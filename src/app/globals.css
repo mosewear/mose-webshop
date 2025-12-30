@@ -1,19 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  /* Colors */
-  --color-brand-primary: #00a676;
-  --color-brand-primary-hover: #008f66;
-  
-  /* Font families */
-  --font-family-sans: var(--font-sans);
-  --font-family-display: var(--font-display);
-  
-  /* Custom animations */
-  --animate-spin: spin 1s linear infinite;
-  --animate-bounce: bounce 1s ease-in-out infinite;
-  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
@@ -51,7 +38,7 @@ h6 {
   letter-spacing: 0.05em;
 }
 
-/* Animations */
+/* Custom animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -81,40 +68,41 @@ h6 {
   }
 }
 
-/* Utility classes */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in;
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-scale {
+    animation: scale 0.3s ease-out;
+  }
+
+  /* Scroll snap */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+
+  /* Hide scrollbar */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.6s ease-out;
-}
-
-.animate-scale {
-  animation: scale 0.3s ease-out;
-}
-
-/* Scroll snap */
-.scroll-snap-x {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-
-.scroll-snap-start {
-  scroll-snap-align: start;
-}
-
-/* Hide scrollbar */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Smooth scroll for all */
+/* Smooth scroll */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;

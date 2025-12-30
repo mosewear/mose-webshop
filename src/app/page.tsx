@@ -44,7 +44,7 @@ export default function HomePage() {
         <div className={`relative z-10 h-full flex items-center justify-center px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="text-center max-w-5xl">
             {/* Badge */}
-            <div className="inline-block mb-6 px-4 py-2 bg-[#00A676] text-white text-sm font-bold uppercase tracking-wider">
+            <div className="inline-block mb-6 px-4 py-2 bg-brand-primary text-white text-sm font-bold uppercase tracking-wider">
               Gemaakt in Groningen
             </div>
 
@@ -85,7 +85,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="bg-[#00A676] py-8">
+      <section className="bg-brand-primary py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
             <div>
@@ -220,7 +220,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6 text-center">
                   <h3 className="font-display text-2xl text-white mb-2">{category.name}</h3>
-                  <span className="text-[#00A676] font-bold group-hover:underline">SHOP NU →</span>
+                  <span className="text-brand-primary font-bold group-hover:underline">SHOP NU →</span>
                 </div>
               </Link>
             ))}
@@ -255,7 +255,7 @@ export default function HomePage() {
               </div>
 
               <Link href="/over-mose">
-                <Button size="lg" className="bg-[#00A676] hover:bg-[#008f66] text-white">
+                <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-white">
                   Lees ons verhaal
                 </Button>
               </Link>
@@ -275,7 +275,7 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-20 px-4 bg-[#00A676]">
+      <section className="py-20 px-4 bg-brand-primary">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-4xl md:text-5xl text-white mb-6">JOIN THE PACK</h2>
           <p className="text-xl text-white/90 mb-8">
