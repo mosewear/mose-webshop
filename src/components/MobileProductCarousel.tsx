@@ -39,7 +39,7 @@ export default function MobileProductCarousel() {
 
     const handleScroll = () => {
       const scrollLeft = carousel.scrollLeft
-      const cardWidth = carousel.offsetWidth * 0.85 + 16 // 85vw + gap-4
+      const cardWidth = carousel.offsetWidth * 0.80 + 16 // 80vw + gap-4
       const index = Math.round(scrollLeft / cardWidth)
       setActiveIndex(Math.max(0, Math.min(index, products.length - 1)))
     }
@@ -53,7 +53,7 @@ export default function MobileProductCarousel() {
     const carousel = carouselRef.current
     if (!carousel) return
 
-    const cardWidth = carousel.offsetWidth * 0.85 + 16 // 85vw + gap-4
+    const cardWidth = carousel.offsetWidth * 0.80 + 16 // 80vw + gap-4
     carousel.scrollTo({
       left: index * cardWidth,
       behavior: 'smooth',
@@ -71,7 +71,7 @@ export default function MobileProductCarousel() {
           <Link
             key={idx}
             href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
-            className="flex-none w-[85vw] min-w-[280px] snap-start active:scale-95 transition-transform"
+            className="flex-none w-[80vw] min-w-[280px] snap-start active:scale-95 transition-transform"
           >
             <div className="bg-white overflow-hidden shadow-md border-2 border-black h-full">
               {/* Product Image Container */}
