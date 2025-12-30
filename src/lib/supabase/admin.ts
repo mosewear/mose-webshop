@@ -49,11 +49,13 @@ export const createAdminClient = async () => {
     return { supabase, user, adminUser: null, isAdmin: false }
   }
 
+  const isAdmin = adminUser.role === 'admin' || adminUser.role === 'manager'
+
   return {
     supabase,
     user,
     adminUser,
-    isAdmin: adminUser.role === 'admin' || adminUser.role === 'manager'
+    isAdmin
   }
 }
 
