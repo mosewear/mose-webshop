@@ -8,12 +8,22 @@ import { useCart } from '@/store/cart'
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   const itemCount = useCart((state) => state.getItemCount())
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
+      
+      // Calculate scroll progress
+      const windowHeight = window.innerHeight
+      const documentHeight = document.documentElement.scrollHeight
+      const scrollTop = window.scrollY
+      const scrollableHeight = documentHeight - windowHeight
+      const progress = (scrollTop / scrollableHeight) * 100
+      setScrollProgress(Math.min(progress, 100))
     }
+    
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -28,6 +38,12 @@ export function Header() {
             : 'bg-white/95 backdrop-blur-sm py-6'
         }`}
       >
+        {/* Scroll Progress Indicator */}
+        <div 
+          className="absolute bottom-0 left-0 h-[3px] bg-brand-primary transition-all duration-150 ease-out"
+          style={{ width: `${scrollProgress}%` }}
+        />
+        
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
