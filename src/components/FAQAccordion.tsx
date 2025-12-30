@@ -26,7 +26,7 @@ const faqs: FAQ[] = [
   },
   {
     question: 'Is MOSE echt lokaal geproduceerd?',
-    answer: 'Absoluut! Al onze kleding wordt 100% in Nederland geproduceerd, voornamelijk in Groningen. We werken samen met lokale textielproducenten die onze kwaliteitseisen delen. Geen lange transportketens, wel eerlijke productie.',
+    answer: 'Absoluut! Al onze kleding wordt 100% in Nederland geproduceerd, voornamelijk in Groningen. We werken samen met een lokaal atelier die onze kwaliteitseisen deelt. Geen lange transportketens, wel eerlijke productie.',
   },
   {
     question: 'Welke betaalmethoden accepteren jullie?',
