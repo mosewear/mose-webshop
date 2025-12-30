@@ -47,14 +47,14 @@ export default function HomePage() {
 
         {/* Hero Content */}
         <div className={`relative z-10 h-full flex items-center justify-center px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="text-center max-w-5xl">
-            {/* Badge with Icon */}
-            <div className="inline-flex items-center gap-2 mb-8 px-5 py-3 bg-brand-primary text-white text-sm font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/30">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-              </svg>
-              Gemaakt in Groningen
-            </div>
+              <div className="text-center max-w-5xl">
+                {/* Badge with Icon - Transparant met witte border */}
+                <div className="inline-flex items-center gap-2 mb-8 px-5 py-3 bg-transparent border-2 border-white text-white text-sm font-bold uppercase tracking-[0.2em]">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Gemaakt in Groningen
+                </div>
 
             {/* Main Heading - Responsive Sizes */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl text-white mb-6 md:mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">

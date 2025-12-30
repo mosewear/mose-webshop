@@ -35,9 +35,9 @@ export function Header() {
               <Image
                 src="/logomose.png"
                 alt="MOSE"
-                width={120}
-                height={40}
-                className="h-8 md:h-10 w-auto"
+                width={160}
+                height={53}
+                className="h-10 md:h-12 w-auto"
                 priority
               />
             </Link>
