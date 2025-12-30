@@ -107,25 +107,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Bar - Touch Optimized */}
-      <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-12">
+      {/* Stats Bar - Mobile Optimized */}
+      <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-4 md:gap-8 text-center text-white">
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
               <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">100%</div>
-              <div className="text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90">
-                Lokaal geproduceerd
+              <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
+                Lokaal<br className="sm:hidden" /> geproduceerd
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
               <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">14</div>
-              <div className="text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90">
-                Dagen retourrecht
+              <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
+                Dagen<br className="sm:hidden" /> retourrecht
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
               <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">∞</div>
-              <div className="text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90">
+              <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
                 Gebouwd om lang mee te gaan
               </div>
             </div>
