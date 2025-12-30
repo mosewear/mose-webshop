@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -19,70 +20,84 @@ export default function AdminLoginPage() {
     setLoading(true)
 
     try {
-      // Sign in with Supabase
+      // 1. Sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (authError) throw authError
-
-      if (!authData.user) {
-        throw new Error('Login failed')
+      if (authError) {
+        setError(authError.message)
+        setLoading(false)
+        return
       }
 
-      // Check if user is an admin
-      const { data: adminUser, error: adminError } = await supabase
+      if (!authData.user) {
+        setError('Login mislukt. Probeer opnieuw.')
+        setLoading(false)
+        return
+      }
+
+      // DEBUG: Log user ID
+      console.log('🔍 Ingelogde user ID:', authData.user.id)
+
+      // 2. Check if user is admin
+      const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
-        .select('*')
+        .select('role')
         .eq('id', authData.user.id)
         .single()
 
-      if (adminError || !adminUser) {
+      console.log('🔍 Admin data:', adminData)
+      console.log('🔍 Admin error:', adminError)
+
+      if (adminError || !adminData) {
+        // User is not an admin
         await supabase.auth.signOut()
-        throw new Error('Je hebt geen admin toegang')
+        setError(`Je hebt geen admin toegang. User ID: ${authData.user.id}`)
+        setLoading(false)
+        return
       }
 
-      // Redirect to admin dashboard
+      // 3. Success - redirect to admin dashboard
       router.push('/admin')
       router.refresh()
-    } catch (err: any) {
-      setError(err.message || 'Login mislukt. Probeer opnieuw.')
-    } finally {
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('Er is iets misgegaan. Probeer opnieuw.')
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="max-w-md w-full space-y-8">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center">
           <Image
             src="/logomose.png"
             alt="MOSE"
-            width={180}
-            height={60}
-            className="h-14 w-auto mx-auto filter invert mb-4"
+            width={200}
+            height={67}
+            className="mx-auto mb-8 brightness-0 invert"
           />
-          <h1 className="text-2xl font-display text-white uppercase tracking-tight">
-            Admin Login
+          <h1 className="font-display text-4xl md:text-5xl mb-4 tracking-tight">
+            ADMIN LOGIN
           </h1>
-          <p className="text-gray-400 mt-2">Log in met je admin account</p>
+          <p className="text-gray-400 text-lg">Log in met je admin account</p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-900/50 border-2 border-red-500 text-red-200 px-6 py-4 rounded">
+            {error}
+          </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 bg-red-900/20 border-2 border-red-600 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-bold text-gray-300 uppercase tracking-wide mb-2">
+            <label htmlFor="email" className="block text-sm font-bold uppercase tracking-wider mb-2">
               Email
             </label>
             <input
@@ -91,14 +106,13 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 text-white focus:outline-none focus:border-brand-primary transition-colors"
-              placeholder="admin@mosewear.nl"
+              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 text-white focus:border-brand-primary focus:outline-none transition-colors"
+              placeholder="info@mosewear.nl"
             />
           </div>
 
-          {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-bold text-gray-300 uppercase tracking-wide mb-2">
+            <label htmlFor="password" className="block text-sm font-bold uppercase tracking-wider mb-2">
               Wachtwoord
             </label>
             <input
@@ -107,29 +121,27 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 text-white focus:outline-none focus:border-brand-primary transition-colors"
-              placeholder="••••••••"
+              className="w-full px-4 py-3 bg-gray-900 border-2 border-brand-primary text-white focus:border-brand-primary focus:outline-none transition-colors"
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-3"
+            className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-4 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             {loading ? (
               <>
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
                 Bezig met inloggen...
               </>
             ) : (
               <>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
                 Inloggen
               </>
@@ -137,20 +149,19 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        {/* Back to Site */}
-        <div className="mt-8 text-center">
-          <a
+        {/* Back to Website */}
+        <div className="text-center">
+          <Link
             href="/"
-            className="text-sm text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Terug naar website
-          </a>
+          </Link>
         </div>
       </div>
     </div>
   )
 }
-
