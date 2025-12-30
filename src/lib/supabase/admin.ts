@@ -39,16 +39,18 @@ export const createAdminClient = async () => {
   }
 
   // Check if user is an admin
-  const { data: adminUser, error: adminError } = await supabase
+  const { data: adminData, error: adminError } = await supabase
     .from('admin_users')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  if (adminError || !adminUser) {
+  if (adminError || !adminData) {
     return { supabase, user, adminUser: null, isAdmin: false }
   }
 
+  // TypeScript type narrowing: adminData exists here
+  const adminUser = adminData as { id: string; role: string; created_at: string; updated_at: string }
   const isAdmin = adminUser.role === 'admin' || adminUser.role === 'manager'
 
   return {
