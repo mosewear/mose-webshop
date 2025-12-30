@@ -49,7 +49,9 @@ export default function HomePage() {
           <div className="text-center max-w-5xl">
             {/* Badge with Icon */}
             <div className="inline-flex items-center gap-2 mb-8 px-5 py-3 bg-brand-primary text-white text-sm font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/30">
-              <span className="text-lg">📍</span>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
               Gemaakt in Groningen
             </div>
 
@@ -343,7 +345,10 @@ export default function HomePage() {
             <div className="space-y-8">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold uppercase tracking-[0.2em] text-sm">
-                <span>📍</span> Ons Verhaal
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                Ons Verhaal
               </div>
 
               <h2 className="font-display text-4xl md:text-6xl leading-tight">
@@ -364,12 +369,30 @@ export default function HomePage() {
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-6 pt-8">
                 {[
-                  { icon: '🏭', label: '100% Lokaal', sublabel: 'Made in NL' },
-                  { icon: '↩️', label: '14 Dagen', sublabel: 'Retourrecht' },
-                  { icon: '🧵', label: 'Premium', sublabel: 'Materialen' },
+                  { 
+                    icon: <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>,
+                    label: '100% Lokaal', 
+                    sublabel: 'Made in NL' 
+                  },
+                  { 
+                    icon: <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>,
+                    label: '14 Dagen', 
+                    sublabel: 'Retourrecht' 
+                  },
+                  { 
+                    icon: <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>,
+                    label: 'Premium', 
+                    sublabel: 'Materialen' 
+                  },
                 ].map((stat, idx) => (
                   <div key={idx} className="group text-center p-4 border-2 border-gray-700 hover:border-brand-primary transition-all duration-300 hover:bg-brand-primary/10">
-                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{stat.icon}</div>
+                    <div className="mb-3 group-hover:scale-110 transition-transform">{stat.icon}</div>
                     <div className="text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</div>
                     <div className="text-xs text-gray-400">{stat.sublabel}</div>
                   </div>
