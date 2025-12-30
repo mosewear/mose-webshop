@@ -104,10 +104,10 @@ export default function MobileProductCarousel() {
               
               {/* Product Info */}
               <div className="p-4 text-center">
-                <h3 className="font-bold text-sm mb-1 uppercase tracking-wide">
+                <h3 className="font-bold text-base mb-2 uppercase tracking-wide">
                   {product.name}
                 </h3>
-                <p className="text-xl font-bold text-brand-primary mb-3">{product.price}</p>
+                <p className="text-2xl font-bold text-brand-primary mb-3">{product.price}</p>
                 
                 {/* Add to Cart Button */}
                 <button 
