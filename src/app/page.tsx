@@ -16,353 +16,467 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
-        {/* Background Image */}
+        {/* Background Image with Parallax Effect */}
         <div className="absolute inset-0">
           <Image
             src="/hero_mose.png"
             alt="MOSE Hero"
             fill
-            className="object-cover object-center"
+            className="object-cover object-center scale-105"
             priority
             quality={90}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+          {/* Improved Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+          {/* Vignette Effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] opacity-40" />
         </div>
         
-        {/* Claw Mark Overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-10">
+        {/* Prominent Claw Mark Watermark */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.15]">
           <Image
             src="/claw.png"
             alt=""
-            width={400}
-            height={400}
-            className="absolute top-1/4 right-1/4 transform rotate-12"
+            width={600}
+            height={600}
+            className="absolute top-1/4 right-1/4 transform rotate-12 animate-pulse"
+            style={{ animationDuration: '4s' }}
           />
         </div>
 
         {/* Hero Content */}
         <div className={`relative z-10 h-full flex items-center justify-center px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="text-center max-w-5xl">
-            {/* Badge */}
-            <div className="inline-block mb-6 px-4 py-2 bg-brand-primary text-white text-sm font-bold uppercase tracking-wider">
+            {/* Badge with Icon */}
+            <div className="inline-flex items-center gap-2 mb-8 px-5 py-3 bg-brand-primary text-white text-sm font-bold uppercase tracking-[0.2em] shadow-lg shadow-brand-primary/30">
+              <span className="text-lg">📍</span>
               Gemaakt in Groningen
             </div>
 
-            {/* Main Heading */}
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight tracking-wide">
+            {/* Main Heading with Better Spacing */}
+            <h1 className="font-display text-5xl md:text-7xl lg:text-9xl text-white mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">
               GEEN POESPAS.
               <br />
-              WEL KARAKTER.
+              <span className="text-brand-primary">WEL KARAKTER.</span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-white/90 mb-10 font-medium max-w-2xl mx-auto">
+            {/* Subtitle with Better Contrast */}
+            <p className="text-lg md:text-2xl text-white mb-12 font-medium max-w-2xl mx-auto leading-relaxed">
               Lokaal gemaakt. Kwaliteit zonder concessies.
+              <br />
+              <span className="text-brand-primary font-bold">Premium basics die blijven.</span>
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/shop">
-                <Button size="lg" className="min-w-[200px]">
-                  Shop MOSE
-                </Button>
+            {/* Modern CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/shop" className="group">
+                <button className="relative px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/50 min-w-[220px]">
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    Shop MOSE
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                  <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
+                </button>
               </Link>
-              <Link href="/lookbook">
-                <Button size="lg" variant="outline" className="min-w-[200px] border-2 border-white text-white hover:bg-white hover:text-black">
-                  Bekijk Lookbook
-                </Button>
+              <Link href="/lookbook" className="group">
+                <button className="relative px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black min-w-[220px]">
+                  <span className="flex items-center justify-center gap-2">
+                    Bekijk Lookbook
+                    <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </span>
+                </button>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-2">
-            <div className="w-1 h-3 bg-white/50 rounded-full animate-pulse" />
+        {/* Animated Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+          <div className="flex flex-col items-center gap-2 animate-bounce">
+            <span className="text-white/60 text-sm uppercase tracking-wider">Scroll</span>
+            <div className="w-6 h-10 border-2 border-white/40 rounded-full flex items-start justify-center p-2">
+              <div className="w-1.5 h-3 bg-brand-primary rounded-full animate-pulse" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="bg-brand-primary py-8">
+      {/* Stats Bar - Modern & Clean */}
+      <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
-            <div>
-              <div className="text-4xl font-display mb-2">100%</div>
-              <div className="text-sm uppercase tracking-wider">Lokaal geproduceerd</div>
+            <div className="group hover:scale-105 transition-transform duration-300">
+              <div className="text-5xl md:text-6xl font-display mb-3 drop-shadow-lg">100%</div>
+              <div className="text-sm md:text-base uppercase tracking-[0.2em] font-semibold opacity-90">
+                Lokaal geproduceerd
+              </div>
             </div>
-            <div>
-              <div className="text-4xl font-display mb-2">14</div>
-              <div className="text-sm uppercase tracking-wider">Dagen retourrecht</div>
+            <div className="group hover:scale-105 transition-transform duration-300">
+              <div className="text-5xl md:text-6xl font-display mb-3 drop-shadow-lg">14</div>
+              <div className="text-sm md:text-base uppercase tracking-[0.2em] font-semibold opacity-90">
+                Dagen retourrecht
+              </div>
             </div>
-            <div>
-              <div className="text-4xl font-display mb-2">∞</div>
-              <div className="text-sm uppercase tracking-wider">Gebouwd om lang mee te gaan</div>
+            <div className="group hover:scale-105 transition-transform duration-300">
+              <div className="text-5xl md:text-6xl font-display mb-3 drop-shadow-lg">∞</div>
+              <div className="text-sm md:text-base uppercase tracking-[0.2em] font-semibold opacity-90">
+                Gebouwd om lang mee te gaan
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Products - ESSENTIALS DIE BLIJVEN */}
-      <section className="py-20 px-4 bg-gray-50 relative overflow-hidden">
-        {/* Claw Mark Background */}
+      {/* Featured Products */}
+      <section className="py-24 px-4 relative overflow-hidden bg-gray-50">
+        {/* Subtle Claw Background */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
+          <Image
+            src="/claw.png"
+            alt=""
+            width={800}
+            height={800}
+            className="absolute -top-32 -right-32 transform rotate-12"
+          />
+          <Image
+            src="/claw.png"
+            alt=""
+            width={600}
+            height={600}
+            className="absolute bottom-0 -left-20 transform -rotate-45"
+          />
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-block px-4 py-2 bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-[0.2em] text-sm mb-4">
+              Bestsellers
+            </div>
+            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">ESSENTIALS DIE BLIJVEN</h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              No-nonsense basics die jarenlang meegaan
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'MOSE Basic Hoodie',
+                price: '€79,99',
+                image: '/hoodieblack.png',
+                badge: 'BESTSELLER',
+                badgeColor: 'bg-brand-primary',
+              },
+              {
+                name: 'MOSE Basic Tee',
+                price: '€34,99',
+                image: '/blacktee.png',
+                badge: 'NEW',
+                badgeColor: 'bg-black',
+              },
+              {
+                name: 'MOSE Snapback',
+                price: '€29,99',
+                image: '/hoodie_cap.png',
+                badge: 'TRENDING',
+                badgeColor: 'bg-brand-primary',
+              },
+            ].map((product, idx) => (
+              <Link
+                key={idx}
+                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
+                className="group"
+              >
+                <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                  {/* Product Image Container */}
+                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                    />
+                    
+                    {/* Badge */}
+                    <div className={`absolute top-4 left-4 ${product.badgeColor} text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
+                      {product.badge}
+                    </div>
+                    
+                    {/* Wishlist Button */}
+                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white hover:scale-110">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Gradient Overlay on Hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Quick View Button */}
+                    <div className="absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                      <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Quick View
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Product Info */}
+                  <div className="p-6 text-center">
+                    <h3 className="font-bold text-lg mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-2xl font-bold text-brand-primary">{product.price}</p>
+                    
+                    {/* Size Dots (Preview) */}
+                    <div className="flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {['S', 'M', 'L', 'XL'].map((size) => (
+                        <span key={size} className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Category Grid - Modern & Immersive */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">SHOP OP CATEGORIE</h2>
+            <p className="text-lg text-gray-600">Ontdek onze collectie</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              {
+                name: 'HOODIES',
+                image: '/hoodieblack.png',
+                href: '/shop?category=hoodies',
+                count: '12 items',
+              },
+              {
+                name: 'T-SHIRTS',
+                image: '/blacktee.png',
+                href: '/shop?category=t-shirts',
+                count: '18 items',
+              },
+              {
+                name: 'CAPS',
+                image: '/hoodie_cap.png',
+                href: '/shop?category=caps',
+                count: '8 items',
+              },
+              {
+                name: 'ACCESSOIRES',
+                image: '/hoodie_cap.png',
+                href: '/shop?category=accessoires',
+                count: '15 items',
+              },
+            ].map((category, idx) => (
+              <Link
+                key={idx}
+                href={category.href}
+                className="group relative aspect-[3/4] overflow-hidden rounded-lg shadow-md hover:shadow-2xl transition-all duration-500"
+              >
+                {/* Image */}
+                <Image
+                  src={category.image}
+                  alt={category.name}
+                  fill
+                  className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                />
+                
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-brand-primary/0 group-hover:bg-brand-primary/20 transition-colors duration-500" />
+                
+                {/* Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-white">
+                  <h3 className="font-display text-2xl md:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                    {category.name}
+                  </h3>
+                  <p className="text-sm opacity-80 mb-4">{category.count}</p>
+                  <div className="flex items-center gap-2 text-brand-primary font-bold group-hover:gap-4 transition-all">
+                    <span className="uppercase tracking-wider text-sm">Shop nu</span>
+                    <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Corner Accent */}
+                <div className="absolute top-0 right-0 w-16 h-16 bg-brand-primary transform translate-x-full translate-y-full rotate-45 group-hover:translate-x-8 group-hover:translate-y-8 transition-transform duration-500" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Story Section - Emotional & Powerful */}
+      <section className="py-24 bg-black text-white relative overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300A676' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Text Content */}
+            <div className="space-y-8">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold uppercase tracking-[0.2em] text-sm">
+                <span>📍</span> Ons Verhaal
+              </div>
+
+              <h2 className="font-display text-4xl md:text-6xl leading-tight">
+                GEMAAKT IN<br />
+                <span className="text-brand-primary">GRONINGEN</span>
+              </h2>
+              
+              <div className="space-y-4 text-lg text-gray-300 leading-relaxed">
+                <p>
+                  Geen poespas. Alleen karakter. We maken kleding die lang meegaat, 
+                  lokaal geproduceerd zonder compromissen op kwaliteit.
+                </p>
+                <p className="text-white font-semibold">
+                  Premium basics met een ziel. Gebouwd voor het echte leven.
+                </p>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-6 pt-8">
+                {[
+                  { icon: '🏭', label: '100% Lokaal', sublabel: 'Made in NL' },
+                  { icon: '↩️', label: '14 Dagen', sublabel: 'Retourrecht' },
+                  { icon: '🧵', label: 'Premium', sublabel: 'Materialen' },
+                ].map((stat, idx) => (
+                  <div key={idx} className="group text-center p-4 border-2 border-gray-700 hover:border-brand-primary transition-all duration-300 hover:bg-brand-primary/10">
+                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{stat.icon}</div>
+                    <div className="text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</div>
+                    <div className="text-xs text-gray-400">{stat.sublabel}</div>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/over-mose" className="group inline-block">
+                <button className="px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-all duration-300 flex items-center gap-3 group-hover:gap-5 shadow-lg shadow-brand-primary/30">
+                  Lees ons verhaal
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </Link>
+            </div>
+
+            {/* Image with Frame Effect */}
+            <div className="relative">
+              <div className="relative aspect-square rounded-lg overflow-hidden shadow-2xl">
+                <Image
+                  src="/hoodieblack.png"
+                  alt="MOSE Atelier Groningen"
+                  fill
+                  className="object-cover"
+                />
+                {/* Frame Overlay */}
+                <div className="absolute inset-0 border-8 border-brand-primary/20" />
+              </div>
+              
+              {/* Floating Badge */}
+              <div className="absolute -bottom-6 -right-6 bg-brand-primary text-white p-8 shadow-2xl">
+                <div className="text-center">
+                  <div className="text-4xl font-display mb-2">2020</div>
+                  <div className="text-sm uppercase tracking-wider">Opgericht</div>
+                </div>
+              </div>
+
+              {/* Decorative Element */}
+              <div className="absolute -top-8 -left-8 w-32 h-32 border-4 border-brand-primary opacity-20" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter CTA - Modern & Engaging */}
+      <section className="relative py-24 px-4 bg-gradient-to-br from-brand-primary via-brand-primary-hover to-brand-primary overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse" style={{ animationDuration: '3s' }} />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-black rounded-full filter blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+        </div>
+
+        {/* Claw Mark */}
         <div className="absolute inset-0 pointer-events-none opacity-5">
           <Image
             src="/claw.png"
             alt=""
             width={600}
             height={600}
-            className="absolute -top-20 -right-20 transform rotate-12"
-          />
-          <Image
-            src="/claw.png"
-            alt=""
-            width={400}
-            height={400}
-            className="absolute bottom-0 left-0 transform -rotate-45"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           />
         </div>
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-5xl md:text-6xl mb-4">ESSENTIALS DIE BLIJVEN</h2>
-            <p className="text-lg text-gray-600">No-nonsense basics die jarenlang meegaan</p>
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          {/* Icon */}
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-8">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
           </div>
 
-          {/* Desktop Grid */}
-          <div className="hidden md:grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'The Icon Jeans',
-                oldPrice: '€149,95',
-                price: '€99,95',
-                image: '/hoodieblack.png',
-                slug: 'the-icon-jeans',
-              },
-              {
-                name: 'The Icon Cap',
-                oldPrice: '€49,95',
-                price: '€34,95',
-                image: '/hoodie_cap.png',
-                slug: 'the-icon-cap',
-              },
-              {
-                name: 'The Icon Hoodie',
-                oldPrice: '€179,95',
-                price: '€140,00',
-                image: '/hoodieblack.png',
-                slug: 'the-icon-hoodie',
-              },
-            ].map((product, idx) => (
-              <div
-                key={idx}
-                className="bg-white border-4 border-black p-6 hover:shadow-2xl transition-shadow duration-300"
-              >
-                <Link href={`/product/${product.slug}`}>
-                  <div className="relative aspect-[3/4] bg-white mb-6 overflow-hidden">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-cover object-center hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                </Link>
-                <div className="text-center">
-                  <h3 className="font-bold text-2xl mb-3 tracking-tight">{product.name}</h3>
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                    <span className="text-gray-400 line-through text-lg">{product.oldPrice}</span>
-                    <span className="text-brand-primary font-bold text-2xl">{product.price}</span>
-                  </div>
-                  <button className="w-full bg-[#B8AFA0] hover:bg-[#A89D8E] text-white font-bold text-lg py-4 px-6 uppercase tracking-wider transition-colors duration-300">
-                    In winkelmand
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile Carousel */}
-          <div className="md:hidden">
-            <div className="relative">
-              <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-12">
-                {[
-                  {
-                    name: 'The Icon Jeans',
-                    oldPrice: '€149,95',
-                    price: '€99,95',
-                    image: '/hoodieblack.png',
-                    slug: 'the-icon-jeans',
-                  },
-                  {
-                    name: 'The Icon Cap',
-                    oldPrice: '€49,95',
-                    price: '€34,95',
-                    image: '/hoodie_cap.png',
-                    slug: 'the-icon-cap',
-                  },
-                  {
-                    name: 'The Icon Hoodie',
-                    oldPrice: '€179,95',
-                    price: '€140,00',
-                    image: '/hoodieblack.png',
-                    slug: 'the-icon-hoodie',
-                  },
-                ].map((product, idx) => (
-                  <div
-                    key={idx}
-                    className="flex-none w-[85vw] snap-start"
-                  >
-                    <div className="bg-white border-4 border-black p-6">
-                      <Link href={`/product/${product.slug}`}>
-                        <div className="relative aspect-[3/4] bg-white mb-6 overflow-hidden">
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className="object-cover object-center"
-                          />
-                        </div>
-                      </Link>
-                      <div className="text-center">
-                        <h3 className="font-bold text-xl mb-3 tracking-tight">{product.name}</h3>
-                        <div className="flex items-center justify-center gap-3 mb-6">
-                          <span className="text-gray-400 line-through text-base">{product.oldPrice}</span>
-                          <span className="text-brand-primary font-bold text-xl">{product.price}</span>
-                        </div>
-                        <button className="w-full bg-[#B8AFA0] hover:bg-[#A89D8E] text-white font-bold text-base py-3 px-4 uppercase tracking-wider transition-colors duration-300">
-                          In winkelmand
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Page Indicator */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-brand-primary"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Category Grid */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-4xl md:text-5xl text-center mb-12">SHOP OP CATEGORIE</h2>
+          <h2 className="font-display text-4xl md:text-6xl text-white mb-6 tracking-tight">
+            JOIN THE PACK
+          </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              {
-                name: 'HOODIES',
-                image: '/hoodieblack.png',
-                href: '/shop?category=hoodies',
-              },
-              {
-                name: 'T-SHIRTS',
-                image: '/blacktee.png',
-                href: '/shop?category=t-shirts',
-              },
-              {
-                name: 'CAPS',
-                image: '/hoodie_cap.png',
-                href: '/shop?category=caps',
-              },
-              {
-                name: 'ACCESSOIRES',
-                image: '/hoodie_cap.png',
-                href: '/shop?category=accessoires',
-              },
-            ].map((category, idx) => (
-              <Link
-                key={idx}
-                href={category.href}
-                className="group relative aspect-[3/4] overflow-hidden border-2 border-black hover:scale-105 transition-transform duration-300"
-              >
-                <Image
-                  src={category.image}
-                  alt={category.name}
-                  fill
-                  className="object-cover object-center group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 text-center">
-                  <h3 className="font-display text-2xl text-white mb-2">{category.name}</h3>
-                  <span className="text-brand-primary font-bold group-hover:underline">SHOP NU →</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Story Section - Gemaakt in Groningen */}
-      <section className="py-20 bg-black text-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            {/* Text Content */}
-            <div>
-              <h2 className="font-display text-4xl md:text-5xl mb-6">GEMAAKT IN GRONINGEN</h2>
-              <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-                Geen poespas. Alleen karakter. Premium basics met een ziel. We maken kleding die lang meegaat, 
-                lokaal geproduceerd zonder compromissen op kwaliteit.
-              </p>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[
-                  { icon: '🏭', label: 'Lokaal' },
-                  { icon: '↩️', label: '14 dagen' },
-                  { icon: '🧵', label: 'Premium' },
-                ].map((stat, idx) => (
-                  <div key={idx} className="text-center border-2 border-white p-4">
-                    <div className="text-3xl mb-2">{stat.icon}</div>
-                    <div className="text-sm font-bold uppercase">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/over-mose">
-                <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-white">
-                  Lees ons verhaal
-                </Button>
-              </Link>
-            </div>
-
-            {/* Image */}
-            <div className="relative aspect-square">
-              <Image
-                src="/hoodieblack.png"
-                alt="MOSE Atelier Groningen"
-                fill
-                className="object-cover border-2 border-white"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter CTA */}
-      <section className="py-20 px-4 bg-brand-primary">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-4xl md:text-5xl text-white mb-6">JOIN THE PACK</h2>
-          <p className="text-xl text-white/90 mb-8">
-            Nieuws over drops, restocks en het atelier. Geen spam — alleen MOSE.
+          <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
+            Nieuws over drops, restocks en het atelier.
+            <br />
+            <span className="font-bold">Geen spam — alleen MOSE.</span>
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 justify-center">
-            <input
-              type="email"
-              placeholder="Jouw e-mailadres"
-              className="flex-1 max-w-md px-6 py-4 text-black border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
-            />
-            <Button size="lg" variant="secondary">
-              Join nu
-            </Button>
+
+          <form className="max-w-lg mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <input
+                type="email"
+                placeholder="Jouw e-mailadres"
+                required
+                className="flex-1 px-6 py-4 text-black text-lg bg-white border-0 focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400 rounded-lg sm:rounded-r-none"
+              />
+              <button
+                type="submit"
+                className="group px-8 py-4 bg-black text-white font-bold text-lg uppercase tracking-wider hover:bg-gray-900 transition-all duration-300 flex items-center justify-center gap-3 rounded-lg sm:rounded-l-none whitespace-nowrap"
+              >
+                Join nu
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Trust Badge */}
+            <p className="text-white/70 text-sm mt-6 flex items-center justify-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              We respecteren je privacy. Uitschrijven kan altijd.
+            </p>
           </form>
         </div>
       </section>
