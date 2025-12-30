@@ -135,7 +135,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-24 px-4 relative overflow-hidden bg-gray-50">
+      <section className="py-24 px-0 md:px-4 relative overflow-hidden bg-gray-50">
         {/* Subtle Claw Background */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
           <Image
@@ -155,7 +155,8 @@ export default function HomePage() {
         </div>
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
+          {/* Section Header */}
+          <div className="text-center mb-12 md:mb-16 px-4">
             <div className="inline-block px-4 py-2 bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-[0.2em] text-sm mb-4">
               Bestsellers
             </div>
@@ -165,7 +166,108 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+          {/* Mobile: Snap Scroll Carousel */}
+          <div className="md:hidden">
+            {/* Carousel Container */}
+            <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-4 pb-4 scroll-smooth">
+              {[
+                {
+                  name: 'MOSE Basic Hoodie',
+                  price: '€79,99',
+                  image: '/hoodieblack.png',
+                  badge: 'BESTSELLER',
+                  badgeColor: 'bg-brand-primary',
+                },
+                {
+                  name: 'MOSE Basic Tee',
+                  price: '€34,99',
+                  image: '/blacktee.png',
+                  badge: 'NEW',
+                  badgeColor: 'bg-black',
+                },
+                {
+                  name: 'MOSE Snapback',
+                  price: '€29,99',
+                  image: '/hoodie_cap.png',
+                  badge: 'TRENDING',
+                  badgeColor: 'bg-brand-primary',
+                },
+              ].map((product, idx) => (
+                <Link
+                  key={idx}
+                  href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
+                  className="flex-none w-[85vw] min-w-[280px] snap-start active:scale-95 transition-transform"
+                >
+                  <div className="bg-white overflow-hidden shadow-md border-2 border-black h-full">
+                    {/* Product Image Container */}
+                    <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        className="object-cover object-center"
+                      />
+                      
+                      {/* Badge */}
+                      <div className={`absolute top-2 left-2 ${product.badgeColor} text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg`}>
+                        {product.badge}
+                      </div>
+                      
+                      {/* Wishlist Button - Always visible on mobile */}
+                      <button 
+                        className="absolute top-2 right-2 w-11 h-11 bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Wishlist logic here
+                        }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {/* Product Info */}
+                    <div className="p-4 text-center">
+                      <h3 className="font-bold text-sm mb-1 uppercase tracking-wide">
+                        {product.name}
+                      </h3>
+                      <p className="text-xl font-bold text-brand-primary mb-3">{product.price}</p>
+                      
+                      {/* Add to Cart Button */}
+                      <button 
+                        className="w-full bg-brand-primary text-white font-bold py-3 px-4 uppercase tracking-wider text-xs hover:bg-brand-primary-hover transition-colors active:scale-95"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Add to cart logic
+                        }}
+                      >
+                        In Winkelmand
+                      </button>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Progress Dots - Square */}
+            <div className="flex justify-center items-center gap-2 mt-6">
+              {[0, 1, 2].map((idx) => (
+                <button
+                  key={idx}
+                  className={`transition-all duration-300 ${
+                    idx === 0 
+                      ? 'w-8 h-2 bg-brand-primary' 
+                      : 'w-2 h-2 bg-gray-300'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop: Grid (unchanged) */}
+          <div className="hidden md:grid grid-cols-3 gap-8">
             {[
               {
                 name: 'MOSE Basic Hoodie',
@@ -205,13 +307,13 @@ export default function HomePage() {
                     />
                     
                     {/* Badge */}
-                    <div className={`absolute top-2 left-2 md:top-4 md:left-4 ${product.badgeColor} text-white px-2 py-1 md:px-3 md:py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
+                    <div className={`absolute top-4 left-4 ${product.badgeColor} text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
                       {product.badge}
                     </div>
                     
-                    {/* Wishlist Button - Always visible on mobile, hover on desktop */}
+                    {/* Wishlist Button - Hover on desktop */}
                     <button 
-                      className="absolute top-2 right-2 md:top-4 md:right-4 w-11 h-11 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
+                      className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
                       onClick={(e) => {
                         e.preventDefault();
                         // Wishlist logic here
@@ -223,10 +325,10 @@ export default function HomePage() {
                     </button>
                     
                     {/* Gradient Overlay on Hover (Desktop only) */}
-                    <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
                     {/* Quick View Button (Desktop only) */}
-                    <div className="hidden md:block absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <div className="absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                       <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -238,25 +340,14 @@ export default function HomePage() {
                   </div>
                   
                   {/* Product Info */}
-                  <div className="p-4 md:p-6 text-center">
-                    <h3 className="font-bold text-sm md:text-lg mb-1 md:mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
+                  <div className="p-6 text-center">
+                    <h3 className="font-bold text-lg mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
                       {product.name}
                     </h3>
-                    <p className="text-xl md:text-2xl font-bold text-brand-primary mb-3 md:mb-0">{product.price}</p>
-                    
-                    {/* Add to Cart Button (Mobile only) */}
-                    <button 
-                      className="md:hidden w-full mt-3 bg-brand-primary text-white font-bold py-3 px-4 uppercase tracking-wider text-xs hover:bg-brand-primary-hover transition-colors active:scale-95"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // Add to cart logic
-                      }}
-                    >
-                      In Winkelmand
-                    </button>
+                    <p className="text-2xl font-bold text-brand-primary">{product.price}</p>
                     
                     {/* Size Dots (Desktop only) */}
-                    <div className="hidden md:flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       {['S', 'M', 'L', 'XL'].map((size) => (
                         <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
                           {size}
