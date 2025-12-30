@@ -18,12 +18,12 @@ export default function HomePage() {
       <section className="relative h-screen w-full overflow-hidden">
         {/* Background Image with Parallax Effect */}
         <div className="absolute inset-0">
-          <Image
+        <Image
             src="/hero_mose.png"
             alt="MOSE Hero"
             fill
             className="object-cover object-center scale-105"
-            priority
+          priority
             quality={90}
           />
           {/* Improved Gradient Overlay */}
@@ -60,7 +60,7 @@ export default function HomePage() {
               GEEN POESPAS.
               <br />
               <span className="text-brand-primary">WEL KARAKTER.</span>
-            </h1>
+          </h1>
 
             {/* Subtitle with Better Contrast */}
             <p className="text-lg md:text-2xl text-white mb-12 font-medium max-w-2xl mx-auto leading-relaxed">
@@ -194,7 +194,7 @@ export default function HomePage() {
                 href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
                 className="group"
               >
-                <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-black">
                   {/* Product Image Container */}
                   <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                     <Image
@@ -210,7 +210,7 @@ export default function HomePage() {
                     </div>
                     
                     {/* Wishlist Button */}
-                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white hover:scale-110">
+                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white hover:scale-110 border-2 border-black">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
@@ -241,7 +241,7 @@ export default function HomePage() {
                     {/* Size Dots (Preview) */}
                     <div className="flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       {['S', 'M', 'L', 'XL'].map((size) => (
-                        <span key={size} className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
+                        <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
                           {size}
                         </span>
                       ))}
@@ -292,7 +292,7 @@ export default function HomePage() {
               <Link
                 key={idx}
                 href={category.href}
-                className="group relative aspect-[3/4] overflow-hidden rounded-lg shadow-md hover:shadow-2xl transition-all duration-500"
+                className="group relative aspect-[3/4] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border-2 border-black"
               >
                 {/* Image */}
                 <Image
@@ -411,7 +411,7 @@ export default function HomePage() {
 
             {/* Image with Frame Effect */}
             <div className="relative">
-              <div className="relative aspect-square rounded-lg overflow-hidden shadow-2xl">
+              <div className="relative aspect-square overflow-hidden shadow-2xl border-2 border-white">
                 <Image
                   src="/hoodieblack.png"
                   alt="MOSE Atelier Groningen"
@@ -447,7 +447,7 @@ export default function HomePage() {
 
         {/* Claw Mark */}
         <div className="absolute inset-0 pointer-events-none opacity-5">
-          <Image
+            <Image
             src="/claw.png"
             alt=""
             width={600}
@@ -458,7 +458,7 @@ export default function HomePage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           {/* Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm mb-8 border-2 border-white/40">
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
@@ -480,11 +480,11 @@ export default function HomePage() {
                 type="email"
                 placeholder="Jouw e-mailadres"
                 required
-                className="flex-1 px-6 py-4 text-black text-lg bg-white border-0 focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400 rounded-lg sm:rounded-r-none"
+                className="flex-1 px-6 py-4 text-black text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400"
               />
               <button
                 type="submit"
-                className="group px-8 py-4 bg-black text-white font-bold text-lg uppercase tracking-wider hover:bg-gray-900 transition-all duration-300 flex items-center justify-center gap-3 rounded-lg sm:rounded-l-none whitespace-nowrap"
+                className="group px-8 py-4 bg-black text-white font-bold text-lg uppercase tracking-wider hover:bg-gray-900 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black"
               >
                 Join nu
                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
