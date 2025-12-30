@@ -108,7 +108,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Bar - Mobile Optimized */}
-      <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-8 md:py-12">
+      <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-10 md:py-14">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-4 md:gap-8 text-center text-white">
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
@@ -134,7 +134,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-24 px-0 md:px-4 relative overflow-hidden bg-gray-50">
+      <section className="py-12 md:py-20 px-4 relative overflow-hidden bg-gray-50">
         {/* Subtle Claw Background */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
           <Image
@@ -265,9 +265,9 @@ export default function HomePage() {
       </section>
 
       {/* Category Grid - Modern & Immersive */}
-      <section className="py-24 px-4 bg-white">
+      <section className="py-16 md:py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
             <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">SHOP OP CATEGORIE</h2>
             <p className="text-lg text-gray-600">Ontdek onze collectie</p>
           </div>
@@ -341,7 +341,7 @@ export default function HomePage() {
       </section>
 
       {/* Story Section - Emotional & Powerful */}
-      <section className="py-24 bg-black text-white relative overflow-hidden">
+      <section className="py-16 md:py-24 px-4 bg-black text-white relative overflow-hidden">
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
@@ -349,7 +349,7 @@ export default function HomePage() {
           }} />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Text Content */}
             <div className="space-y-8">
@@ -448,7 +448,7 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter CTA - Modern & Engaging */}
-      <section className="relative py-24 px-4 bg-gradient-to-br from-brand-primary via-brand-primary-hover to-brand-primary overflow-hidden">
+      <section className="relative py-16 md:py-24 px-4 bg-gradient-to-br from-brand-primary via-brand-primary-hover to-brand-primary overflow-hidden">
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse" style={{ animationDuration: '3s' }} />
