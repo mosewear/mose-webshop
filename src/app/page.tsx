@@ -19,7 +19,7 @@ export default function HomePage() {
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=2400&auto=format&fit=crop"
+            src="/hero_mose.png"
             alt="MOSE Hero"
             fill
             className="object-cover object-center"
@@ -27,6 +27,17 @@ export default function HomePage() {
             quality={90}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        </div>
+        
+        {/* Claw Mark Overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-10">
+          <Image
+            src="/claw.png"
+            alt=""
+            width={400}
+            height={400}
+            className="absolute top-1/4 right-1/4 transform rotate-12"
+          />
         </div>
 
         {/* Hero Content */}
@@ -94,8 +105,26 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-20 px-4 relative overflow-hidden">
+        {/* Claw Mark Background */}
+        <div className="absolute inset-0 pointer-events-none opacity-5">
+          <Image
+            src="/claw.png"
+            alt=""
+            width={600}
+            height={600}
+            className="absolute -top-20 -right-20 transform rotate-12"
+          />
+          <Image
+            src="/claw.png"
+            alt=""
+            width={400}
+            height={400}
+            className="absolute bottom-0 left-0 transform -rotate-45"
+          />
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl md:text-5xl mb-4">ESSENTIALS DIE BLIJVEN</h2>
             <p className="text-lg text-gray-600">No-nonsense basics die jarenlang meegaan</p>
@@ -106,17 +135,17 @@ export default function HomePage() {
               {
                 name: 'MOSE Basic Hoodie',
                 price: '€79,99',
-                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop',
+                image: '/hoodieblack.png',
               },
               {
                 name: 'MOSE Basic Tee',
                 price: '€34,99',
-                image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop',
+                image: '/blacktee.png',
               },
               {
                 name: 'MOSE Snapback',
                 price: '€29,99',
-                image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=800&auto=format&fit=crop',
+                image: '/hoodie_cap.png',
               },
             ].map((product, idx) => (
               <Link
@@ -158,22 +187,22 @@ export default function HomePage() {
             {[
               {
                 name: 'HOODIES',
-                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop',
+                image: '/hoodieblack.png',
                 href: '/shop?category=hoodies',
               },
               {
                 name: 'T-SHIRTS',
-                image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600&auto=format&fit=crop',
+                image: '/blacktee.png',
                 href: '/shop?category=t-shirts',
               },
               {
                 name: 'CAPS',
-                image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=600&auto=format&fit=crop',
+                image: '/hoodie_cap.png',
                 href: '/shop?category=caps',
               },
               {
                 name: 'ACCESSOIRES',
-                image: 'https://images.unsplash.com/photo-1622445272461-c6580cab8755?q=80&w=600&auto=format&fit=crop',
+                image: '/hoodie_cap.png',
                 href: '/shop?category=accessoires',
               },
             ].map((category, idx) => (
@@ -235,7 +264,7 @@ export default function HomePage() {
             {/* Image */}
             <div className="relative aspect-square">
               <Image
-                src="https://images.unsplash.com/photo-1521369909029-2afed882baee?q=80&w=1000&auto=format&fit=crop"
+                src="/hoodieblack.png"
                 alt="MOSE Atelier Groningen"
                 fill
                 className="object-cover border-2 border-white"

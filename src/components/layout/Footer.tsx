@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function Footer() {
   return (
@@ -7,7 +8,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* MOSE Info */}
           <div>
-            <h3 className="font-display text-2xl mb-4">MOSE</h3>
+            <Image
+              src="/logomose.png"
+              alt="MOSE"
+              width={120}
+              height={40}
+              className="h-8 w-auto mb-4 brightness-0 invert"
+            />
             <p className="text-gray-400 mb-4">
               Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.
             </p>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useCart } from '@/store/cart'
 
 export function Header() {
@@ -30,8 +31,15 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="font-display text-2xl md:text-3xl tracking-wider hover:text-brand-primary transition-colors">
-              MOSE
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+              <Image
+                src="/logomose.png"
+                alt="MOSE"
+                width={120}
+                height={40}
+                className="h-8 md:h-10 w-auto"
+                priority
+              />
             </Link>
 
             {/* Desktop Navigation */}
