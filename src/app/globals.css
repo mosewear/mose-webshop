@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 :root {
   --background: #ffffff;
@@ -18,8 +17,8 @@
   --color-brand-accent: var(--brand-accent);
   --color-light-bg: var(--light-bg);
   
-  --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Anton', ui-sans-serif, system-ui, sans-serif;
+  --font-family-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-family-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -36,25 +35,55 @@ html, body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* MOSE Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Anton', sans-serif;
+  font-family: var(--font-display), sans-serif;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 /* Utility classes */
 .font-display {
-  font-family: 'Anton', sans-serif;
+  font-family: var(--font-display), sans-serif;
 }
 
 .font-body {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-sans), sans-serif;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 /* Smooth animations */
@@ -62,4 +91,24 @@ h1, h2, h3, h4, h5, h6 {
   * {
     scroll-behavior: smooth;
   }
+}
+
+/* Scroll snap for carousels */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-start {
+  scroll-snap-align: start;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

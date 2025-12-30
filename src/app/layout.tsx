@@ -1,5 +1,22 @@
 import type { Metadata } from "next";
+import { Anton, Montserrat } from 'next/font/google'
 import "./globals.css";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+
+const anton = Anton({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+const montserrat = Montserrat({
+  weight: ['400', '500', '600', '700', '800'],
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: "MOSE - Geen poespas. Wel karakter.",
@@ -20,9 +37,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl">
-      <body className="antialiased">
-        {children}
+    <html lang="nl" className={`${anton.variable} ${montserrat.variable}`}>
+      <body className="antialiased font-sans">
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );

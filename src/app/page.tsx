@@ -1,74 +1,147 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { Button } from '@/components/ui/Button'
 
 export default function HomePage() {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center bg-black text-white">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/70" />
-        <div className="relative z-10 text-center px-4 max-w-4xl">
-          <h1 className="font-display text-6xl md:text-8xl mb-6 tracking-wide">
-            GEEN POESPAS.
-            <br />
-            WEL KARAKTER.
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 font-medium">
-            Lokaal gemaakt. Kwaliteit zonder concessies.
-          </p>
-          <Link
-            href="/shop"
-            className="inline-block bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-4 px-8 text-lg uppercase tracking-wider transition-all duration-300 hover:scale-105"
-          >
-            Shop MOSE
-          </Link>
+      {/* Hero Section - Full Viewport */}
+      <section className="relative h-screen w-full overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=2400&auto=format&fit=crop"
+            alt="MOSE Hero"
+            fill
+            className="object-cover object-center"
+            priority
+            quality={90}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        </div>
+
+        {/* Hero Content */}
+        <div className={`relative z-10 h-full flex items-center justify-center px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="text-center max-w-5xl">
+            {/* Badge */}
+            <div className="inline-block mb-6 px-4 py-2 bg-brand-primary text-white text-sm font-bold uppercase tracking-wider">
+              Gemaakt in Groningen
+            </div>
+
+            {/* Main Heading */}
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight tracking-wide">
+              GEEN POESPAS.
+              <br />
+              WEL KARAKTER.
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-white/90 mb-10 font-medium max-w-2xl mx-auto">
+              Lokaal gemaakt. Kwaliteit zonder concessies.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/shop">
+                <Button size="lg" className="min-w-[200px]">
+                  Shop MOSE
+                </Button>
+              </Link>
+              <Link href="/lookbook">
+                <Button size="lg" variant="outline" className="min-w-[200px] border-white text-white hover:bg-white hover:text-black">
+                  Bekijk Lookbook
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-2">
+            <div className="w-1 h-3 bg-white/50 rounded-full animate-pulse" />
+          </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-4xl md:text-5xl text-center mb-16">
-            GEMAAKT IN GRONINGEN
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="border-2 border-black p-8 text-center hover:bg-brand-primary hover:text-white transition-all duration-300">
-              <div className="text-4xl mb-4">🏭</div>
-              <h3 className="font-display text-2xl mb-4">LOKAAL GEPRODUCEERD</h3>
-              <p className="text-lg">100% gemaakt in Nederland</p>
+      {/* Stats Bar */}
+      <section className="bg-brand-primary py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
+            <div>
+              <div className="text-4xl font-display mb-2">100%</div>
+              <div className="text-sm uppercase tracking-wider">Lokaal geproduceerd</div>
             </div>
-            <div className="border-2 border-black p-8 text-center hover:bg-brand-primary hover:text-white transition-all duration-300">
-              <div className="text-4xl mb-4">↩️</div>
-              <h3 className="font-display text-2xl mb-4">14 DAGEN RETOUR</h3>
-              <p className="text-lg">Niet goed, geld terug</p>
+            <div>
+              <div className="text-4xl font-display mb-2">14</div>
+              <div className="text-sm uppercase tracking-wider">Dagen retourrecht</div>
             </div>
-            <div className="border-2 border-black p-8 text-center hover:bg-brand-primary hover:text-white transition-all duration-300">
-              <div className="text-4xl mb-4">🧵</div>
-              <h3 className="font-display text-2xl mb-4">PREMIUM MATERIALEN</h3>
-              <p className="text-lg">Gebouwd om lang mee te gaan</p>
+            <div>
+              <div className="text-4xl font-display mb-2">∞</div>
+              <div className="text-sm uppercase tracking-wider">Gebouwd om lang mee te gaan</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Preview */}
-      <section className="py-20 px-4 bg-light-bg">
+      {/* Featured Products */}
+      <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-4xl md:text-5xl text-center mb-16">
-            SHOP OP CATEGORIE
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['Hoodies', 'T-Shirts', 'Caps', 'Accessoires'].map((category) => (
+          <div className="text-center mb-12">
+            <h2 className="font-display text-4xl md:text-5xl mb-4">ESSENTIALS DIE BLIJVEN</h2>
+            <p className="text-lg text-gray-600">No-nonsense basics die jarenlang meegaan</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'MOSE Basic Hoodie',
+                price: '€79,99',
+                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop',
+              },
+              {
+                name: 'MOSE Basic Tee',
+                price: '€34,99',
+                image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop',
+              },
+              {
+                name: 'MOSE Snapback',
+                price: '€29,99',
+                image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=800&auto=format&fit=crop',
+              },
+            ].map((product, idx) => (
               <Link
-                key={category}
-                href={`/shop?category=${category.toLowerCase()}`}
-                className="group relative aspect-[3/4] bg-black overflow-hidden border-2 border-black hover:scale-105 transition-transform duration-300"
+                key={idx}
+                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
+                className="group"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-center">
-                  <h3 className="font-display text-2xl text-white">{category}</h3>
-                  <p className="text-brand-primary font-bold mt-2 group-hover:underline">
-                    SHOP NU →
-                  </p>
+                <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden border-2 border-black">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  {/* Quick Add Overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  <div className="absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <Button size="sm" fullWidth>
+                      Bekijk product
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h3 className="font-bold text-lg mb-2 uppercase tracking-wide">{product.name}</h3>
+                  <p className="text-xl font-bold">{product.price}</p>
                 </div>
               </Link>
             ))}
@@ -76,27 +149,118 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4 bg-black text-white text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="font-display text-4xl md:text-6xl mb-6">
-            JOIN THE PACK
-          </h2>
-          <p className="text-xl mb-8">
+      {/* Category Grid */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="font-display text-4xl md:text-5xl text-center mb-12">SHOP OP CATEGORIE</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              {
+                name: 'HOODIES',
+                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop',
+                href: '/shop?category=hoodies',
+              },
+              {
+                name: 'T-SHIRTS',
+                image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600&auto=format&fit=crop',
+                href: '/shop?category=t-shirts',
+              },
+              {
+                name: 'CAPS',
+                image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=600&auto=format&fit=crop',
+                href: '/shop?category=caps',
+              },
+              {
+                name: 'ACCESSOIRES',
+                image: 'https://images.unsplash.com/photo-1622445272461-c6580cab8755?q=80&w=600&auto=format&fit=crop',
+                href: '/shop?category=accessoires',
+              },
+            ].map((category, idx) => (
+              <Link
+                key={idx}
+                href={category.href}
+                className="group relative aspect-[3/4] overflow-hidden border-2 border-black hover:scale-105 transition-transform duration-300"
+              >
+                <Image
+                  src={category.image}
+                  alt={category.name}
+                  fill
+                  className="object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 text-center">
+                  <h3 className="font-display text-2xl text-white mb-2">{category.name}</h3>
+                  <p className="text-brand-primary font-bold group-hover:underline">SHOP NU →</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Story Section - Gemaakt in Groningen */}
+      <section className="py-20 bg-black text-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Text Content */}
+            <div>
+              <h2 className="font-display text-4xl md:text-5xl mb-6">GEMAAKT IN GRONINGEN</h2>
+              <p className="text-lg text-gray-300 mb-8 leading-relaxed">
+                Geen poespas. Alleen karakter. Premium basics met een ziel. We maken kleding die lang meegaat, 
+                lokaal geproduceerd zonder compromissen op kwaliteit.
+              </p>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                {[
+                  { icon: '🏭', label: 'Lokaal' },
+                  { icon: '↩️', label: '14 dagen' },
+                  { icon: '🧵', label: 'Premium' },
+                ].map((stat, idx) => (
+                  <div key={idx} className="text-center border-2 border-white p-4">
+                    <div className="text-3xl mb-2">{stat.icon}</div>
+                    <div className="text-sm font-bold uppercase">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/over-mose">
+                <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover">
+                  Lees ons verhaal
+                </Button>
+              </Link>
+            </div>
+
+            {/* Image */}
+            <div className="relative aspect-square">
+              <Image
+                src="https://images.unsplash.com/photo-1521369909029-2afed882baee?q=80&w=1000&auto=format&fit=crop"
+                alt="MOSE Atelier Groningen"
+                fill
+                className="object-cover border-2 border-white"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter CTA */}
+      <section className="py-20 px-4 bg-brand-primary">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="font-display text-4xl md:text-5xl text-white mb-6">JOIN THE PACK</h2>
+          <p className="text-xl text-white/90 mb-8">
             Nieuws over drops, restocks en het atelier. Geen spam — alleen MOSE.
           </p>
-          <form className="flex flex-col md:flex-row gap-4 justify-center max-w-md mx-auto">
+          <form className="flex flex-col sm:flex-row gap-4 justify-center">
             <input
               type="email"
               placeholder="Jouw e-mailadres"
-              className="flex-1 px-6 py-4 text-black border-2 border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="flex-1 max-w-md px-6 py-4 text-black border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
             />
-            <button
-              type="submit"
-              className="bg-brand-primary hover:bg-brand-primary-hover font-bold py-4 px-8 uppercase tracking-wider transition-colors duration-300"
-            >
+            <Button size="lg" variant="secondary">
               Join nu
-            </button>
+            </Button>
           </form>
         </div>
       </section>
