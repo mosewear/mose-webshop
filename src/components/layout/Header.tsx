@@ -44,40 +44,40 @@ export function Header() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/shop" className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
+              <Link href="/shop" className="font-bold text-sm uppercase tracking-wider hover:text-[#00A676] transition-colors">
                 Shop
               </Link>
-              <Link href="/lookbook" className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
+              <Link href="/lookbook" className="font-bold text-sm uppercase tracking-wider hover:text-[#00A676] transition-colors">
                 Lookbook
               </Link>
-              <Link href="/over-mose" className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
+              <Link href="/over-mose" className="font-bold text-sm uppercase tracking-wider hover:text-[#00A676] transition-colors">
                 Over MOSE
               </Link>
-              <Link href="/contact" className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
+              <Link href="/contact" className="font-bold text-sm uppercase tracking-wider hover:text-[#00A676] transition-colors">
                 Contact
               </Link>
             </nav>
 
             {/* Icons */}
             <div className="flex items-center space-x-4">
-              <button className="p-2 hover:text-brand-primary transition-colors" aria-label="Zoeken">
+              <button className="p-2 hover:text-[#00A676] transition-colors" aria-label="Zoeken">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
               
-              <Link href="/account" className="p-2 hover:text-brand-primary transition-colors" aria-label="Account">
+              <Link href="/account" className="p-2 hover:text-[#00A676] transition-colors" aria-label="Account">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </Link>
 
-              <Link href="/cart" className="relative p-2 hover:text-brand-primary transition-colors" aria-label="Winkelwagen">
+              <Link href="/cart" className="relative p-2 hover:text-[#00A676] transition-colors" aria-label="Winkelwagen">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-[#00A676] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {itemCount}
                   </span>
                 )}
@@ -112,28 +112,28 @@ export function Header() {
         <nav className="flex flex-col h-full pt-24 px-8">
           <Link
             href="/shop"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-[#00A676] transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             SHOP
           </Link>
           <Link
             href="/lookbook"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-[#00A676] transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             LOOKBOOK
           </Link>
           <Link
             href="/over-mose"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-[#00A676] transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             OVER MOSE
           </Link>
           <Link
             href="/contact"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-[#00A676] transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             CONTACT
