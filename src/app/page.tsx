@@ -65,9 +65,7 @@ export default function HomePage() {
 
             {/* Subtitle - Responsive */}
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-8 md:mb-12 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              Lokaal gemaakt. Kwaliteit zonder concessies.
-              <br />
-              <span className="text-brand-primary font-bold">Premium basics die blijven.</span>
+              Lokaal gemaakt. Kwaliteit die blijft.
             </p>
 
             {/* Modern CTA Buttons - Touch Optimized */}
