@@ -55,24 +55,24 @@ export default function HomePage() {
               Gemaakt in Groningen
             </div>
 
-            {/* Main Heading with Better Spacing */}
-            <h1 className="font-display text-5xl md:text-7xl lg:text-9xl text-white mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">
+            {/* Main Heading - Responsive Sizes */}
+            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl text-white mb-6 md:mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">
               GEEN POESPAS.
               <br />
               <span className="text-brand-primary">WEL KARAKTER.</span>
-          </h1>
+            </h1>
 
-            {/* Subtitle with Better Contrast */}
-            <p className="text-lg md:text-2xl text-white mb-12 font-medium max-w-2xl mx-auto leading-relaxed">
+            {/* Subtitle - Responsive */}
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-8 md:mb-12 font-medium max-w-2xl mx-auto leading-relaxed px-4">
               Lokaal gemaakt. Kwaliteit zonder concessies.
               <br />
               <span className="text-brand-primary font-bold">Premium basics die blijven.</span>
             </p>
 
-            {/* Modern CTA Buttons */}
+            {/* Modern CTA Buttons - Touch Optimized */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/shop" className="group">
-                <button className="relative px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/50 min-w-[220px]">
+              <Link href="/shop" className="group w-full sm:w-auto">
+                <button className="relative w-full sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl hover:shadow-brand-primary/50">
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     Shop MOSE
                     <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,8 +82,8 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
                 </button>
               </Link>
-              <Link href="/lookbook" className="group">
-                <button className="relative px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black min-w-[220px]">
+              <Link href="/lookbook" className="group w-full sm:w-auto">
+                <button className="relative w-full sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black active:scale-95">
                   <span className="flex items-center justify-center gap-2">
                     Bekijk Lookbook
                     <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,25 +108,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Bar - Modern & Clean */}
+      {/* Stats Bar - Touch Optimized */}
       <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-12">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
-            <div className="group hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl md:text-6xl font-display mb-3 drop-shadow-lg">100%</div>
-              <div className="text-sm md:text-base uppercase tracking-[0.2em] font-semibold opacity-90">
+          <div className="grid grid-cols-3 gap-4 md:gap-8 text-center text-white">
+            <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">100%</div>
+              <div className="text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90">
                 Lokaal geproduceerd
               </div>
             </div>
-            <div className="group hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl md:text-6xl font-display mb-3 drop-shadow-lg">14</div>
-              <div className="text-sm md:text-base uppercase tracking-[0.2em] font-semibold opacity-90">
+            <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">14</div>
+              <div className="text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90">
                 Dagen retourrecht
               </div>
             </div>
-            <div className="group hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl md:text-6xl font-display mb-3 drop-shadow-lg">∞</div>
-              <div className="text-sm md:text-base uppercase tracking-[0.2em] font-semibold opacity-90">
+            <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">∞</div>
+              <div className="text-xs sm:text-sm md:text-base uppercase tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90">
                 Gebouwd om lang mee te gaan
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             {[
               {
                 name: 'MOSE Basic Hoodie',
@@ -192,36 +192,42 @@ export default function HomePage() {
               <Link
                 key={idx}
                 href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
-                className="group"
+                className="group active:scale-95 transition-transform"
               >
-                <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-black">
+                <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
                   {/* Product Image Container */}
                   <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                     <Image
                       src={product.image}
                       alt={product.name}
                       fill
-                      className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                      className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
                     />
                     
                     {/* Badge */}
-                    <div className={`absolute top-4 left-4 ${product.badgeColor} text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
+                    <div className={`absolute top-2 left-2 md:top-4 md:left-4 ${product.badgeColor} text-white px-2 py-1 md:px-3 md:py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
                       {product.badge}
                     </div>
                     
-                    {/* Wishlist Button */}
-                    <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white hover:scale-110 border-2 border-black">
+                    {/* Wishlist Button - Always visible on mobile, hover on desktop */}
+                    <button 
+                      className="absolute top-2 right-2 md:top-4 md:right-4 w-11 h-11 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Wishlist logic here
+                      }}
+                    >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
                     
-                    {/* Gradient Overlay on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* Gradient Overlay on Hover (Desktop only) */}
+                    <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
-                    {/* Quick View Button */}
-                    <div className="absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                      <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg">
+                    {/* Quick View Button (Desktop only) */}
+                    <div className="hidden md:block absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                      <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -232,14 +238,25 @@ export default function HomePage() {
                   </div>
                   
                   {/* Product Info */}
-                  <div className="p-6 text-center">
-                    <h3 className="font-bold text-lg mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
+                  <div className="p-4 md:p-6 text-center">
+                    <h3 className="font-bold text-sm md:text-lg mb-1 md:mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
                       {product.name}
                     </h3>
-                    <p className="text-2xl font-bold text-brand-primary">{product.price}</p>
+                    <p className="text-xl md:text-2xl font-bold text-brand-primary mb-3 md:mb-0">{product.price}</p>
                     
-                    {/* Size Dots (Preview) */}
-                    <div className="flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {/* Add to Cart Button (Mobile only) */}
+                    <button 
+                      className="md:hidden w-full mt-3 bg-brand-primary text-white font-bold py-3 px-4 uppercase tracking-wider text-xs hover:bg-brand-primary-hover transition-colors active:scale-95"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Add to cart logic
+                      }}
+                    >
+                      In Winkelmand
+                    </button>
+                    
+                    {/* Size Dots (Desktop only) */}
+                    <div className="hidden md:flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       {['S', 'M', 'L', 'XL'].map((size) => (
                         <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
                           {size}
@@ -292,7 +309,7 @@ export default function HomePage() {
               <Link
                 key={idx}
                 href={category.href}
-                className="group relative aspect-[3/4] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border-2 border-black"
+                className="group relative aspect-[3/4] overflow-hidden shadow-md hover:shadow-2xl active:scale-95 transition-all duration-500 border-2 border-black"
               >
                 {/* Image */}
                 <Image
@@ -400,7 +417,7 @@ export default function HomePage() {
               </div>
 
               <Link href="/over-mose" className="group inline-block">
-                <button className="px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-all duration-300 flex items-center gap-3 group-hover:gap-5 shadow-lg shadow-brand-primary/30">
+                <button className="px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-brand-primary-hover active:scale-95 transition-all duration-300 flex items-center gap-3 group-hover:gap-5 shadow-lg shadow-brand-primary/30">
                   Lees ons verhaal
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -474,17 +491,17 @@ export default function HomePage() {
             <span className="font-bold">Geen spam — alleen MOSE.</span>
           </p>
 
-          <form className="max-w-lg mx-auto">
+          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0">
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="email"
                 placeholder="Jouw e-mailadres"
                 required
-                className="flex-1 px-6 py-4 text-black text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400"
+                className="flex-1 px-6 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400"
               />
               <button
                 type="submit"
-                className="group px-8 py-4 bg-black text-white font-bold text-lg uppercase tracking-wider hover:bg-gray-900 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black"
+                className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-gray-900 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black"
               >
                 Join nu
                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
