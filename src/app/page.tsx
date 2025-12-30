@@ -104,8 +104,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-20 px-4 relative overflow-hidden">
+      {/* Featured Products - ESSENTIALS DIE BLIJVEN */}
+      <section className="py-20 px-4 bg-gray-50 relative overflow-hidden">
         {/* Claw Mark Background */}
         <div className="absolute inset-0 pointer-events-none opacity-5">
           <Image
@@ -125,55 +125,128 @@ export default function HomePage() {
         </div>
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-4xl md:text-5xl mb-4">ESSENTIALS DIE BLIJVEN</h2>
+          <div className="text-center mb-16">
+            <h2 className="font-display text-5xl md:text-6xl mb-4">ESSENTIALS DIE BLIJVEN</h2>
             <p className="text-lg text-gray-600">No-nonsense basics die jarenlang meegaan</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Desktop Grid */}
+          <div className="hidden md:grid md:grid-cols-3 gap-8">
             {[
               {
-                name: 'MOSE Basic Hoodie',
-                price: '€79,99',
+                name: 'The Icon Jeans',
+                oldPrice: '€149,95',
+                price: '€99,95',
                 image: '/hoodieblack.png',
+                slug: 'the-icon-jeans',
               },
               {
-                name: 'MOSE Basic Tee',
-                price: '€34,99',
-                image: '/blacktee.png',
-              },
-              {
-                name: 'MOSE Snapback',
-                price: '€29,99',
+                name: 'The Icon Cap',
+                oldPrice: '€49,95',
+                price: '€34,95',
                 image: '/hoodie_cap.png',
+                slug: 'the-icon-cap',
+              },
+              {
+                name: 'The Icon Hoodie',
+                oldPrice: '€179,95',
+                price: '€140,00',
+                image: '/hoodieblack.png',
+                slug: 'the-icon-hoodie',
               },
             ].map((product, idx) => (
-              <Link
+              <div
                 key={idx}
-                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
-                className="group"
+                className="bg-white border-4 border-black p-6 hover:shadow-2xl transition-shadow duration-300"
               >
-                <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden border-2 border-black">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  />
-                  {/* Quick Add Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                  <div className="absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                    <Button size="sm" fullWidth>
-                      Bekijk product
-                    </Button>
+                <Link href={`/product/${product.slug}`}>
+                  <div className="relative aspect-[3/4] bg-white mb-6 overflow-hidden">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover object-center hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
-                </div>
+                </Link>
                 <div className="text-center">
-                  <h3 className="font-bold text-lg mb-2 uppercase tracking-wide">{product.name}</h3>
-                  <p className="text-xl font-bold">{product.price}</p>
+                  <h3 className="font-bold text-2xl mb-3 tracking-tight">{product.name}</h3>
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <span className="text-gray-400 line-through text-lg">{product.oldPrice}</span>
+                    <span className="text-brand-primary font-bold text-2xl">{product.price}</span>
+                  </div>
+                  <button className="w-full bg-[#B8AFA0] hover:bg-[#A89D8E] text-white font-bold text-lg py-4 px-6 uppercase tracking-wider transition-colors duration-300">
+                    In winkelmand
+                  </button>
                 </div>
-              </Link>
+              </div>
             ))}
+          </div>
+
+          {/* Mobile Carousel */}
+          <div className="md:hidden">
+            <div className="relative">
+              <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-12">
+                {[
+                  {
+                    name: 'The Icon Jeans',
+                    oldPrice: '€149,95',
+                    price: '€99,95',
+                    image: '/hoodieblack.png',
+                    slug: 'the-icon-jeans',
+                  },
+                  {
+                    name: 'The Icon Cap',
+                    oldPrice: '€49,95',
+                    price: '€34,95',
+                    image: '/hoodie_cap.png',
+                    slug: 'the-icon-cap',
+                  },
+                  {
+                    name: 'The Icon Hoodie',
+                    oldPrice: '€179,95',
+                    price: '€140,00',
+                    image: '/hoodieblack.png',
+                    slug: 'the-icon-hoodie',
+                  },
+                ].map((product, idx) => (
+                  <div
+                    key={idx}
+                    className="flex-none w-[85vw] snap-start"
+                  >
+                    <div className="bg-white border-4 border-black p-6">
+                      <Link href={`/product/${product.slug}`}>
+                        <div className="relative aspect-[3/4] bg-white mb-6 overflow-hidden">
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            className="object-cover object-center"
+                          />
+                        </div>
+                      </Link>
+                      <div className="text-center">
+                        <h3 className="font-bold text-xl mb-3 tracking-tight">{product.name}</h3>
+                        <div className="flex items-center justify-center gap-3 mb-6">
+                          <span className="text-gray-400 line-through text-base">{product.oldPrice}</span>
+                          <span className="text-brand-primary font-bold text-xl">{product.price}</span>
+                        </div>
+                        <button className="w-full bg-[#B8AFA0] hover:bg-[#A89D8E] text-white font-bold text-base py-3 px-4 uppercase tracking-wider transition-colors duration-300">
+                          In winkelmand
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Page Indicator */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-brand-primary"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
