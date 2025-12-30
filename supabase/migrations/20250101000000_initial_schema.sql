@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS categories (
 
 -- Products table
 CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   name TEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- Product variants (size + color combinations)
 CREATE TABLE IF NOT EXISTS product_variants (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   sku TEXT NOT NULL UNIQUE,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
 
 -- Product images
 CREATE TABLE IF NOT EXISTS product_images (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE, -- NULL = general product image
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS product_images (
 
 -- Orders
 CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Nullable for guest checkout
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- Order items
 CREATE TABLE IF NOT EXISTS order_items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE SET NULL,
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 -- Wishlist/favorites
 CREATE TABLE IF NOT EXISTS wishlists (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS wishlists (
 
 -- Reviews (optional, for later)
 CREATE TABLE IF NOT EXISTS reviews (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
