@@ -78,7 +78,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         .from('product_images')
         .insert([
           {
-            product_id: params.id,
+            product_id: id,
             url,
             alt_text: product?.name || null,
             position: maxPosition + 1,
