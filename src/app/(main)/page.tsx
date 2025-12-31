@@ -14,8 +14,32 @@ export default function HomePage() {
     setIsVisible(true)
   }, [])
 
+  // Structured Data for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ClothingStore",
+    "name": "MOSE",
+    "image": "https://mosewear.com/logomose.png",
+    "url": "https://mosewear.com",
+    "description": "Lokaal gemaakte premium basics uit Groningen. Kleding zonder concessies, gebouwd om lang mee te gaan.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Groningen",
+      "addressCountry": "NL"
+    },
+    "priceRange": "€€",
+    "openingHours": "Mo-Su 00:00-23:59",
+    "paymentAccepted": ["iDEAL", "Credit Card", "Bancontact"],
+    "currenciesAccepted": "EUR"
+  }
+
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <div className="min-h-screen bg-white">
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
         {/* Background Image with Parallax Effect */}
@@ -566,5 +590,6 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+    </>
   )
 }

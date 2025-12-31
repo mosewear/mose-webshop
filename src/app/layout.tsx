@@ -17,15 +17,54 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "MOSE - Geen poespas. Wel karakter.",
-  description: "Lokaal gemaakte premium basics. Kleding zonder concessies, gebouwd om lang mee te gaan.",
-  keywords: ["MOSE", "streetwear", "Nederlandse kleding", "Groningen", "premium basics", "lokaal gemaakt"],
-  authors: [{ name: "MOSE" }],
+  title: {
+    default: "MOSE - Geen poespas. Wel karakter.",
+    template: "%s | MOSE"
+  },
+  description: "Lokaal gemaakte premium basics uit Groningen. Kleding zonder concessies, gebouwd om lang mee te gaan. Voor stoere moderne mannen.",
+  keywords: ["MOSE", "streetwear", "Nederlandse kleding", "Groningen", "premium basics", "lokaal gemaakt", "mannenmode", "duurzame kleding", "hoodies", "t-shirts"],
+  authors: [{ name: "MOSE", url: "https://mosewear.com" }],
+  creator: "MOSE",
+  publisher: "MOSE",
+  metadataBase: new URL('https://mosewear.com'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: "MOSE - Geen poespas. Wel karakter.",
-    description: "Lokaal gemaakte premium basics uit Groningen",
     type: "website",
     locale: "nl_NL",
+    url: "https://mosewear.com",
+    title: "MOSE - Geen poespas. Wel karakter.",
+    description: "Lokaal gemaakte premium basics uit Groningen. Kleding zonder concessies.",
+    siteName: "MOSE",
+    images: [
+      {
+        url: "/logomose.png",
+        width: 1200,
+        height: 630,
+        alt: "MOSE - Premium basics",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MOSE - Geen poespas. Wel karakter.",
+    description: "Lokaal gemaakte premium basics uit Groningen",
+    images: ["/logomose.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // google: 'your-google-site-verification-code',
   },
 };
 
