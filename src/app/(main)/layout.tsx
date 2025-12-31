@@ -31,9 +31,12 @@ export default function MainLayout({
   return (
     <>
       <Header />
+      {/* Spacer for fixed header - matches Header h-20 */}
+      <div className="h-20" />
       <main>{children}</main>
       <Footer />
     </>
   );
 }
+
 

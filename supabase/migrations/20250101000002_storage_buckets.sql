@@ -36,3 +36,4 @@ USING (
   AND auth.uid() IN (SELECT id FROM admin_users WHERE role IN ('admin', 'manager'))
 );
 
+

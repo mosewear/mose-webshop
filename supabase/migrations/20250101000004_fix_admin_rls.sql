@@ -36,3 +36,4 @@ CREATE POLICY "Admins can delete admin users"
   ON admin_users FOR DELETE
   USING (is_admin(auth.uid()));
 
+

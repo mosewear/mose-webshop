@@ -15,7 +15,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen pt-24 md:pt-32 px-4 pb-16">
+      <div className="min-h-screen px-4 pb-16 pt-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-display mb-8 text-center">WINKELWAGEN</h1>
           
@@ -51,7 +51,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 md:pt-32 px-4 pb-16">
+    <div className="min-h-screen px-4 pb-16 pt-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
