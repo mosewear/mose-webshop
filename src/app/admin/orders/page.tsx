@@ -9,7 +9,7 @@ interface Order {
   user_id: string | null
   email: string
   status: string
-  total_amount: number
+  total: number
   shipping_address: any
   billing_address: any
   payment_intent_id: string | null
@@ -154,7 +154,7 @@ export default function AdminOrdersPage() {
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            €{orders.reduce((sum, o) => sum + Number(o.total_amount), 0).toFixed(2)}
+            €{orders.reduce((sum, o) => sum + Number(o.total), 0).toFixed(2)}
           </div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totale Waarde</div>
         </div>
@@ -215,7 +215,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-gray-900">
-                        €{Number(order.total_amount).toFixed(2)}
+                        €{Number(order.total).toFixed(2)}
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">

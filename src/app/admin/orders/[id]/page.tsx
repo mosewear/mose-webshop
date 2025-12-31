@@ -10,7 +10,7 @@ interface Order {
   user_id: string | null
   email: string
   status: string
-  total_amount: number
+  total: number
   shipping_address: any
   billing_address: any
   payment_intent_id: string | null
@@ -241,7 +241,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <div className="mt-6 pt-4 border-t-2 border-gray-200 flex justify-between items-center">
               <span className="text-lg font-bold">Totaal</span>
               <span className="text-2xl md:text-3xl font-bold text-brand-primary">
-                €{Number(order.total_amount).toFixed(2)}
+                €{Number(order.total).toFixed(2)}
               </span>
             </div>
           </div>
@@ -362,7 +362,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-300">
                 <span className="text-gray-600">Totaal bedrag:</span>
-                <span className="font-bold text-brand-primary">€{Number(order.total_amount).toFixed(2)}</span>
+                <span className="font-bold text-brand-primary">€{Number(order.total).toFixed(2)}</span>
               </div>
             </div>
           </div>

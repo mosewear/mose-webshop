@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         supabase.from('products').select('id', { count: 'exact', head: true }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         supabase.from('product_variants').select('stock_quantity'),
-        supabase.from('orders').select('status, total_amount'),
+        supabase.from('orders').select('status, total'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
       ])
 
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
       const pendingOrders = orders.filter(o => o.status === 'pending').length
       const totalRevenue = orders
         .filter(o => o.status === 'paid' || o.status === 'delivered')
-        .reduce((sum, o) => sum + Number(o.total_amount), 0)
+        .reduce((sum, o) => sum + Number(o.total), 0)
 
       const totalCustomers = customersRes.count || 0
 

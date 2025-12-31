@@ -17,7 +17,7 @@ interface Customer {
 interface Order {
   id: string
   status: string
-  total_amount: number
+  total: number
   created_at: string
 }
 
@@ -54,7 +54,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       setLoading(true)
       const { data, error } = await supabase
         .from('orders')
-        .select('id, status, total_amount, created_at')
+        .select('id, status, total, created_at')
         .eq('user_id', id)
         .order('created_at', { ascending: false })
 
@@ -100,7 +100,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   const totalSpent = orders
     .filter(o => o.status === 'paid' || o.status === 'delivered')
-    .reduce((sum, o) => sum + Number(o.total_amount), 0)
+    .reduce((sum, o) => sum + Number(o.total), 0)
 
   return (
     <div className="space-y-6">
@@ -257,7 +257,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                           {order.status.toUpperCase()}
                         </span>
                         <span className="text-lg font-bold text-brand-primary">
-                          €{Number(order.total_amount).toFixed(2)}
+                          €{Number(order.total).toFixed(2)}
                         </span>
                       </div>
                     </div>
