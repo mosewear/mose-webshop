@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 
 interface Product {
   id: string
@@ -52,7 +52,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
 
-  const addItem = useCartStore((state) => state.addItem)
+  const addItem = useCart((state) => state.addItem)
 
   useEffect(() => {
     fetchProduct()
@@ -111,15 +111,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     if (!product || !selectedVariant) return
 
     addItem({
-      id: selectedVariant.id,
       productId: product.id,
+      variantId: selectedVariant.id,
       name: product.name,
       size: selectedVariant.size,
       color: selectedVariant.color,
+      colorHex: selectedVariant.color_hex,
       price: finalPrice,
       quantity: quantity,
       image: product.product_images[0]?.url || '/placeholder.png',
       sku: selectedVariant.sku,
+      stock: selectedVariant.stock_quantity,
     })
 
     setAddedToCart(true)

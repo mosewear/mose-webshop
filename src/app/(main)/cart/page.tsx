@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCartStore()
+  const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const subtotal = getTotal()
@@ -74,7 +74,7 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <div
-                key={item.id}
+                key={item.variantId}
                 className="bg-white border-2 border-black p-4 md:p-6 flex flex-col sm:flex-row gap-4 transition-all hover:shadow-lg"
               >
                 {/* Product Image */}
@@ -115,14 +115,14 @@ export default function CartPage() {
                   <div className="flex items-center justify-between sm:hidden">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
                         className="w-8 h-8 border-2 border-black font-bold hover:bg-black hover:text-white transition-colors"
                       >
                         −
                       </button>
                       <span className="font-bold w-8 text-center">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                         className="w-8 h-8 border-2 border-black font-bold hover:bg-black hover:text-white transition-colors"
                       >
                         +
@@ -136,7 +136,7 @@ export default function CartPage() {
 
                   {/* Remove Button - Mobile */}
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.variantId)}
                     className="text-red-600 hover:text-red-700 font-semibold text-sm uppercase tracking-wider underline sm:hidden"
                   >
                     Verwijderen
@@ -146,7 +146,7 @@ export default function CartPage() {
                 {/* Quantity & Price - Desktop */}
                 <div className="hidden sm:flex flex-col items-end justify-between">
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.variantId)}
                     className="text-red-600 hover:text-red-700 font-semibold text-sm uppercase tracking-wider"
                   >
                     ✕
@@ -154,14 +154,14 @@ export default function CartPage() {
                   
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                      onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
                       className="w-10 h-10 border-2 border-black font-bold hover:bg-black hover:text-white transition-colors"
                     >
                       −
                     </button>
                     <span className="font-bold text-xl w-10 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                       className="w-10 h-10 border-2 border-black font-bold hover:bg-black hover:text-white transition-colors"
                     >
                       +
