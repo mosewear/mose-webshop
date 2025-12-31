@@ -92,17 +92,30 @@ export default function CheckoutPage() {
     try {
       const supabase = createClient()
 
-      // Create order in database
+      // Create order in database (match schema exactly)
       const orderData = {
-        customer_email: form.email,
-        customer_name: `${form.firstName} ${form.lastName}`,
-        shipping_address: `${form.address}, ${form.postalCode} ${form.city}`,
-        phone: form.phone,
+        email: form.email,
+        status: 'pending',
+        total: total,
         subtotal: subtotal,
         shipping_cost: shipping,
-        total: total,
-        status: 'pending',
-        payment_status: 'pending',
+        tax_amount: 0,
+        shipping_address: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+          phone: form.phone,
+        },
+        billing_address: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+          phone: form.phone,
+        },
+        stripe_payment_status: 'pending',
+        payment_method: null,
       }
 
       const { data: order, error: orderError } = await supabase
@@ -113,13 +126,19 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError
 
-      // Create order items
+      // Create order items (match schema with snapshot data)
       const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: item.productId,
         variant_id: item.variantId,
+        product_name: item.name,
+        size: item.size,
+        color: item.color,
+        sku: `${item.productId}-${item.size}-${item.color}`,
         quantity: item.quantity,
-        price: item.price,
+        price_at_purchase: item.price,
+        subtotal: item.price * item.quantity,
+        image_url: item.image,
       }))
 
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems)

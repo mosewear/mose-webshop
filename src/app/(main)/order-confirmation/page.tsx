@@ -8,34 +8,27 @@ import { useCart } from '@/store/cart'
 
 interface Order {
   id: string
-  customer_name: string
-  customer_email: string
-  shipping_address: string
-  phone: string
+  email: string
+  shipping_address: any // JSONB
+  billing_address: any // JSONB
   subtotal: number
   shipping_cost: number
   total: number
   status: string
-  payment_status: string
+  stripe_payment_status: string
   created_at: string
 }
 
 interface OrderItem {
   id: string
+  product_name: string
+  size: string
+  color: string
+  sku: string
   quantity: number
-  price: number
-  products: {
-    name: string
-    slug: string
-  }
-  product_variants: {
-    size: string
-    color: string
-    sku: string
-  }
-  product_images: {
-    url: string
-  }[]
+  price_at_purchase: number
+  subtotal: number
+  image_url: string | null
 }
 
 export default function OrderConfirmationPage({
@@ -77,37 +70,16 @@ export default function OrderConfirmationPage({
 
     setOrder(orderData)
 
-    // Fetch order items with product info
+    // Fetch order items (they now have snapshot data)
     const { data: itemsData, error: itemsError } = await supabase
       .from('order_items')
-      .select(`
-        *,
-        products!order_items_product_id_fkey(name, slug),
-        product_variants!order_items_variant_id_fkey(size, color, sku)
-      `)
+      .select('*')
       .eq('order_id', orderId)
 
     if (itemsError) {
       console.error('Error fetching order items:', itemsError)
     } else {
-      // Fetch primary image for each product
-      const itemsWithImages = await Promise.all(
-        itemsData.map(async (item: any) => {
-          const { data: imageData } = await supabase
-            .from('product_images')
-            .select('url')
-            .eq('product_id', item.product_id)
-            .eq('is_primary', true)
-            .limit(1)
-            .single()
-
-          return {
-            ...item,
-            product_images: imageData ? [imageData] : [],
-          }
-        })
-      )
-      setOrderItems(itemsWithImages)
+      setOrderItems(itemsData || [])
     }
 
     setLoading(false)
@@ -175,13 +147,14 @@ export default function OrderConfirmationPage({
             </div>
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Bezorgadres</h2>
-              <p className="text-gray-700">{order.customer_name}</p>
-              <p className="text-gray-700">{order.shipping_address}</p>
+              <p className="text-gray-700">{order.shipping_address?.name}</p>
+              <p className="text-gray-700">{order.shipping_address?.address}</p>
+              <p className="text-gray-700">{order.shipping_address?.postalCode} {order.shipping_address?.city}</p>
             </div>
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Contact</h2>
-              <p className="text-gray-700">{order.customer_email}</p>
-              <p className="text-gray-700">{order.phone}</p>
+              <p className="text-gray-700">{order.email}</p>
+              <p className="text-gray-700">{order.shipping_address?.phone}</p>
             </div>
           </div>
 
@@ -192,10 +165,10 @@ export default function OrderConfirmationPage({
               {orderItems.map((item) => (
                 <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
                   <div className="relative w-20 h-24 bg-gray-100 flex-shrink-0">
-                    {item.product_images.length > 0 ? (
+                    {item.image_url ? (
                       <Image
-                        src={item.product_images[0].url}
-                        alt={item.products.name}
+                        src={item.image_url}
+                        alt={item.product_name}
                         fill
                         sizes="80px"
                         className="object-cover object-center"
@@ -205,19 +178,14 @@ export default function OrderConfirmationPage({
                     )}
                   </div>
                   <div className="flex-grow">
-                    <Link
-                      href={`/product/${item.products.slug}`}
-                      className="font-bold hover:text-brand-primary transition-colors"
-                    >
-                      {item.products.name}
-                    </Link>
+                    <p className="font-bold">{item.product_name}</p>
                     <p className="text-sm text-gray-600 mt-1">
-                      Maat: {item.product_variants.size} • Kleur: {item.product_variants.color}
+                      Maat: {item.size} • Kleur: {item.color}
                     </p>
                     <p className="text-sm text-gray-500">Aantal: {item.quantity}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">€{(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-bold">€{item.subtotal.toFixed(2)}</p>
                   </div>
                 </div>
               ))}

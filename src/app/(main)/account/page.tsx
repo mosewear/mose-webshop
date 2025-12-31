@@ -11,18 +11,14 @@ interface Order {
   created_at: string
   total: number
   status: string
-  payment_status: string
+  stripe_payment_status: string
   order_items: {
+    product_name: string
+    size: string
+    color: string
     quantity: number
-    price: number
-    products: {
-      name: string
-      slug: string
-    }
-    product_variants: {
-      size: string
-      color: string
-    }
+    price_at_purchase: number
+    subtotal: number
   }[]
 }
 
@@ -56,14 +52,9 @@ export default function AccountPage() {
       .from('orders')
       .select(`
         *,
-        order_items(
-          quantity,
-          price,
-          products(name, slug),
-          product_variants(size, color)
-        )
+        order_items(*)
       `)
-      .eq('customer_email', email)
+      .eq('email', email)
       .order('created_at', { ascending: false })
 
     if (!error && data) {
@@ -206,17 +197,12 @@ export default function AccountPage() {
                       {order.order_items.map((item, idx) => (
                         <div key={idx} className="flex items-center gap-4">
                           <div className="text-sm flex-grow">
-                            <Link
-                              href={`/product/${item.products.slug}`}
-                              className="font-semibold hover:text-brand-primary transition-colors"
-                            >
-                              {item.products.name}
-                            </Link>
+                            <p className="font-semibold">{item.product_name}</p>
                             <p className="text-gray-600">
-                              {item.product_variants.size} • {item.product_variants.color} • x{item.quantity}
+                              {item.size} • {item.color} • x{item.quantity}
                             </p>
                           </div>
-                          <p className="font-bold">€{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="font-bold">€{item.subtotal.toFixed(2)}</p>
                         </div>
                       ))}
                     </div>
