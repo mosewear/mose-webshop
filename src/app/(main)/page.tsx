@@ -251,6 +251,7 @@ export default function HomePage() {
                       src={product.image}
                       alt={product.name}
                       fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
                       className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
                     />
                     
@@ -355,6 +356,7 @@ export default function HomePage() {
                   src={category.image}
                   alt={category.name}
                   fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
                   className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
                 />
                 
@@ -472,6 +474,7 @@ export default function HomePage() {
                   src="/hoodieblack.png"
                   alt="MOSE Atelier Groningen"
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
                 {/* Frame Overlay */}

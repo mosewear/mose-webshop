@@ -235,7 +235,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             {/* LEFT: Image Gallery */}
             <div className="space-y-4">
               {/* Main Image - Clickable for zoom */}
-              <button
+              <div
                 onClick={() => setShowLightbox(true)}
                 className="relative aspect-[3/4] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
               >
@@ -258,7 +258,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <span className="text-white text-2xl md:text-4xl font-display">UITVERKOCHT</span>
                   </div>
                 )}
-              </button>
+              </div>
 
               {/* Thumbnails */}
               {product.product_images.length > 1 && (
