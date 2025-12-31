@@ -50,7 +50,6 @@ export default function HomePage() {
             fill
             className="object-cover object-center scale-105"
           priority
-            quality={90}
           />
           {/* Improved Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
@@ -592,4 +591,5 @@ export default function HomePage() {
     </div>
     </>
   )
+}
 }
