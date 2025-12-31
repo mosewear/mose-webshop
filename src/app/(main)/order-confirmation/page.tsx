@@ -126,7 +126,7 @@ export default function OrderConfirmationPage({
           <h1 className="text-4xl md:text-6xl font-display mb-4">BEDANKT!</h1>
           <p className="text-xl text-gray-700 mb-2">Je bestelling is geplaatst</p>
           <p className="text-gray-600">
-            We hebben een bevestiging gestuurd naar <span className="font-semibold">{order.customer_email}</span>
+            We hebben een bevestiging gestuurd naar <span className="font-semibold">{order.email}</span>
           </p>
         </div>
 
