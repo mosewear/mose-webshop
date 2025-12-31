@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl" className={`${anton.variable} ${montserrat.variable}`}>
+    <html lang="nl" className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth">
       <body className="antialiased font-sans">
         {children}
       </body>
