@@ -126,18 +126,37 @@ export default function CheckoutPage() {
 
       if (itemsError) throw itemsError
 
-      // TODO: Integrate Stripe payment
-      // For now, we'll simulate success and redirect to confirmation
-      
-      // Clear cart after successful order
-      clearCart()
+      // Create Stripe Checkout Session
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          items: items,
+          customerEmail: form.email,
+          customerName: `${form.firstName} ${form.lastName}`,
+          shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
+          phone: form.phone,
+        }),
+      })
 
-      // Redirect to order confirmation
-      router.push(`/order-confirmation?order=${order.id}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL received')
+      }
     } catch (error: any) {
       console.error('Checkout error:', error)
       alert(`Er is een fout opgetreden: ${error.message}`)
-    } finally {
       setLoading(false)
     }
   }

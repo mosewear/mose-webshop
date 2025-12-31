@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useCart } from '@/store/cart'
 
 interface Order {
   id: string
@@ -47,8 +48,12 @@ export default function OrderConfirmationPage({
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
+  const { clearCart } = useCart()
 
   useEffect(() => {
+    // Clear cart on successful order confirmation
+    clearCart()
+    
     if (orderId) {
       fetchOrder()
     }
