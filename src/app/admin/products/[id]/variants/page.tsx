@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -23,7 +23,8 @@ interface ProductVariant {
   created_at: string
 }
 
-export default function ProductVariantsPage({ params }: { params: { id: string } }) {
+export default function ProductVariantsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [product, setProduct] = useState<Product | null>(null)
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,14 +46,14 @@ export default function ProductVariantsPage({ params }: { params: { id: string }
   useEffect(() => {
     fetchProduct()
     fetchVariants()
-  }, [params.id])
+  }, [id])
 
   const fetchProduct = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('id, name, base_price')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
       if (error) throw error
@@ -68,7 +69,7 @@ export default function ProductVariantsPage({ params }: { params: { id: string }
       const { data, error } = await supabase
         .from('product_variants')
         .select('*')
-        .eq('product_id', params.id)
+        .eq('product_id', id)
         .order('size')
         .order('color')
 
@@ -88,7 +89,7 @@ export default function ProductVariantsPage({ params }: { params: { id: string }
         .from('product_variants')
         .insert([
           {
-            product_id: params.id,
+            product_id: id,
             size: newVariant.size,
             color: newVariant.color,
             color_hex: newVariant.color_hex || null,
@@ -184,7 +185,7 @@ export default function ProductVariantsPage({ params }: { params: { id: string }
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <Link
-            href={`/admin/products/${params.id}/edit`}
+            href={`/admin/products/${id}/edit`}
             className="p-2 hover:bg-gray-100 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

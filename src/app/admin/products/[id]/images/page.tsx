@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -22,7 +22,8 @@ interface ProductImage {
   created_at: string
 }
 
-export default function ProductImagesPage({ params }: { params: { id: string } }) {
+export default function ProductImagesPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [product, setProduct] = useState<Product | null>(null)
   const [images, setImages] = useState<ProductImage[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,14 +33,14 @@ export default function ProductImagesPage({ params }: { params: { id: string } }
   useEffect(() => {
     fetchProduct()
     fetchImages()
-  }, [params.id])
+  }, [id])
 
   const fetchProduct = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('id, name')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
       if (error) throw error
@@ -55,7 +56,7 @@ export default function ProductImagesPage({ params }: { params: { id: string } }
       const { data, error } = await supabase
         .from('product_images')
         .select('*')
-        .eq('product_id', params.id)
+        .eq('product_id', id)
         .order('position')
         .order('created_at')
 
