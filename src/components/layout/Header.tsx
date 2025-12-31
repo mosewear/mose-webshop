@@ -32,12 +32,7 @@ export function Header() {
     <>
       {/* Desktop Header */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
-          isScrolled
-            ? 'bg-white shadow-md py-4'
-            : 'bg-white/95 backdrop-blur-sm py-6'
-        }`}
-        style={{ willChange: 'padding, background-color, box-shadow' }}
+        className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md py-4 transition-shadow duration-300"
       >
         {/* Scroll Progress Indicator */}
         <div 
@@ -158,14 +153,8 @@ export function Header() {
         </nav>
       </div>
 
-      {/* Spacer - Smooth transition */}
-      <div 
-        className="transition-all duration-500 ease-in-out"
-        style={{ 
-          height: isScrolled ? '80px' : '96px',
-          willChange: 'height'
-        }} 
-      />
+      {/* Spacer */}
+      <div className="h-20" />
     </>
   )
 }
