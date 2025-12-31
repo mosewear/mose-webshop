@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -30,7 +30,8 @@ interface OrderItem {
   sku: string | null
 }
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,14 +46,14 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   useEffect(() => {
     fetchOrder()
     fetchOrderItems()
-  }, [params.id])
+  }, [id])
 
   const fetchOrder = async () => {
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
       if (error) throw error
@@ -70,7 +71,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       const { data, error } = await supabase
         .from('order_items')
         .select('*')
-        .eq('order_id', params.id)
+        .eq('order_id', id)
 
       if (error) throw error
       setOrderItems(data || [])
@@ -92,14 +93,14 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           status: newStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (error) throw error
 
       // Log status change
       await supabase.from('order_status_history').insert([
         {
-          order_id: params.id,
+          order_id: id,
           status: newStatus,
           changed_by: (await supabase.auth.getUser()).data.user?.id || null,
         },
@@ -124,7 +125,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           tracking_code: trackingCode || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (error) throw error
       fetchOrder()

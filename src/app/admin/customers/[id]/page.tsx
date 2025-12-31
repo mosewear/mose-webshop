@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -21,7 +21,8 @@ interface Order {
   created_at: string
 }
 
-export default function CustomerDetailPage({ params }: { params: { id: string } }) {
+export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,14 +32,14 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   useEffect(() => {
     fetchCustomer()
     fetchOrders()
-  }, [params.id])
+  }, [id])
 
   const fetchCustomer = async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
       if (error) throw error
@@ -54,7 +55,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
       const { data, error } = await supabase
         .from('orders')
         .select('id, status, total_amount, created_at')
-        .eq('user_id', params.id)
+        .eq('user_id', id)
         .order('created_at', { ascending: false })
 
       if (error) throw error

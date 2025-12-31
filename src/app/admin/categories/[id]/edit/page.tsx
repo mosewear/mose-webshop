@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
-export default function EditCategoryPage({ params }: { params: { id: string } }) {
+export default function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -21,14 +22,14 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     fetchCategory()
-  }, [params.id])
+  }, [id])
 
   const fetchCategory = async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
       if (error) throw error
@@ -66,7 +67,7 @@ export default function EditCategoryPage({ params }: { params: { id: string } })
           description: formData.description || null,
           image_url: formData.image_url || null,
         })
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (updateError) throw updateError
 
