@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -21,8 +21,8 @@ interface Product {
   meta_description: string | null
 }
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
-  const [productId, setProductId] = useState<string>('')
+export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -41,14 +41,11 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   })
 
   useEffect(() => {
-    // Extract ID from params (handle async params in Next.js 14)
-    const id = params.id
-    setProductId(id)
     fetchCategories()
     if (id) {
       fetchProduct(id)
     }
-  }, [params.id])
+  }, [id])
 
   const fetchCategories = async () => {
     const { data } = await supabase
@@ -98,10 +95,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         throw new Error('Vul alle verplichte velden in')
       }
 
-      if (!productId) {
-        throw new Error('Product ID niet gevonden')
-      }
-
       // Update product
       const { error: updateError } = await supabase
         .from('products')
@@ -115,7 +108,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           meta_description: formData.meta_description || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', productId)
+        .eq('id', id)
 
       if (updateError) throw updateError
 
@@ -156,7 +149,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         </div>
         <div className="flex gap-3">
           <Link
-            href={`/admin/products/${productId}/images`}
+            href={`/admin/products/${id}/images`}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +158,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             Afbeeldingen
           </Link>
           <Link
-            href={`/admin/products/${productId}/variants`}
+            href={`/admin/products/${id}/variants`}
             className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
