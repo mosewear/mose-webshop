@@ -15,7 +15,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white -mt-20">
+    <div className="min-h-screen bg-white">
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
         {/* Background Image with Parallax Effect */}

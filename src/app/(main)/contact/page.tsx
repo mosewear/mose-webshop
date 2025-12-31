@@ -2,7 +2,7 @@
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen px-4 pt-6">
+    <div className="min-h-screen pt-32 px-4">
       <div className="max-w-7xl mx-auto text-center">
         <h1 className="text-5xl font-display mb-6">CONTACT</h1>
         <p className="text-xl text-gray-600 mb-8">Komt binnenkort...</p>

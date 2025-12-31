@@ -154,7 +154,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pb-16 bg-gray-50 pt-6">
+    <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">

@@ -166,7 +166,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   if (loading) {
     return (
-      <div className="min-h-screen px-4 pt-6">
+      <div className="min-h-screen pt-6 md:pt-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 md:gap-16">
             <div className="space-y-4">
@@ -190,7 +190,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   if (!product) {
     return (
-      <div className="min-h-screen px-4 pt-6">
+      <div className="min-h-screen pt-6 md:pt-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-display mb-6">PRODUCT NIET GEVONDEN</h1>
           <Link
@@ -209,10 +209,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   return (
     <>
-      <div className="min-h-screen px-4 pb-24 md:pb-16">
+      <div className="min-h-screen pt-6 md:pt-8 px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
-          <div className="pt-6 mb-6 md:mb-8 text-sm">
+          <div className="mb-6 md:mb-8 text-sm">
             <Link href="/" className="text-gray-600 hover:text-brand-primary transition-colors">
               Home
             </Link>

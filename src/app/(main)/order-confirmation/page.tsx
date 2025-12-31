@@ -110,7 +110,7 @@ export default function OrderConfirmationPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen px-4 flex items-center justify-center pt-6">
+      <div className="min-h-screen pt-24 md:pt-32 px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Bestelling laden...</p>
@@ -121,7 +121,7 @@ export default function OrderConfirmationPage({
 
   if (!order) {
     return (
-      <div className="min-h-screen px-4 pt-6">
+      <div className="min-h-screen pt-24 md:pt-32 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-display mb-6">BESTELLING NIET GEVONDEN</h1>
           <p className="text-gray-600 mb-8">We kunnen deze bestelling niet vinden. Controleer de link of neem contact met ons op.</p>
@@ -137,7 +137,7 @@ export default function OrderConfirmationPage({
   }
 
   return (
-    <div className="min-h-screen px-4 pb-16 pt-6">
+    <div className="min-h-screen pt-24 md:pt-32 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
         {/* Success Header */}
         <div className="text-center mb-12">
