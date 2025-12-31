@@ -129,7 +129,7 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-12 md:pt-16">
       {/* Hero Section - Compact */}
       <section className="relative bg-black text-white py-16 md:py-20">
         <div className="absolute inset-0 opacity-10">
