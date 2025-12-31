@@ -32,10 +32,10 @@ export function Header() {
     <>
       {/* Desktop Header */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-5 ${
           isScrolled
-            ? 'bg-white shadow-lg py-4'
-            : 'bg-white shadow-lg py-6'
+            ? 'bg-white shadow-lg'
+            : 'bg-white shadow-md'
         }`}
       >
         {/* Scroll Progress Indicator */}
