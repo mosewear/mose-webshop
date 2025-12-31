@@ -99,7 +99,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       await supabase
         .from('product_images')
         .update({ is_primary: false })
-        .eq('product_id', params.id)
+        .eq('product_id', id)
 
       // Set selected as primary
       const { error } = await supabase
@@ -190,7 +190,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Link
-          href={`/admin/products/${params.id}/edit`}
+          href={`/admin/products/${id}/edit`}
           className="p-2 hover:bg-gray-100 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +235,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         <h3 className="text-xl font-bold mb-4">Nieuwe Afbeelding Uploaden</h3>
         <ImageUpload
           bucket="product-images"
-          path={`products/${params.id}`}
+          path={`products/${id}`}
           onUploadComplete={handleImageUploaded}
           maxSizeMB={5}
         />
