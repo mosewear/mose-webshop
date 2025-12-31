@@ -307,7 +307,7 @@ export default function ShopPage() {
 
             {/* Loading State */}
             {loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {[1, 2, 3, 4, 5, 6].map(i => (
                   <div key={i} className="bg-gray-100 aspect-[3/4] animate-pulse" />
                 ))}
@@ -340,7 +340,7 @@ export default function ShopPage() {
 
             {/* Products Grid */}
             {!loading && filteredProducts.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {filteredProducts.map(product => {
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
@@ -363,25 +363,25 @@ export default function ShopPage() {
                           
                           {/* Stock Badge */}
                           {!inStock && (
-                            <div className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 text-xs font-bold uppercase tracking-wider">
+                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider">
                               UITVERKOCHT
                             </div>
                           )}
                           {inStock && totalStock < 5 && (
-                            <div className="absolute top-4 left-4 bg-orange-500 text-white px-4 py-2 text-xs font-bold uppercase tracking-wider">
+                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider">
                               LAATSTE ITEMS
                             </div>
                           )}
 
                           {/* Category Badge */}
                           {product.category && (
-                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold uppercase tracking-wider border-2 border-black">
+                            <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
                               {product.category.name}
                             </div>
                           )}
 
-                          {/* Wishlist Button */}
-                          <button className="absolute bottom-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90">
+                          {/* Wishlist Button - Hidden on mobile, shown on hover on desktop */}
+                          <button className="hidden md:flex absolute bottom-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
@@ -392,17 +392,17 @@ export default function ShopPage() {
                         </div>
 
                         {/* Product Info */}
-                        <div className="p-4">
-                          <h3 className="font-bold text-lg uppercase tracking-wide mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
+                        <div className="p-3 md:p-4">
+                          <h3 className="font-bold text-sm md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
                             {product.name}
                           </h3>
                           <div className="flex items-center justify-between">
-                            <span className="text-2xl font-bold text-brand-primary">
+                            <span className="text-lg md:text-2xl font-bold text-brand-primary">
                               €{product.base_price.toFixed(2)}
                             </span>
                             {inStock && (
-                              <span className="text-sm text-gray-600">
-                                {totalStock} op voorraad
+                              <span className="text-xs md:text-sm text-gray-600">
+                                {totalStock}
                               </span>
                             )}
                           </div>
