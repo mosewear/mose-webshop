@@ -1,7 +1,10 @@
 -- Test Products voor MOSE Shop
 -- 6 producten met variants en images
 
--- Ensure categories exist first
+-- STAP 1: Verwijder oude producten eerst (CASCADE verwijdert ook variants en images)
+DELETE FROM products;
+
+-- STAP 2: Ensure categories exist first
 INSERT INTO categories (name, slug, description) VALUES
 ('Hoodies', 'hoodies', 'Warme, comfortabele hoodies voor elke dag'),
 ('T-Shirts', 't-shirts', 'Premium basic t-shirts'),
