@@ -720,9 +720,15 @@ export default function CheckoutPage() {
 
               {/* Customer Info Summary */}
               <div className="bg-gray-50 border-2 border-gray-200 p-4 mb-6 text-sm">
-                <div className="font-semibold mb-2">{form.firstName} {form.lastName}</div>
-                <div className="text-gray-600">{form.email}</div>
-                <div className="text-gray-600">{form.address}, {form.postalCode} {form.city}</div>
+                {form.firstName && form.lastName && (
+                  <div className="font-semibold mb-2">{form.firstName} {form.lastName}</div>
+                )}
+                {form.email && <div className="text-gray-600">{form.email}</div>}
+                {(form.address || form.postalCode || form.city) && (
+                  <div className="text-gray-600">
+                    {[form.address, form.postalCode, form.city].filter(Boolean).join(', ')}
+                  </div>
+                )}
                 <div className="text-gray-600 mt-1">
                   {form.country === 'NL' && '🇳🇱 Nederland'}
                   {form.country === 'BE' && '🇧🇪 België'}
