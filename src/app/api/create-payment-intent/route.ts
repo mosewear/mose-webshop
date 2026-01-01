@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     console.log('🔵 API: Request body:', body)
     
-    const { orderId, items, customerEmail, customerName, shippingAddress } = body
+    const { orderId, items, customerEmail, customerName, shippingAddress, paymentMethod } = body
 
     if (!orderId || !items || items.length === 0) {
       console.error('🔴 API: Missing required fields')
@@ -35,13 +35,10 @@ export async function POST(req: NextRequest) {
 
     console.log('🔵 API: Calculated totals:', { subtotal, shippingCost, total })
 
-    // Create Payment Intent
-    const paymentIntent = await stripe.paymentIntents.create({
+    // Payment Intent configuration based on selected method
+    const paymentIntentConfig: any = {
       amount: Math.round(total * 100), // Stripe expects cents
       currency: 'eur',
-      automatic_payment_methods: {
-        enabled: true,
-      },
       metadata: {
         orderId,
         customerName,
@@ -50,7 +47,18 @@ export async function POST(req: NextRequest) {
       },
       description: `Order #${orderId} - ${customerName}`,
       receipt_email: customerEmail,
-    })
+    }
+
+    // If a specific payment method is requested, use that
+    // Otherwise use automatic payment methods
+    if (paymentMethod) {
+      paymentIntentConfig.payment_method_types = [paymentMethod]
+    } else {
+      paymentIntentConfig.automatic_payment_methods = { enabled: true }
+    }
+
+    // Create Payment Intent
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig)
 
     console.log('✅ API: Payment Intent created:', paymentIntent.id)
 

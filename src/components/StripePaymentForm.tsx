@@ -22,14 +22,24 @@ interface PaymentMethodOption {
 }
 
 interface CheckoutFormProps {
-  clientSecret: string
+  clientSecret: string | null
   onSuccess: () => void
   onError: (error: string) => void
+  onMethodSelected: (method: PaymentMethod) => void
   total: number
   country: string
+  isCreatingIntent: boolean
 }
 
-function CheckoutForm({ clientSecret, onSuccess, onError, total, country }: CheckoutFormProps) {
+function CheckoutForm({ 
+  clientSecret, 
+  onSuccess, 
+  onError, 
+  onMethodSelected,
+  total, 
+  country,
+  isCreatingIntent 
+}: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -102,8 +112,12 @@ function CheckoutForm({ clientSecret, onSuccess, onError, total, country }: Chec
             {paymentMethods.map((method) => (
               <button
                 key={method.id}
-                onClick={() => setSelectedMethod(method.id)}
-                className="w-full border-2 border-gray-300 hover:border-brand-primary p-4 text-left transition-all hover:shadow-md group relative"
+                onClick={() => {
+                  setSelectedMethod(method.id)
+                  onMethodSelected(method.id)
+                }}
+                disabled={isCreatingIntent}
+                className="w-full border-2 border-gray-300 hover:border-brand-primary p-4 text-left transition-all hover:shadow-md group relative disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {method.popular && (
                   <div className="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-1 font-bold">
@@ -134,6 +148,11 @@ function CheckoutForm({ clientSecret, onSuccess, onError, total, country }: Chec
               </button>
             ))}
           </div>
+        </div>
+      ) : !clientSecret ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+          <span className="ml-3 text-gray-600">Payment wordt voorbereid...</span>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -168,7 +187,6 @@ function CheckoutForm({ clientSecret, onSuccess, onError, total, country }: Chec
             options={{
               layout: 'accordion',
               business: { name: 'MOSE' },
-              paymentMethodOrder: [selectedMethod],
             }}
           />
           
@@ -201,19 +219,23 @@ function CheckoutForm({ clientSecret, onSuccess, onError, total, country }: Chec
 }
 
 interface StripePaymentFormProps {
-  clientSecret: string
+  clientSecret: string | null
   onSuccess: () => void
   onError: (error: string) => void
+  onMethodSelected: (method: PaymentMethod) => void
   total: number
   country: string
+  isCreatingIntent: boolean
 }
 
 export default function StripePaymentForm({ 
   clientSecret, 
   onSuccess, 
   onError,
+  onMethodSelected,
   total,
-  country 
+  country,
+  isCreatingIntent
 }: StripePaymentFormProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -234,7 +256,7 @@ export default function StripePaymentForm({
   return (
     <Elements 
       stripe={stripePromise} 
-      options={{ 
+      options={clientSecret ? { 
         clientSecret,
         appearance: {
           theme: 'stripe',
@@ -249,14 +271,16 @@ export default function StripePaymentForm({
           },
         },
         locale: 'nl',
-      }}
+      } : undefined}
     >
       <CheckoutForm 
         clientSecret={clientSecret} 
         onSuccess={onSuccess} 
         onError={onError}
+        onMethodSelected={onMethodSelected}
         total={total}
         country={country}
+        isCreatingIntent={isCreatingIntent}
       />
     </Elements>
   )

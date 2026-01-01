@@ -51,6 +51,7 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<'details' | 'payment'>('details')
   const [clientSecret, setClientSecret] = useState<string>()
   const [orderId, setOrderId] = useState<string>()
+  const [isCreatingIntent, setIsCreatingIntent] = useState(false)
 
   const subtotal = getTotal()
   const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
@@ -184,14 +185,30 @@ export default function CheckoutPage() {
       console.log('✅ Order created via API:', order)
       setOrderId(order.id)
 
-      // Step 2: Create Payment Intent
-      console.log('💳 Creating Payment Intent...')
+      // Go to payment step - Payment Intent will be created when user selects method
+      setCurrentStep('payment')
+      setLoading(false)
+    } catch (error: any) {
+      console.error('💥 CHECKOUT ERROR:', error)
+      alert(`Er is een fout opgetreden: ${error.message}`)
+      setLoading(false)
+    }
+  }
+
+  const handlePaymentMethodSelected = async (paymentMethod: string) => {
+    if (!orderId) return
+    
+    setIsCreatingIntent(true)
+
+    try {
+      // Create Payment Intent with specific payment method
+      console.log('💳 Creating Payment Intent for:', paymentMethod)
       
       const paymentResponse = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: order.id,
+          orderId: orderId,
           items: items,
           customerEmail: form.email,
           customerName: `${form.firstName} ${form.lastName}`,
@@ -201,7 +218,9 @@ export default function CheckoutPage() {
             city: form.city,
             postalCode: form.postalCode,
             phone: form.phone,
+            country: form.country,
           },
+          paymentMethod: paymentMethod, // Send selected method
         }),
       })
 
@@ -215,12 +234,11 @@ export default function CheckoutPage() {
       console.log('✅ Payment Intent created')
       
       setClientSecret(secret)
-      setCurrentStep('payment')
-      setLoading(false)
+      setIsCreatingIntent(false)
     } catch (error: any) {
-      console.error('💥 CHECKOUT ERROR:', error)
+      console.error('💥 Payment Intent ERROR:', error)
       alert(`Er is een fout opgetreden: ${error.message}`)
-      setLoading(false)
+      setIsCreatingIntent(false)
     }
   }
 
@@ -495,15 +513,15 @@ export default function CheckoutPage() {
               </div>
 
               {/* Stripe Payment Form */}
-              {clientSecret && (
-                <StripePaymentForm
-                  clientSecret={clientSecret}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                  total={total}
-                  country={form.country}
-                />
-              )}
+              <StripePaymentForm
+                clientSecret={clientSecret || null}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+                onMethodSelected={handlePaymentMethodSelected}
+                total={total}
+                country={form.country}
+                isCreatingIntent={isCreatingIntent}
+              />
             </>
           )}
         </div>
