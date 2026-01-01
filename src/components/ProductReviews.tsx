@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { PenLine } from 'lucide-react'
 
 interface Review {
   id: string
@@ -204,9 +205,16 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       <div className="mb-8">
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors"
+          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors flex items-center gap-2"
         >
-          {showForm ? 'Sluiten' : '✍️ Schrijf een review'}
+          {showForm ? (
+            'Sluiten'
+          ) : (
+            <>
+              <PenLine size={18} />
+              <span>Schrijf een review</span>
+            </>
+          )}
         </button>
       </div>
 
