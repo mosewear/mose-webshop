@@ -68,12 +68,14 @@ export async function GET(req: NextRequest) {
     console.log('✅ API: Order found:', order.id)
 
     // Send order confirmation email if not sent yet
-    // Only send on first retrieval (when coming from Stripe redirect)
-    if (paymentIntentId && order.stripe_payment_status === 'pending') {
+    // Check if email should be sent (only once per order)
+    const shouldSendEmail = order.stripe_payment_status === 'pending' || order.stripe_payment_status === null
+    
+    if (shouldSendEmail) {
       console.log('📧 Sending order confirmation email...')
       
       try {
-        await sendOrderConfirmationEmail({
+        const emailResult = await sendOrderConfirmationEmail({
           customerName: order.shipping_address.name,
           customerEmail: order.email,
           orderId: order.id,
@@ -93,18 +95,24 @@ export async function GET(req: NextRequest) {
           }
         })
         
-        console.log('✅ Order confirmation email sent!')
-        
-        // Mark email as sent by updating stripe_payment_status
-        await supabase
-          .from('orders')
-          .update({ stripe_payment_status: 'succeeded' })
-          .eq('id', order.id)
+        if (emailResult.success) {
+          console.log('✅ Order confirmation email sent!')
+          
+          // Mark email as sent by updating stripe_payment_status
+          await supabase
+            .from('orders')
+            .update({ stripe_payment_status: 'succeeded' })
+            .eq('id', order.id)
+        } else {
+          console.error('❌ Email send failed:', emailResult.error)
+        }
           
       } catch (emailError) {
         console.error('❌ Failed to send email:', emailError)
         // Don't fail the request if email fails
       }
+    } else {
+      console.log('ℹ️ Email already sent for this order')
     }
 
     return NextResponse.json({

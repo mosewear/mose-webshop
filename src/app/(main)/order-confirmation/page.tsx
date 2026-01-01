@@ -3,7 +3,6 @@
 import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
 
 interface Order {
@@ -90,10 +89,10 @@ export default function OrderConfirmationPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 md:pt-32 px-4 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Bestelling laden...</p>
+          <p className="text-gray-600 font-semibold">Bestelling laden...</p>
         </div>
       </div>
     )
@@ -101,9 +100,14 @@ export default function OrderConfirmationPage({
 
   if (!order) {
     return (
-      <div className="min-h-screen pt-24 md:pt-32 px-4">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-display mb-6">BESTELLING NIET GEVONDEN</h1>
+      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+        <div className="max-w-md mx-auto text-center">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-display mb-4">BESTELLING NIET GEVONDEN</h1>
           <p className="text-gray-600 mb-8">We kunnen deze bestelling niet vinden. Controleer de link of neem contact met ons op.</p>
           <Link
             href="/shop"
@@ -117,63 +121,66 @@ export default function OrderConfirmationPage({
   }
 
   return (
-    <div className="min-h-screen pt-24 md:pt-32 px-4 pb-16">
-      <div className="max-w-4xl mx-auto">
-        {/* Success Header */}
-        <div className="text-center mb-12">
-          <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
+    <div className="min-h-screen bg-gray-50">
+      {/* HERO SECTION - Full Screen Success */}
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 pb-32 pt-24 md:pt-32">
+        <div className="text-center max-w-3xl mx-auto">
+          {/* Animated Check Icon */}
+          <div className="relative mb-8 animate-fadeIn">
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-brand-primary rounded-full flex items-center justify-center mx-auto shadow-2xl animate-success">
+              <svg className="w-14 h-14 md:w-20 md:h-20 text-white animate-fadeIn" style={{ animationDelay: '0.2s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-display mb-4">BEDANKT!</h1>
-          <p className="text-xl text-gray-700 mb-2">Je bestelling is geplaatst</p>
-          <p className="text-gray-600">
-            We hebben een bevestiging gestuurd naar <span className="font-semibold">{order.email}</span>
+
+          {/* Main Heading */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display mb-6 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+            BEDANKT!
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-gray-700 mb-3 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+            Je bestelling is geplaatst
           </p>
-        </div>
+          
+          <p className="text-gray-600 mb-8 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
+            We hebben een bevestiging gestuurd naar<br />
+            <span className="font-semibold text-black">{order.email}</span>
+          </p>
 
-        {/* Order Details */}
-        <div className="bg-white border-2 border-black p-6 md:p-8 mb-8">
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Bestelnummer</h2>
-              <p className="font-mono text-lg">{order.id.slice(0, 8).toUpperCase()}</p>
-            </div>
-            <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Besteldatum</h2>
-              <p className="text-lg">{new Date(order.created_at).toLocaleDateString('nl-NL', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-              })}</p>
-            </div>
-            <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Bezorgadres</h2>
-              <p className="text-gray-700">{order.shipping_address?.name}</p>
-              <p className="text-gray-700">{order.shipping_address?.address}</p>
-              <p className="text-gray-700">{order.shipping_address?.postalCode} {order.shipping_address?.city}</p>
-            </div>
-            <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-2">Contact</h2>
-              <p className="text-gray-700">{order.email}</p>
-              <p className="text-gray-700">{order.shipping_address?.phone}</p>
-            </div>
+          {/* Order Number Badge */}
+          <div className="inline-block bg-white border-2 border-black px-6 py-3 animate-fadeIn" style={{ animationDelay: '0.6s' }}>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Bestelnummer</p>
+            <p className="font-mono text-lg font-bold">{order.id.slice(0, 8).toUpperCase()}</p>
           </div>
 
-          {/* Order Items */}
-          <div className="border-t-2 border-gray-200 pt-8">
-            <h2 className="text-2xl font-display mb-6">JOUW ITEMS</h2>
-            <div className="space-y-4">
+          {/* Scroll Indicator */}
+          <div className="mt-16 animate-bounce">
+            <svg className="w-6 h-6 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+            <p className="text-sm text-gray-500 mt-2">Scroll voor details</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ORDER DETAILS SECTION */}
+      <div className="bg-white border-t-4 border-black py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          
+          {/* Your Items */}
+          <div className="mb-16">
+            <h2 className="text-3xl md:text-4xl font-display mb-8 text-center">JOUW ITEMS</h2>
+            <div className="grid gap-6">
               {orderItems.map((item) => (
-                <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
-                  <div className="relative w-20 h-24 bg-gray-100 flex-shrink-0">
+                <div key={item.id} className="bg-gray-50 border-2 border-gray-200 p-6 flex gap-6 hover:border-black transition-colors">
+                  <div className="relative w-24 h-32 md:w-32 md:h-40 bg-white border-2 border-gray-300 flex-shrink-0">
                     {item.image_url ? (
                       <Image
                         src={item.image_url}
                         alt={item.product_name}
                         fill
-                        sizes="80px"
+                        sizes="(max-width: 768px) 96px, 128px"
                         className="object-cover object-center"
                       />
                     ) : (
@@ -181,101 +188,115 @@ export default function OrderConfirmationPage({
                     )}
                   </div>
                   <div className="flex-grow">
-                    <p className="font-bold">{item.product_name}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Maat: {item.size} • Kleur: {item.color}
-                    </p>
-                    <p className="text-sm text-gray-500">Aantal: {item.quantity}</p>
+                    <h3 className="font-bold text-lg mb-2">{item.product_name}</h3>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p>Maat: <span className="font-semibold text-black">{item.size}</span></p>
+                      <p>Kleur: <span className="font-semibold text-black">{item.color}</span></p>
+                      <p>Aantal: <span className="font-semibold text-black">{item.quantity}</span></p>
+                    </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">€{item.subtotal.toFixed(2)}</p>
+                    <p className="font-display text-xl">€{item.subtotal.toFixed(2)}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Order Total */}
-          <div className="border-t-2 border-gray-200 pt-6 mt-6 space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Subtotaal</span>
-              <span className="font-semibold">€{order.subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Verzending</span>
-              <span className="font-semibold">
-                {order.shipping_cost === 0 ? (
-                  <span className="text-green-600">GRATIS</span>
-                ) : (
-                  `€${order.shipping_cost.toFixed(2)}`
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between items-center border-t-2 border-black pt-4 text-xl">
-              <span className="font-bold">Totaal</span>
-              <span className="font-display text-2xl">€{order.total.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* What's Next */}
-        <div className="bg-gray-50 border-2 border-gray-300 p-6 md:p-8 mb-8">
-          <h2 className="text-2xl font-display mb-6">WAT GEBEURT ER NU?</h2>
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold flex-shrink-0">
-                1
+          {/* Order Summary */}
+          <div className="bg-black text-white p-8 mb-16">
+            <div className="max-w-md ml-auto space-y-4">
+              <div className="flex justify-between text-lg">
+                <span>Subtotaal</span>
+                <span className="font-semibold">€{order.subtotal.toFixed(2)}</span>
               </div>
-              <div>
-                <h3 className="font-bold mb-1">Bevestiging per e-mail</h3>
-                <p className="text-gray-600 text-sm">
-                  Je ontvangt binnen enkele minuten een bevestiging met alle details van je bestelling.
-                </p>
+              <div className="flex justify-between text-lg">
+                <span>Verzending</span>
+                <span className="font-semibold">
+                  {order.shipping_cost === 0 ? (
+                    <span className="text-brand-primary">GRATIS</span>
+                  ) : (
+                    `€${order.shipping_cost.toFixed(2)}`
+                  )}
+                </span>
               </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold flex-shrink-0">
-                2
-              </div>
-              <div>
-                <h3 className="font-bold mb-1">We pakken je bestelling in</h3>
-                <p className="text-gray-600 text-sm">
-                  Binnen 1-2 werkdagen pakken we je bestelling zorgvuldig in en maken deze klaar voor verzending.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold flex-shrink-0">
-                3
-              </div>
-              <div>
-                <h3 className="font-bold mb-1">Verzending & tracking</h3>
-                <p className="text-gray-600 text-sm">
-                  Je ontvangt een track & trace code zodra je bestelling onderweg is. Verwachte levertijd: 2-3 werkdagen.
-                </p>
+              <div className="border-t-2 border-white pt-4 flex justify-between items-center text-2xl md:text-3xl">
+                <span className="font-display">Totaal</span>
+                <span className="font-display">€{order.total.toFixed(2)}</span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link
-            href="/shop"
-            className="flex-1 py-4 bg-brand-primary text-white text-center font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
-          >
-            Verder shoppen
-          </Link>
-          <Link
-            href="/contact"
-            className="flex-1 py-4 border-2 border-black text-black text-center font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
-          >
-            Contact opnemen
-          </Link>
+          {/* Delivery Info Grid */}
+          <div className="grid md:grid-cols-2 gap-6 mb-16">
+            <div className="bg-gray-50 border-2 border-gray-200 p-6">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-4">Bezorgadres</h3>
+              <div className="space-y-1 text-gray-700">
+                <p className="font-semibold text-black">{order.shipping_address?.name}</p>
+                <p>{order.shipping_address?.address}</p>
+                <p>{order.shipping_address?.postalCode} {order.shipping_address?.city}</p>
+              </div>
+            </div>
+            <div className="bg-gray-50 border-2 border-gray-200 p-6">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-4">Contact</h3>
+              <div className="space-y-1 text-gray-700">
+                <p className="font-semibold text-black">{order.email}</p>
+                <p>{order.shipping_address?.phone}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="mb-16">
+            <h2 className="text-3xl md:text-4xl font-display mb-12 text-center">WAT GEBEURT ER NU?</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-brand-primary text-white flex items-center justify-center font-display text-2xl mx-auto mb-4">
+                  1
+                </div>
+                <h3 className="font-bold text-lg mb-2">Bevestiging per e-mail</h3>
+                <p className="text-gray-600 text-sm">
+                  Je ontvangt binnen enkele minuten een bevestiging met alle details.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-brand-primary text-white flex items-center justify-center font-display text-2xl mx-auto mb-4">
+                  2
+                </div>
+                <h3 className="font-bold text-lg mb-2">We pakken je bestelling in</h3>
+                <p className="text-gray-600 text-sm">
+                  Binnen 1-2 werkdagen pakken we alles zorgvuldig in.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-brand-primary text-white flex items-center justify-center font-display text-2xl mx-auto mb-4">
+                  3
+                </div>
+                <h3 className="font-bold text-lg mb-2">Verzending & tracking</h3>
+                <p className="text-gray-600 text-sm">
+                  Track & trace code bij verzending. Levertijd: 2-3 werkdagen.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <Link
+              href="/shop"
+              className="block py-5 bg-brand-primary text-white text-center font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-all transform hover:scale-105"
+            >
+              Verder shoppen
+            </Link>
+            <Link
+              href="/contact"
+              className="block py-5 border-2 border-black text-black text-center font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-all transform hover:scale-105"
+            >
+              Contact opnemen
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   )
 }
-
-
