@@ -132,7 +132,6 @@ export default function CheckoutPage() {
           phone: form.phone,
         },
         billing_address: null,
-        payment_intent_id: null,
         tracking_code: null,
       }
 
