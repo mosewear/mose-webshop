@@ -81,6 +81,7 @@ interface PaymentFormProps {
       city: string
       postal_code: string
       country: string
+      state?: string | null
     }
   }
 }
@@ -201,6 +202,7 @@ interface StripePaymentFormProps {
       city: string
       postal_code: string
       country: string
+      state?: string | null
     }
   }
 }

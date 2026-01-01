@@ -534,6 +534,7 @@ export default function CheckoutPage() {
                     city: form.city,
                     postal_code: form.postalCode,
                     country: form.country,
+                    state: null, // Not required for NL/EU countries
                   }
                 }}
               />
