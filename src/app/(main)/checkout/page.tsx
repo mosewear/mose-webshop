@@ -525,6 +525,17 @@ export default function CheckoutPage() {
                 onMethodSelected={handlePaymentMethodSelected}
                 country={form.country}
                 isCreatingIntent={isCreatingIntent}
+                billingDetails={{
+                  name: `${form.firstName} ${form.lastName}`,
+                  email: form.email,
+                  phone: form.phone,
+                  address: {
+                    line1: form.address,
+                    city: form.city,
+                    postal_code: form.postalCode,
+                    country: form.country,
+                  }
+                }}
               />
             </>
           )}
