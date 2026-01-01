@@ -26,18 +26,29 @@ export async function POST(req: NextRequest) {
     console.log('🔵 API: Creating line items...')
     
     // Create line items for Stripe
-    const lineItems = items.map((item: any) => ({
-      price_data: {
-        currency: 'eur',
-        product_data: {
-          name: item.name,
-          description: `${item.size} • ${item.color}`,
-          images: [item.image],
+    const lineItems = items.map((item: any) => {
+      // Only include images if it's a valid absolute URL
+      const isValidUrl = item.image && (item.image.startsWith('http://') || item.image.startsWith('https://'))
+      
+      const productData: any = {
+        name: item.name,
+        description: `${item.size} • ${item.color}`,
+      }
+      
+      // Only add images if we have a valid absolute URL
+      if (isValidUrl) {
+        productData.images = [item.image]
+      }
+      
+      return {
+        price_data: {
+          currency: 'eur',
+          product_data: productData,
+          unit_amount: Math.round(item.price * 100), // Stripe expects cents
         },
-        unit_amount: Math.round(item.price * 100), // Stripe expects cents
-      },
-      quantity: item.quantity,
-    }))
+        quantity: item.quantity,
+      }
+    })
 
     console.log('🔵 API: Line items created:', lineItems)
 
