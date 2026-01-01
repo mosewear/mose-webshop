@@ -9,7 +9,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('=== Checkout Session Start ===')
     const { orderId, items, customerEmail, customerName, shippingAddress, phone } = await req.json()
+    console.log('Order ID:', orderId)
+    console.log('Items count:', items?.length)
 
     if (!orderId || !items || items.length === 0) {
       return NextResponse.json(
@@ -23,7 +26,9 @@ export async function POST(req: NextRequest) {
     const protocol = host.includes('localhost') ? 'http' : 'https'
     const siteUrl = `${protocol}://${host}`
     
-    console.log('Site URL:', siteUrl) // Debug log
+    console.log('Site URL:', siteUrl)
+    console.log('Stripe Key exists:', !!process.env.STRIPE_SECRET_KEY)
+    console.log('Stripe Key starts with:', process.env.STRIPE_SECRET_KEY?.substring(0, 20))
 
     // Create line items for Stripe
     const lineItems = items.map((item: any) => ({
@@ -79,9 +84,14 @@ export async function POST(req: NextRequest) {
       locale: 'nl',
     })
 
+    console.log('Stripe session created:', session.id)
     return NextResponse.json({ sessionId: session.id, url: session.url })
   } catch (error: any) {
-    console.error('Stripe checkout error:', error)
+    console.error('=== Stripe checkout error ===')
+    console.error('Error type:', error.type)
+    console.error('Error code:', error.code)
+    console.error('Error message:', error.message)
+    console.error('Full error:', JSON.stringify(error, null, 2))
     return NextResponse.json(
       { error: error.message || 'Failed to create checkout session' },
       { status: 500 }
