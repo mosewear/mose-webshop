@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useCart } from '@/store/cart'
 import { createClient } from '@/lib/supabase/client'
 import { getSiteSettings } from '@/lib/settings'
+import { debugLog } from '@/lib/debug'
 
 interface CheckoutForm {
   email: string
@@ -91,13 +92,150 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log('🚀 CHECKOUT STARTED')
-    console.log('📋 Form data:', form)
-    console.log('🛒 Cart items:', items)
-    console.log('💰 Totals:', { subtotal, shipping, total })
+    await debugLog('info', '🚀 CHECKOUT STARTED', { form, items, subtotal, shipping, total })
 
     if (!validateForm()) {
-      console.log('❌ Form validation failed:', errors)
+      await debugLog('error', '❌ Form validation failed', errors)
+      const firstError = document.querySelector('.border-red-600')
+      firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+
+    await debugLog('info', '✅ Form validation passed')
+
+    setLoading(true)
+
+    try {
+      await debugLog('info', '🔗 Creating Supabase client')
+      const supabase = createClient()
+
+      await debugLog('info', '📦 Preparing order data', {
+        email: form.email,
+        status: 'pending',
+        total: total,
+        subtotal: subtotal,
+        shipping_cost: shipping,
+      })
+
+      const orderData = {
+        email: form.email,
+        status: 'pending',
+        total: total,
+        subtotal: subtotal,
+        shipping_cost: shipping,
+        tax_amount: 0,
+        shipping_address: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+          phone: form.phone,
+        },
+        billing_address: null,
+        payment_intent_id: null,
+        tracking_code: null,
+      }
+
+      await debugLog('info', '📝 Inserting order into database...')
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+        .single()
+
+      if (orderError) {
+        await debugLog('error', '❌ Order creation failed', { 
+          error: orderError,
+          message: orderError.message,
+          code: orderError.code 
+        })
+        throw orderError
+      }
+
+      await debugLog('info', '✅ Order created successfully', { orderId: order.id })
+
+      // Create order items
+      await debugLog('info', '📦 Creating order items...')
+      const orderItems = items.map((item) => ({
+        order_id: order.id,
+        product_id: item.productId,
+        variant_id: item.variantId,
+        quantity: item.quantity,
+        price: item.price,
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems)
+
+      if (itemsError) {
+        await debugLog('error', '❌ Order items creation failed', itemsError)
+        throw itemsError
+      }
+
+      await debugLog('info', '✅ Order items created successfully')
+
+      // Create Stripe Checkout Session
+      await debugLog('info', '💳 Creating Stripe payload...')
+      const stripePayload = {
+        orderId: order.id,
+        items: items,
+        customerEmail: form.email,
+        customerName: `${form.firstName} ${form.lastName}`,
+        shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
+        phone: form.phone,
+        shippingAddressObject: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+        },
+      }
+
+      await debugLog('info', '🌐 Calling Stripe API...', { apiUrl: '/api/create-checkout-session' })
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stripePayload),
+      })
+
+      await debugLog('info', `📡 Stripe API response status: ${response.status}`)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        await debugLog('error', '❌ Stripe API error', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+        })
+        throw new Error(`Stripe API error: ${response.status} ${errorText}`)
+      }
+
+      const data = await response.json()
+      await debugLog('info', '✅ Stripe session created', { sessionId: data.sessionId, url: data.url })
+
+      if (!data.url) {
+        await debugLog('error', '❌ No Stripe checkout URL received', data)
+        throw new Error('No checkout URL received from Stripe')
+      }
+
+      // Redirect to Stripe Checkout
+      await debugLog('info', '🔄 Redirecting to Stripe...', { url: data.url })
+      window.location.href = data.url
+
+    } catch (error: any) {
+      await debugLog('error', '🔴 Checkout error', {
+        message: error.message,
+        stack: error.stack,
+        error: error,
+      })
+      alert(`Er ging iets mis: ${error.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
       const firstError = document.querySelector('.border-red-600')
       firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
