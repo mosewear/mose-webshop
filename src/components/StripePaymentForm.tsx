@@ -72,6 +72,7 @@ interface PaymentFormProps {
   onError: (error: string) => void
   selectedMethod: PaymentMethod
   onBack: () => void
+  orderId: string
   billingDetails: {
     name: string
     email: string
@@ -91,6 +92,7 @@ function PaymentForm({
   onError,
   selectedMethod,
   onBack,
+  orderId,
   billingDetails
 }: PaymentFormProps) {
   const stripe = useStripe()
@@ -112,7 +114,7 @@ function PaymentForm({
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/order-confirmation`,
+          return_url: `${window.location.origin}/order-confirmation?order_id=${orderId}`,
           payment_method_data: {
             billing_details: billingDetails // Pass billing details we already collected!
           }
@@ -193,6 +195,7 @@ interface StripePaymentFormProps {
   onMethodSelected: (method: PaymentMethod) => Promise<void>
   country: string
   isCreatingIntent: boolean
+  orderId: string | undefined
   billingDetails: {
     name: string
     email: string
@@ -214,6 +217,7 @@ export default function StripePaymentForm({
   onMethodSelected,
   country,
   isCreatingIntent,
+  orderId,
   billingDetails
 }: StripePaymentFormProps) {
   const [mounted, setMounted] = useState(false)
@@ -230,6 +234,7 @@ export default function StripePaymentForm({
 
   const handleBack = () => {
     setSelectedMethod(null)
+    // Note: clientSecret should be cleared in parent component
   }
 
   if (!mounted) {
@@ -330,6 +335,7 @@ export default function StripePaymentForm({
             onError={onError}
             selectedMethod={selectedMethod}
             onBack={handleBack}
+            orderId={orderId || ''}
             billingDetails={billingDetails}
           />
         </Elements>

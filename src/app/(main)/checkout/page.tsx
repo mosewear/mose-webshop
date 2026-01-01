@@ -203,6 +203,12 @@ export default function CheckoutPage() {
   const handlePaymentMethodSelected = async (paymentMethod: PaymentMethod) => {
     if (!orderId) return
     
+    // Prevent duplicate Payment Intent creation
+    if (clientSecret && isCreatingIntent) {
+      console.log('⚠️ Payment Intent already being created, skipping...')
+      return
+    }
+    
     setIsCreatingIntent(true)
 
     try {
@@ -235,8 +241,19 @@ export default function CheckoutPage() {
         throw new Error(errorData.error || 'Failed to create payment intent')
       }
 
-      const { clientSecret: secret } = await paymentResponse.json()
-      console.log('✅ Payment Intent created')
+      const { clientSecret: secret, paymentIntentId } = await paymentResponse.json()
+      console.log('✅ Payment Intent created:', paymentIntentId)
+      
+      // Save payment method to order
+      await fetch('/api/update-order-payment-method', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          paymentMethod,
+          paymentIntentId
+        }),
+      }).catch(err => console.error('Failed to update payment method:', err))
       
       setClientSecret(secret)
       setIsCreatingIntent(false)
@@ -525,6 +542,7 @@ export default function CheckoutPage() {
                 onMethodSelected={handlePaymentMethodSelected}
                 country={form.country}
                 isCreatingIntent={isCreatingIntent}
+                orderId={orderId}
                 billingDetails={{
                   name: `${form.firstName} ${form.lastName}`,
                   email: form.email,
