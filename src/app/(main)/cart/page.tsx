@@ -1,17 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/store/cart'
+import { getSiteSettings } from '@/lib/settings'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [shippingCost, setShippingCost] = useState(0)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
 
   const subtotal = getTotal()
-  const shipping = subtotal >= 50 ? 0 : 5.95
+  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
   const total = subtotal + shipping
+
+  useEffect(() => {
+    // Load settings
+    getSiteSettings().then((settings) => {
+      setShippingCost(settings.shipping_cost)
+      setFreeShippingThreshold(settings.free_shipping_threshold)
+    })
+  }, [])
 
   if (items.length === 0) {
     return (

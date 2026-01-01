@@ -28,8 +28,15 @@ export default function SettingsPage() {
   const [shippingCost, setShippingCost] = useState('0')
   const [lowStockThreshold, setLowStockThreshold] = useState('5')
 
+  // Admin users state
+  const [adminUsers, setAdminUsers] = useState<any[]>([])
+  const [showAddAdmin, setShowAddAdmin] = useState(false)
+  const [newAdminEmail, setNewAdminEmail] = useState('')
+  const [addingAdmin, setAddingAdmin] = useState(false)
+
   useEffect(() => {
     fetchSettings()
+    fetchAdminUsers()
   }, [])
 
   const fetchSettings = async () => {
@@ -120,6 +127,86 @@ export default function SettingsPage() {
       alert(`Fout bij opslaan: ${err.message}`)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const fetchAdminUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('is_admin', true)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setAdminUsers(data || [])
+    } catch (err: any) {
+      console.error('Error fetching admin users:', err)
+    }
+  }
+
+  const handleAddAdmin = async () => {
+    if (!newAdminEmail || !newAdminEmail.includes('@')) {
+      alert('Vul een geldig e-mailadres in')
+      return
+    }
+
+    try {
+      setAddingAdmin(true)
+
+      // Find user by email
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', newAdminEmail)
+        .single()
+
+      if (profileError) {
+        alert('Gebruiker niet gevonden. De gebruiker moet eerst inloggen op de website voordat je hem/haar admin kunt maken.')
+        return
+      }
+
+      // Update to admin
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ is_admin: true })
+        .eq('id', profile.id)
+
+      if (updateError) throw updateError
+
+      alert('✅ Admin toegevoegd!')
+      setShowAddAdmin(false)
+      setNewAdminEmail('')
+      fetchAdminUsers()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setAddingAdmin(false)
+    }
+  }
+
+  const handleRemoveAdmin = async (userId: string, email: string) => {
+    // Prevent removing yourself
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.id === userId) {
+      alert('Je kunt jezelf niet als admin verwijderen')
+      return
+    }
+
+    if (!confirm(`Weet je zeker dat je ${email} als admin wilt verwijderen?`)) return
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_admin: false })
+        .eq('id', userId)
+
+      if (error) throw error
+
+      alert('Admin verwijderd')
+      fetchAdminUsers()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
     }
   }
 
@@ -284,7 +371,7 @@ export default function SettingsPage() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Role
+                  Naam
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Aangemaakt
@@ -295,34 +382,86 @@ export default function SettingsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              <tr className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  info@mosewear.nl
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-3 py-1 text-xs font-semibold bg-brand-primary text-white border-2 border-brand-primary">
-                    ADMIN
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date().toLocaleDateString('nl-NL')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button className="text-gray-400 cursor-not-allowed">
-                    Verwijderen
-                  </button>
-                </td>
-              </tr>
+              {adminUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                    Geen admin gebruikers gevonden
+                  </td>
+                </tr>
+              ) : (
+                adminUsers.map((admin) => (
+                  <tr key={admin.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {admin.email || 'Geen email'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {admin.first_name && admin.last_name 
+                        ? `${admin.first_name} ${admin.last_name}` 
+                        : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(admin.created_at).toLocaleDateString('nl-NL')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleRemoveAdmin(admin.id, admin.email)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Verwijderen
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         <div className="mt-6">
-          <button
-            className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
-          >
-            + Nieuwe Admin Toevoegen
-          </button>
+          {!showAddAdmin ? (
+            <button
+              onClick={() => setShowAddAdmin(true)}
+              className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+            >
+              + Nieuwe Admin Toevoegen
+            </button>
+          ) : (
+            <div className="border-2 border-gray-200 p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                  Email van bestaande gebruiker
+                </label>
+                <input
+                  type="email"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                  placeholder="gebruiker@voorbeeld.nl"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  De gebruiker moet eerst inloggen op de website voordat je hem/haar admin kunt maken.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddAdmin}
+                  disabled={addingAdmin}
+                  className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50"
+                >
+                  {addingAdmin ? 'Toevoegen...' : 'Admin Toevoegen'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddAdmin(false)
+                    setNewAdminEmail('')
+                  }}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+                >
+                  Annuleren
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
