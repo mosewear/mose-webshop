@@ -17,6 +17,16 @@ export default function SettingsPage() {
   const [error, setError] = useState('')
   const supabase = createClient()
 
+  // Form state
+  const [siteName, setSiteName] = useState('MOSE Wear')
+  const [contactEmail, setContactEmail] = useState('info@mosewear.nl')
+  const [freeShipping, setFreeShipping] = useState('50.00')
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
+  const [currency, setCurrency] = useState('EUR')
+  const [taxRate, setTaxRate] = useState('21.00')
+  const [shippingCost, setShippingCost] = useState('0')
+  const [lowStockThreshold, setLowStockThreshold] = useState('5')
+
   useEffect(() => {
     fetchSettings()
   }, [])
@@ -31,10 +41,83 @@ export default function SettingsPage() {
 
       if (error) throw error
       setSettings(data || [])
+
+      // Load settings into form state
+      if (data) {
+        data.forEach((setting: SiteSetting) => {
+          switch (setting.key) {
+            case 'site_name':
+              setSiteName(setting.value)
+              break
+            case 'contact_email':
+              setContactEmail(setting.value)
+              break
+            case 'free_shipping_threshold':
+              setFreeShipping(setting.value)
+              break
+            case 'maintenance_mode':
+              setMaintenanceMode(setting.value === 'true' || setting.value === true)
+              break
+            case 'currency':
+              setCurrency(setting.value)
+              break
+            case 'tax_rate':
+              setTaxRate(setting.value)
+              break
+            case 'shipping_cost':
+              setShippingCost(setting.value)
+              break
+            case 'low_stock_threshold':
+              setLowStockThreshold(setting.value)
+              break
+          }
+        })
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    try {
+      setSaving(true)
+      setError('')
+
+      const settingsToSave = [
+        { key: 'site_name', value: siteName },
+        { key: 'contact_email', value: contactEmail },
+        { key: 'free_shipping_threshold', value: freeShipping },
+        { key: 'maintenance_mode', value: maintenanceMode },
+        { key: 'currency', value: currency },
+        { key: 'tax_rate', value: taxRate },
+        { key: 'shipping_cost', value: shippingCost },
+        { key: 'low_stock_threshold', value: lowStockThreshold },
+      ]
+
+      for (const setting of settingsToSave) {
+        const { error } = await supabase
+          .from('site_settings')
+          .upsert(
+            {
+              key: setting.key,
+              value: setting.value,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'key' }
+          )
+
+        if (error) throw error
+      }
+
+      alert('✅ Instellingen opgeslagen!')
+      fetchSettings()
+    } catch (err: any) {
+      setError(err.message)
+      alert(`Fout bij opslaan: ${err.message}`)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -73,7 +156,8 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                defaultValue="MOSE Wear"
+                value={siteName}
+                onChange={(e) => setSiteName(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
@@ -84,7 +168,8 @@ export default function SettingsPage() {
               </label>
               <input
                 type="email"
-                defaultValue="info@mosewear.nl"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
@@ -96,7 +181,8 @@ export default function SettingsPage() {
               <input
                 type="number"
                 step="0.01"
-                defaultValue="50.00"
+                value={freeShipping}
+                onChange={(e) => setFreeShipping(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
@@ -105,7 +191,8 @@ export default function SettingsPage() {
               <input
                 type="checkbox"
                 id="maintenance_mode"
-                defaultChecked={false}
+                checked={maintenanceMode}
+                onChange={(e) => setMaintenanceMode(e.target.checked)}
                 className="w-5 h-5"
               />
               <label htmlFor="maintenance_mode" className="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -114,6 +201,7 @@ export default function SettingsPage() {
             </div>
 
             <button
+              onClick={handleSaveSettings}
               disabled={saving}
               className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
@@ -131,7 +219,11 @@ export default function SettingsPage() {
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Valuta
               </label>
-              <select className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors">
+              <select 
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+              >
                 <option value="EUR">EUR (€)</option>
                 <option value="USD">USD ($)</option>
               </select>
@@ -144,7 +236,8 @@ export default function SettingsPage() {
               <input
                 type="number"
                 step="0.01"
-                defaultValue="21.00"
+                value={taxRate}
+                onChange={(e) => setTaxRate(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
@@ -156,7 +249,8 @@ export default function SettingsPage() {
               <input
                 type="number"
                 step="0.01"
-                defaultValue="4.95"
+                value={shippingCost}
+                onChange={(e) => setShippingCost(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
@@ -167,7 +261,8 @@ export default function SettingsPage() {
               </label>
               <input
                 type="number"
-                defaultValue="5"
+                value={lowStockThreshold}
+                onChange={(e) => setLowStockThreshold(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
