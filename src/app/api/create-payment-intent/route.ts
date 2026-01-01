@@ -35,10 +35,11 @@ export async function POST(req: NextRequest) {
 
     console.log('🔵 API: Calculated totals:', { subtotal, shippingCost, total })
 
-    // Payment Intent configuration based on selected method
+    // Payment Intent configuration with redirect URLs
     const paymentIntentConfig: any = {
       amount: Math.round(total * 100), // Stripe expects cents
       currency: 'eur',
+      payment_method_types: paymentMethod ? [paymentMethod] : ['card'],
       metadata: {
         orderId,
         customerName,
@@ -49,13 +50,15 @@ export async function POST(req: NextRequest) {
       receipt_email: customerEmail,
     }
 
-    // If a specific payment method is requested, use that
-    // Otherwise use automatic payment methods
-    if (paymentMethod) {
-      paymentIntentConfig.payment_method_types = [paymentMethod]
-    } else {
-      paymentIntentConfig.automatic_payment_methods = { enabled: true }
+    // Special handling for Klarna
+    if (paymentMethod === 'klarna') {
+      paymentIntentConfig.setup_future_usage = 'off_session'
     }
+
+    console.log('🔵 API: Creating Payment Intent with config:', {
+      amount: paymentIntentConfig.amount,
+      payment_method_types: paymentIntentConfig.payment_method_types,
+    })
 
     // Create Payment Intent
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig)

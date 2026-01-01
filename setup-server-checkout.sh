@@ -19,3 +19,4 @@ echo "  git push"
 echo ""
 echo "✅ Dit lost het RLS probleem PERMANENT op!"
 
+

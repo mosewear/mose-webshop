@@ -46,3 +46,4 @@ DROP TABLE IF EXISTS reviews CASCADE;
 -- - wishlists
 -- - site_settings
 
+

@@ -9,3 +9,4 @@ DELETE FROM products;
 -- ALTER SEQUENCE product_images_id_seq RESTART WITH 1;
 
 
+

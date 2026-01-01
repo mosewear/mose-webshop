@@ -97,3 +97,4 @@ CREATE POLICY "Users can delete own votes"
   ON review_votes FOR DELETE
   USING (auth.uid() = user_id);
 
+

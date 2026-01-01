@@ -93,3 +93,4 @@ site_settings (key-value pairs)
 3. **MEDIUM**: Voer cleanup migratie uit voor onnodige tabellen
 4. **LAAG**: Standaardiseer UUID functie naar gen_random_uuid()
 
+
