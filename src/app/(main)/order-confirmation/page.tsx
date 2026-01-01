@@ -34,10 +34,11 @@ interface OrderItem {
 export default function OrderConfirmationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string }>
+  searchParams: Promise<{ order?: string; order_id?: string; payment_intent?: string }>
 }) {
   const params = use(searchParams)
-  const orderId = params.order
+  const orderId = params.order_id || params.order // Support both order_id and order
+  const paymentIntentId = params.payment_intent
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,18 +49,50 @@ export default function OrderConfirmationPage({
     clearCart()
     
     if (orderId) {
-      fetchOrder()
+      fetchOrderById(orderId)
+    } else if (paymentIntentId) {
+      fetchOrderByPaymentIntent(paymentIntentId)
+    } else {
+      setLoading(false)
     }
-  }, [orderId])
+  }, [orderId, paymentIntentId])
 
-  async function fetchOrder() {
+  async function fetchOrderByPaymentIntent(paymentIntent: string) {
     const supabase = createClient()
+
+    console.log('🔍 Fetching order by payment_intent:', paymentIntent)
+
+    // Fetch order by stripe_payment_intent_id
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('stripe_payment_intent_id', paymentIntent)
+      .single()
+
+    if (orderError) {
+      console.error('Error fetching order by payment_intent:', orderError)
+      setLoading(false)
+      return
+    }
+
+    if (orderData) {
+      setOrder(orderData)
+      await fetchOrderItems(orderData.id)
+    }
+
+    setLoading(false)
+  }
+
+  async function fetchOrderById(id: string) {
+    const supabase = createClient()
+
+    console.log('🔍 Fetching order by ID:', id)
 
     // Fetch order
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .select('*')
-      .eq('id', orderId)
+      .eq('id', id)
       .single()
 
     if (orderError) {
@@ -69,8 +102,14 @@ export default function OrderConfirmationPage({
     }
 
     setOrder(orderData)
+    await fetchOrderItems(id)
+    setLoading(false)
+  }
 
-    // Fetch order items (they now have snapshot data)
+  async function fetchOrderItems(orderId: string) {
+    const supabase = createClient()
+
+    // Fetch order items
     const { data: itemsData, error: itemsError } = await supabase
       .from('order_items')
       .select('*')
@@ -81,8 +120,6 @@ export default function OrderConfirmationPage({
     } else {
       setOrderItems(itemsData || [])
     }
-
-    setLoading(false)
   }
 
   if (loading) {

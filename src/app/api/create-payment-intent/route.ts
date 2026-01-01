@@ -72,6 +72,29 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ API: Payment Intent created:', paymentIntent.id)
 
+    // Update order with stripe_payment_intent_id for later lookup
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } }
+      )
+      
+      await supabase
+        .from('orders')
+        .update({ 
+          stripe_payment_intent_id: paymentIntent.id,
+          payment_method: paymentMethod 
+        })
+        .eq('id', orderId)
+        
+      console.log('✅ API: Order updated with payment_intent_id')
+    } catch (err) {
+      console.error('⚠️ API: Failed to update order with payment_intent_id:', err)
+      // Don't fail the whole request if this fails
+    }
+
     return NextResponse.json({ 
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id
