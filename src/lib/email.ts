@@ -94,7 +94,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         
         <div class="footer">
           <p><strong>MOSE</strong> • Groningen, Nederland</p>
-          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.com" style="color: #2ECC71;">info@mosewear.com</a></p>
+          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.nl" style="color: #2ECC71;">info@mosewear.nl</a></p>
         </div>
       </body>
     </html>
@@ -170,7 +170,7 @@ export async function sendShippingConfirmationEmail(props: {
         
         <div class="footer">
           <p><strong>MOSE</strong> • Groningen, Nederland</p>
-          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.com" style="color: #2ECC71;">info@mosewear.com</a></p>
+          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.nl" style="color: #2ECC71;">info@mosewear.nl</a></p>
         </div>
       </body>
     </html>
