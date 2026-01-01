@@ -60,8 +60,6 @@ function CheckoutForm({ clientSecret, onSuccess, onError, total, country }: Chec
 
   const paymentMethods = getPaymentMethods()
 
-  const paymentMethods = getPaymentMethods()
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
