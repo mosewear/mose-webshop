@@ -162,8 +162,14 @@ export default function CheckoutPage() {
         order_id: order.id,
         product_id: item.productId,
         variant_id: item.variantId,
+        product_name: item.name,
+        size: item.size,
+        color: item.color,
+        sku: item.sku || `${item.productId}-${item.size}-${item.color}`,
         quantity: item.quantity,
-        price: item.price,
+        price_at_purchase: item.price,
+        subtotal: item.price * item.quantity,
+        image_url: item.image,
       }))
 
       const { error: itemsError } = await supabase
