@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
+import { useCartDrawer } from '@/store/cartDrawer'
+import CartDrawer from '@/components/CartDrawer'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -11,6 +13,7 @@ export function Header() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [mounted, setMounted] = useState(false)
   const itemCount = useCart((state) => state.getItemCount())
+  const { isOpen, openDrawer, closeDrawer } = useCartDrawer()
 
   useEffect(() => {
     setMounted(true)
@@ -93,7 +96,11 @@ export function Header() {
                 </svg>
               </Link>
 
-              <Link href="/cart" className="relative p-2 hover:text-brand-primary transition-colors" aria-label="Winkelwagen">
+              <button
+                onClick={openDrawer}
+                className="relative p-2 hover:text-brand-primary transition-colors"
+                aria-label="Winkelwagen"
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
@@ -102,7 +109,7 @@ export function Header() {
                     {itemCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Mobile Menu Toggle */}
               <button
@@ -164,6 +171,9 @@ export function Header() {
 
       {/* Spacer */}
       <div className="h-20" />
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={isOpen} onClose={closeDrawer} />
     </>
   )
 }

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
+import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import ProductReviews from '@/components/ProductReviews'
 
@@ -61,6 +62,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [notifySubmitted, setNotifySubmitted] = useState(false)
 
   const addItem = useCart((state) => state.addItem)
+  const { openDrawer } = useCartDrawer()
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
   const [isWishlisted, setIsWishlisted] = useState(false)
 
@@ -164,8 +166,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       stock: selectedVariant.stock_quantity,
     })
 
-    setAddedToCart(true)
-    setTimeout(() => setAddedToCart(false), 2000)
+    // Open cart drawer immediately
+    openDrawer()
   }
 
   const handleNotifyMe = async () => {
