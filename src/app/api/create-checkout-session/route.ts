@@ -6,22 +6,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
 })
 
-// Helper function to sanitize strings for Stripe metadata
-function sanitizeForStripe(str: string): string {
-  if (!str) return ''
-  // Remove any non-ASCII characters and control characters
-  return str
-    .replace(/[^\x20-\x7E]/g, '') // Keep only printable ASCII
-    .trim()
-    .slice(0, 500) // Stripe metadata values max 500 chars
-}
-
 export async function POST(req: NextRequest) {
   try {
     console.log('🔵 API: create-checkout-session called')
     
     const body = await req.json()
-    console.log('🔵 API: Request body:', JSON.stringify(body, null, 2))
+    console.log('🔵 API: Request body:', body)
     
     const { orderId, items, customerEmail, customerName, shippingAddress, phone } = body
 
@@ -41,8 +31,8 @@ export async function POST(req: NextRequest) {
       const isValidUrl = item.image && (item.image.startsWith('http://') || item.image.startsWith('https://'))
       
       const productData: any = {
-        name: sanitizeForStripe(item.name),
-        description: sanitizeForStripe(`${item.size} • ${item.color}`),
+        name: item.name,
+        description: `${item.size} • ${item.color}`,
       }
       
       // Only add images if we have a valid absolute URL
@@ -60,7 +50,7 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    console.log('🔵 API: Line items created')
+    console.log('🔵 API: Line items created:', lineItems)
 
     // Calculate shipping
     const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
@@ -84,16 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('🔵 API: Creating Stripe session...')
-
-    // Sanitize metadata values
-    const sanitizedMetadata = {
-      orderId: sanitizeForStripe(orderId),
-      customerName: sanitizeForStripe(customerName || ''),
-      shippingAddress: sanitizeForStripe(shippingAddress || ''),
-      phone: sanitizeForStripe(phone || ''),
-    }
-
-    console.log('🔵 API: Sanitized metadata:', sanitizedMetadata)
+    console.log('🔵 API: Success URL base:', process.env.NEXT_PUBLIC_SITE_URL)
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -103,7 +84,12 @@ export async function POST(req: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-confirmation?order=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
       customer_email: customerEmail,
-      metadata: sanitizedMetadata,
+      metadata: {
+        orderId,
+        customerName,
+        shippingAddress,
+        phone,
+      },
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['NL', 'BE'],
@@ -111,24 +97,24 @@ export async function POST(req: NextRequest) {
       locale: 'nl',
     })
 
-    console.log('✅ API: Stripe session created successfully')
+    console.log('✅ API: Stripe session created:', {
+      id: session.id,
+      url: session.url,
+    })
 
     return NextResponse.json({ sessionId: session.id, url: session.url })
   } catch (error: any) {
     console.error('🔴 API: Stripe checkout error:', error)
-    console.error('🔴 API: Error type:', error.type)
-    console.error('🔴 API: Error code:', error.code)
-    console.error('🔴 API: Error message:', error.message)
-    
-    // Return detailed error for debugging
+    console.error('🔴 API: Error details:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      stack: error.stack,
+    })
     return NextResponse.json(
-      { 
-        error: error.message || 'Failed to create checkout session',
-        type: error.type,
-        code: error.code,
-        details: error.raw || error,
-      },
+      { error: error.message || 'Failed to create checkout session', details: error },
       { status: 500 }
     )
   }
 }
+

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import { useCart } from '@/store/cart'
 import { createClient } from '@/lib/supabase/client'
 import { getSiteSettings } from '@/lib/settings'
-import { debugLog } from '@/lib/debug'
 
 interface CheckoutForm {
   email: string
@@ -92,40 +91,26 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Log immediately - fire and forget
-    debugLog('info', '🚀 CHECKOUT STARTED', { 
-      form: { ...form, phone: '***' }, // Hide sensitive data
-      itemCount: items.length,
-      subtotal, 
-      shipping, 
-      total 
-    })
+    console.log('🚀 CHECKOUT STARTED')
+    console.log('📋 Form data:', form)
+    console.log('🛒 Cart items:', items)
+    console.log('💰 Totals:', { subtotal, shipping, total })
 
     if (!validateForm()) {
-      debugLog('error', '❌ Form validation failed', errors)
+      console.log('❌ Form validation failed:', errors)
       const firstError = document.querySelector('.border-red-600')
       firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
-    debugLog('info', '✅ Form validation passed')
-
+    console.log('✅ Form validation passed')
     setLoading(true)
 
     try {
-      debugLog('info', '🔗 Creating Supabase client')
       const supabase = createClient()
+      console.log('🔗 Supabase client created')
 
-      const addressData = {
-        name: `${form.firstName} ${form.lastName}`,
-        address: form.address,
-        city: form.city,
-        postalCode: form.postalCode,
-        phone: form.phone,
-      }
-
-      debugLog('info', '📦 Preparing order data')
-
+      // Create order in database (match schema exactly)
       const orderData = {
         email: form.email,
         status: 'pending',
@@ -133,12 +118,25 @@ export default function CheckoutPage() {
         subtotal: subtotal,
         shipping_cost: shipping,
         tax_amount: 0,
-        shipping_address: addressData,
-        billing_address: addressData, // Same as shipping for now
-        tracking_code: null,
+        shipping_address: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+          phone: form.phone,
+        },
+        billing_address: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+          phone: form.phone,
+        },
+        stripe_payment_status: 'pending',
+        payment_method: null,
       }
 
-      debugLog('info', '📝 Inserting order into database...')
+      console.log('📦 Order data to insert:', orderData)
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -147,18 +145,13 @@ export default function CheckoutPage() {
         .single()
 
       if (orderError) {
-        debugLog('error', '❌ Order creation failed', { 
-          message: orderError.message,
-          code: orderError.code,
-          hint: orderError.hint,
-        })
-        throw new Error(`Database error: ${orderError.message}`)
+        console.error('❌ Order creation error:', orderError)
+        throw orderError
       }
 
-      debugLog('info', '✅ Order created successfully', { orderId: order.id })
+      console.log('✅ Order created successfully:', order)
 
-      // Create order items
-      debugLog('info', '📦 Creating order items...')
+      // Create order items (match schema with snapshot data)
       const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: item.productId,
@@ -166,29 +159,25 @@ export default function CheckoutPage() {
         product_name: item.name,
         size: item.size,
         color: item.color,
-        sku: item.sku || `${item.productId}-${item.size}-${item.color}`,
+        sku: `${item.productId}-${item.size}-${item.color}`,
         quantity: item.quantity,
         price_at_purchase: item.price,
         subtotal: item.price * item.quantity,
         image_url: item.image,
       }))
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems)
+      console.log('📦 Order items to insert:', orderItems)
+
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
 
       if (itemsError) {
-        debugLog('error', '❌ Order items creation failed', {
-          message: itemsError.message,
-          code: itemsError.code,
-        })
-        throw new Error(`Database error: ${itemsError.message}`)
+        console.error('❌ Order items creation error:', itemsError)
+        throw itemsError
       }
 
-      debugLog('info', '✅ Order items created successfully')
+      console.log('✅ Order items created successfully')
 
       // Create Stripe Checkout Session
-      debugLog('info', '💳 Creating Stripe payload...')
       const stripePayload = {
         orderId: order.id,
         items: items,
@@ -196,56 +185,52 @@ export default function CheckoutPage() {
         customerName: `${form.firstName} ${form.lastName}`,
         shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
         phone: form.phone,
+        shippingAddressObject: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+        },
       }
 
-      debugLog('info', '🌐 Calling Stripe API...')
+      console.log('💳 Stripe payload:', stripePayload)
+      console.log('🌐 Calling API:', '/api/create-checkout-session')
 
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(stripePayload),
       })
 
-      debugLog('info', `📡 Stripe API response status: ${response.status}`)
+      console.log('📡 API response status:', response.status, response.statusText)
 
-      const responseText = await response.text()
-      let data
-      
-      try {
-        data = JSON.parse(responseText)
-      } catch (e) {
-        debugLog('error', '❌ Failed to parse Stripe response', { responseText })
-        throw new Error('Invalid response from payment provider')
-      }
+      const data = await response.json()
+      console.log('📡 API response data:', data)
 
       if (!response.ok) {
-        debugLog('error', '❌ Stripe API error', {
-          status: response.status,
-          error: data.error,
-          type: data.type,
-          code: data.code,
-        })
-        throw new Error(data.error || 'Payment provider error')
-      }
-
-      debugLog('info', '✅ Stripe session created', { hasUrl: !!data.url })
-
-      if (!data.url) {
-        debugLog('error', '❌ No Stripe checkout URL received', { data })
-        throw new Error('No payment URL received')
+        console.error('❌ API returned error:', data)
+        throw new Error(data.error || 'Failed to create checkout session')
       }
 
       // Redirect to Stripe Checkout
-      debugLog('info', '🔄 Redirecting to Stripe...')
-      window.location.href = data.url
-
+      if (data.url) {
+        console.log('✅ Stripe URL received:', data.url)
+        console.log('🔄 Redirecting to Stripe...')
+        window.location.href = data.url
+      } else {
+        console.error('❌ No checkout URL in response:', data)
+        throw new Error('No checkout URL received')
+      }
     } catch (error: any) {
-      debugLog('error', '🔴 Checkout error', {
+      console.error('💥 CHECKOUT ERROR:', error)
+      console.error('💥 Error details:', {
         message: error.message,
+        stack: error.stack,
         name: error.name,
       })
-      alert(`Er ging iets mis: ${error.message}`)
-    } finally {
+      alert(`Er is een fout opgetreden: ${error.message}`)
       setLoading(false)
     }
   }
@@ -294,7 +279,7 @@ export default function CheckoutPage() {
           {/* Checkout Form - 3/5 width */}
           <div className="lg:col-span-3">
             <div className="bg-white border-2 border-black p-6 md:p-8">
-              <h1 className="text-3xl md:text-4xl font-display mb-6">AFREKENEN</h1>
+              <h1 className="text-3xl md:text-4xl font-display mb-6">AFREKEN</h1>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact - Compact */}

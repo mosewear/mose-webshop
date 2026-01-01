@@ -842,8 +842,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             >
               Sluiten
             </button>
-          </div>
-        </div>
+      </div>
+    </div>
       )}
     </>
   )
