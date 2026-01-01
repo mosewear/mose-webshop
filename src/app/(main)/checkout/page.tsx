@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/store/cart'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteSettings } from '@/lib/settings'
 
 interface CheckoutForm {
   email: string
@@ -32,10 +33,20 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
   const [loading, setLoading] = useState(false)
   const [showOrderSummary, setShowOrderSummary] = useState(false)
+  const [shippingCost, setShippingCost] = useState(5.95)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
 
   const subtotal = getTotal()
-  const shipping = subtotal >= 50 ? 0 : 5.95
+  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
   const total = subtotal + shipping
+
+  useEffect(() => {
+    // Load settings
+    getSiteSettings().then((settings) => {
+      setShippingCost(settings.shipping_cost)
+      setFreeShippingThreshold(settings.free_shipping_threshold)
+    })
+  }, [])
 
   useEffect(() => {
     // Redirect to cart if empty
@@ -499,9 +510,9 @@ export default function CheckoutPage() {
                     )}
                   </span>
                 </div>
-                {subtotal < 50 && subtotal > 0 && (
+                {subtotal < freeShippingThreshold && subtotal > 0 && (
                   <div className="bg-green-50 border border-green-200 p-2 rounded text-xs text-green-800">
-                    Nog €{(50 - subtotal).toFixed(2)} tot gratis verzending!
+                    Nog €{(freeShippingThreshold - subtotal).toFixed(2)} tot gratis verzending!
                   </div>
                 )}
               </div>
