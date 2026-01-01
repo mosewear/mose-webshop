@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import { getSiteSettings } from '@/lib/settings'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -50,11 +51,18 @@ export async function POST(req: NextRequest) {
 
     console.log('🔵 API: Line items created:', lineItems)
 
-    // Calculate shipping
-    const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
-    const shippingCost = subtotal >= 50 ? 0 : 5.95
+    // Get dynamic shipping settings from Supabase
+    const settings = await getSiteSettings()
+    console.log('🔵 API: Settings from Supabase:', {
+      shipping_cost: settings.shipping_cost,
+      free_shipping_threshold: settings.free_shipping_threshold
+    })
 
-    console.log('🔵 API: Calculated shipping:', { subtotal, shippingCost })
+    // Calculate shipping with dynamic values
+    const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
+    const shippingCost = subtotal >= settings.free_shipping_threshold ? 0 : settings.shipping_cost
+
+    console.log('🔵 API: Calculated shipping:', { subtotal, shippingCost, threshold: settings.free_shipping_threshold })
 
     // Add shipping as line item if applicable
     if (shippingCost > 0) {
