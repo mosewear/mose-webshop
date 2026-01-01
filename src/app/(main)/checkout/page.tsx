@@ -235,39 +235,53 @@ export default function CheckoutPage() {
       }
 
       const { clientSecret } = await paymentResponse.json()
-      console.log('✅ Payment Intent created, redirecting to payment provider...')
+      console.log('✅ Payment Intent created, confirming payment...')
       
-      // Initialize Stripe and redirect to payment page
+      // Initialize Stripe
       const stripe = await stripePromise
       
       if (!stripe) {
         throw new Error('Stripe kon niet worden geladen')
       }
 
-      // Confirm the payment and redirect directly to bank/payment provider
-      const { error } = await stripe.confirmPayment({
-        clientSecret,
-        confirmParams: {
-          return_url: `${window.location.origin}/order-confirmation?order_id=${orderId}`,
-          payment_method_data: {
-            billing_details: {
-              name: `${form.firstName} ${form.lastName}`,
-              email: form.email,
-              phone: form.phone,
-              address: {
-                line1: form.address,
-                city: form.city,
-                postal_code: form.postalCode,
-                country: form.country,
-              },
-            },
+      // For iDEAL and other redirect methods, we need to use confirmIdealPayment or a generic approach
+      const returnUrl = `${window.location.origin}/order-confirmation?order_id=${orderId}`
+      
+      // Create payment method first
+      const { paymentMethod: pm, error: pmError } = await stripe.createPaymentMethod({
+        type: paymentMethod as any,
+        billing_details: {
+          name: `${form.firstName} ${form.lastName}`,
+          email: form.email,
+          phone: form.phone,
+          address: {
+            line1: form.address,
+            city: form.city,
+            postal_code: form.postalCode,
+            country: form.country,
           },
         },
       })
 
+      if (pmError) {
+        console.error('❌ Payment method creation error:', pmError)
+        throw new Error(pmError.message || 'Payment method kon niet worden aangemaakt')
+      }
+
+      console.log('✅ Payment method created:', pm?.id)
+
+      // Now confirm the payment with the payment method
+      const { error } = await stripe.confirmPayment({
+        clientSecret,
+        confirmParams: {
+          payment_method: pm?.id,
+          return_url: returnUrl,
+        },
+      })
+
       if (error) {
-        console.error('❌ Payment redirect error:', error)
-        throw new Error(error.message || 'Betaling kon niet worden gestart')
+        console.error('❌ Payment confirmation error:', error)
+        throw new Error(error.message || 'Betaling kon niet worden bevestigd')
       }
 
       // If we reach here without error, redirect is happening
