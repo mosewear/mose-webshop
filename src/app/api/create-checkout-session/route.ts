@@ -72,15 +72,16 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('🔵 API: Creating Stripe session...')
-    console.log('🔵 API: Success URL base:', process.env.NEXT_PUBLIC_SITE_URL)
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app').trim()
+    console.log('🔵 API: Site URL:', siteUrl)
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'ideal', 'bancontact'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-confirmation?order=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
+      success_url: `${siteUrl}/order-confirmation?order=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/checkout?canceled=true`,
       customer_email: customerEmail,
       metadata: {
         orderId,
