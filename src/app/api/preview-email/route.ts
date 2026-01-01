@@ -33,6 +33,11 @@ function generateDesign(designNumber: number, data: typeof testData): string {
   const { customerName, orderId, orderTotal, orderItems, shippingAddress } = data
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
   
+  // Use absolute URL for logo
+  const logoUrl = `${siteUrl}/logomose.png`
+  
+  console.log('Logo URL:', logoUrl)
+  
   const productItemsHtml = orderItems.map(item => ({
     name: item.name,
     size: item.size,
@@ -73,7 +78,7 @@ function generateDesign(designNumber: number, data: typeof testData): string {
 </head>
 <body>
   <div class="wrapper">
-    <div class="header"><img src="${siteUrl}/logomose.png" alt="MOSE"/></div>
+    <div class="header"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:180px;height:auto;"/></div>
     <div class="hero">
       <div class="check">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
@@ -144,7 +149,7 @@ function generateDesign(designNumber: number, data: typeof testData): string {
 </head>
 <body>
   <div class="wrapper">
-    <div class="logo-bar"><img src="${siteUrl}/logomose.png" alt="MOSE"/></div>
+    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;opacity:0.9;"/></div>
     <div class="hero">
       <div class="check-big">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4">
@@ -214,7 +219,7 @@ function generateDesign(designNumber: number, data: typeof testData): string {
 </head>
 <body>
   <div class="wrapper">
-    <div class="logo"><img src="${siteUrl}/logomose.png" alt="MOSE"/></div>
+    <div class="logo"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:160px;"/></div>
     <div class="header">
       <div class="title">ORDER BEVESTIGD</div>
       <div style="font-size:12px;color:#666">GRONINGEN, NEDERLAND</div>
@@ -281,7 +286,7 @@ function generateDesign(designNumber: number, data: typeof testData): string {
   <div class="wrapper">
     <div class="split">
       <div class="left">
-        <img src="${siteUrl}/logomose.png" class="logo-sm" alt="MOSE"/>
+        <img src="${logoUrl}" class="logo-sm" alt="MOSE" style="display:block;max-width:120px;margin-bottom:32px;"/>
         <div class="split-title"><span class="check-inline">✓</span>BEDANKT!</div>
         <div style="font-size:15px;color:#999;margin-bottom:24px">Je bestelling is bevestigd</div>
         <div class="info">
@@ -344,7 +349,7 @@ function generateDesign(designNumber: number, data: typeof testData): string {
 <body>
   <div class="wrapper">
     <div class="header-wave">
-      <img src="${siteUrl}/logomose.png" class="logo-center" alt="MOSE"/>
+      <img src="${logoUrl}" class="logo-center" alt="MOSE" style="display:block;max-width:160px;margin:0 auto 24px;filter:brightness(0) invert(1);"/>
       <div class="check-modern">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="3">
           <polyline points="20 6 9 17 4 12"></polyline>
