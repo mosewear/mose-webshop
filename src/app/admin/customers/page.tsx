@@ -41,6 +41,38 @@ export default function CustomersPage() {
     }
   }
 
+  const handleExportCSV = () => {
+    if (customers.length === 0) {
+      alert('Geen klanten om te exporteren')
+      return
+    }
+
+    // Create CSV content
+    const headers = ['Email', 'Voornaam', 'Achternaam', 'Aangemaakt', 'Bijgewerkt']
+    const csvRows = [
+      headers.join(','),
+      ...customers.map(customer => [
+        customer.email || '',
+        customer.first_name || '',
+        customer.last_name || '',
+        new Date(customer.created_at).toLocaleDateString('nl-NL'),
+        new Date(customer.updated_at).toLocaleDateString('nl-NL'),
+      ].map(val => `"${val}"`).join(','))
+    ]
+
+    const csvContent = csvRows.join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `klanten-export-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -57,6 +89,12 @@ export default function CustomersPage() {
           <h1 className="text-3xl font-display font-bold mb-2">Klanten</h1>
           <p className="text-gray-600 text-sm md:text-base">Overzicht van geregistreerde klanten</p>
         </div>
+        <button
+          onClick={handleExportCSV}
+          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+        >
+          📥 Exporteer CSV
+        </button>
       </div>
 
       {/* Error Message */}
