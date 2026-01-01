@@ -17,8 +17,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Get the site URL from request or env
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin || 'http://localhost:3000'
+    // Get the site URL - use request headers to determine the origin
+    const host = req.headers.get('host') || 'localhost:3000'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const siteUrl = `${protocol}://${host}`
+    
+    console.log('Site URL:', siteUrl) // Debug log
 
     // Create line items for Stripe
     const lineItems = items.map((item: any) => ({
