@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         product_data: {
           name: item.name,
           description: `${item.size} • ${item.color}`,
-          images: [item.image],
+          // Remove images - might cause issues with local/relative URLs
         },
         unit_amount: Math.round(item.price * 100), // Stripe expects cents
       },
