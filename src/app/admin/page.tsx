@@ -293,6 +293,7 @@ export default function AdminDashboard() {
               <div className="text-xs text-gray-500">Real-time debugging</div>
             </div>
           </Link>
+        </div>
       </div>
 
       {/* System Status */}
