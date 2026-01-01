@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         shippingAddress: JSON.stringify(shippingAddress),
       },
       description: `Order #${orderId} - ${customerName}`,
-      receipt_email: customerEmail,
+      // Don't send Stripe receipt email - we send our own from orders@mosewear.nl
     }
 
     // If a specific payment method is requested, use that
