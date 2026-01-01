@@ -136,6 +136,9 @@ function PaymentForm({
         <PaymentElement 
           options={{
             layout: 'tabs',
+            fields: {
+              billingDetails: 'never' // Hide all billing detail fields - we already have them!
+            }
           }}
         />
       </div>
