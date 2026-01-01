@@ -214,19 +214,19 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="flex-shrink-0 border-t-2 border-black bg-gray-50 sticky bottom-0">
               {/* Desktop Summary */}
               <div className="hidden md:block p-4 space-y-2">
-                {/* Price Breakdown - Compact */}
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
+                {/* Price Breakdown - Better Hierarchy */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotaal</span>
-                    <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-900">€{subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">BTW 21%</span>
                     <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Verzending</span>
-                    <span className="font-semibold">
+                    <span className="font-semibold text-gray-900">
                       {shipping === 0 ? (
                         <span className="text-brand-primary">GRATIS</span>
                       ) : (
@@ -245,22 +245,22 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </div>
                 )}
 
-                {/* Divider & Total - Compact */}
-                <div className="border-t border-black pt-2">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-display text-base uppercase">Totaal</span>
-                    <span className="font-display text-xl">€{total.toFixed(2)}</span>
+                {/* Divider & Total - PROMINENT! */}
+                <div className="border-t-2 border-black pt-3 mt-3">
+                  <div className="flex justify-between items-baseline mb-1">
+                    <span className="font-display text-lg uppercase tracking-wide">Totaal</span>
+                    <span className="font-display text-3xl font-bold">€{total.toFixed(2)}</span>
                   </div>
-                  <p className="text-xs text-gray-500 text-right">
+                  <p className="text-xs text-gray-600 text-right">
                     Incl. €{totalBtw.toFixed(2)} BTW
                   </p>
                 </div>
 
-                {/* CTA Button - Compact */}
+                {/* CTA Button */}
                 <Link
                   href="/checkout"
                   onClick={onClose}
-                  className="block w-full py-3 bg-black text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                  className="block w-full py-3 bg-black text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-gray-800 transition-colors mt-3"
                 >
                   Afrekenen
                 </Link>
@@ -277,19 +277,20 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <div className="md:hidden p-4 bg-black text-white">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="font-display text-2xl">€{total.toFixed(2)}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">Incl. BTW</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Totaal</div>
+                    <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
+                    <div className="text-xs text-gray-400">Incl. €{totalBtw.toFixed(2)} BTW</div>
                   </div>
                   <Link
                     href="/checkout"
                     onClick={onClose}
-                    className="px-8 py-3 bg-white text-black font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors"
+                    className="px-6 py-3 bg-white text-black font-bold text-sm uppercase tracking-wider hover:bg-gray-200 transition-colors"
                   >
                     Afrekenen
                   </Link>
                 </div>
                 {subtotal < freeShippingThreshold && (
-                  <p className="text-xs text-gray-400 text-center">
+                  <p className="text-xs text-gray-400 text-center border-t border-gray-700 pt-2">
                     Nog €{(freeShippingThreshold - subtotal).toFixed(2)} tot gratis verzending
                   </p>
                 )}
