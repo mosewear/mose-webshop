@@ -198,9 +198,9 @@ export default function CartPage() {
                     )}
                   </span>
                 </div>
-                {subtotal < 50 && (
+                {subtotal < freeShippingThreshold && (
                   <p className="text-xs text-gray-500">
-                    Nog €{(50 - subtotal).toFixed(2)} tot gratis verzending!
+                    Nog €{(freeShippingThreshold - subtotal).toFixed(2)} tot gratis verzending!
                   </p>
                 )}
               </div>

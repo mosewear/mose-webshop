@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { clearSettingsCache } from '@/lib/settings'
 
 interface SiteSetting {
   key: string
@@ -112,6 +113,7 @@ export default function SettingsPage() {
       }
 
       alert('✅ Instellingen opgeslagen!')
+      clearSettingsCache() // Clear cache so new settings are loaded
       fetchSettings()
     } catch (err: any) {
       setError(err.message)
