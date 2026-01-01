@@ -244,38 +244,27 @@ export default function CheckoutPage() {
         throw new Error('Stripe kon niet worden geladen')
       }
 
-      // For iDEAL and other redirect methods, we need to use confirmIdealPayment or a generic approach
       const returnUrl = `${window.location.origin}/order-confirmation?order_id=${orderId}`
       
-      // Create payment method first
-      const { paymentMethod: pm, error: pmError } = await stripe.createPaymentMethod({
-        type: paymentMethod as any,
-        billing_details: {
-          name: `${form.firstName} ${form.lastName}`,
-          email: form.email,
-          phone: form.phone,
-          address: {
-            line1: form.address,
-            city: form.city,
-            postal_code: form.postalCode,
-            country: form.country,
-          },
-        },
-      })
-
-      if (pmError) {
-        console.error('❌ Payment method creation error:', pmError)
-        throw new Error(pmError.message || 'Payment method kon niet worden aangemaakt')
-      }
-
-      console.log('✅ Payment method created:', pm?.id)
-
-      // Now confirm the payment with the payment method
+      // For redirect-based payments, use confirmPayment with payment_method_data
+      // Stripe will handle the redirect to the bank/payment provider
       const { error } = await stripe.confirmPayment({
         clientSecret,
         confirmParams: {
-          payment_method: pm?.id,
           return_url: returnUrl,
+          payment_method_data: {
+            billing_details: {
+              name: `${form.firstName} ${form.lastName}`,
+              email: form.email,
+              phone: form.phone,
+              address: {
+                line1: form.address,
+                city: form.city,
+                postal_code: form.postalCode,
+                country: form.country,
+              },
+            },
+          },
         },
       })
 
