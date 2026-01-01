@@ -253,10 +253,26 @@ export default function StripePaymentForm({
     )
   }
 
+  // Don't render Elements until we have a clientSecret (after method selection)
+  if (!clientSecret) {
+    return (
+      <CheckoutForm 
+        clientSecret={null} 
+        onSuccess={onSuccess} 
+        onError={onError}
+        onMethodSelected={onMethodSelected}
+        total={total}
+        country={country}
+        isCreatingIntent={isCreatingIntent}
+      />
+    )
+  }
+
   return (
     <Elements 
+      key={clientSecret} // Force remount when clientSecret changes
       stripe={stripePromise} 
-      options={clientSecret ? { 
+      options={{ 
         clientSecret,
         appearance: {
           theme: 'stripe',
@@ -271,7 +287,7 @@ export default function StripePaymentForm({
           },
         },
         locale: 'nl',
-      } : undefined}
+      }}
     >
       <CheckoutForm 
         clientSecret={clientSecret} 
