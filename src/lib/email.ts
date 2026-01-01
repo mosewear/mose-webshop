@@ -24,81 +24,113 @@ interface OrderEmailProps {
 
 export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const { customerName, customerEmail, orderId, orderTotal, orderItems, shippingAddress } = props
+  
+  // BTW berekening (21%)
+  const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const shipping = orderTotal - subtotal
+  const totalExclBtw = orderTotal / 1.21
+  const btw = orderTotal - totalExclBtw
+  const subtotalExclBtw = subtotal / 1.21
+  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const logoUrl = `${siteUrl}/logomose.png`
+  
+  const productItemsHtml = orderItems.map(item => ({
+    name: item.name,
+    size: item.size,
+    color: item.color,
+    quantity: item.quantity,
+    total: (item.price * item.quantity).toFixed(2)
+  }))
 
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
-          .header { background: #1a1a1a; color: white; padding: 30px; text-align: center; }
-          .header h1 { margin: 0; font-size: 32px; letter-spacing: 4px; }
-          .content { padding: 30px; background: #f9f9f9; }
-          .order-box { background: white; border: 2px solid #1a1a1a; padding: 20px; margin: 20px 0; }
-          .item { border-bottom: 1px solid #eee; padding: 15px 0; }
-          .item:last-child { border-bottom: none; }
-          .total { font-size: 24px; font-weight: bold; text-align: right; margin-top: 20px; padding-top: 20px; border-top: 2px solid #1a1a1a; }
-          .footer { background: #1a1a1a; color: white; padding: 20px; text-align: center; font-size: 14px; }
-          .button { display: inline-block; background: #2ECC71; color: white; padding: 15px 30px; text-decoration: none; font-weight: bold; text-transform: uppercase; margin: 20px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>MOSE</h1>
-          <p style="margin: 10px 0 0 0; font-size: 14px; letter-spacing: 2px;">MOSEWEAR.COM</p>
-        </div>
-        
-        <div class="content">
-          <h2>Bedankt voor je bestelling!</h2>
-          <p>Hey ${customerName},</p>
-          <p>Je bestelling is succesvol geplaatst. We gaan direct aan de slag om alles voor je klaar te maken.</p>
-          
-          <div class="order-box">
-            <p><strong>Bestelnummer:</strong> #${orderId.slice(0, 8).toUpperCase()}</p>
-            
-            <h3>Je items:</h3>
-            ${orderItems.map(item => `
-              <div class="item">
-                <strong>${item.name}</strong><br>
-                <span style="color: #666;">Maat: ${item.size} • Kleur: ${item.color} • x${item.quantity}</span><br>
-                <span style="float: right; font-weight: bold;">€${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            `).join('')}
-            
-            <div class="total">
-              Totaal: €${orderTotal.toFixed(2)}
-            </div>
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff; }
+    .wrapper { max-width: 600px; margin: 0 auto; }
+    .logo-bar { padding: 24px; text-align: center; background: #000; }
+    .logo-bar img { max-width: 140px; display: block; margin: 0 auto; filter: brightness(0) invert(1); }
+    .hero { padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%); }
+    .check-modern { width: 72px; height: 72px; background: #2ECC71; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(46,204,113,0.25); }
+    h1 { margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px; }
+    .hero-sub { font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .hero-text { font-size: 14px; color: #999; }
+    .order-badge { background: #000; color: #fff; padding: 10px 24px; display: inline-block; margin-top: 20px; font-family: monospace; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; }
+    .content { padding: 32px 20px; }
+    .items-title { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .product { background: #f8f8f8; padding: 16px; border-left: 3px solid #2ECC71; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+    .prod-img { width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; }
+    .prod-info { flex: 1; }
+    .prod-name { font-size: 14px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+    .prod-meta { font-size: 12px; color: #666; }
+    .prod-price { font-size: 17px; font-weight: 900; }
+    .summary { background: #000; color: #fff; padding: 28px 24px; margin-top: 28px; }
+    .sum-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 16px; text-align: center; }
+    .sum-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; }
+    .sum-btw { font-size: 13px; color: #999; }
+    .sum-divider { border-top: 1px solid #333; margin: 12px 0; }
+    .sum-grand { font-size: 28px; font-weight: 900; padding-top: 12px; text-align: center; }
+    .footer { background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px; }
+    .footer strong { color: #fff; }
+    .footer a { color: #2ECC71; font-weight: 600; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="hero">
+      <div class="check-modern">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h1>BEDANKT!</h1>
+      <div class="hero-sub">Bestelling Geplaatst</div>
+      <div class="hero-text">Hey ${customerName}, we gaan voor je aan de slag</div>
+      <div class="order-badge">#${orderId.slice(0,8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="items-title">Jouw Items</div>
+      ${productItemsHtml.map(item => `
+        <div class="product">
+          <div class="prod-img"></div>
+          <div class="prod-info">
+            <div class="prod-name">${item.name}</div>
+            <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x stuks</div>
           </div>
-          
-          <div class="order-box">
-            <h3>Bezorgadres:</h3>
-            <p>
-              ${shippingAddress.name}<br>
-              ${shippingAddress.address}<br>
-              ${shippingAddress.postalCode} ${shippingAddress.city}
-            </p>
-          </div>
-          
-          <h3>Wat gebeurt er nu?</h3>
-          <ol>
-            <li><strong>Bevestiging:</strong> Deze email bevestigt je bestelling</li>
-            <li><strong>Inpakken:</strong> We pakken je items binnen 1-2 werkdagen in</li>
-            <li><strong>Verzending:</strong> Je ontvangt een track & trace zodra het onderweg is</li>
-          </ol>
-          
-          <center>
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/order-confirmation?order=${orderId}" class="button">Bekijk je bestelling</a>
-          </center>
+          <div class="prod-price">€${item.total}</div>
         </div>
-        
-        <div class="footer">
-          <p><strong>MOSE</strong> • Groningen, Nederland</p>
-          <p>Vragen? Stuur een mail naar <a href="mailto:bestellingen@orders.mosewear.nl" style="color: #2ECC71;">bestellingen@orders.mosewear.nl</a></p>
+      `).join('')}
+      
+      <div class="summary">
+        <div class="sum-label">Betaaloverzicht</div>
+        <div class="sum-line">
+          <span>Subtotaal (excl. BTW)</span>
+          <span style="font-weight:600">€${subtotalExclBtw.toFixed(2)}</span>
         </div>
-      </body>
-    </html>
-  `
+        <div class="sum-line sum-btw">
+          <span>BTW (21%)</span>
+          <span>€${btw.toFixed(2)}</span>
+        </div>
+        <div class="sum-line">
+          <span>Verzendkosten</span>
+          <span style="font-weight:600">€${shipping.toFixed(2)}</span>
+        </div>
+        <div class="sum-divider"></div>
+        <div class="sum-grand">€${orderTotal.toFixed(2)}</div>
+        <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
+      </div>
+    </div>
+    <div class="footer">
+      <p><strong>MOSE</strong> • Groningen, Nederland</p>
+      <p style="margin-top:8px"><a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+    </div>
+  </div>
+</body>
+</html>`
 
   try {
     const { data, error } = await resend.emails.send({

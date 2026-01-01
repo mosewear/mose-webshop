@@ -60,6 +60,14 @@ export default function CheckoutPage() {
 
   const subtotal = getTotal()
   const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
+  
+  // BTW berekening (21% is al inbegrepen in de prijzen)
+  const subtotalExclBtw = subtotal / 1.21
+  const btwAmount = subtotal - subtotalExclBtw
+  const shippingExclBtw = shipping / 1.21
+  const shippingBtw = shipping - shippingExclBtw
+  const totalBtw = btwAmount + shippingBtw
+  
   const total = subtotal + shipping
 
   useEffect(() => {
@@ -614,11 +622,15 @@ export default function CheckoutPage() {
                   <span className="text-gray-600">Subtotaal</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Waarvan BTW (21%)</span>
+                  <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Verzending</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
-                      <span className="text-black font-bold">GRATIS</span>
+                      <span className="text-brand-primary font-bold">GRATIS</span>
                     ) : (
                       `€${shipping.toFixed(2)}`
                     )}
@@ -636,6 +648,7 @@ export default function CheckoutPage() {
                 <span className="text-lg font-bold">Totaal</span>
                 <span className="text-2xl font-display">€{total.toFixed(2)}</span>
               </div>
+              <p className="text-xs text-gray-500 text-right mt-1">Incl. €{totalBtw.toFixed(2)} BTW</p>
 
               {/* Submit Button - Desktop */}
               {currentStep === 'details' && (

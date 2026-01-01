@@ -66,9 +66,11 @@ export function Footer() {
           <p className="text-gray-400 text-sm mb-4 md:mb-0">
             © {new Date().getFullYear()} MOSE. Alle rechten voorbehouden.
           </p>
-          <p className="text-gray-400 text-sm">
-            Gemaakt met ❤️ in Groningen
-          </p>
+          <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center text-sm text-gray-400">
+            <p>Alle prijzen incl. 21% BTW</p>
+            <span className="hidden md:inline">•</span>
+            <p>Gemaakt met ❤️ in Groningen</p>
+          </div>
         </div>
       </div>
     </footer>

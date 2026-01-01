@@ -268,11 +268,21 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               ))}
             </div>
-            <div className="mt-6 pt-4 border-t-2 border-gray-200 flex justify-between items-center">
-              <span className="text-lg font-bold">Totaal</span>
-              <span className="text-2xl md:text-3xl font-bold text-brand-primary">
-                €{Number(order.total).toFixed(2)}
-              </span>
+            <div className="mt-6 pt-4 border-t-2 border-gray-200 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Subtotaal</span>
+                <span className="font-semibold">€{Number(order.total).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Waarvan BTW (21%)</span>
+                <span className="text-gray-500">€{(Number(order.total) - Number(order.total) / 1.21).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className="text-lg font-bold">Totaal (incl. BTW)</span>
+                <span className="text-2xl md:text-3xl font-bold text-brand-primary">
+                  €{Number(order.total).toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
 

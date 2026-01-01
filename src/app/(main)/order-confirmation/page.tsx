@@ -210,6 +210,10 @@ export default function OrderConfirmationPage({
                 <span>Subtotaal</span>
                 <span className="font-semibold">€{order.subtotal.toFixed(2)}</span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-300">Waarvan BTW (21%)</span>
+                <span className="text-gray-300">€{(order.subtotal - order.subtotal / 1.21).toFixed(2)}</span>
+              </div>
               <div className="flex justify-between text-lg">
                 <span>Verzending</span>
                 <span className="font-semibold">
@@ -224,6 +228,7 @@ export default function OrderConfirmationPage({
                 <span className="font-display">Totaal</span>
                 <span className="font-display">€{order.total.toFixed(2)}</span>
               </div>
+              <p className="text-xs text-gray-300 text-right">Incl. €{(order.total - order.total / 1.21).toFixed(2)} BTW</p>
             </div>
           </div>
 

@@ -311,7 +311,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {product.categories.name}
                 </Link>
                 <h1 className="text-3xl md:text-5xl font-display mb-4">{product.name}</h1>
-                <p className="text-2xl md:text-3xl font-bold">€{finalPrice.toFixed(2)}</p>
+                <div className="mb-2">
+                  <p className="text-2xl md:text-3xl font-bold">€{finalPrice.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500">Incl. BTW</p>
+                </div>
               </div>
 
               {/* Trust Badges - PROMINENT (Feature 6) */}
