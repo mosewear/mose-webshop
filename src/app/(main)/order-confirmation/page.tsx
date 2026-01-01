@@ -50,80 +50,41 @@ export default function OrderConfirmationPage({
     // Clear cart on successful order confirmation
     clearCart()
     
-    if (orderId) {
-      console.log('📋 Fetching by order_id:', orderId)
-      fetchOrderById(orderId)
-    } else if (paymentIntentId) {
-      console.log('💳 Fetching by payment_intent:', paymentIntentId)
-      fetchOrderByPaymentIntent(paymentIntentId)
+    if (orderId || paymentIntentId) {
+      fetchOrder()
     } else {
       console.error('❌ No orderId or paymentIntentId provided!')
       setLoading(false)
     }
   }, [orderId, paymentIntentId])
 
-  async function fetchOrderByPaymentIntent(paymentIntent: string) {
-    const supabase = createClient()
+  async function fetchOrder() {
+    try {
+      // Build query params
+      const params = new URLSearchParams()
+      if (orderId) params.append('order_id', orderId)
+      if (paymentIntentId) params.append('payment_intent', paymentIntentId)
 
-    console.log('🔍 Fetching order by payment_intent:', paymentIntent)
+      console.log('📡 Fetching order via API...')
+      
+      const response = await fetch(`/api/get-order?${params.toString()}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('❌ Error fetching order:', errorData)
+        setLoading(false)
+        return
+      }
 
-    // Fetch order by stripe_payment_intent_id
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('stripe_payment_intent_id', paymentIntent)
-      .single()
-
-    if (orderError) {
-      console.error('Error fetching order by payment_intent:', orderError)
+      const data = await response.json()
+      console.log('✅ Order fetched:', data.order.id)
+      
+      setOrder(data.order)
+      setOrderItems(data.items)
       setLoading(false)
-      return
-    }
-
-    if (orderData) {
-      setOrder(orderData)
-      await fetchOrderItems(orderData.id)
-    }
-
-    setLoading(false)
-  }
-
-  async function fetchOrderById(id: string) {
-    const supabase = createClient()
-
-    console.log('🔍 Fetching order by ID:', id)
-
-    // Fetch order
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (orderError) {
-      console.error('Error fetching order:', orderError)
+    } catch (error) {
+      console.error('❌ Failed to fetch order:', error)
       setLoading(false)
-      return
-    }
-
-    setOrder(orderData)
-    await fetchOrderItems(id)
-    setLoading(false)
-  }
-
-  async function fetchOrderItems(orderId: string) {
-    const supabase = createClient()
-
-    // Fetch order items
-    const { data: itemsData, error: itemsError } = await supabase
-      .from('order_items')
-      .select('*')
-      .eq('order_id', orderId)
-
-    if (itemsError) {
-      console.error('Error fetching order items:', itemsError)
-    } else {
-      setOrderItems(itemsData || [])
     }
   }
 
