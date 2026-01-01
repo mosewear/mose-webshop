@@ -316,11 +316,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* Trust Badges - PROMINENT (Feature 6) */}
               <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-3 py-2 rounded">
-                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-2 bg-gray-100 border border-gray-300 px-3 py-2">
+                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-sm font-semibold text-green-800">Gratis verzending €50+</span>
+                  <span className="text-sm font-bold text-gray-900">Gratis verzending €50+</span>
                 </div>
                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded">
                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,10 +436,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <div className="flex items-center gap-2">
                   {inStock ? (
                     <>
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className="text-green-600 font-semibold">
+                      <span className="text-black font-bold">
                         {lowStock ? `Nog maar ${selectedVariant.stock_quantity} op voorraad!` : 'Op voorraad'}
                       </span>
                     </>
@@ -465,7 +465,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <h3 className="font-bold mb-2">Mis dit product niet!</h3>
                   <p className="text-sm text-gray-600 mb-3">Ontvang een email als dit product weer op voorraad is.</p>
                   {notifySubmitted ? (
-                    <div className="text-green-600 font-semibold flex items-center gap-2">
+                    <div className="text-black font-bold flex items-center gap-2 animate-fadeIn">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
@@ -522,7 +522,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   disabled={!inStock || !selectedVariant || addedToCart}
                   className={`flex-1 py-4 md:py-5 text-lg md:text-xl font-bold uppercase tracking-wider transition-all ${
                     addedToCart
-                      ? 'bg-green-600 text-white cursor-default'
+                      ? 'bg-black text-white cursor-default animate-success'
                       : inStock && selectedVariant
                       ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -700,7 +700,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               disabled={addedToCart}
               className={`flex-1 py-4 text-base font-bold uppercase tracking-wider transition-all ${
                 addedToCart
-                  ? 'bg-green-600 text-white cursor-default'
+                  ? 'bg-black text-white cursor-default animate-success'
                   : 'bg-brand-primary text-white active:scale-95'
               }`}
             >

@@ -271,14 +271,14 @@ export default function CheckoutPage() {
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm">
+              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm">
                 ✓
               </div>
               <span className="ml-2 text-sm font-semibold text-gray-700 hidden sm:inline">Winkelwagen</span>
             </div>
             <div className={`w-12 h-0.5 ${currentStep === 'payment' ? 'bg-brand-primary' : 'bg-brand-primary'}`}></div>
             <div className="flex items-center">
-              <div className={`w-8 h-8 rounded-full ${currentStep === 'payment' ? 'bg-green-600' : 'bg-brand-primary'} text-white flex items-center justify-center font-bold text-sm`}>
+              <div className={`w-8 h-8 rounded-full ${currentStep === 'payment' ? 'bg-black' : 'bg-brand-primary'} text-white flex items-center justify-center font-bold text-sm transition-all`}>
                 {currentStep === 'payment' ? '✓' : '2'}
               </div>
               <span className={`ml-2 text-sm font-semibold ${currentStep === 'payment' ? 'text-gray-700' : 'text-gray-900'} hidden sm:inline`}>Gegevens</span>
@@ -440,19 +440,19 @@ export default function CheckoutPage() {
                 {/* Trust Signals */}
                 <div className="border-t-2 border-gray-200 pt-6 space-y-2 text-sm text-gray-700">
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span>Veilig betalen via Stripe</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>14 dagen bedenktijd</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <span>SSL beveiligde verbinding</span>
@@ -584,14 +584,14 @@ export default function CheckoutPage() {
                   <span className="text-gray-600">Verzending</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
-                      <span className="text-green-600">GRATIS</span>
+                      <span className="text-black font-bold">GRATIS</span>
                     ) : (
                       `€${shipping.toFixed(2)}`
                     )}
                   </span>
                 </div>
                 {subtotal < freeShippingThreshold && subtotal > 0 && (
-                  <div className="bg-green-50 border border-green-200 p-2 rounded text-xs text-green-800">
+                  <div className="bg-gray-100 border border-gray-300 p-2 text-xs text-gray-900 font-semibold">
                     Nog €{(freeShippingThreshold - subtotal).toFixed(2)} tot gratis verzending!
                   </div>
                 )}
