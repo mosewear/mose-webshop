@@ -45,14 +45,19 @@ export default function OrderConfirmationPage({
   const { clearCart } = useCart()
 
   useEffect(() => {
+    console.log('🔍 Order Confirmation - Params:', { orderId, paymentIntentId })
+    
     // Clear cart on successful order confirmation
     clearCart()
     
     if (orderId) {
+      console.log('📋 Fetching by order_id:', orderId)
       fetchOrderById(orderId)
     } else if (paymentIntentId) {
+      console.log('💳 Fetching by payment_intent:', paymentIntentId)
       fetchOrderByPaymentIntent(paymentIntentId)
     } else {
+      console.error('❌ No orderId or paymentIntentId provided!')
       setLoading(false)
     }
   }, [orderId, paymentIntentId])
