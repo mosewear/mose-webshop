@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
-import { Trash2, X, Minus, Plus } from 'lucide-react'
+import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw } from 'lucide-react'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCart()
@@ -242,10 +242,19 @@ export default function CartPage() {
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-6 space-y-2 text-sm text-gray-600 uppercase tracking-wider">
-              <p>🚚 Gratis verzending vanaf €{freeShippingThreshold.toFixed(2)}</p>
-              <p>🔒 Veilig betalen via Stripe</p>
-              <p>↩️  14 dagen bedenktijd</p>
+            <div className="pt-6 space-y-3 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <Truck size={18} className="flex-shrink-0" />
+                <span className="uppercase tracking-wider">Gratis verzending vanaf €{freeShippingThreshold.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Lock size={18} className="flex-shrink-0" />
+                <span className="uppercase tracking-wider">Veilig betalen via Stripe</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <RotateCcw size={18} className="flex-shrink-0" />
+                <span className="uppercase tracking-wider">14 dagen bedenktijd</span>
+              </div>
             </div>
           </div>
         </div>
@@ -324,10 +333,19 @@ export default function CartPage() {
                   Afrekenen
                 </Link>
 
-                <div className="pt-4 space-y-2 text-sm text-gray-600">
-                  <p>🚚 Gratis verzending vanaf €{freeShippingThreshold.toFixed(2)}</p>
-                  <p>🔒 Veilig betalen via Stripe</p>
-                  <p>↩️  14 dagen bedenktijd</p>
+                <div className="pt-4 space-y-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Truck size={18} className="flex-shrink-0" />
+                    <span>Gratis verzending vanaf €{freeShippingThreshold.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Lock size={18} className="flex-shrink-0" />
+                    <span>Veilig betalen via Stripe</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RotateCcw size={18} className="flex-shrink-0" />
+                    <span>14 dagen bedenktijd</span>
+                  </div>
                 </div>
               </div>
             </div>
