@@ -66,13 +66,18 @@ export async function GET(req: NextRequest) {
     }
 
     console.log('✅ API: Order found:', order.id)
+    console.log('📊 API: Order status:', {
+      stripe_payment_status: order.stripe_payment_status,
+      payment_method: order.payment_method,
+      email: order.email
+    })
 
     // Send order confirmation email if not sent yet
     // Check if email should be sent (only once per order)
     const shouldSendEmail = order.stripe_payment_status === 'pending' || order.stripe_payment_status === null
     
     if (shouldSendEmail) {
-      console.log('📧 Sending order confirmation email...')
+      console.log('📧 API: Attempting to send order confirmation email...')
       
       try {
         const emailResult = await sendOrderConfirmationEmail({
@@ -95,24 +100,29 @@ export async function GET(req: NextRequest) {
           }
         })
         
+        console.log('📧 API: Email result:', emailResult)
+        
         if (emailResult.success) {
-          console.log('✅ Order confirmation email sent!')
+          console.log('✅ API: Order confirmation email sent successfully!')
           
           // Mark email as sent by updating stripe_payment_status
           await supabase
             .from('orders')
             .update({ stripe_payment_status: 'succeeded' })
             .eq('id', order.id)
+            
+          console.log('✅ API: Order status updated to succeeded')
         } else {
-          console.error('❌ Email send failed:', emailResult.error)
+          console.error('❌ API: Email send failed:', emailResult.error)
+          // Don't update status if email failed
         }
           
       } catch (emailError) {
-        console.error('❌ Failed to send email:', emailError)
-        // Don't fail the request if email fails
+        console.error('❌ API: Exception sending email:', emailError)
+        // Don't fail the request if email fails, but log it
       }
     } else {
-      console.log('ℹ️ Email already sent for this order')
+      console.log('ℹ️ API: Email already sent for this order (status: ' + order.stripe_payment_status + ')')
     }
 
     return NextResponse.json({
