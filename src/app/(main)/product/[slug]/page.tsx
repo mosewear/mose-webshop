@@ -5,6 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
+import { useWishlist } from '@/store/wishlist'
+import ProductReviews from '@/components/ProductReviews'
 
 interface Product {
   id: string
@@ -59,10 +61,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [notifySubmitted, setNotifySubmitted] = useState(false)
 
   const addItem = useCart((state) => state.addItem)
+  const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
+  const [isWishlisted, setIsWishlisted] = useState(false)
+
+  useEffect(() => {
+    loadWishlist()
+  }, [])
 
   useEffect(() => {
     fetchProduct()
   }, [slug])
+
+  useEffect(() => {
+    if (product) {
+      setIsWishlisted(isInWishlist(product.id))
+    }
+  }, [product, isInWishlist])
 
   async function fetchProduct() {
     const supabase = createClient()
@@ -502,19 +516,43 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               )}
 
               {/* Add to Cart Button - Desktop */}
-              <button
-                onClick={handleAddToCart}
-                disabled={!inStock || !selectedVariant || addedToCart}
-                className={`hidden md:block w-full py-4 md:py-5 text-lg md:text-xl font-bold uppercase tracking-wider transition-all ${
-                  addedToCart
-                    ? 'bg-green-600 text-white cursor-default'
-                    : inStock && selectedVariant
-                    ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {addedToCart ? '✓ TOEGEVOEGD AAN WINKELWAGEN' : inStock ? 'TOEVOEGEN AAN WINKELWAGEN' : 'UITVERKOCHT'}
-              </button>
+              <div className="hidden md:flex gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!inStock || !selectedVariant || addedToCart}
+                  className={`flex-1 py-4 md:py-5 text-lg md:text-xl font-bold uppercase tracking-wider transition-all ${
+                    addedToCart
+                      ? 'bg-green-600 text-white cursor-default'
+                      : inStock && selectedVariant
+                      ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {addedToCart ? '✓ TOEGEVOEGD AAN WINKELWAGEN' : inStock ? 'TOEVOEGEN AAN WINKELWAGEN' : 'UITVERKOCHT'}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!product) return
+                    if (isWishlisted) {
+                      await removeFromWishlist(product.id)
+                      setIsWishlisted(false)
+                    } else {
+                      await addToWishlist(product.id)
+                      setIsWishlisted(true)
+                    }
+                  }}
+                  className={`p-4 border-2 transition-all ${
+                    isWishlisted
+                      ? 'bg-red-50 border-red-500 text-red-600'
+                      : 'border-gray-300 hover:border-brand-primary'
+                  }`}
+                  title={isWishlisted ? 'Verwijderen uit wishlist' : 'Toevoegen aan wishlist'}
+                >
+                  <svg className="w-6 h-6" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+              </div>
 
               {/* Product Tabs / Accordion (Feature 5) */}
               <div className="border-t-2 border-gray-200 pt-6">
@@ -643,13 +681,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </div>
             </div>
           )}
+
+          {/* Product Reviews */}
+          <ProductReviews productId={product.id} />
         </div>
       </div>
 
       {/* Sticky Add to Cart Bar - Mobile (Feature 1) */}
       {inStock && selectedVariant && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black p-4 z-40 shadow-2xl">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <p className="text-xs text-gray-600">Prijs</p>
               <p className="text-xl font-bold">€{(finalPrice * quantity).toFixed(2)}</p>
@@ -664,6 +705,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               }`}
             >
               {addedToCart ? '✓ TOEGEVOEGD' : 'IN WINKELWAGEN'}
+            </button>
+            <button
+              onClick={async () => {
+                if (!product) return
+                if (isWishlisted) {
+                  await removeFromWishlist(product.id)
+                  setIsWishlisted(false)
+                } else {
+                  await addToWishlist(product.id)
+                  setIsWishlisted(true)
+                }
+              }}
+              className={`p-4 border-2 transition-all ${
+                isWishlisted
+                  ? 'bg-red-50 border-red-500 text-red-600'
+                  : 'border-gray-300'
+              }`}
+            >
+              <svg className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
             </button>
           </div>
         </div>

@@ -174,6 +174,12 @@ export default function CheckoutPage() {
         customerName: `${form.firstName} ${form.lastName}`,
         shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
         phone: form.phone,
+        shippingAddressObject: {
+          name: `${form.firstName} ${form.lastName}`,
+          address: form.address,
+          city: form.city,
+          postalCode: form.postalCode,
+        },
       }
 
       console.log('💳 Stripe payload:', stripePayload)

@@ -42,6 +42,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const [trackingCode, setTrackingCode] = useState('')
   const [newStatus, setNewStatus] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   useEffect(() => {
     fetchOrder()
@@ -134,6 +135,35 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       alert(`Fout: ${err.message}`)
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleSendShippingEmail = async () => {
+    if (!order || !trackingCode) {
+      alert('Voeg eerst een tracking code toe!')
+      return
+    }
+
+    if (!confirm('Weet je zeker dat je de verzend-email wilt versturen?')) return
+
+    try {
+      setSendingEmail(true)
+      const response = await fetch('/api/send-shipping-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: id }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to send email')
+      }
+
+      alert('✅ Verzend-email verzonden!')
+    } catch (err: any) {
+      alert(`Fout bij versturen email: ${err.message}`)
+    } finally {
+      setSendingEmail(false)
     }
   }
 
@@ -341,6 +371,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               >
                 {updating ? 'Opslaan...' : 'Tracking Opslaan'}
               </button>
+              
+              {trackingCode && (
+                <button
+                  onClick={handleSendShippingEmail}
+                  disabled={sendingEmail}
+                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingEmail ? 'Verzenden...' : '📧 Verzend Email Versturen'}
+                </button>
+              )}
             </div>
           </div>
 
