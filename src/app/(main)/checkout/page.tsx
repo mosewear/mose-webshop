@@ -92,30 +92,29 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    await debugLog('info', '🚀 CHECKOUT STARTED', { form, items, subtotal, shipping, total })
+    // Log immediately - fire and forget
+    debugLog('info', '🚀 CHECKOUT STARTED', { 
+      form: { ...form, phone: '***' }, // Hide sensitive data
+      itemCount: items.length,
+      subtotal, 
+      shipping, 
+      total 
+    })
 
     if (!validateForm()) {
-      await debugLog('error', '❌ Form validation failed', errors)
+      debugLog('error', '❌ Form validation failed', errors)
       const firstError = document.querySelector('.border-red-600')
       firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
-    await debugLog('info', '✅ Form validation passed')
+    debugLog('info', '✅ Form validation passed')
 
     setLoading(true)
 
     try {
-      await debugLog('info', '🔗 Creating Supabase client')
+      debugLog('info', '🔗 Creating Supabase client')
       const supabase = createClient()
-
-      await debugLog('info', '📦 Preparing order data', {
-        email: form.email,
-        status: 'pending',
-        total: total,
-        subtotal: subtotal,
-        shipping_cost: shipping,
-      })
 
       const addressData = {
         name: `${form.firstName} ${form.lastName}`,
@@ -124,6 +123,8 @@ export default function CheckoutPage() {
         postalCode: form.postalCode,
         phone: form.phone,
       }
+
+      debugLog('info', '📦 Preparing order data')
 
       const orderData = {
         email: form.email,
@@ -137,7 +138,7 @@ export default function CheckoutPage() {
         tracking_code: null,
       }
 
-      await debugLog('info', '📝 Inserting order into database...')
+      debugLog('info', '📝 Inserting order into database...')
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -146,18 +147,18 @@ export default function CheckoutPage() {
         .single()
 
       if (orderError) {
-        await debugLog('error', '❌ Order creation failed', { 
-          error: orderError,
+        debugLog('error', '❌ Order creation failed', { 
           message: orderError.message,
-          code: orderError.code 
+          code: orderError.code,
+          hint: orderError.hint,
         })
-        throw orderError
+        throw new Error(`Database error: ${orderError.message}`)
       }
 
-      await debugLog('info', '✅ Order created successfully', { orderId: order.id })
+      debugLog('info', '✅ Order created successfully', { orderId: order.id })
 
       // Create order items
-      await debugLog('info', '📦 Creating order items...')
+      debugLog('info', '📦 Creating order items...')
       const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: item.productId,
@@ -177,14 +178,17 @@ export default function CheckoutPage() {
         .insert(orderItems)
 
       if (itemsError) {
-        await debugLog('error', '❌ Order items creation failed', itemsError)
-        throw itemsError
+        debugLog('error', '❌ Order items creation failed', {
+          message: itemsError.message,
+          code: itemsError.code,
+        })
+        throw new Error(`Database error: ${itemsError.message}`)
       }
 
-      await debugLog('info', '✅ Order items created successfully')
+      debugLog('info', '✅ Order items created successfully')
 
       // Create Stripe Checkout Session
-      await debugLog('info', '💳 Creating Stripe payload...')
+      debugLog('info', '💳 Creating Stripe payload...')
       const stripePayload = {
         orderId: order.id,
         items: items,
@@ -192,15 +196,9 @@ export default function CheckoutPage() {
         customerName: `${form.firstName} ${form.lastName}`,
         shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
         phone: form.phone,
-        shippingAddressObject: {
-          name: `${form.firstName} ${form.lastName}`,
-          address: form.address,
-          city: form.city,
-          postalCode: form.postalCode,
-        },
       }
 
-      await debugLog('info', '🌐 Calling Stripe API...', { apiUrl: '/api/create-checkout-session' })
+      debugLog('info', '🌐 Calling Stripe API...')
 
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -208,35 +206,43 @@ export default function CheckoutPage() {
         body: JSON.stringify(stripePayload),
       })
 
-      await debugLog('info', `📡 Stripe API response status: ${response.status}`)
+      debugLog('info', `📡 Stripe API response status: ${response.status}`)
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        await debugLog('error', '❌ Stripe API error', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-        })
-        throw new Error(`Stripe API error: ${response.status} ${errorText}`)
+      const responseText = await response.text()
+      let data
+      
+      try {
+        data = JSON.parse(responseText)
+      } catch (e) {
+        debugLog('error', '❌ Failed to parse Stripe response', { responseText })
+        throw new Error('Invalid response from payment provider')
       }
 
-      const data = await response.json()
-      await debugLog('info', '✅ Stripe session created', { sessionId: data.sessionId, url: data.url })
+      if (!response.ok) {
+        debugLog('error', '❌ Stripe API error', {
+          status: response.status,
+          error: data.error,
+          type: data.type,
+          code: data.code,
+        })
+        throw new Error(data.error || 'Payment provider error')
+      }
+
+      debugLog('info', '✅ Stripe session created', { hasUrl: !!data.url })
 
       if (!data.url) {
-        await debugLog('error', '❌ No Stripe checkout URL received', data)
-        throw new Error('No checkout URL received from Stripe')
+        debugLog('error', '❌ No Stripe checkout URL received', { data })
+        throw new Error('No payment URL received')
       }
 
       // Redirect to Stripe Checkout
-      await debugLog('info', '🔄 Redirecting to Stripe...', { url: data.url })
+      debugLog('info', '🔄 Redirecting to Stripe...')
       window.location.href = data.url
 
     } catch (error: any) {
-      await debugLog('error', '🔴 Checkout error', {
+      debugLog('error', '🔴 Checkout error', {
         message: error.message,
-        stack: error.stack,
-        error: error,
+        name: error.name,
       })
       alert(`Er ging iets mis: ${error.message}`)
     } finally {
