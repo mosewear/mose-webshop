@@ -27,6 +27,7 @@ interface CheckoutForm {
   city: string
   postalCode: string
   phone: string
+  country: string
 }
 
 export default function CheckoutPage() {
@@ -40,6 +41,7 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     phone: '',
+    country: 'NL',
   })
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
   const [loading, setLoading] = useState(false)
@@ -83,6 +85,8 @@ export default function CheckoutPage() {
       case 'postalCode':
         return !value.trim() ? 'Verplicht veld' : undefined
       case 'phone':
+        return !value.trim() ? 'Verplicht veld' : undefined
+      case 'country':
         return !value.trim() ? 'Verplicht veld' : undefined
       default:
         return undefined
@@ -135,6 +139,7 @@ export default function CheckoutPage() {
           city: form.city,
           postalCode: form.postalCode,
           phone: form.phone,
+          country: form.country,
         },
         billing_address: {
           name: `${form.firstName} ${form.lastName}`,
@@ -142,6 +147,7 @@ export default function CheckoutPage() {
           city: form.city,
           postalCode: form.postalCode,
           phone: form.phone,
+          country: form.country,
         },
         stripe_payment_status: 'pending',
         payment_method: null,
@@ -393,6 +399,23 @@ export default function CheckoutPage() {
                       />
                       {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
                     </div>
+
+                    {/* Country */}
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">Land</label>
+                      <select
+                        value={form.country}
+                        onChange={(e) => updateForm('country', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none bg-white"
+                      >
+                        <option value="NL">🇳🇱 Nederland</option>
+                        <option value="BE">🇧🇪 België</option>
+                        <option value="DE">🇩🇪 Duitsland</option>
+                        <option value="FR">🇫🇷 Frankrijk</option>
+                        <option value="GB">🇬🇧 Verenigd Koninkrijk</option>
+                        <option value="OTHER">🌍 Overig</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -461,6 +484,14 @@ export default function CheckoutPage() {
                 <div className="font-semibold mb-2">{form.firstName} {form.lastName}</div>
                 <div className="text-gray-600">{form.email}</div>
                 <div className="text-gray-600">{form.address}, {form.postalCode} {form.city}</div>
+                <div className="text-gray-600 mt-1">
+                  {form.country === 'NL' && '🇳🇱 Nederland'}
+                  {form.country === 'BE' && '🇧🇪 België'}
+                  {form.country === 'DE' && '🇩🇪 Duitsland'}
+                  {form.country === 'FR' && '🇫🇷 Frankrijk'}
+                  {form.country === 'GB' && '🇬🇧 Verenigd Koninkrijk'}
+                  {form.country === 'OTHER' && '🌍 Overig'}
+                </div>
               </div>
 
               {/* Stripe Payment Form */}
@@ -470,6 +501,7 @@ export default function CheckoutPage() {
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   total={total}
+                  country={form.country}
                 />
               )}
             </>
