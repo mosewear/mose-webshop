@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Get the site URL from request or env
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin || 'http://localhost:3000'
+
     // Create line items for Stripe
     const lineItems = items.map((item: any) => ({
       price_data: {
@@ -55,8 +58,8 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card', 'ideal', 'bancontact'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/order-confirmation?order=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
+      success_url: `${siteUrl}/order-confirmation?order=${orderId}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/checkout?canceled=true`,
       customer_email: customerEmail,
       metadata: {
         orderId,
