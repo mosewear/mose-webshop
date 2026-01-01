@@ -117,6 +117,14 @@ export default function CheckoutPage() {
         shipping_cost: shipping,
       })
 
+      const addressData = {
+        name: `${form.firstName} ${form.lastName}`,
+        address: form.address,
+        city: form.city,
+        postalCode: form.postalCode,
+        phone: form.phone,
+      }
+
       const orderData = {
         email: form.email,
         status: 'pending',
@@ -124,14 +132,8 @@ export default function CheckoutPage() {
         subtotal: subtotal,
         shipping_cost: shipping,
         tax_amount: 0,
-        shipping_address: {
-          name: `${form.firstName} ${form.lastName}`,
-          address: form.address,
-          city: form.city,
-          postalCode: form.postalCode,
-          phone: form.phone,
-        },
-        billing_address: null,
+        shipping_address: addressData,
+        billing_address: addressData, // Same as shipping for now
         tracking_code: null,
       }
 

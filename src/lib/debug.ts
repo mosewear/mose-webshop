@@ -4,8 +4,8 @@ export async function debugLog(level: 'info' | 'warn' | 'error', message: string
     // Log to console as well
     console.log(`[${level.toUpperCase()}] ${message}`, details)
 
-    // Send to server
-    await fetch('/api/debug-log', {
+    // Send to server (don't await - fire and forget so errors don't block)
+    fetch('/api/debug-log', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -13,6 +13,8 @@ export async function debugLog(level: 'info' | 'warn' | 'error', message: string
         message,
         details: details || {},
       }),
+    }).catch(err => {
+      console.error('Failed to send debug log:', err)
     })
   } catch (error) {
     console.error('Failed to send debug log:', error)
