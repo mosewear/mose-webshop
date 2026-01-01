@@ -45,16 +45,18 @@ export const createAdminClient = async () => {
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profileData || !profileData.is_admin) {
+  const profile = profileData as { id: string; is_admin: boolean; created_at: string; updated_at: string } | null
+
+  if (profileError || !profile || !profile.is_admin) {
     return { supabase, user, adminUser: null, isAdmin: false }
   }
 
-  // TypeScript type narrowing: profileData exists here and is_admin is true
+  // TypeScript type narrowing: profile exists here and is_admin is true
   const adminUser = {
-    id: profileData.id,
+    id: profile.id,
     role: 'admin' as const,
-    created_at: profileData.created_at,
-    updated_at: profileData.updated_at
+    created_at: profile.created_at,
+    updated_at: profile.updated_at
   }
   const isAdmin = true
 

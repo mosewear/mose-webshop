@@ -45,7 +45,9 @@ export default function AdminLoginPage() {
         .eq('id', authData.user.id)
         .single()
 
-      if (profileError || !profileData || !profileData.is_admin) {
+      const profile = profileData as { is_admin: boolean } | null
+
+      if (profileError || !profile || !profile.is_admin) {
         // User is not an admin
         await supabase.auth.signOut()
         setError('Je hebt geen admin toegang.')
