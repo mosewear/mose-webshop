@@ -80,17 +80,24 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    console.log('🚀 CHECKOUT STARTED')
+    console.log('📋 Form data:', form)
+    console.log('🛒 Cart items:', items)
+    console.log('💰 Totals:', { subtotal, shipping, total })
+
     if (!validateForm()) {
-      // Scroll to first error
+      console.log('❌ Form validation failed:', errors)
       const firstError = document.querySelector('.border-red-600')
       firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
+    console.log('✅ Form validation passed')
     setLoading(true)
 
     try {
       const supabase = createClient()
+      console.log('🔗 Supabase client created')
 
       // Create order in database (match schema exactly)
       const orderData = {
@@ -118,13 +125,20 @@ export default function CheckoutPage() {
         payment_method: null,
       }
 
+      console.log('📦 Order data to insert:', orderData)
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([orderData])
         .select()
         .single()
 
-      if (orderError) throw orderError
+      if (orderError) {
+        console.error('❌ Order creation error:', orderError)
+        throw orderError
+      }
+
+      console.log('✅ Order created successfully:', order)
 
       // Create order items (match schema with snapshot data)
       const orderItems = items.map((item) => ({
@@ -141,40 +155,64 @@ export default function CheckoutPage() {
         image_url: item.image,
       }))
 
+      console.log('📦 Order items to insert:', orderItems)
+
       const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
 
-      if (itemsError) throw itemsError
+      if (itemsError) {
+        console.error('❌ Order items creation error:', itemsError)
+        throw itemsError
+      }
+
+      console.log('✅ Order items created successfully')
 
       // Create Stripe Checkout Session
+      const stripePayload = {
+        orderId: order.id,
+        items: items,
+        customerEmail: form.email,
+        customerName: `${form.firstName} ${form.lastName}`,
+        shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
+        phone: form.phone,
+      }
+
+      console.log('💳 Stripe payload:', stripePayload)
+      console.log('🌐 Calling API:', '/api/create-checkout-session')
+
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          orderId: order.id,
-          items: items,
-          customerEmail: form.email,
-          customerName: `${form.firstName} ${form.lastName}`,
-          shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
-          phone: form.phone,
-        }),
+        body: JSON.stringify(stripePayload),
       })
 
+      console.log('📡 API response status:', response.status, response.statusText)
+
       const data = await response.json()
+      console.log('📡 API response data:', data)
 
       if (!response.ok) {
+        console.error('❌ API returned error:', data)
         throw new Error(data.error || 'Failed to create checkout session')
       }
 
       // Redirect to Stripe Checkout
       if (data.url) {
+        console.log('✅ Stripe URL received:', data.url)
+        console.log('🔄 Redirecting to Stripe...')
         window.location.href = data.url
       } else {
+        console.error('❌ No checkout URL in response:', data)
         throw new Error('No checkout URL received')
       }
     } catch (error: any) {
-      console.error('Checkout error:', error)
+      console.error('💥 CHECKOUT ERROR:', error)
+      console.error('💥 Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      })
       alert(`Er is een fout opgetreden: ${error.message}`)
       setLoading(false)
     }
