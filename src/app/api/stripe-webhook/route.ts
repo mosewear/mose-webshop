@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
+  apiVersion: '2024-12-18.acacia',
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
