@@ -107,10 +107,7 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
-      console.log('🔗 Supabase client created')
-
-      // Create order in database (match schema exactly)
+      // Create order via SERVER-SIDE API (bypasses RLS)
       const orderData = {
         email: form.email,
         status: 'pending',
@@ -136,24 +133,7 @@ export default function CheckoutPage() {
         payment_method: null,
       }
 
-      console.log('📦 Order data to insert:', orderData)
-
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([orderData])
-        .select()
-        .single()
-
-      if (orderError) {
-        console.error('❌ Order creation error:', orderError)
-        throw orderError
-      }
-
-      console.log('✅ Order created successfully:', order)
-
-      // Create order items (match schema with snapshot data)
       const orderItems = items.map((item) => ({
-        order_id: order.id,
         product_id: item.productId,
         variant_id: item.variantId,
         product_name: item.name,
@@ -166,16 +146,22 @@ export default function CheckoutPage() {
         image_url: item.image,
       }))
 
-      console.log('📦 Order items to insert:', orderItems)
+      console.log('📦 Creating order via API...')
+      
+      const checkoutResponse = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: orderData, items: orderItems }),
+      })
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
-
-      if (itemsError) {
-        console.error('❌ Order items creation error:', itemsError)
-        throw itemsError
+      if (!checkoutResponse.ok) {
+        const errorData = await checkoutResponse.json()
+        console.error('❌ Checkout API error:', errorData)
+        throw new Error(errorData.error || 'Failed to create order')
       }
 
-      console.log('✅ Order items created successfully')
+      const { order } = await checkoutResponse.json()
+      console.log('✅ Order created via API:', order)
 
       // Create Stripe Checkout Session
       const stripePayload = {
