@@ -8,6 +8,8 @@ import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
 import { loadStripe, Stripe } from '@stripe/stripe-js'
+import { createClient } from '@/lib/supabase/client'
+import { UserCircle2, ShoppingBag } from 'lucide-react'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -38,6 +40,13 @@ interface CheckoutForm {
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotal, clearCart } = useCart()
+  const supabase = createClient()
+  
+  const [checkoutMode, setCheckoutMode] = useState<'guest' | 'login'>('guest')
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const [loginError, setLoginError] = useState('')
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  
   const [form, setForm] = useState<CheckoutForm>({
     email: '',
     firstName: '',
@@ -57,6 +66,7 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string>()
   const [orderId, setOrderId] = useState<string>()
   const [isCreatingIntent, setIsCreatingIntent] = useState(false)
+  const [paymentCancelled, setPaymentCancelled] = useState(false)
 
   const subtotal = getTotal()
   const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
@@ -69,6 +79,24 @@ export default function CheckoutPage() {
   const totalBtw = btwAmount + shippingBtw
   
   const total = subtotal + shipping
+
+  useEffect(() => {
+    // Check for cancelled payment
+    const cancelled = sessionStorage.getItem('payment_cancelled')
+    const savedOrderId = sessionStorage.getItem('order_id')
+    
+    if (cancelled === 'true') {
+      setPaymentCancelled(true)
+      if (savedOrderId) {
+        setOrderId(savedOrderId)
+        setCurrentStep('payment')
+      }
+      // Clear sessionStorage
+      sessionStorage.removeItem('payment_cancelled')
+      sessionStorage.removeItem('payment_intent')
+      sessionStorage.removeItem('order_id')
+    }
+  }, [])
 
   useEffect(() => {
     // Load settings
@@ -118,6 +146,49 @@ export default function CheckoutPage() {
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoggingIn(true)
+    setLoginError('')
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginForm.email,
+        password: loginForm.password,
+      })
+
+      if (error) throw error
+
+      // Fetch user profile and saved addresses
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user!.id)
+        .single()
+
+      // Pre-fill form with saved data
+      if (profile) {
+        setForm({
+          email: loginForm.email,
+          firstName: profile.first_name || '',
+          lastName: profile.last_name || '',
+          address: profile.address || '',
+          city: profile.city || '',
+          postalCode: profile.postal_code || '',
+          phone: profile.phone || '',
+          country: profile.country || 'NL',
+        })
+      }
+
+      // Switch to guest mode with pre-filled form
+      setCheckoutMode('guest')
+    } catch (error: any) {
+      setLoginError(error.message || 'Inloggen mislukt. Controleer je gegevens.')
+    } finally {
+      setIsLoggingIn(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -331,6 +402,102 @@ export default function CheckoutPage() {
                 <>
                   <h1 className="text-3xl md:text-4xl font-display mb-6">AFREKENEN</h1>
                   
+                  {/* TWO-TABS CHECKOUT */}
+                  <div className="mb-8">
+                    <div className="border-2 border-black flex overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutMode('guest')}
+                        className={`flex-1 py-4 px-4 font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                          checkoutMode === 'guest'
+                            ? 'bg-black text-white'
+                            : 'bg-white text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        <ShoppingBag size={20} />
+                        <span className="hidden sm:inline">Gast Checkout</span>
+                        <span className="sm:hidden">Gast</span>
+                      </button>
+                      <div className="w-px bg-black"></div>
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutMode('login')}
+                        className={`flex-1 py-4 px-4 font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                          checkoutMode === 'login'
+                            ? 'bg-black text-white'
+                            : 'bg-white text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        <UserCircle2 size={20} />
+                        <span className="hidden sm:inline">Login & Checkout</span>
+                        <span className="sm:hidden">Login</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {checkoutMode === 'login' ? (
+                    /* LOGIN FORM */
+                    <div className="bg-gray-50 border-2 border-gray-200 p-6 md:p-8">
+                      <h2 className="text-2xl font-display mb-4">Inloggen</h2>
+                      <p className="text-gray-600 mb-6">
+                        Log in om je opgeslagen gegevens te gebruiken en sneller af te rekenen.
+                      </p>
+                      
+                      {loginError && (
+                        <div className="mb-6 p-4 bg-red-50 border-2 border-red-600 text-red-900 text-sm">
+                          {loginError}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleLogin} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-bold mb-2 uppercase tracking-wide">
+                            E-mailadres
+                          </label>
+                          <input
+                            type="email"
+                            value={loginForm.email}
+                            onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                            required
+                            className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                            placeholder="jouw@email.nl"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-bold mb-2 uppercase tracking-wide">
+                            Wachtwoord
+                          </label>
+                          <input
+                            type="password"
+                            value={loginForm.password}
+                            onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                            required
+                            className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                            placeholder="••••••••"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isLoggingIn}
+                          className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {isLoggingIn ? 'INLOGGEN...' : 'INLOGGEN & DOORGAAN'}
+                        </button>
+
+                        <div className="text-center pt-4 border-t border-gray-300 mt-6">
+                          <p className="text-sm text-gray-600">
+                            Nog geen account?{' '}
+                            <Link href="/login" className="text-brand-primary font-semibold hover:underline">
+                              Registreer hier
+                            </Link>
+                          </p>
+                        </div>
+                      </form>
+                    </div>
+                  ) : (
+                    /* GUEST CHECKOUT FORM */
                   <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact - Compact */}
                 <div>
@@ -511,6 +678,7 @@ export default function CheckoutPage() {
                   {loading ? 'BEZIG...' : 'DOORGAAN NAAR BETALEN'}
                 </button>
               </form>
+              )}
             </>
           ) : (
             <>
@@ -526,6 +694,29 @@ export default function CheckoutPage() {
                   Terug
                 </button>
               </div>
+
+              {/* Payment Cancelled Warning */}
+              {paymentCancelled && (
+                <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-500 flex items-start gap-3 animate-fadeIn">
+                  <svg className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-amber-900 mb-1">Je vorige betaling is geannuleerd</h3>
+                    <p className="text-sm text-amber-800">
+                      Geen zorgen, je gegevens zijn bewaard. Kies opnieuw je betaalmethode om je bestelling af te ronden.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setPaymentCancelled(false)}
+                    className="text-amber-600 hover:text-amber-800"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
 
               {/* Customer Info Summary */}
               <div className="bg-gray-50 border-2 border-gray-200 p-4 mb-6 text-sm">

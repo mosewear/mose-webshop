@@ -8,6 +8,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js'
+import { Landmark, CreditCard, ShoppingBag, Building2, Smartphone } from 'lucide-react'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -17,7 +18,7 @@ interface PaymentMethodOption {
   id: PaymentMethod
   name: string
   description: string
-  icon: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
   popular?: boolean
 }
 
@@ -28,32 +29,32 @@ const getPaymentMethods = (country: string): PaymentMethodOption[] => {
       id: 'ideal',
       name: 'iDEAL',
       description: 'Direct betalen via je bank',
-      icon: '🇳🇱',
+      icon: Landmark,
       popular: true
     },
     {
       id: 'card',
       name: 'Credit card',
       description: 'Visa, Mastercard, Amex',
-      icon: '💳'
+      icon: CreditCard
     },
     {
       id: 'klarna',
       name: 'Klarna',
       description: 'Achteraf betalen',
-      icon: '🛍️'
+      icon: ShoppingBag
     },
     {
       id: 'bancontact',
       name: 'Bancontact',
       description: 'Voor Belgische klanten',
-      icon: '🇧🇪'
+      icon: Building2
     },
     {
       id: 'paypal',
       name: 'PayPal',
       description: 'Betalen met PayPal',
-      icon: '📱'
+      icon: Smartphone
     }
   ]
 
@@ -114,7 +115,7 @@ function PaymentForm({
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/order-confirmation?order_id=${orderId}`,
+          return_url: `${window.location.origin}/checkout/payment-status`,
           payment_method_data: {
             billing_details: billingDetails // Pass billing details we already collected!
           }
@@ -256,36 +257,41 @@ export default function StripePaymentForm({
           <h3 className="text-lg font-bold mb-4">Kies je betaalmethode</h3>
           
           <div className="grid gap-3">
-            {paymentMethods.map((method) => (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => handleMethodClick(method.id)}
-                disabled={isCreatingIntent}
-                className="relative p-4 border-2 border-gray-300 hover:border-black transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{method.icon}</span>
-                  <div className="flex-1">
-                    <div className="font-bold text-black group-hover:text-brand-primary transition-colors">{method.name}</div>
-                    <div className="text-sm text-gray-600">{method.description}</div>
+            {paymentMethods.map((method) => {
+              const IconComponent = method.icon
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => handleMethodClick(method.id)}
+                  disabled={isCreatingIntent}
+                  className="relative p-4 border-2 border-gray-300 hover:border-black transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 flex items-center justify-center bg-gray-100 group-hover:bg-black group-hover:text-white transition-colors">
+                      <IconComponent size={24} className="text-current" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-black group-hover:text-brand-primary transition-colors">{method.name}</div>
+                      <div className="text-sm text-gray-600">{method.description}</div>
+                    </div>
+                    {method.popular && (
+                      <span className="absolute top-2 right-2 px-2 py-1 bg-black text-white text-xs font-bold">
+                        POPULAIR
+                      </span>
+                    )}
+                    <svg 
+                      className="w-6 h-6 text-gray-400 group-hover:text-brand-primary transition-colors flex-shrink-0" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                  {method.popular && (
-                    <span className="absolute top-2 right-2 px-2 py-1 bg-black text-white text-xs font-bold">
-                      POPULAIR
-                    </span>
-                  )}
-                  <svg 
-                    className="w-6 h-6 text-gray-400 group-hover:text-brand-primary transition-colors flex-shrink-0" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
 
           <div className="border-t pt-4 mt-6 space-y-2 text-sm text-gray-700">

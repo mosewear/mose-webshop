@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Mail } from 'lucide-react'
 
 interface Order {
   id: string
@@ -386,9 +387,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <button
                   onClick={handleSendShippingEmail}
                   disabled={sendingEmail}
-                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {sendingEmail ? 'Verzenden...' : '📧 Verzend Email Versturen'}
+                  <Mail size={20} />
+                  {sendingEmail ? 'Verzenden...' : 'Verzend Email Versturen'}
                 </button>
               )}
             </div>
