@@ -94,7 +94,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         
         <div class="footer">
           <p><strong>MOSE</strong> • Groningen, Nederland</p>
-          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.nl" style="color: #2ECC71;">info@mosewear.nl</a></p>
+          <p>Vragen? Stuur een mail naar <a href="mailto:bestellingen@orders.mosewear.nl" style="color: #2ECC71;">bestellingen@orders.mosewear.nl</a></p>
         </div>
       </body>
     </html>
@@ -102,7 +102,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE <orders@mosewear.nl>',
+      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Bestelling bevestiging #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -170,7 +170,7 @@ export async function sendShippingConfirmationEmail(props: {
         
         <div class="footer">
           <p><strong>MOSE</strong> • Groningen, Nederland</p>
-          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.nl" style="color: #2ECC71;">info@mosewear.nl</a></p>
+          <p>Vragen? Stuur een mail naar <a href="mailto:bestellingen@orders.mosewear.nl" style="color: #2ECC71;">bestellingen@orders.mosewear.nl</a></p>
         </div>
       </body>
     </html>
@@ -178,7 +178,7 @@ export async function sendShippingConfirmationEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE <orders@mosewear.nl>',
+      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `📦 Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
