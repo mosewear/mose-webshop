@@ -5,8 +5,19 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/store/cart'
-import { createClient } from '@/lib/supabase/client'
 import { getSiteSettings } from '@/lib/settings'
+import dynamic from 'next/dynamic'
+
+const StripePaymentForm = dynamic(() => import('@/components/StripePaymentForm'), {
+  ssr: false,
+  loading: () => (
+    <div className="animate-pulse space-y-4">
+      <div className="h-12 bg-gray-200 rounded"></div>
+      <div className="h-12 bg-gray-200 rounded"></div>
+      <div className="h-12 bg-gray-200 rounded"></div>
+    </div>
+  ),
+})
 
 interface CheckoutForm {
   email: string
@@ -35,6 +46,9 @@ export default function CheckoutPage() {
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [shippingCost, setShippingCost] = useState(5.95)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
+  const [currentStep, setCurrentStep] = useState<'details' | 'payment'>('details')
+  const [clientSecret, setClientSecret] = useState<string>()
+  const [orderId, setOrderId] = useState<string>()
 
   const subtotal = getTotal()
   const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
@@ -107,7 +121,7 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
-      // Create order via SERVER-SIDE API (bypasses RLS)
+      // Step 1: Create order via server-side API
       const orderData = {
         email: form.email,
         status: 'pending',
@@ -162,63 +176,57 @@ export default function CheckoutPage() {
 
       const { order } = await checkoutResponse.json()
       console.log('✅ Order created via API:', order)
+      setOrderId(order.id)
 
-      // Create Stripe Checkout Session
-      const stripePayload = {
-        orderId: order.id,
-        items: items,
-        customerEmail: form.email,
-        customerName: `${form.firstName} ${form.lastName}`,
-        shippingAddress: `${form.address}, ${form.postalCode} ${form.city}`,
-        phone: form.phone,
-        shippingAddressObject: {
-          name: `${form.firstName} ${form.lastName}`,
-          address: form.address,
-          city: form.city,
-          postalCode: form.postalCode,
-        },
-      }
-
-      console.log('💳 Stripe payload:', stripePayload)
-      console.log('🌐 Calling API:', '/api/create-checkout-session')
-
-      const response = await fetch('/api/create-checkout-session', {
+      // Step 2: Create Payment Intent
+      console.log('💳 Creating Payment Intent...')
+      
+      const paymentResponse = await fetch('/api/create-payment-intent', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(stripePayload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          items: items,
+          customerEmail: form.email,
+          customerName: `${form.firstName} ${form.lastName}`,
+          shippingAddress: {
+            name: `${form.firstName} ${form.lastName}`,
+            address: form.address,
+            city: form.city,
+            postalCode: form.postalCode,
+            phone: form.phone,
+          },
+        }),
       })
 
-      console.log('📡 API response status:', response.status, response.statusText)
-
-      const data = await response.json()
-      console.log('📡 API response data:', data)
-
-      if (!response.ok) {
-        console.error('❌ API returned error:', data)
-        throw new Error(data.error || 'Failed to create checkout session')
+      if (!paymentResponse.ok) {
+        const errorData = await paymentResponse.json()
+        console.error('❌ Payment Intent error:', errorData)
+        throw new Error(errorData.error || 'Failed to create payment intent')
       }
 
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        console.log('✅ Stripe URL received:', data.url)
-        console.log('🔄 Redirecting to Stripe...')
-        window.location.href = data.url
-      } else {
-        console.error('❌ No checkout URL in response:', data)
-        throw new Error('No checkout URL received')
-      }
+      const { clientSecret: secret } = await paymentResponse.json()
+      console.log('✅ Payment Intent created')
+      
+      setClientSecret(secret)
+      setCurrentStep('payment')
+      setLoading(false)
     } catch (error: any) {
       console.error('💥 CHECKOUT ERROR:', error)
-      console.error('💥 Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      })
       alert(`Er is een fout opgetreden: ${error.message}`)
       setLoading(false)
     }
+  }
+
+  const handlePaymentSuccess = () => {
+    console.log('✅ Payment successful!')
+    clearCart()
+    router.push(`/order-confirmation?order=${orderId}`)
+  }
+
+  const handlePaymentError = (error: string) => {
+    console.error('💥 Payment error:', error)
+    alert(`Betaling mislukt: ${error}`)
   }
 
   const updateForm = (field: keyof CheckoutForm, value: string) => {
@@ -244,19 +252,19 @@ export default function CheckoutPage() {
               </div>
               <span className="ml-2 text-sm font-semibold text-gray-700 hidden sm:inline">Winkelwagen</span>
             </div>
-            <div className="w-12 h-0.5 bg-brand-primary"></div>
+            <div className={`w-12 h-0.5 ${currentStep === 'payment' ? 'bg-brand-primary' : 'bg-brand-primary'}`}></div>
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm">
-                2
+              <div className={`w-8 h-8 rounded-full ${currentStep === 'payment' ? 'bg-green-600' : 'bg-brand-primary'} text-white flex items-center justify-center font-bold text-sm`}>
+                {currentStep === 'payment' ? '✓' : '2'}
               </div>
-              <span className="ml-2 text-sm font-semibold text-gray-900 hidden sm:inline">Gegevens</span>
+              <span className={`ml-2 text-sm font-semibold ${currentStep === 'payment' ? 'text-gray-700' : 'text-gray-900'} hidden sm:inline`}>Gegevens</span>
             </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className={`w-12 h-0.5 ${currentStep === 'payment' ? 'bg-brand-primary' : 'bg-gray-300'}`}></div>
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm">
+              <div className={`w-8 h-8 rounded-full ${currentStep === 'payment' ? 'bg-brand-primary' : 'bg-gray-300'} text-${currentStep === 'payment' ? 'white' : 'gray-600'} flex items-center justify-center font-bold text-sm`}>
                 3
               </div>
-              <span className="ml-2 text-sm text-gray-500 hidden sm:inline">Betalen</span>
+              <span className={`ml-2 text-sm ${currentStep === 'payment' ? 'text-gray-900 font-semibold' : 'text-gray-500'} hidden sm:inline`}>Betalen</span>
             </div>
           </div>
         </div>
@@ -265,9 +273,11 @@ export default function CheckoutPage() {
           {/* Checkout Form - 3/5 width */}
           <div className="lg:col-span-3">
             <div className="bg-white border-2 border-black p-6 md:p-8">
-              <h1 className="text-3xl md:text-4xl font-display mb-6">AFREKEN</h1>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
+              {currentStep === 'details' ? (
+                <>
+                  <h1 className="text-3xl md:text-4xl font-display mb-6">AFREKENEN</h1>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact - Compact */}
                 <div>
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -427,11 +437,45 @@ export default function CheckoutPage() {
                   disabled={loading}
                   className="w-full lg:hidden py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'BEZIG...' : `BETALEN €${total.toFixed(2)}`}
+                  {loading ? 'BEZIG...' : 'DOORGAAN NAAR BETALEN'}
                 </button>
               </form>
-            </div>
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl md:text-4xl font-display">BETALEN</h1>
+                <button
+                  onClick={() => setCurrentStep('details')}
+                  className="text-sm text-brand-primary hover:underline flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Terug
+                </button>
+              </div>
+
+              {/* Customer Info Summary */}
+              <div className="bg-gray-50 border-2 border-gray-200 p-4 mb-6 text-sm">
+                <div className="font-semibold mb-2">{form.firstName} {form.lastName}</div>
+                <div className="text-gray-600">{form.email}</div>
+                <div className="text-gray-600">{form.address}, {form.postalCode} {form.city}</div>
+              </div>
+
+              {/* Stripe Payment Form */}
+              {clientSecret && (
+                <StripePaymentForm
+                  clientSecret={clientSecret}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                  total={total}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
           {/* Order Summary - 2/5 width - Sticky */}
           <div className="lg:col-span-2">
@@ -510,14 +554,16 @@ export default function CheckoutPage() {
               </div>
 
               {/* Submit Button - Desktop */}
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="hidden lg:block w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? 'BEZIG...' : `BETALEN €${total.toFixed(2)}`}
-              </button>
+              {currentStep === 'details' && (
+                <button
+                  type="submit"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="hidden lg:block w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'BEZIG...' : 'DOORGAAN NAAR BETALEN'}
+                </button>
+              )}
             </div>
           </div>
         </div>
