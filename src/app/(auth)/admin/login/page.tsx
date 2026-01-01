@@ -38,23 +38,17 @@ export default function AdminLoginPage() {
         return
       }
 
-      // DEBUG: Log user ID
-      console.log('🔍 Ingelogde user ID:', authData.user.id)
-
-      // 2. Check if user is admin
-      const { data: adminData, error: adminError } = await supabase
-        .from('admin_users')
-        .select('role')
+      // 2. Check if user is admin via profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_admin')
         .eq('id', authData.user.id)
         .single()
 
-      console.log('🔍 Admin data:', adminData)
-      console.log('🔍 Admin error:', adminError)
-
-      if (adminError || !adminData) {
+      if (profileError || !profileData || !profileData.is_admin) {
         // User is not an admin
         await supabase.auth.signOut()
-        setError(`Je hebt geen admin toegang. User ID: ${authData.user.id}`)
+        setError('Je hebt geen admin toegang.')
         setLoading(false)
         return
       }
