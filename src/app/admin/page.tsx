@@ -97,15 +97,52 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6 md:space-y-8 flex flex-col">
       {/* Welcome Header */}
-      <div>
+      <div className="order-0">
         <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">Dashboard</h1>
         <p className="text-gray-600 text-sm md:text-base">Welkom terug! Hier is je overzicht.</p>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* Revenue & Customers Row - FIRST ON MOBILE */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 order-1">
+        {/* Revenue */}
+        <div className="bg-gradient-to-r from-brand-primary to-brand-primary-hover p-8 text-white border-2 border-brand-primary">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur flex items-center justify-center">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-5xl md:text-6xl font-display">
+              €{stats.totalRevenue.toFixed(2)}
+            </div>
+          </div>
+          <div className="text-lg md:text-xl uppercase tracking-wider font-bold">Totale Omzet</div>
+          <div className="text-sm text-white/70 mt-1">Van {stats.totalOrders} orders</div>
+        </div>
+
+        {/* Customers */}
+        <Link
+          href="/admin/customers"
+          className="bg-white p-8 border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-14 h-14 bg-purple-100 flex items-center justify-center">
+              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div className="text-5xl md:text-6xl font-display text-purple-600">
+              {stats.totalCustomers}
+            </div>
+          </div>
+          <div className="text-lg md:text-xl text-gray-600 uppercase tracking-wider font-bold">Klanten</div>
+        </Link>
+      </div>
+
+      {/* Quick Stats Grid - SECOND ON MOBILE */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 order-2">
         {/* Products */}
         <Link
           href="/admin/products"
@@ -178,45 +215,8 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Revenue & Customers Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Revenue */}
-        <div className="bg-gradient-to-r from-brand-primary to-brand-primary-hover p-8 text-white border-2 border-brand-primary">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur flex items-center justify-center">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="text-5xl md:text-6xl font-display">
-              €{stats.totalRevenue.toFixed(2)}
-            </div>
-          </div>
-          <div className="text-lg md:text-xl uppercase tracking-wider font-bold">Totale Omzet</div>
-          <div className="text-sm text-white/70 mt-1">Van {stats.totalOrders} orders</div>
-        </div>
-
-        {/* Customers */}
-        <Link
-          href="/admin/customers"
-          className="bg-white p-8 border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-purple-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <div className="text-5xl md:text-6xl font-display text-purple-600">
-              {stats.totalCustomers}
-            </div>
-          </div>
-          <div className="text-lg md:text-xl text-gray-600 uppercase tracking-wider font-bold">Klanten</div>
-        </Link>
-      </div>
-
       {/* Quick Actions */}
-      <div className="bg-white border-2 border-gray-200 p-6 md:p-8">
+      <div className="bg-white border-2 border-gray-200 p-6 md:p-8 order-3">
         <h2 className="text-2xl md:text-3xl font-display font-bold mb-6">Snelle Acties</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* System Status */}
-      <div className="bg-white border-2 border-gray-200 p-6 md:p-8">
+      <div className="bg-white border-2 border-gray-200 p-6 md:p-8 order-4">
         <h2 className="text-2xl md:text-3xl font-display font-bold mb-6">Systeem Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center gap-3">
