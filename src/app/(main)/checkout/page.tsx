@@ -54,6 +54,7 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(5.95)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
   const [currentStep, setCurrentStep] = useState<'details' | 'payment'>('details')
+  const [clientSecret, setClientSecret] = useState<string>()
   const [orderId, setOrderId] = useState<string>()
   const [isCreatingIntent, setIsCreatingIntent] = useState(false)
 
@@ -234,53 +235,27 @@ export default function CheckoutPage() {
         throw new Error(errorData.error || 'Failed to create payment intent')
       }
 
-      const { clientSecret } = await paymentResponse.json()
-      console.log('✅ Payment Intent created, confirming payment...')
+      const { clientSecret: secret } = await paymentResponse.json()
+      console.log('✅ Payment Intent created')
       
-      // Initialize Stripe
-      const stripe = await stripePromise
-      
-      if (!stripe) {
-        throw new Error('Stripe kon niet worden geladen')
-      }
-
-      const returnUrl = `${window.location.origin}/order-confirmation?order_id=${orderId}`
-      
-      // For redirect-based payments, use confirmPayment with payment_method_data
-      // Stripe will handle the redirect to the bank/payment provider
-      const { error } = await stripe.confirmPayment({
-        clientSecret,
-        confirmParams: {
-          return_url: returnUrl,
-          payment_method_data: {
-            billing_details: {
-              name: `${form.firstName} ${form.lastName}`,
-              email: form.email,
-              phone: form.phone,
-              address: {
-                line1: form.address,
-                city: form.city,
-                postal_code: form.postalCode,
-                country: form.country,
-              },
-            },
-          },
-        },
-      })
-
-      if (error) {
-        console.error('❌ Payment confirmation error:', error)
-        throw new Error(error.message || 'Betaling kon niet worden bevestigd')
-      }
-
-      // If we reach here without error, redirect is happening
-      console.log('🚀 Redirecting to payment provider...')
-      
+      setClientSecret(secret)
+      setIsCreatingIntent(false)
     } catch (error: any) {
       console.error('💥 Payment Intent ERROR:', error)
       alert(`Er is een fout opgetreden: ${error.message}`)
       setIsCreatingIntent(false)
     }
+  }
+
+  const handlePaymentSuccess = () => {
+    console.log('✅ Payment successful!')
+    clearCart()
+    router.push(`/order-confirmation?order=${orderId}`)
+  }
+
+  const handlePaymentError = (error: string) => {
+    console.error('💥 Payment error:', error)
+    alert(`Betaling mislukt: ${error}`)
   }
 
   const updateForm = (field: keyof CheckoutForm, value: string) => {
@@ -544,6 +519,9 @@ export default function CheckoutPage() {
 
               {/* Stripe Payment Form */}
               <StripePaymentForm
+                clientSecret={clientSecret || null}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
                 onMethodSelected={handlePaymentMethodSelected}
                 country={form.country}
                 isCreatingIntent={isCreatingIntent}

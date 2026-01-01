@@ -39,11 +39,7 @@ export async function POST(req: NextRequest) {
     const paymentIntentConfig: any = {
       amount: Math.round(total * 100), // Stripe expects cents
       currency: 'eur',
-      // Use automatic_payment_methods to let Stripe handle the payment flow
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always'
-      },
+      // Use specific payment method type if provided, otherwise use automatic
       metadata: {
         orderId,
         customerName,
@@ -54,8 +50,20 @@ export async function POST(req: NextRequest) {
       receipt_email: customerEmail,
     }
 
+    // If a specific payment method is requested, use that
+    // Otherwise use automatic payment methods
+    if (paymentMethod) {
+      paymentIntentConfig.payment_method_types = [paymentMethod]
+    } else {
+      paymentIntentConfig.automatic_payment_methods = {
+        enabled: true,
+        allow_redirects: 'always'
+      }
+    }
+
     console.log('🔵 API: Creating Payment Intent with config:', {
       amount: paymentIntentConfig.amount,
+      payment_method_types: paymentIntentConfig.payment_method_types,
       automatic_payment_methods: paymentIntentConfig.automatic_payment_methods,
     })
 
