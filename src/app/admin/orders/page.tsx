@@ -23,6 +23,9 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [bulkAction, setBulkAction] = useState('')
+  const [bulkUpdating, setBulkUpdating] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -74,6 +77,61 @@ export default function AdminOrdersPage() {
       cancelled: 'Geannuleerd',
     }
     return labels[status] || status
+  }
+
+  const handleSelectAll = () => {
+    if (selectedOrders.length === orders.length) {
+      setSelectedOrders([])
+    } else {
+      setSelectedOrders(orders.map(o => o.id))
+    }
+  }
+
+  const handleSelectOrder = (orderId: string) => {
+    if (selectedOrders.includes(orderId)) {
+      setSelectedOrders(selectedOrders.filter(id => id !== orderId))
+    } else {
+      setSelectedOrders([...selectedOrders, orderId])
+    }
+  }
+
+  const handleBulkAction = async () => {
+    if (selectedOrders.length === 0) {
+      alert('Selecteer eerst orders')
+      return
+    }
+
+    if (!bulkAction) {
+      alert('Selecteer eerst een actie')
+      return
+    }
+
+    if (!confirm(`Weet je zeker dat je de status van ${selectedOrders.length} order(s) wilt wijzigen naar "${getStatusLabel(bulkAction)}"?`)) {
+      return
+    }
+
+    try {
+      setBulkUpdating(true)
+
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: bulkAction,
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', selectedOrders)
+
+      if (error) throw error
+
+      alert(`✅ ${selectedOrders.length} order(s) bijgewerkt!`)
+      setSelectedOrders([])
+      setBulkAction('')
+      fetchOrders()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setBulkUpdating(false)
+    }
   }
 
   const filters = [
@@ -171,33 +229,81 @@ export default function AdminOrdersPage() {
             <p className="text-gray-500">Orders verschijnen hier zodra klanten bestellen!</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y-2 divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Order ID
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Klant
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Totaal
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
-                    Datum
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Acties
-                  </th>
-                </tr>
+          <>
+            {/* Bulk Actions Bar */}
+            {selectedOrders.length > 0 && (
+              <div className="bg-brand-primary text-white p-4 flex items-center gap-4">
+                <span className="font-bold">{selectedOrders.length} order(s) geselecteerd</span>
+                <select
+                  value={bulkAction}
+                  onChange={(e) => setBulkAction(e.target.value)}
+                  className="px-4 py-2 bg-white text-gray-800 border-2 border-white font-bold"
+                >
+                  <option value="">Kies actie...</option>
+                  <option value="processing">Markeer als: In behandeling</option>
+                  <option value="shipped">Markeer als: Verzonden</option>
+                  <option value="delivered">Markeer als: Afgeleverd</option>
+                  <option value="cancelled">Markeer als: Geannuleerd</option>
+                </select>
+                <button
+                  onClick={handleBulkAction}
+                  disabled={!bulkAction || bulkUpdating}
+                  className="bg-white text-brand-primary font-bold py-2 px-6 uppercase tracking-wider hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  {bulkUpdating ? 'Bijwerken...' : 'Toepassen'}
+                </button>
+                <button
+                  onClick={() => setSelectedOrders([])}
+                  className="ml-auto text-white hover:text-gray-200"
+                >
+                  ✕ Deselecteren
+                </button>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y-2 divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 md:px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrders.length === orders.length}
+                        onChange={handleSelectAll}
+                        className="w-5 h-5"
+                      />
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Order ID
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Klant
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Totaal
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
+                      Datum
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Acties
+                    </th>
+                  </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrders.includes(order.id)}
+                        onChange={() => handleSelectOrder(order.id)}
+                        className="w-5 h-5"
+                      />
+                    </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
                         #{order.id.slice(0, 8)}
@@ -234,6 +340,7 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>
