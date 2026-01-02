@@ -185,13 +185,18 @@ export default function ShopPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-        {/* Mobile Filter Button - Fixed Position */}
+        {/* Mobile Filter Button - Inline (bold & brutalist) */}
         <button
           onClick={() => setMobileFiltersOpen(true)}
-          className="lg:hidden fixed bottom-6 right-6 z-40 bg-black text-white p-4 border-2 border-black shadow-2xl hover:bg-gray-900 transition-all active:scale-95"
-          aria-label="Open filters"
+          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors active:scale-[0.98]"
         >
-          <SlidersHorizontal className="w-6 h-6" />
+          <SlidersHorizontal className="w-5 h-5" />
+          <span>Filters & Sorteren</span>
+          {(selectedCategory !== 'all' || searchQuery) && (
+            <span className="bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-sm">
+              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0)}
+            </span>
+          )}
         </button>
 
         {/* Mobile Filter Drawer */}
