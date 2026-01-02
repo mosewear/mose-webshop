@@ -141,7 +141,7 @@ export function Header() {
         }`}
       >
         <nav className="flex flex-col h-full pt-24 px-8">
-          {/* Search - Minimal Line */}
+          {/* Search - Minimal Line (Black) */}
           <button 
             className="flex items-center gap-3 text-xl font-bold py-4 border-b-2 border-black hover:bg-gray-50 transition-colors group"
             onClick={() => {
@@ -153,14 +153,14 @@ export function Header() {
             <span>ZOEKEN</span>
           </button>
 
-          {/* Navigation Links - Minimal with Arrows */}
+          {/* Navigation Links - Green Arrows! */}
           <Link
             href="/shop"
             className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span>SHOP</span>
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link
             href="/lookbook"
@@ -168,7 +168,7 @@ export function Header() {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span>LOOKBOOK</span>
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link
             href="/over-mose"
@@ -176,7 +176,7 @@ export function Header() {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span>OVER MOSE</span>
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link
             href="/contact"
@@ -184,14 +184,14 @@ export function Header() {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span>CONTACT</span>
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
           </Link>
 
-          {/* Account - Prominent Border-4 Box */}
+          {/* Account - Green Box! */}
           <div className="mt-8">
             <Link
               href="/account"
-              className="flex items-center gap-3 py-4 px-6 text-lg font-bold border-4 border-black bg-white hover:bg-black hover:text-white transition-all group"
+              className="flex items-center gap-3 py-4 px-6 text-lg font-bold border-2 border-brand-primary bg-brand-primary text-white hover:bg-brand-primary-hover transition-all group"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <User className="w-6 h-6" />
@@ -199,13 +199,13 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Wishlist - Subtle Line */}
+          {/* Wishlist - Green Heart */}
           <Link
             href="/wishlist"
             className="flex items-center gap-3 py-4 text-lg font-semibold border-b-2 border-gray-200 hover:text-brand-primary transition-colors mt-6"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <Heart className="w-5 h-5" />
+            <Heart className="w-5 h-5 text-brand-primary" />
             <span>Wishlist</span>
           </Link>
         </nav>
