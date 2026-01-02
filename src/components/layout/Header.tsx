@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import CartDrawer from '@/components/CartDrawer'
+import { ChevronRight, Search, User, Heart } from 'lucide-react'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -139,76 +140,73 @@ export function Header() {
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <nav className="flex flex-col h-full pt-24 px-6 overflow-y-auto">
-          {/* Search Block - Black */}
+        <nav className="flex flex-col h-full pt-24 px-8">
+          {/* Search - Minimal Line */}
           <button 
-            className="w-full flex items-center justify-center gap-3 bg-black text-white border-2 border-black py-4 px-6 font-bold text-lg uppercase tracking-wider hover:bg-gray-900 transition-colors active:scale-[0.98] mb-6"
+            className="flex items-center gap-3 text-xl font-bold py-4 border-b-2 border-black hover:bg-gray-50 transition-colors group"
             onClick={() => {
               setIsMobileMenuOpen(false)
               // TODO: Open search modal/functionality
             }}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            ZOEKEN
+            <Search className="w-6 h-6" />
+            <span>ZOEKEN</span>
           </button>
 
-          {/* Navigation Blocks - Bold borders */}
+          {/* Navigation Links - Minimal with Arrows */}
           <Link
             href="/shop"
-            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-4"
+            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            SHOP
+            <span>SHOP</span>
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link
             href="/lookbook"
-            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-4"
+            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            LOOKBOOK
+            <span>LOOKBOOK</span>
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link
             href="/over-mose"
-            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-4"
+            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            OVER MOSE
+            <span>OVER MOSE</span>
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link
             href="/contact"
-            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-6"
+            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            CONTACT
+            <span>CONTACT</span>
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
           </Link>
 
-          {/* Divider - Thick */}
-          <div className="border-t-4 border-black my-6" />
+          {/* Account - Prominent Border-4 Box */}
+          <div className="mt-8">
+            <Link
+              href="/account"
+              className="flex items-center gap-3 py-4 px-6 text-lg font-bold border-4 border-black bg-white hover:bg-black hover:text-white transition-all group"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <User className="w-6 h-6" />
+              <span className="uppercase tracking-wide">MIJN ACCOUNT</span>
+            </Link>
+          </div>
 
-          {/* Account Block - Green CTA */}
-          <Link
-            href="/account"
-            className="w-full flex items-center justify-center gap-3 bg-brand-primary text-white border-2 border-brand-primary py-4 px-6 font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-colors active:scale-[0.98] mb-4"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            MIJN ACCOUNT
-          </Link>
-
-          {/* Wishlist Block */}
+          {/* Wishlist - Subtle Line */}
           <Link
             href="/wishlist"
-            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-black py-4 px-6 font-bold text-lg uppercase tracking-wider hover:bg-gray-50 transition-colors active:scale-[0.98]"
+            className="flex items-center gap-3 py-4 text-lg font-semibold border-b-2 border-gray-200 hover:text-brand-primary transition-colors mt-6"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            WISHLIST
+            <Heart className="w-5 h-5" />
+            <span>Wishlist</span>
           </Link>
         </nav>
       </div>
