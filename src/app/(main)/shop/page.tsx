@@ -166,7 +166,7 @@ export default function ShopPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section - Compact */}
-      <section className="relative bg-black text-white py-16 md:py-20">
+      <section className="relative bg-black text-white py-16 md:py-20 z-0">
         <div className="absolute inset-0 opacity-10">
           <Image
             src="/claw.png"
@@ -184,14 +184,14 @@ export default function ShopPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
         {/* Mobile Filter Button - Inline (bold & brutalist) */}
         <button
           onClick={() => {
             console.log('🔍 Filter button clicked! Opening drawer...')
             setMobileFiltersOpen(true)
           }}
-          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors active:scale-[0.98]"
+          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors active:scale-[0.98] relative z-20 cursor-pointer"
         >
           <SlidersHorizontal className="w-5 h-5" />
           <span>Filters & Sorteren</span>
