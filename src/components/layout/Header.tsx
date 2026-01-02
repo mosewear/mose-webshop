@@ -139,76 +139,77 @@ export function Header() {
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <nav className="flex flex-col h-full pt-24 px-8">
-          {/* Search - Mobile */}
-          <div className="mb-6 pb-6 border-b-2 border-gray-200">
-            <button 
-              className="w-full flex items-center gap-3 text-xl font-display hover:text-brand-primary transition-colors"
-              onClick={() => {
-                setIsMobileMenuOpen(false)
-                // TODO: Open search modal/functionality
-              }}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              ZOEKEN
-            </button>
-          </div>
+        <nav className="flex flex-col h-full pt-24 px-6 overflow-y-auto">
+          {/* Search Block - Black */}
+          <button 
+            className="w-full flex items-center justify-center gap-3 bg-black text-white border-2 border-black py-4 px-6 font-bold text-lg uppercase tracking-wider hover:bg-gray-900 transition-colors active:scale-[0.98] mb-6"
+            onClick={() => {
+              setIsMobileMenuOpen(false)
+              // TODO: Open search modal/functionality
+            }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            ZOEKEN
+          </button>
 
-          {/* Navigation Links */}
+          {/* Navigation Blocks - Bold borders */}
           <Link
             href="/shop"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-4"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             SHOP
           </Link>
           <Link
             href="/lookbook"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-4"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             LOOKBOOK
           </Link>
           <Link
             href="/over-mose"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-4"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             OVER MOSE
           </Link>
           <Link
             href="/contact"
-            className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
+            className="w-full py-6 text-3xl font-display uppercase tracking-tight border-4 border-black bg-white hover:bg-gray-100 transition-colors active:scale-[0.98] text-center mb-6"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             CONTACT
           </Link>
 
-          {/* Account & Wishlist - Mobile */}
-          <div className="mt-6 pt-6 border-t-2 border-gray-200 space-y-4">
-            <Link
-              href="/account"
-              className="flex items-center gap-3 text-lg font-semibold hover:text-brand-primary transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Mijn Account
-            </Link>
-            <Link
-              href="/wishlist"
-              className="flex items-center gap-3 text-lg font-semibold hover:text-brand-primary transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              Wishlist
-            </Link>
-          </div>
+          {/* Divider - Thick */}
+          <div className="border-t-4 border-black my-6" />
+
+          {/* Account Block - Green CTA */}
+          <Link
+            href="/account"
+            className="w-full flex items-center justify-center gap-3 bg-brand-primary text-white border-2 border-brand-primary py-4 px-6 font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-colors active:scale-[0.98] mb-4"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            MIJN ACCOUNT
+          </Link>
+
+          {/* Wishlist Block */}
+          <Link
+            href="/wishlist"
+            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-black py-4 px-6 font-bold text-lg uppercase tracking-wider hover:bg-gray-50 transition-colors active:scale-[0.98]"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            WISHLIST
+          </Link>
         </nav>
       </div>
 
