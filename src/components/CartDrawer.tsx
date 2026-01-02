@@ -267,9 +267,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                 {/* Trust Badges - Single Line Icons Only */}
                 <div className="pt-2 flex items-center justify-center gap-4 text-gray-600">
-                  <Truck size={16} className="hover:text-black transition-colors cursor-help" title="Gratis verzending vanaf €50" />
-                  <Lock size={16} className="hover:text-black transition-colors cursor-help" title="Veilig betalen via Stripe" />
-                  <RotateCcw size={16} className="hover:text-black transition-colors cursor-help" title="14 dagen bedenktijd" />
+                  <div className="cursor-help" title="Gratis verzending vanaf €50">
+                    <Truck size={16} className="hover:text-black transition-colors" />
+                  </div>
+                  <div className="cursor-help" title="Veilig betalen via Stripe">
+                    <Lock size={16} className="hover:text-black transition-colors" />
+                  </div>
+                  <div className="cursor-help" title="14 dagen bedenktijd">
+                    <RotateCcw size={16} className="hover:text-black transition-colors" />
+                  </div>
                 </div>
               </div>
 
