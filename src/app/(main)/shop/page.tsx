@@ -187,7 +187,10 @@ export default function ShopPage() {
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         {/* Mobile Filter Button - Inline (bold & brutalist) */}
         <button
-          onClick={() => setMobileFiltersOpen(true)}
+          onClick={() => {
+            console.log('🔍 Filter button clicked! Opening drawer...')
+            setMobileFiltersOpen(true)
+          }}
           className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors active:scale-[0.98]"
         >
           <SlidersHorizontal className="w-5 h-5" />
@@ -198,6 +201,13 @@ export default function ShopPage() {
             </span>
           )}
         </button>
+
+        {/* Debug info */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="lg:hidden mb-4 p-2 bg-yellow-100 text-xs">
+            🔍 Debug: mobileFiltersOpen = {mobileFiltersOpen ? 'TRUE (drawer should show)' : 'FALSE (drawer hidden)'}
+          </div>
+        )}
 
         {/* Mobile Filter Drawer */}
         {mobileFiltersOpen && (
