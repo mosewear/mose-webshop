@@ -78,24 +78,26 @@ export function Header() {
 
             {/* Icons */}
             <div className="flex items-center space-x-4">
-              <button className="p-2 hover:text-brand-primary transition-colors" aria-label="Zoeken">
+              {/* Desktop Icons - All visible */}
+              <button className="hidden md:block p-2 hover:text-brand-primary transition-colors" aria-label="Zoeken">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
               
-              <Link href="/account" className="p-2 hover:text-brand-primary transition-colors" aria-label="Account">
+              <Link href="/account" className="hidden md:block p-2 hover:text-brand-primary transition-colors" aria-label="Account">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </Link>
 
-              <Link href="/wishlist" className="p-2 hover:text-brand-primary transition-colors" aria-label="Wishlist">
+              <Link href="/wishlist" className="hidden md:block p-2 hover:text-brand-primary transition-colors" aria-label="Wishlist">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </Link>
 
+              {/* Cart - Always visible (desktop + mobile) */}
               <button
                 onClick={openDrawer}
                 className="relative p-2 hover:text-brand-primary transition-colors"
@@ -111,7 +113,7 @@ export function Header() {
                 )}
               </button>
 
-              {/* Mobile Menu Toggle */}
+              {/* Mobile Menu Toggle - Always visible on mobile */}
               <button
                 className="md:hidden p-2"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -138,6 +140,23 @@ export function Header() {
         }`}
       >
         <nav className="flex flex-col h-full pt-24 px-8">
+          {/* Search - Mobile */}
+          <div className="mb-6 pb-6 border-b-2 border-gray-200">
+            <button 
+              className="w-full flex items-center gap-3 text-xl font-display hover:text-brand-primary transition-colors"
+              onClick={() => {
+                setIsMobileMenuOpen(false)
+                // TODO: Open search modal/functionality
+              }}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              ZOEKEN
+            </button>
+          </div>
+
+          {/* Navigation Links */}
           <Link
             href="/shop"
             className="py-6 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-colors"
@@ -166,6 +185,30 @@ export function Header() {
           >
             CONTACT
           </Link>
+
+          {/* Account & Wishlist - Mobile */}
+          <div className="mt-6 pt-6 border-t-2 border-gray-200 space-y-4">
+            <Link
+              href="/account"
+              className="flex items-center gap-3 text-lg font-semibold hover:text-brand-primary transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Mijn Account
+            </Link>
+            <Link
+              href="/wishlist"
+              className="flex items-center gap-3 text-lg font-semibold hover:text-brand-primary transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              Wishlist
+            </Link>
+          </div>
         </nav>
       </div>
 
