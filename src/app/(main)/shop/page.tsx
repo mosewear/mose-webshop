@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
+import { X, SlidersHorizontal, Search } from 'lucide-react'
 
 interface Product {
   id: string
@@ -42,6 +43,29 @@ export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const supabase = createClient()
+
+  // Body scroll lock when drawer is open
+  useEffect(() => {
+    if (mobileFiltersOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [mobileFiltersOpen])
+
+  // Close on ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileFiltersOpen) {
+        setMobileFiltersOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [mobileFiltersOpen])
 
   useEffect(() => {
     fetchCategories()
@@ -128,6 +152,17 @@ export default function ShopPage() {
     return primaryImg?.url || product.images?.[0]?.url || '/placeholder-product.png'
   }
 
+  const handleApplyFilters = () => {
+    setMobileFiltersOpen(false)
+    // Scroll to top of results
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleResetFilters = () => {
+    setSelectedCategory('all')
+    setSearchQuery('')
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section - Compact */}
@@ -150,23 +185,172 @@ export default function ShopPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-        {/* Mobile Filter Toggle */}
+        {/* Mobile Filter Button - Fixed Position */}
         <button
-          onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-3 px-6 uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          onClick={() => setMobileFiltersOpen(true)}
+          className="lg:hidden fixed bottom-6 right-6 z-40 bg-black text-white p-4 border-2 border-black shadow-2xl hover:bg-gray-900 transition-all active:scale-95"
+          aria-label="Open filters"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-          Filters & Sorteren
+          <SlidersHorizontal className="w-6 h-6" />
         </button>
 
+        {/* Mobile Filter Drawer */}
+        {mobileFiltersOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="lg:hidden fixed inset-0 bg-black/80 z-40 transition-opacity"
+              onClick={() => setMobileFiltersOpen(false)}
+              aria-hidden="true"
+            />
+
+            {/* Drawer */}
+            <div className="lg:hidden fixed inset-y-0 right-0 w-[90%] max-w-sm bg-white z-50 border-l-4 border-black flex flex-col animate-slideInRight">
+              {/* Header - Fixed */}
+              <div className="flex-shrink-0 flex items-center justify-between p-6 border-b-2 border-black bg-white">
+                <h2 className="font-display text-xl uppercase tracking-wide">Filters & Sorteren</h2>
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="p-2 hover:bg-gray-100 transition-colors"
+                  aria-label="Sluit filters"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Search */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                    Zoeken
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Zoek producten..."
+                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                    />
+                    <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                    Categorieën
+                  </h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setSelectedCategory('all')}
+                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                        selectedCategory === 'all'
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                      }`}
+                    >
+                      Alle Producten ({products.length})
+                    </button>
+                    {categories.map(category => {
+                      const count = products.filter(p => p.category?.slug === category.slug).length
+                      return (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategory(category.slug)}
+                          className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                            selectedCategory === category.slug
+                              ? 'bg-brand-primary border-brand-primary text-white'
+                              : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                          }`}
+                        >
+                          {category.name} ({count})
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Sort */}
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                    Sorteren
+                  </h3>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-semibold"
+                  >
+                    <option value="newest">Nieuwste</option>
+                    <option value="price-asc">Prijs: Laag - Hoog</option>
+                    <option value="price-desc">Prijs: Hoog - Laag</option>
+                    <option value="name">Naam: A - Z</option>
+                  </select>
+                </div>
+
+                {/* Active Filters Summary */}
+                {(selectedCategory !== 'all' || searchQuery) && (
+                  <div className="pt-4 border-t-2 border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                        Actieve Filters
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedCategory !== 'all' && (
+                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
+                          <span className="text-sm font-semibold">
+                            {categories.find(c => c.slug === selectedCategory)?.name}
+                          </span>
+                          <button
+                            onClick={() => setSelectedCategory('all')}
+                            className="text-gray-600 hover:text-black"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      {searchQuery && (
+                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
+                          <span className="text-sm font-semibold">"{searchQuery}"</span>
+                          <button
+                            onClick={() => setSearchQuery('')}
+                            className="text-gray-600 hover:text-black"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer - Fixed */}
+              <div className="flex-shrink-0 border-t-2 border-black bg-white p-6">
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleResetFilters}
+                    className="flex-1 py-3 bg-white text-black border-2 border-black font-bold text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors"
+                  >
+                    Wis alles
+                  </button>
+                  <button
+                    onClick={handleApplyFilters}
+                    className="flex-1 py-3 bg-black text-white border-2 border-black font-bold text-sm uppercase tracking-wider hover:bg-gray-900 transition-colors"
+                  >
+                    Toon {filteredProducts.length}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar - Filters */}
-          <aside className={`
-            lg:w-64 lg:flex-shrink-0
-            ${mobileFiltersOpen ? 'block' : 'hidden lg:block'}
-          `}>
+          {/* Desktop Sidebar - Filters (hidden on mobile) */}
+          <aside className="hidden lg:block lg:w-64 lg:flex-shrink-0">
             <div className="space-y-6 lg:sticky lg:top-24">
               {/* Search */}
               <div>
@@ -181,9 +365,7 @@ export default function ShopPage() {
                     placeholder="Zoek producten..."
                     className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                   />
-                  <svg className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
               </div>
 
@@ -266,9 +448,7 @@ export default function ShopPage() {
                           onClick={() => setSelectedCategory('all')}
                           className="text-gray-600 hover:text-black"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     )}
@@ -279,9 +459,7 @@ export default function ShopPage() {
                           onClick={() => setSearchQuery('')}
                           className="text-gray-600 hover:text-black"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     )}
