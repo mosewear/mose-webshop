@@ -288,13 +288,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <span className="text-black font-semibold">{product.name}</span>
           </div>
 
-          <div className="grid md:grid-cols-[1.5fr_1fr] gap-6 md:gap-12">
-            {/* LEFT: Image Gallery (60% width) */}
+          <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
+            {/* LEFT: Image Gallery (55% width) */}
             <div className="space-y-4">
               {/* Main Image - Clickable for zoom */}
               <div
                 onClick={() => setShowLightbox(true)}
-                className="relative aspect-[3/4] md:aspect-square bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
+                className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
               >
                 <Image
                   src={product.product_images[selectedImage]?.url || '/placeholder.png'}
@@ -343,7 +343,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               )}
             </div>
 
-            {/* RIGHT: Product Info (40% width, sticky) */}
+            {/* RIGHT: Product Info (45% width, sticky) */}
             <div className="space-y-4 md:sticky md:top-24 md:self-start">
               {/* Title & Category */}
               <div>
