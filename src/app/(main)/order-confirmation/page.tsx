@@ -59,7 +59,20 @@ export default function OrderConfirmationPage({
 
   async function fetchOrder() {
     try {
-      // Build query params
+      // STEP 1: If we have payment_intent, check status first (fallback mechanism)
+      if (paymentIntentId) {
+        console.log('🔍 Checking payment status via fallback...')
+        const statusResponse = await fetch(`/api/check-payment-status?payment_intent=${paymentIntentId}`)
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json()
+          console.log('✅ Payment status checked:', statusData)
+          if (statusData.fallback_applied) {
+            console.log('🔧 Fallback applied - order updated to PAID')
+          }
+        }
+      }
+      
+      // STEP 2: Fetch order details
       const params = new URLSearchParams()
       if (orderId) params.append('order_id', orderId)
       if (paymentIntentId) params.append('payment_intent', paymentIntentId)
