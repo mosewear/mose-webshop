@@ -149,8 +149,8 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       </div>
     </div>
     <div class="footer">
-      <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -249,8 +249,8 @@ export async function sendShippingConfirmationEmail(props: {
       </ul>
     </div>
     <div class="footer">
-      <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -336,8 +336,8 @@ export async function sendOrderProcessingEmail(props: {
       </div>
     </div>
     <div class="footer">
-      <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -453,8 +453,8 @@ export async function sendOrderDeliveredEmail(props: {
       </div>
     </div>
     <div class="footer">
-      <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -544,8 +544,8 @@ export async function sendOrderCancelledEmail(props: {
       </div>
     </div>
     <div class="footer">
-      <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
