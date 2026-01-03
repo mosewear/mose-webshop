@@ -3,12 +3,15 @@ import { createClient } from '@/lib/supabase/client'
 interface SiteSettings {
   site_name: string
   contact_email: string
+  contact_phone: string
+  contact_address: string
   free_shipping_threshold: number
   shipping_cost: number
   tax_rate: number
   currency: string
   low_stock_threshold: number
   maintenance_mode: boolean
+  return_days: number
 }
 
 let cachedSettings: SiteSettings | null = null
@@ -40,12 +43,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     cachedSettings = {
       site_name: settings.site_name || 'MOSE Wear',
       contact_email: settings.contact_email || 'info@mosewear.nl',
-      free_shipping_threshold: parseFloat(settings.free_shipping_threshold) || 50,
+      contact_phone: settings.contact_phone || '+31 50 211 1931',
+      contact_address: settings.contact_address || 'Helper Brink 27a, 9722 EG Groningen',
+      free_shipping_threshold: parseFloat(settings.free_shipping_threshold) || 100,
       shipping_cost: parseFloat(settings.shipping_cost) || 0,
       tax_rate: parseFloat(settings.tax_rate) || 21,
       currency: settings.currency || 'EUR',
       low_stock_threshold: parseInt(settings.low_stock_threshold) || 5,
       maintenance_mode: settings.maintenance_mode === 'true' || settings.maintenance_mode === true,
+      return_days: parseInt(settings.return_days) || 14,
     }
 
     return cachedSettings
@@ -56,12 +62,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return {
       site_name: 'MOSE Wear',
       contact_email: 'info@mosewear.nl',
-      free_shipping_threshold: 50,
+      contact_phone: '+31 50 211 1931',
+      contact_address: 'Helper Brink 27a, 9722 EG Groningen',
+      free_shipping_threshold: 100,
       shipping_cost: 0,
       tax_rate: 21,
       currency: 'EUR',
       low_stock_threshold: 5,
       maintenance_mode: false,
+      return_days: 14,
     }
   }
 }

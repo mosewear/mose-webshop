@@ -31,7 +31,6 @@ export default function SettingsPage() {
   // Abandoned cart settings
   const [abandonedCartEnabled, setAbandonedCartEnabled] = useState(true)
   const [abandonedCartHours, setAbandonedCartHours] = useState('24')
-  const [abandonedCartDiscountCode, setAbandonedCartDiscountCode] = useState('COMEBACK10')
 
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
@@ -89,9 +88,6 @@ export default function SettingsPage() {
             case 'abandoned_cart_hours':
               setAbandonedCartHours(setting.value)
               break
-            case 'abandoned_cart_discount_code':
-              setAbandonedCartDiscountCode(setting.value.replace(/"/g, ''))
-              break
           }
         })
       }
@@ -118,7 +114,6 @@ export default function SettingsPage() {
         { key: 'low_stock_threshold', value: lowStockThreshold },
         { key: 'abandoned_cart_email_enabled', value: abandonedCartEnabled },
         { key: 'abandoned_cart_hours', value: abandonedCartHours },
-        { key: 'abandoned_cart_discount_code', value: abandonedCartDiscountCode },
       ]
 
       for (const setting of settingsToSave) {
@@ -399,7 +394,8 @@ export default function SettingsPage() {
               <p className="font-bold mb-1">ℹ️ Hoe werkt het?</p>
               <p>
                 Wanneer een klant checkout start maar niet betaalt, wordt na het ingestelde aantal uren automatisch 
-                een email gestuurd met een kortingscode om de bestelling alsnog af te ronden.
+                een herinneringsmail gestuurd om de bestelling alsnog af te ronden. De email bevat de cart items, 
+                social proof, USPs en urgency messaging.
               </p>
             </div>
 
@@ -418,24 +414,6 @@ export default function SettingsPage() {
               />
               <p className="text-xs text-gray-500 mt-1">
                 Standaard: 24 uur. Min: 1 uur, Max: 168 uur (7 dagen)
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                Kortingscode
-              </label>
-              <input
-                type="text"
-                value={abandonedCartDiscountCode}
-                onChange={(e) => setAbandonedCartDiscountCode(e.target.value.toUpperCase())}
-                disabled={!abandonedCartEnabled}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors uppercase font-mono disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="COMEBACK10"
-                maxLength={20}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Deze code moet ook bestaan in de Kortingscodes sectie
               </p>
             </div>
 
