@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import CartDrawer from '@/components/CartDrawer'
+import SearchOverlay from '@/components/SearchOverlay'
 import { ChevronRight, User, Heart } from 'lucide-react'
 
 export function Header() {
@@ -13,6 +14,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [mounted, setMounted] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const itemCount = useCart((state) => state.getItemCount())
   const { isOpen, openDrawer, closeDrawer } = useCartDrawer()
 
@@ -80,7 +82,11 @@ export function Header() {
             {/* Icons */}
             <div className="flex items-center space-x-4">
               {/* Desktop Icons - All visible */}
-              <button className="hidden md:block p-2 hover:text-brand-primary transition-colors" aria-label="Zoeken">
+              <button 
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:block p-2 hover:text-brand-primary transition-colors" 
+                aria-label="Zoeken"
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -204,6 +210,9 @@ export function Header() {
 
       {/* Cart Drawer */}
       <CartDrawer isOpen={isOpen} onClose={closeDrawer} />
+
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }
