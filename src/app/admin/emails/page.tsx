@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Mail, Search, Filter, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Mail, Search, Filter, Calendar, CheckCircle, XCircle, AlertCircle, FileText, Eye, Code } from 'lucide-react'
 import Link from 'next/link'
 
 interface EmailLog {
@@ -17,12 +17,72 @@ interface EmailLog {
   metadata: any
 }
 
+interface EmailTemplate {
+  id: string
+  name: string
+  type: string
+  description: string
+  icon: string
+  color: string
+  subject: string
+}
+
 export default function AdminEmailsPage() {
+  const [activeTab, setActiveTab] = useState<'logs' | 'templates'>('logs')
   const [emails, setEmails] = useState<EmailLog[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'sent' | 'failed'>('all')
   const [filterType, setFilterType] = useState<string>('all')
+  const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null)
+  
+  const emailTemplates: EmailTemplate[] = [
+    {
+      id: 'confirmation',
+      name: 'Bestelling Bevestiging',
+      type: 'confirmation',
+      description: 'Verzonden direct na succesvolle betaling. Bevat orderoverzicht, producten met afbeeldingen, verzendadres en BTW berekening.',
+      icon: '✓',
+      color: 'bg-green-100 text-green-800 border-green-200',
+      subject: 'Bestelling bevestiging #ORDER_ID - MOSE'
+    },
+    {
+      id: 'processing',
+      name: 'Order In Behandeling',
+      type: 'processing',
+      description: 'Stuurt een update dat de order wordt voorbereid voor verzending. Bevat checklist van stappen en verwachte verzendtijd.',
+      icon: '⚙️',
+      color: 'bg-purple-100 text-purple-800 border-purple-200',
+      subject: 'Je bestelling wordt voorbereid #ORDER_ID - MOSE'
+    },
+    {
+      id: 'shipped',
+      name: 'Order Verzonden',
+      type: 'shipped',
+      description: 'Verzonden wanneer order is verzonden. Bevat tracking code, tracking URL, vervoerder en geschatte leveringsdatum.',
+      icon: '📦',
+      color: 'bg-orange-100 text-orange-800 border-orange-200',
+      subject: 'Je bestelling is verzonden #ORDER_ID - MOSE'
+    },
+    {
+      id: 'delivered',
+      name: 'Order Bezorgd',
+      type: 'delivered',
+      description: 'Verzonden wanneer pakket is afgeleverd. Bevat producten, review sectie, verzorgingstips en upsell naar shop.',
+      icon: '🎉',
+      color: 'bg-green-100 text-green-800 border-green-200',
+      subject: 'Je pakket is bezorgd #ORDER_ID - MOSE'
+    },
+    {
+      id: 'cancelled',
+      name: 'Order Geannuleerd',
+      type: 'cancelled',
+      description: 'Verzonden bij annulering. Bevat terugbetalingsinformatie, SORRY10 discount code en link naar shop.',
+      icon: '✕',
+      color: 'bg-red-100 text-red-800 border-red-200',
+      subject: 'Je bestelling is geannuleerd #ORDER_ID - MOSE'
+    }
+  ]
 
   useEffect(() => {
     fetchEmails()
@@ -97,6 +157,17 @@ export default function AdminEmailsPage() {
     return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200'
   }
 
+  const getTemplateLine = (type: string) => {
+    const lines: { [key: string]: number } = {
+      'confirmation': 76,
+      'processing': 181,
+      'shipped': 247,
+      'delivered': 367,
+      'cancelled': 484,
+    }
+    return lines[type] || 1
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -111,15 +182,50 @@ export default function AdminEmailsPage() {
       <div className="mb-6 md:mb-8">
         <h1 className="text-3xl font-display font-bold mb-2 flex items-center gap-3">
           <Mail size={32} />
-          Email Log
+          Email Management
         </h1>
         <p className="text-gray-600 text-sm md:text-base">
-          Alle verzonden emails van MOSE - {emails.length} totaal
+          Bekijk verzonden emails en email templates
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b-2 border-gray-200">
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider text-sm transition-colors relative ${
+            activeTab === 'logs'
+              ? 'text-brand-primary'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Mail size={18} className="inline mr-2" />
+          Email Log
+          {activeTab === 'logs' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider text-sm transition-colors relative ${
+            activeTab === 'templates'
+              ? 'text-brand-primary'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <FileText size={18} className="inline mr-2" />
+          Templates
+          {activeTab === 'templates' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary" />
+          )}
+        </button>
+      </div>
+
+      {/* Email Logs Tab */}
+      {activeTab === 'logs' && (
+        <div>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-1 md:mb-2">
             {emails.length}
@@ -369,6 +475,152 @@ export default function AdminEmailsPage() {
           <span className="font-mono font-bold">bestellingen@orders.mosewear.nl</span>
         </p>
       </div>
+        </div>
+      )}
+
+      {/* Templates Tab */}
+      {activeTab === 'templates' && (
+        <div>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-6 border-2 border-gray-200">
+              <div className="text-3xl font-bold text-brand-primary mb-2">
+                {emailTemplates.length}
+              </div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">
+                Email Templates
+              </div>
+            </div>
+            <div className="bg-white p-6 border-2 border-gray-200">
+              <div className="text-3xl font-bold text-gray-800 mb-2">
+                5
+              </div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">
+                Order Lifecycle Stages
+              </div>
+            </div>
+            <div className="bg-white p-6 border-2 border-gray-200">
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                100%
+              </div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide">
+                Responsive Design
+              </div>
+            </div>
+          </div>
+
+          {/* Templates Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {emailTemplates.map((template) => (
+              <div key={template.id} className="bg-white border-2 border-gray-200 p-6 hover:border-brand-primary transition-colors">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="text-4xl">{template.icon}</div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{template.name}</h3>
+                      <span className={`inline-block px-2 py-1 text-xs font-semibold border mt-1 ${template.color}`}>
+                        {getEmailTypeLabel(template.type)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  {template.description}
+                </p>
+
+                <div className="bg-gray-50 p-3 border-l-3 border-brand-primary mb-4">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Subject Line:</div>
+                  <div className="text-sm font-mono text-gray-900">{template.subject}</div>
+                </div>
+
+                <div className="flex gap-2">
+                  <a
+                    href={`/api/email-preview?type=${template.type}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                  >
+                    <Eye size={16} />
+                    Preview
+                  </a>
+                  <a
+                    href={`https://github.com/mosewear/mose-webshop/blob/main/src/lib/email.ts#L${getTemplateLine(template.type)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-gray-200 text-gray-700 font-bold text-sm uppercase tracking-wider hover:bg-gray-50 transition-colors"
+                  >
+                    <Code size={16} />
+                    Code
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Template Features */}
+          <div className="mt-8 bg-white border-2 border-gray-200 p-6">
+            <h3 className="text-xl font-bold mb-4 uppercase tracking-wide">Email Template Features</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+                <div>
+                  <div className="font-bold text-sm">Consistent Branding</div>
+                  <div className="text-sm text-gray-600">MOSE logo, kleuren (#2ECC71) en typography</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+                <div>
+                  <div className="font-bold text-sm">Responsive Design</div>
+                  <div className="text-sm text-gray-600">Perfect op desktop, mobile en tablets</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+                <div>
+                  <div className="font-bold text-sm">Product Images</div>
+                  <div className="text-sm text-gray-600">Absolute URLs naar product afbeeldingen</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+                <div>
+                  <div className="font-bold text-sm">Contact Details</div>
+                  <div className="text-sm text-gray-600">Helper Brink 27a, +31 50 211 1931</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+                <div>
+                  <div className="font-bold text-sm">Clear CTAs</div>
+                  <div className="text-sm text-gray-600">Track order, shop, write review buttons</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+                <div>
+                  <div className="font-bold text-sm">Sender Domain</div>
+                  <div className="text-sm text-gray-600">bestellingen@orders.mosewear.nl</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Code Location */}
+          <div className="mt-6 bg-gray-900 text-gray-300 p-6 border-2 border-gray-700 font-mono text-sm">
+            <div className="text-gray-400 mb-2">📁 Template Bestanden:</div>
+            <div className="space-y-1">
+              <div className="text-green-400">└─ src/lib/email.ts</div>
+              <div className="ml-4 text-gray-500">├─ sendOrderConfirmationEmail()</div>
+              <div className="ml-4 text-gray-500">├─ sendOrderProcessingEmail()</div>
+              <div className="ml-4 text-gray-500">├─ sendShippingConfirmationEmail()</div>
+              <div className="ml-4 text-gray-500">├─ sendOrderDeliveredEmail()</div>
+              <div className="ml-4 text-gray-500">└─ sendOrderCancelledEmail()</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
