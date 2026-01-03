@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         if (updatedOrder) {
           try {
             const shippingAddress = updatedOrder.shipping_address as any
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
             
             await sendOrderConfirmationEmail({
               customerName: shippingAddress?.name || 'Klant',
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
                 color: item.color,
                 quantity: item.quantity,
                 price: item.price_at_purchase,
-                imageUrl: item.image_url,
+                imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
               })),
               shippingAddress: {
                 name: shippingAddress?.name || '',
@@ -231,6 +232,7 @@ export async function POST(req: NextRequest) {
             if (updatedOrder && session.customer_email) {
               try {
                 const shippingAddress = updatedOrder.shipping_address as any
+                const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
                 
                 await sendOrderConfirmationEmail({
                   customerName: shippingAddress?.name || session.metadata?.customerName || 'Klant',
@@ -243,7 +245,7 @@ export async function POST(req: NextRequest) {
                     color: item.color,
                     quantity: item.quantity,
                     price: item.price_at_purchase,
-                    imageUrl: item.image_url,
+                    imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
                   })),
                   shippingAddress: {
                     name: shippingAddress?.name || '',
