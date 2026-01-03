@@ -59,7 +59,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [addedToCart, setAddedToCart] = useState(false)
   const [showLightbox, setShowLightbox] = useState(false)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
-  const [activeTab, setActiveTab] = useState<'details' | 'materials' | 'shipping'>('details')
+  const [activeTab, setActiveTab] = useState<'description' | 'trust' | 'details' | 'materials' | 'shipping'>('details')
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
   const [settings, setSettings] = useState({
@@ -360,8 +360,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Trust Badges - MINIMAL LINES (Voorstel 2) */}
-              <div className="space-y-0 border-2 border-gray-200">
+              {/* Trust Badges - Desktop only */}
+              <div className="hidden md:block space-y-0 border-2 border-gray-200">
                 <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary py-3 px-4">
                   <Truck className="w-5 h-5 text-gray-600 flex-shrink-0" />
                   <span className="text-sm font-semibold text-gray-900">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
@@ -376,8 +376,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="border-t-2 border-b-2 border-gray-200 py-6">
+              {/* Description - Desktop only */}
+              <div className="hidden md:block border-t-2 border-b-2 border-gray-200 py-6">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">{product.description}</p>
               </div>
 
@@ -594,9 +594,66 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </button>
               </div>
 
-              {/* Product Tabs / Accordion (Feature 5) */}
+              {/* Product Tabs / Accordion */}
               <div className="border-t-2 border-gray-200 pt-6">
                 <div className="space-y-4">
+                  {/* Product Description Tab - Mobile only */}
+                  <div className="md:hidden border-2 border-black">
+                    <button
+                      onClick={() => setActiveTab(activeTab === 'description' ? '' as any : 'description')}
+                      className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
+                    >
+                      <span>Product beschrijving</span>
+                      <svg
+                        className={`w-5 h-5 transition-transform ${activeTab === 'description' ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {activeTab === 'description' && (
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50">
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm">{product.description}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Trust Badges Tab - Mobile only */}
+                  <div className="md:hidden border-2 border-black">
+                    <button
+                      onClick={() => setActiveTab(activeTab === 'trust' ? '' as any : 'trust')}
+                      className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
+                    >
+                      <span>Verzending & Retour</span>
+                      <svg
+                        className={`w-5 h-5 transition-transform ${activeTab === 'trust' ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {activeTab === 'trust' && (
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                          <span className="text-sm font-semibold text-gray-900">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <RotateCcw className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                          <span className="text-sm font-semibold text-gray-900">{settings.return_days} dagen bedenktijd</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <MapPin className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                          <span className="text-sm font-semibold text-gray-900">Lokaal gemaakt in Nederland</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Details Tab */}
                   <div className="border-2 border-black">
                     <button
@@ -648,8 +705,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     )}
                   </div>
 
-                  {/* Shipping Tab */}
-                  <div className="border-2 border-black">
+                  {/* Shipping Tab - Desktop only (mobile has it in Trust tab) */}
+                  <div className="hidden md:block border-2 border-black">
                     <button
                       onClick={() => setActiveTab(activeTab === 'shipping' ? '' as any : 'shipping')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
