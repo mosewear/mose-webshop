@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendShippingConfirmationEmail } from '@/lib/email'
 import { createClient } from '@/lib/supabase/server'
+import { logEmailSent } from '@/lib/email-logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,6 +45,20 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       trackingCode: order.tracking_code,
       trackingUrl: order.tracking_url || undefined,
+      carrier: order.carrier || undefined,
+      estimatedDelivery: order.estimated_delivery_date
+        ? new Date(order.estimated_delivery_date).toLocaleDateString('nl-NL')
+        : undefined,
+    })
+
+    // Log email to database
+    await logEmailSent({
+      orderId: order.id,
+      emailType: 'shipped',
+      recipientEmail: order.email,
+      subject: `Je bestelling is verzonden #${order.id.slice(0, 8).toUpperCase()}`,
+      status: result.success ? 'sent' : 'failed',
+      errorMessage: result.error ? JSON.stringify(result.error) : undefined,
     })
 
     if (!result.success) {
