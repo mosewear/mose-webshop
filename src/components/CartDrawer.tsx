@@ -356,10 +356,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       return (
                         <div
                           key={product.id}
-                          className="flex-shrink-0 w-[280px] md:w-[320px] border-2 border-gray-200 hover:border-black transition-all p-3 group"
+                          className="flex-shrink-0 w-[280px] md:w-[320px] border-2 border-gray-200 hover:border-black transition-all p-2 group"
                         >
                           {/* Top Row: Image + Info */}
-                          <div className="flex items-start gap-3 mb-3">
+                          <div className="flex items-start gap-3 mb-2">
                             {/* Image */}
                             <Link
                               href={`/product/${product.slug}`}
@@ -390,18 +390,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </div>
                           </div>
 
-                          {/* Size Selector */}
-                          <div className="mb-3">
-                            <label className="block text-[10px] uppercase tracking-wide text-gray-600 mb-1.5">
-                              Maat:
-                            </label>
-                            <div className="flex gap-1.5">
+                          {/* Inline: Size Selector + Add Button */}
+                          <div className="flex items-center gap-2">
+                            {/* Size Buttons */}
+                            <div className="flex gap-1 flex-1">
                               {availableSizes.map((size: string) => (
                                 <button
                                   key={size}
                                   onClick={() => setSelectedUpsellSizes(prev => ({ ...prev, [product.id]: size }))}
                                   className={`
-                                    flex-1 px-2 py-1.5 text-xs font-bold uppercase border-2 transition-all
+                                    flex-1 px-2 py-1.5 text-[10px] font-bold uppercase border-2 transition-all
                                     ${selectedSize === size
                                       ? 'border-black bg-black text-white'
                                       : 'border-gray-300 hover:border-black'
@@ -412,33 +410,33 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 </button>
                               ))}
                             </div>
-                          </div>
 
-                          {/* Add to Cart Button */}
-                          <button
-                            onClick={() => handleQuickAdd(product)}
-                            disabled={addingProduct === product.id || !selectedSize}
-                            className={`
-                              w-full py-2.5 text-xs font-bold uppercase transition-all
-                              ${addingProduct === product.id
-                                ? 'bg-brand-primary text-white'
-                                : !selectedSize
-                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                  : 'bg-black text-white hover:bg-brand-primary'
-                              }
-                            `}
-                          >
-                            {addingProduct === product.id ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <span className="text-base">✓</span>
-                                Toegevoegd
-                              </span>
-                            ) : !selectedSize ? (
-                              'Selecteer maat'
-                            ) : (
-                              '+ Toevoegen'
-                            )}
-                          </button>
+                            {/* Add to Cart Button */}
+                            <button
+                              onClick={() => handleQuickAdd(product)}
+                              disabled={addingProduct === product.id || !selectedSize}
+                              className={`
+                                flex-shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase transition-all whitespace-nowrap
+                                ${addingProduct === product.id
+                                  ? 'bg-brand-primary text-white'
+                                  : !selectedSize
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-black text-white hover:bg-brand-primary'
+                                }
+                              `}
+                            >
+                              {addingProduct === product.id ? (
+                                <span className="flex items-center gap-1">
+                                  <span className="text-sm">✓</span>
+                                  OK
+                                </span>
+                              ) : !selectedSize ? (
+                                'Kies'
+                              ) : (
+                                '+ ADD'
+                              )}
+                            </button>
+                          </div>
                         </div>
                       )
                     })}
