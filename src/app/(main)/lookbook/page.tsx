@@ -125,14 +125,14 @@ export default function LookbookPage() {
               <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
                 <Image
                   src="/hoodieblack.png"
-                  alt="Statement Pieces"
+                  alt="Oversized Hoodie"
                   fill
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
               <h4 className="text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider text-center">
-                Statement
+                Oversized Hoodie
               </h4>
             </div>
 
@@ -141,14 +141,14 @@ export default function LookbookPage() {
               <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
                 <Image
                   src="/hoodie_cap.png"
-                  alt="Finishing Touches"
+                  alt="MOSE Cap"
                   fill
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
               <h4 className="text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider text-center">
-                Details
+                MOSE Cap
               </h4>
             </div>
 
@@ -157,14 +157,14 @@ export default function LookbookPage() {
               <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
                 <Image
                   src="/blacktee.png"
-                  alt="Timeless Design"
+                  alt="Classic Tee"
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
               <h4 className="text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider text-center">
-                Timeless
+                Classic Tee
               </h4>
             </div>
           </div>
