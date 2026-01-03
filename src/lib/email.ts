@@ -63,7 +63,7 @@ interface OrderEmailProps {
     color: string
     quantity: number
     price: number
-    image_url?: string
+    imageUrl?: string
   }[]
   shippingAddress: {
     name: string
@@ -92,7 +92,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
     color: item.color,
     quantity: item.quantity,
     total: (item.price * item.quantity).toFixed(2),
-    imageUrl: item.image_url || ''
+    imageUrl: item.imageUrl || ''
   }))
 
   const htmlContent = `<!DOCTYPE html>
