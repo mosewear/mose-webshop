@@ -210,16 +210,16 @@ export default function ShopPage() {
             />
 
             {/* Drawer */}
-            <div className="lg:hidden fixed inset-y-0 right-0 w-[90%] max-w-sm bg-white z-50 border-l-4 border-black flex flex-col animate-slideInRight">
-              {/* Header - Fixed */}
-              <div className="flex-shrink-0 flex items-center justify-between p-6 border-b-2 border-black bg-white">
-                <h2 className="font-display text-xl uppercase tracking-wide">Filters & Sorteren</h2>
+            <div className="lg:hidden fixed top-0 bottom-0 right-0 w-[90%] max-w-sm bg-white z-50 border-l-4 border-black flex flex-col animate-slideInRight overflow-hidden">
+              {/* Header - Fixed (sticky at top) */}
+              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b-4 border-black bg-white sticky top-0 z-10">
+                <h2 className="font-display text-lg uppercase tracking-wide font-bold">Filters & Sorteren</h2>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="p-2 hover:bg-gray-100 transition-colors rounded-sm border-2 border-transparent hover:border-gray-300"
+                  className="flex-shrink-0 w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors rounded-sm border-2 border-gray-300"
                   aria-label="Sluit filters"
                 >
-                  <X className="w-7 h-7" strokeWidth={2.5} />
+                  <X className="w-6 h-6" strokeWidth={3} />
                 </button>
               </div>
 
