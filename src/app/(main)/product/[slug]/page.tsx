@@ -184,7 +184,28 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const finalPrice = product ? product.base_price + (selectedVariant?.price_adjustment || 0) : 0
 
-  const availableSizes = product ? [...new Set(product.product_variants.map((v) => v.size))] : []
+  // Smart size sorting: XS, S, M, L, XL, XXL, XXXL, etc.
+  const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
+  const availableSizes = product 
+    ? [...new Set(product.product_variants.map((v) => v.size))].sort((a, b) => {
+        const indexA = sizeOrder.indexOf(a.toUpperCase())
+        const indexB = sizeOrder.indexOf(b.toUpperCase())
+        
+        // Both sizes in predefined order - sort by index
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB
+        }
+        
+        // Only A is in predefined order - A comes first
+        if (indexA !== -1) return -1
+        
+        // Only B is in predefined order - B comes first
+        if (indexB !== -1) return 1
+        
+        // Neither in predefined order - sort alphabetically
+        return a.localeCompare(b)
+      })
+    : []
   const availableColors = product
     ? product.product_variants
         .filter((v) => v.size === selectedSize)
