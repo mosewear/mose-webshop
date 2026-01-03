@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap } from 'lucide-react'
 import { getCarrierOptions, generateTrackingUrl, calculateEstimatedDelivery } from '@/lib/order-utils'
 
 interface Order {
@@ -72,6 +72,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [autoUpdateToShipped, setAutoUpdateToShipped] = useState(true)
   const [sendingEmail, setSendingEmail] = useState(false)
   const [showTimeline, setShowTimeline] = useState(true)
+  const [creatingLabel, setCreatingLabel] = useState(false)
+  const [labelSuccess, setLabelSuccess] = useState(false)
+  const [labelUrl, setLabelUrl] = useState('')
 
   const carrierOptions = getCarrierOptions()
 
@@ -286,6 +289,56 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       alert(`Fout bij versturen email: ${err.message}`)
     } finally {
       setSendingEmail(false)
+    }
+  }
+
+  const handleCreateLabel = async () => {
+    if (!order) return
+
+    if (!confirm('Automatisch verzendlabel aanmaken via Sendcloud + DHL?')) return
+
+    try {
+      setCreatingLabel(true)
+      setLabelSuccess(false)
+      
+      const response = await fetch('/api/create-shipping-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: id,
+          sendEmail: true, // Automatisch shipping email versturen
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to create label')
+      }
+
+      const result = await response.json()
+      
+      setLabelSuccess(true)
+      setLabelUrl(result.data.labelUrl)
+      
+      // Update local state
+      setTrackingCode(result.data.trackingNumber)
+      setTrackingUrl(result.data.trackingUrl)
+      setCarrier(result.data.carrier)
+
+      // Refresh order data
+      await fetchOrder()
+      await fetchStatusHistory()
+
+      alert('✅ Label aangemaakt en klant gemaild!')
+
+      // Open label in new tab
+      if (result.data.labelUrl) {
+        window.open(result.data.labelUrl, '_blank')
+      }
+    } catch (err: any) {
+      alert(`Fout bij aanmaken label: ${err.message}`)
+    } finally {
+      setCreatingLabel(false)
     }
   }
 
@@ -610,6 +663,81 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               </button>
             </div>
           </div>
+
+          {/* Sendcloud Label Creatie */}
+          {!order.tracking_code && order.status !== 'cancelled' && order.status !== 'refunded' && (
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-300 p-4 md:p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2 bg-blue-500 text-white rounded">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900">Automatisch Verzendlabel</h2>
+                  <p className="text-sm text-gray-700 mt-1">
+                    Maak instant een verzendlabel via Sendcloud + DHL. Tracking code wordt automatisch toegevoegd en klant ontvangt verzend-email.
+                  </p>
+                </div>
+              </div>
+
+              {labelSuccess && (
+                <div className="bg-green-100 border-2 border-green-400 text-green-800 px-4 py-3 rounded mb-4 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <div className="flex-1">
+                    <strong>Label aangemaakt!</strong>
+                    <div className="text-sm mt-1">
+                      Tracking: {trackingCode} • {carrier}
+                    </div>
+                  </div>
+                  {labelUrl && (
+                    <a
+                      href={labelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-bold uppercase transition-colors"
+                    >
+                      <Printer size={16} />
+                      Print Label
+                    </a>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-white border border-gray-200 p-4 rounded">
+                  <h3 className="font-bold text-sm uppercase tracking-wide text-gray-700 mb-2">Wat Gebeurt Er?</h3>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>✅ DHL verzendlabel wordt aangemaakt</li>
+                    <li>✅ Tracking code automatisch toegevoegd aan order</li>
+                    <li>✅ Status wordt "Verzonden"</li>
+                    <li>✅ Klant ontvangt shipping email met tracking link</li>
+                    <li>✅ Label PDF opent automatisch voor printen</li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={handleCreateLabel}
+                  disabled={creatingLabel}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg shadow-lg"
+                >
+                  {creatingLabel ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                      Label Aanmaken...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5" />
+                      Maak Verzendlabel (DHL)
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-center text-gray-600">
+                  Kosten: ~€4,50 via Sendcloud • Geschatte levering: 1-2 werkdagen
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Tracking Code */}
           <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
