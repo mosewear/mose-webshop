@@ -440,7 +440,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   ? 'bg-brand-primary text-white'
                                   : !selectedSize
                                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-black text-white hover:bg-brand-primary'
+                                    : 'bg-brand-primary text-white hover:bg-green-600'
                                 }
                               `}
                             >
