@@ -149,24 +149,35 @@ export default function AdminDashboard() {
 
       {/* Revenue & Customers Row - FIRST ON MOBILE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 order-1">
-        {/* Revenue */}
-        <div className="bg-gradient-to-r from-brand-primary to-brand-primary-hover p-8 text-white border-2 border-brand-primary">
+        {/* Revenue - CLICKABLE */}
+        <Link
+          href="/admin/analytics"
+          className="bg-gradient-to-r from-brand-primary to-brand-primary-hover p-8 text-white border-2 border-brand-primary hover:shadow-xl hover:scale-[1.02] transition-all group cursor-pointer"
+        >
           <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur flex items-center justify-center">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur flex items-center justify-center group-hover:bg-white/30 transition-all">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="text-5xl md:text-6xl font-display">
+            <div className="text-5xl md:text-6xl font-display group-hover:scale-105 transition-transform">
               €{stats.totalRevenue.toFixed(2)}
             </div>
           </div>
-          <div className="text-lg md:text-xl uppercase tracking-wider font-bold">Totale Omzet</div>
+          <div className="text-lg md:text-xl uppercase tracking-wider font-bold flex items-center justify-between">
+            <span>Totale Omzet</span>
+            <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </div>
           <div className="text-sm text-white/80 mt-2 space-y-1">
             <div>✓ {stats.paidOrders} betaalde orders</div>
             <div>Ø €{stats.avgOrderValue.toFixed(2)} per order</div>
+            <div className="mt-3 text-white/60 text-xs uppercase tracking-wide group-hover:text-white/90 transition-colors">
+              → Klik voor uitgebreide analytics
+            </div>
           </div>
-        </div>
+        </Link>
 
         {/* Customers */}
         <Link
@@ -185,91 +196,6 @@ export default function AdminDashboard() {
           </div>
           <div className="text-lg md:text-xl text-gray-600 uppercase tracking-wider font-bold">Klanten</div>
         </Link>
-      </div>
-
-      {/* CONVERSION FUNNEL - NEW */}
-      <div className="bg-white border-2 border-gray-200 p-6 md:p-8 order-1-5">
-        <h2 className="text-2xl md:text-3xl font-display font-bold mb-6 flex items-center gap-2">
-          📊 Conversion Funnel
-        </h2>
-        <div className="space-y-4">
-          {/* Funnel Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 p-4 border-l-4 border-gray-400">
-              <div className="text-3xl font-bold text-gray-700">{stats.totalOrders}</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
-                Totaal Orders
-              </div>
-            </div>
-            <div className="bg-yellow-50 p-4 border-l-4 border-yellow-400">
-              <div className="text-3xl font-bold text-yellow-700">{stats.pendingPayments}</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
-                ⏳ Wacht op betaling
-              </div>
-            </div>
-            <div className="bg-green-50 p-4 border-l-4 border-green-400">
-              <div className="text-3xl font-bold text-green-700">{stats.paidOrders}</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
-                ✓ Betaald
-              </div>
-            </div>
-            <div className="bg-red-50 p-4 border-l-4 border-red-400">
-              <div className="text-3xl font-bold text-red-700">{stats.abandonedCarts}</div>
-              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
-                🛒 Abandoned (24h+)
-              </div>
-            </div>
-          </div>
-
-          {/* Conversion Rate */}
-          <div className="bg-gradient-to-r from-green-400 to-green-500 p-6 text-white mt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm uppercase tracking-wider font-semibold mb-1">Conversie Rate</div>
-                <div className="text-4xl font-bold">{stats.conversionRate.toFixed(1)}%</div>
-              </div>
-              <div className="text-5xl opacity-50">📈</div>
-            </div>
-            <div className="mt-3 text-sm text-white/90">
-              {stats.paidOrders} van {stats.totalOrders} orders zijn succesvol betaald
-            </div>
-          </div>
-
-          {/* Visual Funnel */}
-          <div className="mt-6 space-y-2">
-            <div className="text-sm font-bold text-gray-700 mb-3">VISUELE FUNNEL:</div>
-            {/* Step 1: All Orders */}
-            <div className="relative">
-              <div 
-                className="bg-gray-300 h-12 flex items-center justify-between px-4"
-                style={{ width: '100%' }}
-              >
-                <span className="text-sm font-bold">Orders Aangemaakt</span>
-                <span className="text-sm font-bold">{stats.totalOrders}</span>
-              </div>
-            </div>
-            {/* Step 2: Pending */}
-            <div className="relative">
-              <div 
-                className="bg-yellow-300 h-12 flex items-center justify-between px-4"
-                style={{ width: `${stats.totalOrders > 0 ? (stats.pendingPayments / stats.totalOrders * 100) : 0}%`, minWidth: '20%' }}
-              >
-                <span className="text-sm font-bold">Wacht op betaling</span>
-                <span className="text-sm font-bold">{stats.pendingPayments}</span>
-              </div>
-            </div>
-            {/* Step 3: Paid */}
-            <div className="relative">
-              <div 
-                className="bg-green-400 h-12 flex items-center justify-between px-4"
-                style={{ width: `${stats.totalOrders > 0 ? (stats.paidOrders / stats.totalOrders * 100) : 0}%`, minWidth: '20%' }}
-              >
-                <span className="text-sm font-bold text-white">Betaald ✓</span>
-                <span className="text-sm font-bold text-white">{stats.paidOrders}</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Quick Stats Grid - SECOND ON MOBILE */}
