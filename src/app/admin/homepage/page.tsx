@@ -321,7 +321,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.stats_1_number}
                         onChange={(e) => setSettings({ ...settings, stats_1_number: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -330,7 +330,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.stats_1_text}
                         onChange={(e) => setSettings({ ...settings, stats_1_text: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -339,10 +339,10 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.stats_2_text}
                         onChange={(e) => setSettings({ ...settings, stats_2_text: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
-                    <div className="md:col-span-2 text-sm text-gray-600 bg-gray-100 p-2 md:p-3 border-l-2 border-black text-xs md:text-sm">
+                    <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
                       💡 <strong>Tip:</strong> Stat 2 cijfer wordt automatisch gehaald uit de retour dagen setting
                     </div>
                     <div>
@@ -351,7 +351,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.stats_3_number}
                         onChange={(e) => setSettings({ ...settings, stats_3_number: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -360,7 +360,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.stats_3_text}
                         onChange={(e) => setSettings({ ...settings, stats_3_text: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                   </div>
@@ -376,7 +376,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.trust_badge_1}
                         onChange={(e) => setSettings({ ...settings, trust_badge_1: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -385,10 +385,10 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.trust_badge_2_prefix}
                         onChange={(e) => setSettings({ ...settings, trust_badge_2_prefix: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
-                    <div className="md:col-span-2 text-sm text-gray-600 bg-gray-100 p-2 md:p-3 border-l-2 border-black text-xs md:text-sm">
+                    <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
                       💡 <strong>Tip:</strong> Badge 2 toont automatisch: "{settings.trust_badge_2_prefix} €[gratis verzending drempel]"
                     </div>
                     <div>
@@ -397,10 +397,10 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.trust_badge_3_suffix}
                         onChange={(e) => setSettings({ ...settings, trust_badge_3_suffix: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
-                    <div className="md:col-span-2 text-sm text-gray-600 bg-gray-100 p-2 md:p-3 border-l-2 border-black text-xs md:text-sm">
+                    <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
                       💡 <strong>Tip:</strong> Badge 3 toont automatisch: "[retour dagen] {settings.trust_badge_3_suffix}"
                     </div>
                     <div>
@@ -409,7 +409,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.trust_badge_4}
                         onChange={(e) => setSettings({ ...settings, trust_badge_4: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                   </div>
@@ -430,7 +430,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.featured_label}
                         onChange={(e) => setSettings({ ...settings, featured_label: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -439,7 +439,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.featured_title}
                         onChange={(e) => setSettings({ ...settings, featured_title: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none text-2xl font-bold"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
                       />
                     </div>
                     <div>
@@ -448,7 +448,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.featured_description}
                         onChange={(e) => setSettings({ ...settings, featured_description: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     
@@ -458,7 +458,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.featured_product_1_id || ''}
                           onChange={(e) => setSettings({ ...settings, featured_product_1_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen product</option>
                           {products.map((product) => (
@@ -473,7 +473,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.featured_product_2_id || ''}
                           onChange={(e) => setSettings({ ...settings, featured_product_2_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen product</option>
                           {products.map((product) => (
@@ -488,7 +488,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.featured_product_3_id || ''}
                           onChange={(e) => setSettings({ ...settings, featured_product_3_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen product</option>
                           {products.map((product) => (
@@ -512,7 +512,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.categories_title}
                         onChange={(e) => setSettings({ ...settings, categories_title: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none text-2xl font-bold"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
                       />
                     </div>
                     <div>
@@ -521,7 +521,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.categories_description}
                         onChange={(e) => setSettings({ ...settings, categories_description: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
 
@@ -531,7 +531,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.category_1_id || ''}
                           onChange={(e) => setSettings({ ...settings, category_1_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen categorie</option>
                           {categories.map((category) => (
@@ -546,7 +546,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.category_2_id || ''}
                           onChange={(e) => setSettings({ ...settings, category_2_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen categorie</option>
                           {categories.map((category) => (
@@ -561,7 +561,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.category_3_id || ''}
                           onChange={(e) => setSettings({ ...settings, category_3_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen categorie</option>
                           {categories.map((category) => (
@@ -576,7 +576,7 @@ export default function HomepageSettingsPage() {
                         <select
                           value={settings.category_4_id || ''}
                           onChange={(e) => setSettings({ ...settings, category_4_id: e.target.value || null })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         >
                           <option value="">Geen categorie</option>
                           {categories.map((category) => (
@@ -606,7 +606,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_badge}
                           onChange={(e) => setSettings({ ...settings, story_badge: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                       <div>
@@ -615,7 +615,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_founded_year}
                           onChange={(e) => setSettings({ ...settings, story_founded_year: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                     </div>
@@ -625,7 +625,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.story_title_line1}
                         onChange={(e) => setSettings({ ...settings, story_title_line1: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none text-2xl font-bold"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
                       />
                     </div>
                     <div>
@@ -634,7 +634,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.story_title_line2}
                         onChange={(e) => setSettings({ ...settings, story_title_line2: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none text-2xl font-bold text-brand-primary"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold text-brand-primary"
                       />
                     </div>
                     <div>
@@ -643,7 +643,7 @@ export default function HomepageSettingsPage() {
                         value={settings.story_paragraph1}
                         onChange={(e) => setSettings({ ...settings, story_paragraph1: e.target.value })}
                         rows={3}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -652,7 +652,7 @@ export default function HomepageSettingsPage() {
                         value={settings.story_paragraph2}
                         onChange={(e) => setSettings({ ...settings, story_paragraph2: e.target.value })}
                         rows={2}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
 
@@ -664,14 +664,14 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_stat1_label}
                           onChange={(e) => setSettings({ ...settings, story_stat1_label: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                         <label className="block text-sm font-bold mb-2 mt-2">Stat 1 Sublabel</label>
                         <input
                           type="text"
                           value={settings.story_stat1_sublabel}
                           onChange={(e) => setSettings({ ...settings, story_stat1_sublabel: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                       <div>
@@ -680,14 +680,14 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_stat2_label}
                           onChange={(e) => setSettings({ ...settings, story_stat2_label: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                         <label className="block text-sm font-bold mb-2 mt-2">Stat 2 Sublabel</label>
                         <input
                           type="text"
                           value={settings.story_stat2_sublabel}
                           onChange={(e) => setSettings({ ...settings, story_stat2_sublabel: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                       <div>
@@ -696,14 +696,14 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_stat3_label}
                           onChange={(e) => setSettings({ ...settings, story_stat3_label: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                         <label className="block text-sm font-bold mb-2 mt-2">Stat 3 Sublabel</label>
                         <input
                           type="text"
                           value={settings.story_stat3_sublabel}
                           onChange={(e) => setSettings({ ...settings, story_stat3_sublabel: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                     </div>
@@ -715,7 +715,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_cta_text}
                           onChange={(e) => setSettings({ ...settings, story_cta_text: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                       <div>
@@ -724,7 +724,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_cta_link}
                           onChange={(e) => setSettings({ ...settings, story_cta_link: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                       <div>
@@ -733,7 +733,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.story_image_url}
                           onChange={(e) => setSettings({ ...settings, story_image_url: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                     </div>
@@ -750,7 +750,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.newsletter_title}
                         onChange={(e) => setSettings({ ...settings, newsletter_title: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none text-2xl font-bold"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
                       />
                     </div>
                     <div>
@@ -759,7 +759,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.newsletter_description1}
                         onChange={(e) => setSettings({ ...settings, newsletter_description1: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -768,7 +768,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.newsletter_description2}
                         onChange={(e) => setSettings({ ...settings, newsletter_description2: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -778,7 +778,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.newsletter_input_placeholder}
                           onChange={(e) => setSettings({ ...settings, newsletter_input_placeholder: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                       <div>
@@ -787,7 +787,7 @@ export default function HomepageSettingsPage() {
                           type="text"
                           value={settings.newsletter_button_text}
                           onChange={(e) => setSettings({ ...settings, newsletter_button_text: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                         />
                       </div>
                     </div>
@@ -797,7 +797,7 @@ export default function HomepageSettingsPage() {
                         type="text"
                         value={settings.newsletter_trust_text}
                         onChange={(e) => setSettings({ ...settings, newsletter_trust_text: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                     </div>
                   </div>
