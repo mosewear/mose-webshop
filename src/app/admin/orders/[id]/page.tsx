@@ -917,6 +917,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </a>
                 )}
 
+                {/* Helper message als label ontbreekt maar tracking wel bestaat */}
+                {!order.label_url && trackingCode && (
+                  <div className="bg-yellow-50 border border-yellow-300 p-3 rounded text-xs">
+                    <p className="font-bold text-yellow-800 mb-1">💡 Label printen niet beschikbaar</p>
+                    <p className="text-yellow-700">
+                      Dit label is aangemaakt voor de print functie bestond. 
+                      Verwijder de tracking code en maak een nieuw label aan om de print functie te gebruiken.
+                    </p>
+                  </div>
+                )}
+
                 {/* Handmatig email versturen als nodig */}
                 {trackingCode && order.status === 'shipped' && (
                   <button
