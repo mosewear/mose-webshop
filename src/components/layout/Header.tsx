@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import CartDrawer from '@/components/CartDrawer'
-import { ChevronRight, Search, User, Heart } from 'lucide-react'
+import { ChevronRight, User, Heart } from 'lucide-react'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -141,18 +141,6 @@ export function Header() {
         }`}
       >
         <nav className="flex flex-col h-full pt-24 px-8">
-          {/* Search - Minimal Line (Black) */}
-          <button 
-            className="flex items-center gap-3 text-xl font-bold py-4 border-b-2 border-black hover:bg-gray-50 transition-colors group"
-            onClick={() => {
-              setIsMobileMenuOpen(false)
-              // TODO: Open search modal/functionality
-            }}
-          >
-            <Search className="w-6 h-6" />
-            <span>ZOEKEN</span>
-          </button>
-
           {/* Navigation Links - Green Arrows! */}
           <Link
             href="/shop"
