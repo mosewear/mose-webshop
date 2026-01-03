@@ -351,25 +351,25 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     {upsellProducts.map((product) => {
                       // Get unique sizes and sort them logically
                       const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
-                      const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))]
-                        .sort((a, b) => {
-                          const indexA = sizeOrder.indexOf(a.toUpperCase())
-                          const indexB = sizeOrder.indexOf(b.toUpperCase())
-                          
-                          // Both sizes in predefined order - sort by index
-                          if (indexA !== -1 && indexB !== -1) {
-                            return indexA - indexB
-                          }
-                          
-                          // Only A is in predefined order - A comes first
-                          if (indexA !== -1) return -1
-                          
-                          // Only B is in predefined order - B comes first
-                          if (indexB !== -1) return 1
-                          
-                          // Neither in predefined order - sort alphabetically
-                          return a.localeCompare(b)
-                        })
+                      const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))] as string[]
+                      availableSizes.sort((a: string, b: string) => {
+                        const indexA = sizeOrder.indexOf(a.toUpperCase())
+                        const indexB = sizeOrder.indexOf(b.toUpperCase())
+                        
+                        // Both sizes in predefined order - sort by index
+                        if (indexA !== -1 && indexB !== -1) {
+                          return indexA - indexB
+                        }
+                        
+                        // Only A is in predefined order - A comes first
+                        if (indexA !== -1) return -1
+                        
+                        // Only B is in predefined order - B comes first
+                        if (indexB !== -1) return 1
+                        
+                        // Neither in predefined order - sort alphabetically
+                        return a.localeCompare(b)
+                      })
                       const selectedSize = selectedUpsellSizes[product.id]
                       
                       return (
