@@ -22,7 +22,6 @@ interface Order {
   total: number
   shipping_address: any
   billing_address: any
-  payment_intent_id: string | null
   tracking_code: string | null
   tracking_url: string | null
   carrier: string | null
@@ -557,15 +556,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="text-gray-500">Geen adres beschikbaar</div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {order.payment_intent_id && (
-                <div>
-                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Payment Intent</span>
-                  <code className="block text-xs bg-gray-100 px-2 py-1 rounded mt-1 font-mono">
-                    {order.payment_intent_id}
-                  </code>
                 </div>
               )}
             </div>

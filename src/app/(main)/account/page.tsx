@@ -11,7 +11,7 @@ interface Order {
   created_at: string
   total: number
   status: string
-  stripe_payment_status: string
+  payment_status: string
   order_items: {
     product_name: string
     size: string

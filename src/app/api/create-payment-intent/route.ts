@@ -85,13 +85,15 @@ export async function POST(req: NextRequest) {
         .from('orders')
         .update({ 
           stripe_payment_intent_id: paymentIntent.id,
-          payment_method: paymentMethod 
+          payment_status: 'pending',
+          payment_method: paymentMethod,
+          checkout_started_at: new Date().toISOString(),
         })
         .eq('id', orderId)
         
-      console.log('✅ API: Order updated with payment_intent_id')
+      console.log('✅ API: Order updated with payment intent and status')
     } catch (err) {
-      console.error('⚠️ API: Failed to update order with payment_intent_id:', err)
+      console.error('⚠️ API: Failed to update order:', err)
       // Don't fail the whole request if this fails
     }
 

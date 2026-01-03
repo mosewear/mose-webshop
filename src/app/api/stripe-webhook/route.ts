@@ -33,29 +33,108 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         
-        // Update order with payment success
+        // Find order using TRIPLE FALLBACK method for 100% reliability
         const supabase = await createClient()
-        const orderId = session.metadata?.orderId
-
-        if (orderId) {
-          const { data: order, error } = await supabase
+        let orderId: string | null = null
+        let order: any = null
+        
+        console.log('🔍 Webhook: Finding order for session:', session.id)
+        
+        // METHOD 1: Via metadata orderId (primary method)
+        if (session.metadata?.orderId) {
+          orderId = session.metadata.orderId
+          console.log('🔍 Method 1: Trying metadata orderId:', orderId)
+          
+          const { data, error } = await supabase
             .from('orders')
-            .update({
-              payment_status: 'paid',
-              paid_at: new Date().toISOString(),
-              payment_method: session.payment_method_types?.[0] || 'unknown',
-              stripe_payment_intent_id: session.payment_intent as string,
-              payment_metadata: {
-                stripe_session_id: session.id,
-                amount_total: session.amount_total,
-                currency: session.currency,
-                customer_email: session.customer_email,
-              },
-              status: 'processing', // Move to processing when paid
-            })
-            .eq('id', orderId)
             .select('*, order_items(*)')
+            .eq('id', orderId)
             .single()
+          
+          if (!error && data) {
+            order = data
+            console.log('✅ Method 1: Order found via metadata')
+          } else {
+            console.log('⚠️ Method 1: Order not found via metadata:', error?.message)
+          }
+        }
+        
+        // METHOD 2: FALLBACK - Via stripe_payment_intent_id
+        if (!order && session.payment_intent) {
+          console.log('🔍 Method 2: Trying stripe_payment_intent_id:', session.payment_intent)
+          
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .eq('stripe_payment_intent_id', session.payment_intent as string)
+            .single()
+          
+          if (!error && data) {
+            order = data
+            orderId = data.id
+            console.log('✅ Method 2: Order found via payment_intent_id')
+          } else {
+            console.log('⚠️ Method 2: Order not found via payment_intent_id:', error?.message)
+          }
+        }
+        
+        // METHOD 3: LAST RESORT - Via customer_email + pending status (most recent)
+        if (!order && session.customer_email) {
+          console.log('🔍 Method 3: Trying customer_email + pending status:', session.customer_email)
+          
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .eq('email', session.customer_email)
+            .eq('payment_status', 'pending')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+          
+          if (!error && data) {
+            order = data
+            orderId = data.id
+            console.log('✅ Method 3: Order found via customer_email')
+          } else {
+            console.log('⚠️ Method 3: Order not found via email:', error?.message)
+          }
+        }
+        
+        // If still no order found, log error and return
+        if (!orderId || !order) {
+          console.error('❌ Webhook: Could not find order for session:', {
+            session_id: session.id,
+            payment_intent: session.payment_intent,
+            customer_email: session.customer_email,
+            metadata: session.metadata,
+          })
+          return NextResponse.json({ 
+            error: 'Order not found',
+            session_id: session.id 
+          }, { status: 404 })
+        }
+        
+        // Update order with payment success
+        console.log('💳 Webhook: Updating order to PAID:', orderId)
+        
+        const { data: updatedOrder, error } = await supabase
+          .from('orders')
+          .update({
+            payment_status: 'paid',
+            paid_at: new Date().toISOString(),
+            payment_method: session.payment_method_types?.[0] || 'unknown',
+            stripe_payment_intent_id: session.payment_intent as string,
+            payment_metadata: {
+              stripe_session_id: session.id,
+              amount_total: session.amount_total,
+              currency: session.currency,
+              customer_email: session.customer_email,
+            },
+            status: 'processing', // Move to processing when paid
+          })
+          .eq('id', orderId)
+          .select('*, order_items(*)')
+          .single()
 
           if (error) {
             console.error('❌ Error updating order:', error)
@@ -63,16 +142,16 @@ export async function POST(req: NextRequest) {
             console.log(`✅ Order ${orderId} marked as PAID (payment_status: paid, status: processing)`)
             
             // Send order confirmation email
-            if (order && session.customer_email) {
+            if (updatedOrder && session.customer_email) {
               try {
-                const shippingAddress = order.shipping_address as any
+                const shippingAddress = updatedOrder.shipping_address as any
                 
                 await sendOrderConfirmationEmail({
                   customerName: shippingAddress?.name || session.metadata?.customerName || 'Klant',
                   customerEmail: session.customer_email,
-                  orderId: order.id,
-                  orderTotal: order.total,
-                  orderItems: order.order_items.map((item: any) => ({
+                  orderId: updatedOrder.id,
+                  orderTotal: updatedOrder.total,
+                  orderItems: updatedOrder.order_items.map((item: any) => ({
                     name: item.product_name,
                     size: item.size,
                     color: item.color,
@@ -94,7 +173,6 @@ export async function POST(req: NextRequest) {
               }
             }
           }
-        }
         break
       }
 

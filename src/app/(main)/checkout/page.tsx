@@ -261,8 +261,9 @@ export default function CheckoutPage() {
           phone: form.phone,
           country: form.country,
         },
-        stripe_payment_status: 'pending',
+        payment_status: 'pending',
         payment_method: null,
+        checkout_started_at: new Date().toISOString(),
       }
 
       const orderItems = items.map((item) => ({

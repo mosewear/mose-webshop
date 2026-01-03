@@ -14,7 +14,7 @@ interface Order {
   shipping_cost: number
   total: number
   status: string
-  stripe_payment_status: string
+  payment_status: string
   created_at: string
 }
 
