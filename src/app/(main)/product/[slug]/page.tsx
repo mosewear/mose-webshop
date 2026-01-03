@@ -376,7 +376,25 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Description - Removed from desktop, only in accordion */}
+              {/* Description - Desktop: Compact with line-clamp */}
+              <div className="hidden md:block border-t border-b border-gray-200 py-3">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line line-clamp-3">{product.description}</p>
+                {product.description && product.description.length > 150 && (
+                  <button 
+                    onClick={() => {
+                      const descTab = document.querySelector('[data-tab="description"]') as HTMLButtonElement
+                      if (descTab) descTab.click()
+                      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                    }}
+                    className="text-xs text-brand-primary hover:underline font-semibold mt-2 inline-flex items-center gap-1"
+                  >
+                    Lees meer
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
 
               {/* Size Selector with Size Guide */}
               {availableSizes.length > 0 && (
@@ -597,6 +615,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Product Description Tab - Mobile only */}
                   <div className="md:hidden border-2 border-black">
                     <button
+                      data-tab="description"
                       onClick={() => setActiveTab(activeTab === 'description' ? '' as any : 'description')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
