@@ -359,8 +359,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
               )}
 
-              {/* Clear Cart Button */}
-              <div className="px-4 md:px-6 pb-4">
+              {/* Clear Cart Button - Desktop Only */}
+              <div className="hidden md:block px-4 md:px-6 pb-4">
                 <button
                   onClick={() => setShowClearConfirm(true)}
                   className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
