@@ -4,9 +4,10 @@ import { useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/store/cart'
-import { X, Minus, Plus, Trash2, Truck, Lock, RotateCcw, ShoppingBag } from 'lucide-react'
+import { X, Minus, Plus, Trash2, Truck, Lock, RotateCcw, ShoppingBag, Ticket, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import { getSiteSettings } from '@/lib/settings'
+import { createClient } from '@/lib/supabase/client'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -14,21 +15,28 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCart()
+  const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount, addItem } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
+  const [promoCodeExpanded, setPromoCodeExpanded] = useState(false)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoError, setPromoError] = useState('')
+  const [promoDiscount, setPromoDiscount] = useState(0)
+  const [upsellProducts, setUpsellProducts] = useState<any[]>([])
+  const [addingProduct, setAddingProduct] = useState<string | null>(null)
 
   const subtotal = getTotal()
-  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
+  const subtotalAfterDiscount = subtotal - promoDiscount
+  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
   // BTW berekening (21% is al inbegrepen in de prijzen)
   const vatRate = 0.21
-  const subtotalExclBtw = subtotal / (1 + vatRate)
-  const btwAmount = subtotal - subtotalExclBtw
+  const subtotalExclBtw = subtotalAfterDiscount / (1 + vatRate)
+  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
   const totalBtw = btwAmount + (shipping / (1 + vatRate) * vatRate)
   
-  const total = subtotal + shipping
+  const total = subtotalAfterDiscount + shipping
 
   useEffect(() => {
     getSiteSettings().then((settings) => {
@@ -36,6 +44,43 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       setFreeShippingThreshold(settings.free_shipping_threshold)
     })
   }, [])
+
+  // Fetch upsell products
+  useEffect(() => {
+    if (!isOpen || items.length === 0) {
+      setUpsellProducts([])
+      return
+    }
+
+    const fetchUpsellProducts = async () => {
+      const supabase = createClient()
+      
+      // Get product IDs already in cart
+      const cartProductIds = items.map(item => item.productId)
+      
+      // Fetch 3 random products not in cart
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          slug,
+          base_price,
+          product_images!inner(url, is_primary),
+          product_variants!inner(id, sku, stock_quantity)
+        `)
+        .not('id', 'in', `(${cartProductIds.join(',')})`)
+        .gt('product_variants.stock_quantity', 0)
+        .eq('product_images.is_primary', true)
+        .limit(3)
+
+      if (!error && data) {
+        setUpsellProducts(data)
+      }
+    }
+
+    fetchUpsellProducts()
+  }, [isOpen, items])
 
   // Disable body scroll when drawer is open
   useEffect(() => {
@@ -59,6 +104,55 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
+
+  // Handle promo code
+  const handleApplyPromo = () => {
+    setPromoError('')
+    // Simple validation (you can add API call here)
+    if (promoCode.toUpperCase() === 'MOSE10') {
+      setPromoDiscount(subtotal * 0.1) // 10% discount
+      setPromoCodeExpanded(false)
+    } else if (promoCode.toUpperCase() === 'WELCOME15') {
+      setPromoDiscount(subtotal * 0.15) // 15% discount
+      setPromoCodeExpanded(false)
+    } else {
+      setPromoError('Code ongeldig')
+      setPromoDiscount(0)
+    }
+  }
+
+  const handleRemovePromo = () => {
+    setPromoCode('')
+    setPromoDiscount(0)
+    setPromoError('')
+  }
+
+  // Handle quick add from upsell
+  const handleQuickAdd = async (product: any) => {
+    setAddingProduct(product.id)
+    
+    // Get first available variant
+    const variant = product.product_variants[0]
+    
+    addItem({
+      productId: product.id,
+      variantId: variant.id,
+      name: product.name,
+      size: variant.size || 'M',
+      color: variant.color || 'Zwart',
+      colorHex: variant.color_hex || '#000000',
+      price: product.base_price,
+      quantity: 1,
+      image: product.product_images[0]?.url || '/placeholder.png',
+      sku: variant.sku,
+      stock: variant.stock_quantity,
+    })
+
+    // Remove from upsell list
+    setUpsellProducts(prev => prev.filter(p => p.id !== product.id))
+    
+    setTimeout(() => setAddingProduct(null), 1000)
+  }
 
   if (!isOpen) return null
 
@@ -198,6 +292,73 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 ))}
               </div>
 
+              {/* Upsell Products - "Maak je Look Compleet" */}
+              {upsellProducts.length > 0 && (
+                <div className="px-4 md:px-6 pb-4 border-t-2 border-gray-200 pt-4">
+                  <h3 className="font-display text-base uppercase mb-3 tracking-wide">
+                    Maak je look compleet
+                  </h3>
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
+                    {upsellProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex-shrink-0 w-[280px] md:w-[320px] flex items-center gap-3 border-2 border-gray-200 hover:border-black transition-all p-2 group"
+                      >
+                        {/* Image */}
+                        <Link
+                          href={`/product/${product.slug}`}
+                          onClick={onClose}
+                          className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
+                        >
+                          <Image
+                            src={product.product_images[0]?.url || '/placeholder.png'}
+                            alt={product.name}
+                            fill
+                            sizes="60px"
+                            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </Link>
+                        
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/product/${product.slug}`}
+                            onClick={onClose}
+                            className="block text-xs font-semibold uppercase leading-tight mb-1 hover:text-brand-primary transition-colors line-clamp-2"
+                          >
+                            {product.name}
+                          </Link>
+                          <div className="text-[10px] text-gray-600">
+                            {product.product_variants[0]?.size && (
+                              <span>Maat {product.product_variants[0].size}</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Price & Button */}
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className="text-brand-primary font-bold text-sm">
+                            €{product.base_price.toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() => handleQuickAdd(product)}
+                            disabled={addingProduct === product.id}
+                            className="w-8 h-8 bg-black text-white hover:bg-brand-primary transition-colors flex items-center justify-center disabled:bg-brand-primary"
+                            title="Voeg toe"
+                          >
+                            {addingProduct === product.id ? (
+                              <span className="text-xs">✓</span>
+                            ) : (
+                              <Plus size={16} strokeWidth={3} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Clear Cart Button */}
               <div className="px-4 md:px-6 pb-4">
                 <button
@@ -220,6 +381,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <span className="text-gray-600">Subtotaal</span>
                     <span className="font-semibold text-gray-900">€{subtotal.toFixed(2)}</span>
                   </div>
+                  
+                  {/* Promo Discount */}
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-brand-primary flex items-center gap-1">
+                        <Ticket size={14} />
+                        Korting
+                      </span>
+                      <span className="font-semibold text-brand-primary">-€{promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">BTW 21%</span>
                     <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
@@ -237,13 +410,84 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
 
                 {/* Progress to Free Shipping - Compact */}
-                {subtotal < freeShippingThreshold && (
+                {subtotalAfterDiscount < freeShippingThreshold && (
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-1.5">
                     <p className="text-xs text-gray-600">
-                      Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotal).toFixed(2)}</span> tot gratis verzending
+                      Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)}</span> tot gratis verzending
                     </p>
                   </div>
                 )}
+
+                {/* Promo Code Section */}
+                <div className="border-t border-gray-300 pt-2">
+                  {!promoCodeExpanded && promoDiscount === 0 ? (
+                    <button
+                      onClick={() => setPromoCodeExpanded(true)}
+                      className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Ticket size={16} />
+                        <span>Kortingscode?</span>
+                      </div>
+                      <ChevronDown size={16} />
+                    </button>
+                  ) : promoDiscount === 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Ticket size={16} />
+                          <span>Kortingscode</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPromoCodeExpanded(false)
+                            setPromoError('')
+                            setPromoCode('')
+                          }}
+                          className="p-1 hover:bg-gray-200 transition-colors"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value.toUpperCase())
+                            setPromoError('')
+                          }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                          placeholder="CODE"
+                          className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                        />
+                        <button
+                          onClick={handleApplyPromo}
+                          disabled={!promoCode}
+                          className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          Toepassen
+                        </button>
+                      </div>
+                      {promoError && (
+                        <p className="text-xs text-red-600 font-semibold">{promoError}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between py-2 text-sm bg-brand-primary/10 px-2">
+                      <div className="flex items-center gap-2 text-brand-primary font-semibold">
+                        <Ticket size={16} />
+                        <span>{promoCode}</span>
+                      </div>
+                      <button
+                        onClick={handleRemovePromo}
+                        className="text-xs text-gray-600 hover:text-black font-semibold uppercase"
+                      >
+                        Verwijder
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Divider & Total - PROMINENT! */}
                 <div className="border-t-2 border-black pt-3 mt-3">
@@ -256,11 +500,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </p>
                 </div>
 
-                {/* CTA Button */}
+                {/* CTA Button - GREEN! */}
                 <Link
                   href="/checkout"
                   onClick={onClose}
-                  className="block w-full py-3 bg-black text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-gray-800 transition-colors mt-3"
+                  className="block w-full py-3 bg-brand-primary text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors mt-3 border-2 border-brand-primary"
                 >
                   Afrekenen
                 </Link>
@@ -285,19 +529,26 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div>
                     <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Totaal</div>
                     <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
-                    <div className="text-xs text-gray-400">Incl. €{totalBtw.toFixed(2)} BTW</div>
+                    <div className="text-xs text-gray-400">
+                      Incl. €{totalBtw.toFixed(2)} BTW
+                      {promoDiscount > 0 && (
+                        <span className="text-brand-primary ml-2">
+                          • -€{promoDiscount.toFixed(2)} korting
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Link
                     href="/checkout"
                     onClick={onClose}
-                    className="px-6 py-3 bg-white text-black font-bold text-sm uppercase tracking-wider hover:bg-gray-200 transition-colors"
+                    className="px-6 py-3 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
                   >
                     Afrekenen
                   </Link>
                 </div>
-                {subtotal < freeShippingThreshold && (
+                {subtotalAfterDiscount < freeShippingThreshold && (
                   <p className="text-xs text-gray-400 text-center border-t border-gray-700 pt-2">
-                    Nog €{(freeShippingThreshold - subtotal).toFixed(2)} tot gratis verzending
+                    Nog €{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)} tot gratis verzending
                   </p>
                 )}
               </div>

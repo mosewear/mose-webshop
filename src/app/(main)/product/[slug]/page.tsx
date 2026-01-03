@@ -8,6 +8,7 @@ import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import ProductReviews from '@/components/ProductReviews'
+import { Truck, RotateCcw, MapPin } from 'lucide-react'
 
 interface Product {
   id: string
@@ -79,6 +80,28 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       setIsWishlisted(isInWishlist(product.id))
     }
   }, [product, isInWishlist])
+
+  // Size guide modal: body scroll lock & ESC key
+  useEffect(() => {
+    if (showSizeGuide) {
+      // Lock body scroll
+      document.body.style.overflow = 'hidden'
+      
+      // ESC key handler
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setShowSizeGuide(false)
+        }
+      }
+      
+      document.addEventListener('keydown', handleEscape)
+      
+      return () => {
+        document.body.style.overflow = 'unset'
+        document.removeEventListener('keydown', handleEscape)
+      }
+    }
+  }, [showSizeGuide])
 
   async function fetchProduct() {
     const supabase = createClient()
@@ -319,25 +342,19 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Trust Badges - PROMINENT (Feature 6) */}
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 bg-gray-100 border border-gray-300 px-3 py-2">
-                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-sm font-bold text-gray-900">Gratis verzending €50+</span>
+              {/* Trust Badges - MINIMAL LINES (Voorstel 2) */}
+              <div className="space-y-0 border-2 border-gray-200">
+                <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary py-3 px-4">
+                  <Truck className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-gray-900">Gratis verzending vanaf €50</span>
                 </div>
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span className="text-sm font-semibold text-blue-800">14 dagen retour</span>
+                <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary border-t border-gray-200 py-3 px-4">
+                  <RotateCcw className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-gray-900">14 dagen bedenktijd</span>
                 </div>
-                <div className="flex items-center gap-2 bg-purple-50 border border-purple-200 px-3 py-2 rounded">
-                  <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0L6.343 16.657m10.314-10.314L13.414 3.1a1.998 1.998 0 00-2.828 0L6.343 6.343m10.314 0l-7.682 7.682m7.682-7.682A4.5 4.5 0 0118 9.5a4.5 4.5 0 01-4.5 4.5m-9.164-9.164A4.5 4.5 0 016 9.5a4.5 4.5 0 014.5 4.5" />
-                  </svg>
-                  <span className="text-sm font-semibold text-purple-800">Lokaal gemaakt</span>
+                <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary border-t border-gray-200 py-3 px-4">
+                  <MapPin className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-gray-900">Lokaal gemaakt in Nederland</span>
                 </div>
               </div>
 
@@ -773,69 +790,85 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
       )}
 
-      {/* Size Guide Modal (Feature 2) */}
+      {/* Size Guide Modal - IMPROVED (All 7 fixes!) */}
       {showSizeGuide && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white border-4 border-black p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl md:text-3xl font-display">MAATTABEL</h2>
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
+          onClick={() => setShowSizeGuide(false)}
+          aria-label="Sluit maattabel"
+        >
+          <div 
+            className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[95vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">MAATTABEL</h2>
               <button
                 onClick={() => setShowSizeGuide(false)}
-                className="text-gray-600 hover:text-black transition-colors"
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
+                aria-label="Sluit maattabel"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full border-2 border-black">
+            {/* Scroll hint for mobile */}
+            <div className="sm:hidden mb-2 text-xs text-gray-600 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              <span>Swipe naar links voor meer →</span>
+            </div>
+            
+            <div className="overflow-x-auto -mx-2 px-2">
+              <table className="w-full border-2 border-black min-w-[500px]">
                 <thead>
                   <tr className="bg-black text-white">
-                    <th className="px-4 py-3 text-left font-bold">Maat</th>
-                    <th className="px-4 py-3 text-left font-bold">Borst (cm)</th>
-                    <th className="px-4 py-3 text-left font-bold">Lengte (cm)</th>
-                    <th className="px-4 py-3 text-left font-bold">Schouders (cm)</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Maat</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Borst (cm)</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Lengte (cm)</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Schouders (cm)</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-xs sm:text-sm">
                   <tr className="border-b-2 border-black">
-                    <td className="px-4 py-3 font-bold">S</td>
-                    <td className="px-4 py-3">100-104</td>
-                    <td className="px-4 py-3">68-70</td>
-                    <td className="px-4 py-3">44-46</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">S</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">100-104</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">68-70</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">44-46</td>
                   </tr>
                   <tr className="border-b-2 border-black bg-gray-50">
-                    <td className="px-4 py-3 font-bold">M</td>
-                    <td className="px-4 py-3">104-108</td>
-                    <td className="px-4 py-3">70-72</td>
-                    <td className="px-4 py-3">46-48</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">M</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">104-108</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">70-72</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">46-48</td>
                   </tr>
                   <tr className="border-b-2 border-black">
-                    <td className="px-4 py-3 font-bold">L</td>
-                    <td className="px-4 py-3">108-112</td>
-                    <td className="px-4 py-3">72-74</td>
-                    <td className="px-4 py-3">48-50</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">L</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">108-112</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">72-74</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">48-50</td>
                   </tr>
                   <tr className="border-b-2 border-black bg-gray-50">
-                    <td className="px-4 py-3 font-bold">XL</td>
-                    <td className="px-4 py-3">112-116</td>
-                    <td className="px-4 py-3">74-76</td>
-                    <td className="px-4 py-3">50-52</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XL</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">112-116</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">74-76</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">50-52</td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-bold">XXL</td>
-                    <td className="px-4 py-3">116-120</td>
-                    <td className="px-4 py-3">76-78</td>
-                    <td className="px-4 py-3">52-54</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XXL</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">116-120</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">76-78</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">52-54</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="mt-6 bg-gray-50 border-2 border-gray-300 p-4 text-sm space-y-2">
-              <h3 className="font-bold">Hoe meet je?</h3>
+            <div className="mt-4 sm:mt-6 bg-gray-50 border-2 border-gray-300 p-3 sm:p-4 text-xs sm:text-sm space-y-2">
+              <h3 className="font-bold text-sm sm:text-base">Hoe meet je?</h3>
               <p><span className="font-semibold">Borst:</span> Meet rond de breedste punt van je borst</p>
               <p><span className="font-semibold">Lengte:</span> Meet vanaf de halsnaad tot aan de onderkant</p>
               <p><span className="font-semibold">Schouders:</span> Meet van schouder tot schouder over de rug</p>
@@ -843,12 +876,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
             <button
               onClick={() => setShowSizeGuide(false)}
-              className="mt-6 w-full py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+              className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
             >
               Sluiten
             </button>
-      </div>
-    </div>
+          </div>
+        </div>
       )}
     </>
   )
