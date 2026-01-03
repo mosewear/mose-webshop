@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { getSiteSettings } from '@/lib/settings'
+import { getHomepageSettings, type HomepageSettings } from '@/lib/homepage'
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false)
@@ -14,6 +15,7 @@ export default function HomePage() {
     free_shipping_threshold: 100,
     return_days: 14,
   })
+  const [homepageSettings, setHomepageSettings] = useState<HomepageSettings | null>(null)
 
   useEffect(() => {
     setIsVisible(true)
@@ -22,11 +24,16 @@ export default function HomePage() {
 
   const loadSettings = async () => {
     try {
-      const siteSettings = await getSiteSettings()
+      const [siteSettings, homepage] = await Promise.all([
+        getSiteSettings(),
+        getHomepageSettings(),
+      ])
+      
       setSettings({
         free_shipping_threshold: siteSettings.free_shipping_threshold,
         return_days: siteSettings.return_days,
       })
+      setHomepageSettings(homepage)
     } catch (error) {
       console.error('Error loading settings:', error)
     }
@@ -63,7 +70,7 @@ export default function HomePage() {
         {/* Background Image with Parallax Effect */}
         <div className="absolute inset-0">
         <Image
-            src="/hero_mose.png"
+            src={homepageSettings?.hero_image_url || '/hero_mose.png'}
             alt="MOSE Hero"
             fill
             className="object-cover object-center scale-105"
@@ -95,27 +102,27 @@ export default function HomePage() {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
-                  Gemaakt in Groningen
+                  {homepageSettings?.hero_badge_text || 'Gemaakt in Groningen'}
                 </div>
 
             {/* Main Heading - Responsive Sizes */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl text-white mb-6 md:mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">
-              GEEN POESPAS.
+              {homepageSettings?.hero_title_line1 || 'GEEN POESPAS.'}
               <br />
-              <span className="text-brand-primary">WEL KARAKTER.</span>
+              <span className="text-brand-primary">{homepageSettings?.hero_title_line2 || 'WEL KARAKTER.'}</span>
             </h1>
 
             {/* Subtitle - Responsive */}
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-8 md:mb-12 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              Lokaal gemaakt. Kwaliteit die blijft.
+              {homepageSettings?.hero_subtitle || 'Lokaal gemaakt. Kwaliteit die blijft.'}
             </p>
 
             {/* Modern CTA Buttons - Touch Optimized */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/shop" className="group w-full sm:w-auto">
+              <Link href={homepageSettings?.hero_cta1_link || '/shop'} className="group w-full sm:w-auto">
                 <button className="relative w-full sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl hover:shadow-brand-primary/50">
                   <span className="relative z-10 flex items-center justify-center gap-2">
-                    Shop MOSE
+                    {homepageSettings?.hero_cta1_text || 'Shop MOSE'}
                     <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
@@ -123,10 +130,10 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
                 </button>
               </Link>
-              <Link href="/lookbook" className="group w-full sm:w-auto">
+              <Link href={homepageSettings?.hero_cta2_link || '/lookbook'} className="group w-full sm:w-auto">
                 <button className="relative w-full sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black active:scale-95">
                   <span className="flex items-center justify-center gap-2">
-                    Bekijk Lookbook
+                    {homepageSettings?.hero_cta2_text || 'Bekijk Lookbook'}
                     <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -154,21 +161,21 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-4 md:gap-8 text-center text-white">
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">100%</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_1_number || '100%'}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
-                Lokaal<br className="sm:hidden" /> geproduceerd
+                {homepageSettings?.stats_1_text || 'Lokaal geproduceerd'}
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
               <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{settings.return_days}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
-                Dagen<br className="sm:hidden" /> retourrecht
+                {homepageSettings?.stats_2_text || 'Dagen retourrecht'}
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">∞</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_3_number || '∞'}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
-                Premium kwaliteit
+                {homepageSettings?.stats_3_text || 'Premium kwaliteit'}
               </div>
             </div>
           </div>
@@ -184,7 +191,7 @@ export default function HomePage() {
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="font-medium">Lokaal gemaakt</span>
+              <span className="font-medium">{homepageSettings?.trust_badge_1 || 'Lokaal gemaakt'}</span>
             </div>
             
             <div className="hidden sm:block w-px h-4 bg-gray-300" />
@@ -194,7 +201,7 @@ export default function HomePage() {
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              <span className="font-medium">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
+              <span className="font-medium">{homepageSettings?.trust_badge_2_prefix || 'Gratis verzending vanaf'} €{settings.free_shipping_threshold}</span>
             </div>
             
             <div className="hidden sm:block w-px h-4 bg-gray-300" />
@@ -204,7 +211,7 @@ export default function HomePage() {
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span className="font-medium">{settings.return_days} dagen retour</span>
+              <span className="font-medium">{settings.return_days} {homepageSettings?.trust_badge_3_suffix || 'dagen retour'}</span>
             </div>
             
             <div className="hidden md:block w-px h-4 bg-gray-300" />
@@ -214,7 +221,7 @@ export default function HomePage() {
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span className="font-medium">Veilig betalen</span>
+              <span className="font-medium">{homepageSettings?.trust_badge_4 || 'Veilig betalen'}</span>
             </div>
           </div>
         </div>
