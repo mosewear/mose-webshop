@@ -65,7 +65,8 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [shippingCost, setShippingCost] = useState(5.95)
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
+  const [returnDays, setReturnDays] = useState(14)
   const [currentStep, setCurrentStep] = useState<'details' | 'payment'>('details')
   const [clientSecret, setClientSecret] = useState<string>()
   const [orderId, setOrderId] = useState<string>()
@@ -130,6 +131,7 @@ export default function CheckoutPage() {
     getSiteSettings().then((settings) => {
       setShippingCost(settings.shipping_cost)
       setFreeShippingThreshold(settings.free_shipping_threshold)
+      setReturnDays(settings.return_days)
     })
   }, [])
 
@@ -674,7 +676,7 @@ export default function CheckoutPage() {
                     <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>14 dagen bedenktijd</span>
+                    <span>{returnDays} dagen bedenktijd</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
