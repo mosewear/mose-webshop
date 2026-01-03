@@ -27,6 +27,11 @@ export default function SettingsPage() {
   const [taxRate, setTaxRate] = useState('21.00')
   const [shippingCost, setShippingCost] = useState('0')
   const [lowStockThreshold, setLowStockThreshold] = useState('5')
+  
+  // Abandoned cart settings
+  const [abandonedCartEnabled, setAbandonedCartEnabled] = useState(true)
+  const [abandonedCartHours, setAbandonedCartHours] = useState('24')
+  const [abandonedCartDiscountCode, setAbandonedCartDiscountCode] = useState('COMEBACK10')
 
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
@@ -78,6 +83,15 @@ export default function SettingsPage() {
             case 'low_stock_threshold':
               setLowStockThreshold(setting.value)
               break
+            case 'abandoned_cart_email_enabled':
+              setAbandonedCartEnabled(setting.value === 'true' || setting.value === true)
+              break
+            case 'abandoned_cart_hours':
+              setAbandonedCartHours(setting.value)
+              break
+            case 'abandoned_cart_discount_code':
+              setAbandonedCartDiscountCode(setting.value.replace(/"/g, ''))
+              break
           }
         })
       }
@@ -102,6 +116,9 @@ export default function SettingsPage() {
         { key: 'tax_rate', value: taxRate },
         { key: 'shipping_cost', value: shippingCost },
         { key: 'low_stock_threshold', value: lowStockThreshold },
+        { key: 'abandoned_cart_email_enabled', value: abandonedCartEnabled },
+        { key: 'abandoned_cart_hours', value: abandonedCartHours },
+        { key: 'abandoned_cart_discount_code', value: abandonedCartDiscountCode },
       ]
 
       for (const setting of settingsToSave) {
@@ -354,6 +371,89 @@ export default function SettingsPage() {
                 onChange={(e) => setLowStockThreshold(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Abandoned Cart Email Settings */}
+        <div className="bg-white border-2 border-gray-200 p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            🛒 Abandoned Cart Emails
+          </h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="abandoned_cart_enabled"
+                checked={abandonedCartEnabled}
+                onChange={(e) => setAbandonedCartEnabled(e.target.checked)}
+                className="w-5 h-5"
+              />
+              <label htmlFor="abandoned_cart_enabled" className="text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                Abandoned Cart Emails Inschakelen
+              </label>
+            </div>
+
+            <div className="bg-blue-50 border-l-3 border-blue-400 p-4 text-sm text-blue-900">
+              <p className="font-bold mb-1">ℹ️ Hoe werkt het?</p>
+              <p>
+                Wanneer een klant checkout start maar niet betaalt, wordt na het ingestelde aantal uren automatisch 
+                een email gestuurd met een kortingscode om de bestelling alsnog af te ronden.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Aantal Uren Wachten (voor email)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="168"
+                value={abandonedCartHours}
+                onChange={(e) => setAbandonedCartHours(e.target.value)}
+                disabled={!abandonedCartEnabled}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Standaard: 24 uur. Min: 1 uur, Max: 168 uur (7 dagen)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Kortingscode
+              </label>
+              <input
+                type="text"
+                value={abandonedCartDiscountCode}
+                onChange={(e) => setAbandonedCartDiscountCode(e.target.value.toUpperCase())}
+                disabled={!abandonedCartEnabled}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors uppercase font-mono disabled:bg-gray-100 disabled:cursor-not-allowed"
+                placeholder="COMEBACK10"
+                maxLength={20}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Deze code moet ook bestaan in de Kortingscodes sectie
+              </p>
+            </div>
+
+            <div className="bg-yellow-50 border-l-3 border-yellow-400 p-4 text-sm text-yellow-900">
+              <p className="font-bold mb-1">⚠️ Let op!</p>
+              <p>
+                Deze emails worden automatisch verstuurd via een cron job. Zorg dat de cron job is ingesteld op Vercel 
+                om de <code className="bg-yellow-100 px-1 font-mono">/api/abandoned-cart-cron</code> endpoint aan te roepen.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-3 text-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-gray-600">
+                  Emails worden verzonden vanaf <code className="font-mono font-bold">bestellingen@orders.mosewear.nl</code>
+                </span>
+              </div>
             </div>
           </div>
         </div>
