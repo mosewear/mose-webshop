@@ -13,6 +13,7 @@ interface OrderEmailProps {
     color: string
     quantity: number
     price: number
+    image_url?: string
   }[]
   shippingAddress: {
     name: string
@@ -88,7 +89,7 @@ function generateDesign1(props: OrderEmailProps) {
             <h2 class="section-title">Je Items</h2>
             ${orderItems.map(item => `
               <div class="product-item">
-                <div class="product-image"></div>
+                <div class="product-image">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}</div>
                 <div class="product-details">
                   <p class="product-name">${item.name}</p>
                   <p class="product-meta">Maat ${item.size} • ${item.color}</p>
@@ -194,7 +195,7 @@ function generateDesign2(props: OrderEmailProps) {
               ${orderItems.map(item => `
                 <div class="product-card">
                   <div class="product-card-inner">
-                    <div class="product-img"></div>
+                    <div class="product-img">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}</div>
                     <div class="product-info">
                       <p class="product-name">${item.name}</p>
                       <p class="product-meta">SIZE ${item.size} • ${item.color.toUpperCase()}</p>
@@ -482,7 +483,7 @@ function generateDesign5(props: OrderEmailProps) {
             <div class="card-grid">
               ${orderItems.map(item => `
                 <div class="product-card-modern">
-                  <div class="product-img-modern"></div>
+                  <div class="product-img-modern">${item.image_url ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;" />` : ''}</div>
                   <div class="product-details-modern">
                     <p class="product-name-modern">${item.name}</p>
                     <p class="product-meta-modern">Maat ${item.size} • ${item.color} • ${item.quantity}x</p>

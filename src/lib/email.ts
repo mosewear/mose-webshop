@@ -13,6 +13,7 @@ interface OrderEmailProps {
     color: string
     quantity: number
     price: number
+    image_url?: string
   }[]
   shippingAddress: {
     name: string
@@ -40,7 +41,8 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
     size: item.size,
     color: item.color,
     quantity: item.quantity,
-    total: (item.price * item.quantity).toFixed(2)
+    total: (item.price * item.quantity).toFixed(2),
+    imageUrl: item.image_url || ''
   }))
 
   const htmlContent = `<!DOCTYPE html>
@@ -96,7 +98,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <div class="items-title">Jouw Items</div>
       ${productItemsHtml.map(item => `
         <div class="product">
-          <div class="prod-img"></div>
+          <div class="prod-img">${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}</div>
           <div class="prod-info">
             <div class="prod-name">${item.name}</div>
             <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x stuks</div>

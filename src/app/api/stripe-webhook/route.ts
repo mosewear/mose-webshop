@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
                     color: item.color,
                     quantity: item.quantity,
                     price: item.price_at_purchase,
+                    image_url: item.image_url,
                   })),
                   shippingAddress: {
                     name: shippingAddress?.name || '',
