@@ -30,6 +30,92 @@ export async function POST(req: NextRequest) {
   // Handle the event
   try {
     switch (event.type) {
+      // PRIMARY EVENT: Payment Intent Succeeded (for Payment Element flow)
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        const supabase = await createClient()
+        
+        console.log('💳 Webhook: Payment Intent Succeeded:', paymentIntent.id)
+        
+        // Find order by payment intent ID
+        const { data: order, error: findError } = await supabase
+          .from('orders')
+          .select('*, order_items(*)')
+          .eq('stripe_payment_intent_id', paymentIntent.id)
+          .single()
+        
+        if (findError || !order) {
+          console.error('❌ Webhook: Order not found for payment intent:', paymentIntent.id, findError)
+          return NextResponse.json({ 
+            error: 'Order not found',
+            payment_intent_id: paymentIntent.id 
+          }, { status: 404 })
+        }
+        
+        console.log('✅ Webhook: Order found:', order.id)
+        
+        // Update order to PAID
+        const { data: updatedOrder, error: updateError } = await supabase
+          .from('orders')
+          .update({
+            payment_status: 'paid',
+            paid_at: new Date().toISOString(),
+            payment_method: paymentIntent.payment_method_types?.[0] || 'unknown',
+            payment_metadata: {
+              payment_intent_id: paymentIntent.id,
+              amount_received: paymentIntent.amount_received,
+              currency: paymentIntent.currency,
+              payment_method_types: paymentIntent.payment_method_types,
+            },
+            status: 'processing', // Move to processing when paid
+          })
+          .eq('id', order.id)
+          .select('*, order_items(*)')
+          .single()
+        
+        if (updateError) {
+          console.error('❌ Error updating order:', updateError)
+          return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
+        }
+        
+        console.log(`✅ Order ${order.id} marked as PAID (payment_status: paid, status: processing)`)
+        
+        // Send order confirmation email
+        if (updatedOrder) {
+          try {
+            const shippingAddress = updatedOrder.shipping_address as any
+            
+            await sendOrderConfirmationEmail({
+              customerName: shippingAddress?.name || 'Klant',
+              customerEmail: updatedOrder.email,
+              orderId: updatedOrder.id,
+              orderTotal: updatedOrder.total,
+              orderItems: updatedOrder.order_items.map((item: any) => ({
+                name: item.product_name,
+                size: item.size,
+                color: item.color,
+                quantity: item.quantity,
+                price: item.price_at_purchase,
+                imageUrl: item.image_url,
+              })),
+              shippingAddress: {
+                name: shippingAddress?.name || '',
+                address: shippingAddress?.address || '',
+                city: shippingAddress?.city || '',
+                postalCode: shippingAddress?.postalCode || '',
+              },
+            })
+            console.log('✅ Order confirmation email sent')
+          } catch (emailError) {
+            console.error('❌ Error sending confirmation email:', emailError)
+            // Don't fail the webhook if email fails
+          }
+        }
+        
+        break
+      }
+
+      // LEGACY EVENT: Checkout Session Completed (for old Hosted Checkout flow - kept for backwards compatibility)
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         
