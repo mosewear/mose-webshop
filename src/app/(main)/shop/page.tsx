@@ -191,7 +191,7 @@ export default function ShopPage() {
         {/* Mobile Filter Button - Inline (bold & brutalist) */}
         <button
           onClick={() => setMobileFiltersOpen(true)}
-          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors active:scale-[0.98] relative z-20 cursor-pointer"
+          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors relative z-20 cursor-pointer"
         >
           <SlidersHorizontal className="w-5 h-5" />
           <span>Filters & Sorteren</span>
@@ -517,7 +517,7 @@ export default function ShopPage() {
                     setSelectedCategory('all')
                     setSearchQuery('')
                   }}
-                  className="inline-block bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors active:scale-95"
+                  className="inline-block bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors"
                 >
                   Reset Filters
                 </button>
@@ -537,7 +537,7 @@ export default function ShopPage() {
                       href={`/product/${product.slug}`}
                       className="group block"
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:shadow-2xl md:hover:-translate-y-2 active:scale-95">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:shadow-2xl md:hover:-translate-y-2">
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden">
                           <Image
