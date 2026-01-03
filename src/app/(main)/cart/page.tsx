@@ -11,7 +11,8 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
+  const [returnDays, setReturnDays] = useState(14)
   const [showMobileSummary, setShowMobileSummary] = useState(false)
 
   const subtotal = getTotal()
@@ -31,6 +32,7 @@ export default function CartPage() {
     getSiteSettings().then((settings) => {
       setShippingCost(settings.shipping_cost)
       setFreeShippingThreshold(settings.free_shipping_threshold)
+      setReturnDays(settings.return_days)
     })
   }, [])
 
@@ -253,7 +255,7 @@ export default function CartPage() {
               </div>
               <div className="flex items-center gap-2">
                 <RotateCcw size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">14 dagen bedenktijd</span>
+                <span className="uppercase tracking-wider">{returnDays} dagen bedenktijd</span>
               </div>
             </div>
           </div>
@@ -344,7 +346,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <RotateCcw size={18} className="flex-shrink-0" />
-                    <span>14 dagen bedenktijd</span>
+                    <span>{returnDays} dagen bedenktijd</span>
                   </div>
                 </div>
               </div>

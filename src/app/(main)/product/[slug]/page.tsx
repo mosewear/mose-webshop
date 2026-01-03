@@ -9,6 +9,7 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import ProductReviews from '@/components/ProductReviews'
 import { Truck, RotateCcw, MapPin } from 'lucide-react'
+import { getSiteSettings } from '@/lib/settings'
 
 interface Product {
   id: string
@@ -61,6 +62,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [activeTab, setActiveTab] = useState<'details' | 'materials' | 'shipping'>('details')
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
+  const [settings, setSettings] = useState({
+    free_shipping_threshold: 100,
+    return_days: 14,
+  })
 
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
@@ -69,7 +74,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   useEffect(() => {
     loadWishlist()
+    loadSettings()
   }, [])
+
+  const loadSettings = async () => {
+    try {
+      const siteSettings = await getSiteSettings()
+      setSettings({
+        free_shipping_threshold: siteSettings.free_shipping_threshold,
+        return_days: siteSettings.return_days,
+      })
+    } catch (error) {
+      console.error('Error loading settings:', error)
+    }
+  }
 
   useEffect(() => {
     fetchProduct()
@@ -346,11 +364,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               <div className="space-y-0 border-2 border-gray-200">
                 <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary py-3 px-4">
                   <Truck className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-gray-900">Gratis verzending vanaf €50</span>
+                  <span className="text-sm font-semibold text-gray-900">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
                 </div>
                 <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary border-t border-gray-200 py-3 px-4">
                   <RotateCcw className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-gray-900">14 dagen bedenktijd</span>
+                  <span className="text-sm font-semibold text-gray-900">{settings.return_days} dagen bedenktijd</span>
                 </div>
                 <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary border-t border-gray-200 py-3 px-4">
                   <MapPin className="w-5 h-5 text-gray-600 flex-shrink-0" />
@@ -648,9 +666,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'shipping' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        <p><span className="font-semibold">Verzending:</span> Gratis verzending vanaf €50</p>
+                        <p><span className="font-semibold">Verzending:</span> Gratis verzending vanaf €{settings.free_shipping_threshold}</p>
                         <p><span className="font-semibold">Levertijd:</span> 2-3 werkdagen binnen Nederland</p>
-                        <p><span className="font-semibold">Retour:</span> 14 dagen bedenktijd</p>
+                        <p><span className="font-semibold">Retour:</span> {settings.return_days} dagen bedenktijd</p>
                         <p><span className="font-semibold">Retourkosten:</span> Gratis retourneren</p>
                       </div>
                     )}
