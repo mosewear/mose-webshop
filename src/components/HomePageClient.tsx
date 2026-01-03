@@ -91,27 +91,31 @@ export default function HomePageClient({
 
             {/* Modern CTA Buttons - Touch Optimized */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href={homepageSettings?.hero_cta1_link || '/shop'} className="group w-full sm:w-auto">
-                <button className="relative w-full sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl hover:shadow-brand-primary/50">
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    {homepageSettings?.hero_cta1_text || 'Shop MOSE'}
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                  <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-                </button>
+              <Link 
+                href={homepageSettings?.hero_cta1_link || '/shop'} 
+                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl hover:shadow-brand-primary/50 block text-center"
+                aria-label="Bekijk onze shop met alle MOSE producten"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  {homepageSettings?.hero_cta1_text || 'Shop MOSE'}
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+                <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
               </Link>
-              <Link href={homepageSettings?.hero_cta2_link || '/lookbook'} className="group w-full sm:w-auto">
-                <button className="relative w-full sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black active:scale-95">
-                  <span className="flex items-center justify-center gap-2">
-                    {homepageSettings?.hero_cta2_text || 'Bekijk Lookbook'}
-                    <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </span>
-                </button>
+              <Link 
+                href={homepageSettings?.hero_cta2_link || '/lookbook'} 
+                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black active:scale-95 block text-center"
+                aria-label="Bekijk ons lookbook met MOSE outfit inspiratie"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {homepageSettings?.hero_cta2_text || 'Bekijk Lookbook'}
+                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </span>
               </Link>
             </div>
           </div>
@@ -464,13 +468,15 @@ export default function HomePageClient({
                 ))}
               </div>
 
-              <Link href="/over-mose" className="group inline-block">
-                <button className="px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-brand-primary-hover active:scale-95 transition-all duration-300 flex items-center gap-3 group-hover:gap-5 shadow-lg shadow-brand-primary/30">
-                  Lees ons verhaal
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </button>
+              <Link 
+                href="/over-mose" 
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-brand-primary-hover active:scale-95 transition-all duration-300 group-hover:gap-5 shadow-lg shadow-brand-primary/30"
+                aria-label="Lees het volledige verhaal over MOSE en onze lokale productie"
+              >
+                Lees ons verhaal
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </Link>
             </div>
 
@@ -527,8 +533,8 @@ export default function HomePageClient({
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           {/* Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm mb-8 border-2 border-white/40">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm mb-8 border-2 border-white/40" role="img" aria-label="Nieuwsbrief email icoon">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
@@ -543,20 +549,26 @@ export default function HomePageClient({
             <span className="font-bold">Geen spam — alleen MOSE.</span>
           </p>
 
-          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0">
+          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label="Nieuwsbrief inschrijving">
             <div className="flex flex-col sm:flex-row gap-4">
+              <label htmlFor="newsletter-email" className="sr-only">E-mailadres voor nieuwsbrief</label>
               <input
+                id="newsletter-email"
+                name="email"
                 type="email"
                 placeholder="Jouw e-mailadres"
                 required
+                autoComplete="email"
+                aria-required="true"
                 className="flex-1 px-6 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400"
               />
               <button
                 type="submit"
+                aria-label="Schrijf je in voor de MOSE nieuwsbrief"
                 className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-gray-900 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black"
               >
                 Join nu
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </button>
@@ -564,7 +576,7 @@ export default function HomePageClient({
             
             {/* Trust Badge */}
             <p className="text-white/70 text-sm mt-6 flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
               We respecteren je privacy. Uitschrijven kan altijd.
