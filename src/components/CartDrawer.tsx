@@ -115,6 +115,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     } else if (promoCode.toUpperCase() === 'WELCOME15') {
       setPromoDiscount(subtotal * 0.15) // 15% discount
       setPromoCodeExpanded(false)
+    } else if (promoCode.toUpperCase() === 'SORRY10') {
+      setPromoDiscount(subtotal * 0.1) // 10% discount (same as MOSE10)
+      setPromoCodeExpanded(false)
     } else {
       setPromoError('Code ongeldig')
       setPromoDiscount(0)

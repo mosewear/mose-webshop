@@ -176,24 +176,18 @@ async function sendDeliveredEmailForOrder(order: any) {
     const customerEmail = order.email
 
     const orderItems = order.order_items.map((item: any) => ({
-      name: item.product_name,
-      size: item.size,
-      color: item.color,
-      quantity: item.quantity,
-      price: item.price_at_purchase,
-      imageUrl: item.image_url,
+      product_id: item.product_id || '',
+      product_name: item.product_name,
+      image_url: item.image_url,
     }))
-
-    const shippingAddress = order.shipping_address as any
 
     const result = await sendOrderDeliveredEmail({
       customerName,
       customerEmail,
       orderId: order.id,
-      orderItems: orderItems.map((item: any) => ({
-        product_id: item.product_id || '',
-        product_name: item.name,
-      })),
+      orderItems: orderItems,
+      shippingAddress: order.shipping_address,
+      deliveryDate: new Date().toISOString(),
     })
 
     if (result.success) {

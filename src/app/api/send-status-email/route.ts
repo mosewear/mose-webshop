@@ -89,9 +89,12 @@ export async function POST(req: NextRequest) {
           customerName,
           orderId: order.id,
           orderItems: order.order_items.map((item: any) => ({
-            product_id: item.product_id,
+            product_id: item.product_id || '',
             product_name: item.product_name,
+            image_url: item.image_url,
           })),
+          shippingAddress: order.shipping_address,
+          deliveryDate: new Date().toISOString(),
         })
         break
 
