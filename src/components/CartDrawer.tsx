@@ -349,8 +349,27 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </h3>
                   <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
                     {upsellProducts.map((product) => {
-                      // Get unique sizes for this product
-                      const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))].sort()
+                      // Get unique sizes and sort them logically
+                      const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
+                      const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))]
+                        .sort((a, b) => {
+                          const indexA = sizeOrder.indexOf(a.toUpperCase())
+                          const indexB = sizeOrder.indexOf(b.toUpperCase())
+                          
+                          // Both sizes in predefined order - sort by index
+                          if (indexA !== -1 && indexB !== -1) {
+                            return indexA - indexB
+                          }
+                          
+                          // Only A is in predefined order - A comes first
+                          if (indexA !== -1) return -1
+                          
+                          // Only B is in predefined order - B comes first
+                          if (indexB !== -1) return 1
+                          
+                          // Neither in predefined order - sort alphabetically
+                          return a.localeCompare(b)
+                        })
                       const selectedSize = selectedUpsellSizes[product.id]
                       
                       return (
