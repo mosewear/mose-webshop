@@ -150,7 +150,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
     </div>
     <div class="footer">
       <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
     </div>
   </div>
 </body>
@@ -158,7 +158,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `Bestelling bevestiging #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -250,7 +250,7 @@ export async function sendShippingConfirmationEmail(props: {
     </div>
     <div class="footer">
       <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
     </div>
   </div>
 </body>
@@ -258,7 +258,7 @@ export async function sendShippingConfirmationEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `📦 Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -337,7 +337,7 @@ export async function sendOrderProcessingEmail(props: {
     </div>
     <div class="footer">
       <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
     </div>
   </div>
 </body>
@@ -345,7 +345,7 @@ export async function sendOrderProcessingEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `⚙️ Je bestelling wordt voorbereid #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -454,7 +454,7 @@ export async function sendOrderDeliveredEmail(props: {
     </div>
     <div class="footer">
       <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
     </div>
   </div>
 </body>
@@ -462,7 +462,7 @@ export async function sendOrderDeliveredEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `🎉 Je pakket is bezorgd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -545,7 +545,7 @@ export async function sendOrderCancelledEmail(props: {
     </div>
     <div class="footer">
       <p><strong>MOSE</strong> • Groningen, Nederland</p>
-      <p style="margin-top:8px"><a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
     </div>
   </div>
 </body>
@@ -553,7 +553,7 @@ export async function sendOrderCancelledEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `Order geannuleerd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,

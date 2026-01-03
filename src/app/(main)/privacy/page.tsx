@@ -88,8 +88,8 @@ export default function PrivacyPage() {
               We bewaren je persoonsgegevens niet langer dan noodzakelijk voor de doeleinden waarvoor 
               ze zijn verzameld. Ordergegevens bewaren we 7 jaar conform fiscale wetgeving. Je kunt 
               altijd verzoeken om je gegevens te verwijderen via{' '}
-              <a href="mailto:info@mosewear.com" className="text-brand-primary hover:underline">
-                info@mosewear.com
+              <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
+                info@mosewear.nl
               </a>
               .
             </p>
@@ -164,8 +164,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="text-gray-700 leading-relaxed mt-4">
               Neem contact op via{' '}
-              <a href="mailto:info@mosewear.com" className="text-brand-primary hover:underline">
-                info@mosewear.com
+              <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
+                info@mosewear.nl
               </a>
               {' '}om gebruik te maken van deze rechten.
             </p>
@@ -186,11 +186,18 @@ export default function PrivacyPage() {
             </p>
             <div className="bg-gray-50 border-2 border-gray-300 p-6 mt-4">
               <p className="text-gray-800 font-bold">MOSE</p>
-              <p className="text-gray-700">Groningen, Nederland</p>
+              <p className="text-gray-700">Helper Brink 27a</p>
+              <p className="text-gray-700">9722 EG Groningen, Nederland</p>
               <p className="text-gray-700">
                 E-mail:{' '}
-                <a href="mailto:info@mosewear.com" className="text-brand-primary hover:underline">
-                  info@mosewear.com
+                <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
+                  info@mosewear.nl
+                </a>
+              </p>
+              <p className="text-gray-700">
+                Telefoon:{' '}
+                <a href="tel:+31502111931" className="text-brand-primary hover:underline">
+                  +31 50 211 1931
                 </a>
               </p>
             </div>

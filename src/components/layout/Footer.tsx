@@ -18,6 +18,20 @@ export function Footer() {
             <p className="text-gray-400 mb-4">
               Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.
             </p>
+            <div className="space-y-2 text-sm text-gray-400 mb-4">
+              <p>Helper Brink 27a</p>
+              <p>9722 EG Groningen</p>
+              <p>
+                <a href="tel:+31502111931" className="hover:text-white transition-colors">
+                  +31 50 211 1931
+                </a>
+              </p>
+              <p>
+                <a href="mailto:info@mosewear.nl" className="hover:text-white transition-colors">
+                  info@mosewear.nl
+                </a>
+              </p>
+            </div>
             <div className="flex space-x-4">
               <a href="https://instagram.com/mosewear.nl" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary transition-colors">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

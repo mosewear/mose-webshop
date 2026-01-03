@@ -117,7 +117,7 @@ function generateDesign1(props: OrderEmailProps) {
           
           <div class="footer">
             <p><strong>MOSE</strong> • Groningen, Nederland</p>
-            <p style="margin-top: 8px;">Vragen? Mail naar <a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+            <p style="margin-top: 8px;">Vragen? Mail naar <a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
           </div>
         </div>
       </body>
@@ -216,7 +216,7 @@ function generateDesign2(props: OrderEmailProps) {
           <div class="footer">
             <img src="${process.env.NEXT_PUBLIC_SITE_URL}/logomose.png" class="footer-logo" alt="MOSE" />
             <p><strong>MOSE</strong> • GRONINGEN</p>
-            <p style="margin-top: 12px;"><a href="mailto:bestellingen@orders.mosewear.nl">BESTELLINGEN@ORDERS.MOSEWEAR.NL</a></p>
+            <p style="margin-top: 12px;"><a href="mailto:info@mosewear.nl">BESTELLINGEN@ORDERS.MOSEWEAR.NL</a></p>
           </div>
         </div>
       </body>
@@ -326,7 +326,7 @@ function generateDesign3(props: OrderEmailProps) {
           
           <div class="footer">
             <p><strong>MOSE</strong></p>
-            <p>VRAGEN? <a href="mailto:bestellingen@orders.mosewear.nl">BESTELLINGEN@ORDERS.MOSEWEAR.NL</a></p>
+            <p>VRAGEN? <a href="mailto:info@mosewear.nl">BESTELLINGEN@ORDERS.MOSEWEAR.NL</a></p>
           </div>
         </div>
       </body>
@@ -411,7 +411,7 @@ function generateDesign4(props: OrderEmailProps) {
           </div>
           <div class="footer-split">
             <p><strong>MOSE</strong> • Groningen, Nederland</p>
-            <p style="margin-top: 8px;">Vragen? <a href="mailto:bestellingen@orders.mosewear.nl" style="color: #2ECC71; text-decoration: none;">bestellingen@orders.mosewear.nl</a></p>
+            <p style="margin-top: 8px;">Vragen? <a href="mailto:info@mosewear.nl" style="color: #2ECC71; text-decoration: none;">info@mosewear.nl</a></p>
           </div>
         </div>
       </body>
@@ -511,7 +511,7 @@ function generateDesign5(props: OrderEmailProps) {
           
           <div class="footer-modern">
             <p><strong>MOSE</strong> • Groningen, Nederland</p>
-            <p style="margin-top: 12px;">Vragen? Mail naar <a href="mailto:bestellingen@orders.mosewear.nl">bestellingen@orders.mosewear.nl</a></p>
+            <p style="margin-top: 12px;">Vragen? Mail naar <a href="mailto:info@mosewear.nl">info@mosewear.nl</a></p>
           </div>
         </div>
       </body>
@@ -550,7 +550,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps, design:
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `Bestelling bevestiging #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -618,7 +618,7 @@ export async function sendShippingConfirmationEmail(props: {
         
         <div class="footer">
           <p><strong>MOSE</strong> • Groningen, Nederland</p>
-          <p>Vragen? Stuur een mail naar <a href="mailto:bestellingen@orders.mosewear.nl" style="color: #2ECC71;">bestellingen@orders.mosewear.nl</a></p>
+          <p>Vragen? Stuur een mail naar <a href="mailto:info@mosewear.nl" style="color: #2ECC71;">info@mosewear.nl</a></p>
         </div>
       </body>
     </html>
@@ -626,7 +626,7 @@ export async function sendShippingConfirmationEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Bestellingen <info@mosewear.nl>',
       to: [customerEmail],
       subject: `📦 Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,

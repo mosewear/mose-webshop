@@ -119,7 +119,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
-                <span>Neem contact op via info@mosewear.com voor retourinstructies</span>
+                <span>Neem contact op via info@mosewear.nl voor retourinstructies</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
@@ -133,8 +133,8 @@ export default function TermsPage() {
             <p className="text-gray-700 leading-relaxed">
               Wil je ruilen voor een andere maat of kleur? Geen probleem! Neem contact met ons op 
               via{' '}
-              <a href="mailto:info@mosewear.com" className="text-brand-primary hover:underline">
-                info@mosewear.com
+              <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
+                info@mosewear.nl
               </a>
               {' '}en we regelen het voor je. Ruilen is gratis binnen Nederland en België (eenmalig per bestelling).
             </p>
@@ -194,11 +194,18 @@ export default function TermsPage() {
             </p>
             <div className="bg-gray-50 border-2 border-gray-300 p-6 mt-4">
               <p className="text-gray-800 font-bold">MOSE</p>
-              <p className="text-gray-700">Groningen, Nederland</p>
+              <p className="text-gray-700">Helper Brink 27a</p>
+              <p className="text-gray-700">9722 EG Groningen, Nederland</p>
               <p className="text-gray-700">
                 E-mail:{' '}
-                <a href="mailto:info@mosewear.com" className="text-brand-primary hover:underline">
-                  info@mosewear.com
+                <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
+                  info@mosewear.nl
+                </a>
+              </p>
+              <p className="text-gray-700">
+                Telefoon:{' '}
+                <a href="tel:+31502111931" className="text-brand-primary hover:underline">
+                  +31 50 211 1931
                 </a>
               </p>
               <p className="text-gray-700">
