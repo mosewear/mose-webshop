@@ -165,20 +165,23 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section - Compact */}
-      <section className="relative bg-black text-white py-16 md:py-20 z-0">
-        <div className="absolute inset-0 opacity-10">
-          <Image
-            src="/claw.png"
-            alt=""
-            width={400}
-            height={400}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-          />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 text-center">
-          <h1 className="font-display text-5xl md:text-7xl mb-4 tracking-tight">SHOP</h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
+      {/* Hero Section - Minimal Banner with Image */}
+      <section className="relative h-48 md:h-80 overflow-hidden border-b-4 border-brand-primary">
+        {/* Background Image */}
+        <Image
+          src="/hero_mose.png"
+          alt="MOSE Shop"
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
+        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
+        {/* Text */}
+        <div className="relative h-full flex flex-col items-center justify-center text-white text-center px-4">
+          <h1 className="font-display text-4xl md:text-7xl mb-2 md:mb-4 tracking-tight">SHOP</h1>
+          <p className="text-sm md:text-xl text-gray-200 max-w-2xl">
             Premium basics. Lokaal gemaakt. Gebouwd om lang mee te gaan.
           </p>
         </div>
