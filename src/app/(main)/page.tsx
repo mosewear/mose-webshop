@@ -387,8 +387,6 @@ export default function HomePage() {
             <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">SHOP OP CATEGORIE</h2>
             <p className="text-lg text-gray-600">Ontdek onze collectie</p>
           </div>
-          
-// REPLACEMENT FOR CATEGORIES GRID (around line 391-456)
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {categories.length > 0 ? (
