@@ -21,8 +21,6 @@ const nextConfig: NextConfig = {
     ],
     qualities: [75, 90],
   },
-  // Empty turbopack config to silence warning and use defaults
-  turbopack: {},
 };
 
 export default nextConfig;
