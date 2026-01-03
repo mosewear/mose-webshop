@@ -524,33 +524,103 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </div>
 
               {/* Mobile Fixed Bottom Bar */}
-              <div className="md:hidden p-4 bg-black text-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Totaal</div>
-                    <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
-                    <div className="text-xs text-gray-400">
-                      Incl. €{totalBtw.toFixed(2)} BTW
-                      {promoDiscount > 0 && (
-                        <span className="text-brand-primary ml-2">
-                          • -€{promoDiscount.toFixed(2)} korting
-                        </span>
+              <div className="md:hidden bg-white border-t-2 border-black">
+                {/* Promo Code Section - Mobile */}
+                <div className="p-3 border-b border-gray-200">
+                  {!promoCodeExpanded && promoDiscount === 0 ? (
+                    <button
+                      onClick={() => setPromoCodeExpanded(true)}
+                      className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Ticket size={16} />
+                        <span>Kortingscode?</span>
+                      </div>
+                      <ChevronDown size={16} />
+                    </button>
+                  ) : promoDiscount === 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Ticket size={16} />
+                          <span>Kortingscode</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPromoCodeExpanded(false)
+                            setPromoError('')
+                            setPromoCode('')
+                          }}
+                          className="p-1 hover:bg-gray-200 transition-colors"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value.toUpperCase())
+                            setPromoError('')
+                          }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                          placeholder="CODE"
+                          className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                        />
+                        <button
+                          onClick={handleApplyPromo}
+                          disabled={!promoCode}
+                          className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          OK
+                        </button>
+                      </div>
+                      {promoError && (
+                        <p className="text-xs text-red-600 font-semibold">{promoError}</p>
                       )}
                     </div>
-                  </div>
-                  <Link
-                    href="/checkout"
-                    onClick={onClose}
-                    className="px-6 py-3 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
-                  >
-                    Afrekenen
-                  </Link>
+                  ) : (
+                    <div className="flex items-center justify-between py-2 text-sm bg-brand-primary/10 px-2 rounded">
+                      <div className="flex items-center gap-2 text-brand-primary font-semibold">
+                        <Ticket size={16} />
+                        <span>{promoCode}</span>
+                        <span className="text-xs">(-€{promoDiscount.toFixed(2)})</span>
+                      </div>
+                      <button
+                        onClick={handleRemovePromo}
+                        className="text-xs text-gray-600 hover:text-black font-semibold uppercase"
+                      >
+                        Verwijder
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {subtotalAfterDiscount < freeShippingThreshold && (
-                  <p className="text-xs text-gray-400 text-center border-t border-gray-700 pt-2">
-                    Nog €{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)} tot gratis verzending
-                  </p>
-                )}
+
+                {/* Total & Checkout - Mobile */}
+                <div className="p-4 bg-black text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Totaal</div>
+                      <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
+                      <div className="text-xs text-gray-400">
+                        Incl. €{totalBtw.toFixed(2)} BTW
+                      </div>
+                    </div>
+                    <Link
+                      href="/checkout"
+                      onClick={onClose}
+                      className="px-6 py-3 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                    >
+                      Afrekenen
+                    </Link>
+                  </div>
+                  {subtotalAfterDiscount < freeShippingThreshold && (
+                    <p className="text-xs text-gray-400 text-center border-t border-gray-700 pt-2">
+                      Nog €{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)} tot gratis verzending
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </>
