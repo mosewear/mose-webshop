@@ -33,11 +33,11 @@ COMMENT ON COLUMN orders.checkout_abandoned_at IS 'When checkout was marked as a
 COMMENT ON COLUMN orders.abandoned_cart_email_sent IS 'Whether abandoned cart email was sent';
 
 -- Update existing orders to have correct payment status
--- Orders with stripe_session_id are considered paid (they completed checkout)
+-- Orders with stripe_payment_intent_id are considered paid (they completed checkout)
 UPDATE orders 
 SET payment_status = 'paid',
     paid_at = created_at
-WHERE stripe_session_id IS NOT NULL 
+WHERE stripe_payment_intent_id IS NOT NULL 
 AND payment_status = 'unpaid';
 
 -- =====================================================
@@ -175,13 +175,15 @@ ORDER BY updated_at DESC;
 -- TRIGGERS & AUTOMATION
 -- =====================================================
 
--- Trigger: Auto-set checkout_started_at when stripe_session_id is added
+-- Trigger: Auto-set checkout_started_at when stripe_payment_intent_id is added
 CREATE OR REPLACE FUNCTION set_checkout_started_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.stripe_session_id IS NOT NULL AND OLD.stripe_session_id IS NULL THEN
+  IF NEW.stripe_payment_intent_id IS NOT NULL AND OLD.stripe_payment_intent_id IS NULL THEN
     NEW.checkout_started_at = NOW();
-    NEW.payment_status = 'pending';
+    IF NEW.payment_status IS NULL OR NEW.payment_status = 'unpaid' THEN
+      NEW.payment_status = 'pending';
+    END IF;
   END IF;
   RETURN NEW;
 END;
