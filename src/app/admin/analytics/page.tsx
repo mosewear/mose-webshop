@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
           total_revenue: data.revenue,
         }))
 
-        setTopProducts(products.sort((a, b) => b.total_revenue - a.revenue).slice(0, 5))
+        setTopProducts(products.sort((a, b) => b.total_revenue - a.total_revenue).slice(0, 5))
       }
 
       // Fetch revenue history (last 30 days)
