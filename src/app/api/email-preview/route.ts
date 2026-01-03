@@ -105,6 +105,9 @@ export async function GET(req: NextRequest) {
     case 'cancelled':
       htmlContent = generateCancelledEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
       break
+    case 'abandoned_cart':
+      htmlContent = generateAbandonedCartEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
+      break
     default:
       return NextResponse.json({ error: 'Invalid email type' }, { status: 400 })
   }
@@ -341,6 +344,80 @@ function generateCancelledEmail(data: any, logoUrl: string, styles: string) {
     <div class="footer">
       <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+function generateAbandonedCartEmail(data: any, logoUrl: string, styles: string) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${styles}
+    .icon-cart { background: #FF9500; }
+    .countdown { background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%); color: #fff; padding: 24px; border-radius: 8px; text-align: center; margin: 20px 0; }
+    .countdown-timer { font-size: 42px; font-weight: 900; letter-spacing: 2px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
+    <div class="hero">
+      <div class="icon-circle icon-cart">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+      </div>
+      <h1>MIS JE IETS?</h1>
+      <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
+      <div class="hero-text">Hey ${data.customerName}, je hebt items achtergelaten!</div>
+      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="countdown">
+        <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">⏰ EXCLUSIEVE KORTING</h3>
+        <p style="margin: 0 0 12px 0; font-size: 15px;">Gebruik deze code voor <strong>10% korting</strong>:</p>
+        <div class="discount-code">COMEBACK10</div>
+        <div style="margin-top: 16px; font-size: 14px; opacity: 0.9;">
+          ⏱️ Je items zijn nog <strong>24 uur</strong> gereserveerd!
+        </div>
+      </div>
+
+      <div class="section-title">Je Items</div>
+      ${data.orderItems.map((item: any) => `
+        <div class="product" style="border-left-color: #FF9500;">
+          <div class="prod-img"></div>
+          <div class="prod-info">
+            <div class="prod-name">${item.name}</div>
+            <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x stuks</div>
+          </div>
+          <div class="prod-price">€${(item.price * item.quantity).toFixed(2)}</div>
+        </div>
+      `).join('')}
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="https://mose-webshop.vercel.app/checkout" class="button" style="background: #FF9500; color:#fff;text-decoration:none;">VOLTOOI JE BESTELLING</a>
+      </div>
+
+      <div class="info-box" style="border-left-color: #FF9500;">
+        <h3>✓ Waarom MOSE?</h3>
+        <p style="margin: 12px 0 0 0; font-size: 14px; line-height: 1.8;">
+          ✓ Premium kwaliteit<br>
+          ✓ Gratis verzending vanaf €50<br>
+          ✓ Snelle levering (1-3 werkdagen)<br>
+          ✓ 30 dagen retourrecht
+        </p>
+      </div>
+    </div>
+    <div class="footer">
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+      <p style="margin-top:12px; font-size:11px; color:#555;">Je ontvangt deze email omdat je items in je winkelwagen hebt achtergelaten.</p>
     </div>
   </div>
 </body>
