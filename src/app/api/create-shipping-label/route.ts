@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
 
     // Update order in database
     const estimatedDelivery = calculateEstimatedDeliveryDate(parcel.carrier.code)
+    const labelUrl = parcel.label.normal_printer?.[0] || null
 
     const { error: updateError } = await supabase
       .from('orders')
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
         tracking_code: parcel.tracking_number,
         tracking_url: parcel.tracking_url,
         carrier: parcel.carrier.name,
+        label_url: labelUrl,
         status: 'shipped',
         estimated_delivery_date: estimatedDelivery.toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
@@ -171,7 +173,7 @@ export async function POST(req: NextRequest) {
         trackingNumber: parcel.tracking_number,
         trackingUrl: parcel.tracking_url,
         carrier: parcel.carrier.name,
-        labelUrl: parcel.label.normal_printer?.[0],
+        labelUrl: labelUrl,
         estimatedDelivery: estimatedDelivery.toISOString(),
       },
     })

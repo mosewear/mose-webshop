@@ -20,6 +20,7 @@ interface Order {
   tracking_code: string | null
   tracking_url: string | null
   carrier: string | null
+  label_url: string | null
   estimated_delivery_date: string | null
   internal_notes: string | null
   last_email_sent_at: string | null
@@ -902,6 +903,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     </button>
                   </div>
                 </details>
+
+                {/* Print Label knop als label beschikbaar is */}
+                {order.label_url && (
+                  <a
+                    href={order.label_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 uppercase tracking-wider transition-colors flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Printer size={18} />
+                    Print Verzendlabel
+                  </a>
+                )}
 
                 {/* Handmatig email versturen als nodig */}
                 {trackingCode && order.status === 'shipped' && (
