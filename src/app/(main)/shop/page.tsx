@@ -180,10 +180,7 @@ export default function ShopPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
         {/* Text */}
         <div className="relative h-full flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="font-display text-4xl md:text-7xl mb-2 md:mb-4 tracking-tight">SHOP</h1>
-          <p className="text-sm md:text-xl text-gray-200 max-w-2xl">
-            Premium basics. Lokaal gemaakt. Gebouwd om lang mee te gaan.
-          </p>
+          <h1 className="font-display text-7xl md:text-9xl tracking-tight">SHOP</h1>
         </div>
       </section>
 

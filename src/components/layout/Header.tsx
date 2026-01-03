@@ -7,6 +7,7 @@ import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import CartDrawer from '@/components/CartDrawer'
 import SearchOverlay from '@/components/SearchOverlay'
+import LanguageSelector from '@/components/LanguageSelector'
 import { ChevronRight, User, Heart } from 'lucide-react'
 
 export function Header() {
@@ -81,6 +82,9 @@ export function Header() {
 
             {/* Icons */}
             <div className="flex items-center space-x-4">
+              {/* Language Selector - Left of other icons */}
+              <LanguageSelector />
+              
               {/* Desktop Icons - All visible */}
               <button 
                 onClick={() => setSearchOpen(true)}
