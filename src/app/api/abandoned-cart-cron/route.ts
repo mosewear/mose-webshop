@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
 
     const abandonedHours = parseInt(settingsMap.abandoned_cart_hours || 24)
     const emailEnabled = settingsMap.abandoned_cart_email_enabled === 'true' || settingsMap.abandoned_cart_email_enabled === true
-    const discountCode = settingsMap.abandoned_cart_discount_code?.replace(/"/g, '') || 'COMEBACK10'
+    const freeShippingThreshold = parseFloat(settingsMap.free_shipping_threshold || 100)
+    const returnDays = parseInt(settingsMap.return_days || 14)
 
     if (!emailEnabled) {
       return NextResponse.json({ 
@@ -86,10 +87,10 @@ export async function POST(req: NextRequest) {
             price: item.price,
             imageUrl: item.image_url,
           })),
-          discountCode: discountCode,
-          discountPercentage: 10,
           checkoutUrl: checkoutUrl,
-          hoursSinceAbandoned: Math.round(cart.hours_since_checkout),
+          hoursSinceAbandoned: Math.round(cart.hours_since_abandonment),
+          freeShippingThreshold: freeShippingThreshold,
+          returnDays: returnDays,
         })
 
         // Log the email
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
           orderId: cart.order_id,
           emailType: 'abandoned_cart',
           recipientEmail: cart.customer_email,
-          subject: `${cart.customer_name}, je MOSE items wachten nog op je! 🛒 (+10% korting)`,
+          subject: `${cart.customer_name || 'Klant'}, je MOSE items wachten nog op je! 🛒`,
           status: emailResult.success ? 'sent' : 'failed',
           errorMessage: emailResult.error ? JSON.stringify(emailResult.error) : undefined,
         })

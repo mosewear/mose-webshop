@@ -593,10 +593,10 @@ interface AbandonedCartEmailProps {
     price: number
     imageUrl?: string
   }[]
-  discountCode?: string
-  discountPercentage?: number
   checkoutUrl: string
   hoursSinceAbandoned: number
+  freeShippingThreshold?: number
+  returnDays?: number
 }
 
 export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
@@ -606,10 +606,10 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     orderId, 
     orderTotal, 
     orderItems, 
-    discountCode = 'COMEBACK10',
-    discountPercentage = 10,
     checkoutUrl,
-    hoursSinceAbandoned
+    hoursSinceAbandoned,
+    freeShippingThreshold = 100,
+    returnDays = 14
   } = props
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
@@ -624,9 +624,6 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     imageUrl: item.imageUrl || ''
   }))
 
-  const discountedTotal = (orderTotal * (1 - discountPercentage / 100)).toFixed(2)
-  const savingsAmount = (orderTotal * (discountPercentage / 100)).toFixed(2)
-
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -637,11 +634,6 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
 </head>
 <body>
   <div class="wrapper">
-    <!-- Urgency Banner -->
-    <div class="urgency-banner">
-      ⏰ Je items zijn nog ${Math.round(24 - hoursSinceAbandoned)} uur gereserveerd!
-    </div>
-
     <!-- Logo -->
     <div class="logo-bar">
       <img src="${logoUrl}" alt="MOSE" />
@@ -649,7 +641,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     
     <!-- Hero Section -->
     <div class="hero">
-      <div class="icon-circle icon-cart">
+      <div class="icon-circle" style="background: #FF9500; box-shadow: 0 6px 16px rgba(255,149,0,0.25);">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
           <circle cx="9" cy="21" r="1"></circle>
           <circle cx="20" cy="21" r="1"></circle>
@@ -669,23 +661,12 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
         Geen zorgen - we hebben je items nog voor je gereserveerd! 🎁
       </p>
 
-      <!-- Special Discount -->
-      <div class="discount-highlight">
-        <h3 style="margin: 0 0 8px 0; font-size: 18px;">🎉 SPECIALE AANBIEDING VOOR JOU</h3>
-        <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.95;">
-          Maak je bestelling vandaag nog af en krijg <strong>${discountPercentage}% KORTING</strong>!
-        </p>
-        <div class="discount-code">${discountCode}</div>
-        <p style="margin: 12px 0 0 0; font-size: 12px; opacity: 0.9;">
-          ✓ Geldig voor 48 uur • ✓ Automatisch toegepast bij checkout
-        </p>
-      </div>
 
       <!-- Cart Items -->
       <div class="section-title">🛍️ Jouw Items</div>
-      <div class="cart-items">
+      <div style="margin: 20px 0;">
         ${productItemsHtml.map(item => `
-          <div class="product" style="margin-bottom: 12px; border-left-color: #FF6B6B;">
+          <div class="product" style="margin-bottom: 12px; border-left-color: #FF9500;">
             <div class="prod-img">
               ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}
             </div>
@@ -698,24 +679,17 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
         `).join('')}
       </div>
 
-      <!-- Price Breakdown with Discount -->
+      <!-- Total -->
       <div class="summary">
-        <div class="sum-label">💰 JOUW BESPARING</div>
-        <div class="sum-line"><span>Subtotaal</span><span>€${orderTotal.toFixed(2)}</span></div>
-        <div class="sum-line" style="color: #2ECC71; font-weight: 700;">
-          <span>🎁 ${discountCode} (-${discountPercentage}%)</span>
-          <span>-€${savingsAmount}</span>
-        </div>
-        <div class="sum-divider"></div>
-        <div class="sum-grand">€${discountedTotal}</div>
+        <div class="sum-grand">€${orderTotal.toFixed(2)}</div>
         <p style="text-align: center; margin-top: 16px; font-size: 13px; color: #999;">
-          Je bespaart €${savingsAmount}! 🎉
+          Totaalbedrag (incl. BTW)
         </p>
       </div>
 
       <!-- CTA Button -->
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${checkoutUrl}" class="button" style="color: #fff; font-size: 16px; padding: 18px 48px;">
+        <a href="${checkoutUrl}" class="button" style="background: #FF9500; color: #fff; font-size: 16px; padding: 18px 48px; text-decoration: none; border-radius: 4px;">
           ✓ MAAK BESTELLING AF
         </a>
         <p style="font-size: 12px; color: #999; margin-top: 12px;">
@@ -734,31 +708,43 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       </div>
 
       <!-- Why Shop with Us -->
-      <div class="info-box" style="border-left-color: #2ECC71;">
-        <h3>✓ Waarom MOSE?</h3>
+      <div class="info-box" style="border-left-color: #FF9500;">
+        <h3 style="color: #FF9500;">✓ Waarom MOSE?</h3>
         <ul class="checklist" style="margin: 12px 0 0 0;">
-          <li>Gratis verzending vanaf €50</li>
-          <li>30 dagen retourrecht</li>
-          <li>Duurzame & hoogwaardige materialen</li>
-          <li>Snelle levering (1-2 werkdagen)</li>
+          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
+            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
+            Gratis verzending vanaf €${freeShippingThreshold}
+          </li>
+          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
+            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
+            ${returnDays} dagen retourrecht
+          </li>
+          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
+            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
+            Duurzame & hoogwaardige materialen
+          </li>
+          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
+            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
+            Snelle levering (1-2 werkdagen)
+          </li>
         </ul>
       </div>
 
       <!-- Urgency Reminder -->
-      <div style="background: #fff3cd; border-left: 3px solid: #ffc107; padding: 16px; margin: 24px 0;">
+      <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
         <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
-          ⚠️ <strong>Let op:</strong> Je items blijven nog ${Math.round(24 - hoursSinceAbandoned)} uur gereserveerd. 
+          ⚠️ <strong>Let op:</strong> Je items blijven nog ${Math.max(1, Math.round(48 - hoursSinceAbandoned))} uur gereserveerd. 
           Daarna kunnen we helaas niet garanderen dat ze nog op voorraad zijn.
         </p>
       </div>
 
       <!-- Need Help -->
-      <div class="info-box" style="margin-top: 28px;">
-        <h3>💬 Hulp Nodig?</h3>
+      <div class="info-box" style="margin-top: 28px; border-left-color: #FF9500;">
+        <h3 style="color: #FF9500;">💬 Hulp Nodig?</h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
           Twijfel je nog of heb je vragen? Ons team staat voor je klaar!<br>
-          <a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600;">info@mosewear.nl</a> • 
-          <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600;">+31 50 211 1931</a>
+          <a href="mailto:info@mosewear.nl" style="color: #FF9500; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
+          <a href="tel:+31502111931" style="color: #FF9500; font-weight: 600; text-decoration: none;">+31 50 211 1931</a>
         </p>
       </div>
     </div>
@@ -767,8 +753,8 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     <div class="footer">
       <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin-top:8px">
-        <a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • 
-        <a href="tel:+31502111931">+31 50 211 1931</a>
+        <a href="mailto:info@mosewear.nl" style="color: #FF9500;">info@mosewear.nl</a> • 
+        <a href="tel:+31502111931" style="color: #FF9500;">+31 50 211 1931</a>
       </p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
         Deze email is verzonden omdat je items in je winkelwagen hebt achtergelaten.<br>
@@ -783,7 +769,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Winkelwagen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `${customerName}, je MOSE items wachten nog op je! 🛒 (+${discountPercentage}% korting)`,
+      subject: `${customerName}, je MOSE items wachten nog op je! 🛒`,
       html: htmlContent,
     })
 

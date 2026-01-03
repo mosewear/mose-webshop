@@ -356,41 +356,32 @@ function generateAbandonedCartEmail(data: any, logoUrl: string, styles: string) 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}
-    .icon-cart { background: #FF9500; }
-    .countdown { background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%); color: #fff; padding: 24px; border-radius: 8px; text-align: center; margin: 20px 0; }
-    .countdown-timer { font-size: 42px; font-weight: 900; letter-spacing: 2px; margin: 12px 0; }
-  </style>
+  <style>${styles}</style>
 </head>
 <body>
   <div class="wrapper">
     <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
     <div class="hero">
-      <div class="icon-circle icon-cart">
+      <div class="icon-circle" style="background: #FF9500; box-shadow: 0 6px 16px rgba(255,149,0,0.25);">
         <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
           <circle cx="9" cy="21" r="1"></circle>
           <circle cx="20" cy="21" r="1"></circle>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
         </svg>
       </div>
-      <h1>MIS JE IETS?</h1>
+      <h1>NIET VERGETEN?</h1>
       <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
       <div class="hero-text">Hey ${data.customerName}, je hebt items achtergelaten!</div>
-      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
     </div>
     <div class="content">
-      <div class="countdown">
-        <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">⏰ EXCLUSIEVE KORTING</h3>
-        <p style="margin: 0 0 12px 0; font-size: 15px;">Gebruik deze code voor <strong>10% korting</strong>:</p>
-        <div class="discount-code">COMEBACK10</div>
-        <div style="margin-top: 16px; font-size: 14px; opacity: 0.9;">
-          ⏱️ Je items zijn nog <strong>24 uur</strong> gereserveerd!
-        </div>
-      </div>
+      <p style="font-size: 15px; line-height: 1.8; color: #444; margin-bottom: 24px;">
+        We zagen dat je onlangs aan het shoppen was bij MOSE, maar je bestelling nog niet hebt afgerond. 
+        Geen zorgen - we hebben je items nog voor je gereserveerd! 🎁
+      </p>
 
-      <div class="section-title">Je Items</div>
+      <div class="section-title">🛍️ Jouw Items</div>
       ${data.orderItems.map((item: any) => `
-        <div class="product" style="border-left-color: #FF9500;">
+        <div class="product" style="border-left-color: #FF9500; margin-bottom: 12px;">
           <div class="prod-img"></div>
           <div class="prod-info">
             <div class="prod-name">${item.name}</div>
@@ -400,23 +391,61 @@ function generateAbandonedCartEmail(data: any, logoUrl: string, styles: string) 
         </div>
       `).join('')}
 
+      <div class="summary" style="margin: 20px 0;">
+        <div class="sum-grand">€${data.orderTotal.toFixed(2)}</div>
+        <p style="text-align: center; margin-top: 16px; font-size: 13px; color: #999;">
+          Totaalbedrag (incl. BTW)
+        </p>
+      </div>
+
       <div style="text-align: center; margin: 32px 0;">
-        <a href="https://mose-webshop.vercel.app/checkout" class="button" style="background: #FF9500; color:#fff;text-decoration:none;">VOLTOOI JE BESTELLING</a>
+        <a href="https://mose-webshop.vercel.app/checkout" class="button" style="background: #FF9500; color:#fff;text-decoration:none; border-radius: 4px;">✓ MAAK BESTELLING AF</a>
+        <p style="font-size: 12px; color: #999; margin-top: 12px;">
+          Klik hier om terug te gaan naar je winkelwagen
+        </p>
+      </div>
+
+      <div style="background: #f0f9f4; padding: 20px; border-left: 3px solid #2ECC71; margin: 20px 0; font-style: italic;">
+        <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6;">
+          "Beste aankoop ooit! De kwaliteit is geweldig en het zit super comfortabel. Krijg constant complimenten!" ⭐⭐⭐⭐⭐
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #666; font-weight: 600;">
+          - Lisa, Amsterdam
+        </p>
       </div>
 
       <div class="info-box" style="border-left-color: #FF9500;">
-        <h3>✓ Waarom MOSE?</h3>
+        <h3 style="color: #FF9500;">✓ Waarom MOSE?</h3>
         <p style="margin: 12px 0 0 0; font-size: 14px; line-height: 1.8;">
-          ✓ Premium kwaliteit<br>
-          ✓ Gratis verzending vanaf €50<br>
-          ✓ Snelle levering (1-3 werkdagen)<br>
-          ✓ 30 dagen retourrecht
+          <span style="color: #FF9500; font-weight: 900;">✓</span> Gratis verzending vanaf €100<br>
+          <span style="color: #FF9500; font-weight: 900;">✓</span> 14 dagen retourrecht<br>
+          <span style="color: #FF9500; font-weight: 900;">✓</span> Duurzame & hoogwaardige materialen<br>
+          <span style="color: #FF9500; font-weight: 900;">✓</span> Snelle levering (1-2 werkdagen)
+        </p>
+      </div>
+
+      <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
+        <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
+          ⚠️ <strong>Let op:</strong> Je items blijven nog 48 uur gereserveerd. 
+          Daarna kunnen we helaas niet garanderen dat ze nog op voorraad zijn.
+        </p>
+      </div>
+
+      <div class="info-box" style="margin-top: 28px; border-left-color: #FF9500;">
+        <h3 style="color: #FF9500;">💬 Hulp Nodig?</h3>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
+          Twijfel je nog of heb je vragen? Ons team staat voor je klaar!<br>
+          <a href="mailto:info@mosewear.nl" style="color: #FF9500; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
+          <a href="tel:+31502111931" style="color: #FF9500; font-weight: 600; text-decoration: none;">+31 50 211 1931</a>
         </p>
       </div>
     </div>
     <div class="footer">
       <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+      <p style="margin-top:8px">
+        <a href="mailto:info@mosewear.nl" style="color: #FF9500;">info@mosewear.nl</a> • 
+        <a href="tel:+31502111931" style="color: #FF9500;">+31 50 211 1931</a>
+      </p>
       <p style="margin-top:12px; font-size:11px; color:#555;">Je ontvangt deze email omdat je items in je winkelwagen hebt achtergelaten.</p>
     </div>
   </div>

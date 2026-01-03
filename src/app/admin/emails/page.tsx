@@ -86,10 +86,10 @@ export default function AdminEmailsPage() {
       id: 'abandoned_cart',
       name: 'Verlaten Winkelwagen',
       type: 'abandoned_cart',
-      description: 'Verzonden automatisch via cron job (elke 2 uur) wanneer klant checkout heeft gestart maar niet heeft afgerond. Bevat 10% kortingscode, countdown timer en cart items.',
+      description: 'Verzonden automatisch via cron job (elke 2 uur) wanneer klant checkout heeft gestart maar niet heeft afgerond. Bevat urgency messaging, cart items en USPs.',
       icon: '🛒',
       color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      subject: 'Je MOSE items wachten nog op je! 🛒 (+10% korting)'
+      subject: 'Je MOSE items wachten nog op je! 🛒'
     }
   ]
 
