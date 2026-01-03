@@ -294,7 +294,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {/* Main Image - Clickable for zoom */}
               <div
                 onClick={() => setShowLightbox(true)}
-                className="relative aspect-[3/4] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
+                className="relative aspect-[3/4] md:aspect-[3/3.5] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
               >
                 <Image
                   src={product.product_images[selectedImage]?.url || '/placeholder.png'}
@@ -344,61 +344,50 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             </div>
 
             {/* RIGHT: Product Info (40% width, sticky) */}
-            <div className="space-y-6 md:sticky md:top-24 md:self-start">
+            <div className="space-y-4 md:sticky md:top-24 md:self-start">
               {/* Title & Category */}
               <div>
                 <Link
                   href={`/shop?category=${product.categories.slug}`}
-                  className="text-sm uppercase tracking-wider text-brand-primary hover:underline mb-2 block"
+                  className="text-xs md:text-sm uppercase tracking-wider text-brand-primary hover:underline mb-1 md:mb-2 block"
                 >
                   {product.categories.name}
                 </Link>
-                <h1 className="text-3xl md:text-5xl font-display mb-4">{product.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3">{product.name}</h1>
                 <div className="mb-2">
-                  <p className="text-2xl md:text-3xl font-bold">€{finalPrice.toFixed(2)}</p>
+                  <p className="text-xl md:text-2xl font-bold">€{finalPrice.toFixed(2)}</p>
                   <p className="text-xs text-gray-500">Incl. BTW</p>
                 </div>
               </div>
 
               {/* Trust Badges - Desktop: Horizontal (1 row, 3 cols), Mobile: Accordion */}
-              <div className="hidden md:grid md:grid-cols-3 gap-3 border-2 border-gray-200 p-4">
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Truck className="w-6 h-6 text-brand-primary flex-shrink-0" />
-                  <span className="text-xs font-semibold text-gray-900 leading-tight">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
+              <div className="hidden md:grid md:grid-cols-3 gap-2 border-2 border-gray-200 p-3">
+                <div className="flex flex-col items-center text-center gap-1">
+                  <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                  <span className="text-[10px] font-semibold text-gray-900 leading-tight">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
                 </div>
-                <div className="flex flex-col items-center text-center gap-2 border-l border-gray-200">
-                  <RotateCcw className="w-6 h-6 text-brand-primary flex-shrink-0" />
-                  <span className="text-xs font-semibold text-gray-900 leading-tight">{settings.return_days} dagen bedenktijd</span>
+                <div className="flex flex-col items-center text-center gap-1 border-l border-gray-200">
+                  <RotateCcw className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                  <span className="text-[10px] font-semibold text-gray-900 leading-tight">{settings.return_days} dagen bedenktijd</span>
                 </div>
-                <div className="flex flex-col items-center text-center gap-2 border-l border-gray-200">
-                  <MapPin className="w-6 h-6 text-brand-primary flex-shrink-0" />
-                  <span className="text-xs font-semibold text-gray-900 leading-tight">Lokaal gemaakt in NL</span>
+                <div className="flex flex-col items-center text-center gap-1 border-l border-gray-200">
+                  <MapPin className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                  <span className="text-[10px] font-semibold text-gray-900 leading-tight">Lokaal gemaakt in NL</span>
                 </div>
               </div>
 
-              {/* Description - Desktop: Compact with max height */}
-              <div className="hidden md:block border-t-2 border-b-2 border-gray-200 py-4">
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line line-clamp-3">{product.description}</p>
-                {product.description && product.description.length > 150 && (
-                  <button 
-                    onClick={() => setActiveTab('description')}
-                    className="text-xs text-brand-primary hover:underline font-semibold mt-2"
-                  >
-                    Lees meer →
-                  </button>
-                )}
-              </div>
+              {/* Description - Removed from desktop, only in accordion */}
 
-              {/* Size Selector with Size Guide (Feature 2) */}
+              {/* Size Selector with Size Guide */}
               {availableSizes.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-bold uppercase tracking-wider">
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                    <label className="block text-xs md:text-sm font-bold uppercase tracking-wider">
                       Maat: {selectedSize}
                     </label>
                     <button
                       onClick={() => setShowSizeGuide(true)}
-                      className="text-sm text-brand-primary hover:underline font-semibold flex items-center gap-1"
+                      className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -406,7 +395,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       Maattabel
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2 md:gap-3">
+                  <div className="flex flex-wrap gap-2">
                     {availableSizes.map((size) => {
                       const sizeVariants = product.product_variants.filter((v) => v.size === size)
                       const sizeAvailable = sizeVariants.some((v) => v.is_available && v.stock_quantity > 0)
@@ -421,7 +410,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             }
                           }}
                           disabled={!sizeAvailable}
-                          className={`px-4 md:px-6 py-2 md:py-3 border-2 font-bold uppercase tracking-wider transition-all text-sm md:text-base ${
+                          className={`px-4 md:px-5 py-2 border-2 font-bold uppercase tracking-wider transition-all text-sm ${
                             selectedSize === size
                               ? 'border-brand-primary bg-brand-primary text-white'
                               : sizeAvailable
@@ -440,10 +429,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {/* Color Selector */}
               {availableColors.length > 0 && (
                 <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider mb-3">
+                  <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
                     Kleur: {selectedColor}
                   </label>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2 md:gap-3">
                     {availableColors.map(({ color, hex }) => {
                       const colorVariant = product.product_variants.find(
                         (v) => v.size === selectedSize && v.color === color
@@ -454,7 +443,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           key={color}
                           onClick={() => setSelectedColor(color)}
                           disabled={!colorAvailable}
-                          className={`relative w-12 h-12 md:w-14 md:h-14 border-2 transition-all ${
+                          className={`relative w-10 h-10 md:w-12 md:h-12 border-2 transition-all ${
                             selectedColor === color
                               ? 'border-brand-primary scale-110'
                               : colorAvailable
@@ -542,20 +531,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {/* Quantity Selector */}
               {inStock && (
                 <div>
-                  <label className="block text-sm font-bold uppercase tracking-wider mb-3">Aantal</label>
-                  <div className="flex items-center gap-4">
+                  <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">Aantal</label>
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 md:w-12 md:h-12 border-2 border-black font-bold text-xl hover:bg-black hover:text-white transition-colors"
+                      className="w-10 h-10 border-2 border-black font-bold text-xl hover:bg-black hover:text-white transition-colors"
                     >
                       −
                     </button>
-                    <span className="text-xl md:text-2xl font-bold w-12 text-center">{quantity}</span>
+                    <span className="text-lg md:text-xl font-bold w-10 text-center">{quantity}</span>
                     <button
                       onClick={() =>
                         setQuantity(Math.min(selectedVariant?.stock_quantity || 1, quantity + 1))
                       }
-                      className="w-10 h-10 md:w-12 md:h-12 border-2 border-black font-bold text-xl hover:bg-black hover:text-white transition-colors"
+                      className="w-10 h-10 border-2 border-black font-bold text-xl hover:bg-black hover:text-white transition-colors"
                     >
                       +
                     </button>
@@ -568,7 +557,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <button
                   onClick={handleAddToCart}
                   disabled={!inStock || !selectedVariant || addedToCart}
-                  className={`flex-1 py-4 md:py-5 text-lg md:text-xl font-bold uppercase tracking-wider transition-all ${
+                  className={`flex-1 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
                     addedToCart
                       ? 'bg-black text-white cursor-default animate-success'
                       : inStock && selectedVariant
@@ -576,7 +565,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {addedToCart ? '✓ TOEGEVOEGD AAN WINKELWAGEN' : inStock ? 'TOEVOEGEN AAN WINKELWAGEN' : 'UITVERKOCHT'}
+                  {addedToCart ? '✓ TOEGEVOEGD' : inStock ? 'TOEVOEGEN' : 'UITVERKOCHT'}
                 </button>
                 <button
                   onClick={async () => {
