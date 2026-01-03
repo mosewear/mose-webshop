@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         
-        // Update order status in Supabase
+        // Update order with payment success
         const supabase = await createClient()
         const orderId = session.metadata?.orderId
 
@@ -41,18 +41,26 @@ export async function POST(req: NextRequest) {
           const { data: order, error } = await supabase
             .from('orders')
             .update({
-              stripe_payment_status: 'paid',
-              status: 'processing',
+              payment_status: 'paid',
+              paid_at: new Date().toISOString(),
+              payment_method: session.payment_method_types?.[0] || 'unknown',
               stripe_payment_intent_id: session.payment_intent as string,
+              payment_metadata: {
+                stripe_session_id: session.id,
+                amount_total: session.amount_total,
+                currency: session.currency,
+                customer_email: session.customer_email,
+              },
+              status: 'processing', // Move to processing when paid
             })
             .eq('id', orderId)
             .select('*, order_items(*)')
             .single()
 
           if (error) {
-            console.error('Error updating order:', error)
+            console.error('❌ Error updating order:', error)
           } else {
-            console.log(`✅ Order ${orderId} marked as paid`)
+            console.log(`✅ Order ${orderId} marked as PAID (payment_status: paid, status: processing)`)
             
             // Send order confirmation email
             if (order && session.customer_email) {
@@ -81,7 +89,7 @@ export async function POST(req: NextRequest) {
                 })
                 console.log('✅ Order confirmation email sent')
               } catch (emailError) {
-                console.error('Error sending confirmation email:', emailError)
+                console.error('❌ Error sending confirmation email:', emailError)
                 // Don't fail the webhook if email fails
               }
             }
@@ -90,15 +98,88 @@ export async function POST(req: NextRequest) {
         break
       }
 
+      case 'checkout.session.expired': {
+        const session = event.data.object as Stripe.Checkout.Session
+        const supabase = await createClient()
+        const orderId = session.metadata?.orderId
+
+        if (orderId) {
+          await supabase
+            .from('orders')
+            .update({
+              payment_status: 'expired',
+              payment_metadata: {
+                expired_at: new Date().toISOString(),
+                stripe_session_id: session.id,
+              },
+            })
+            .eq('id', orderId)
+
+          console.log(`⏰ Checkout session expired for order ${orderId}`)
+        }
+        break
+      }
+
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        console.error('❌ Payment failed:', paymentIntent.id)
-        // TODO: Send email to customer about failed payment
+        const supabase = await createClient()
+
+        // Find order by payment intent ID
+        const { data: order } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('stripe_payment_intent_id', paymentIntent.id)
+          .single()
+
+        if (order) {
+          await supabase
+            .from('orders')
+            .update({
+              payment_status: 'failed',
+              payment_metadata: {
+                failure_code: paymentIntent.last_payment_error?.code,
+                failure_message: paymentIntent.last_payment_error?.message,
+                failed_at: new Date().toISOString(),
+              },
+            })
+            .eq('id', order.id)
+
+          console.error(`❌ Payment failed for order ${order.id}: ${paymentIntent.last_payment_error?.message}`)
+        }
+        break
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge
+        const supabase = await createClient()
+
+        // Find order by payment intent ID
+        const { data: order } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('stripe_payment_intent_id', charge.payment_intent as string)
+          .single()
+
+        if (order) {
+          await supabase
+            .from('orders')
+            .update({
+              payment_status: 'refunded',
+              payment_metadata: {
+                refunded_at: new Date().toISOString(),
+                refund_amount: charge.amount_refunded,
+                refund_reason: charge.refunds?.data?.[0]?.reason,
+              },
+            })
+            .eq('id', order.id)
+
+          console.log(`💰 Refund processed for order ${order.id}: €${(charge.amount_refunded / 100).toFixed(2)}`)
+        }
         break
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        console.log(`ℹ️ Unhandled event type: ${event.type}`)
     }
 
     return NextResponse.json({ received: true })

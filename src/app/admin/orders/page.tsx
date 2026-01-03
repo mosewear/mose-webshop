@@ -9,6 +9,9 @@ interface Order {
   user_id: string | null
   email: string
   status: string
+  payment_status: string
+  paid_at: string | null
+  payment_method: string | null
   total: number
   shipping_address: any
   billing_address: any
@@ -77,6 +80,30 @@ export default function AdminOrdersPage() {
       cancelled: 'Geannuleerd',
     }
     return labels[status] || status
+  }
+
+  const getPaymentStatusColor = (paymentStatus: string) => {
+    const colors: Record<string, string> = {
+      paid: 'bg-green-100 text-green-800 border-green-200',
+      unpaid: 'bg-gray-100 text-gray-600 border-gray-200',
+      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      failed: 'bg-red-100 text-red-700 border-red-200',
+      refunded: 'bg-purple-100 text-purple-700 border-purple-200',
+      expired: 'bg-gray-100 text-gray-500 border-gray-200',
+    }
+    return colors[paymentStatus] || 'bg-gray-100 text-gray-600 border-gray-200'
+  }
+
+  const getPaymentStatusLabel = (paymentStatus: string) => {
+    const labels: Record<string, string> = {
+      paid: '✓ Betaald',
+      unpaid: '○ Onbetaald',
+      pending: '⏳ Wacht op betaling',
+      failed: '✕ Betaling mislukt',
+      refunded: '↩ Terugbetaald',
+      expired: '⌛ Verlopen',
+    }
+    return labels[paymentStatus] || paymentStatus
   }
 
   const handleSelectAll = () => {
@@ -199,22 +226,22 @@ export default function AdminOrdersPage() {
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Orders</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">
-            {orders.filter(o => o.status === 'pending').length}
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
+            {orders.filter(o => o.payment_status === 'paid').length}
           </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">In afwachting</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Betaald</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-2">
-            {orders.filter(o => o.status === 'shipped').length}
+          <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">
+            {orders.filter(o => o.payment_status === 'pending').length}
           </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Verzonden</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Wacht op betaling</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            €{orders.reduce((sum, o) => sum + Number(o.total), 0).toFixed(2)}
+            €{orders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + Number(o.total), 0).toFixed(2)}
           </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totale Waarde</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Omzet (Betaald)</div>
         </div>
       </div>
 
@@ -280,7 +307,10 @@ export default function AdminOrdersPage() {
                       Klant
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Status
+                      Betaling
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Fulfillment
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Totaal
@@ -313,6 +343,11 @@ export default function AdminOrdersPage() {
                       <div className="text-sm font-semibold text-gray-900 truncate max-w-[150px] md:max-w-none">
                         {order.email}
                       </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${getPaymentStatusColor(order.payment_status || 'unpaid')}`}>
+                        {getPaymentStatusLabel(order.payment_status || 'unpaid')}
+                      </span>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${getStatusColor(order.status)}`}>
