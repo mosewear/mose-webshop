@@ -34,16 +34,8 @@ export default function HomePageClient({
     setIsVisible(true)
   }, [])
 
-  // Structured Data for SEO (moved to server component)
-
-  return (
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
       <div className="min-h-screen bg-white">
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
