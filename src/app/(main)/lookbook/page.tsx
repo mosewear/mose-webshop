@@ -46,7 +46,7 @@ export default function LookbookPage() {
           {/* Image - Mobile: full width on top, Desktop: 2 cols (40%) */}
           <div className="lg:col-span-2 relative aspect-[3/4] border-2 border-black overflow-hidden group">
             <Image
-              src="/hoodiegreen.png"
+              src="/hero_mose.png"
               alt="Urban Essentials"
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"
@@ -96,7 +96,7 @@ export default function LookbookPage() {
           {/* Image - Mobile: below text (flipped!), Desktop: 2 cols (40%) */}
           <div className="lg:col-span-2 relative aspect-[3/4] border-2 border-black overflow-hidden group order-1 lg:order-2">
             <Image
-              src="/tshirtwhite.png"
+              src="/blacktee.png"
               alt="Clean & Simple"
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"
@@ -140,7 +140,7 @@ export default function LookbookPage() {
             <div className="group">
               <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
                 <Image
-                  src="/capblack.png"
+                  src="/hoodie_cap.png"
                   alt="Finishing Touches"
                   fill
                   sizes="(max-width: 768px) 50vw, 33vw"
@@ -156,7 +156,7 @@ export default function LookbookPage() {
             <div className="group col-span-2 md:col-span-1">
               <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
                 <Image
-                  src="/tshirtwhite.png"
+                  src="/blacktee.png"
                   alt="Timeless Design"
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
@@ -173,7 +173,7 @@ export default function LookbookPage() {
         {/* SECTION 5: Wide Lifestyle Photo with Text Overlay */}
         <div className="relative w-full aspect-[16/9] md:aspect-[16/7] border-2 lg:border-4 border-black overflow-hidden group">
           <Image
-            src="/hoodiegreen.png"
+            src="/hero_mose.png"
             alt="Shop de Volledige Collectie"
             fill
             sizes="(max-width: 1280px) 100vw, 1280px"
