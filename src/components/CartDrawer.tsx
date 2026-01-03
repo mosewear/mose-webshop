@@ -106,20 +106,31 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   }, [isOpen, onClose])
 
   // Handle promo code
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     setPromoError('')
-    // Simple validation (you can add API call here)
-    if (promoCode.toUpperCase() === 'MOSE10') {
-      setPromoDiscount(subtotal * 0.1) // 10% discount
-      setPromoCodeExpanded(false)
-    } else if (promoCode.toUpperCase() === 'WELCOME15') {
-      setPromoDiscount(subtotal * 0.15) // 15% discount
-      setPromoCodeExpanded(false)
-    } else if (promoCode.toUpperCase() === 'SORRY10') {
-      setPromoDiscount(subtotal * 0.1) // 10% discount (same as MOSE10)
-      setPromoCodeExpanded(false)
-    } else {
-      setPromoError('Code ongeldig')
+    
+    try {
+      const response = await fetch('/api/validate-promo-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCode.toUpperCase(),
+          orderTotal: subtotal,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.valid) {
+        setPromoDiscount(data.discountAmount)
+        setPromoCodeExpanded(false)
+      } else {
+        setPromoError(data.error || 'Code ongeldig')
+        setPromoDiscount(0)
+      }
+    } catch (error) {
+      console.error('Error validating promo code:', error)
+      setPromoError('Kon code niet valideren')
       setPromoDiscount(0)
     }
   }

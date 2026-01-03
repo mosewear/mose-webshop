@@ -278,6 +278,21 @@ export default function AdminDashboard() {
               <div className="text-xs text-gray-500">Beheer reviews</div>
             </div>
           </Link>
+
+          <Link
+            href="/admin/promo-codes"
+            className="flex items-center gap-3 p-4 border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all group"
+          >
+            <div className="w-10 h-10 bg-green-600 text-white flex items-center justify-center">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-bold text-sm md:text-base">Kortingscodes</div>
+              <div className="text-xs text-gray-500">Beheer promo codes</div>
+            </div>
+          </Link>
         </div>
       </div>
 
