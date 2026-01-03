@@ -294,7 +294,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {/* Main Image - Clickable for zoom */}
               <div
                 onClick={() => setShowLightbox(true)}
-                className="relative aspect-[3/4] md:aspect-[3/3.5] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
+                className="relative aspect-[3/4] md:aspect-square bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
               >
                 <Image
                   src={product.product_images[selectedImage]?.url || '/placeholder.png'}
