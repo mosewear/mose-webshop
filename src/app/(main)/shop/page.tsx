@@ -216,10 +216,10 @@ export default function ShopPage() {
                 <h2 className="font-display text-xl uppercase tracking-wide">Filters & Sorteren</h2>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="p-2 hover:bg-gray-100 transition-colors"
+                  className="p-2 hover:bg-gray-100 transition-colors rounded-sm border-2 border-transparent hover:border-gray-300"
                   aria-label="Sluit filters"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-7 h-7" strokeWidth={2.5} />
                 </button>
               </div>
 
