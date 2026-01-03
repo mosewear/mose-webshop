@@ -21,7 +21,10 @@ export default function SettingsPage() {
   // Form state
   const [siteName, setSiteName] = useState('MOSE Wear')
   const [contactEmail, setContactEmail] = useState('info@mosewear.nl')
-  const [freeShipping, setFreeShipping] = useState('50.00')
+  const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
+  const [contactAddress, setContactAddress] = useState('Helper Brink 27a, 9722 EG Groningen')
+  const [freeShipping, setFreeShipping] = useState('100.00')
+  const [returnDays, setReturnDays] = useState('14')
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [currency, setCurrency] = useState('EUR')
   const [taxRate, setTaxRate] = useState('21.00')
@@ -64,8 +67,17 @@ export default function SettingsPage() {
             case 'contact_email':
               setContactEmail(setting.value)
               break
+            case 'contact_phone':
+              setContactPhone(setting.value)
+              break
+            case 'contact_address':
+              setContactAddress(setting.value)
+              break
             case 'free_shipping_threshold':
               setFreeShipping(setting.value)
+              break
+            case 'return_days':
+              setReturnDays(setting.value)
               break
             case 'maintenance_mode':
               setMaintenanceMode(setting.value === 'true' || setting.value === true)
@@ -106,7 +118,10 @@ export default function SettingsPage() {
       const settingsToSave = [
         { key: 'site_name', value: siteName },
         { key: 'contact_email', value: contactEmail },
+        { key: 'contact_phone', value: contactPhone },
+        { key: 'contact_address', value: contactAddress },
         { key: 'free_shipping_threshold', value: freeShipping },
+        { key: 'return_days', value: returnDays },
         { key: 'maintenance_mode', value: maintenanceMode },
         { key: 'currency', value: currency },
         { key: 'tax_rate', value: taxRate },
@@ -277,6 +292,32 @@ export default function SettingsPage() {
 
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Contact Telefoon
+              </label>
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                placeholder="+31 50 211 1931"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Contact Adres
+              </label>
+              <input
+                type="text"
+                value={contactAddress}
+                onChange={(e) => setContactAddress(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                placeholder="Helper Brink 27a, 9722 EG Groningen"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Gratis Verzending Boven (€)
               </label>
               <input
@@ -286,6 +327,26 @@ export default function SettingsPage() {
                 onChange={(e) => setFreeShipping(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Gebruikt overal op de site (homepage, product pagina's, cart, checkout, emails, etc.)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Retourbeleid (dagen)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="365"
+                value={returnDays}
+                onChange={(e) => setReturnDays(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Aantal dagen bedenktijd. Gebruikt overal op de site (homepage, product pagina's, cart, verzending pagina, etc.)
+              </p>
             </div>
 
             <div className="flex items-center gap-3">

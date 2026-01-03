@@ -6,13 +6,31 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
+import { getSiteSettings } from '@/lib/settings'
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false)
+  const [settings, setSettings] = useState({
+    free_shipping_threshold: 100,
+    return_days: 14,
+  })
 
   useEffect(() => {
     setIsVisible(true)
+    loadSettings()
   }, [])
+
+  const loadSettings = async () => {
+    try {
+      const siteSettings = await getSiteSettings()
+      setSettings({
+        free_shipping_threshold: siteSettings.free_shipping_threshold,
+        return_days: siteSettings.return_days,
+      })
+    } catch (error) {
+      console.error('Error loading settings:', error)
+    }
+  }
 
   // Structured Data for SEO
   const structuredData = {
@@ -142,7 +160,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">14</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{settings.return_days}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
                 Dagen<br className="sm:hidden" /> retourrecht
               </div>
@@ -176,17 +194,17 @@ export default function HomePage() {
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              <span className="font-medium">Gratis verzending vanaf €50</span>
+              <span className="font-medium">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
             </div>
             
             <div className="hidden sm:block w-px h-4 bg-gray-300" />
             
-            {/* 14 Dagen Retour */}
+            {/* Retourbeleid */}
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span className="font-medium">14 dagen retour</span>
+              <span className="font-medium">{settings.return_days} dagen retour</span>
             </div>
             
             <div className="hidden md:block w-px h-4 bg-gray-300" />
