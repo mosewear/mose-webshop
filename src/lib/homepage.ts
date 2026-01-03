@@ -171,7 +171,7 @@ export async function getCategoryData(categoryIds: (string | null)[]) {
   try {
     const { data, error } = await supabase
       .from('categories')
-      .select('*')
+      .select('id, name, slug, image_url, description')
       .in('id', validIds)
 
     if (error) throw error
