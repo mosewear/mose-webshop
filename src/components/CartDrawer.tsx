@@ -26,6 +26,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [promoDiscount, setPromoDiscount] = useState(0)
   const [upsellProducts, setUpsellProducts] = useState<any[]>([])
   const [addingProduct, setAddingProduct] = useState<string | null>(null)
+  const [selectedUpsellSizes, setSelectedUpsellSizes] = useState<Record<string, string>>({})
 
   const subtotal = getTotal()
   const subtotalAfterDiscount = subtotal - promoDiscount
@@ -60,7 +61,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       // Get product IDs already in cart
       const cartProductIds = items.map(item => item.productId)
       
-      // Fetch 3 random products not in cart
+      // Fetch 3 random products not in cart with all variants
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -69,15 +70,27 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           slug,
           base_price,
           product_images!inner(url, is_primary),
-          product_variants!inner(id, sku, stock_quantity)
+          product_variants!inner(id, sku, size, color, color_hex, stock_quantity, is_available)
         `)
         .not('id', 'in', `(${cartProductIds.join(',')})`)
         .gt('product_variants.stock_quantity', 0)
         .eq('product_images.is_primary', true)
+        .eq('product_variants.is_available', true)
         .limit(3)
 
       if (!error && data) {
         setUpsellProducts(data)
+        
+        // Set default selected size for each product (first available size)
+        const defaultSizes: Record<string, string> = {}
+        data.forEach(product => {
+          if (product.product_variants && product.product_variants.length > 0) {
+            // Get unique sizes and select first one
+            const sizes = [...new Set(product.product_variants.map((v: any) => v.size))].sort()
+            defaultSizes[product.id] = sizes[0] || ''
+          }
+        })
+        setSelectedUpsellSizes(defaultSizes)
       }
     }
 
@@ -145,16 +158,29 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   // Handle quick add from upsell
   const handleQuickAdd = async (product: any) => {
+    const selectedSize = selectedUpsellSizes[product.id]
+    
+    if (!selectedSize) {
+      console.error('No size selected')
+      return
+    }
+    
     setAddingProduct(product.id)
     
-    // Get first available variant
-    const variant = product.product_variants[0]
+    // Find the variant that matches the selected size
+    const variant = product.product_variants.find((v: any) => v.size === selectedSize)
+    
+    if (!variant) {
+      console.error('Variant not found for selected size')
+      setAddingProduct(null)
+      return
+    }
     
     addItem({
       productId: product.id,
       variantId: variant.id,
       name: product.name,
-      size: variant.size || 'M',
+      size: variant.size,
       color: variant.color || 'Zwart',
       colorHex: variant.color_hex || '#000000',
       price: product.base_price,
@@ -166,6 +192,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     // Remove from upsell list
     setUpsellProducts(prev => prev.filter(p => p.id !== product.id))
+    
+    // Remove from selected sizes
+    setSelectedUpsellSizes(prev => {
+      const newSizes = { ...prev }
+      delete newSizes[product.id]
+      return newSizes
+    })
     
     setTimeout(() => setAddingProduct(null), 1000)
   }
@@ -315,62 +348,100 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     Maak je look compleet
                   </h3>
                   <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
-                    {upsellProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex-shrink-0 w-[280px] md:w-[320px] flex items-center gap-3 border-2 border-gray-200 hover:border-black transition-all p-2 group"
-                      >
-                        {/* Image */}
-                        <Link
-                          href={`/product/${product.slug}`}
-                          onClick={onClose}
-                          className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
+                    {upsellProducts.map((product) => {
+                      // Get unique sizes for this product
+                      const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))].sort()
+                      const selectedSize = selectedUpsellSizes[product.id]
+                      
+                      return (
+                        <div
+                          key={product.id}
+                          className="flex-shrink-0 w-[280px] md:w-[320px] border-2 border-gray-200 hover:border-black transition-all p-3 group"
                         >
-                          <Image
-                            src={product.product_images[0]?.url || '/placeholder.png'}
-                            alt={product.name}
-                            fill
-                            sizes="60px"
-                            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </Link>
-                        
-                        {/* Product Info */}
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/product/${product.slug}`}
-                            onClick={onClose}
-                            className="block text-xs font-semibold uppercase leading-tight mb-1 hover:text-brand-primary transition-colors line-clamp-2"
-                          >
-                            {product.name}
-                          </Link>
-                          <div className="text-[10px] text-gray-600">
-                            {product.product_variants[0]?.size && (
-                              <span>Maat {product.product_variants[0].size}</span>
-                            )}
+                          {/* Top Row: Image + Info */}
+                          <div className="flex items-start gap-3 mb-3">
+                            {/* Image */}
+                            <Link
+                              href={`/product/${product.slug}`}
+                              onClick={onClose}
+                              className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
+                            >
+                              <Image
+                                src={product.product_images[0]?.url || '/placeholder.png'}
+                                alt={product.name}
+                                fill
+                                sizes="60px"
+                                className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </Link>
+                            
+                            {/* Product Info + Price */}
+                            <div className="flex-1 min-w-0">
+                              <Link
+                                href={`/product/${product.slug}`}
+                                onClick={onClose}
+                                className="block text-xs font-semibold uppercase leading-tight mb-1 hover:text-brand-primary transition-colors line-clamp-2"
+                              >
+                                {product.name}
+                              </Link>
+                              <span className="text-brand-primary font-bold text-sm">
+                                €{product.base_price.toFixed(2)}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        
-                        {/* Price & Button */}
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          <span className="text-brand-primary font-bold text-sm">
-                            €{product.base_price.toFixed(2)}
-                          </span>
+
+                          {/* Size Selector */}
+                          <div className="mb-3">
+                            <label className="block text-[10px] uppercase tracking-wide text-gray-600 mb-1.5">
+                              Maat:
+                            </label>
+                            <div className="flex gap-1.5">
+                              {availableSizes.map((size: string) => (
+                                <button
+                                  key={size}
+                                  onClick={() => setSelectedUpsellSizes(prev => ({ ...prev, [product.id]: size }))}
+                                  className={`
+                                    flex-1 px-2 py-1.5 text-xs font-bold uppercase border-2 transition-all
+                                    ${selectedSize === size
+                                      ? 'border-black bg-black text-white'
+                                      : 'border-gray-300 hover:border-black'
+                                    }
+                                  `}
+                                >
+                                  {size}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Add to Cart Button */}
                           <button
                             onClick={() => handleQuickAdd(product)}
-                            disabled={addingProduct === product.id}
-                            className="w-8 h-8 bg-black text-white hover:bg-brand-primary transition-colors flex items-center justify-center disabled:bg-brand-primary"
-                            title="Voeg toe"
+                            disabled={addingProduct === product.id || !selectedSize}
+                            className={`
+                              w-full py-2.5 text-xs font-bold uppercase transition-all
+                              ${addingProduct === product.id
+                                ? 'bg-brand-primary text-white'
+                                : !selectedSize
+                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  : 'bg-black text-white hover:bg-brand-primary'
+                              }
+                            `}
                           >
                             {addingProduct === product.id ? (
-                              <span className="text-xs">✓</span>
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="text-base">✓</span>
+                                Toegevoegd
+                              </span>
+                            ) : !selectedSize ? (
+                              'Selecteer maat'
                             ) : (
-                              <Plus size={16} strokeWidth={3} />
+                              '+ Toevoegen'
                             )}
                           </button>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
