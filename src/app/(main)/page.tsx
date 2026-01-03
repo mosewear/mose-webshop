@@ -575,20 +575,20 @@ export default function HomePage() {
           </div>
 
           <h2 className="font-display text-4xl md:text-6xl text-white mb-6 tracking-tight">
-            JOIN THE PACK
+            {homepageSettings?.newsletter_title || 'JOIN THE PACK'}
           </h2>
           
           <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Nieuws over drops, restocks en het atelier.
+            {homepageSettings?.newsletter_description1 || 'Nieuws over drops, restocks en het atelier.'}
             <br />
-            <span className="font-bold">Geen spam — alleen MOSE.</span>
+            <span className="font-bold">{homepageSettings?.newsletter_description2 || 'Geen spam — alleen MOSE.'}</span>
           </p>
 
           <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0">
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="email"
-                placeholder="Jouw e-mailadres"
+                placeholder={homepageSettings?.newsletter_input_placeholder || 'Jouw e-mailadres'}
                 required
                 className="flex-1 px-6 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400"
               />
