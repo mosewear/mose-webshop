@@ -62,6 +62,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [activeTab, setActiveTab] = useState<'description' | 'trust' | 'details' | 'materials' | 'shipping'>('details')
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
@@ -384,20 +385,24 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Description - Desktop: Compact with line-clamp */}
+              {/* Description - Desktop: Expandable with line-clamp */}
               <div className="hidden md:block border-t border-b border-gray-200 py-3">
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line line-clamp-3">{product.description}</p>
-                {product.description && product.description.length > 150 && (
+                <p className={`text-sm text-gray-700 leading-relaxed whitespace-pre-line ${descriptionExpanded ? '' : 'line-clamp-3'}`}>
+                  {product.description}
+                </p>
+                {/* Only show button if text is actually clamped (more than 3 lines worth of text) */}
+                {product.description && product.description.split('\n').length > 3 && (
                   <button 
-                    onClick={() => {
-                      const descTab = document.querySelector('[data-tab="description"]') as HTMLButtonElement
-                      if (descTab) descTab.click()
-                      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                    }}
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                     className="text-xs text-brand-primary hover:underline font-semibold mt-2 inline-flex items-center gap-1"
                   >
-                    Lees meer
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {descriptionExpanded ? 'Toon minder' : 'Lees meer'}
+                    <svg 
+                      className={`w-3 h-3 transition-transform ${descriptionExpanded ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
