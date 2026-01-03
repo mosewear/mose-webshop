@@ -664,175 +664,258 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
-          {/* Sendcloud Label Creatie */}
-          {!order.tracking_code && order.status !== 'cancelled' && order.status !== 'refunded' && (
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-300 p-4 md:p-6">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="p-2 bg-blue-500 text-white rounded">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-gray-900">Automatisch Verzendlabel</h2>
-                  <p className="text-sm text-gray-700 mt-1">
-                    Maak instant een verzendlabel via Sendcloud + DHL. Tracking code wordt automatisch toegevoegd en klant ontvangt verzend-email.
-                  </p>
-                </div>
-              </div>
+          {/* Verzending - Stapsgewijze Flow */}
+          <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
+            <h2 className="text-xl font-bold mb-4">📦 Verzending</h2>
+            
+            {/* Als er nog geen tracking is */}
+            {!order.tracking_code ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-700">
+                  Kies hoe je het pakket wilt verzenden:
+                </p>
 
-              {labelSuccess && (
-                <div className="bg-green-100 border-2 border-green-400 text-green-800 px-4 py-3 rounded mb-4 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <div className="flex-1">
-                    <strong>Label aangemaakt!</strong>
-                    <div className="text-sm mt-1">
-                      Tracking: {trackingCode} • {carrier}
+                {/* Optie 1: Automatisch via Sendcloud (AANBEVOLEN) */}
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-400 p-4 rounded-lg relative">
+                  <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 uppercase rounded">
+                    Aanbevolen
+                  </div>
+                  
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="p-2 bg-blue-500 text-white rounded">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900">Automatisch Label (Sendcloud + DHL)</h3>
+                      <p className="text-xs text-gray-700 mt-1">
+                        Eén klik = label, tracking, en email automatisch geregeld
+                      </p>
                     </div>
                   </div>
-                  {labelUrl && (
-                    <a
-                      href={labelUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-bold uppercase transition-colors"
-                    >
-                      <Printer size={16} />
-                      Print Label
-                    </a>
-                  )}
-                </div>
-              )}
 
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-white border border-gray-200 p-4 rounded">
-                  <h3 className="font-bold text-sm uppercase tracking-wide text-gray-700 mb-2">Wat Gebeurt Er?</h3>
-                  <ul className="text-sm text-gray-700 space-y-1">
-                    <li>✅ DHL verzendlabel wordt aangemaakt</li>
-                    <li>✅ Tracking code automatisch toegevoegd aan order</li>
-                    <li>✅ Status wordt "Verzonden"</li>
-                    <li>✅ Klant ontvangt shipping email met tracking link</li>
-                    <li>✅ Label PDF opent automatisch voor printen</li>
+                  {labelSuccess && (
+                    <div className="bg-green-100 border border-green-400 text-green-800 px-3 py-2 rounded mb-3 flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <div className="flex-1">
+                        Label aangemaakt! {trackingCode}
+                      </div>
+                      {labelUrl && (
+                        <a
+                          href={labelUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-2 py-1 text-xs font-bold uppercase transition-colors rounded"
+                        >
+                          <Printer size={14} />
+                          Print
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  <ul className="text-xs text-gray-700 space-y-1 mb-3 ml-11">
+                    <li>✅ Label direct printen (PDF)</li>
+                    <li>✅ Tracking automatisch toegevoegd</li>
+                    <li>✅ Klant krijgt verzend-email</li>
+                    <li>💰 €4,50 • 1-2 werkdagen levering</li>
                   </ul>
+
+                  <button
+                    onClick={handleCreateLabel}
+                    disabled={creatingLabel}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {creatingLabel ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                        Bezig...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-5 h-5" />
+                        Maak DHL Label
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                <button
-                  onClick={handleCreateLabel}
-                  disabled={creatingLabel}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg shadow-lg"
-                >
-                  {creatingLabel ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                      Label Aanmaken...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-5 h-5" />
-                      Maak Verzendlabel (DHL)
-                    </>
-                  )}
-                </button>
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">Of</span>
+                  </div>
+                </div>
 
-                <p className="text-xs text-center text-gray-600">
-                  Kosten: ~€4,50 via Sendcloud • Geschatte levering: 1-2 werkdagen
-                </p>
+                {/* Optie 2: Handmatig Invoeren */}
+                <details className="bg-gray-50 border border-gray-300 p-4 rounded-lg">
+                  <summary className="font-bold text-sm cursor-pointer flex items-center gap-2">
+                    <Truck className="w-4 h-4" />
+                    Handmatig Tracking Invoeren
+                    <span className="text-xs text-gray-500 font-normal ml-auto">
+                      (Voor andere vervoerders)
+                    </span>
+                  </summary>
+                  
+                  <div className="mt-4 space-y-3">
+                    <p className="text-xs text-gray-600">
+                      Gebruik dit als je het label via een andere manier hebt aangemaakt (bijv. PostNL website, eigen account).
+                    </p>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                        Vervoerder
+                      </label>
+                      <select
+                        value={carrier}
+                        onChange={(e) => setCarrier(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm"
+                      >
+                        <option value="">Selecteer...</option>
+                        {carrierOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                        Tracking Code
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingCode}
+                        onChange={(e) => setTrackingCode(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
+                        placeholder="3SMOSE123456789"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                        Tracking URL
+                      </label>
+                      <input
+                        type="url"
+                        value={trackingUrl}
+                        onChange={(e) => setTrackingUrl(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm"
+                        placeholder="https://..."
+                      />
+                      <button
+                        onClick={handleAutoGenerateUrl}
+                        disabled={!carrier || !trackingCode}
+                        className="mt-1 text-xs text-brand-primary hover:underline disabled:text-gray-400 disabled:no-underline"
+                      >
+                        ✨ Auto-genereer URL
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-gray-200">
+                      <label className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={autoUpdateToShipped}
+                          onChange={(e) => setAutoUpdateToShipped(e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                        <span>Status naar "Verzonden"</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={sendEmailOnStatusChange}
+                          onChange={(e) => setSendEmailOnStatusChange(e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                        <span>Verzend-email versturen</span>
+                      </label>
+                    </div>
+
+                    <button
+                      onClick={handleUpdateTracking}
+                      disabled={updating || !trackingCode}
+                      className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    >
+                      {updating ? 'Opslaan...' : 'Tracking Opslaan'}
+                    </button>
+                  </div>
+                </details>
               </div>
-            </div>
-          )}
+            ) : (
+              /* Als tracking al bestaat - Toon info + opties */
+              <div className="space-y-4">
+                <div className="bg-green-50 border-2 border-green-400 p-4 rounded">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-bold text-green-900">Verzending Actief</div>
+                      <div className="text-sm text-green-800 mt-1 space-y-1">
+                        <div><strong>Vervoerder:</strong> {carrier || 'Niet ingesteld'}</div>
+                        <div><strong>Tracking:</strong> <code className="bg-green-100 px-2 py-0.5 rounded text-xs">{trackingCode}</code></div>
+                        {trackingUrl && (
+                          <div>
+                            <a
+                              href={trackingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-xs flex items-center gap-1"
+                            >
+                              <Truck size={14} />
+                              Track pakket →
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Tracking Code */}
-          <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
-            <h2 className="text-xl font-bold mb-4">Track & Trace</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                  Vervoerder
-                </label>
-                <select
-                  value={carrier}
-                  onChange={(e) => setCarrier(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                >
-                  <option value="">Selecteer vervoerder...</option>
-                  {carrierOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                {/* Opties als tracking al bestaat */}
+                <details className="bg-gray-50 border border-gray-300 p-3 rounded text-sm">
+                  <summary className="font-bold cursor-pointer text-xs uppercase text-gray-700">
+                    Tracking Aanpassen
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                        Tracking Code
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingCode}
+                        onChange={(e) => setTrackingCode(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={handleUpdateTracking}
+                      disabled={updating}
+                      className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 uppercase tracking-wider transition-colors disabled:opacity-50 text-xs"
+                    >
+                      {updating ? 'Opslaan...' : 'Bijwerken'}
+                    </button>
+                  </div>
+                </details>
+
+                {/* Handmatig email versturen als nodig */}
+                {trackingCode && order.status === 'shipped' && (
+                  <button
+                    onClick={handleSendShippingEmail}
+                    disabled={sendingEmail}
+                    className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 px-4 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Mail size={16} />
+                    {sendingEmail ? 'Verzenden...' : 'Verzend Email (Opnieuw) Versturen'}
+                  </button>
+                )}
               </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                  Tracking Code
-                </label>
-                <input
-                  type="text"
-                  value={trackingCode}
-                  onChange={(e) => setTrackingCode(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
-                  placeholder="3SMOSE123456789"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                  Tracking URL
-                </label>
-                <input
-                  type="url"
-                  value={trackingUrl}
-                  onChange={(e) => setTrackingUrl(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm"
-                  placeholder="https://..."
-                />
-                <button
-                  onClick={handleAutoGenerateUrl}
-                  disabled={!carrier || !trackingCode}
-                  className="mt-2 text-sm text-brand-primary hover:underline disabled:text-gray-400 disabled:no-underline"
-                >
-                  Auto-genereer URL
-                </button>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={autoUpdateToShipped}
-                  onChange={(e) => setAutoUpdateToShipped(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span>Status automatisch naar "Verzonden"</span>
-              </label>
-
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={sendEmailOnStatusChange}
-                  onChange={(e) => setSendEmailOnStatusChange(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span>Verzend-email automatisch versturen</span>
-              </label>
-
-              <button
-                onClick={handleUpdateTracking}
-                disabled={updating}
-                className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {updating ? 'Opslaan...' : 'Tracking Opslaan'}
-              </button>
-              
-              {trackingCode && !autoUpdateToShipped && (
-                <button
-                  onClick={handleSendShippingEmail}
-                  disabled={sendingEmail}
-                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <Mail size={20} />
-                  {sendingEmail ? 'Verzenden...' : 'Verzend Email Versturen'}
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
           {/* Admin Notes */}
