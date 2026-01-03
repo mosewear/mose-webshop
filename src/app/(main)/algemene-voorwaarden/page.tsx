@@ -1,8 +1,24 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getSiteSettings } from '@/lib/settings'
 
 export default function TermsPage() {
+  const [settings, setSettings] = useState({
+    free_shipping_threshold: 100,
+    return_days: 14,
+  })
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setSettings({
+        free_shipping_threshold: s.free_shipping_threshold,
+        return_days: s.return_days,
+      })
+    })
+  }, [])
+
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
@@ -36,7 +52,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
-                <span>Gratis verzending vanaf €50 binnen Nederland en België</span>
+                <span>Gratis verzending vanaf €{settings.free_shipping_threshold} binnen Nederland en België</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
@@ -99,9 +115,9 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="text-3xl font-display mb-4">6. RETOURRECHT (14 DAGEN BEDENKTIJD)</h2>
+            <h2 className="text-3xl font-display mb-4">6. RETOURRECHT ({settings.return_days} DAGEN BEDENKTIJD)</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Je hebt het recht om binnen 14 dagen na ontvangst je bestelling te retourneren, 
+              Je hebt het recht om binnen {settings.return_days} dagen na ontvangst je bestelling te retourneren, 
               zonder opgave van reden. Voorwaarden:
             </p>
             <ul className="space-y-2 text-gray-700">
@@ -123,7 +139,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
-                <span>Je ontvangt je geld terug binnen 14 dagen na goedkeuring retour</span>
+                <span>Je ontvangt je geld terug binnen {settings.return_days} dagen na goedkeuring retour</span>
               </li>
             </ul>
           </div>

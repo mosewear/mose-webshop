@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getSiteSettings } from '@/lib/settings'
 
 interface FAQ {
   question: string
-  answer: string
+  answer: string | ((settings: { free_shipping_threshold: number; return_days: number }) => string)
 }
 
 const faqs: FAQ[] = [
@@ -14,11 +15,11 @@ const faqs: FAQ[] = [
   },
   {
     question: 'Wat zijn de verzendkosten en levertijd?',
-    answer: 'Verzending binnen Nederland is gratis vanaf €50. Daaronder betaal je €4,95. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL.',
+    answer: (s) => `Verzending binnen Nederland is gratis vanaf €${s.free_shipping_threshold}. Daaronder betaal je €4,95. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL.`,
   },
   {
     question: 'Kan ik mijn bestelling retourneren?',
-    answer: 'Ja! Je hebt 14 dagen bedenktijd vanaf ontvangst. Retourneren is gratis en eenvoudig. De artikelen moeten ongedragen zijn met labels er nog aan. Vul het retourformulier in je pakket in en stuur het terug. Je krijgt binnen 5 werkdagen je geld terug.',
+    answer: (s) => `Ja! Je hebt ${s.return_days} dagen bedenktijd vanaf ontvangst. Retourneren is gratis en eenvoudig. De artikelen moeten ongedragen zijn met labels er nog aan. Vul het retourformulier in je pakket in en stuur het terug. Je krijgt binnen 5 werkdagen je geld terug.`,
   },
   {
     question: 'Hoe verzorg ik mijn MOSE kleding?',
@@ -36,9 +37,26 @@ const faqs: FAQ[] = [
 
 export default function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [settings, setSettings] = useState({
+    free_shipping_threshold: 100,
+    return_days: 14,
+  })
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setSettings({
+        free_shipping_threshold: s.free_shipping_threshold,
+        return_days: s.return_days,
+      })
+    })
+  }, [])
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
+  }
+
+  const getAnswer = (answer: string | ((settings: any) => string)) => {
+    return typeof answer === 'function' ? answer(settings) : answer
   }
 
   return (
@@ -96,7 +114,7 @@ export default function FAQAccordion() {
                 }`}
               >
                 <div className="px-6 py-5 bg-gray-50 border-t-2 border-black">
-                  <p className="text-gray-700 leading-relaxed">{faq.answer}</p>
+                  <p className="text-gray-700 leading-relaxed">{getAnswer(faq.answer)}</p>
                 </div>
               </div>
             </div>

@@ -18,7 +18,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount, addItem } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState(50)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
+  const [returnDays, setReturnDays] = useState(14)
   const [promoCodeExpanded, setPromoCodeExpanded] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [promoError, setPromoError] = useState('')
@@ -42,6 +43,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     getSiteSettings().then((settings) => {
       setShippingCost(settings.shipping_cost)
       setFreeShippingThreshold(settings.free_shipping_threshold)
+      setReturnDays(settings.return_days)
     })
   }, [])
 
@@ -531,7 +533,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="cursor-help" title="Veilig betalen via Stripe">
                     <Lock size={16} className="hover:text-black transition-colors" />
                   </div>
-                  <div className="cursor-help" title="14 dagen bedenktijd">
+                  <div className="cursor-help" title={`${returnDays} dagen bedenktijd`}>
                     <RotateCcw size={16} className="hover:text-black transition-colors" />
                   </div>
                 </div>

@@ -1,13 +1,25 @@
-import { Metadata } from 'next'
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Truck, Package, Clock, MapPin, RefreshCw } from 'lucide-react'
-
-export const metadata: Metadata = {
-  title: 'Verzending & Retour | MOSE',
-  description: 'Alles over verzending, levering en retourneren bij MOSE. Gratis verzending vanaf €50, 14 dagen bedenktijd.',
-}
+import { getSiteSettings } from '@/lib/settings'
 
 export default function VerzendingPage() {
+  const [settings, setSettings] = useState({
+    free_shipping_threshold: 100,
+    return_days: 14,
+  })
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setSettings({
+        free_shipping_threshold: s.free_shipping_threshold,
+        return_days: s.return_days,
+      })
+    })
+  }, [])
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -34,10 +46,10 @@ export default function VerzendingPage() {
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <h3 className="font-bold text-green-900 mb-2 flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Gratis verzending vanaf €50
+                Gratis verzending vanaf €{settings.free_shipping_threshold}
               </h3>
               <p className="text-green-800">
-                Bij bestellingen onder €50 betaal je €5,95 verzendkosten.
+                Bij bestellingen onder €{settings.free_shipping_threshold} betaal je €5,95 verzendkosten.
               </p>
             </div>
 
@@ -97,10 +109,10 @@ export default function VerzendingPage() {
           <div className="space-y-6 text-gray-700 leading-relaxed">
             <div className="bg-brand-light border border-brand-primary rounded-lg p-6">
               <h3 className="font-bold text-brand-dark mb-2">
-                14 dagen bedenktijd
+                {settings.return_days} dagen bedenktijd
               </h3>
               <p className="text-gray-800">
-                Niet tevreden? Je hebt 14 dagen bedenktijd vanaf ontvangst van je bestelling. Je kunt je artikel(en) zonder opgaaf van reden retourneren.
+                Niet tevreden? Je hebt {settings.return_days} dagen bedenktijd vanaf ontvangst van je bestelling. Je kunt je artikel(en) zonder opgaaf van reden retourneren.
               </p>
             </div>
 
@@ -110,7 +122,7 @@ export default function VerzendingPage() {
                 <li>Artikelen zijn ongedragen en ongewassen</li>
                 <li>Labels zitten er nog aan</li>
                 <li>Artikel is in originele staat en verpakking</li>
-                <li>Maximaal 14 dagen na ontvangst</li>
+                <li>Maximaal {settings.return_days} dagen na ontvangst</li>
               </ul>
             </div>
 
@@ -188,5 +200,3 @@ export default function VerzendingPage() {
     </div>
   )
 }
-
-

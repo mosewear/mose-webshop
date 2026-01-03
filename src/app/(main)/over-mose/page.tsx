@@ -1,9 +1,25 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getSiteSettings } from '@/lib/settings'
 
 export default function AboutPage() {
+  const [settings, setSettings] = useState({
+    free_shipping_threshold: 100,
+    return_days: 14,
+  })
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setSettings({
+        free_shipping_threshold: s.free_shipping_threshold,
+        return_days: s.return_days,
+      })
+    })
+  }, [])
+
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
@@ -77,7 +93,7 @@ export default function AboutPage() {
               <div className="border-2 border-gray-300 p-6">
                 <h3 className="text-xl font-bold mb-3">Geen Gedoe</h3>
                 <p className="text-gray-700">
-                  14 dagen retour, gratis verzending vanaf €50, en 
+                  {settings.return_days} dagen retour, gratis verzending vanaf €{settings.free_shipping_threshold}, en 
                   snelle klantenservice. Simpel.
                 </p>
               </div>
