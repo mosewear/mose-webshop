@@ -6,21 +6,37 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 
 interface ImageUploadProps {
+  // For simple category uploads (legacy)
   currentImageUrl?: string | null
-  onImageUploaded: (url: string) => void
-  onImageRemoved: () => void
+  onImageUploaded?: (url: string) => void
+  onImageRemoved?: () => void
   folder?: string
+  
+  // For advanced product uploads (new)
+  bucket?: string
+  path?: string
+  onUploadComplete?: (url: string) => Promise<void>
+  maxSizeMB?: number
 }
 
 export default function ImageUpload({ 
   currentImageUrl, 
   onImageUploaded, 
   onImageRemoved,
-  folder = 'categories'
+  folder = 'categories',
+  bucket,
+  path,
+  onUploadComplete,
+  maxSizeMB = 2
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const supabase = createClient()
+  
+  // Determine which mode we're in
+  const isLegacyMode = !bucket && !path && !onUploadComplete
+  const targetBucket = bucket || 'images'
+  const targetFolder = path || folder
 
   const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -38,18 +54,19 @@ export default function ImageUpload({
         throw new Error('Alleen afbeeldingen zijn toegestaan')
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Afbeelding is te groot (max 5MB)')
+      // Validate file size
+      const maxBytes = maxSizeMB * 1024 * 1024
+      if (file.size > maxBytes) {
+        throw new Error(`Afbeelding is te groot (max ${maxSizeMB}MB)`)
       }
 
       // Create unique filename
       const fileExt = file.name.split('.').pop()
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const fileName = `${targetFolder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
       // Upload to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
-        .from('images')
+        .from(targetBucket)
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
@@ -61,10 +78,15 @@ export default function ImageUpload({
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('images')
+        .from(targetBucket)
         .getPublicUrl(data.path)
 
-      onImageUploaded(publicUrl)
+      // Call appropriate callback
+      if (onUploadComplete) {
+        await onUploadComplete(publicUrl)
+      } else if (onImageUploaded) {
+        onImageUploaded(publicUrl)
+      }
     } catch (error: any) {
       console.error('Error uploading image:', error)
       setError(error.message || 'Fout bij uploaden van afbeelding')
@@ -78,13 +100,13 @@ export default function ImageUpload({
 
     try {
       // Extract path from URL
-      const urlParts = currentImageUrl.split('/storage/v1/object/public/images/')
+      const urlParts = currentImageUrl.split(`/storage/v1/object/public/${targetBucket}/`)
       if (urlParts.length > 1) {
         const filePath = urlParts[1]
         
         // Delete from Supabase Storage
         const { error } = await supabase.storage
-          .from('images')
+          .from(targetBucket)
           .remove([filePath])
 
         if (error) {
@@ -92,7 +114,9 @@ export default function ImageUpload({
         }
       }
 
-      onImageRemoved()
+      if (onImageRemoved) {
+        onImageRemoved()
+      }
     } catch (error) {
       console.error('Error removing image:', error)
     }
