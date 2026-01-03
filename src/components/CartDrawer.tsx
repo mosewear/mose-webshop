@@ -661,7 +661,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Totaal</div>
                       <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
                       <div className="text-xs text-gray-400">
-                        Incl. €{totalBtw.toFixed(2)} BTW
+                        Incl. BTW & verzending
                       </div>
                     </div>
                     <Link
