@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -41,6 +41,10 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotal, clearCart } = useCart()
   const supabase = createClient()
+  
+  // Ref voor het scrollen naar de juiste sectie
+  const checkoutContainerRef = useRef<HTMLDivElement>(null)
+  const paymentSectionRef = useRef<HTMLDivElement>(null)
   
   const [checkoutMode, setCheckoutMode] = useState<'guest' | 'login'>('guest')
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
@@ -97,6 +101,29 @@ export default function CheckoutPage() {
       sessionStorage.removeItem('order_id')
     }
   }, [])
+
+  // Auto-scroll naar de juiste sectie bij step wijziging
+  useEffect(() => {
+    // Scroll naar de top van de checkout container bij elke step change
+    // Gebruik een kleine delay om te zorgen dat de DOM is gerenderd
+    const scrollToTop = () => {
+      if (checkoutContainerRef.current) {
+        // Bereken de offset van de header (80px op mobiel, 96px op desktop)
+        const headerOffset = window.innerWidth >= 768 ? 96 : 80
+        const elementPosition = checkoutContainerRef.current.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset - 16 // Extra 16px ruimte
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        })
+      }
+    }
+
+    // Kleine delay om te zorgen dat de nieuwe content is gerenderd
+    const timer = setTimeout(scrollToTop, 100)
+    return () => clearTimeout(timer)
+  }, [currentStep])
 
   useEffect(() => {
     // Load settings
@@ -396,7 +423,7 @@ export default function CheckoutPage() {
 
         <div className="grid lg:grid-cols-5 gap-6">
           {/* Checkout Form - 3/5 width */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3" ref={checkoutContainerRef}>
             <div className="bg-white border-2 border-black p-6 md:p-8">
               {currentStep === 'details' ? (
                 <>
