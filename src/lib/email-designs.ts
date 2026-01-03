@@ -550,7 +550,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps, design:
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <info@mosewear.nl>',
+      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Bestelling bevestiging #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
@@ -626,7 +626,7 @@ export async function sendShippingConfirmationEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Bestellingen <info@mosewear.nl>',
+      from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `📦 Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
