@@ -13,6 +13,12 @@ interface Order {
   user_id: string | null
   email: string
   status: string
+  payment_status: string
+  paid_at: string | null
+  payment_method: string | null
+  stripe_payment_intent_id: string | null
+  payment_metadata: any
+  checkout_started_at: string | null
   total: number
   shipping_address: any
   billing_address: any
@@ -560,6 +566,164 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   <code className="block text-xs bg-gray-100 px-2 py-1 rounded mt-1 font-mono">
                     {order.payment_intent_id}
                   </code>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Payment Information */}
+          <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              💳 Betalingsinformatie
+            </h2>
+            <div className="space-y-4">
+              {/* Payment Status Badge */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Status</span>
+                <span className={`px-3 py-1.5 text-sm font-bold border-2 inline-block ${
+                  order.payment_status === 'paid' ? 'bg-green-100 text-green-800 border-green-200' :
+                  order.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                  order.payment_status === 'failed' ? 'bg-red-100 text-red-700 border-red-200' :
+                  order.payment_status === 'refunded' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                  order.payment_status === 'expired' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                  'bg-gray-100 text-gray-600 border-gray-200'
+                }`}>
+                  {order.payment_status === 'paid' && '✓ Betaald'}
+                  {order.payment_status === 'unpaid' && '○ Onbetaald'}
+                  {order.payment_status === 'pending' && '⏳ Wacht op betaling'}
+                  {order.payment_status === 'failed' && '✕ Betaling mislukt'}
+                  {order.payment_status === 'refunded' && '↩ Terugbetaald'}
+                  {order.payment_status === 'expired' && '⌛ Verlopen'}
+                  {!order.payment_status && '○ Onbekend'}
+                </span>
+              </div>
+
+              {/* Payment Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {order.paid_at && (
+                  <div>
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                      Betaald op
+                    </span>
+                    <div className="text-sm text-gray-900">
+                      {new Date(order.paid_at).toLocaleString('nl-NL', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {order.checkout_started_at && (
+                  <div>
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                      Checkout gestart
+                    </span>
+                    <div className="text-sm text-gray-900">
+                      {new Date(order.checkout_started_at).toLocaleString('nl-NL', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {order.payment_method && (
+                  <div>
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                      Betaalmethode
+                    </span>
+                    <div className="text-sm text-gray-900 capitalize">
+                      {order.payment_method === 'card' && '💳 Creditcard'}
+                      {order.payment_method === 'ideal' && '🏦 iDEAL'}
+                      {order.payment_method === 'paypal' && '💙 PayPal'}
+                      {!['card', 'ideal', 'paypal'].includes(order.payment_method) && order.payment_method}
+                    </div>
+                  </div>
+                )}
+
+                {order.stripe_payment_intent_id && (
+                  <div>
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                      Stripe Payment Intent
+                    </span>
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono block break-all">
+                      {order.stripe_payment_intent_id}
+                    </code>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Metadata */}
+              {order.payment_metadata && Object.keys(order.payment_metadata).length > 0 && (
+                <div className="pt-2">
+                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-2">
+                    Payment Metadata
+                  </span>
+                  <div className="bg-gray-50 p-3 rounded border border-gray-200 space-y-1">
+                    {Object.entries(order.payment_metadata).map(([key, value]) => (
+                      <div key={key} className="flex justify-between text-xs">
+                        <span className="text-gray-600 font-mono">{key}:</span>
+                        <span className="text-gray-900 font-mono">{JSON.stringify(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Conversion Time */}
+              {order.checkout_started_at && order.paid_at && (
+                <div className="bg-blue-50 border-l-3 border-blue-400 p-3 mt-3">
+                  <div className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-1">
+                    ⚡ Conversie Tijd
+                  </div>
+                  <div className="text-sm text-blue-900">
+                    {(() => {
+                      const start = new Date(order.checkout_started_at).getTime()
+                      const end = new Date(order.paid_at).getTime()
+                      const diffMinutes = Math.round((end - start) / 1000 / 60)
+                      if (diffMinutes < 1) return 'Minder dan 1 minuut'
+                      if (diffMinutes < 60) return `${diffMinutes} minuten`
+                      const diffHours = Math.floor(diffMinutes / 60)
+                      const remainingMinutes = diffMinutes % 60
+                      return `${diffHours}u ${remainingMinutes}m`
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Unpaid Warning */}
+              {order.payment_status !== 'paid' && order.payment_status !== 'refunded' && (
+                <div className="bg-yellow-50 border-l-3 border-yellow-400 p-3 mt-3">
+                  <div className="text-xs font-bold text-yellow-800 uppercase tracking-wide mb-1">
+                    ⚠️ Let Op
+                  </div>
+                  <div className="text-sm text-yellow-900">
+                    Deze order is nog niet betaald. Verzend alleen als betaling is ontvangen.
+                  </div>
+                </div>
+              )}
+
+              {/* Stripe Dashboard Link */}
+              {order.stripe_payment_intent_id && (
+                <div className="pt-2">
+                  <a
+                    href={`https://dashboard.stripe.com/payments/${order.stripe_payment_intent_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-brand-primary hover:text-brand-primary-hover transition-colors"
+                  >
+                    <span>Bekijk in Stripe Dashboard</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               )}
             </div>

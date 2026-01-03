@@ -12,8 +12,14 @@ interface DashboardStats {
   lowStockCount: number
   totalOrders: number
   pendingOrders: number
+  paidOrders: number
+  unpaidOrders: number
+  pendingPayments: number
   totalCustomers: number
   totalRevenue: number
+  conversionRate: number
+  avgOrderValue: number
+  abandonedCarts: number
 }
 
 export default function AdminDashboard() {
@@ -25,8 +31,14 @@ export default function AdminDashboard() {
     lowStockCount: 0,
     totalOrders: 0,
     pendingOrders: 0,
+    paidOrders: 0,
+    unpaidOrders: 0,
+    pendingPayments: 0,
     totalCustomers: 0,
     totalRevenue: 0,
+    conversionRate: 0,
+    avgOrderValue: 0,
+    abandonedCarts: 0,
   })
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -48,7 +60,7 @@ export default function AdminDashboard() {
         supabase.from('products').select('id', { count: 'exact', head: true }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         supabase.from('product_variants').select('stock_quantity'),
-        supabase.from('orders').select('status, total'),
+        supabase.from('orders').select('status, payment_status, total, checkout_started_at'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
       ])
 
@@ -63,10 +75,35 @@ export default function AdminDashboard() {
 
       const orders = ordersRes.data || []
       const totalOrders = orders.length
+      
+      // Payment status stats
+      const paidOrders = orders.filter(o => o.payment_status === 'paid')
+      const unpaidOrders = orders.filter(o => o.payment_status === 'unpaid' || !o.payment_status)
+      const pendingPayments = orders.filter(o => o.payment_status === 'pending')
+      
+      // Order status stats
       const pendingOrders = orders.filter(o => o.status === 'pending').length
-      const totalRevenue = orders
-        .filter(o => o.status === 'paid' || o.status === 'delivered')
-        .reduce((sum, o) => sum + Number(o.total), 0)
+      
+      // Revenue (ONLY from paid orders)
+      const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0)
+      
+      // Average order value (only paid orders)
+      const avgOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
+      
+      // Conversion rate (paid / total orders that started checkout)
+      const ordersWithCheckout = orders.filter(o => o.checkout_started_at)
+      const conversionRate = ordersWithCheckout.length > 0 
+        ? (paidOrders.length / ordersWithCheckout.length) * 100 
+        : 0
+      
+      // Abandoned carts (checkout started but not paid, older than 24h)
+      const now = new Date()
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const abandonedCarts = orders.filter(o => 
+        o.checkout_started_at &&
+        new Date(o.checkout_started_at) < twentyFourHoursAgo &&
+        o.payment_status !== 'paid'
+      ).length
 
       const totalCustomers = customersRes.count || 0
 
@@ -78,8 +115,14 @@ export default function AdminDashboard() {
         lowStockCount,
         totalOrders,
         pendingOrders,
+        paidOrders: paidOrders.length,
+        unpaidOrders: unpaidOrders.length,
+        pendingPayments: pendingPayments.length,
         totalCustomers,
         totalRevenue,
+        conversionRate,
+        avgOrderValue,
+        abandonedCarts,
       })
     } catch (err) {
       console.error('Error fetching stats:', err)
@@ -119,7 +162,10 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="text-lg md:text-xl uppercase tracking-wider font-bold">Totale Omzet</div>
-          <div className="text-sm text-white/70 mt-1">Van {stats.totalOrders} orders</div>
+          <div className="text-sm text-white/80 mt-2 space-y-1">
+            <div>✓ {stats.paidOrders} betaalde orders</div>
+            <div>Ø €{stats.avgOrderValue.toFixed(2)} per order</div>
+          </div>
         </div>
 
         {/* Customers */}
@@ -139,6 +185,91 @@ export default function AdminDashboard() {
           </div>
           <div className="text-lg md:text-xl text-gray-600 uppercase tracking-wider font-bold">Klanten</div>
         </Link>
+      </div>
+
+      {/* CONVERSION FUNNEL - NEW */}
+      <div className="bg-white border-2 border-gray-200 p-6 md:p-8 order-1-5">
+        <h2 className="text-2xl md:text-3xl font-display font-bold mb-6 flex items-center gap-2">
+          📊 Conversion Funnel
+        </h2>
+        <div className="space-y-4">
+          {/* Funnel Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 border-l-4 border-gray-400">
+              <div className="text-3xl font-bold text-gray-700">{stats.totalOrders}</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
+                Totaal Orders
+              </div>
+            </div>
+            <div className="bg-yellow-50 p-4 border-l-4 border-yellow-400">
+              <div className="text-3xl font-bold text-yellow-700">{stats.pendingPayments}</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
+                ⏳ Wacht op betaling
+              </div>
+            </div>
+            <div className="bg-green-50 p-4 border-l-4 border-green-400">
+              <div className="text-3xl font-bold text-green-700">{stats.paidOrders}</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
+                ✓ Betaald
+              </div>
+            </div>
+            <div className="bg-red-50 p-4 border-l-4 border-red-400">
+              <div className="text-3xl font-bold text-red-700">{stats.abandonedCarts}</div>
+              <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold mt-1">
+                🛒 Abandoned (24h+)
+              </div>
+            </div>
+          </div>
+
+          {/* Conversion Rate */}
+          <div className="bg-gradient-to-r from-green-400 to-green-500 p-6 text-white mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm uppercase tracking-wider font-semibold mb-1">Conversie Rate</div>
+                <div className="text-4xl font-bold">{stats.conversionRate.toFixed(1)}%</div>
+              </div>
+              <div className="text-5xl opacity-50">📈</div>
+            </div>
+            <div className="mt-3 text-sm text-white/90">
+              {stats.paidOrders} van {stats.totalOrders} orders zijn succesvol betaald
+            </div>
+          </div>
+
+          {/* Visual Funnel */}
+          <div className="mt-6 space-y-2">
+            <div className="text-sm font-bold text-gray-700 mb-3">VISUELE FUNNEL:</div>
+            {/* Step 1: All Orders */}
+            <div className="relative">
+              <div 
+                className="bg-gray-300 h-12 flex items-center justify-between px-4"
+                style={{ width: '100%' }}
+              >
+                <span className="text-sm font-bold">Orders Aangemaakt</span>
+                <span className="text-sm font-bold">{stats.totalOrders}</span>
+              </div>
+            </div>
+            {/* Step 2: Pending */}
+            <div className="relative">
+              <div 
+                className="bg-yellow-300 h-12 flex items-center justify-between px-4"
+                style={{ width: `${stats.totalOrders > 0 ? (stats.pendingPayments / stats.totalOrders * 100) : 0}%`, minWidth: '20%' }}
+              >
+                <span className="text-sm font-bold">Wacht op betaling</span>
+                <span className="text-sm font-bold">{stats.pendingPayments}</span>
+              </div>
+            </div>
+            {/* Step 3: Paid */}
+            <div className="relative">
+              <div 
+                className="bg-green-400 h-12 flex items-center justify-between px-4"
+                style={{ width: `${stats.totalOrders > 0 ? (stats.paidOrders / stats.totalOrders * 100) : 0}%`, minWidth: '20%' }}
+              >
+                <span className="text-sm font-bold text-white">Betaald ✓</span>
+                <span className="text-sm font-bold text-white">{stats.paidOrders}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats Grid - SECOND ON MOBILE */}
