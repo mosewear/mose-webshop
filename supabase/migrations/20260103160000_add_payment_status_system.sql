@@ -82,7 +82,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to detect abandoned carts
 CREATE OR REPLACE FUNCTION get_abandoned_carts(
-  hours_since_checkout INTEGER DEFAULT 24,
+  hours_threshold INTEGER DEFAULT 24,
   email_not_sent_only BOOLEAN DEFAULT true
 )
 RETURNS TABLE (
@@ -117,7 +117,7 @@ BEGIN
   LEFT JOIN order_items oi ON oi.order_id = o.id
   WHERE o.payment_status IN ('unpaid', 'pending')
   AND o.checkout_started_at IS NOT NULL
-  AND o.checkout_started_at < NOW() - (hours_since_checkout || ' hours')::INTERVAL
+  AND o.checkout_started_at < NOW() - (hours_threshold || ' hours')::INTERVAL
   AND (NOT email_not_sent_only OR o.abandoned_cart_email_sent = false)
   AND o.status != 'cancelled'
   GROUP BY o.id, o.email, o.shipping_address, o.total, o.checkout_started_at, o.abandoned_cart_email_sent;

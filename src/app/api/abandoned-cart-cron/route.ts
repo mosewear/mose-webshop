@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     // Get abandoned carts using the database function
     const { data: abandonedCarts, error } = await supabase
       .rpc('get_abandoned_carts', { 
-        hours_since_checkout: abandonedHours,
+        hours_threshold: abandonedHours,
         email_not_sent_only: true 
       })
 
@@ -166,7 +166,7 @@ export async function GET(req: NextRequest) {
     // Get abandoned carts stats
     const { data: abandonedCarts, error } = await supabase
       .rpc('get_abandoned_carts', { 
-        hours_since_checkout: 24,
+        hours_threshold: 24,
         email_not_sent_only: false 
       })
 
