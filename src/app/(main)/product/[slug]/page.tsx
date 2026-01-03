@@ -360,19 +360,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Trust Badges - Desktop: Horizontal (1 row, 3 cols), Mobile: Accordion */}
-              <div className="hidden md:grid md:grid-cols-3 gap-2 border-2 border-gray-200 p-3">
-                <div className="flex flex-col items-center text-center gap-1">
-                  <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
-                  <span className="text-[10px] font-semibold text-gray-900 leading-tight">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
+              {/* Trust Badges - Desktop: Ultra compact inline, Mobile: Accordion */}
+              <div className="hidden md:flex items-center justify-start gap-3 text-xs text-gray-600 py-2">
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">Gratis verzending &gt;€{settings.free_shipping_threshold}</span>
                 </div>
-                <div className="flex flex-col items-center text-center gap-1 border-l border-gray-200">
-                  <RotateCcw className="w-5 h-5 text-brand-primary flex-shrink-0" />
-                  <span className="text-[10px] font-semibold text-gray-900 leading-tight">{settings.return_days} dagen bedenktijd</span>
+                <span className="text-gray-300">|</span>
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">{settings.return_days} dagen retour</span>
                 </div>
-                <div className="flex flex-col items-center text-center gap-1 border-l border-gray-200">
-                  <MapPin className="w-5 h-5 text-brand-primary flex-shrink-0" />
-                  <span className="text-[10px] font-semibold text-gray-900 leading-tight">Lokaal gemaakt in NL</span>
+                <span className="text-gray-300">|</span>
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">Lokaal gemaakt</span>
                 </div>
               </div>
 
