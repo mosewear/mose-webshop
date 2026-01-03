@@ -2,134 +2,176 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import Image from 'next/image'
 
 interface ImageUploadProps {
-  bucket: string
-  path?: string
-  onUploadComplete: (url: string) => void
-  maxSizeMB?: number
-  accept?: string
+  currentImageUrl?: string | null
+  onImageUploaded: (url: string) => void
+  onImageRemoved: () => void
+  folder?: string
 }
 
-export default function ImageUpload({
-  bucket,
-  path = '',
-  onUploadComplete,
-  maxSizeMB = 5,
-  accept = 'image/*',
+export default function ImageUpload({ 
+  currentImageUrl, 
+  onImageUploaded, 
+  onImageRemoved,
+  folder = 'categories'
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
-  const [progress, setProgress] = useState(0)
   const supabase = createClient()
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Reset
-    setError('')
-    setProgress(0)
-
-    // Validate file size
-    const fileSizeMB = file.size / (1024 * 1024)
-    if (fileSizeMB > maxSizeMB) {
-      setError(`Bestand is te groot (max ${maxSizeMB}MB)`)
-      return
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Alleen afbeeldingen zijn toegestaan')
-      return
-    }
-
+  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true)
+      setError('')
 
-      // Generate unique filename
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('Je moet een afbeelding selecteren')
+      }
+
+      const file = event.target.files[0]
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Alleen afbeeldingen zijn toegestaan')
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Afbeelding is te groot (max 5MB)')
+      }
+
+      // Create unique filename
       const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = path ? `${path}/${fileName}` : fileName
+      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
       // Upload to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
+        .from('images')
+        .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false,
+          upsert: false
         })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        throw uploadError
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath)
+        .from('images')
+        .getPublicUrl(data.path)
 
-      setProgress(100)
-      onUploadComplete(publicUrl)
-    } catch (err: any) {
-      setError(err.message)
+      onImageUploaded(publicUrl)
+    } catch (error: any) {
+      console.error('Error uploading image:', error)
+      setError(error.message || 'Fout bij uploaden van afbeelding')
     } finally {
       setUploading(false)
     }
   }
 
-  return (
-    <div className="w-full">
-      <label className="block cursor-pointer">
-        <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-          uploading
-            ? 'border-brand-primary bg-brand-primary/5'
-            : 'border-gray-300 hover:border-brand-primary hover:bg-gray-50'
-        }`}>
-          {uploading ? (
-            <div className="space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto" />
-              <p className="text-sm font-semibold text-brand-primary">Uploaden... {progress}%</p>
-            </div>
-          ) : (
-            <>
-              <svg
-                className="w-12 h-12 text-gray-400 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p className="text-sm font-semibold text-gray-700 mb-1">
-                Klik om een afbeelding te uploaden
-              </p>
-              <p className="text-xs text-gray-500">
-                Of sleep een bestand hierheen (max {maxSizeMB}MB)
-              </p>
-            </>
-          )}
-        </div>
-        <input
-          type="file"
-          className="hidden"
-          accept={accept}
-          onChange={handleFileSelect}
-          disabled={uploading}
-        />
-      </label>
+  const removeImage = async () => {
+    if (!currentImageUrl) return
 
+    try {
+      // Extract path from URL
+      const urlParts = currentImageUrl.split('/storage/v1/object/public/images/')
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1]
+        
+        // Delete from Supabase Storage
+        const { error } = await supabase.storage
+          .from('images')
+          .remove([filePath])
+
+        if (error) {
+          console.error('Error deleting image:', error)
+        }
+      }
+
+      onImageRemoved()
+    } catch (error) {
+      console.error('Error removing image:', error)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Current Image Preview */}
+      {currentImageUrl && (
+        <div className="relative w-full aspect-[3/4] max-w-xs border-2 border-black overflow-hidden">
+          <Image
+            src={currentImageUrl}
+            alt="Category afbeelding"
+            fill
+            className="object-cover"
+          />
+          <button
+            type="button"
+            onClick={removeImage}
+            className="absolute top-2 right-2 w-8 h-8 bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors border-2 border-black"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Upload Button */}
+      <div>
+        <label className="block cursor-pointer">
+          <div className={`
+            border-2 border-dashed border-gray-300 p-6 text-center
+            hover:border-brand-primary hover:bg-brand-primary/5
+            transition-colors
+            ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          `}>
+            {uploading ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary" />
+                <p className="text-sm text-gray-600">Uploaden...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                {currentImageUrl ? (
+                  <>
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                    <p className="text-sm font-bold text-gray-700">Klik om afbeelding te vervangen</p>
+                    <p className="text-xs text-gray-500">JPG, PNG, WEBP (max 5MB)</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <p className="text-sm font-bold text-gray-700">Klik om afbeelding te uploaden</p>
+                    <p className="text-xs text-gray-500">JPG, PNG, WEBP (max 5MB)</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={uploadImage}
+            disabled={uploading}
+            className="hidden"
+          />
+        </label>
+      </div>
+
+      {/* Error Message */}
       {error && (
-        <div className="mt-2 text-sm text-red-600 font-semibold">
+        <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-3 text-sm">
           {error}
         </div>
       )}
+
+      {/* Helper Text */}
+      <p className="text-xs text-gray-500">
+        💡 <strong>Tip:</strong> Gebruik een afbeelding met een aspect ratio van 3:4 voor het beste resultaat
+      </p>
     </div>
   )
 }
-
-
-

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import ImageUpload from '@/components/admin/ImageUpload'
 
 export default function CreateCategoryPage() {
   const [loading, setLoading] = useState(false)
@@ -138,22 +139,17 @@ export default function CreateCategoryPage() {
             />
           </div>
 
-          {/* Image URL */}
+          {/* Image Upload */}
           <div>
-            <label htmlFor="image_url" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Afbeelding URL
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Categorie Afbeelding
             </label>
-            <input
-              type="url"
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-              placeholder="https://example.com/image.jpg"
+            <ImageUpload
+              currentImageUrl={formData.image_url}
+              onImageUploaded={(url) => setFormData({ ...formData, image_url: url })}
+              onImageRemoved={() => setFormData({ ...formData, image_url: '' })}
+              folder="categories"
             />
-            <p className="mt-2 text-sm text-gray-500">
-              Tijdelijk: vul een externe URL in. Image upload komt later!
-            </p>
           </div>
         </div>
 
