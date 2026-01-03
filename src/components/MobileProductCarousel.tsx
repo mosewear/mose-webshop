@@ -7,6 +7,7 @@ import Image from 'next/image'
 const products = [
   {
     name: 'MOSE Basic Hoodie',
+    slug: 'mose-classic-hoodie-zwart',
     price: '€79,99',
     image: '/hoodieblack.png',
     badge: 'BESTSELLER',
@@ -14,6 +15,7 @@ const products = [
   },
   {
     name: 'MOSE Basic Tee',
+    slug: 'mose-essential-tee-zwart',
     price: '€34,99',
     image: '/blacktee.png',
     badge: 'NEW',
@@ -21,6 +23,7 @@ const products = [
   },
   {
     name: 'MOSE Snapback',
+    slug: 'mose-classic-cap-zwart',
     price: '€29,99',
     image: '/hoodie_cap.png',
     badge: 'TRENDING',
@@ -70,8 +73,8 @@ export default function MobileProductCarousel() {
         {products.map((product, idx) => (
           <Link
             key={idx}
-            href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
-            className="flex-none w-[80vw] min-w-[280px] snap-start active:scale-95 transition-transform"
+            href={`/product/${product.slug}`}
+            className="flex-none w-[80vw] min-w-[280px] snap-start"
           >
             <div className="bg-white overflow-hidden shadow-md border-2 border-black h-full">
               {/* Product Image Container */}
