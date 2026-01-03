@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
  * Log email sent to database for audit trail
  * NOTE: This is a server-only function
  */
-export async function logEmailSent(params: {
+export async function logEmail(params: {
   orderId: string
   emailType: string
   recipientEmail: string
@@ -42,7 +42,7 @@ export async function logEmailSent(params: {
       .eq('id', params.orderId)
     
   } catch (error) {
-    console.error('Error in logEmailSent:', error)
+    console.error('Error in logEmail:', error)
   }
 }
 

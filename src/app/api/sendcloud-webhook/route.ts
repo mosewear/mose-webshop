@@ -190,14 +190,10 @@ async function sendDeliveredEmailForOrder(order: any) {
       customerName,
       customerEmail,
       orderId: order.id,
-      orderTotal: order.total,
-      orderItems,
-      shippingAddress,
-      deliveryDate: new Date().toLocaleDateString('nl-NL', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
+      orderItems: orderItems.map((item: any) => ({
+        product_id: item.product_id || '',
+        product_name: item.name,
+      })),
     })
 
     if (result.success) {

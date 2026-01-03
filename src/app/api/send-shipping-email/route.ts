@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendShippingConfirmationEmail } from '@/lib/email'
 import { createClient } from '@/lib/supabase/server'
-import { logEmailSent } from '@/lib/email-logger'
+import { logEmail } from '@/lib/email-logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Log email to database
-    await logEmailSent({
+    await logEmail({
       orderId: order.id,
       emailType: 'shipped',
       recipientEmail: order.email,

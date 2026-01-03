@@ -121,6 +121,34 @@ export function calculateEstimatedDelivery(carrier?: string): string {
 }
 
 /**
+ * Calculate estimated delivery date as Date object (for database storage)
+ */
+export function calculateEstimatedDeliveryDate(carrier?: string): Date {
+  const today = new Date()
+  let daysToAdd = 2 // Default 2 days
+  
+  // Adjust based on carrier
+  if (carrier?.toUpperCase() === 'DHL' || carrier?.toLowerCase().includes('dhl')) {
+    daysToAdd = 1 // DHL is usually faster
+  } else if (carrier?.toUpperCase() === 'POSTNL' || carrier?.toLowerCase().includes('postnl')) {
+    daysToAdd = 2
+  }
+  
+  // Skip weekends
+  let deliveryDate = new Date(today)
+  deliveryDate.setDate(deliveryDate.getDate() + daysToAdd)
+  
+  // If delivery falls on weekend, move to Monday
+  if (deliveryDate.getDay() === 0) { // Sunday
+    deliveryDate.setDate(deliveryDate.getDate() + 1)
+  } else if (deliveryDate.getDay() === 6) { // Saturday
+    deliveryDate.setDate(deliveryDate.getDate() + 2)
+  }
+  
+  return deliveryDate
+}
+
+/**
  * Get carrier list for dropdown
  */
 export function getCarrierOptions() {

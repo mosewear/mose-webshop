@@ -6,7 +6,7 @@ import {
   sendOrderCancelledEmail,
   sendShippingConfirmationEmail 
 } from '@/lib/email'
-import { logEmailSent } from '@/lib/email-logger'
+import { logEmail } from '@/lib/email-logger'
 import { getEmailTypeForStatusChange } from '@/lib/order-utils'
 
 export async function POST(req: NextRequest) {
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log email to database
-    await logEmailSent({
+    await logEmail({
       orderId: order.id,
       emailType,
       recipientEmail: customerEmail,

@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
         trackingCode: parcel.tracking_number,
         trackingUrl: parcel.tracking_url,
         carrier: parcel.carrier.name,
-        estimatedDeliveryDate: estimatedDelivery.toISOString(),
+        estimatedDelivery: estimatedDelivery.toISOString(),
       })
 
       await logEmail({
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
         recipientEmail: order.email,
         subject: `📦 Je MOSE bestelling #${order.id.slice(0, 8).toUpperCase()} is verzonden!`,
         status: emailResult.success ? 'sent' : 'failed',
-        errorMessage: emailResult.error?.message,
+        errorMessage: emailResult.error ? String(emailResult.error) : undefined,
       })
 
       // Update last_email_sent
