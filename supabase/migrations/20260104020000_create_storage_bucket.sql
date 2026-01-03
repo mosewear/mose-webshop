@@ -3,6 +3,12 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('images', 'images', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Drop existing policies if they exist (to avoid conflicts)
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can update images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can delete images" ON storage.objects;
+
 -- Set up storage policies for the images bucket
 
 -- Allow public read access
