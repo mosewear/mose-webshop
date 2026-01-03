@@ -4,36 +4,48 @@ import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-const products = [
-  {
-    name: 'MOSE Basic Hoodie',
-    slug: 'mose-classic-hoodie-zwart',
-    price: '€79,99',
-    image: '/hoodieblack.png',
-    badge: 'BESTSELLER',
-    badgeColor: 'bg-brand-primary',
-  },
-  {
-    name: 'MOSE Basic Tee',
-    slug: 'mose-essential-tee-zwart',
-    price: '€34,99',
-    image: '/blacktee.png',
-    badge: 'NEW',
-    badgeColor: 'bg-black',
-  },
-  {
-    name: 'MOSE Snapback',
-    slug: 'mose-classic-cap-zwart',
-    price: '€29,99',
-    image: '/hoodie_cap.png',
-    badge: 'TRENDING',
-    badgeColor: 'bg-brand-primary',
-  },
-]
+interface Product {
+  id: string
+  name: string
+  slug: string
+  base_price: number
+  product_images?: { url: string }[]
+}
 
-export default function MobileProductCarousel() {
+interface MobileProductCarouselProps {
+  products?: Product[]
+}
+
+export default function MobileProductCarousel({ products: propProducts }: MobileProductCarouselProps) {
   const carouselRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+
+  // Fallback products
+  const fallbackProducts = [
+    {
+      id: '1',
+      name: 'MOSE Basic Hoodie',
+      slug: 'mose-classic-hoodie-zwart',
+      base_price: 79.99,
+      product_images: [{ url: '/hoodieblack.png' }],
+    },
+    {
+      id: '2',
+      name: 'MOSE Basic Tee',
+      slug: 'mose-essential-tee-zwart',
+      base_price: 34.99,
+      product_images: [{ url: '/blacktee.png' }],
+    },
+    {
+      id: '3',
+      name: 'MOSE Snapback',
+      slug: 'mose-classic-cap-zwart',
+      base_price: 29.99,
+      product_images: [{ url: '/hoodie_cap.png' }],
+    },
+  ]
+
+  const products = propProducts && propProducts.length > 0 ? propProducts : fallbackProducts
 
   // Update active index based on scroll position
   useEffect(() => {
@@ -49,7 +61,7 @@ export default function MobileProductCarousel() {
 
     carousel.addEventListener('scroll', handleScroll)
     return () => carousel.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [products.length])
 
   // Scroll to specific index when dot is clicked
   const scrollToIndex = (index: number) => {
@@ -70,62 +82,59 @@ export default function MobileProductCarousel() {
         ref={carouselRef}
         className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-4 pb-4 scroll-smooth"
       >
-        {products.map((product, idx) => (
-          <Link
-            key={idx}
-            href={`/product/${product.slug}`}
-            className="flex-none w-[80vw] min-w-[280px] snap-start"
-          >
-            <div className="bg-white overflow-hidden shadow-md border-2 border-black h-full">
-              {/* Product Image Container */}
-              <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover object-center"
-                />
-                
-                {/* Badge */}
-                <div className={`absolute top-2 left-2 ${product.badgeColor} text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg`}>
-                  {product.badge}
+        {products.map((product) => {
+          const primaryImage = product.product_images?.[0]?.url || '/hoodieblack.png'
+          
+          return (
+            <Link
+              key={product.id}
+              href={`/product/${product.slug}`}
+              className="flex-none w-[80vw] min-w-[280px] snap-start"
+            >
+              <div className="bg-white overflow-hidden shadow-md border-2 border-black h-full">
+                {/* Product Image Container */}
+                <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                  <Image
+                    src={primaryImage}
+                    alt={product.name}
+                    fill
+                    className="object-cover object-center"
+                  />
+                  
+                  {/* Wishlist Button - Always visible on mobile */}
+                  <button 
+                    className="absolute top-2 right-2 w-11 h-11 bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
+                    onClick={(e) => {
+                      e.preventDefault()
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
                 </div>
                 
-                {/* Wishlist Button - Always visible on mobile */}
-                <button 
-                  className="absolute top-2 right-2 w-11 h-11 bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    // Wishlist logic here
-                  }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
+                {/* Product Info */}
+                <div className="p-4 text-center">
+                  <h3 className="font-bold text-base mb-2 uppercase tracking-wide">
+                    {product.name}
+                  </h3>
+                  <p className="text-2xl font-bold text-brand-primary mb-3">€{product.base_price.toFixed(2)}</p>
+                  
+                  {/* Add to Cart Button */}
+                  <button 
+                    className="w-full bg-brand-primary text-white font-bold py-3 px-4 uppercase tracking-wider text-xs hover:bg-brand-primary-hover transition-colors active:scale-95"
+                    onClick={(e) => {
+                      e.preventDefault()
+                    }}
+                  >
+                    In Winkelmand
+                  </button>
+                </div>
               </div>
-              
-              {/* Product Info */}
-              <div className="p-4 text-center">
-                <h3 className="font-bold text-base mb-2 uppercase tracking-wide">
-                  {product.name}
-                </h3>
-                <p className="text-2xl font-bold text-brand-primary mb-3">{product.price}</p>
-                
-                {/* Add to Cart Button */}
-                <button 
-                  className="w-full bg-brand-primary text-white font-bold py-3 px-4 uppercase tracking-wider text-xs hover:bg-brand-primary-hover transition-colors active:scale-95"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    // Add to cart logic
-                  }}
-                >
-                  In Winkelmand
-                </button>
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Progress Dots - Square */}

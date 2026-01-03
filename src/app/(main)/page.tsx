@@ -281,79 +281,102 @@ export default function HomePage() {
           </div>
 
           {/* Mobile: Snap Scroll Carousel */}
-          <MobileProductCarousel />
+          <MobileProductCarousel products={featuredProducts} />
 
-// REPLACEMENT FOR LINES 286-379
-
-          {/* Desktop: Grid - Dynamic Products */}
+          {/* Desktop: Grid (unchanged) */}
           <div className="hidden md:grid grid-cols-3 gap-8">
-            {featuredProducts.length > 0 ? (
-              featuredProducts.map((product: any) => {
-                const primaryImage = product.product_images?.[0]?.url || '/hoodieblack.png'
-                
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/product/${product.slug}`}
-                    className="group active:scale-95 transition-transform"
-                  >
-                    <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
-                      {/* Product Image Container */}
-                      <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                        <Image
-                          src={primaryImage}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 33vw"
-                          className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
-                        />
-                        
-                        {/* Wishlist Button - Hover on desktop */}
-                        <button 
-                          className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
-                          onClick={(e) => {
-                            e.preventDefault();
-                          }}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </button>
-                        
-                        {/* Gradient Overlay on Hover (Desktop only) */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        
-                        {/* Quick View Button (Desktop only) */}
-                        <div className="absolute bottom-4 left-4 right-4 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                          <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Quick View
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* Product Info */}
-                      <div className="p-6 text-center">
-                        <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
-                          {product.name}
-                        </h3>
-                        <p className="text-2xl font-bold text-brand-primary">€{product.base_price.toFixed(2)}</p>
-                      </div>
+            {[
+              {
+                name: 'MOSE Basic Hoodie',
+                price: '€79,99',
+                image: '/hoodieblack.png',
+                badge: 'BESTSELLER',
+                badgeColor: 'bg-brand-primary',
+              },
+              {
+                name: 'MOSE Basic Tee',
+                price: '€34,99',
+                image: '/blacktee.png',
+                badge: 'NEW',
+                badgeColor: 'bg-black',
+              },
+              {
+                name: 'MOSE Snapback',
+                price: '€29,99',
+                image: '/hoodie_cap.png',
+                badge: 'TRENDING',
+                badgeColor: 'bg-brand-primary',
+              },
+            ].map((product, idx) => (
+              <Link
+                key={idx}
+                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
+                className="group active:scale-95 transition-transform"
+              >
+                <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
+                  {/* Product Image Container */}
+                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
+                    />
+                    
+                    {/* Badge */}
+                    <div className={`absolute top-4 left-4 ${product.badgeColor} text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
+                      {product.badge}
                     </div>
-                  </Link>
-                )
-              })
-            ) : (
-              // Fallback
-              <div className="col-span-3 text-center py-12 text-gray-500">
-                <p>Geen producten geselecteerd. Configureer ze in het admin panel.</p>
-              </div>
-            )}
+                    
+                    {/* Wishlist Button - Hover on desktop */}
+                    <button 
+                      className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Wishlist logic here
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Gradient Overlay on Hover (Desktop only) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Quick View Button (Desktop only) - Volledig verborgen tot hover */}
+                    <div className="absolute bottom-4 left-4 right-4 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                      <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Quick View
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Product Info */}
+                  <div className="p-6 text-center">
+                    <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-2xl font-bold text-brand-primary">{product.price}</p>
+                    
+                    {/* Size Dots - Altijd zichtbaar */}
+                    <div className="flex justify-center gap-2 mt-4 transition-opacity duration-300">
+                      {['S', 'M', 'L', 'XL'].map((size) => (
+                        <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-
         </div>
       </section>
 
@@ -361,8 +384,8 @@ export default function HomePage() {
       <section className="py-16 md:py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">{homepageSettings?.categories_title || 'SHOP OP CATEGORIE'}</h2>
-            <p className="text-lg text-gray-600">{homepageSettings?.categories_description || 'Ontdek onze collectie'}</p>
+            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">SHOP OP CATEGORIE</h2>
+            <p className="text-lg text-gray-600">Ontdek onze collectie</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
