@@ -478,41 +478,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             {/* Summary - Sticky Bottom (Desktop) / Fixed Bottom (Mobile) */}
             <div className="flex-shrink-0 border-t-2 border-black bg-gray-50 sticky bottom-0">
               {/* Desktop Summary */}
-              <div className="hidden md:block p-4 space-y-2">
-                {/* Price Breakdown - Better Hierarchy */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotaal</span>
-                    <span className="font-semibold text-gray-900">€{subtotal.toFixed(2)}</span>
-                  </div>
-                  
-                  {/* Promo Discount */}
-                  {promoDiscount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-brand-primary flex items-center gap-1">
-                        <Ticket size={14} />
-                        Korting
-                      </span>
-                      <span className="font-semibold text-brand-primary">-€{promoDiscount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">BTW 21%</span>
-                    <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Verzending</span>
-                    <span className="font-semibold text-gray-900">
-                      {shipping === 0 ? (
-                        <span className="text-brand-primary">GRATIS</span>
-                      ) : (
-                        `€${shipping.toFixed(2)}`
-                      )}
-                    </span>
-                  </div>
-                </div>
-
+              <div className="hidden md:block p-3 space-y-2">
                 {/* Progress to Free Shipping - Compact */}
                 {subtotalAfterDiscount < freeShippingThreshold && (
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-1.5">
@@ -593,14 +559,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   )}
                 </div>
 
-                {/* Divider & Total - PROMINENT! */}
-                <div className="border-t-2 border-black pt-3 mt-3">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="font-display text-lg uppercase tracking-wide">Totaal</span>
-                    <span className="font-display text-3xl font-bold">€{total.toFixed(2)}</span>
+                {/* Minimal Total - PROMINENT */}
+                <div className="border-t-2 border-black pt-3">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-display text-xl uppercase tracking-wide">Totaal</span>
+                    <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
                   </div>
-                  <p className="text-xs text-gray-600 text-right">
-                    Incl. €{totalBtw.toFixed(2)} BTW
+                  <p className="text-xs text-gray-500 text-right mt-1">
+                    Incl. BTW & verzending
                   </p>
                 </div>
 
@@ -608,7 +574,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <Link
                   href="/checkout"
                   onClick={onClose}
-                  className="block w-full py-3 bg-brand-primary text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors mt-3 border-2 border-brand-primary"
+                  className="block w-full py-3 bg-brand-primary text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors border-2 border-brand-primary"
                 >
                   Afrekenen
                 </Link>
