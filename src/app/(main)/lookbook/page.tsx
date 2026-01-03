@@ -2,146 +2,216 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 export default function LookbookPage() {
-  const lookbookItems = [
-    {
-      id: 1,
-      image: '/hoodieblack.png',
-      title: 'URBAN ESSENTIALS',
-      description: 'Basics die je elke dag wilt dragen',
-    },
-    {
-      id: 2,
-      image: '/tshirtwhite.png',
-      title: 'CLEAN & SIMPLE',
-      description: 'Minimalisme op zijn best',
-    },
-    {
-      id: 3,
-      image: '/hoodiegreen.png',
-      title: 'STATEMENT PIECES',
-      description: 'Opvallen zonder te schreeuwen',
-    },
-    {
-      id: 4,
-      image: '/capblack.png',
-      title: 'FINISHING TOUCHES',
-      description: 'De details maken het verschil',
-    },
-  ]
-
   return (
-    <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-6">LOOKBOOK</h1>
-          <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto">
-            Stoer. Modern. Zonder poespas.
-          </p>
-        </div>
+    <div className="min-h-screen bg-white">
+      {/* Compact Header */}
+      <div className="text-center py-12 md:py-16 px-4">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-display tracking-tight mb-4">
+          LOOKBOOK
+        </h1>
+        <p className="text-base md:text-xl text-gray-700">
+          Winter '25 / Stoer. Modern. Tijdloos.
+        </p>
+      </div>
 
-        {/* Hero Image */}
-        <div className="relative aspect-[16/9] md:aspect-[21/9] mb-16 border-2 border-black overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 pb-16 space-y-8 md:space-y-12">
+        {/* HERO - Full-bleed lifestyle photo */}
+        <div className="relative w-full aspect-[4/3] md:aspect-[16/9] lg:aspect-[21/9] border-2 lg:border-4 border-black overflow-hidden">
           <Image
             src="/hoodieblack.png"
-            alt="MOSE Lookbook Hero"
+            alt="MOSE Winter '25"
             fill
             sizes="(max-width: 1280px) 100vw, 1280px"
             className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h2 className="text-4xl md:text-6xl font-display mb-4">WINTER 2025</h2>
-              <p className="text-lg md:text-xl opacity-90">Premium basics voor echte mannen</p>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          <div className="absolute inset-0 flex items-center justify-center text-center text-white px-4">
+            <div>
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-display mb-3 md:mb-4 tracking-tight">
+                WINTER '25
+              </h2>
+              <p className="text-base md:text-xl lg:text-2xl opacity-90">
+                Premium basics voor echte mannen
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Lookbook Grid */}
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8 mb-16">
-          {lookbookItems.map((item) => (
-            <div key={item.id} className="group">
-              <div className="relative aspect-[3/4] mb-4 border-2 border-black overflow-hidden">
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <h3 className="text-2xl font-display mb-2">{item.title}</h3>
-              <p className="text-gray-600">{item.description}</p>
-            </div>
-          ))}
+        {/* SECTION 1: Image Left (40%) + Text Right (60%) - DESKTOP ASYMMETRIC */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
+          {/* Image - Mobile: full width on top, Desktop: 2 cols (40%) */}
+          <div className="lg:col-span-2 relative aspect-[3/4] border-2 border-black overflow-hidden group">
+            <Image
+              src="/hoodiegreen.png"
+              alt="Urban Essentials"
+              fill
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+            />
+          </div>
+
+          {/* Text - Mobile: below image, Desktop: 3 cols (60%) */}
+          <div className="lg:col-span-3 border-2 border-black p-6 md:p-8 lg:p-12 flex flex-col justify-center bg-white">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-display mb-4 tracking-tight">
+              URBAN ESSENTIALS
+            </h3>
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-6 md:mb-8">
+              Basics die je elke dag wilt dragen. Onze hoodies en tees zijn gemaakt van premium 
+              katoen en lokaal geproduceerd in Groningen. Geen gedoe, gewoon perfecte basics.
+            </p>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2 bg-black text-white px-6 md:px-8 py-3 md:py-4 font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors self-start"
+            >
+              Shop Basics
+              <ArrowRight size={20} />
+            </Link>
+          </div>
         </div>
 
-        {/* Philosophy */}
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-display mb-6">ONZE FILOSOFIE</h2>
-          <p className="text-lg text-gray-700 leading-relaxed mb-6">
-            Kleding hoeft niet ingewikkeld te zijn. Goede basics, perfect gemaakt, lang houdbaar. 
+        {/* SECTION 2: Text Left (60%) + Image Right (40%) - FLIPPED! - DESKTOP ZIGZAG */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
+          {/* Text - Mobile: on top, Desktop: 3 cols (60%) */}
+          <div className="lg:col-span-3 border-2 border-black p-6 md:p-8 lg:p-12 flex flex-col justify-center bg-white order-2 lg:order-1">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-display mb-4 tracking-tight">
+              CLEAN & SIMPLE
+            </h3>
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-6 md:mb-8">
+              Minimalisme op zijn best. Onze t-shirts zijn tijdloos en veelzijdig. 
+              Draag ze solo of layer ze onder een hoodie. Perfect voor elke gelegenheid.
+            </p>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2 bg-black text-white px-6 md:px-8 py-3 md:py-4 font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors self-start"
+            >
+              Shop Tees
+              <ArrowRight size={20} />
+            </Link>
+          </div>
+
+          {/* Image - Mobile: below text (flipped!), Desktop: 2 cols (40%) */}
+          <div className="lg:col-span-2 relative aspect-[3/4] border-2 border-black overflow-hidden group order-1 lg:order-2">
+            <Image
+              src="/tshirtwhite.png"
+              alt="Clean & Simple"
+              fill
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+            />
+          </div>
+        </div>
+
+        {/* SECTION 3: Big Quote Block - Full Width */}
+        <div className="bg-black text-white border-2 lg:border-4 border-black p-8 md:p-12 lg:p-16 text-center">
+          <blockquote className="text-2xl md:text-4xl lg:text-5xl font-display leading-tight mb-6 md:mb-8">
+            "KLEDING HOEFT NIET INGEWIKKELD TE ZIJN."
+          </blockquote>
+          <p className="text-base md:text-lg lg:text-xl opacity-90 max-w-3xl mx-auto">
+            Goede basics. Perfect gemaakt. Lang houdbaar. <br className="hidden md:inline" />
             Dat is waar we in geloven.
           </p>
-          <p className="text-lg text-gray-700 leading-relaxed">
-            Geen seizoenen, geen trends, geen gedoe. Gewoon tijdloze stukken die je 
-            jarenlang blijft dragen.
-          </p>
         </div>
 
-        {/* CTA Section */}
-        <div className="bg-brand-primary text-white p-8 md:p-12 text-center border-2 border-brand-primary">
-          <h2 className="text-3xl md:text-4xl font-display mb-4">SHOP DE COLLECTIE</h2>
-          <p className="text-lg mb-8 opacity-90">
-            Ontdek alle producten en vind jouw nieuwe favoriet
+        {/* SECTION 4: Triple Split (Desktop 3 cols, Mobile 2+1) */}
+        <div className="space-y-4 md:space-y-6">
+          {/* Desktop: 3 cols, Mobile: 2 cols */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+            {/* Item 1 */}
+            <div className="group">
+              <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
+                <Image
+                  src="/hoodieblack.png"
+                  alt="Statement Pieces"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+              <h4 className="text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider text-center">
+                Statement
+              </h4>
+            </div>
+
+            {/* Item 2 */}
+            <div className="group">
+              <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
+                <Image
+                  src="/capblack.png"
+                  alt="Finishing Touches"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+              <h4 className="text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider text-center">
+                Details
+              </h4>
+            </div>
+
+            {/* Item 3 - Full width on mobile (col-span-2), normal on desktop */}
+            <div className="group col-span-2 md:col-span-1">
+              <div className="relative aspect-square border-2 border-black overflow-hidden mb-3 md:mb-4">
+                <Image
+                  src="/tshirtwhite.png"
+                  alt="Timeless Design"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+              <h4 className="text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider text-center">
+                Timeless
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 5: Wide Lifestyle Photo with Text Overlay */}
+        <div className="relative w-full aspect-[16/9] md:aspect-[16/7] border-2 lg:border-4 border-black overflow-hidden group">
+          <Image
+            src="/hoodiegreen.png"
+            alt="Shop de Volledige Collectie"
+            fill
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            className="object-cover object-center group-hover:scale-105 transition-transform duration-1000"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 flex items-end justify-center p-6 md:p-8 lg:p-12">
+            <div className="text-center text-white max-w-2xl">
+              <h3 className="text-2xl md:text-3xl lg:text-4xl font-display mb-4 md:mb-6 tracking-tight">
+                SHOP DE VOLLEDIGE COLLECTIE
+              </h3>
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-2 bg-white text-black px-8 md:px-10 py-3 md:py-4 font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
+              >
+                Naar Shop
+                <ArrowRight size={20} />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 6: Final Green CTA */}
+        <div className="bg-brand-primary text-white border-2 lg:border-4 border-brand-primary p-8 md:p-12 lg:p-16 text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display mb-4 md:mb-6 tracking-tight">
+            ONTDEK MOSE
+          </h2>
+          <p className="text-base md:text-lg lg:text-xl mb-8 md:mb-10 opacity-95 max-w-2xl mx-auto leading-relaxed">
+            Lokaal gemaakt in Groningen. Premium kwaliteit. Tijdloos design. 
+            Ontdek waarom onze klanten MOSE blijven dragen.
           </p>
           <Link
             href="/shop"
-            className="inline-block px-12 py-5 bg-white text-brand-primary font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-white text-brand-primary px-10 md:px-12 py-4 md:py-5 font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors text-base md:text-lg"
           >
-            Naar Shop
+            Shop Nu
+            <ArrowRight size={22} />
           </Link>
-        </div>
-
-        {/* Values Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mt-16">
-          <div className="text-center p-8 border-2 border-gray-300">
-            <div className="w-16 h-16 bg-brand-primary text-white flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">Premium Materialen</h3>
-            <p className="text-gray-600">
-              Alleen de beste stoffen voor maximale kwaliteit en comfort
-            </p>
-          </div>
-          <div className="text-center p-8 border-2 border-gray-300">
-            <div className="w-16 h-16 bg-brand-primary text-white flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">Lokaal Gemaakt</h3>
-            <p className="text-gray-600">
-              100% geproduceerd in Groningen, Nederland
-            </p>
-          </div>
-          <div className="text-center p-8 border-2 border-gray-300">
-            <div className="w-16 h-16 bg-brand-primary text-white flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">Tijdloos Design</h3>
-            <p className="text-gray-600">
-              Geen trends, alleen stukken die jarenlang meegaan
-            </p>
-          </div>
         </div>
       </div>
     </div>
