@@ -288,8 +288,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <span className="text-black font-semibold">{product.name}</span>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 md:gap-16">
-            {/* LEFT: Image Gallery */}
+          <div className="grid md:grid-cols-[1.5fr_1fr] gap-6 md:gap-12">
+            {/* LEFT: Image Gallery (60% width) */}
             <div className="space-y-4">
               {/* Main Image - Clickable for zoom */}
               <div
@@ -317,9 +317,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 )}
               </div>
 
-              {/* Thumbnails */}
+              {/* Thumbnails - 4 on mobile, 5 on desktop */}
               {product.product_images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2 md:gap-4">
+                <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
                   {product.product_images.map((image, index) => (
                     <button
                       key={image.id}
@@ -343,8 +343,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               )}
             </div>
 
-            {/* RIGHT: Product Info */}
-            <div className="space-y-6">
+            {/* RIGHT: Product Info (40% width, sticky) */}
+            <div className="space-y-6 md:sticky md:top-24 md:self-start">
               {/* Title & Category */}
               <div>
                 <Link
@@ -360,25 +360,33 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Trust Badges - Desktop only */}
-              <div className="hidden md:block space-y-0 border-2 border-gray-200">
-                <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary py-3 px-4">
-                  <Truck className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-gray-900">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
+              {/* Trust Badges - Desktop: Horizontal (1 row, 3 cols), Mobile: Accordion */}
+              <div className="hidden md:grid md:grid-cols-3 gap-3 border-2 border-gray-200 p-4">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <Truck className="w-6 h-6 text-brand-primary flex-shrink-0" />
+                  <span className="text-xs font-semibold text-gray-900 leading-tight">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
                 </div>
-                <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary border-t border-gray-200 py-3 px-4">
-                  <RotateCcw className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-gray-900">{settings.return_days} dagen bedenktijd</span>
+                <div className="flex flex-col items-center text-center gap-2 border-l border-gray-200">
+                  <RotateCcw className="w-6 h-6 text-brand-primary flex-shrink-0" />
+                  <span className="text-xs font-semibold text-gray-900 leading-tight">{settings.return_days} dagen bedenktijd</span>
                 </div>
-                <div className="flex items-center gap-3 bg-gray-50 border-l-4 border-brand-primary border-t border-gray-200 py-3 px-4">
-                  <MapPin className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-gray-900">Lokaal gemaakt in Nederland</span>
+                <div className="flex flex-col items-center text-center gap-2 border-l border-gray-200">
+                  <MapPin className="w-6 h-6 text-brand-primary flex-shrink-0" />
+                  <span className="text-xs font-semibold text-gray-900 leading-tight">Lokaal gemaakt in NL</span>
                 </div>
               </div>
 
-              {/* Description - Desktop only */}
-              <div className="hidden md:block border-t-2 border-b-2 border-gray-200 py-6">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{product.description}</p>
+              {/* Description - Desktop: Compact with max height */}
+              <div className="hidden md:block border-t-2 border-b-2 border-gray-200 py-4">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line line-clamp-3">{product.description}</p>
+                {product.description && product.description.length > 150 && (
+                  <button 
+                    onClick={() => setActiveTab('description')}
+                    className="text-xs text-brand-primary hover:underline font-semibold mt-2"
+                  >
+                    Lees meer →
+                  </button>
+                )}
               </div>
 
               {/* Size Selector with Size Guide (Feature 2) */}
