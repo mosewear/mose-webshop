@@ -77,13 +77,20 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             slug,
             base_price,
             product_images (url),
-            category:categories (name)
+            categories (name)
           `)
           .ilike('name', `%${query}%`)
           .limit(8)
 
         if (!error && data) {
-          setResults(data as SearchResult[])
+          // Transform the data to match SearchResult type
+          const transformedData = data.map((item: any) => ({
+            ...item,
+            category: Array.isArray(item.categories) && item.categories.length > 0
+              ? item.categories[0]
+              : undefined
+          }))
+          setResults(transformedData)
         }
       } catch (err) {
         console.error('Search error:', err)
