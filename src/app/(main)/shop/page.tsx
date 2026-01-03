@@ -537,9 +537,9 @@ export default function ShopPage() {
                       href={`/product/${product.slug}`}
                       className="group block"
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 active:scale-95">
-                        {/* Image */}
-                        <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:shadow-2xl md:hover:-translate-y-2 active:scale-95">
+                        {/* Image - Larger on mobile */}
+                        <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden">
                           <Image
                             src={getPrimaryImage(product)}
                             alt={product.name}
@@ -560,9 +560,9 @@ export default function ShopPage() {
                             </div>
                           )}
 
-                          {/* Category Badge */}
+                          {/* Category Badge - Hidden on mobile */}
                           {product.category && (
-                            <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
+                            <div className="hidden md:block absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
                               {product.category.name}
                             </div>
                           )}
@@ -578,20 +578,15 @@ export default function ShopPage() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
 
-                        {/* Product Info */}
-                        <div className="p-3 md:p-4">
-                          <h3 className="font-bold text-sm md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
+                        {/* Product Info - Smaller padding on mobile */}
+                        <div className="p-2 md:p-4">
+                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
                             {product.name}
                           </h3>
                           <div className="flex items-center justify-between">
-                            <span className="text-lg md:text-2xl font-bold text-brand-primary">
+                            <span className="text-base md:text-2xl font-bold text-brand-primary">
                               €{product.base_price.toFixed(2)}
                             </span>
-                            {inStock && (
-                              <span className="text-xs md:text-sm text-gray-600">
-                                {totalStock}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
