@@ -55,36 +55,57 @@ export default function AnalyticsPage() {
     const supabase = createClient()
 
     try {
-      // Fetch revenue stats
-      const { data: revenueData, error: revenueError } = await supabase.rpc('get_revenue_stats')
+      // Fetch ALL orders first
+      const { data: allOrders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, payment_status, total, paid_at, checkout_started_at')
+        .order('created_at', { ascending: false })
       
-      if (revenueError) {
-        console.error('Error fetching revenue stats:', revenueError)
-      } else if (revenueData && revenueData.length > 0) {
-        const stats = revenueData[0]
-        
-        // Fetch additional counts
-        const { count: totalOrders } = await supabase.from('orders').select('*', { count: 'exact', head: true })
-        const { count: pendingCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('payment_status', 'pending')
-        const { count: failedCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('payment_status', 'failed')
-        
-        // Fetch abandoned carts
-        const { data: abandonedData } = await supabase.rpc('get_abandoned_carts', {
-          hours_threshold: 24,
-          email_not_sent_only: false,
-        })
-
-        setStats({
-          totalOrders: totalOrders || 0,
-          paidOrdersCount: stats.total_paid_orders || 0,
-          pendingPaymentsCount: pendingCount || 0,
-          abandonedCartsCount: abandonedData?.length || 0,
-          failedPaymentsCount: failedCount || 0,
-          totalRevenue: stats.total_revenue || 0,
-          avgOrderValue: stats.avg_order_value || 0,
-          conversionRate: stats.conversion_rate || 0,
-        })
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError)
+        setLoading(false)
+        return
       }
+
+      // Calculate stats manually for accuracy
+      const totalOrders = allOrders?.length || 0
+      const paidOrders = allOrders?.filter(o => o.payment_status === 'paid') || []
+      const pendingOrders = allOrders?.filter(o => o.payment_status === 'pending') || []
+      const failedOrders = allOrders?.filter(o => o.payment_status === 'failed') || []
+      
+      // Calculate abandoned carts (pending orders older than 24h)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const abandonedCarts = allOrders?.filter(o => 
+        o.payment_status === 'pending' && 
+        o.checkout_started_at && 
+        new Date(o.checkout_started_at) < twentyFourHoursAgo
+      ) || []
+      
+      // Calculate revenue (only paid orders)
+      const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0)
+      const avgOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
+      const conversionRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0
+      
+      console.log('📊 Analytics calculated:', {
+        totalOrders,
+        paidOrders: paidOrders.length,
+        pendingOrders: pendingOrders.length,
+        abandonedCarts: abandonedCarts.length,
+        totalRevenue,
+        avgOrderValue,
+        conversionRate,
+      })
+
+      setStats({
+        totalOrders,
+        paidOrdersCount: paidOrders.length,
+        pendingPaymentsCount: pendingOrders.length,
+        abandonedCartsCount: abandonedCarts.length,
+        failedPaymentsCount: failedOrders.length,
+        totalRevenue,
+        avgOrderValue,
+        conversionRate,
+      })
 
       // Fetch payment method breakdown
       const { data: ordersData } = await supabase
