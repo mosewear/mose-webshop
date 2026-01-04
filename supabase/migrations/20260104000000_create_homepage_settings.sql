@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS homepage_settings (
   stats_1_number TEXT DEFAULT '100%',
   stats_1_text TEXT DEFAULT 'Lokaal geproduceerd',
   stats_2_text TEXT DEFAULT 'Dagen retourrecht',
-  stats_3_number TEXT DEFAULT '⭐',
+  stats_3_number TEXT DEFAULT '∞',
   stats_3_text TEXT DEFAULT 'Premium kwaliteit',
   
   -- Trust Badges

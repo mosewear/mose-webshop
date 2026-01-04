@@ -17,6 +17,7 @@ export interface HomepageSettings {
   stats_2_text: string
   stats_3_number: string
   stats_3_text: string
+  stats_3_icon: string
   // Trust Badges
   trust_badge_1: string
   trust_badge_2_prefix: string

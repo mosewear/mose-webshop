@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Home, Package, FileText, Settings } from 'lucide-react'
+import IconSelector from '@/components/admin/IconSelector'
 
 interface HomepageSettings {
   id: string
@@ -22,6 +23,7 @@ interface HomepageSettings {
   stats_2_text: string
   stats_3_number: string
   stats_3_text: string
+  stats_3_icon: string
   // Trust Badges
   trust_badge_1: string
   trust_badge_2_prefix: string
@@ -361,6 +363,12 @@ export default function HomepageSettingsPage() {
                         value={settings.stats_3_text}
                         onChange={(e) => setSettings({ ...settings, stats_3_text: e.target.value })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <IconSelector
+                        value={settings.stats_3_icon || 'Star'}
+                        onChange={(iconName) => setSettings({ ...settings, stats_3_icon: iconName })}
                       />
                     </div>
                   </div>
