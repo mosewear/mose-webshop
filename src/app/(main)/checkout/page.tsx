@@ -472,8 +472,8 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid lg:grid-cols-5 gap-6">
-          {/* Checkout Form - 3/5 width */}
-          <div className="lg:col-span-3" ref={checkoutContainerRef}>
+          {/* Checkout Form - 3/5 width - SECOND ON MOBILE */}
+          <div className="lg:col-span-3 order-2 lg:order-1" ref={checkoutContainerRef}>
             <div className="bg-white border-2 border-black p-6 md:p-8">
               {currentStep === 'details' ? (
                 <>
@@ -843,8 +843,8 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-          {/* Order Summary - 2/5 width - Sticky */}
-          <div className="lg:col-span-2">
+          {/* Order Summary - 2/5 width - Sticky - FIRST ON MOBILE */}
+          <div className="lg:col-span-2 order-1 lg:order-2">
             {/* Mobile: Collapsible Summary */}
             <button
               onClick={() => setShowOrderSummary(!showOrderSummary)}
