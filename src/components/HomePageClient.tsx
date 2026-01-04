@@ -25,11 +25,29 @@ export default function HomePageClient({
   featuredProducts: initialFeaturedProducts,
   categories: initialCategories,
 }: HomePageClientProps) {
+  console.log('=== CLIENT COMPONENT: HomePageClient ===')
+  console.log('Props received:', {
+    siteSettings: initialSettings,
+    homepageSettings: initialHomepageSettings,
+    featuredProductsCount: initialFeaturedProducts?.length || 0,
+    featuredProducts: initialFeaturedProducts,
+    categoriesCount: initialCategories?.length || 0,
+    categories: initialCategories,
+  })
+  
   const [isVisible, setIsVisible] = useState(false)
   const settings = initialSettings
   const homepageSettings = initialHomepageSettings
   const featuredProducts = initialFeaturedProducts
   const categories = initialCategories
+  
+  console.log('Featured products in component:', featuredProducts)
+  console.log('Featured products check:', {
+    exists: !!featuredProducts,
+    isArray: Array.isArray(featuredProducts),
+    length: featuredProducts?.length,
+    condition: featuredProducts && featuredProducts.length > 0,
+  })
 
   useEffect(() => {
     setIsVisible(true)
