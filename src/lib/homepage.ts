@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 
 export interface HomepageSettings {
   // Hero
@@ -63,7 +63,7 @@ export interface HomepageSettings {
 }
 
 export async function getHomepageSettings(): Promise<HomepageSettings> {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   try {
     const { data, error } = await supabase
@@ -134,7 +134,7 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
 }
 
 export async function getFeaturedProducts(productIds: (string | null)[]) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   const validIds = productIds.filter((id): id is string => id !== null)
   
@@ -191,7 +191,7 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
 }
 
 export async function getCategoryData(categoryIds: (string | null)[]) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   const validIds = categoryIds.filter((id): id is string => id !== null)
   
