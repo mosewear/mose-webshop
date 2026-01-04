@@ -351,7 +351,7 @@ export default function CheckoutPage() {
       setLoading(false)
     } catch (error: any) {
       console.error('💥 CHECKOUT ERROR:', error)
-      alert(`Er is een fout opgetreden: ${error.message}`)
+      toast.error(`Er is een fout opgetreden: ${error.message}`)
       setLoading(false)
     }
   }
@@ -400,16 +400,8 @@ export default function CheckoutPage() {
       const { clientSecret: secret, paymentIntentId } = await paymentResponse.json()
       console.log('✅ Payment Intent created:', paymentIntentId)
       
-      // Save payment method to order
-      await fetch('/api/update-order-payment-method', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId,
-          paymentMethod,
-          paymentIntentId
-        }),
-      }).catch(err => console.error('Failed to update payment method:', err))
+      // Note: Order is already updated by create-payment-intent route
+      // (stripe_payment_intent_id, payment_method, payment_status, checkout_started_at)
       
       setClientSecret(secret)
       setIsCreatingIntent(false)
@@ -428,7 +420,7 @@ export default function CheckoutPage() {
 
   const handlePaymentError = (error: string) => {
     console.error('💥 Payment error:', error)
-    alert(`Betaling mislukt: ${error}`)
+    toast.error(`Betaling mislukt: ${error}`)
   }
 
   const updateForm = (field: keyof CheckoutForm, value: string) => {

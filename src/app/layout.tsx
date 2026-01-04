@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Montserrat } from 'next/font/google'
+import { Toaster } from 'react-hot-toast'
 import "./globals.css";
 
 const anton = Anton({
@@ -83,6 +84,44 @@ export default function RootLayout({
     <html lang="nl" className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth">
       <body className="antialiased font-sans">
         {children}
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#000',
+              color: '#fff',
+              border: '2px solid #000',
+              borderRadius: '0',
+              padding: '16px 20px',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
+              style: {
+                background: '#000',
+                color: '#10b981',
+                border: '2px solid #10b981',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+              style: {
+                background: '#000',
+                color: '#ef4444',
+                border: '2px solid #ef4444',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

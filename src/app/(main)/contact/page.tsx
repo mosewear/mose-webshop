@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import Link from 'next/link'
 
 export default function ContactPage() {
@@ -42,7 +43,7 @@ export default function ContactPage() {
       }
 
       if (!response.ok) {
-        alert(data.error || 'Er ging iets mis bij het versturen van je bericht')
+        toast.error(data.error || 'Er ging iets mis bij het versturen van je bericht')
         setLoading(false)
         return
       }

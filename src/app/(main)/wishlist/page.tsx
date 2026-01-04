@@ -65,7 +65,7 @@ export default function WishlistPage() {
       .limit(1)
 
     if (!variants || variants.length === 0) {
-      alert('Dit product is helaas uitverkocht')
+      toast.error('Dit product is helaas uitverkocht')
       return
     }
 
@@ -85,7 +85,7 @@ export default function WishlistPage() {
       sku: variant.sku,
     })
 
-    alert('✅ Toegevoegd aan winkelwagen!')
+    toast.success('Toegevoegd aan winkelwagen!')
   }
 
   if (loading || isLoading) {

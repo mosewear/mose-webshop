@@ -59,7 +59,7 @@ export default function LoginPage() {
         if (error) throw error
 
         // Show success message
-        alert('Account aangemaakt! Check je email voor verificatie.')
+        toast.success('Account aangemaakt! Check je email voor verificatie.')
         setIsLogin(true)
       }
     } catch (err: any) {

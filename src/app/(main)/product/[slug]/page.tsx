@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
+import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
 import { Truck, RotateCcw, MapPin } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
@@ -252,10 +253,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'Er ging iets mis bij het aanmelden')
+        toast.error(data.error || 'Er ging iets mis bij het aanmelden')
         return
       }
 
+      toast.success('Je bent aangemeld! We sturen je een email wanneer het product weer op voorraad is.')
       setNotifySubmitted(true)
       setTimeout(() => {
         setNotifySubmitted(false)
@@ -263,7 +265,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       }, 5000)
     } catch (error) {
       console.error('Error notifying:', error)
-      alert('Er ging iets mis bij het aanmelden')
+      toast.error('Er ging iets mis bij het aanmelden')
     }
   }
 
