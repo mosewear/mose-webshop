@@ -246,99 +246,94 @@ export default function HomePageClient({
           {/* Mobile: Snap Scroll Carousel */}
           <MobileProductCarousel products={featuredProducts} />
 
-          {/* Desktop: Grid (unchanged) */}
+          {/* Desktop: Grid - Dynamic Products */}
           <div className="hidden md:grid grid-cols-3 gap-8">
-            {[
-              {
-                name: 'MOSE Basic Hoodie',
-                price: '€79,99',
-                image: '/hoodieblack.png',
-                badge: 'BESTSELLER',
-                badgeColor: 'bg-brand-primary',
-              },
-              {
-                name: 'MOSE Basic Tee',
-                price: '€34,99',
-                image: '/blacktee.png',
-                badge: 'NEW',
-                badgeColor: 'bg-black',
-              },
-              {
-                name: 'MOSE Snapback',
-                price: '€29,99',
-                image: '/hoodie_cap.png',
-                badge: 'TRENDING',
-                badgeColor: 'bg-brand-primary',
-              },
-            ].map((product, idx) => (
-              <Link
-                key={idx}
-                href={`/product/${product.name.toLowerCase().replace(/ /g, '-')}`}
-                className="group active:scale-95 transition-transform"
-              >
-                <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
-                  {/* Product Image Container */}
-                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
-                    />
-                    
-                    {/* Badge */}
-                    <div className={`absolute top-4 left-4 ${product.badgeColor} text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg`}>
-                      {product.badge}
-                    </div>
-                    
-                    {/* Wishlist Button - Hover on desktop */}
-                    <button 
-                      className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // Wishlist logic here
-                      }}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </button>
-                    
-                    {/* Gradient Overlay on Hover (Desktop only) */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    {/* Quick View Button (Desktop only) - Volledig verborgen tot hover */}
-                    <div className="absolute bottom-4 left-4 right-4 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                      <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            {featuredProducts && featuredProducts.length > 0 ? (
+              featuredProducts.slice(0, 3).map((product: any) => (
+                <Link
+                  key={product.id}
+                  href={`/product/${product.slug}`}
+                  className="group active:scale-95 transition-transform"
+                >
+                  <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
+                    {/* Product Image Container */}
+                    <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+                      <Image
+                        src={product.images?.[0]?.image_url || product.image_url || '/placeholder.png'}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
+                      />
+                      
+                      {/* Badge - show if in stock */}
+                      {product.stock_quantity > 0 && (
+                        <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                          Op voorraad
+                        </div>
+                      )}
+                      {product.stock_quantity === 0 && (
+                        <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                          Uitverkocht
+                        </div>
+                      )}
+                      
+                      {/* Wishlist Button - Hover on desktop */}
+                      <button 
+                        className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Wishlist logic here
+                        }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                        Quick View
                       </button>
+                      
+                      {/* Gradient Overlay on Hover (Desktop only) */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Quick View Button (Desktop only) - Volledig verborgen tot hover */}
+                      <div className="absolute bottom-4 left-4 right-4 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                        <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Quick View
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="p-6 text-center">
-                    <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
-                      {product.name}
-                    </h3>
-                    <p className="text-2xl font-bold text-brand-primary">{product.price}</p>
                     
-                    {/* Size Dots - Altijd zichtbaar */}
-                    <div className="flex justify-center gap-2 mt-4 transition-opacity duration-300">
-                      {['S', 'M', 'L', 'XL'].map((size) => (
-                        <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
-                          {size}
-                        </span>
-                      ))}
+                    {/* Product Info */}
+                    <div className="p-6 text-center">
+                      <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
+                        {product.name}
+                      </h3>
+                      <p className="text-2xl font-bold text-brand-primary">€{product.price.toFixed(2)}</p>
+                      
+                      {/* Available Sizes - from variants */}
+                      {product.variants && product.variants.length > 0 && (
+                        <div className="flex justify-center gap-2 mt-4 transition-opacity duration-300">
+                          {[...new Set(product.variants.map((v: any) => v.size))].slice(0, 4).map((size: string) => (
+                            <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
+                              {size}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            ) : (
+              // Fallback: show placeholder if no products
+              <div className="col-span-3 text-center py-12 text-gray-500">
+                <p className="text-lg">Geen featured producten ingesteld.</p>
+                <p className="text-sm mt-2">Selecteer producten in de admin homepage settings.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
