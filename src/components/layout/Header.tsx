@@ -53,7 +53,11 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <Link 
+              href="/" 
+              className="flex items-center hover:opacity-80 transition-opacity"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               <Image
                 src="/logomose.png"
                 alt="MOSE"
