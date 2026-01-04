@@ -311,7 +311,9 @@ export default function HomePageClient({
                       <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
                         {product.name}
                       </h3>
-                      <p className="text-2xl font-bold text-brand-primary">€{product.price.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-brand-primary">
+                        €{product.price ? product.price.toFixed(2) : '0.00'}
+                      </p>
                       
                       {/* Available Sizes - from variants */}
                       {product.variants && product.variants.length > 0 && (

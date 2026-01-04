@@ -148,15 +148,28 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
         name,
         slug,
         base_price,
-        product_images!inner(url, is_primary)
+        stock_quantity,
+        product_images(url, is_primary),
+        product_variants(size, color, stock_quantity)
       `)
       .in('id', validIds)
-      .eq('product_images.is_primary', true)
 
     if (error) throw error
     
+    // Transform data to match expected format
+    const products = data?.map(p => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: p.base_price,
+      stock_quantity: p.stock_quantity,
+      image_url: p.product_images?.find((img: any) => img.is_primary)?.url || p.product_images?.[0]?.url,
+      images: p.product_images,
+      variants: p.product_variants,
+    })) || []
+    
     // Maintain order based on input
-    return validIds.map(id => data?.find(p => p.id === id)).filter(Boolean)
+    return validIds.map(id => products.find(p => p.id === id)).filter(Boolean)
   } catch (error) {
     console.error('Error fetching featured products:', error)
     return []
