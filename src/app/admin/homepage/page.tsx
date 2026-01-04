@@ -150,6 +150,15 @@ export default function HomepageSettingsPage() {
 
       if (error) throw error
 
+      // ✅ Revalidate homepage cache after save
+      try {
+        await fetch('/api/revalidate-homepage', { method: 'POST' })
+        console.log('Homepage cache revalidated')
+      } catch (revalidateError) {
+        console.warn('Failed to revalidate homepage:', revalidateError)
+        // Don't fail the save if revalidation fails
+      }
+
       setMessage('✅ Homepage instellingen opgeslagen!')
       setTimeout(() => setMessage(''), 3000)
     } catch (error) {

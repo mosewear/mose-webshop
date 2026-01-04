@@ -143,11 +143,25 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
   }
   
   try {
-    // First, get the basic product data (NO stock_quantity in products table!)
-    const { data: productsData, error: productsError } = await supabase
-      .from('products')
-      .select('id, name, slug, base_price')
-      .in('id', validIds)
+    // ✅ PARALLEL QUERIES - 3x faster!
+    const [
+      { data: productsData, error: productsError },
+      { data: imagesData, error: imagesError },
+      { data: variantsData, error: variantsError }
+    ] = await Promise.all([
+      supabase
+        .from('products')
+        .select('id, name, slug, base_price')
+        .in('id', validIds),
+      supabase
+        .from('product_images')
+        .select('product_id, url, is_primary')
+        .in('product_id', validIds),
+      supabase
+        .from('product_variants')
+        .select('product_id, size, color, stock_quantity')
+        .in('product_id', validIds)
+    ])
 
     if (productsError) {
       console.error('Products query error:', productsError)
@@ -158,21 +172,9 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
       return []
     }
 
-    // Then get images for these products
-    const { data: imagesData, error: imagesError } = await supabase
-      .from('product_images')
-      .select('product_id, url, is_primary')
-      .in('product_id', validIds)
-
     if (imagesError) {
       console.error('Images query error:', imagesError)
     }
-
-    // Then get variants for these products
-    const { data: variantsData, error: variantsError } = await supabase
-      .from('product_variants')
-      .select('product_id, size, color, stock_quantity')
-      .in('product_id', validIds)
 
     if (variantsError) {
       console.error('Variants query error:', variantsError)

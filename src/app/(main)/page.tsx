@@ -2,9 +2,8 @@ import { getSiteSettings } from '@/lib/settings'
 import { getHomepageSettings, getFeaturedProducts, getCategoryData } from '@/lib/homepage'
 import HomePageClient from '@/components/HomePageClient'
 
-// Force dynamic rendering to prevent caching issues
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ✅ Smart Caching: Cache for 60 seconds, rebuild in background
+export const revalidate = 60
 
 export default async function HomePage() {
   // Fetch all data server-side
