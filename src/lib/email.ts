@@ -54,6 +54,34 @@ const EMAIL_STYLES = `
   .urgency-banner { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: #fff; padding: 20px; text-align: center; font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
   .cart-items { background: #f8f8f8; padding: 20px; margin: 20px 0; border-left: 3px solid #FF6B6B; }
   .testimonial { background: #f0f9f4; padding: 20px; border-left: 3px solid #2ECC71; margin: 20px 0; font-style: italic; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a !important; color: #e0e0e0 !important; }
+    .wrapper { background: #1a1a1a !important; }
+    .content { background: #1a1a1a !important; color: #e0e0e0 !important; }
+    .hero { background: #1a1a1a !important; }
+    h1 { color: #ffffff !important; }
+    .hero-sub { color: #cccccc !important; }
+    .hero-text { color: #aaaaaa !important; }
+    .info-box { background: #2a2a2a !important; border-left-color: #2ECC71 !important; }
+    .info-box h3 { color: #ffffff !important; }
+    .info-box p { color: #e0e0e0 !important; }
+    .summary { background: #000000 !important; color: #ffffff !important; }
+    .sum-label { color: #999 !important; }
+    .sum-line { color: #ffffff !important; }
+    .sum-btw { color: #999 !important; }
+    .product { background: #2a2a2a !important; border-left-color: #2ECC71 !important; }
+    .prod-img { background: #1a1a1a !important; border-color: #444 !important; }
+    .prod-name { color: #ffffff !important; }
+    .prod-meta { color: #cccccc !important; }
+    .prod-price { color: #ffffff !important; }
+    .section-title { color: #ffffff !important; }
+    .testimonial { background: #2a2a2a !important; color: #e0e0e0 !important; border-left-color: #2ECC71 !important; }
+    .cart-items { background: #2a2a2a !important; border-left-color: #FF6B6B !important; }
+    p { color: #e0e0e0 !important; }
+    a { color: #2ECC71 !important; }
+    strong { color: #ffffff !important; }
+  }
 `
 
 interface OrderEmailProps {
@@ -104,11 +132,13 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
     <div class="hero">
       <div class="icon-circle icon-success">
         <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
@@ -152,9 +182,10 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -211,11 +242,13 @@ export async function sendShippingConfirmationEmail(props: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
     <div class="hero">
       <div class="icon-circle icon-shipping">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
@@ -252,9 +285,10 @@ export async function sendShippingConfirmationEmail(props: {
         <li>Je ontvangt een melding zodra het in de buurt is</li>
       </ul>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -298,11 +332,13 @@ export async function sendOrderProcessingEmail(props: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
     <div class="hero">
       <div class="icon-circle icon-processing">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
@@ -339,9 +375,10 @@ export async function sendOrderProcessingEmail(props: {
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -401,11 +438,13 @@ export async function sendOrderDeliveredEmail(props: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
     <div class="hero">
       <div class="icon-circle icon-delivered">
         <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
@@ -456,9 +495,10 @@ export async function sendOrderDeliveredEmail(props: {
         <a href="${siteUrl}/shop" class="button" style="color:#fff;text-decoration:none;">BEKIJK SHOP</a>
       </div>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -502,11 +542,13 @@ export async function sendOrderCancelledEmail(props: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
     <div class="hero">
       <div class="icon-circle icon-cancelled">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
@@ -547,9 +589,10 @@ export async function sendOrderCancelledEmail(props: {
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">Heb je vragen over je annulering? Neem gerust contact met ons op. We helpen je graag!</p>
       </div>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -632,7 +675,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   <title>Je MOSE items wachten op je! 🛒</title>
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
     <!-- Logo -->
     <div class="logo-bar">
@@ -750,12 +793,10 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     </div>
     
     <!-- Footer -->
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px">
-        <a href="mailto:info@mosewear.nl" style="color: #FF9500;">info@mosewear.nl</a> • 
-        <a href="tel:+31502111931" style="color: #FF9500;">+31 50 211 1931</a>
-      </p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
         Deze email is verzonden omdat je items in je winkelwagen hebt achtergelaten.<br>
         Wil je geen herinneringen meer ontvangen? <a href="${siteUrl}/unsubscribe?email=${customerEmail}" style="color: #888;">Klik hier</a>
@@ -810,11 +851,13 @@ export async function sendBackInStockEmail(props: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
+<body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
     <div class="hero">
       <div class="icon-circle icon-success">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
@@ -868,9 +911,10 @@ export async function sendBackInStockEmail(props: {
         </p>
       </div>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
         Je ontving deze email omdat je aangaf geïnteresseerd te zijn in dit product toen het uitverkocht was.
       </p>
@@ -925,43 +969,56 @@ export async function sendContactFormEmail(props: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <style>${EMAIL_STYLES}</style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
-    <div class="content" style="padding: 40px 20px;">
-      <h1 style="margin: 0 0 20px; font-size: 32px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">
-        Nieuw Contactformulier Bericht
-      </h1>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff;" data-ogsc="#ffffff">
+  <div class="wrapper" style="max-width: 600px; margin: 0 auto;">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" />
+    </div>
+    <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
+      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.15); background: #2ECC71;">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" style="display: block;">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h1 style="margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">NIEUW BERICHT</h1>
+      <div class="hero-sub" style="font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contactformulier</div>
+      <div class="hero-text" style="font-size: 14px; color: #999;">Van ${name}</div>
+    </div>
+    <div class="content" style="padding: 32px 20px;">
+      <div class="section-title" style="font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; margin-top: 28px;">Contactgegevens</div>
       
-      <div class="info-box" style="margin: 24px 0;">
-        <h3>Van</h3>
-        <p style="margin: 8px 0 0 0; font-size: 15px;">
-          <strong>${name}</strong><br>
-          <a href="mailto:${email}" style="color: #2ECC71; font-weight: 600;">${email}</a>
+      <div class="info-box" style="background: #f8f8f8; padding: 20px; border-left: 3px solid #2ECC71; margin: 16px 0;">
+        <h3 style="margin-top: 0; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Van</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.6;">
+          <strong style="font-weight: 700;">${name}</strong><br>
+          <a href="mailto:${email}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${email}</a>
         </p>
       </div>
 
-      <div class="info-box" style="margin: 24px 0;">
-        <h3>Onderwerp</h3>
-        <p style="margin: 8px 0 0 0; font-size: 15px; font-weight: 600;">${subjectLabel}</p>
+      <div class="info-box" style="background: #f8f8f8; padding: 20px; border-left: 3px solid #2ECC71; margin: 16px 0;">
+        <h3 style="margin-top: 0; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Onderwerp</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; font-weight: 600; line-height: 1.6;">${subjectLabel}</p>
       </div>
 
-      <div class="info-box" style="margin: 24px 0;">
-        <h3>Bericht</h3>
+      <div class="info-box" style="background: #f8f8f8; padding: 20px; border-left: 3px solid #2ECC71; margin: 16px 0;">
+        <h3 style="margin-top: 0; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Bericht</h3>
         <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.8; color: #444; white-space: pre-wrap;">${message}</p>
       </div>
 
       <div style="background: #f8f8f8; padding: 20px; margin: 24px 0; border-left: 3px solid #2ECC71;">
-        <p style="margin: 0; font-size: 13px; color: #666;">
-          <strong>Antwoord:</strong> Je kunt direct antwoorden op deze email om contact op te nemen met ${name}.
+        <p style="margin: 0; font-size: 13px; color: #666; line-height: 1.6;">
+          <strong style="font-weight: 700;">Antwoord:</strong> Je kunt direct antwoorden op deze email om contact op te nemen met ${name}.
         </p>
       </div>
     </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
   </div>
 </body>
@@ -974,11 +1031,14 @@ export async function sendContactFormEmail(props: {
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Contact <contact@mosewear.nl>',
+      from: 'MOSE Contact <contact@orders.mosewear.nl>',
       to: [adminEmail],
       replyTo: email,
       subject: `Contactformulier: ${subjectLabel} - ${name}`,
       html: htmlContent,
+      headers: {
+        'X-Entity-Ref-ID': `contact-${Date.now()}`,
+      },
     })
 
     if (error) {
