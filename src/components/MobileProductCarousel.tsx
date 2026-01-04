@@ -8,8 +8,11 @@ interface Product {
   id: string
   name: string
   slug: string
-  base_price: number
+  base_price?: number
+  price?: number  // Added for transformed products
   product_images?: { url: string }[]
+  image_url?: string  // Added for transformed products
+  images?: { url: string }[]  // Added for transformed products
 }
 
 interface MobileProductCarouselProps {
@@ -83,7 +86,11 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
         className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-4 pb-4 scroll-smooth"
       >
         {products.map((product) => {
-          const primaryImage = product.product_images?.[0]?.url || '/hoodieblack.png'
+          // Support both old format (product_images) and new format (image_url or images)
+          const primaryImage = product.image_url 
+            || product.images?.[0]?.url 
+            || product.product_images?.[0]?.url 
+            || '/hoodieblack.png'
           
           return (
             <Link
