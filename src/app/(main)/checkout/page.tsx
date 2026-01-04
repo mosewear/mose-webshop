@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic'
 import { loadStripe, Stripe } from '@stripe/stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
