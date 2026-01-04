@@ -91,6 +91,7 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
       stats_2_text: 'Dagen retourrecht',
       stats_3_number: '∞',
       stats_3_text: 'Premium kwaliteit',
+      stats_3_icon: 'Star',
       trust_badge_1: 'Lokaal gemaakt',
       trust_badge_2_prefix: 'Gratis verzending vanaf',
       trust_badge_3_suffix: 'dagen retour',
