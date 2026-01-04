@@ -316,7 +316,7 @@ export default function HomePageClient({
                       {/* Available Sizes - from variants */}
                       {product.variants && product.variants.length > 0 && (
                         <div className="flex justify-center gap-2 mt-4 transition-opacity duration-300">
-                          {[...new Set(product.variants.map((v: any) => v.size))].slice(0, 4).map((size: string) => (
+                          {Array.from(new Set<string>(product.variants.map((v: any) => v.size))).slice(0, 4).map((size) => (
                             <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
                               {size}
                             </span>
