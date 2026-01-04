@@ -146,10 +146,10 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
   console.log('Fetching featured products for IDs:', validIds)
   
   try {
-    // First, get the basic product data
+    // First, get the basic product data (NO stock_quantity in products table!)
     const { data: productsData, error: productsError } = await supabase
       .from('products')
-      .select('id, name, slug, base_price, stock_quantity')
+      .select('id, name, slug, base_price')
       .in('id', validIds)
 
     if (productsError) {
@@ -194,12 +194,15 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
       const productVariants = variantsData?.filter(v => v.product_id === p.id) || []
       const primaryImage = productImages.find(img => img.is_primary)
       
+      // Calculate total stock from variants
+      const totalStock = productVariants.reduce((sum, variant) => sum + (variant.stock_quantity || 0), 0)
+      
       return {
         id: p.id,
         name: p.name,
         slug: p.slug,
         price: p.base_price,
-        stock_quantity: p.stock_quantity,
+        stock_quantity: totalStock, // Calculated from variants
         image_url: primaryImage?.url || productImages[0]?.url || '/placeholder.png',
         images: productImages,
         variants: productVariants,
