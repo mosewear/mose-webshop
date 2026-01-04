@@ -502,7 +502,7 @@ export default function HomePageClient({
               {/* Floating Badge */}
               <div className="absolute -bottom-6 -right-6 bg-brand-primary text-white p-8 shadow-2xl">
                 <div className="text-center">
-                  <div className="text-4xl font-display mb-2">2020</div>
+                  <div className="text-4xl font-display mb-2">{homepageSettings.story_founded_year}</div>
                   <div className="text-sm uppercase tracking-wider">Opgericht</div>
                 </div>
               </div>
