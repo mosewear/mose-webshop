@@ -9,7 +9,7 @@ import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
 import { loadStripe, Stripe } from '@stripe/stripe-js'
 import { createClient } from '@/lib/supabase/client'
-import { UserCircle2, ShoppingBag } from 'lucide-react'
+import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -72,18 +72,25 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState<string>()
   const [isCreatingIntent, setIsCreatingIntent] = useState(false)
   const [paymentCancelled, setPaymentCancelled] = useState(false)
+  
+  // Promo code state
+  const [promoCodeExpanded, setPromoCodeExpanded] = useState(false)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoError, setPromoError] = useState('')
+  const [promoDiscount, setPromoDiscount] = useState(0)
 
   const subtotal = getTotal()
-  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
+  const subtotalAfterDiscount = subtotal - promoDiscount
+  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
   // BTW berekening (21% is al inbegrepen in de prijzen)
-  const subtotalExclBtw = subtotal / 1.21
-  const btwAmount = subtotal - subtotalExclBtw
+  const subtotalExclBtw = subtotalAfterDiscount / 1.21
+  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
   const shippingExclBtw = shipping / 1.21
   const shippingBtw = shipping - shippingExclBtw
   const totalBtw = btwAmount + shippingBtw
   
-  const total = subtotal + shipping
+  const total = subtotalAfterDiscount + shipping
 
   useEffect(() => {
     // Check for cancelled payment
@@ -220,13 +227,51 @@ export default function CheckoutPage() {
     }
   }
 
+  // Handle promo code
+  const handleApplyPromo = async () => {
+    setPromoError('')
+    
+    try {
+      const response = await fetch('/api/validate-promo-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCode.toUpperCase(),
+          orderTotal: subtotal,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.valid) {
+        setPromoDiscount(data.discountAmount)
+        setPromoCodeExpanded(false)
+      } else {
+        setPromoError(data.error || 'Code ongeldig')
+        setPromoDiscount(0)
+      }
+    } catch (error) {
+      console.error('Error validating promo code:', error)
+      setPromoError('Kon code niet valideren')
+      setPromoDiscount(0)
+    }
+  }
+
+  const handleRemovePromo = () => {
+    setPromoCode('')
+    setPromoDiscount(0)
+    setPromoError('')
+    setPromoCodeExpanded(false)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     console.log('🚀 CHECKOUT STARTED')
     console.log('📋 Form data:', form)
     console.log('🛒 Cart items:', items)
-    console.log('💰 Totals:', { subtotal, shipping, total })
+    console.log('💰 Totals:', { subtotal, subtotalAfterDiscount, promoDiscount, shipping, total })
+    console.log('🎟️ Promo code:', promoCode || 'None')
 
     if (!validateForm()) {
       console.log('❌ Form validation failed:', errors)
@@ -244,9 +289,11 @@ export default function CheckoutPage() {
         email: form.email,
         status: 'pending',
         total: total,
-        subtotal: subtotal,
+        subtotal: subtotalAfterDiscount, // After discount
         shipping_cost: shipping,
         tax_amount: 0,
+        promo_code: promoCode || null,
+        discount_amount: promoDiscount,
         shipping_address: {
           name: `${form.firstName} ${form.lastName}`,
           address: form.address,
@@ -863,9 +910,82 @@ export default function CheckoutPage() {
                     )}
                   </span>
                 </div>
-                {subtotal < freeShippingThreshold && subtotal > 0 && (
+                
+                {/* Promo Code Section */}
+                {!promoCodeExpanded && promoDiscount === 0 ? (
+                  <button
+                    onClick={() => setPromoCodeExpanded(true)}
+                    className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors border-t border-gray-200 pt-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Ticket size={16} />
+                      <span>Kortingscode?</span>
+                    </div>
+                    <ChevronDown size={16} />
+                  </button>
+                ) : promoDiscount === 0 ? (
+                  <div className="space-y-2 border-t border-gray-200 pt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <Ticket size={16} />
+                        <span>Kortingscode</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setPromoCodeExpanded(false)
+                          setPromoError('')
+                          setPromoCode('')
+                        }}
+                        className="p-1 hover:bg-gray-200 transition-colors rounded"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => {
+                          setPromoCode(e.target.value.toUpperCase())
+                          setPromoError('')
+                        }}
+                        onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                        placeholder="CODE"
+                        className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                      />
+                      <button
+                        onClick={handleApplyPromo}
+                        disabled={!promoCode}
+                        className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        Toepassen
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="text-xs text-red-600 font-semibold">{promoError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="border-t border-gray-200 pt-3">
+                    <div className="flex items-center justify-between py-2 text-sm bg-brand-primary/10 px-3 rounded">
+                      <div className="flex items-center gap-2 text-brand-primary font-semibold">
+                        <Ticket size={16} />
+                        <span>{promoCode}</span>
+                        <span className="text-xs">(-€{promoDiscount.toFixed(2)})</span>
+                      </div>
+                      <button
+                        onClick={handleRemovePromo}
+                        className="text-xs text-gray-600 hover:text-black font-semibold uppercase"
+                      >
+                        Verwijder
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {subtotalAfterDiscount < freeShippingThreshold && subtotalAfterDiscount > 0 && (
                   <div className="bg-gray-100 border border-gray-300 p-2 text-xs text-gray-900 font-semibold">
-                    Nog €{(freeShippingThreshold - subtotal).toFixed(2)} tot gratis verzending!
+                    Nog €{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)} tot gratis verzending!
                   </div>
                 )}
               </div>
