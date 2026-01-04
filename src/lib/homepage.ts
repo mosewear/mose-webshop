@@ -146,37 +146,65 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
   console.log('Fetching featured products for IDs:', validIds)
   
   try {
-    const { data, error } = await supabase
+    // First, get the basic product data
+    const { data: productsData, error: productsError } = await supabase
       .from('products')
-      .select(`
-        id,
-        name,
-        slug,
-        base_price,
-        stock_quantity,
-        images:product_images(url, is_primary),
-        variants:product_variants(size, color, stock_quantity)
-      `)
+      .select('id, name, slug, base_price, stock_quantity')
       .in('id', validIds)
 
-    if (error) {
-      console.error('Supabase query error:', error)
-      throw error
+    if (productsError) {
+      console.error('Products query error:', productsError)
+      throw productsError
     }
     
-    console.log('Raw Supabase data:', data)
+    console.log('Products data:', productsData)
     
-    // Transform data to match expected format
-    const products = data?.map(p => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      price: p.base_price,
-      stock_quantity: p.stock_quantity,
-      image_url: (p as any).images?.find((img: any) => img.is_primary)?.url || (p as any).images?.[0]?.url,
-      images: (p as any).images,
-      variants: (p as any).variants,
-    })) || []
+    if (!productsData || productsData.length === 0) {
+      console.log('No products found for given IDs')
+      return []
+    }
+
+    // Then get images for these products
+    const { data: imagesData, error: imagesError } = await supabase
+      .from('product_images')
+      .select('product_id, url, is_primary')
+      .in('product_id', validIds)
+
+    if (imagesError) {
+      console.error('Images query error:', imagesError)
+    }
+    
+    console.log('Images data:', imagesData)
+
+    // Then get variants for these products
+    const { data: variantsData, error: variantsError } = await supabase
+      .from('product_variants')
+      .select('product_id, size, color, stock_quantity')
+      .in('product_id', validIds)
+
+    if (variantsError) {
+      console.error('Variants query error:', variantsError)
+    }
+    
+    console.log('Variants data:', variantsData)
+    
+    // Combine the data
+    const products = productsData.map(p => {
+      const productImages = imagesData?.filter(img => img.product_id === p.id) || []
+      const productVariants = variantsData?.filter(v => v.product_id === p.id) || []
+      const primaryImage = productImages.find(img => img.is_primary)
+      
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.base_price,
+        stock_quantity: p.stock_quantity,
+        image_url: primaryImage?.url || productImages[0]?.url || '/placeholder.png',
+        images: productImages,
+        variants: productVariants,
+      }
+    })
     
     console.log('Transformed products:', products)
     
