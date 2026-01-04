@@ -23,13 +23,15 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
   const carouselRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
 
-  // Fallback products
-  const fallbackProducts = [
+  // Fallback products (matching new Product interface)
+  const fallbackProducts: Product[] = [
     {
       id: '1',
       name: 'MOSE Basic Hoodie',
       slug: 'mose-classic-hoodie-zwart',
       base_price: 79.99,
+      price: 79.99,
+      image_url: '/hoodieblack.png',
       product_images: [{ url: '/hoodieblack.png' }],
     },
     {
@@ -37,6 +39,8 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
       name: 'MOSE Basic Tee',
       slug: 'mose-essential-tee-zwart',
       base_price: 34.99,
+      price: 34.99,
+      image_url: '/blacktee.png',
       product_images: [{ url: '/blacktee.png' }],
     },
     {
@@ -44,6 +48,8 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
       name: 'MOSE Snapback',
       slug: 'mose-classic-cap-zwart',
       base_price: 29.99,
+      price: 29.99,
+      image_url: '/hoodie_cap.png',
       product_images: [{ url: '/hoodie_cap.png' }],
     },
   ]
