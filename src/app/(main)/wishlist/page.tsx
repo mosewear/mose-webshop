@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
+import toast from 'react-hot-toast'
 
 interface Product {
   id: string
