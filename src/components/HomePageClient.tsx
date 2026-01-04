@@ -149,7 +149,7 @@ export default function HomePageClient({
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_3_number || '∞'}</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_3_number || '⭐'}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
                 {homepageSettings?.stats_3_text || 'Premium kwaliteit'}
               </div>
