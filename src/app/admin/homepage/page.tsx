@@ -348,15 +348,6 @@ export default function HomepageSettingsPage() {
                       💡 <strong>Tip:</strong> Stat 2 cijfer wordt automatisch gehaald uit de retour dagen setting
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Stat 3 Cijfer</label>
-                      <input
-                        type="text"
-                        value={settings.stats_3_number}
-                        onChange={(e) => setSettings({ ...settings, stats_3_number: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
                       <label className="block text-sm font-bold mb-2">Stat 3 Tekst</label>
                       <input
                         type="text"
@@ -366,6 +357,7 @@ export default function HomepageSettingsPage() {
                       />
                     </div>
                     <div>
+                      <label className="block text-sm font-bold mb-2">Stat 3 Icon</label>
                       <IconSelector
                         value={settings.stats_3_icon || 'Star'}
                         onChange={(iconName) => setSettings({ ...settings, stats_3_icon: iconName })}
