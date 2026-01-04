@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
+import { Star } from 'lucide-react'
 import { type HomepageSettings } from '@/lib/homepage'
 
 interface HomePageClientProps {
@@ -149,7 +150,9 @@ export default function HomePageClient({
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_3_number || '⭐'}</div>
+              <div className="flex justify-center items-center mb-2 md:mb-3">
+                <Star className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 fill-white stroke-white drop-shadow-lg" />
+              </div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
                 {homepageSettings?.stats_3_text || 'Premium kwaliteit'}
               </div>
