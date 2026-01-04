@@ -138,7 +138,12 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
   
   const validIds = productIds.filter((id): id is string => id !== null)
   
-  if (validIds.length === 0) return []
+  if (validIds.length === 0) {
+    console.log('No valid product IDs provided')
+    return []
+  }
+  
+  console.log('Fetching featured products for IDs:', validIds)
   
   try {
     const { data, error } = await supabase
@@ -149,12 +154,17 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
         slug,
         base_price,
         stock_quantity,
-        product_images(url, is_primary),
-        product_variants(size, color, stock_quantity)
+        images:product_images(url, is_primary),
+        variants:product_variants(size, color, stock_quantity)
       `)
       .in('id', validIds)
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase query error:', error)
+      throw error
+    }
+    
+    console.log('Raw Supabase data:', data)
     
     // Transform data to match expected format
     const products = data?.map(p => ({
@@ -163,13 +173,17 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
       slug: p.slug,
       price: p.base_price,
       stock_quantity: p.stock_quantity,
-      image_url: p.product_images?.find((img: any) => img.is_primary)?.url || p.product_images?.[0]?.url,
-      images: p.product_images,
-      variants: p.product_variants,
+      image_url: (p as any).images?.find((img: any) => img.is_primary)?.url || (p as any).images?.[0]?.url,
+      images: (p as any).images,
+      variants: (p as any).variants,
     })) || []
     
+    console.log('Transformed products:', products)
+    
     // Maintain order based on input
-    return validIds.map(id => products.find(p => p.id === id)).filter(Boolean)
+    const orderedProducts = validIds.map(id => products.find(p => p.id === id)).filter(Boolean)
+    console.log('Ordered products:', orderedProducts)
+    return orderedProducts
   } catch (error) {
     console.error('Error fetching featured products:', error)
     return []
