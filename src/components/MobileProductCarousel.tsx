@@ -119,7 +119,9 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                   <h3 className="font-bold text-base mb-2 uppercase tracking-wide">
                     {product.name}
                   </h3>
-                  <p className="text-2xl font-bold text-brand-primary mb-3">€{product.base_price.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-brand-primary mb-3">
+                    €{typeof product.price === 'number' ? product.price.toFixed(2) : (typeof product.base_price === 'number' ? product.base_price.toFixed(2) : '0.00')}
+                  </p>
                   
                   {/* Add to Cart Button */}
                   <button 
