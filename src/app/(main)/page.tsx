@@ -2,9 +2,9 @@ import { getSiteSettings } from '@/lib/settings'
 import { getHomepageSettings, getFeaturedProducts, getCategoryData } from '@/lib/homepage'
 import HomePageClient from '@/components/HomePageClient'
 
-// ✅ FULL STATIC GENERATION - Generated once at build time
-export const dynamic = 'force-static'
-export const revalidate = false
+// ✅ ISR with On-Demand Revalidation
+// Homepage cached for 1 hour, auto-updates when admin saves changes
+export const revalidate = 3600 // Cache for 1 hour
 
 export default async function HomePage() {
   // Fetch all data server-side
