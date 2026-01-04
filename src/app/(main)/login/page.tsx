@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const router = useRouter()
