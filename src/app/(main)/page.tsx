@@ -2,8 +2,9 @@ import { getSiteSettings } from '@/lib/settings'
 import { getHomepageSettings, getFeaturedProducts, getCategoryData } from '@/lib/homepage'
 import HomePageClient from '@/components/HomePageClient'
 
-// ✅ Smart Caching: Cache for 60 seconds, rebuild in background
-export const revalidate = 60
+// ✅ FULL STATIC GENERATION - Generated once at build time
+export const dynamic = 'force-static'
+export const revalidate = false
 
 export default async function HomePage() {
   // Fetch all data server-side

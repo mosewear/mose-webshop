@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Home, Package, FileText, Settings } from 'lucide-react'
 import IconSelector from '@/components/admin/IconSelector'
+import RevalidateButton from '@/components/admin/RevalidateButton'
 
 interface HomepageSettings {
   id: string
@@ -150,17 +151,19 @@ export default function HomepageSettingsPage() {
 
       if (error) throw error
 
-      // ✅ Revalidate homepage cache after save
+      // ✅ Revalidate static homepage after save
       try {
-        await fetch('/api/revalidate-homepage', { method: 'POST' })
-        console.log('Homepage cache revalidated')
+        const revalidateResponse = await fetch('/api/revalidate-homepage', { method: 'POST' })
+        if (revalidateResponse.ok) {
+          console.log('Homepage revalidated successfully')
+        }
       } catch (revalidateError) {
         console.warn('Failed to revalidate homepage:', revalidateError)
         // Don't fail the save if revalidation fails
       }
 
-      setMessage('✅ Homepage instellingen opgeslagen!')
-      setTimeout(() => setMessage(''), 3000)
+      setMessage('✅ Homepage opgeslagen! De wijzigingen zijn binnen ~10 seconden live.')
+      setTimeout(() => setMessage(''), 5000)
     } catch (error) {
       console.error('Error saving:', error)
       setMessage('❌ Error bij opslaan')
@@ -838,12 +841,13 @@ export default function HomepageSettingsPage() {
 
         {/* Save Button - Sticky */}
         <div className="sticky bottom-0 bg-white border-t-2 border-black p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {message && (
               <p className={`font-bold text-sm md:text-base ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
                 {message}
               </p>
             )}
+            <RevalidateButton />
           </div>
           <button
             onClick={handleSave}
