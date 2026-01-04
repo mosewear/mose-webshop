@@ -16,15 +16,33 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
-    // TODO: Send email via API
-    // For now, simulate submission
-    setTimeout(() => {
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'Er ging iets mis bij het versturen van je bericht')
+        setLoading(false)
+        return
+      }
+
       setSubmitted(true)
       setLoading(false)
       setForm({ name: '', email: '', subject: '', message: '' })
       setTimeout(() => setSubmitted(false), 5000)
-    }, 1000)
+    } catch (error) {
+      console.error('Error submitting contact form:', error)
+      alert('Er ging iets mis bij het versturen van je bericht')
+      setLoading(false)
+    }
   }
 
   return (

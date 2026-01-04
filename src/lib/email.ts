@@ -785,3 +785,211 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     return { success: false, error }
   }
 }
+
+export async function sendBackInStockEmail(props: {
+  customerEmail: string
+  productName: string
+  productSlug: string
+  productImageUrl?: string
+  productPrice: number
+  variantInfo?: {
+    size: string
+    color: string
+  }
+}) {
+  const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo } = props
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const logoUrl = `${siteUrl}/logomose.png`
+  const productUrl = `${siteUrl}/product/${productSlug}`
+
+  const variantText = variantInfo ? `${variantInfo.size} • ${variantInfo.color}` : ''
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="hero">
+      <div class="icon-circle icon-success">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h1>WEER OP VOORRAAD!</h1>
+      <div class="hero-sub">Je Favoriete Product</div>
+      <div class="hero-text">Goed nieuws! ${productName} is weer beschikbaar</div>
+    </div>
+    <div class="content">
+      <div class="section-title">🎉 Je Wacht Is Voorbij</div>
+      <p style="font-size: 15px; line-height: 1.8; color: #444; margin-bottom: 24px;">
+        We hebben goed nieuws! Het product waar je op wachtte is weer op voorraad. 
+        ${variantInfo ? `Je hebt aangegeven dat je geïnteresseerd bent in: ${variantText}.` : ''}
+      </p>
+
+      <div class="product" style="margin: 24px 0; border-left-color: #2ECC71;">
+        ${productImageUrl ? `
+        <div class="prod-img" style="width: 80px; height: 100px;">
+          <img src="${productImageUrl}" alt="${productName}" style="width:100%;height:100%;object-fit:cover;display:block;" />
+        </div>
+        ` : ''}
+        <div class="prod-info">
+          <div class="prod-name">${productName}</div>
+          ${variantInfo ? `<div class="prod-meta">Maat ${variantInfo.size} • ${variantInfo.color}</div>` : ''}
+        </div>
+        <div class="prod-price">€${productPrice.toFixed(2)}</div>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${productUrl}" class="button" style="color:#fff;text-decoration:none;">BEKIJK PRODUCT</a>
+        <p style="font-size: 12px; color: #999; margin-top: 12px;">
+          Bestel nu voordat het weer uitverkocht is
+        </p>
+      </div>
+
+      <div class="info-box">
+        <h3>⚡ Waarom Nu Bestellen?</h3>
+        <ul class="checklist">
+          <li>Beperkte voorraad - dit product is populair!</li>
+          <li>Gratis verzending vanaf €100</li>
+          <li>14 dagen retourrecht</li>
+          <li>Lokaal gemaakt in Groningen</li>
+        </ul>
+      </div>
+
+      <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
+        <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
+          ⏰ <strong>Let op:</strong> Deze notificatie is éénmalig. Bestel nu om zeker te zijn van je maat en kleur!
+        </p>
+      </div>
+    </div>
+    <div class="footer">
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+      <p style="margin-top: 16px; font-size: 11px; color: #666;">
+        Je ontving deze email omdat je aangaf geïnteresseerd te zijn in dit product toen het uitverkocht was.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Notificaties <bestellingen@orders.mosewear.nl>',
+      to: [customerEmail],
+      subject: `🎉 ${productName} is weer op voorraad! - MOSE`,
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('Error sending back-in-stock email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Back-in-stock email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendContactFormEmail(props: {
+  name: string
+  email: string
+  subject: string
+  message: string
+}) {
+  const { name, email, subject, message } = props
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const logoUrl = `${siteUrl}/logomose.png`
+  const adminEmail = process.env.CONTACT_EMAIL || 'info@mosewear.nl'
+
+  const subjectLabels: { [key: string]: string } = {
+    order: 'Vraag over bestelling',
+    product: 'Vraag over product',
+    return: 'Retour of ruil',
+    other: 'Iets anders',
+  }
+  const subjectLabel = subjectLabels[subject] || subject
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE" style="display:block;max-width:140px;margin:0 auto;filter:brightness(0) invert(1);"/></div>
+    <div class="content" style="padding: 40px 20px;">
+      <h1 style="margin: 0 0 20px; font-size: 32px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">
+        Nieuw Contactformulier Bericht
+      </h1>
+      
+      <div class="info-box" style="margin: 24px 0;">
+        <h3>Van</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px;">
+          <strong>${name}</strong><br>
+          <a href="mailto:${email}" style="color: #2ECC71; font-weight: 600;">${email}</a>
+        </p>
+      </div>
+
+      <div class="info-box" style="margin: 24px 0;">
+        <h3>Onderwerp</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; font-weight: 600;">${subjectLabel}</p>
+      </div>
+
+      <div class="info-box" style="margin: 24px 0;">
+        <h3>Bericht</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.8; color: #444; white-space: pre-wrap;">${message}</p>
+      </div>
+
+      <div style="background: #f8f8f8; padding: 20px; margin: 24px 0; border-left: 3px solid #2ECC71;">
+        <p style="margin: 0; font-size: 13px; color: #666;">
+          <strong>Antwoord:</strong> Je kunt direct antwoorden op deze email om contact op te nemen met ${name}.
+        </p>
+      </div>
+    </div>
+    <div class="footer">
+      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not set')
+      return { success: false, error: 'Email service not configured' }
+    }
+
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Contact <contact@mosewear.nl>',
+      to: [adminEmail],
+      replyTo: email,
+      subject: `Contactformulier: ${subjectLabel} - ${name}`,
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('Error sending contact form email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Contact form email sent:', data)
+    return { success: true, data }
+  } catch (error: any) {
+    console.error('Error sending email:', error)
+    return { success: false, error: error?.message || 'Unknown error' }
+  }
+}

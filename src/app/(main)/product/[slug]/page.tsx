@@ -235,12 +235,36 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const handleNotifyMe = async () => {
     if (!notifyEmail || !product || !selectedVariant) return
-    // TODO: Save to database
-    setNotifySubmitted(true)
-    setTimeout(() => {
-      setNotifySubmitted(false)
-      setNotifyEmail('')
-    }, 3000)
+
+    try {
+      const response = await fetch('/api/back-in-stock/notify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: notifyEmail,
+          productId: product.id,
+          variantId: selectedVariant.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'Er ging iets mis bij het aanmelden')
+        return
+      }
+
+      setNotifySubmitted(true)
+      setTimeout(() => {
+        setNotifySubmitted(false)
+        setNotifyEmail('')
+      }, 5000)
+    } catch (error) {
+      console.error('Error notifying:', error)
+      alert('Er ging iets mis bij het aanmelden')
+    }
   }
 
   if (loading) {

@@ -166,6 +166,18 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Forgot Password Link */}
+          {isLogin && (
+            <div className="mt-4 text-center">
+              <Link
+                href="/forgot-password"
+                className="text-brand-primary hover:underline font-semibold text-sm"
+              >
+                Wachtwoord vergeten?
+              </Link>
+            </div>
+          )}
+
           {/* Toggle */}
           <div className="mt-6 pt-6 border-t-2 border-gray-200 text-center">
             <p className="text-gray-600">

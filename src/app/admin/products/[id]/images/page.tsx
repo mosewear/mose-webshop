@@ -132,6 +132,27 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
     if (!confirm('Weet je zeker dat je deze afbeelding wilt verwijderen?')) return
 
     try {
+      // Extract file path from URL and delete from storage
+      // URL format: https://project.supabase.co/storage/v1/object/public/bucket/path
+      if (imageUrl.includes('/storage/v1/object/public/')) {
+        const urlParts = imageUrl.split('/storage/v1/object/public/')
+        if (urlParts.length > 1) {
+          const pathParts = urlParts[1].split('/')
+          const bucket = pathParts[0]
+          const filePath = pathParts.slice(1).join('/')
+
+          // Delete from Supabase Storage
+          const { error: storageError } = await supabase.storage
+            .from(bucket)
+            .remove([filePath])
+
+          if (storageError) {
+            console.error('Error deleting from storage:', storageError)
+            // Continue anyway - database deletion is more important
+          }
+        }
+      }
+
       // Delete from database
       const { error } = await supabase
         .from('product_images')
@@ -139,9 +160,6 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         .eq('id', imageId)
 
       if (error) throw error
-
-      // TODO: Also delete from storage if needed
-      // Extract file path from URL and delete from bucket
 
       fetchImages()
     } catch (err: any) {
