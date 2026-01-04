@@ -139,11 +139,8 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
   const validIds = productIds.filter((id): id is string => id !== null)
   
   if (validIds.length === 0) {
-    console.log('No valid product IDs provided')
     return []
   }
-  
-  console.log('Fetching featured products for IDs:', validIds)
   
   try {
     // First, get the basic product data (NO stock_quantity in products table!)
@@ -157,10 +154,7 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
       throw productsError
     }
     
-    console.log('Products data:', productsData)
-    
     if (!productsData || productsData.length === 0) {
-      console.log('No products found for given IDs')
       return []
     }
 
@@ -173,8 +167,6 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
     if (imagesError) {
       console.error('Images query error:', imagesError)
     }
-    
-    console.log('Images data:', imagesData)
 
     // Then get variants for these products
     const { data: variantsData, error: variantsError } = await supabase
@@ -185,8 +177,6 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
     if (variantsError) {
       console.error('Variants query error:', variantsError)
     }
-    
-    console.log('Variants data:', variantsData)
     
     // Combine the data
     const products = productsData.map(p => {
@@ -209,12 +199,8 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
       }
     })
     
-    console.log('Transformed products:', products)
-    
     // Maintain order based on input
-    const orderedProducts = validIds.map(id => products.find(p => p.id === id)).filter(Boolean)
-    console.log('Ordered products:', orderedProducts)
-    return orderedProducts
+    return validIds.map(id => products.find(p => p.id === id)).filter(Boolean)
   } catch (error) {
     console.error('Error fetching featured products:', error)
     return []
