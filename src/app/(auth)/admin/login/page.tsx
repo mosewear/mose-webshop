@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
             alt="MOSE"
             width={200}
             height={67}
-            className="mx-auto mb-8 brightness-0 invert"
+            className="mx-auto mb-8 brightness-0 invert h-auto"
           />
           <h1 className="font-display text-4xl md:text-5xl mb-4 tracking-tight">
             ADMIN LOGIN
