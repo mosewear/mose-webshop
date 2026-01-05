@@ -639,7 +639,7 @@ export default function CheckoutPage() {
     toast.error(`Betaling mislukt: ${error}`)
   }
 
-  const updateForm = (field: keyof CheckoutForm, value: string) => {
+  const updateForm = (field: keyof CheckoutForm, value: string, validateNow: boolean = false) => {
     setForm((prev) => {
       const updated = { ...prev, [field]: value }
       
@@ -657,9 +657,17 @@ export default function CheckoutPage() {
       return updated
     })
     
-    // Real-time validation
-    const error = validateField(field, value)
-    setErrors((prev) => ({ ...prev, [field]: error }))
+    // Alleen valideren als validateNow true is (bij blur) of als het veld leeg wordt gemaakt
+    // Voor postcode en huisnummer: alleen valideren bij blur, niet tijdens typen
+    if (validateNow || (field !== 'postalCode' && field !== 'huisnummer')) {
+      const error = validateField(field, value)
+      setErrors((prev) => ({ ...prev, [field]: error }))
+    } else {
+      // Clear error tijdens typen voor postcode en huisnummer
+      if (field === 'postalCode' || field === 'huisnummer') {
+        setErrors((prev) => ({ ...prev, [field]: undefined }))
+      }
+    }
     
     // Reset address lookup state als gebruiker handmatig wijzigt
     if (field === 'postalCode' || field === 'huisnummer' || field === 'toevoeging') {
@@ -967,7 +975,10 @@ export default function CheckoutPage() {
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
-                            onBlur={() => {
+                            onBlur={(e) => {
+                              // Valideer bij blur
+                              updateForm('postalCode', e.target.value, true)
+                              
                               // Auto-trigger lookup als postcode + huisnummer compleet zijn
                               if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
                                 const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
@@ -990,7 +1001,9 @@ export default function CheckoutPage() {
                             disabled={addressLookup.isLookingUp}
                             maxLength={7}
                           />
-                          {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
+                          <div className="min-h-[20px] mt-1">
+                            {errors.postalCode && <p className="text-red-600 text-xs">{errors.postalCode}</p>}
+                          </div>
                         </div>
                         <div className="col-span-2 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
@@ -1004,7 +1017,10 @@ export default function CheckoutPage() {
                               const value = e.target.value.replace(/\D/g, '')
                               updateForm('huisnummer', value)
                             }}
-                            onBlur={() => {
+                            onBlur={(e) => {
+                              // Valideer bij blur
+                              updateForm('huisnummer', e.target.value, true)
+                              
                               // Auto-trigger lookup als postcode + huisnummer compleet zijn
                               if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
                                 const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
@@ -1026,7 +1042,9 @@ export default function CheckoutPage() {
                             disabled={addressLookup.isLookingUp}
                             maxLength={5}
                           />
-                          {errors.huisnummer && <p className="text-red-600 text-xs mt-1">{errors.huisnummer}</p>}
+                          <div className="min-h-[20px] mt-1">
+                            {errors.huisnummer && <p className="text-red-600 text-xs">{errors.huisnummer}</p>}
+                          </div>
                         </div>
                         <div className="col-span-2 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
@@ -1047,7 +1065,9 @@ export default function CheckoutPage() {
                             disabled={addressLookup.isLookingUp}
                             maxLength={10}
                           />
-                          {errors.toevoeging && <p className="text-red-600 text-xs mt-1">{errors.toevoeging}</p>}
+                          <div className="min-h-[20px] mt-1">
+                            {errors.toevoeging && <p className="text-red-600 text-xs">{errors.toevoeging}</p>}
+                          </div>
                         </div>
                         <div className="col-span-5 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
@@ -1085,6 +1105,7 @@ export default function CheckoutPage() {
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
+                            onBlur={(e) => updateForm('postalCode', e.target.value, true)}
                             className={`w-full px-4 py-3 border-2 ${
                               errors.postalCode ? 'border-red-600' : 'border-gray-300'
                             } focus:border-brand-primary focus:outline-none`}
@@ -1093,7 +1114,9 @@ export default function CheckoutPage() {
                             disabled={addressLookup.isLookingUp}
                             maxLength={7}
                           />
-                          {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
+                          <div className="min-h-[20px] mt-1">
+                            {errors.postalCode && <p className="text-red-600 text-xs">{errors.postalCode}</p>}
+                          </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                           <div className="col-span-2">
@@ -1107,6 +1130,7 @@ export default function CheckoutPage() {
                                 const value = e.target.value.replace(/\D/g, '')
                                 updateForm('huisnummer', value)
                               }}
+                              onBlur={(e) => updateForm('huisnummer', e.target.value, true)}
                               className={`w-full px-4 py-3 border-2 ${
                                 errors.huisnummer ? 'border-red-600' : 'border-gray-300'
                               } focus:border-brand-primary focus:outline-none`}
@@ -1115,7 +1139,9 @@ export default function CheckoutPage() {
                               disabled={addressLookup.isLookingUp}
                               maxLength={5}
                             />
-                            {errors.huisnummer && <p className="text-red-600 text-xs mt-1">{errors.huisnummer}</p>}
+                            <div className="min-h-[20px] mt-1">
+                              {errors.huisnummer && <p className="text-red-600 text-xs">{errors.huisnummer}</p>}
+                            </div>
                           </div>
                           <div>
                             <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
@@ -1136,7 +1162,9 @@ export default function CheckoutPage() {
                               disabled={addressLookup.isLookingUp}
                               maxLength={10}
                             />
-                            {errors.toevoeging && <p className="text-red-600 text-xs mt-1">{errors.toevoeging}</p>}
+                            <div className="min-h-[20px] mt-1">
+                              {errors.toevoeging && <p className="text-red-600 text-xs">{errors.toevoeging}</p>}
+                            </div>
                           </div>
                         </div>
                         <button
