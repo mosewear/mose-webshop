@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import emailIcons from './email-icons.json'
+import emailLogoUrls from './email-logo-urls.json'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -26,11 +27,13 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
 }
 
-// Helper function to create logo with Gmail-safe styling (works in dark/light mode)
-function createLogoTag(logoUrl: string, size: number = 140): string {
-  // Use inline style with filter for better Gmail compatibility
-  // Gmail sometimes strips CSS filters, so we use inline style
-  return `<img src="${logoUrl}" alt="MOSE" width="${size}" style="width: ${size}px; height: auto; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1); -webkit-filter: brightness(0) invert(1);" role="presentation" />`
+// Helper function to create logo with white version (Gmail-safe, no filter needed)
+function createLogoTag(size: 'header' | 'footer' = 'header'): string {
+  const logoUrls = emailLogoUrls as { header: string; footer: string }
+  const logoUrl = size === 'header' ? logoUrls.header : logoUrls.footer
+  const width = size === 'header' ? 140 : 100
+  
+  return `<img src="${logoUrl}" alt="MOSE" width="${width}" style="width: ${width}px; height: auto; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" role="presentation" />`
 }
 
 // Helper function to create sum line with table layout (Gmail-safe, no flexbox)
@@ -228,7 +231,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 140)}
+            ${createLogoTag('header')}
           </td>
         </tr>
       </table>
@@ -269,7 +272,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -341,7 +344,7 @@ export async function sendShippingConfirmationEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 140)}
+            ${createLogoTag('header')}
           </td>
         </tr>
       </table>
@@ -379,7 +382,7 @@ export async function sendShippingConfirmationEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -438,7 +441,7 @@ export async function sendOrderProcessingEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 140)}
+            ${createLogoTag('header')}
           </td>
         </tr>
       </table>
@@ -475,7 +478,7 @@ export async function sendOrderProcessingEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -550,7 +553,7 @@ export async function sendOrderDeliveredEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 140)}
+            ${createLogoTag('header')}
           </td>
         </tr>
       </table>
@@ -610,7 +613,7 @@ export async function sendOrderDeliveredEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -669,7 +672,7 @@ export async function sendOrderCancelledEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 140)}
+            ${createLogoTag('header')}
           </td>
         </tr>
       </table>
@@ -713,7 +716,7 @@ export async function sendOrderCancelledEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -922,7 +925,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -993,7 +996,7 @@ export async function sendBackInStockEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 140)}
+            ${createLogoTag('header')}
           </td>
         </tr>
       </table>
@@ -1051,7 +1054,7 @@ export async function sendBackInStockEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
@@ -1157,7 +1160,7 @@ export async function sendContactFormEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrl, 100)}
+            ${createLogoTag('footer')}
           </td>
         </tr>
       </table>
