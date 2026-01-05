@@ -62,7 +62,7 @@ export default function HomePageClient({
         </div>
 
         {/* Hero Content */}
-        <div className={`relative z-10 h-full flex items-center justify-center px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className="relative z-10 h-full flex items-center justify-center px-4 animate-fadeInUp">
               <div className="text-center max-w-5xl">
                 {/* Badge with Icon - Transparant met witte border */}
                 <div className="inline-flex items-center gap-2 mb-8 px-5 py-3 bg-transparent border-2 border-white text-white text-sm font-bold uppercase tracking-[0.2em]">
