@@ -958,9 +958,9 @@ export default function CheckoutPage() {
                     {/* Postcode + Huisnummer + Toevoeging + Lookup Button */}
                     <div className="space-y-3">
                       {/* Desktop: Grid layout */}
-                      <div className="hidden md:grid md:grid-cols-12 gap-3 items-end">
-                        <div className="col-span-3">
-                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                      <div className="hidden md:grid md:grid-cols-12 gap-3">
+                        <div className="col-span-3 flex flex-col">
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                             Postcode *
                           </label>
                           <input
@@ -992,8 +992,8 @@ export default function CheckoutPage() {
                           />
                           {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
                         </div>
-                        <div className="col-span-2">
-                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                        <div className="col-span-2 flex flex-col">
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                             Huisnummer *
                           </label>
                           <input
@@ -1028,8 +1028,8 @@ export default function CheckoutPage() {
                           />
                           {errors.huisnummer && <p className="text-red-600 text-xs mt-1">{errors.huisnummer}</p>}
                         </div>
-                        <div className="col-span-2">
-                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                        <div className="col-span-2 flex flex-col">
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                             Toevoeging
                           </label>
                           <input
@@ -1049,7 +1049,11 @@ export default function CheckoutPage() {
                           />
                           {errors.toevoeging && <p className="text-red-600 text-xs mt-1">{errors.toevoeging}</p>}
                         </div>
-                        <div className="col-span-5">
+                        <div className="col-span-5 flex flex-col">
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
+                            {/* Invisible label voor alignment */}
+                            &nbsp;
+                          </label>
                           <button
                             type="button"
                             onClick={handleAddressLookup}
@@ -1182,8 +1186,8 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Address (read-only na lookup) */}
-                    <div>
-                      <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                    <div className="flex flex-col">
+                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                         Straat en huisnummer *
                       </label>
                       <input
@@ -1203,8 +1207,8 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* City (read-only na lookup) */}
-                    <div>
-                      <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                    <div className="flex flex-col">
+                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                         Plaats *
                       </label>
                       <input
