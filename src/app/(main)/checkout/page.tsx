@@ -237,8 +237,6 @@ export default function CheckoutPage() {
       if (defaultAddress?.address && defaultAddress?.city && defaultAddress?.postal_code) {
         setAddressLookup({ isLookingUp: false, isLookedUp: true, error: null })
       }
-
-      toast.success('Je gegevens zijn ingevuld!')
     } catch (error) {
       console.error('Error loading profile and address:', error)
       // Don't show error toast, just silently fail (user can still fill manually)
@@ -437,7 +435,6 @@ export default function CheckoutPage() {
       setCheckoutMode('guest')
     } catch (error: any) {
       setLoginError(error.message || 'Inloggen mislukt. Controleer je gegevens.')
-      toast.error('Inloggen mislukt')
     } finally {
       setIsLoggingIn(false)
     }
@@ -686,7 +683,6 @@ export default function CheckoutPage() {
         postalCode: postcodeError,
         huisnummer: huisnummerError,
       }))
-      toast.error('Controleer postcode en huisnummer')
       return
     }
 
@@ -708,13 +704,12 @@ export default function CheckoutPage() {
       const data = await response.json()
 
       if (!data.success) {
-        setAddressLookup({
-          isLookingUp: false,
-          isLookedUp: false,
-          error: data.error || 'Adres niet gevonden',
-        })
-        toast.error(data.error || 'Adres niet gevonden')
-        return
+      setAddressLookup({
+        isLookingUp: false,
+        isLookedUp: false,
+        error: data.error || 'Adres niet gevonden',
+      })
+      return
       }
 
       // Vul adres in
@@ -729,8 +724,6 @@ export default function CheckoutPage() {
         isLookedUp: true,
         error: null,
       })
-
-      toast.success('Adres opgehaald!')
     } catch (error: any) {
       console.error('Address lookup error:', error)
       setAddressLookup({
@@ -738,7 +731,6 @@ export default function CheckoutPage() {
         isLookedUp: false,
         error: 'Kon adres niet ophalen. Probeer opnieuw of vul handmatig in.',
       })
-      toast.error('Kon adres niet ophalen')
     }
   }
 
