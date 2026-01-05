@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import emailIcons from './email-icons.json'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -25,25 +26,13 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
 }
 
-// Helper function to create Unicode icon (email-safe, works everywhere)
-function createUnicodeIcon(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle'): string {
-  const icons: Record<string, string> = {
-    'check': '✓',
-    'check-circle': '✓',
-    'truck': '🚚',
-    'settings': '⚙',
-    'x': '✕',
-    'shopping-cart': '🛒',
-    'package': '📦',
+// Helper function to create centered icon circle with hosted PNG (email-safe, works in all clients)
+function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-delivered' | 'truck-shipping' | 'settings-processing' | 'x-cancelled' | 'shopping-cart-abandoned'): string {
+  const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
+  if (!iconUrl) {
+    console.warn(`Icon style ${iconStyle} not found in email-icons.json`)
+    return ''
   }
-  return icons[iconName] || icons['check']
-}
-
-// Helper function to create centered icon circle with Unicode (email-safe, works in all clients)
-function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', backgroundColor: string, iconSize: number = 32): string {
-  const unicodeIcon = createUnicodeIcon(iconName)
-  // Calculate font size based on iconSize (roughly 60% of circle size for good fit)
-  const fontSize = Math.round(iconSize * 1.5)
   
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
@@ -51,8 +40,8 @@ function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shop
         <td align="center" style="padding: 0;">
           <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
             <tr>
-              <td align="center" valign="middle" style="width: 72px; height: 72px; background-color: ${backgroundColor}; border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,0.15); padding: 0; font-size: ${fontSize}px; line-height: 72px; color: #ffffff; font-weight: 900;">
-                ${unicodeIcon}
+              <td align="center" valign="middle" style="padding: 0;">
+                ${createImageTag(iconUrl, iconStyle, 72, 72, 'display: block;')}
               </td>
             </tr>
           </table>
@@ -62,9 +51,16 @@ function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shop
   `
 }
 
-// Helper function to create inline checkmark (email-safe Unicode, works everywhere)
-function createCheckmark(color: string = '#2ECC71', size: number = 18): string {
-  return `<span style="color: ${color}; font-weight: 900; font-size: ${size}px; line-height: 1;">✓</span>`
+// Helper function to create inline checkmark with hosted PNG (email-safe, works everywhere)
+function createCheckmark(color: 'green' | 'orange' = 'green'): string {
+  const iconStyle = color === 'orange' ? 'check-orange' : 'check-small'
+  const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
+  if (!iconUrl) {
+    // Fallback to Unicode if icon not found
+    return `<span style="color: ${color === 'orange' ? '#FF9500' : '#2ECC71'}; font-weight: 900; font-size: 18px; line-height: 1;">✓</span>`
+  }
+  
+  return createImageTag(iconUrl, 'checkmark', 18, 18, 'display: inline-block; vertical-align: middle; margin-right: 8px;')
 }
 
 // Shared email styles - consistent across all emails
@@ -207,7 +203,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      ${createIconCircle('check-circle', '#2ECC71', 38)}
+      ${createIconCircle('check-circle-success')}
       <h1>BEDANKT!</h1>
       <div class="hero-sub">Bestelling Geplaatst</div>
       <div class="hero-text">Hey ${customerName}, we gaan voor je aan de slag</div>
@@ -315,7 +311,7 @@ export async function sendShippingConfirmationEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      ${createIconCircle('truck', '#FF9500', 42)}
+      ${createIconCircle('truck-shipping')}
       <h1>ONDERWEG!</h1>
       <div class="hero-sub">Je Pakket Is Verzonden</div>
       <div class="hero-text">Hey ${customerName}, je bestelling komt eraan</div>
@@ -338,9 +334,9 @@ export async function sendShippingConfirmationEmail(props: {
       
       <div class="section-title">Handige Tips</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Controleer je brievenbus voor een bezorgkaartje</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een melding zodra het in de buurt is</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Controleer je brievenbus voor een bezorgkaartje</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Je ontvangt een melding zodra het in de buurt is</span></li>
       </ul>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
@@ -398,7 +394,7 @@ export async function sendOrderProcessingEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      ${createIconCircle('settings', '#667eea', 42)}
+      ${createIconCircle('settings-processing')}
       <h1>IN BEHANDELING</h1>
       <div class="hero-sub">We Pakken Je Order In</div>
       <div class="hero-text">Hey ${customerName}, we zijn voor je aan de slag!</div>
@@ -407,9 +403,9 @@ export async function sendOrderProcessingEmail(props: {
     <div class="content">
       <div class="section-title">Wat Gebeurt Er Nu?</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je betaling is ontvangen en bevestigd</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>We pakken je items zorgvuldig in</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een tracking code zodra we verzenden</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Je betaling is ontvangen en bevestigd</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>We pakken je items zorgvuldig in</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Je ontvangt een tracking code zodra we verzenden</span></li>
       </ul>
       
       <div class="info-box">
@@ -499,7 +495,7 @@ export async function sendOrderDeliveredEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      ${createIconCircle('check-circle', '#2ECC71', 46)}
+      ${createIconCircle('check-circle-delivered')}
       <h1>BEZORGD!</h1>
       <div class="hero-sub">Je Pakket Is Aangekomen</div>
       <div class="hero-text">Hey ${customerName}, geniet van je nieuwe items!</div>
@@ -507,7 +503,7 @@ export async function sendOrderDeliveredEmail(props: {
     </div>
     <div class="content">
       <div class="info-box" style="border-left-color: #2ECC71; text-align: center;">
-        <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px;">${createCheckmark('#2ECC71', 20)}<span>Afgeleverd op ${dateText}</span></h3>
+        <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px;">${createCheckmark('green')}<span>Afgeleverd op ${dateText}</span></h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">We hopen dat alles in perfecte staat is aangekomen!</p>
       </div>
       
@@ -538,9 +534,9 @@ export async function sendOrderDeliveredEmail(props: {
       
       <div class="section-title">Verzorgingstips</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Was je MOSE items op 30°C voor het beste resultaat</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Hang je kledingstukken te drogen (niet in de droger)</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lees altijd het waslabel voor specifieke instructies</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Was je MOSE items op 30°C voor het beste resultaat</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Hang je kledingstukken te drogen (niet in de droger)</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Lees altijd het waslabel voor specifieke instructies</span></li>
       </ul>
       
       <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
@@ -604,7 +600,7 @@ export async function sendOrderCancelledEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      ${createIconCircle('x', '#e74c3c', 42)}
+      ${createIconCircle('x-cancelled')}
       <h1>GEANNULEERD</h1>
       <div class="hero-sub">Order Geannuleerd</div>
       <div class="hero-text">Hey ${customerName}, je order is geannuleerd</div>
@@ -738,7 +734,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     
     <!-- Hero Section -->
     <div class="hero">
-      ${createIconCircle('shopping-cart', '#FF9500', 42)}
+      ${createIconCircle('shopping-cart-abandoned')}
       <h1>NIET VERGETEN?</h1>
       <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
       <div class="hero-text">Hey ${customerName}, je hebt nog ${orderItems.length} item${orderItems.length > 1 ? 's' : ''} in je winkelwagen!</div>
@@ -803,19 +799,19 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
         <h3 style="color: #FF9500;">Waarom MOSE?</h3>
         <ul class="checklist" style="margin: 12px 0 0 0;">
           <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
+            ${createCheckmark('orange')}
             <span>Gratis verzending vanaf €${freeShippingThreshold}</span>
           </li>
           <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
+            ${createCheckmark('orange')}
             <span>${returnDays} dagen retourrecht</span>
           </li>
           <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
+            ${createCheckmark('orange')}
             <span>Duurzame & hoogwaardige materialen</span>
           </li>
           <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
+            ${createCheckmark('orange')}
             <span>Snelle levering (1-2 werkdagen)</span>
           </li>
         </ul>
@@ -908,7 +904,7 @@ export async function sendBackInStockEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      ${createIconCircle('check-circle', '#2ECC71', 42)}
+      ${createIconCircle('check-circle-success')}
       <h1>WEER OP VOORRAAD!</h1>
       <div class="hero-sub">Je Favoriete Product</div>
       <div class="hero-text">Goed nieuws! ${productName} is weer beschikbaar</div>
@@ -943,10 +939,10 @@ export async function sendBackInStockEmail(props: {
       <div class="info-box">
         <h3>Waarom Nu Bestellen?</h3>
         <ul class="checklist">
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Beperkte voorraad - dit product is populair!</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Gratis verzending vanaf €100</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>14 dagen retourrecht</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lokaal gemaakt in Groningen</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Beperkte voorraad - dit product is populair!</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Gratis verzending vanaf €100</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>14 dagen retourrecht</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Lokaal gemaakt in Groningen</span></li>
         </ul>
       </div>
 
@@ -1024,7 +1020,7 @@ export async function sendContactFormEmail(props: {
       ${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}
     </div>
     <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
-      ${createIconCircle('check-circle', '#2ECC71', 38)}
+      ${createIconCircle('check-circle-success')}
       <h1 style="margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">NIEUW BERICHT</h1>
       <div class="hero-sub" style="font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contactformulier</div>
       <div class="hero-text" style="font-size: 14px; color: #999;">Van ${name}</div>

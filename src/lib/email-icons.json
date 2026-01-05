@@ -1,0 +1,10 @@
+{
+  "check-circle-success": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/check-circle-success.png",
+  "check-circle-delivered": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/check-circle-delivered.png",
+  "truck-shipping": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/truck-shipping.png",
+  "settings-processing": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/settings-processing.png",
+  "x-cancelled": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/x-cancelled.png",
+  "shopping-cart-abandoned": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/shopping-cart-abandoned.png",
+  "check-small": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/check-small.png",
+  "check-orange": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/email-icons/check-orange.png"
+}
