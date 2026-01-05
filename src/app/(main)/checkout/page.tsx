@@ -47,6 +47,9 @@ export default function CheckoutPage() {
   const checkoutContainerRef = useRef<HTMLDivElement>(null)
   const paymentSectionRef = useRef<HTMLDivElement>(null)
   
+  const [user, setUser] = useState<any>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false)
   const [checkoutMode, setCheckoutMode] = useState<'guest' | 'login'>('guest')
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [loginError, setLoginError] = useState('')
@@ -141,7 +144,63 @@ export default function CheckoutPage() {
       setFreeShippingThreshold(settings.free_shipping_threshold)
       setReturnDays(settings.return_days)
     })
+
+    // Check if user is already logged in and load data
+    loadUserData()
   }, [])
+
+  async function loadUserData() {
+    setIsLoadingUserData(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        setUser(user)
+        setIsLoggedIn(true)
+        await loadProfileAndAddress(user.id, user.email || '')
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    } finally {
+      setIsLoadingUserData(false)
+    }
+  }
+
+  async function loadProfileAndAddress(userId: string, userEmail: string) {
+    try {
+      // 1. Fetch profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      // 2. Fetch default shipping address
+      const { data: defaultAddress } = await supabase
+        .from('user_addresses')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_default_shipping', true)
+        .single()
+
+      // 3. Fill form with data
+      setForm({
+        email: userEmail || profile?.email || '',
+        firstName: profile?.first_name || '',
+        lastName: profile?.last_name || '',
+        address: defaultAddress?.address || '',
+        city: defaultAddress?.city || '',
+        postalCode: defaultAddress?.postal_code || '',
+        phone: defaultAddress?.phone || '',
+        country: defaultAddress?.country || 'NL',
+      })
+
+      toast.success('Je gegevens zijn ingevuld!')
+    } catch (error) {
+      console.error('Error loading profile and address:', error)
+      // Don't show error toast, just silently fail (user can still fill manually)
+    }
+  }
 
   useEffect(() => {
     // Redirect to cart if empty
@@ -198,31 +257,18 @@ export default function CheckoutPage() {
 
       if (error) throw error
 
-      // Fetch user profile and saved addresses
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user!.id)
-        .single()
+      // Update user state
+      setUser(data.user)
+      setIsLoggedIn(true)
 
-      // Pre-fill form with saved data
-      if (profile) {
-        setForm({
-          email: loginForm.email,
-          firstName: profile.first_name || '',
-          lastName: profile.last_name || '',
-          address: profile.address || '',
-          city: profile.city || '',
-          postalCode: profile.postal_code || '',
-          phone: profile.phone || '',
-          country: profile.country || 'NL',
-        })
-      }
+      // Load profile and address data
+      await loadProfileAndAddress(data.user!.id, loginForm.email)
 
       // Switch to guest mode with pre-filled form
       setCheckoutMode('guest')
     } catch (error: any) {
       setLoginError(error.message || 'Inloggen mislukt. Controleer je gegevens.')
+      toast.error('Inloggen mislukt')
     } finally {
       setIsLoggingIn(false)
     }
@@ -489,23 +535,32 @@ export default function CheckoutPage() {
                         <span className="sm:hidden">Gast</span>
                       </button>
                       <div className="w-px bg-black"></div>
-                      <button
-                        type="button"
-                        onClick={() => setCheckoutMode('login')}
-                        className={`flex-1 py-4 px-4 font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                          checkoutMode === 'login'
-                            ? 'bg-black text-white'
-                            : 'bg-white text-black hover:bg-gray-100'
-                        }`}
-                      >
-                        <UserCircle2 size={20} />
-                        <span className="hidden sm:inline">Login & Checkout</span>
-                        <span className="sm:hidden">Login</span>
-                      </button>
+                      {isLoggedIn ? (
+                        <div className="flex-1 py-4 px-4 bg-gray-50 flex items-center justify-center gap-2">
+                          <UserCircle2 size={20} className="text-brand-primary" />
+                          <span className="text-sm font-semibold text-gray-700">
+                            Je bent ingelogd
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setCheckoutMode('login')}
+                          className={`flex-1 py-4 px-4 font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                            checkoutMode === 'login'
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black hover:bg-gray-100'
+                          }`}
+                        >
+                          <UserCircle2 size={20} />
+                          <span className="hidden sm:inline">Login & Checkout</span>
+                          <span className="sm:hidden">Login</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {checkoutMode === 'login' ? (
+                  {checkoutMode === 'login' && !isLoggedIn ? (
                     /* LOGIN FORM */
                     <div className="bg-gray-50 border-2 border-gray-200 p-6 md:p-8">
                       <h2 className="text-2xl font-display mb-4">Inloggen</h2>

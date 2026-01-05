@@ -2,6 +2,29 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Helper function to normalize image URLs (ensure absolute URLs)
+function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
+  if (!url) return ''
+  // If already absolute URL, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  // If relative URL, make it absolute
+  if (url.startsWith('/')) {
+    return `${siteUrl}${url}`
+  }
+  // If no leading slash, add it
+  return `${siteUrl}/${url}`
+}
+
+// Helper function to create safe image tag with all required attributes
+function createImageTag(src: string, alt: string, width: number, height?: number | 'auto', additionalStyles?: string): string {
+  if (!src) return ''
+  const heightStyle = height === 'auto' ? 'height: auto;' : height ? `height: ${height}px;` : ''
+  const styles = `width: ${width}px; ${heightStyle} display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; ${additionalStyles || ''}`
+  return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" />`
+}
+
 // Shared email styles - consistent across all emails
 const EMAIL_STYLES = `
   body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff; }
@@ -116,16 +139,19 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const subtotalExclBtw = subtotal / 1.21
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
   
-  const productItemsHtml = orderItems.map(item => ({
-    name: item.name,
-    size: item.size,
-    color: item.color,
-    quantity: item.quantity,
-    total: (item.price * item.quantity).toFixed(2),
-    imageUrl: item.imageUrl || ''
-  }))
+  const productItemsHtml = orderItems.map(item => {
+    const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
+    return {
+      name: item.name,
+      size: item.size,
+      color: item.color,
+      quantity: item.quantity,
+      total: (item.price * item.quantity).toFixed(2),
+      imageUrl: normalizedImageUrl
+    }
+  })
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -138,12 +164,10 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-success">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 38px; font-weight: 900; line-height: 72px;">✓</span>
       </div>
       <h1>BEDANKT!</h1>
       <div class="hero-sub">Bestelling Geplaatst</div>
@@ -154,7 +178,9 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <div class="section-title">Jouw Items</div>
       ${productItemsHtml.map(item => `
         <div class="product">
-          <div class="prod-img">${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}</div>
+          <div class="prod-img" style="width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
+            ${item.imageUrl ? createImageTag(item.imageUrl, item.name, 60, 80, 'object-fit: cover;') : ''}
+          </div>
           <div class="prod-info">
             <div class="prod-name">${item.name}</div>
             <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x stuks</div>
@@ -183,7 +209,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -224,7 +250,7 @@ export async function sendShippingConfirmationEmail(props: {
   const { customerEmail, customerName, orderId, trackingCode, trackingUrl, carrier, estimatedDelivery } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
 
   // Format delivery date
   let deliveryText = '2-3 werkdagen'
@@ -248,15 +274,10 @@ export async function sendShippingConfirmationEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-shipping">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-          <rect x="1" y="3" width="15" height="13"></rect>
-          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-          <circle cx="5.5" cy="18.5" r="2.5"></circle>
-          <circle cx="18.5" cy="18.5" r="2.5"></circle>
-        </svg>
+      <div class="icon-circle icon-shipping" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #FF9500; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">🚚</span>
       </div>
       <h1>ONDERWEG!</h1>
       <div class="hero-sub">Je Pakket Is Verzonden</div>
@@ -286,7 +307,7 @@ export async function sendShippingConfirmationEmail(props: {
       </ul>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -325,7 +346,7 @@ export async function sendOrderProcessingEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, estimatedShipDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -338,13 +359,10 @@ export async function sendOrderProcessingEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-processing">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
+      <div class="icon-circle icon-processing" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">⚙️</span>
       </div>
       <h1>IN BEHANDELING</h1>
       <div class="hero-sub">We Pakken Je Order In</div>
@@ -376,7 +394,7 @@ export async function sendOrderProcessingEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -420,7 +438,7 @@ export async function sendOrderDeliveredEmail(props: {
   const { customerEmail, customerName, orderId, orderItems, deliveryDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
 
   // Format delivery date
   let dateText = 'vandaag'
@@ -444,12 +462,10 @@ export async function sendOrderDeliveredEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-delivered">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+      <div class="icon-circle icon-delivered" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 46px; font-weight: 900; line-height: 72px;">✓</span>
       </div>
       <h1>BEZORGD!</h1>
       <div class="hero-sub">Je Pakket Is Aangekomen</div>
@@ -464,14 +480,19 @@ export async function sendOrderDeliveredEmail(props: {
       
       ${orderItems && orderItems.length > 0 ? `
       <div class="section-title">Je Bestelde Items</div>
-      ${orderItems.map(item => `
+      ${orderItems.map(item => {
+        const normalizedImageUrl = normalizeImageUrl(item.image_url, siteUrl)
+        return `
         <div class="product">
-          <div class="prod-img">${item.image_url ? `<img src="${item.image_url}" alt="${item.product_name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}</div>
+          <div class="prod-img" style="width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
+            ${normalizedImageUrl ? createImageTag(normalizedImageUrl, item.product_name, 60, 80, 'object-fit: cover;') : ''}
+          </div>
           <div class="prod-info">
             <div class="prod-name">${item.product_name}</div>
           </div>
         </div>
-      `).join('')}
+      `
+      }).join('')}
       ` : ''}
       
       <div class="section-title">⭐ Deel Je Ervaring</div>
@@ -496,7 +517,7 @@ export async function sendOrderDeliveredEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -535,7 +556,7 @@ export async function sendOrderCancelledEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, cancellationReason } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -548,13 +569,10 @@ export async function sendOrderCancelledEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-cancelled">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+      <div class="icon-circle icon-cancelled" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #e74c3c; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">✕</span>
       </div>
       <h1>GEANNULEERD</h1>
       <div class="hero-sub">Order Geannuleerd</div>
@@ -590,7 +608,7 @@ export async function sendOrderCancelledEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -656,40 +674,41 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   } = props
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
   
-  const productItemsHtml = orderItems.map(item => ({
-    name: item.name,
-    size: item.size,
-    color: item.color,
-    quantity: item.quantity,
-    total: (item.price * item.quantity).toFixed(2),
-    imageUrl: item.imageUrl || ''
-  }))
+  const productItemsHtml = orderItems.map(item => {
+    const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
+    return {
+      name: item.name,
+      size: item.size,
+      color: item.color,
+      quantity: item.quantity,
+      total: (item.price * item.quantity).toFixed(2),
+      imageUrl: normalizedImageUrl
+    }
+  })
 
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Je MOSE items wachten op je! 🛒</title>
   <style>${EMAIL_STYLES}</style>
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
     <!-- Logo -->
-    <div class="logo-bar">
-      <img src="${logoUrl}" alt="MOSE" />
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      ${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}
     </div>
     
     <!-- Hero Section -->
     <div class="hero">
-      <div class="icon-circle" style="background: #FF9500; box-shadow: 0 6px 16px rgba(255,149,0,0.25);">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-          <circle cx="9" cy="21" r="1"></circle>
-          <circle cx="20" cy="21" r="1"></circle>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-        </svg>
+      <div class="icon-circle" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #FF9500; box-shadow: 0 6px 16px rgba(255,149,0,0.25);">
+        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">🛒</span>
       </div>
       <h1>NIET VERGETEN?</h1>
       <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
@@ -710,8 +729,8 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <div style="margin: 20px 0;">
         ${productItemsHtml.map(item => `
           <div class="product" style="margin-bottom: 12px; border-left-color: #FF9500;">
-            <div class="prod-img">
-              ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />` : ''}
+            <div class="prod-img" style="width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
+              ${item.imageUrl ? createImageTag(item.imageUrl, item.name, 60, 80, 'object-fit: cover;') : ''}
             </div>
             <div class="prod-info">
               <div class="prod-name">${item.name}</div>
@@ -794,7 +813,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     
     <!-- Footer -->
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
@@ -841,8 +860,9 @@ export async function sendBackInStockEmail(props: {
   const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
   const productUrl = `${siteUrl}/product/${productSlug}`
+  const normalizedProductImageUrl = normalizeImageUrl(productImageUrl, siteUrl)
 
   const variantText = variantInfo ? `${variantInfo.size} • ${variantInfo.color}` : ''
 
@@ -857,12 +877,10 @@ export async function sendBackInStockEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;"><img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" /></div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-success">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">✓</span>
       </div>
       <h1>WEER OP VOORRAAD!</h1>
       <div class="hero-sub">Je Favoriete Product</div>
@@ -876,9 +894,9 @@ export async function sendBackInStockEmail(props: {
       </p>
 
       <div class="product" style="margin: 24px 0; border-left-color: #2ECC71;">
-        ${productImageUrl ? `
-        <div class="prod-img" style="width: 80px; height: 100px;">
-          <img src="${productImageUrl}" alt="${productName}" style="width:100%;height:100%;object-fit:cover;display:block;" />
+        ${normalizedProductImageUrl ? `
+        <div class="prod-img" style="width: 80px; height: 100px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
+          ${createImageTag(normalizedProductImageUrl, productName, 80, 100, 'object-fit: cover;')}
         </div>
         ` : ''}
         <div class="prod-info">
@@ -912,7 +930,7 @@ export async function sendBackInStockEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
@@ -953,7 +971,7 @@ export async function sendContactFormEmail(props: {
   const { name, email, subject, message } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
   const adminEmail = process.env.CONTACT_EMAIL || 'info@mosewear.nl'
 
   const subjectLabels: { [key: string]: string } = {
@@ -976,13 +994,11 @@ export async function sendContactFormEmail(props: {
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff;" data-ogsc="#ffffff">
   <div class="wrapper" style="max-width: 600px; margin: 0 auto;">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <img src="${logoUrl}" alt="MOSE" width="140" height="auto" style="display: block; max-width: 140px; height: auto; margin: 0 auto; border: 0; outline: none; text-decoration: none;" />
+      ${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}
     </div>
     <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
-      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.15); background: #2ECC71;">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" style="display: block;">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+        <span style="color: #ffffff; font-size: 38px; font-weight: 900; line-height: 72px;">✓</span>
       </div>
       <h1 style="margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">NIEUW BERICHT</h1>
       <div class="hero-sub" style="font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contactformulier</div>
@@ -1016,7 +1032,7 @@ export async function sendContactFormEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <img src="${logoUrl}" alt="MOSE" width="100" height="auto" style="display: block; max-width: 100px; height: auto; margin: 0 auto 16px; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1);" />
+      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
