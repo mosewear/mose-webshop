@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
@@ -25,15 +24,10 @@ export default function HomePageClient({
   featuredProducts: initialFeaturedProducts,
   categories: initialCategories,
 }: HomePageClientProps) {
-  const [isVisible, setIsVisible] = useState(false)
   const settings = initialSettings
   const homepageSettings = initialHomepageSettings
   const featuredProducts = initialFeaturedProducts
   const categories = initialCategories
-
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
 
   return (
     <>
