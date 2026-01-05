@@ -968,8 +968,8 @@ export default function CheckoutPage() {
                       {/* Desktop: Grid layout */}
                       <div className="hidden md:grid md:grid-cols-12 gap-3">
                         <div className="col-span-3 flex flex-col">
-                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
-                            Postcode *
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
+                            Postcode <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
                             type="text"
@@ -1006,8 +1006,8 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <div className="col-span-2 flex flex-col">
-                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
-                            Huisnummer *
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
+                            Huisnummer <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
                             type="text"
@@ -1098,8 +1098,8 @@ export default function CheckoutPage() {
                       {/* Mobile: Stacked layout */}
                       <div className="md:hidden space-y-3">
                         <div>
-                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
-                            Postcode *
+                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700 whitespace-nowrap">
+                            Postcode <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
                             type="text"
@@ -1120,8 +1120,8 @@ export default function CheckoutPage() {
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                           <div className="col-span-2">
-                            <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
-                              Huisnummer *
+                            <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700 whitespace-nowrap">
+                              Huisnummer <span className="text-red-600 ml-0.5">*</span>
                             </label>
                             <input
                               type="text"
@@ -1215,8 +1215,8 @@ export default function CheckoutPage() {
 
                     {/* Address (read-only na lookup) */}
                     <div className="flex flex-col">
-                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
-                        Straat en huisnummer *
+                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
+                        Straat en huisnummer <span className="text-red-600 ml-0.5">*</span>
                       </label>
                       <input
                         type="text"
@@ -1236,8 +1236,8 @@ export default function CheckoutPage() {
 
                     {/* City (read-only na lookup) */}
                     <div className="flex flex-col">
-                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
-                        Plaats *
+                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
+                        Plaats <span className="text-red-600 ml-0.5">*</span>
                       </label>
                       <input
                         type="text"
