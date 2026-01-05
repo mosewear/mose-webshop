@@ -25,6 +25,11 @@ function getAuthHeader(): string {
 
 // Helper voor API calls
 async function sendcloudFetch(endpoint: string, options: RequestInit = {}) {
+  // Check if credentials are configured
+  if (!SENDCLOUD_PUBLIC_KEY || !SENDCLOUD_SECRET_KEY) {
+    throw new Error('Sendcloud credentials niet geconfigureerd. Voeg SENDCLOUD_PUBLIC_KEY en SENDCLOUD_SECRET_KEY toe aan environment variables.')
+  }
+
   const url = `${SENDCLOUD_API_URL}${endpoint}`
   
   const response = await fetch(url, {
@@ -37,9 +42,22 @@ async function sendcloudFetch(endpoint: string, options: RequestInit = {}) {
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    console.error('Sendcloud API error:', response.status, error)
-    throw new Error(`Sendcloud API error: ${response.status} - ${error}`)
+    let errorMessage = ''
+    try {
+      const errorData = await response.json()
+      errorMessage = JSON.stringify(errorData)
+    } catch {
+      errorMessage = await response.text()
+    }
+    
+    console.error('Sendcloud API error:', response.status, errorMessage)
+    
+    // Provide specific error messages for common issues
+    if (response.status === 401) {
+      throw new Error(`Sendcloud authenticatie mislukt (401). Controleer of SENDCLOUD_PUBLIC_KEY en SENDCLOUD_SECRET_KEY correct zijn ingesteld in je environment variables. Error: ${errorMessage}`)
+    }
+    
+    throw new Error(`Sendcloud API error: ${response.status} - ${errorMessage}`)
   }
 
   return response.json()
@@ -186,9 +204,10 @@ export async function getShippingMethods(): Promise<SendcloudShippingMethod[]> {
   try {
     const data = await sendcloudFetch('/shipping_methods')
     return data.shipping_methods || []
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching shipping methods:', error)
-    return []
+    // Re-throw with more context
+    throw new Error(`Kon shipping methods niet ophalen: ${error.message || 'Onbekende fout'}`)
   }
 }
 
@@ -220,9 +239,10 @@ export async function getDefaultDHLMethodId(): Promise<number | null> {
     const methods = await getShippingMethodsForOrder('NL', 2.0) // 2kg default
     const dhlMethod = methods.find((m) => m.carrier.toLowerCase().includes('dhl'))
     return dhlMethod?.id || null
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting default DHL method:', error)
-    return null
+    // Re-throw with more context
+    throw new Error(`Kon standaard DHL method niet ophalen: ${error.message || 'Onbekende fout'}`)
   }
 }
 

@@ -76,11 +76,25 @@ export async function POST(req: NextRequest) {
     // Bepaal shipping method
     let methodId = shippingMethodId
     if (!methodId) {
-      // Gebruik standaard DHL method
-      methodId = await getDefaultDHLMethodId()
-      if (!methodId) {
+      try {
+        // Gebruik standaard DHL method
+        methodId = await getDefaultDHLMethodId()
+        if (!methodId) {
+          return NextResponse.json(
+            { 
+              error: 'Geen geschikt verzendmethode gevonden',
+              details: 'Controleer of DHL geactiveerd is in je Sendcloud account en of de API credentials correct zijn.'
+            },
+            { status: 400 }
+          )
+        }
+      } catch (error: any) {
+        console.error('Error getting default DHL method:', error)
         return NextResponse.json(
-          { error: 'Geen geschikt verzendmethode gevonden' },
+          { 
+            error: 'Kon verzendmethode niet ophalen',
+            details: error.message || 'Onbekende fout. Controleer Sendcloud API credentials.'
+          },
           { status: 400 }
         )
       }
