@@ -9,7 +9,7 @@ import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
 import { loadStripe, Stripe } from '@stripe/stripe-js'
 import { createClient } from '@/lib/supabase/client'
-import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
+import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -36,6 +36,8 @@ interface CheckoutForm {
   postalCode: string
   phone: string
   country: string
+  huisnummer: string
+  toevoeging: string
 }
 
 export default function CheckoutPage() {
@@ -66,9 +68,16 @@ export default function CheckoutPage() {
     postalCode: '',
     phone: '',
     country: 'NL',
+    huisnummer: '',
+    toevoeging: '',
   })
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
   const [loading, setLoading] = useState(false)
+  const [addressLookup, setAddressLookup] = useState({
+    isLookingUp: false,
+    isLookedUp: false,
+    error: null as string | null,
+  })
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [shippingCost, setShippingCost] = useState(5.95)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
@@ -194,17 +203,40 @@ export default function CheckoutPage() {
         .eq('is_default_shipping', true)
         .single()
 
-      // 3. Fill form with data
+      // 3. Parse address voor huisnummer en toevoeging (als adres al bestaat)
+      let huisnummer = ''
+      let toevoeging = ''
+      let addressOnly = defaultAddress?.address || ''
+      
+      if (defaultAddress?.address) {
+        // Probeer huisnummer en toevoeging te extraheren uit adres string
+        // Format: "Straatnaam 123A" of "Straatnaam 123 A"
+        const addressMatch = defaultAddress.address.match(/^(.+?)\s+(\d+)([A-Za-z0-9]*)$/)
+        if (addressMatch) {
+          addressOnly = addressMatch[1].trim()
+          huisnummer = addressMatch[2]
+          toevoeging = addressMatch[3] || ''
+        }
+      }
+
+      // 4. Fill form with data
       setForm({
         email: userEmail || profile?.email || '',
         firstName: profile?.first_name || '',
         lastName: profile?.last_name || '',
-        address: defaultAddress?.address || '',
+        address: addressOnly,
         city: defaultAddress?.city || '',
         postalCode: defaultAddress?.postal_code || '',
         phone: defaultAddress?.phone || '',
         country: defaultAddress?.country || 'NL',
+        huisnummer: huisnummer,
+        toevoeging: toevoeging,
       })
+
+      // Als adres al compleet is, markeer als looked up
+      if (defaultAddress?.address && defaultAddress?.city && defaultAddress?.postal_code) {
+        setAddressLookup({ isLookingUp: false, isLookedUp: true, error: null })
+      }
 
       toast.success('Je gegevens zijn ingevuld!')
     } catch (error) {
@@ -271,16 +303,37 @@ export default function CheckoutPage() {
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
       
+      // Parse address voor huisnummer en toevoeging
+      let huisnummer = ''
+      let toevoeging = ''
+      let addressOnly = shippingAddress?.address || ''
+      
+      if (shippingAddress?.address) {
+        const addressMatch = shippingAddress.address.match(/^(.+?)\s+(\d+)([A-Za-z0-9]*)$/)
+        if (addressMatch) {
+          addressOnly = addressMatch[1].trim()
+          huisnummer = addressMatch[2]
+          toevoeging = addressMatch[3] || ''
+        }
+      }
+      
       setForm({
         email: order.email || '',
         firstName: firstName,
         lastName: lastName,
-        address: shippingAddress?.address || '',
+        address: addressOnly,
         city: shippingAddress?.city || '',
         postalCode: shippingAddress?.postalCode || shippingAddress?.postal_code || '',
         phone: shippingAddress?.phone || '',
         country: shippingAddress?.country || 'NL',
+        huisnummer: huisnummer,
+        toevoeging: toevoeging,
       })
+
+      // Als adres compleet is, markeer als looked up
+      if (shippingAddress?.address && shippingAddress?.city && shippingAddress?.postalCode) {
+        setAddressLookup({ isLookingUp: false, isLookedUp: true, error: null })
+      }
       
       // Set order ID
       setOrderId(order.id)
@@ -322,7 +375,22 @@ export default function CheckoutPage() {
       case 'city':
         return !value.trim() ? 'Verplicht veld' : undefined
       case 'postalCode':
-        return !value.trim() ? 'Verplicht veld' : undefined
+        const normalizedPostcode = value.replace(/\s+/g, '').toUpperCase()
+        if (!value.trim()) return 'Verplicht veld'
+        if (!/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
+          return 'Ongeldig formaat. Gebruik: 1234AB'
+        }
+        return undefined
+      case 'huisnummer':
+        if (!value.trim()) return 'Verplicht veld'
+        const huisnummerNum = parseInt(value, 10)
+        if (isNaN(huisnummerNum) || huisnummerNum < 1 || huisnummerNum > 99999) {
+          return 'Ongeldig huisnummer'
+        }
+        return undefined
+      case 'toevoeging':
+        if (value.length > 10) return 'Maximaal 10 tekens'
+        return undefined
       case 'phone':
         return !value.trim() ? 'Verplicht veld' : undefined
       case 'country':
@@ -572,10 +640,104 @@ export default function CheckoutPage() {
   }
 
   const updateForm = (field: keyof CheckoutForm, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value }
+      
+      // Auto-format postcode
+      if (field === 'postalCode') {
+        const normalized = value.replace(/\s+/g, '').toUpperCase()
+        // Voeg spatie toe na 4 cijfers als gebruiker typt
+        if (normalized.length > 4 && /^\d{4}[A-Z]{0,2}$/.test(normalized)) {
+          updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
+        } else {
+          updated.postalCode = normalized
+        }
+      }
+      
+      return updated
+    })
+    
     // Real-time validation
     const error = validateField(field, value)
     setErrors((prev) => ({ ...prev, [field]: error }))
+    
+    // Reset address lookup state als gebruiker handmatig wijzigt
+    if (field === 'postalCode' || field === 'huisnummer' || field === 'toevoeging') {
+      setAddressLookup({ isLookingUp: false, isLookedUp: false, error: null })
+    }
+  }
+
+  const handleAddressLookup = async () => {
+    // Validatie
+    const postcodeError = validateField('postalCode', form.postalCode)
+    const huisnummerError = validateField('huisnummer', form.huisnummer)
+    
+    if (postcodeError || huisnummerError) {
+      setErrors((prev) => ({
+        ...prev,
+        postalCode: postcodeError,
+        huisnummer: huisnummerError,
+      }))
+      toast.error('Controleer postcode en huisnummer')
+      return
+    }
+
+    setAddressLookup({ isLookingUp: true, isLookedUp: false, error: null })
+
+    try {
+      const normalizedPostcode = form.postalCode.replace(/\s+/g, '').toUpperCase()
+      
+      const response = await fetch('/api/postcode-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postcode: normalizedPostcode,
+          huisnummer: form.huisnummer.trim(),
+          toevoeging: form.toevoeging.trim() || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        setAddressLookup({
+          isLookingUp: false,
+          isLookedUp: false,
+          error: data.error || 'Adres niet gevonden',
+        })
+        toast.error(data.error || 'Adres niet gevonden')
+        return
+      }
+
+      // Vul adres in
+      setForm((prev) => ({
+        ...prev,
+        address: data.fullAddress,
+        city: data.city,
+      }))
+
+      setAddressLookup({
+        isLookingUp: false,
+        isLookedUp: true,
+        error: null,
+      })
+
+      toast.success('Adres opgehaald!')
+    } catch (error: any) {
+      console.error('Address lookup error:', error)
+      setAddressLookup({
+        isLookingUp: false,
+        isLookedUp: false,
+        error: 'Kon adres niet ophalen. Probeer opnieuw of vul handmatig in.',
+      })
+      toast.error('Kon adres niet ophalen')
+    }
+  }
+
+  const handleEditAddress = () => {
+    setAddressLookup({ isLookingUp: false, isLookedUp: false, error: null })
+    // Optioneel: clear address/city voor fresh start
+    // setForm((prev) => ({ ...prev, address: '', city: '' }))
   }
 
   if (items.length === 0 && !isRecovering) {
@@ -793,49 +955,272 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* Address */}
+                    {/* Postcode + Huisnummer + Toevoeging + Lookup Button */}
+                    <div className="space-y-3">
+                      {/* Desktop: Grid layout */}
+                      <div className="hidden md:grid md:grid-cols-12 gap-3 items-end">
+                        <div className="col-span-3">
+                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                            Postcode *
+                          </label>
+                          <input
+                            type="text"
+                            value={form.postalCode}
+                            onChange={(e) => updateForm('postalCode', e.target.value)}
+                            onBlur={() => {
+                              // Auto-trigger lookup als postcode + huisnummer compleet zijn
+                              if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
+                                const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
+                                const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
+                                if (postcodeValid && huisnummerValid) {
+                                  // Debounce: kleine delay
+                                  setTimeout(() => {
+                                    if (form.postalCode && form.huisnummer) {
+                                      handleAddressLookup()
+                                    }
+                                  }, 500)
+                                }
+                              }
+                            }}
+                            className={`w-full px-4 py-3 border-2 ${
+                              errors.postalCode ? 'border-red-600' : 'border-gray-300'
+                            } focus:border-brand-primary focus:outline-none`}
+                            placeholder="1234 AB"
+                            autoComplete="postal-code"
+                            disabled={addressLookup.isLookingUp}
+                            maxLength={7}
+                          />
+                          {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                            Huisnummer *
+                          </label>
+                          <input
+                            type="text"
+                            value={form.huisnummer}
+                            onChange={(e) => {
+                              // Alleen cijfers toestaan
+                              const value = e.target.value.replace(/\D/g, '')
+                              updateForm('huisnummer', value)
+                            }}
+                            onBlur={() => {
+                              // Auto-trigger lookup als postcode + huisnummer compleet zijn
+                              if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
+                                const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
+                                const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
+                                if (postcodeValid && huisnummerValid) {
+                                  setTimeout(() => {
+                                    if (form.postalCode && form.huisnummer) {
+                                      handleAddressLookup()
+                                    }
+                                  }, 500)
+                                }
+                              }
+                            }}
+                            className={`w-full px-4 py-3 border-2 ${
+                              errors.huisnummer ? 'border-red-600' : 'border-gray-300'
+                            } focus:border-brand-primary focus:outline-none`}
+                            placeholder="27"
+                            autoComplete="off"
+                            disabled={addressLookup.isLookingUp}
+                            maxLength={5}
+                          />
+                          {errors.huisnummer && <p className="text-red-600 text-xs mt-1">{errors.huisnummer}</p>}
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                            Toevoeging
+                          </label>
+                          <input
+                            type="text"
+                            value={form.toevoeging}
+                            onChange={(e) => {
+                              const value = e.target.value.slice(0, 10)
+                              updateForm('toevoeging', value)
+                            }}
+                            className={`w-full px-4 py-3 border-2 ${
+                              errors.toevoeging ? 'border-red-600' : 'border-gray-300'
+                            } focus:border-brand-primary focus:outline-none`}
+                            placeholder="A"
+                            autoComplete="off"
+                            disabled={addressLookup.isLookingUp}
+                            maxLength={10}
+                          />
+                          {errors.toevoeging && <p className="text-red-600 text-xs mt-1">{errors.toevoeging}</p>}
+                        </div>
+                        <div className="col-span-5">
+                          <button
+                            type="button"
+                            onClick={handleAddressLookup}
+                            disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
+                            className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {addressLookup.isLookingUp ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <span>Ophalen...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Search size={18} />
+                                <span>Adres ophalen</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Mobile: Stacked layout */}
+                      <div className="md:hidden space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                            Postcode *
+                          </label>
+                          <input
+                            type="text"
+                            value={form.postalCode}
+                            onChange={(e) => updateForm('postalCode', e.target.value)}
+                            className={`w-full px-4 py-3 border-2 ${
+                              errors.postalCode ? 'border-red-600' : 'border-gray-300'
+                            } focus:border-brand-primary focus:outline-none`}
+                            placeholder="1234 AB"
+                            autoComplete="postal-code"
+                            disabled={addressLookup.isLookingUp}
+                            maxLength={7}
+                          />
+                          {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="col-span-2">
+                            <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                              Huisnummer *
+                            </label>
+                            <input
+                              type="text"
+                              value={form.huisnummer}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '')
+                                updateForm('huisnummer', value)
+                              }}
+                              className={`w-full px-4 py-3 border-2 ${
+                                errors.huisnummer ? 'border-red-600' : 'border-gray-300'
+                              } focus:border-brand-primary focus:outline-none`}
+                              placeholder="27"
+                              autoComplete="off"
+                              disabled={addressLookup.isLookingUp}
+                              maxLength={5}
+                            />
+                            {errors.huisnummer && <p className="text-red-600 text-xs mt-1">{errors.huisnummer}</p>}
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                              Toevoeging
+                            </label>
+                            <input
+                              type="text"
+                              value={form.toevoeging}
+                              onChange={(e) => {
+                                const value = e.target.value.slice(0, 10)
+                                updateForm('toevoeging', value)
+                              }}
+                              className={`w-full px-4 py-3 border-2 ${
+                                errors.toevoeging ? 'border-red-600' : 'border-gray-300'
+                              } focus:border-brand-primary focus:outline-none`}
+                              placeholder="A"
+                              autoComplete="off"
+                              disabled={addressLookup.isLookingUp}
+                              maxLength={10}
+                            />
+                            {errors.toevoeging && <p className="text-red-600 text-xs mt-1">{errors.toevoeging}</p>}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddressLookup}
+                          disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
+                          className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {addressLookup.isLookingUp ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              <span>Adres wordt opgehaald...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Search size={18} />
+                              <span>Adres ophalen</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Error message */}
+                      {addressLookup.error && (
+                        <div className="p-3 bg-red-50 border-2 border-red-600 text-red-900 text-sm rounded">
+                          {addressLookup.error}
+                        </div>
+                      )}
+
+                      {/* Success message */}
+                      {addressLookup.isLookedUp && (
+                        <div className="p-3 bg-green-50 border-2 border-green-600 text-green-900 text-sm rounded flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Check size={18} className="text-green-600" />
+                            <span>Adres opgehaald!</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleEditAddress}
+                            className="text-green-700 hover:text-green-900 font-semibold flex items-center gap-1 text-xs"
+                          >
+                            <Edit2 size={14} />
+                            Wijzig
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Address (read-only na lookup) */}
                     <div>
+                      <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                        Straat en huisnummer *
+                      </label>
                       <input
                         type="text"
                         value={form.address}
                         onChange={(e) => updateForm('address', e.target.value)}
                         className={`w-full px-4 py-3 border-2 ${
                           errors.address ? 'border-red-600' : 'border-gray-300'
-                        } focus:border-brand-primary focus:outline-none`}
+                        } focus:border-brand-primary focus:outline-none ${
+                          addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="Straat en huisnummer"
                         autoComplete="street-address"
+                        readOnly={addressLookup.isLookedUp}
                       />
                       {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
                     </div>
 
-                    {/* Postal + City */}
-                    <div className="grid grid-cols-5 gap-3">
-                      <div className="col-span-2">
-                        <input
-                          type="text"
-                          value={form.postalCode}
-                          onChange={(e) => updateForm('postalCode', e.target.value)}
-                          className={`w-full px-4 py-3 border-2 ${
-                            errors.postalCode ? 'border-red-600' : 'border-gray-300'
-                          } focus:border-brand-primary focus:outline-none`}
-                          placeholder="1234 AB"
-                          autoComplete="postal-code"
-                        />
-                        {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
-                      </div>
-                      <div className="col-span-3">
-                        <input
-                          type="text"
-                          value={form.city}
-                          onChange={(e) => updateForm('city', e.target.value)}
-                          className={`w-full px-4 py-3 border-2 ${
-                            errors.city ? 'border-red-600' : 'border-gray-300'
-                          } focus:border-brand-primary focus:outline-none`}
-                          placeholder="Plaats"
-                          autoComplete="address-level2"
-                        />
-                        {errors.city && <p className="text-red-600 text-xs mt-1">{errors.city}</p>}
-                      </div>
+                    {/* City (read-only na lookup) */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+                        Plaats *
+                      </label>
+                      <input
+                        type="text"
+                        value={form.city}
+                        onChange={(e) => updateForm('city', e.target.value)}
+                        className={`w-full px-4 py-3 border-2 ${
+                          errors.city ? 'border-red-600' : 'border-gray-300'
+                        } focus:border-brand-primary focus:outline-none ${
+                          addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
+                        }`}
+                        placeholder="Plaats"
+                        autoComplete="address-level2"
+                        readOnly={addressLookup.isLookedUp}
+                      />
+                      {errors.city && <p className="text-red-600 text-xs mt-1">{errors.city}</p>}
                     </div>
 
                     {/* Phone */}
