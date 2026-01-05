@@ -233,7 +233,7 @@ export default function HomepageSettingsPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-4 md:p-6 max-h-[calc(100vh-350px)] md:max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div className="p-4 md:p-6">
             {/* TAB 1: HERO & STATS */}
             {activeTab === 'hero' && (
               <div className="space-y-8">
