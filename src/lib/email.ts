@@ -25,41 +25,34 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
 }
 
-// Helper function to create Lucide icon SVG (email-safe)
-function createLucideIcon(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', size: number = 32, color: string = '#ffffff'): string {
+// Helper function to create Unicode icon (email-safe, works everywhere)
+function createUnicodeIcon(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle'): string {
   const icons: Record<string, string> = {
-    'check': '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
-    'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="m9 11 3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
-    'truck': '<path d="M16 3h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M8 3H3v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 22h-4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
-    'settings': '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>',
-    'x': '<path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
-    'shopping-cart': '<circle cx="8" cy="21" r="1" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="19" cy="21" r="1" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
-    'package': '<path d="m7.5 4.27 9 5.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M21 8.77v5.23a2 2 0 0 1-1.11 1.79l-8 4.44a2 2 0 0 1-1.78 0l-8-4.44A2 2 0 0 1 3 14V8.77" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 22V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="m3 8.77 9 5.15 9-5.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'check': '✓',
+    'check-circle': '✓',
+    'truck': '🚚',
+    'settings': '⚙',
+    'x': '✕',
+    'shopping-cart': '🛒',
+    'package': '📦',
   }
-  
-  const path = icons[iconName] || icons['check']
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;" role="presentation">
-    ${path.replace(/currentColor/g, color)}
-  </svg>`
+  return icons[iconName] || icons['check']
 }
 
-// Helper function to create centered icon circle with table layout (email-safe)
+// Helper function to create centered icon circle with Unicode (email-safe, works in all clients)
 function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', backgroundColor: string, iconSize: number = 32): string {
-  const iconSvg = createLucideIcon(iconName, iconSize, '#ffffff')
+  const unicodeIcon = createUnicodeIcon(iconName)
+  // Calculate font size based on iconSize (roughly 60% of circle size for good fit)
+  const fontSize = Math.round(iconSize * 1.5)
+  
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
       <tr>
         <td align="center" style="padding: 0;">
           <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
             <tr>
-              <td align="center" valign="middle" style="width: 72px; height: 72px; background-color: ${backgroundColor}; border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,0.15); padding: 0;">
-                <table cellpadding="0" cellspacing="0" border="0" width="100%" height="100%">
-                  <tr>
-                    <td align="center" valign="middle" style="padding: 0;">
-                      ${iconSvg}
-                    </td>
-                  </tr>
-                </table>
+              <td align="center" valign="middle" style="width: 72px; height: 72px; background-color: ${backgroundColor}; border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,0.15); padding: 0; font-size: ${fontSize}px; line-height: 72px; color: #ffffff; font-weight: 900;">
+                ${unicodeIcon}
               </td>
             </tr>
           </table>
@@ -69,9 +62,9 @@ function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shop
   `
 }
 
-// Helper function to create inline checkmark (email-safe, no CSS :before)
+// Helper function to create inline checkmark (email-safe Unicode, works everywhere)
 function createCheckmark(color: string = '#2ECC71', size: number = 18): string {
-  return createLucideIcon('check', size, color)
+  return `<span style="color: ${color}; font-weight: 900; font-size: ${size}px; line-height: 1;">✓</span>`
 }
 
 // Shared email styles - consistent across all emails
