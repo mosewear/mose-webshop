@@ -22,7 +22,56 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   if (!src) return ''
   const heightStyle = height === 'auto' ? 'height: auto;' : height ? `height: ${height}px;` : ''
   const styles = `width: ${width}px; ${heightStyle} display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; ${additionalStyles || ''}`
-  return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" />`
+  return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
+}
+
+// Helper function to create Lucide icon SVG (email-safe)
+function createLucideIcon(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', size: number = 32, color: string = '#ffffff'): string {
+  const icons: Record<string, string> = {
+    'check': '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="m9 11 3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'truck': '<path d="M16 3h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M8 3H3v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 22h-4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'settings': '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>',
+    'x': '<path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'shopping-cart': '<circle cx="8" cy="21" r="1" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="19" cy="21" r="1" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'package': '<path d="m7.5 4.27 9 5.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M21 8.77v5.23a2 2 0 0 1-1.11 1.79l-8 4.44a2 2 0 0 1-1.78 0l-8-4.44A2 2 0 0 1 3 14V8.77" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 22V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="m3 8.77 9 5.15 9-5.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+  }
+  
+  const path = icons[iconName] || icons['check']
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;" role="presentation">
+    ${path.replace(/currentColor/g, color)}
+  </svg>`
+}
+
+// Helper function to create centered icon circle with table layout (email-safe)
+function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', backgroundColor: string, iconSize: number = 32): string {
+  const iconSvg = createLucideIcon(iconName, iconSize, '#ffffff')
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+      <tr>
+        <td align="center" style="padding: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+            <tr>
+              <td align="center" valign="middle" style="width: 72px; height: 72px; background-color: ${backgroundColor}; border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,0.15); padding: 0;">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" height="100%">
+                  <tr>
+                    <td align="center" valign="middle" style="padding: 0;">
+                      ${iconSvg}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `
+}
+
+// Helper function to create inline checkmark (email-safe, no CSS :before)
+function createCheckmark(color: string = '#2ECC71', size: number = 18): string {
+  return createLucideIcon('check', size, color)
 }
 
 // Shared email styles - consistent across all emails
@@ -71,8 +120,7 @@ const EMAIL_STYLES = `
   .discount-highlight { background: #2ECC71; color: #fff; padding: 24px; border-radius: 8px; text-align: center; margin: 20px 0; }
   .discount-code { font-size: 32px; font-weight: 900; letter-spacing: 4px; font-family: monospace; background: rgba(255,255,255,0.2); padding: 16px 28px; border-radius: 6px; display: inline-block; margin: 12px 0; }
   .checklist { list-style: none; padding: 0; }
-  .checklist li { padding: 10px 0; padding-left: 30px; position: relative; }
-  .checklist li:before { content: "✓"; position: absolute; left: 0; color: #2ECC71; font-weight: 900; font-size: 18px; }
+  .checklist li { padding: 10px 0; padding-left: 0; }
   .icon-cart { background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%); }
   .urgency-banner { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: #fff; padding: 20px; text-align: center; font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
   .cart-items { background: #f8f8f8; padding: 20px; margin: 20px 0; border-left: 3px solid #FF6B6B; }
@@ -166,9 +214,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 38px; font-weight: 900; line-height: 72px;">✓</span>
-      </div>
+      ${createIconCircle('check-circle', '#2ECC71', 38)}
       <h1>BEDANKT!</h1>
       <div class="hero-sub">Bestelling Geplaatst</div>
       <div class="hero-text">Hey ${customerName}, we gaan voor je aan de slag</div>
@@ -276,34 +322,32 @@ export async function sendShippingConfirmationEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-shipping" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #FF9500; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">🚚</span>
-      </div>
+      ${createIconCircle('truck', '#FF9500', 42)}
       <h1>ONDERWEG!</h1>
       <div class="hero-sub">Je Pakket Is Verzonden</div>
       <div class="hero-text">Hey ${customerName}, je bestelling komt eraan</div>
       <div class="order-badge">#${orderId.slice(0,8).toUpperCase()}</div>
     </div>
     <div class="content">
-      <div class="section-title">📦 Tracking Informatie</div>
+      <div class="section-title">Tracking Informatie</div>
       ${carrier ? `<div class="carrier-badge">${carrier}</div>` : ''}
       
       <div class="tracking-box">
         <div style="font-size: 13px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Track & Trace Code</div>
         <div class="tracking-code">${trackingCode}</div>
-        ${trackingUrl ? `<a href="${trackingUrl}" class="button" style="color:#fff;text-decoration:none;">📍 VOLG JE BESTELLING</a>` : ''}
+        ${trackingUrl ? `<a href="${trackingUrl}" class="button" style="color:#fff;text-decoration:none;">VOLG JE BESTELLING</a>` : ''}
       </div>
       
       <div class="info-box">
-        <h3>🚚 Verwachte Levering</h3>
+        <h3>Verwachte Levering</h3>
         <p style="margin: 8px 0 0 0; font-size: 15px; font-weight: 600;">${deliveryText}</p>
       </div>
       
-      <div class="section-title">💡 Handige Tips</div>
+      <div class="section-title">Handige Tips</div>
       <ul class="checklist">
-        <li>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</li>
-        <li>Controleer je brievenbus voor een bezorgkaartje</li>
-        <li>Je ontvangt een melding zodra het in de buurt is</li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Controleer je brievenbus voor een bezorgkaartje</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een melding zodra het in de buurt is</span></li>
       </ul>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
@@ -319,7 +363,7 @@ export async function sendShippingConfirmationEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `📦 Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
+      subject: `Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
     })
 
@@ -361,24 +405,22 @@ export async function sendOrderProcessingEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-processing" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">⚙️</span>
-      </div>
+      ${createIconCircle('settings', '#667eea', 42)}
       <h1>IN BEHANDELING</h1>
       <div class="hero-sub">We Pakken Je Order In</div>
       <div class="hero-text">Hey ${customerName}, we zijn voor je aan de slag!</div>
       <div class="order-badge">#${orderId.slice(0,8).toUpperCase()}</div>
     </div>
     <div class="content">
-      <div class="section-title">⚙️ Wat Gebeurt Er Nu?</div>
+      <div class="section-title">Wat Gebeurt Er Nu?</div>
       <ul class="checklist">
-        <li>Je betaling is ontvangen en bevestigd</li>
-        <li>We pakken je items zorgvuldig in</li>
-        <li>Je ontvangt een tracking code zodra we verzenden</li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je betaling is ontvangen en bevestigd</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>We pakken je items zorgvuldig in</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een tracking code zodra we verzenden</span></li>
       </ul>
       
       <div class="info-box">
-        <h3>📅 Verwachte Verzending</h3>
+        <h3>Verwachte Verzending</h3>
         <p style="margin: 8px 0 0 0; font-size: 15px; font-weight: 600;">${estimatedShipDate || 'Binnen 1-2 werkdagen'}</p>
       </div>
       
@@ -406,7 +448,7 @@ export async function sendOrderProcessingEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `⚙️ Je bestelling wordt voorbereid #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
+      subject: `Je bestelling wordt voorbereid #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
     })
 
@@ -464,9 +506,7 @@ export async function sendOrderDeliveredEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-delivered" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 46px; font-weight: 900; line-height: 72px;">✓</span>
-      </div>
+      ${createIconCircle('check-circle', '#2ECC71', 46)}
       <h1>BEZORGD!</h1>
       <div class="hero-sub">Je Pakket Is Aangekomen</div>
       <div class="hero-text">Hey ${customerName}, geniet van je nieuwe items!</div>
@@ -474,7 +514,7 @@ export async function sendOrderDeliveredEmail(props: {
     </div>
     <div class="content">
       <div class="info-box" style="border-left-color: #2ECC71; text-align: center;">
-        <h3>✓ Afgeleverd op ${dateText}</h3>
+        <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px;">${createCheckmark('#2ECC71', 20)}<span>Afgeleverd op ${dateText}</span></h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">We hopen dat alles in perfecte staat is aangekomen!</p>
       </div>
       
@@ -495,19 +535,19 @@ export async function sendOrderDeliveredEmail(props: {
       }).join('')}
       ` : ''}
       
-      <div class="section-title">⭐ Deel Je Ervaring</div>
+      <div class="section-title">Deel Je Ervaring</div>
       <div style="background: #f8f8f8; padding: 24px; text-align: center; border-radius: 8px; margin: 16px 0;">
-        <div style="font-size: 36px; margin-bottom: 12px;">⭐⭐⭐⭐⭐</div>
+        <div style="font-size: 36px; margin-bottom: 12px; color: #FFD700;">★★★★★</div>
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #666;">Wat vind je van je bestelling?</p>
-        <a href="${siteUrl}/contact" class="button" style="color:#fff;text-decoration:none;">📝 SCHRIJF EEN REVIEW</a>
+        <a href="${siteUrl}/contact" class="button" style="color:#fff;text-decoration:none;">SCHRIJF EEN REVIEW</a>
         <p style="margin: 12px 0 0 0; font-size: 12px; color: #999;">Help andere klanten met hun keuze</p>
       </div>
       
-      <div class="section-title">🧥 Verzorgingstips</div>
+      <div class="section-title">Verzorgingstips</div>
       <ul class="checklist">
-        <li>Was je MOSE items op 30°C voor het beste resultaat</li>
-        <li>Hang je kledingstukken te drogen (niet in de droger)</li>
-        <li>Lees altijd het waslabel voor specifieke instructies</li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Was je MOSE items op 30°C voor het beste resultaat</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Hang je kledingstukken te drogen (niet in de droger)</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lees altijd het waslabel voor specifieke instructies</span></li>
       </ul>
       
       <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
@@ -529,7 +569,7 @@ export async function sendOrderDeliveredEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `🎉 Je pakket is bezorgd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
+      subject: `Je pakket is bezorgd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
     })
 
@@ -571,9 +611,7 @@ export async function sendOrderCancelledEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-cancelled" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #e74c3c; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">✕</span>
-      </div>
+      ${createIconCircle('x', '#e74c3c', 42)}
       <h1>GEANNULEERD</h1>
       <div class="hero-sub">Order Geannuleerd</div>
       <div class="hero-text">Hey ${customerName}, je order is geannuleerd</div>
@@ -581,29 +619,29 @@ export async function sendOrderCancelledEmail(props: {
     </div>
     <div class="content">
       <div class="info-box" style="border-left-color: #e74c3c; background: #fff3f3;">
-        <h3>⚠️ Order Details</h3>
+        <h3>Order Details</h3>
         ${cancellationReason ? `<p style="margin: 8px 0; font-size: 14px;"><strong>Reden:</strong> ${cancellationReason}</p>` : ''}
         <p style="margin: 8px 0 0 0; font-size: 15px;"><strong>Bedrag:</strong> €${orderTotal.toFixed(2)}</p>
       </div>
       
-      <div class="section-title">💰 Terugbetaling</div>
+      <div class="section-title">Terugbetaling</div>
       <p style="font-size: 15px; line-height: 1.6; color: #333;">Je betaling wordt automatisch teruggestort naar je originele betaalmethode binnen <strong>3-5 werkdagen</strong>. Afhankelijk van je bank kan het iets langer duren voordat het bedrag zichtbaar is op je rekening.</p>
       
       <div class="discount-highlight">
-        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🎁 Onze Excuses</h3>
+        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Onze Excuses</h3>
         <p style="margin: 0 0 16px 0; font-size: 15px; opacity: 0.95;">Als excuus bieden we je <strong>10% korting</strong> op je volgende bestelling:</p>
         <div class="discount-code">SORRY10</div>
         <p style="margin: 12px 0 0 0; font-size: 13px; opacity: 0.9; font-weight: 600;">Geldig tot 1 maand na deze email</p>
       </div>
       
       <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
-        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🛍️ Nog Steeds Interesse?</h3>
+        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Nog Steeds Interesse?</h3>
         <p style="margin: 0 0 20px 0; font-size: 14px; color: #999;">Bekijk onze volledige collectie en vind je perfecte MOSE item</p>
         <a href="${siteUrl}/shop" class="button" style="color:#fff;text-decoration:none;">BEKIJK SHOP</a>
       </div>
       
       <div class="info-box" style="margin-top: 28px;">
-        <h3>💬 Vragen?</h3>
+        <h3>Vragen?</h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">Heb je vragen over je annulering? Neem gerust contact met ons op. We helpen je graag!</p>
       </div>
     </div>
@@ -695,7 +733,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Je MOSE items wachten op je! 🛒</title>
+  <title>Je MOSE items wachten op je!</title>
   <style>${EMAIL_STYLES}</style>
 </head>
 <body data-ogsc="#ffffff">
@@ -707,9 +745,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     
     <!-- Hero Section -->
     <div class="hero">
-      <div class="icon-circle" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #FF9500; box-shadow: 0 6px 16px rgba(255,149,0,0.25);">
-        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">🛒</span>
-      </div>
+      ${createIconCircle('shopping-cart', '#FF9500', 42)}
       <h1>NIET VERGETEN?</h1>
       <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
       <div class="hero-text">Hey ${customerName}, je hebt nog ${orderItems.length} item${orderItems.length > 1 ? 's' : ''} in je winkelwagen!</div>
@@ -720,12 +756,12 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <!-- Personal Message -->
       <p style="font-size: 15px; line-height: 1.8; color: #444; margin-bottom: 24px;">
         We zagen dat je ${hoursSinceAbandoned > 24 ? 'gisteren' : 'vandaag'} aan het shoppen was bij MOSE, maar je bestelling nog niet hebt afgerond. 
-        Geen zorgen - we hebben je items nog voor je gereserveerd! 🎁
+        Geen zorgen - we hebben je items nog voor je gereserveerd!
       </p>
 
 
       <!-- Cart Items -->
-      <div class="section-title">🛍️ Jouw Items</div>
+      <div class="section-title">Jouw Items</div>
       <div style="margin: 20px 0;">
         ${productItemsHtml.map(item => `
           <div class="product" style="margin-bottom: 12px; border-left-color: #FF9500;">
@@ -752,7 +788,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <!-- CTA Button -->
       <div style="text-align: center; margin: 32px 0;">
         <a href="${checkoutUrl}" class="button" style="background: #FF9500; color: #fff; font-size: 16px; padding: 18px 48px; text-decoration: none; border-radius: 4px;">
-          ✓ MAAK BESTELLING AF
+          MAAK BESTELLING AF
         </a>
         <p style="font-size: 12px; color: #999; margin-top: 12px;">
           Klik hier om terug te gaan naar je winkelwagen
@@ -762,7 +798,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <!-- Social Proof -->
       <div class="testimonial">
         <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6;">
-          "Beste aankoop ooit! De kwaliteit is geweldig en het zit super comfortabel. Krijg constant complimenten!" ⭐⭐⭐⭐⭐
+          "Beste aankoop ooit! De kwaliteit is geweldig en het zit super comfortabel. Krijg constant complimenten!"
         </p>
         <p style="margin: 0; font-size: 12px; color: #666; font-weight: 600;">
           - Lisa, Amsterdam
@@ -771,23 +807,23 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
 
       <!-- Why Shop with Us -->
       <div class="info-box" style="border-left-color: #FF9500;">
-        <h3 style="color: #FF9500;">✓ Waarom MOSE?</h3>
+        <h3 style="color: #FF9500;">Waarom MOSE?</h3>
         <ul class="checklist" style="margin: 12px 0 0 0;">
-          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
-            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
-            Gratis verzending vanaf €${freeShippingThreshold}
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>Gratis verzending vanaf €${freeShippingThreshold}</span>
           </li>
-          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
-            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
-            ${returnDays} dagen retourrecht
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>${returnDays} dagen retourrecht</span>
           </li>
-          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
-            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
-            Duurzame & hoogwaardige materialen
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>Duurzame & hoogwaardige materialen</span>
           </li>
-          <li style="padding-left: 30px; position: relative; padding: 10px 0 10px 30px;">
-            <span style="position: absolute; left: 0; color: #FF9500; font-weight: 900; font-size: 18px;">✓</span>
-            Snelle levering (1-2 werkdagen)
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>Snelle levering (1-2 werkdagen)</span>
           </li>
         </ul>
       </div>
@@ -795,14 +831,14 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <!-- Urgency Reminder -->
       <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
         <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
-          ⚠️ <strong>Let op:</strong> Je items blijven nog ${Math.max(1, Math.round(48 - hoursSinceAbandoned))} uur gereserveerd. 
+          <strong>Let op:</strong> Je items blijven nog ${Math.max(1, Math.round(48 - hoursSinceAbandoned))} uur gereserveerd. 
           Daarna kunnen we helaas niet garanderen dat ze nog op voorraad zijn.
         </p>
       </div>
 
       <!-- Need Help -->
       <div class="info-box" style="margin-top: 28px; border-left-color: #FF9500;">
-        <h3 style="color: #FF9500;">💬 Hulp Nodig?</h3>
+        <h3 style="color: #FF9500;">Hulp Nodig?</h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
           Twijfel je nog of heb je vragen? Ons team staat voor je klaar!<br>
           <a href="mailto:info@mosewear.nl" style="color: #FF9500; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
@@ -829,7 +865,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Winkelwagen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `${customerName}, je MOSE items wachten nog op je! 🛒`,
+      subject: `${customerName}, je MOSE items wachten nog op je!`,
       html: htmlContent,
     })
 
@@ -879,15 +915,13 @@ export async function sendBackInStockEmail(props: {
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
     <div class="hero">
-      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 42px; font-weight: 900; line-height: 72px;">✓</span>
-      </div>
+      ${createIconCircle('check-circle', '#2ECC71', 42)}
       <h1>WEER OP VOORRAAD!</h1>
       <div class="hero-sub">Je Favoriete Product</div>
       <div class="hero-text">Goed nieuws! ${productName} is weer beschikbaar</div>
     </div>
     <div class="content">
-      <div class="section-title">🎉 Je Wacht Is Voorbij</div>
+      <div class="section-title">Je Wacht Is Voorbij</div>
       <p style="font-size: 15px; line-height: 1.8; color: #444; margin-bottom: 24px;">
         We hebben goed nieuws! Het product waar je op wachtte is weer op voorraad. 
         ${variantInfo ? `Je hebt aangegeven dat je geïnteresseerd bent in: ${variantText}.` : ''}
@@ -914,18 +948,18 @@ export async function sendBackInStockEmail(props: {
       </div>
 
       <div class="info-box">
-        <h3>⚡ Waarom Nu Bestellen?</h3>
+        <h3>Waarom Nu Bestellen?</h3>
         <ul class="checklist">
-          <li>Beperkte voorraad - dit product is populair!</li>
-          <li>Gratis verzending vanaf €100</li>
-          <li>14 dagen retourrecht</li>
-          <li>Lokaal gemaakt in Groningen</li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Beperkte voorraad - dit product is populair!</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Gratis verzending vanaf €100</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>14 dagen retourrecht</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lokaal gemaakt in Groningen</span></li>
         </ul>
       </div>
 
       <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
         <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
-          ⏰ <strong>Let op:</strong> Deze notificatie is éénmalig. Bestel nu om zeker te zijn van je maat en kleur!
+          <strong>Let op:</strong> Deze notificatie is éénmalig. Bestel nu om zeker te zijn van je maat en kleur!
         </p>
       </div>
     </div>
@@ -945,7 +979,7 @@ export async function sendBackInStockEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Notificaties <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `🎉 ${productName} is weer op voorraad! - MOSE`,
+      subject: `${productName} is weer op voorraad! - MOSE`,
       html: htmlContent,
     })
 
@@ -997,9 +1031,7 @@ export async function sendContactFormEmail(props: {
       ${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}
     </div>
     <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
-      <div class="icon-circle icon-success" style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: table-cell; vertical-align: middle; text-align: center; background: #2ECC71; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
-        <span style="color: #ffffff; font-size: 38px; font-weight: 900; line-height: 72px;">✓</span>
-      </div>
+      ${createIconCircle('check-circle', '#2ECC71', 38)}
       <h1 style="margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">NIEUW BERICHT</h1>
       <div class="hero-sub" style="font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contactformulier</div>
       <div class="hero-text" style="font-size: 14px; color: #999;">Van ${name}</div>
