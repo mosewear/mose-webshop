@@ -26,6 +26,29 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
 }
 
+// Helper function to create logo with Gmail-safe styling (works in dark/light mode)
+function createLogoTag(logoUrl: string, size: number = 140): string {
+  // Use inline style with filter for better Gmail compatibility
+  // Gmail sometimes strips CSS filters, so we use inline style
+  return `<img src="${logoUrl}" alt="MOSE" width="${size}" style="width: ${size}px; height: auto; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; filter: brightness(0) invert(1); -webkit-filter: brightness(0) invert(1);" role="presentation" />`
+}
+
+// Helper function to create sum line with table layout (Gmail-safe, no flexbox)
+function createSumLine(label: string, value: string, isBtw: boolean = false): string {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0;">
+      <tr>
+        <td align="left" style="padding: 0; font-size: 15px; ${isBtw ? 'color: #999; font-size: 13px;' : ''}">
+          ${label}
+        </td>
+        <td align="right" style="padding: 0; font-size: 15px; font-weight: ${isBtw ? '400' : '600'}; ${isBtw ? 'color: #999; font-size: 13px;' : ''}">
+          ${value}
+        </td>
+      </tr>
+    </table>
+  `
+}
+
 // Helper function to create centered icon circle with hosted PNG (email-safe, works in all clients)
 function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-delivered' | 'truck-shipping' | 'settings-processing' | 'x-cancelled' | 'shopping-cart-abandoned'): string {
   const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
@@ -68,7 +91,7 @@ const EMAIL_STYLES = `
   body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff; }
   .wrapper { max-width: 600px; margin: 0 auto; }
   .logo-bar { padding: 24px; text-align: center; background: #000; }
-  .logo-bar img { max-width: 140px; display: block; margin: 0 auto; filter: brightness(0) invert(1); }
+  .logo-bar img { max-width: 140px; display: block; margin: 0 auto; }
   .hero { padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%); }
   .icon-circle { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
   .icon-success { background: #2ECC71; }
@@ -93,7 +116,7 @@ const EMAIL_STYLES = `
   .button-secondary:hover { background: #333; }
   .summary { background: #000; color: #fff; padding: 28px 24px; margin-top: 28px; }
   .sum-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 16px; text-align: center; }
-  .sum-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; }
+  .sum-line { padding: 8px 0; font-size: 15px; }
   .sum-btw { font-size: 13px; color: #999; }
   .sum-divider { border-top: 1px solid #333; margin: 12px 0; }
   .sum-grand { font-size: 28px; font-weight: 900; padding-top: 12px; text-align: center; }
@@ -201,7 +224,15 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 140)}
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="hero">
       ${createIconCircle('check-circle-success')}
       <h1>BEDANKT!</h1>
@@ -226,25 +257,22 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       
       <div class="summary">
         <div class="sum-label">Betaaloverzicht</div>
-        <div class="sum-line">
-          <span>Subtotaal (excl. BTW)</span>
-          <span style="font-weight:600">€${subtotalExclBtw.toFixed(2)}</span>
-        </div>
-        <div class="sum-line sum-btw">
-          <span>BTW (21%)</span>
-          <span>€${btw.toFixed(2)}</span>
-        </div>
-        <div class="sum-line">
-          <span>Verzendkosten</span>
-          <span style="font-weight:600">€${shipping.toFixed(2)}</span>
-        </div>
+        ${createSumLine('Subtotaal (excl. BTW)', `€${subtotalExclBtw.toFixed(2)}`)}
+        ${createSumLine('BTW (21%)', `€${btw.toFixed(2)}`, true)}
+        ${createSumLine('Verzendkosten', `€${shipping.toFixed(2)}`)}
         <div class="sum-divider"></div>
         <div class="sum-grand">€${orderTotal.toFixed(2)}</div>
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -309,7 +337,15 @@ export async function sendShippingConfirmationEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 140)}
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="hero">
       ${createIconCircle('truck-shipping')}
       <h1>ONDERWEG!</h1>
@@ -340,7 +376,13 @@ export async function sendShippingConfirmationEmail(props: {
       </ul>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -392,7 +434,15 @@ export async function sendOrderProcessingEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 140)}
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="hero">
       ${createIconCircle('settings-processing')}
       <h1>IN BEHANDELING</h1>
@@ -415,17 +465,20 @@ export async function sendOrderProcessingEmail(props: {
       
       <div class="summary">
         <div class="sum-label">Order Overzicht</div>
-        <div class="sum-line">
-          <span>Order nummer</span>
-          <span style="font-weight:600;font-family:monospace">#${orderId.slice(0,8).toUpperCase()}</span>
-        </div>
+        ${createSumLine('Order nummer', `#${orderId.slice(0,8).toUpperCase()}`)}
         <div class="sum-divider"></div>
         <div class="sum-grand">€${orderTotal.toFixed(2)}</div>
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -493,7 +546,15 @@ export async function sendOrderDeliveredEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 140)}
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="hero">
       ${createIconCircle('check-circle-delivered')}
       <h1>BEZORGD!</h1>
@@ -546,7 +607,13 @@ export async function sendOrderDeliveredEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -598,7 +665,15 @@ export async function sendOrderCancelledEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 140)}
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="hero">
       ${createIconCircle('x-cancelled')}
       <h1>GEANNULEERD</h1>
@@ -635,7 +710,13 @@ export async function sendOrderCancelledEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -838,7 +919,13 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     
     <!-- Footer -->
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
@@ -902,7 +989,15 @@ export async function sendBackInStockEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}</div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 140)}
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="hero">
       ${createIconCircle('check-circle-success')}
       <h1>WEER OP VOORRAAD!</h1>
@@ -953,7 +1048,13 @@ export async function sendBackInStockEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
@@ -1053,7 +1154,13 @@ export async function sendContactFormEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      ${createImageTag(logoUrl, 'MOSE', 100, 'auto', 'filter: brightness(0) invert(1); margin-bottom: 16px;')}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+        <tr>
+          <td align="center" style="padding: 0;">
+            ${createLogoTag(logoUrl, 100)}
+          </td>
+        </tr>
+      </table>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
