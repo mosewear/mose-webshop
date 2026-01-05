@@ -52,6 +52,7 @@ export default function ContactPage() {
 
       setSubmitted(true)
       setLoading(false)
+      setError('')
       setForm({ name: '', email: '', subject: '', message: '' })
       setTimeout(() => setSubmitted(false), 5000)
     } catch (error) {
