@@ -13,10 +13,12 @@ export default function ContactPage() {
   })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
     try {
       const response = await fetch('/api/contact', {
@@ -43,7 +45,7 @@ export default function ContactPage() {
       }
 
       if (!response.ok) {
-        toast.error(data.error || 'Er ging iets mis bij het versturen van je bericht')
+        setError(data.error || 'Er ging iets mis bij het versturen van je bericht')
         setLoading(false)
         return
       }
@@ -82,6 +84,12 @@ export default function ContactPage() {
             {submitted && (
               <div className="mb-6 p-4 bg-green-50 border-2 border-green-600 text-green-800">
                 <strong>Bedankt!</strong> We hebben je bericht ontvangen en nemen zo snel mogelijk contact op.
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-2 border-red-600 text-red-900">
+                <strong>Fout:</strong> {error}
               </div>
             )}
 

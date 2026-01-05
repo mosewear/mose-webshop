@@ -67,6 +67,8 @@ export default function AccountPage() {
   })
   const [profileLoading, setProfileLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [addressError, setAddressError] = useState('')
 
   // Addresses state
   const [addresses, setAddresses] = useState<Address[]>([])
@@ -211,13 +213,15 @@ export default function AccountPage() {
   async function updatePassword() {
     if (!user) return
 
+    setPasswordError('')
+
     if (passwordForm.newPassword.length < 6) {
-      toast.error('Wachtwoord moet minimaal 6 karakters lang zijn')
+      setPasswordError('Wachtwoord moet minimaal 6 karakters lang zijn')
       return
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('Wachtwoorden komen niet overeen')
+      setPasswordError('Wachtwoorden komen niet overeen')
       return
     }
 
@@ -237,8 +241,9 @@ export default function AccountPage() {
         newPassword: '',
         confirmPassword: '',
       })
+      setPasswordError('')
     } catch (error: any) {
-      toast.error(error.message || 'Kon wachtwoord niet bijwerken')
+      setPasswordError(error.message || 'Kon wachtwoord niet bijwerken')
     } finally {
       setPasswordLoading(false)
     }
@@ -282,8 +287,10 @@ export default function AccountPage() {
   async function saveAddress() {
     if (!user) return
 
+    setAddressError('')
+
     if (!addressForm.name || !addressForm.address || !addressForm.city || !addressForm.postal_code) {
-      toast.error('Vul alle verplichte velden in')
+      setAddressError('Vul alle verplichte velden in')
       return
     }
 
@@ -345,9 +352,10 @@ export default function AccountPage() {
         is_default_shipping: false,
         is_default_billing: false,
       })
+      setAddressError('')
       await fetchAddresses()
     } catch (error: any) {
-      toast.error(error.message || 'Kon adres niet opslaan')
+      setAddressError(error.message || 'Kon adres niet opslaan')
     }
   }
 
@@ -736,6 +744,11 @@ export default function AccountPage() {
                         className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                       />
                     </div>
+                    {passwordError && (
+                      <div className="p-3 bg-red-50 border-2 border-red-600 text-red-900 text-sm">
+                        {passwordError}
+                      </div>
+                    )}
                     <button
                       onClick={updatePassword}
                       disabled={passwordLoading}
@@ -872,6 +885,11 @@ export default function AccountPage() {
                           <span className="text-sm font-bold">Gebruik als standaard factuuradres</span>
                         </label>
                       </div>
+                      {addressError && (
+                        <div className="p-3 bg-red-50 border-2 border-red-600 text-red-900 text-sm">
+                          {addressError}
+                        </div>
+                      )}
                       <div className="flex gap-3 pt-4">
                         <button
                           onClick={saveAddress}
