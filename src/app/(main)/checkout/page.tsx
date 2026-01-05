@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
@@ -40,7 +40,8 @@ interface CheckoutForm {
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { items, getTotal, clearCart } = useCart()
+  const searchParams = useSearchParams()
+  const { items, getTotal, clearCart, setItems } = useCart()
   const supabase = createClient()
   
   // Ref voor het scrollen naar de juiste sectie
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [loginError, setLoginError] = useState('')
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [isRecovering, setIsRecovering] = useState(false)
   
   const [form, setForm] = useState<CheckoutForm>({
     email: '',
@@ -149,6 +151,15 @@ export default function CheckoutPage() {
     loadUserData()
   }, [])
 
+  // Separate useEffect for recover parameter (runs when searchParams change)
+  useEffect(() => {
+    const recoverOrderId = searchParams.get('recover')
+    if (recoverOrderId && !isRecovering) {
+      recoverOrder(recoverOrderId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
   async function loadUserData() {
     setIsLoadingUserData(true)
     try {
@@ -202,12 +213,102 @@ export default function CheckoutPage() {
     }
   }
 
+  async function recoverOrder(orderId: string) {
+    if (isRecovering) return // Prevent multiple calls
+    
+    setIsRecovering(true)
+    
+    try {
+      // Fetch order and items
+      const response = await fetch(`/api/get-order?order_id=${orderId}`)
+      
+      if (!response.ok) {
+        throw new Error('Order niet gevonden')
+      }
+      
+      const { order, items: orderItems } = await response.json()
+      
+      // Validate order is recoverable
+      if (order.payment_status === 'paid' || order.status === 'cancelled') {
+        toast.error('Deze bestelling kan niet worden hersteld')
+        router.replace('/checkout')
+        return
+      }
+      
+      // Fetch product variants to get full cart item data
+      const cartItems = await Promise.all(
+        orderItems.map(async (item: any) => {
+          // Fetch variant to get colorHex and stock
+          const { data: variant } = await supabase
+            .from('product_variants')
+            .select('color_hex, stock_quantity')
+            .eq('id', item.variant_id)
+            .single()
+          
+          return {
+            productId: item.product_id,
+            variantId: item.variant_id,
+            name: item.product_name,
+            size: item.size,
+            color: item.color,
+            colorHex: variant?.color_hex || '#000000',
+            quantity: item.quantity,
+            price: item.price_at_purchase,
+            image: item.image_url || '',
+            stock: variant?.stock_quantity || 0,
+            sku: item.sku || `${item.product_id}-${item.size}-${item.color}`,
+          }
+        })
+      )
+      
+      // Set items in cart
+      clearCart()
+      setItems(cartItems)
+      
+      // Pre-fill form with order data
+      const shippingAddress = order.shipping_address as any
+      const nameParts = (shippingAddress?.name || '').split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+      
+      setForm({
+        email: order.email || '',
+        firstName: firstName,
+        lastName: lastName,
+        address: shippingAddress?.address || '',
+        city: shippingAddress?.city || '',
+        postalCode: shippingAddress?.postalCode || shippingAddress?.postal_code || '',
+        phone: shippingAddress?.phone || '',
+        country: shippingAddress?.country || 'NL',
+      })
+      
+      // Set order ID
+      setOrderId(order.id)
+      
+      // Go directly to payment step
+      setCurrentStep('payment')
+      
+      // Show success toast
+      toast.success('Je winkelwagen is hersteld!')
+      
+      // Clean URL (remove ?recover parameter)
+      router.replace('/checkout', { scroll: false })
+      
+    } catch (error: any) {
+      console.error('Error recovering order:', error)
+      toast.error('Kon bestelling niet herstellen: ' + (error.message || 'Onbekende fout'))
+      router.replace('/checkout')
+    } finally {
+      setIsRecovering(false)
+    }
+  }
+
   useEffect(() => {
-    // Redirect to cart if empty
-    if (items.length === 0) {
+    // Redirect to cart if empty (but not when recovering)
+    if (items.length === 0 && !isRecovering) {
       router.push('/cart')
     }
-  }, [items, router])
+  }, [items, router, isRecovering])
 
   const validateField = (field: keyof CheckoutForm, value: string): string | undefined => {
     switch (field) {
@@ -477,8 +578,20 @@ export default function CheckoutPage() {
     setErrors((prev) => ({ ...prev, [field]: error }))
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !isRecovering) {
     return null // Will redirect in useEffect
+  }
+
+  // Show loading state while recovering
+  if (isRecovering) {
+    return (
+      <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16 bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Je winkelwagen wordt hersteld...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
