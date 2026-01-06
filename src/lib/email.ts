@@ -1,7 +1,17 @@
 import { Resend } from 'resend'
 import emailIcons from './email-icons.json'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialize Resend to allow environment variables to load first
+let resendInstance: Resend | null = null
+function getResend() {
+  if (!resendInstance) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not set in environment variables')
+    }
+    resendInstance = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendInstance
+}
 
 // Helper function to normalize image URLs (ensure absolute URLs)
 function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
@@ -285,7 +295,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Bestelling bevestiging #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -399,7 +409,7 @@ export async function sendShippingConfirmationEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -499,7 +509,7 @@ export async function sendOrderProcessingEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Je bestelling wordt voorbereid #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -638,7 +648,7 @@ export async function sendOrderDeliveredEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Je pakket is bezorgd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -745,7 +755,7 @@ export async function sendOrderCancelledEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Order geannuleerd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -962,7 +972,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Winkelwagen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `${customerName}, je MOSE items wachten nog op je!`,
@@ -1094,7 +1104,7 @@ export async function sendBackInStockEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Notificaties <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `${productName} is weer op voorraad! - MOSE`,
@@ -1206,7 +1216,7 @@ export async function sendContactFormEmail(props: {
       return { success: false, error: 'Email service not configured' }
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: 'MOSE Contact <contact@orders.mosewear.nl>',
       to: [adminEmail],
       replyTo: email,
