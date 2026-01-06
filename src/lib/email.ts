@@ -1,6 +1,34 @@
 import { Resend } from 'resend'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+// Base64 encoded logos (embedded directly in email for 100% compatibility)
+function getBase64Logos(): { light: string; dark: string } {
+  try {
+    // In production/build, use process.cwd() or absolute paths
+    const publicPath = process.cwd()
+    const logoLightPath = join(publicPath, 'public', 'logomose.png')
+    const logoDarkPath = join(publicPath, 'public', 'logomose_white.png')
+    
+    const logoLight = readFileSync(logoLightPath)
+    const logoDark = readFileSync(logoDarkPath)
+    
+    return {
+      light: `data:image/png;base64,${logoLight.toString('base64')}`,
+      dark: `data:image/png;base64,${logoDark.toString('base64')}`
+    }
+  } catch (error) {
+    console.error('Error reading logo files:', error)
+    // Fallback to URLs if files can't be read
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+    return {
+      light: `${siteUrl}/logomose.png`,
+      dark: `${siteUrl}/logomose_white.png`
+    }
+  }
+}
 
 // Helper function to normalize image URLs (ensure absolute URLs)
 function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
@@ -17,17 +45,9 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   return `${siteUrl}/${url}`
 }
 
-// Helper function to get logo URLs for light and dark mode
-function getLogoUrls(siteUrl: string): { light: string; dark: string } {
-  return {
-    light: normalizeImageUrl('/logomose.png', siteUrl),
-    dark: normalizeImageUrl('/logomose_white.png', siteUrl)
-  }
-}
-
-// Helper function to create logo image tag with dark mode support
+// Helper function to create logo image tag with dark mode support (using base64 embedded images)
 function createLogoTag(siteUrl: string, width: number = 140, height: number | 'auto' = 'auto'): string {
-  const logos = getLogoUrls(siteUrl)
+  const logos = getBase64Logos()
   const heightAttr = height === 'auto' ? '' : ` height="${height}"`
   const heightStyle = height === 'auto' ? 'height: auto;' : `height: ${height}px;`
   
@@ -51,12 +71,14 @@ function createLogoTag(siteUrl: string, width: number = 140, height: number | 'a
   `
 }
 
-// Helper function to create safe image tag with all required attributes
+// Helper function to create safe image tag with all required attributes (email-safe)
 function createImageTag(src: string, alt: string, width: number, height?: number | 'auto', additionalStyles?: string): string {
   if (!src) return ''
+  const normalizedSrc = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'}${src.startsWith('/') ? src : '/' + src}`
+  const heightAttr = height === 'auto' ? '' : height ? ` height="${height}"` : ''
   const heightStyle = height === 'auto' ? 'height: auto;' : height ? `height: ${height}px;` : ''
-  const styles = `width: ${width}px; ${heightStyle} display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; ${additionalStyles || ''}`
-  return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
+  const styles = `width: ${width}px; ${heightStyle} display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; max-width: 100%; ${additionalStyles || ''}`
+  return `<img src="${normalizedSrc}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}"${heightAttr} style="${styles}" role="presentation" />`
 }
 
 // Helper function to create Lucide icon SVG (email-safe)
@@ -103,9 +125,9 @@ function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shop
   `
 }
 
-// Helper function to create inline checkmark (email-safe, no CSS :before)
+// Helper function to create inline checkmark using Unicode (100% email-safe, works everywhere)
 function createCheckmark(color: string = '#2ECC71', size: number = 18): string {
-  return createLucideIcon('check', size, color)
+  return `<span style="color: ${color}; font-size: ${size}px; font-weight: 900; line-height: 1; display: inline-block; vertical-align: middle;">✓</span>`
 }
 
 // Shared email styles - consistent across all emails
@@ -384,9 +406,30 @@ export async function sendShippingConfirmationEmail(props: {
       
       <div class="section-title">Handige Tips</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Controleer je brievenbus voor een bezorgkaartje</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een melding zodra het in de buurt is</span></li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Zorg dat iemand thuis is om het pakket in ontvangst te nemen</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Controleer je brievenbus voor een bezorgkaartje</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Je ontvangt een melding zodra het in de buurt is</td>
+            </tr>
+          </table>
+        </li>
       </ul>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
@@ -452,9 +495,30 @@ export async function sendOrderProcessingEmail(props: {
     <div class="content">
       <div class="section-title">Wat Gebeurt Er Nu?</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je betaling is ontvangen en bevestigd</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>We pakken je items zorgvuldig in</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een tracking code zodra we verzenden</span></li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Je betaling is ontvangen en bevestigd</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">We pakken je items zorgvuldig in</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Je ontvangt een tracking code zodra we verzenden</td>
+            </tr>
+          </table>
+        </li>
       </ul>
       
       <div class="info-box">
@@ -551,7 +615,14 @@ export async function sendOrderDeliveredEmail(props: {
     </div>
     <div class="content">
       <div class="info-box" style="border-left-color: #2ECC71; text-align: center;">
-        <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px;">${createCheckmark('#2ECC71', 20)}<span>Afgeleverd op ${dateText}</span></h3>
+        <h3 style="text-align: center;">
+          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
+            <tr>
+              <td valign="middle" style="padding-right: 8px; vertical-align: middle;">${createCheckmark('#2ECC71', 20)}</td>
+              <td valign="middle" style="vertical-align: middle;">Afgeleverd op ${dateText}</td>
+            </tr>
+          </table>
+        </h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">We hopen dat alles in perfecte staat is aangekomen!</p>
       </div>
       
@@ -582,9 +653,30 @@ export async function sendOrderDeliveredEmail(props: {
       
       <div class="section-title">Verzorgingstips</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Was je MOSE items op 30°C voor het beste resultaat</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Hang je kledingstukken te drogen (niet in de droger)</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lees altijd het waslabel voor specifieke instructies</span></li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Was je MOSE items op 30°C voor het beste resultaat</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Hang je kledingstukken te drogen (niet in de droger)</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;">Lees altijd het waslabel voor specifieke instructies</td>
+            </tr>
+          </table>
+        </li>
       </ul>
       
       <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
@@ -844,21 +936,37 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <div class="info-box" style="border-left-color: #FF9500;">
         <h3 style="color: #FF9500;">Waarom MOSE?</h3>
         <ul class="checklist" style="margin: 12px 0 0 0;">
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
-            <span>Gratis verzending vanaf €${freeShippingThreshold}</span>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Gratis verzending vanaf €${freeShippingThreshold}</td>
+              </tr>
+            </table>
           </li>
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
-            <span>${returnDays} dagen retourrecht</span>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">${returnDays} dagen retourrecht</td>
+              </tr>
+            </table>
           </li>
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
-            <span>Duurzame & hoogwaardige materialen</span>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Duurzame & hoogwaardige materialen</td>
+              </tr>
+            </table>
           </li>
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('#FF9500', 18)}
-            <span>Snelle levering (1-2 werkdagen)</span>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Snelle levering (1-2 werkdagen)</td>
+              </tr>
+            </table>
           </li>
         </ul>
       </div>
@@ -984,10 +1092,38 @@ export async function sendBackInStockEmail(props: {
       <div class="info-box">
         <h3>Waarom Nu Bestellen?</h3>
         <ul class="checklist">
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Beperkte voorraad - dit product is populair!</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Gratis verzending vanaf €100</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>14 dagen retourrecht</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lokaal gemaakt in Groningen</span></li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Beperkte voorraad - dit product is populair!</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Gratis verzending vanaf €100</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">14 dagen retourrecht</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Lokaal gemaakt in Groningen</td>
+              </tr>
+            </table>
+          </li>
         </ul>
       </div>
 
