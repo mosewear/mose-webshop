@@ -1,5 +1,7 @@
 import { Resend } from 'resend'
 import emailIcons from './email-icons.json'
+import emailLogos from './email-logos.json'
+import { lucideIconSvgs, unicodeFallbacks } from './email-icon-svgs'
 
 // Lazy initialize Resend to allow environment variables to load first
 let resendInstance: Resend | null = null
@@ -28,11 +30,10 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   return `${siteUrl}/${url}`
 }
 
-// Helper function to create Gmail-safe logo image (with explicit dimensions and alt text)
-function createLogoImage(logoUrl: string, size: number = 140): string {
-  // Gmail requires explicit width/height attributes and proper alt text
-  // Remove role="presentation" to ensure Gmail displays the image
-  return `<img src="${logoUrl}" alt="MOSE Logo" width="${size}" height="${size}" style="width: ${size}px; height: auto; max-width: ${size}px; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" border="0" />`
+// Helper function to create Gmail-safe logo image (with inline base64 for guaranteed display)
+function createLogoImage(logoBase64: string, size: number = 140): string {
+  // Use inline base64 to ensure logo always displays, even when external images are blocked
+  return `<img src="${logoBase64}" alt="MOSE Logo" width="${size}" height="${size}" style="width: ${size}px; height: auto; max-width: ${size}px; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" border="0" />`
 }
 
 // Helper function to create safe image tag with all required attributes
@@ -44,11 +45,10 @@ function createImageTag(src: string, alt: string, width: number, height?: number
 }
 
 // Helper function to create logo tag (white for dark backgrounds, black for light backgrounds)
-function createLogoTag(logoUrlWhite: string, logoUrlBlack: string, size: number = 140, isDarkBackground: boolean = true): string {
-  // Use white logo for dark backgrounds (header/footer), black logo for light backgrounds
-  const logoUrl = isDarkBackground ? logoUrlWhite : logoUrlBlack
-  // Gmail-safe logo with explicit dimensions
-  return createLogoImage(logoUrl, size)
+function createLogoTag(size: number = 140, isDarkBackground: boolean = true): string {
+  // Use inline base64 logos for guaranteed display across all email clients
+  const logoBase64 = isDarkBackground ? (emailLogos as { white: string }).white : (emailLogos as { black: string }).black
+  return createLogoImage(logoBase64, size)
 }
 
 // Helper function to create sum line with table layout (Gmail-safe, no flexbox)
@@ -67,13 +67,50 @@ function createSumLine(label: string, value: string, isBtw: boolean = false): st
   `
 }
 
-// Helper function to create centered icon circle with hosted PNG (email-safe, works in all clients)
+// Helper function to create centered icon circle with hybrid SVG + Unicode fallback (Option 3)
 function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-delivered' | 'truck-shipping' | 'settings-processing' | 'x-cancelled' | 'shopping-cart-abandoned'): string {
-  const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
-  if (!iconUrl) {
-    console.warn(`Icon style ${iconStyle} not found in email-icons.json`)
+  // Map icon styles to Lucide icon names
+  const iconMap: Record<string, { name: string; bgColor: string; iconColor: string }> = {
+    'check-circle-success': { name: 'check-circle', bgColor: '#2ECC71', iconColor: '#ffffff' },
+    'check-circle-delivered': { name: 'check-circle', bgColor: '#2ECC71', iconColor: '#ffffff' },
+    'truck-shipping': { name: 'truck', bgColor: '#FF9500', iconColor: '#ffffff' },
+    'settings-processing': { name: 'settings', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', iconColor: '#ffffff' },
+    'x-cancelled': { name: 'x', bgColor: '#e74c3c', iconColor: '#ffffff' },
+    'shopping-cart-abandoned': { name: 'shopping-cart', bgColor: '#FF9500', iconColor: '#ffffff' }
+  }
+  
+  const config = iconMap[iconStyle]
+  if (!config) {
+    console.warn(`Icon style ${iconStyle} not found`)
     return ''
   }
+  
+  const svgIcon = lucideIconSvgs[config.name] || ''
+  const unicodeFallback = unicodeFallbacks[config.name] || '●'
+  
+  // Create SVG with colored circle background
+  const svgWithBackground = `
+    <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="36" r="36" fill="${config.bgColor.startsWith('linear-gradient') ? '#667eea' : config.bgColor}"/>
+      ${config.bgColor.startsWith('linear-gradient') ? `
+      <defs>
+        <linearGradient id="grad-${iconStyle}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <circle cx="36" cy="36" r="36" fill="url(#grad-${iconStyle})"/>
+      ` : ''}
+      <g transform="translate(20, 20)" fill="none" stroke="${config.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${svgIcon.replace(/<svg[^>]*>/, '').replace('</svg>', '').replace(/width="[^"]*"/, '').replace(/height="[^"]*"/, '').replace(/viewBox="[^"]*"/, '')}
+      </g>
+      <!-- Unicode fallback for Outlook -->
+      <text x="36" y="36" font-size="32" fill="${config.iconColor}" text-anchor="middle" dominant-baseline="central" style="font-family: Arial, sans-serif;">${unicodeFallback}</text>
+    </svg>
+  `
+  
+  // Convert SVG to base64 for inline embedding
+  const svgBase64 = `data:image/svg+xml;base64,${Buffer.from(svgWithBackground).toString('base64')}`
   
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
@@ -82,7 +119,7 @@ function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-deli
           <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
             <tr>
               <td align="center" valign="middle" style="padding: 0;">
-                ${createImageTag(iconUrl, iconStyle, 72, 72, 'display: block;')}
+                <img src="${svgBase64}" alt="${iconStyle}" width="72" height="72" style="width: 72px; height: 72px; display: block; border: 0; outline: none; text-decoration: none;" border="0" />
               </td>
             </tr>
           </table>
@@ -92,16 +129,49 @@ function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-deli
   `
 }
 
-// Helper function to create inline checkmark with hosted PNG (email-safe, works everywhere)
+// Helper function to create inline checkmark with hybrid SVG + Unicode fallback (Option 3)
 function createCheckmark(color: 'green' | 'orange' = 'green'): string {
-  const iconStyle = color === 'orange' ? 'check-orange' : 'check-small'
-  const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
-  if (!iconUrl) {
-    // Fallback to Unicode if icon not found
-    return `<span style="color: ${color === 'orange' ? '#FF9500' : '#2ECC71'}; font-weight: 900; font-size: 18px; line-height: 1;">✓</span>`
-  }
+  const iconColor = color === 'orange' ? '#FF9500' : '#2ECC71'
+  const svgIcon = lucideIconSvgs['check'] || ''
+  const unicodeFallback = unicodeFallbacks['check'] || '✓'
   
-  return createImageTag(iconUrl, 'checkmark', 18, 18, 'display: inline-block; vertical-align: middle; margin-right: 8px;')
+  // Create inline SVG with Unicode fallback
+  const svgWithColor = svgIcon.replace(/stroke="currentColor"/g, `stroke="${iconColor}"`)
+  
+  // Convert to base64 for inline embedding
+  const svgBase64 = `data:image/svg+xml;base64,${Buffer.from(svgWithColor).toString('base64')}`
+  
+  // Return table-based layout for perfect alignment in all email clients
+  return `
+    <table cellpadding="0" cellspacing="0" border="0" style="display: inline-table; vertical-align: middle; margin-right: 8px;">
+      <tr>
+        <td valign="middle" style="padding: 0; line-height: 1;">
+          <!--[if mso]>
+          <span style="color: ${iconColor}; font-size: 18px; font-weight: 900;">${unicodeFallback}</span>
+          <![endif]-->
+          <!--[if !mso]><!-->
+          <img src="${svgBase64}" alt="checkmark" width="18" height="18" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; border: 0; outline: none; text-decoration: none;" border="0" />
+          <!--<![endif]-->
+        </td>
+      </tr>
+    </table>
+  `
+}
+
+// Helper function to create bullet list item with checkmark (table-based for perfect alignment)
+function createBulletListItem(text: string, color: 'green' | 'orange' = 'green'): string {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0;">
+      <tr>
+        <td valign="top" style="width: 26px; padding: 0; padding-right: 10px;">
+          ${createCheckmark(color)}
+        </td>
+        <td valign="top" style="padding: 0; font-size: 15px; line-height: 1.5; color: #333;">
+          ${text}
+        </td>
+      </tr>
+    </table>
+  `
 }
 
 // Shared email styles - consistent across all emails
@@ -217,11 +287,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const subtotalExclBtw = subtotal / 1.21
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
   
   const productItemsHtml = orderItems.map(item => {
     const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
@@ -250,7 +316,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+            ${createLogoTag(140, true)}
           </td>
         </tr>
       </table>
@@ -291,7 +357,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -335,11 +401,7 @@ export async function sendShippingConfirmationEmail(props: {
   const { customerEmail, customerName, orderId, trackingCode, trackingUrl, carrier, estimatedDelivery } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
 
   // Format delivery date
   let deliveryText = '2-3 werkdagen'
@@ -367,7 +429,7 @@ export async function sendShippingConfirmationEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+            ${createLogoTag(140, true)}
           </td>
         </tr>
       </table>
@@ -405,7 +467,7 @@ export async function sendShippingConfirmationEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -447,11 +509,7 @@ export async function sendOrderProcessingEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, estimatedShipDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -468,7 +526,7 @@ export async function sendOrderProcessingEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+            ${createLogoTag(140, true)}
           </td>
         </tr>
       </table>
@@ -483,9 +541,9 @@ export async function sendOrderProcessingEmail(props: {
     <div class="content">
       <div class="section-title">Wat Gebeurt Er Nu?</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Je betaling is ontvangen en bevestigd</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>We pakken je items zorgvuldig in</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Je ontvangt een tracking code zodra we verzenden</span></li>
+        ${createBulletListItem('Je betaling is ontvangen en bevestigd', 'green')}
+        ${createBulletListItem('We pakken je items zorgvuldig in', 'green')}
+        ${createBulletListItem('Je ontvangt een tracking code zodra we verzenden', 'green')}
       </ul>
       
       <div class="info-box">
@@ -505,7 +563,7 @@ export async function sendOrderProcessingEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -552,11 +610,7 @@ export async function sendOrderDeliveredEmail(props: {
   const { customerEmail, customerName, orderId, orderItems, deliveryDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
 
   // Format delivery date
   let dateText = 'vandaag'
@@ -584,7 +638,7 @@ export async function sendOrderDeliveredEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+            ${createLogoTag(140, true)}
           </td>
         </tr>
       </table>
@@ -598,7 +652,22 @@ export async function sendOrderDeliveredEmail(props: {
     </div>
     <div class="content">
       <div class="info-box" style="border-left-color: #2ECC71; text-align: center;">
-        <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px;">${createCheckmark('green')}<span>Afgeleverd op ${dateText}</span></h3>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 16px 0;">
+          <tr>
+            <td align="center" style="padding: 0;">
+              <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td valign="middle" style="padding: 0; padding-right: 8px;">
+                    ${createCheckmark('green')}
+                  </td>
+                  <td valign="middle" style="padding: 0;">
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">Afgeleverd op ${dateText}</h3>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">We hopen dat alles in perfecte staat is aangekomen!</p>
       </div>
       
@@ -629,9 +698,9 @@ export async function sendOrderDeliveredEmail(props: {
       
       <div class="section-title">Verzorgingstips</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Was je MOSE items op 30°C voor het beste resultaat</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Hang je kledingstukken te drogen (niet in de droger)</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Lees altijd het waslabel voor specifieke instructies</span></li>
+        ${createBulletListItem('Was je MOSE items op 30°C voor het beste resultaat', 'green')}
+        ${createBulletListItem('Hang je kledingstukken te drogen (niet in de droger)', 'green')}
+        ${createBulletListItem('Lees altijd het waslabel voor specifieke instructies', 'green')}
       </ul>
       
       <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
@@ -644,7 +713,7 @@ export async function sendOrderDeliveredEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -686,11 +755,7 @@ export async function sendOrderCancelledEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, cancellationReason } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -707,7 +772,7 @@ export async function sendOrderCancelledEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+            ${createLogoTag(140, true)}
           </td>
         </tr>
       </table>
@@ -751,7 +816,7 @@ export async function sendOrderCancelledEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -820,11 +885,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   } = props
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
   
   const productItemsHtml = orderItems.map(item => {
     const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
@@ -852,7 +913,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   <div class="wrapper">
     <!-- Logo -->
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+      ${createLogoTag(140, true)}
     </div>
     
     <!-- Hero Section -->
@@ -920,24 +981,12 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <!-- Why Shop with Us -->
       <div class="info-box" style="border-left-color: #FF9500;">
         <h3 style="color: #FF9500;">Waarom MOSE?</h3>
-        <ul class="checklist" style="margin: 12px 0 0 0;">
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('orange')}
-            <span>Gratis verzending vanaf €${freeShippingThreshold}</span>
-          </li>
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('orange')}
-            <span>${returnDays} dagen retourrecht</span>
-          </li>
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('orange')}
-            <span>Duurzame & hoogwaardige materialen</span>
-          </li>
-          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
-            ${createCheckmark('orange')}
-            <span>Snelle levering (1-2 werkdagen)</span>
-          </li>
-        </ul>
+        <div style="margin: 12px 0 0 0;">
+          ${createBulletListItem(`Gratis verzending vanaf €${freeShippingThreshold}`, 'orange')}
+          ${createBulletListItem(`${returnDays} dagen retourrecht`, 'orange')}
+          ${createBulletListItem('Duurzame & hoogwaardige materialen', 'orange')}
+          ${createBulletListItem('Snelle levering (1-2 werkdagen)', 'orange')}
+        </div>
       </div>
 
       <!-- Urgency Reminder -->
@@ -964,7 +1013,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -1014,11 +1063,7 @@ export async function sendBackInStockEmail(props: {
   const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
   const productUrl = `${siteUrl}/product/${productSlug}`
   const normalizedProductImageUrl = normalizeImageUrl(productImageUrl, siteUrl)
 
@@ -1039,7 +1084,7 @@ export async function sendBackInStockEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+            ${createLogoTag(140, true)}
           </td>
         </tr>
       </table>
@@ -1080,10 +1125,10 @@ export async function sendBackInStockEmail(props: {
       <div class="info-box">
         <h3>Waarom Nu Bestellen?</h3>
         <ul class="checklist">
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Beperkte voorraad - dit product is populair!</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Gratis verzending vanaf €100</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>14 dagen retourrecht</span></li>
-          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Lokaal gemaakt in Groningen</span></li>
+          ${createBulletListItem('Beperkte voorraad - dit product is populair!', 'green')}
+          ${createBulletListItem('Gratis verzending vanaf €100', 'green')}
+          ${createBulletListItem('14 dagen retourrecht', 'green')}
+          ${createBulletListItem('Lokaal gemaakt in Groningen', 'green')}
         </ul>
       </div>
 
@@ -1097,7 +1142,7 @@ export async function sendBackInStockEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
@@ -1141,11 +1186,7 @@ export async function sendContactFormEmail(props: {
   const { name, email, subject, message } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logo URLs
-  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
-  // - logomose.png: zwarte logo voor lichte achtergronden
-  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
-  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logos are now inline base64 embedded for guaranteed display
   const adminEmail = process.env.CONTACT_EMAIL || 'info@mosewear.nl'
 
   const subjectLabels: { [key: string]: string } = {
@@ -1168,7 +1209,7 @@ export async function sendContactFormEmail(props: {
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff;" data-ogsc="#ffffff">
   <div class="wrapper" style="max-width: 600px; margin: 0 auto;">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
+      ${createLogoTag(140, true)}
     </div>
     <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
       ${createIconCircle('check-circle-success')}
@@ -1207,7 +1248,7 @@ export async function sendContactFormEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
+            ${createLogoTag(100, true)}
           </td>
         </tr>
       </table>
