@@ -1,19 +1,6 @@
 import { Resend } from 'resend'
-import emailIcons from './email-icons.json'
-import emailLogos from './email-logos.json'
-import { lucideIconSvgs, unicodeFallbacks } from './email-icon-svgs'
 
-// Lazy initialize Resend to allow environment variables to load first
-let resendInstance: Resend | null = null
-function getResend() {
-  if (!resendInstance) {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not set in environment variables')
-    }
-    resendInstance = new Resend(process.env.RESEND_API_KEY)
-  }
-  return resendInstance
-}
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Helper function to normalize image URLs (ensure absolute URLs)
 function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
@@ -30,10 +17,38 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   return `${siteUrl}/${url}`
 }
 
-// Helper function to create Gmail-safe logo image (with inline base64 for guaranteed display)
-function createLogoImage(logoBase64: string, size: number = 140): string {
-  // Use inline base64 to ensure logo always displays, even when external images are blocked
-  return `<img src="${logoBase64}" alt="MOSE Logo" width="${size}" height="${size}" style="width: ${size}px; height: auto; max-width: ${size}px; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" border="0" />`
+// Helper function to get logo URLs for light and dark mode
+function getLogoUrls(siteUrl: string): { light: string; dark: string } {
+  return {
+    light: normalizeImageUrl('/logomose.png', siteUrl),
+    dark: normalizeImageUrl('/logomose_white.png', siteUrl)
+  }
+}
+
+// Helper function to create logo image tag with dark mode support
+function createLogoTag(siteUrl: string, width: number = 140, height: number | 'auto' = 'auto'): string {
+  const logos = getLogoUrls(siteUrl)
+  const heightAttr = height === 'auto' ? '' : ` height="${height}"`
+  const heightStyle = height === 'auto' ? 'height: auto;' : `height: ${height}px;`
+  
+  return `
+    <img 
+      src="${logos.light}" 
+      alt="MOSE" 
+      width="${width}"${heightAttr}
+      style="width: ${width}px; ${heightStyle} display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; max-width: ${width}px;"
+      role="presentation"
+      class="logo-light"
+    />
+    <img 
+      src="${logos.dark}" 
+      alt="MOSE" 
+      width="${width}"${heightAttr}
+      style="width: ${width}px; ${heightStyle} display: none; margin: 0 auto; border: 0; outline: none; text-decoration: none; max-width: ${width}px;"
+      role="presentation"
+      class="logo-dark"
+    />
+  `
 }
 
 // Helper function to create safe image tag with all required attributes
@@ -44,75 +59,41 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
 }
 
-// Helper function to create logo tag (white for dark backgrounds, black for light backgrounds)
-function createLogoTag(size: number = 140, isDarkBackground: boolean = true): string {
-  // Use inline base64 logos for guaranteed display across all email clients
-  const logoBase64 = isDarkBackground ? (emailLogos as { white: string }).white : (emailLogos as { black: string }).black
-  return createLogoImage(logoBase64, size)
+// Helper function to create Lucide icon SVG (email-safe)
+function createLucideIcon(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', size: number = 32, color: string = '#ffffff'): string {
+  const icons: Record<string, string> = {
+    'check': '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="m9 11 3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'truck': '<path d="M16 3h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M8 3H3v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 22h-4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'settings': '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>',
+    'x': '<path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'shopping-cart': '<circle cx="8" cy="21" r="1" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="19" cy="21" r="1" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    'package': '<path d="m7.5 4.27 9 5.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M21 8.77v5.23a2 2 0 0 1-1.11 1.79l-8 4.44a2 2 0 0 1-1.78 0l-8-4.44A2 2 0 0 1 3 14V8.77" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 22V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="m3 8.77 9 5.15 9-5.15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+  }
+  
+  const path = icons[iconName] || icons['check']
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;" role="presentation">
+    ${path.replace(/currentColor/g, color)}
+  </svg>`
 }
 
-// Helper function to create sum line with table layout (Gmail-safe, no flexbox)
-function createSumLine(label: string, value: string, isBtw: boolean = false): string {
-  return `
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0;">
-      <tr>
-        <td align="left" style="padding: 0; font-size: 15px; ${isBtw ? 'color: #999; font-size: 13px;' : ''}">
-          ${label}
-        </td>
-        <td align="right" style="padding: 0; font-size: 15px; font-weight: ${isBtw ? '400' : '600'}; ${isBtw ? 'color: #999; font-size: 13px;' : ''}">
-          ${value}
-        </td>
-      </tr>
-    </table>
-  `
-}
-
-// Helper function to create centered icon circle with hybrid SVG + Unicode fallback (Option 3)
-function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-delivered' | 'truck-shipping' | 'settings-processing' | 'x-cancelled' | 'shopping-cart-abandoned'): string {
-  // Map icon styles to Lucide icon names
-  const iconMap: Record<string, { name: string; bgColor: string; iconColor: string }> = {
-    'check-circle-success': { name: 'check-circle', bgColor: '#2ECC71', iconColor: '#ffffff' },
-    'check-circle-delivered': { name: 'check-circle', bgColor: '#2ECC71', iconColor: '#ffffff' },
-    'truck-shipping': { name: 'truck', bgColor: '#FF9500', iconColor: '#ffffff' },
-    'settings-processing': { name: 'settings', bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', iconColor: '#ffffff' },
-    'x-cancelled': { name: 'x', bgColor: '#e74c3c', iconColor: '#ffffff' },
-    'shopping-cart-abandoned': { name: 'shopping-cart', bgColor: '#FF9500', iconColor: '#ffffff' }
-  }
-  
-  const config = iconMap[iconStyle]
-  if (!config) {
-    console.warn(`Icon style ${iconStyle} not found`)
-    return ''
-  }
-  
-  const svgIcon = lucideIconSvgs[config.name] || ''
-  const unicodeFallback = unicodeFallbacks[config.name] || '●'
-  
-  // Use hosted PNG icons (base64 SVG doesn't work in email clients)
-  // Map to existing hosted PNG icons
-  const iconUrlMap: Record<string, string> = {
-    'check-circle-success': (emailIcons as Record<string, string>)['check-circle-success'] || '',
-    'check-circle-delivered': (emailIcons as Record<string, string>)['check-circle-delivered'] || '',
-    'truck-shipping': (emailIcons as Record<string, string>)['truck-shipping'] || '',
-    'settings-processing': (emailIcons as Record<string, string>)['settings-processing'] || '',
-    'x-cancelled': (emailIcons as Record<string, string>)['x-cancelled'] || '',
-    'shopping-cart-abandoned': (emailIcons as Record<string, string>)['shopping-cart-abandoned'] || ''
-  }
-  
-  const iconUrl = iconUrlMap[iconStyle]
-  if (!iconUrl) {
-    console.warn(`Icon style ${iconStyle} not found in email-icons.json`)
-    return ''
-  }
-  
+// Helper function to create centered icon circle with table layout (email-safe)
+function createIconCircle(iconName: 'check' | 'truck' | 'settings' | 'x' | 'shopping-cart' | 'package' | 'check-circle', backgroundColor: string, iconSize: number = 32): string {
+  const iconSvg = createLucideIcon(iconName, iconSize, '#ffffff')
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
       <tr>
         <td align="center" style="padding: 0;">
           <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
             <tr>
-              <td align="center" valign="middle" style="padding: 0;">
-                ${createImageTag(iconUrl, iconStyle, 72, 72, 'display: block;')}
+              <td align="center" valign="middle" style="width: 72px; height: 72px; background-color: ${backgroundColor}; border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,0.15); padding: 0;">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" height="100%">
+                  <tr>
+                    <td align="center" valign="middle" style="padding: 0;">
+                      ${iconSvg}
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
@@ -122,49 +103,9 @@ function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-deli
   `
 }
 
-// Helper function to create inline checkmark with hosted PNG (email-safe, works everywhere)
-function createCheckmark(color: 'green' | 'orange' = 'green'): string {
-  const iconStyle = color === 'orange' ? 'check-orange' : 'check-small'
-  const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
-  const unicodeFallback = '✓'
-  const iconColor = color === 'orange' ? '#FF9500' : '#2ECC71'
-  
-  if (!iconUrl) {
-    // Fallback to Unicode if icon not found
-    return `<span style="color: ${iconColor}; font-weight: 900; font-size: 18px; line-height: 1;">${unicodeFallback}</span>`
-  }
-  
-  // Return table-based layout for perfect alignment in all email clients
-  return `
-    <table cellpadding="0" cellspacing="0" border="0" style="display: inline-table; vertical-align: middle; margin-right: 8px;">
-      <tr>
-        <td valign="middle" style="padding: 0; line-height: 1;">
-          <!--[if mso]>
-          <span style="color: ${iconColor}; font-size: 18px; font-weight: 900;">${unicodeFallback}</span>
-          <![endif]-->
-          <!--[if !mso]><!-->
-          ${createImageTag(iconUrl, 'checkmark', 18, 18, 'display: inline-block; vertical-align: middle;')}
-          <!--<![endif]-->
-        </td>
-      </tr>
-    </table>
-  `
-}
-
-// Helper function to create bullet list item with checkmark (table-based for perfect alignment)
-function createBulletListItem(text: string, color: 'green' | 'orange' = 'green'): string {
-  return `
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0;">
-      <tr>
-        <td valign="top" style="width: 26px; padding: 0; padding-right: 10px;">
-          ${createCheckmark(color)}
-        </td>
-        <td valign="top" style="padding: 0; font-size: 15px; line-height: 1.5; color: #333;">
-          ${text}
-        </td>
-      </tr>
-    </table>
-  `
+// Helper function to create inline checkmark (email-safe, no CSS :before)
+function createCheckmark(color: string = '#2ECC71', size: number = 18): string {
+  return createLucideIcon('check', size, color)
 }
 
 // Shared email styles - consistent across all emails
@@ -173,6 +114,8 @@ const EMAIL_STYLES = `
   .wrapper { max-width: 600px; margin: 0 auto; }
   .logo-bar { padding: 24px; text-align: center; background: #000; }
   .logo-bar img { max-width: 140px; display: block; margin: 0 auto; }
+  .logo-bar .logo-light { display: block !important; }
+  .logo-bar .logo-dark { display: none !important; }
   .hero { padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%); }
   .icon-circle { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
   .icon-success { background: #2ECC71; }
@@ -197,7 +140,7 @@ const EMAIL_STYLES = `
   .button-secondary:hover { background: #333; }
   .summary { background: #000; color: #fff; padding: 28px 24px; margin-top: 28px; }
   .sum-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 16px; text-align: center; }
-  .sum-line { padding: 8px 0; font-size: 15px; }
+  .sum-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; }
   .sum-btw { font-size: 13px; color: #999; }
   .sum-divider { border-top: 1px solid #333; margin: 12px 0; }
   .sum-grand { font-size: 28px; font-weight: 900; padding-top: 12px; text-align: center; }
@@ -245,6 +188,11 @@ const EMAIL_STYLES = `
     p { color: #e0e0e0 !important; }
     a { color: #2ECC71 !important; }
     strong { color: #ffffff !important; }
+    .logo-bar { background: #1a1a1a !important; }
+    .logo-bar .logo-light { display: none !important; }
+    .logo-bar .logo-dark { display: block !important; }
+    .footer .logo-light { display: none !important; }
+    .footer .logo-dark { display: block !important; }
   }
 `
 
@@ -280,7 +228,6 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const subtotalExclBtw = subtotal / 1.21
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
   
   const productItemsHtml = orderItems.map(item => {
     const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
@@ -305,17 +252,9 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(140, true)}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
     <div class="hero">
-      ${createIconCircle('check-circle-success')}
+      ${createIconCircle('check-circle', '#2ECC71', 38)}
       <h1>BEDANKT!</h1>
       <div class="hero-sub">Bestelling Geplaatst</div>
       <div class="hero-text">Hey ${customerName}, we gaan voor je aan de slag</div>
@@ -338,22 +277,25 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       
       <div class="summary">
         <div class="sum-label">Betaaloverzicht</div>
-        ${createSumLine('Subtotaal (excl. BTW)', `€${subtotalExclBtw.toFixed(2)}`)}
-        ${createSumLine('BTW (21%)', `€${btw.toFixed(2)}`, true)}
-        ${createSumLine('Verzendkosten', `€${shipping.toFixed(2)}`)}
+        <div class="sum-line">
+          <span>Subtotaal (excl. BTW)</span>
+          <span style="font-weight:600">€${subtotalExclBtw.toFixed(2)}</span>
+        </div>
+        <div class="sum-line sum-btw">
+          <span>BTW (21%)</span>
+          <span>€${btw.toFixed(2)}</span>
+        </div>
+        <div class="sum-line">
+          <span>Verzendkosten</span>
+          <span style="font-weight:600">€${shipping.toFixed(2)}</span>
+        </div>
         <div class="sum-divider"></div>
         <div class="sum-grand">€${orderTotal.toFixed(2)}</div>
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -362,7 +304,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Bestelling bevestiging #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -394,7 +336,6 @@ export async function sendShippingConfirmationEmail(props: {
   const { customerEmail, customerName, orderId, trackingCode, trackingUrl, carrier, estimatedDelivery } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
 
   // Format delivery date
   let deliveryText = '2-3 werkdagen'
@@ -418,17 +359,9 @@ export async function sendShippingConfirmationEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(140, true)}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
     <div class="hero">
-      ${createIconCircle('truck-shipping')}
+      ${createIconCircle('truck', '#FF9500', 42)}
       <h1>ONDERWEG!</h1>
       <div class="hero-sub">Je Pakket Is Verzonden</div>
       <div class="hero-text">Hey ${customerName}, je bestelling komt eraan</div>
@@ -451,19 +384,13 @@ export async function sendShippingConfirmationEmail(props: {
       
       <div class="section-title">Handige Tips</div>
       <ul class="checklist">
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Controleer je brievenbus voor een bezorgkaartje</span></li>
-        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('green')}<span>Je ontvangt een melding zodra het in de buurt is</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Zorg dat iemand thuis is om het pakket in ontvangst te nemen</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Controleer je brievenbus voor een bezorgkaartje</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een melding zodra het in de buurt is</span></li>
       </ul>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -472,7 +399,7 @@ export async function sendShippingConfirmationEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Je bestelling is verzonden #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -502,7 +429,6 @@ export async function sendOrderProcessingEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, estimatedShipDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -515,17 +441,9 @@ export async function sendOrderProcessingEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(140, true)}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
     <div class="hero">
-      ${createIconCircle('settings-processing')}
+      ${createIconCircle('settings', '#667eea', 42)}
       <h1>IN BEHANDELING</h1>
       <div class="hero-sub">We Pakken Je Order In</div>
       <div class="hero-text">Hey ${customerName}, we zijn voor je aan de slag!</div>
@@ -534,9 +452,9 @@ export async function sendOrderProcessingEmail(props: {
     <div class="content">
       <div class="section-title">Wat Gebeurt Er Nu?</div>
       <ul class="checklist">
-        ${createBulletListItem('Je betaling is ontvangen en bevestigd', 'green')}
-        ${createBulletListItem('We pakken je items zorgvuldig in', 'green')}
-        ${createBulletListItem('Je ontvangt een tracking code zodra we verzenden', 'green')}
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je betaling is ontvangen en bevestigd</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>We pakken je items zorgvuldig in</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Je ontvangt een tracking code zodra we verzenden</span></li>
       </ul>
       
       <div class="info-box">
@@ -546,20 +464,17 @@ export async function sendOrderProcessingEmail(props: {
       
       <div class="summary">
         <div class="sum-label">Order Overzicht</div>
-        ${createSumLine('Order nummer', `#${orderId.slice(0,8).toUpperCase()}`)}
+        <div class="sum-line">
+          <span>Order nummer</span>
+          <span style="font-weight:600;font-family:monospace">#${orderId.slice(0,8).toUpperCase()}</span>
+        </div>
         <div class="sum-divider"></div>
         <div class="sum-grand">€${orderTotal.toFixed(2)}</div>
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -568,7 +483,7 @@ export async function sendOrderProcessingEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Je bestelling wordt voorbereid #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -603,7 +518,6 @@ export async function sendOrderDeliveredEmail(props: {
   const { customerEmail, customerName, orderId, orderItems, deliveryDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
 
   // Format delivery date
   let dateText = 'vandaag'
@@ -627,17 +541,9 @@ export async function sendOrderDeliveredEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(140, true)}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
     <div class="hero">
-      ${createIconCircle('check-circle-delivered')}
+      ${createIconCircle('check-circle', '#2ECC71', 46)}
       <h1>BEZORGD!</h1>
       <div class="hero-sub">Je Pakket Is Aangekomen</div>
       <div class="hero-text">Hey ${customerName}, geniet van je nieuwe items!</div>
@@ -645,22 +551,7 @@ export async function sendOrderDeliveredEmail(props: {
     </div>
     <div class="content">
       <div class="info-box" style="border-left-color: #2ECC71; text-align: center;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 16px 0;">
-          <tr>
-            <td align="center" style="padding: 0;">
-              <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
-                <tr>
-                  <td valign="middle" style="padding: 0; padding-right: 8px;">
-                    ${createCheckmark('green')}
-                  </td>
-                  <td valign="middle" style="padding: 0;">
-                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">Afgeleverd op ${dateText}</h3>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+        <h3 style="display: flex; align-items: center; justify-content: center; gap: 8px;">${createCheckmark('#2ECC71', 20)}<span>Afgeleverd op ${dateText}</span></h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">We hopen dat alles in perfecte staat is aangekomen!</p>
       </div>
       
@@ -691,9 +582,9 @@ export async function sendOrderDeliveredEmail(props: {
       
       <div class="section-title">Verzorgingstips</div>
       <ul class="checklist">
-        ${createBulletListItem('Was je MOSE items op 30°C voor het beste resultaat', 'green')}
-        ${createBulletListItem('Hang je kledingstukken te drogen (niet in de droger)', 'green')}
-        ${createBulletListItem('Lees altijd het waslabel voor specifieke instructies', 'green')}
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Was je MOSE items op 30°C voor het beste resultaat</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Hang je kledingstukken te drogen (niet in de droger)</span></li>
+        <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lees altijd het waslabel voor specifieke instructies</span></li>
       </ul>
       
       <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
@@ -703,13 +594,7 @@ export async function sendOrderDeliveredEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -718,7 +603,7 @@ export async function sendOrderDeliveredEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Je pakket is bezorgd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -748,7 +633,6 @@ export async function sendOrderCancelledEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, cancellationReason } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -761,17 +645,9 @@ export async function sendOrderCancelledEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(140, true)}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
     <div class="hero">
-      ${createIconCircle('x-cancelled')}
+      ${createIconCircle('x', '#e74c3c', 42)}
       <h1>GEANNULEERD</h1>
       <div class="hero-sub">Order Geannuleerd</div>
       <div class="hero-text">Hey ${customerName}, je order is geannuleerd</div>
@@ -806,13 +682,7 @@ export async function sendOrderCancelledEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -821,7 +691,7 @@ export async function sendOrderCancelledEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Bestellingen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `Order geannuleerd #${orderId.slice(0, 8).toUpperCase()} - MOSE`,
@@ -878,7 +748,6 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   } = props
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
   
   const productItemsHtml = orderItems.map(item => {
     const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
@@ -906,12 +775,12 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   <div class="wrapper">
     <!-- Logo -->
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      ${createLogoTag(140, true)}
+      ${createLogoTag(siteUrl, 140, 'auto')}
     </div>
     
     <!-- Hero Section -->
     <div class="hero">
-      ${createIconCircle('shopping-cart-abandoned')}
+      ${createIconCircle('shopping-cart', '#FF9500', 42)}
       <h1>NIET VERGETEN?</h1>
       <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
       <div class="hero-text">Hey ${customerName}, je hebt nog ${orderItems.length} item${orderItems.length > 1 ? 's' : ''} in je winkelwagen!</div>
@@ -974,12 +843,24 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <!-- Why Shop with Us -->
       <div class="info-box" style="border-left-color: #FF9500;">
         <h3 style="color: #FF9500;">Waarom MOSE?</h3>
-        <div style="margin: 12px 0 0 0;">
-          ${createBulletListItem(`Gratis verzending vanaf €${freeShippingThreshold}`, 'orange')}
-          ${createBulletListItem(`${returnDays} dagen retourrecht`, 'orange')}
-          ${createBulletListItem('Duurzame & hoogwaardige materialen', 'orange')}
-          ${createBulletListItem('Snelle levering (1-2 werkdagen)', 'orange')}
-        </div>
+        <ul class="checklist" style="margin: 12px 0 0 0;">
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>Gratis verzending vanaf €${freeShippingThreshold}</span>
+          </li>
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>${returnDays} dagen retourrecht</span>
+          </li>
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>Duurzame & hoogwaardige materialen</span>
+          </li>
+          <li style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;">
+            ${createCheckmark('#FF9500', 18)}
+            <span>Snelle levering (1-2 werkdagen)</span>
+          </li>
+        </ul>
       </div>
 
       <!-- Urgency Reminder -->
@@ -1003,13 +884,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     
     <!-- Footer -->
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
@@ -1022,7 +897,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Winkelwagen <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `${customerName}, je MOSE items wachten nog op je!`,
@@ -1056,7 +931,6 @@ export async function sendBackInStockEmail(props: {
   const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
   const productUrl = `${siteUrl}/product/${productSlug}`
   const normalizedProductImageUrl = normalizeImageUrl(productImageUrl, siteUrl)
 
@@ -1073,17 +947,9 @@ export async function sendBackInStockEmail(props: {
 </head>
 <body data-ogsc="#ffffff">
   <div class="wrapper">
-    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(140, true)}
-          </td>
-        </tr>
-      </table>
-    </div>
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
     <div class="hero">
-      ${createIconCircle('check-circle-success')}
+      ${createIconCircle('check-circle', '#2ECC71', 42)}
       <h1>WEER OP VOORRAAD!</h1>
       <div class="hero-sub">Je Favoriete Product</div>
       <div class="hero-text">Goed nieuws! ${productName} is weer beschikbaar</div>
@@ -1118,10 +984,10 @@ export async function sendBackInStockEmail(props: {
       <div class="info-box">
         <h3>Waarom Nu Bestellen?</h3>
         <ul class="checklist">
-          ${createBulletListItem('Beperkte voorraad - dit product is populair!', 'green')}
-          ${createBulletListItem('Gratis verzending vanaf €100', 'green')}
-          ${createBulletListItem('14 dagen retourrecht', 'green')}
-          ${createBulletListItem('Lokaal gemaakt in Groningen', 'green')}
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Beperkte voorraad - dit product is populair!</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Gratis verzending vanaf €100</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>14 dagen retourrecht</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 10px;">${createCheckmark('#2ECC71', 18)}<span>Lokaal gemaakt in Groningen</span></li>
         </ul>
       </div>
 
@@ -1132,13 +998,7 @@ export async function sendBackInStockEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
@@ -1150,7 +1010,7 @@ export async function sendBackInStockEmail(props: {
 </html>`
 
   try {
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Notificaties <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
       subject: `${productName} is weer op voorraad! - MOSE`,
@@ -1179,7 +1039,6 @@ export async function sendContactFormEmail(props: {
   const { name, email, subject, message } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  // Logos are now inline base64 embedded for guaranteed display
   const adminEmail = process.env.CONTACT_EMAIL || 'info@mosewear.nl'
 
   const subjectLabels: { [key: string]: string } = {
@@ -1202,10 +1061,10 @@ export async function sendContactFormEmail(props: {
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff;" data-ogsc="#ffffff">
   <div class="wrapper" style="max-width: 600px; margin: 0 auto;">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      ${createLogoTag(140, true)}
+      ${createLogoTag(siteUrl, 140, 'auto')}
     </div>
     <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
-      ${createIconCircle('check-circle-success')}
+      ${createIconCircle('check-circle', '#2ECC71', 38)}
       <h1 style="margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px;">NIEUW BERICHT</h1>
       <div class="hero-sub" style="font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contactformulier</div>
       <div class="hero-text" style="font-size: 14px; color: #999;">Van ${name}</div>
@@ -1238,13 +1097,7 @@ export async function sendContactFormEmail(props: {
       </div>
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-        <tr>
-          <td align="center" style="padding: 0;">
-            ${createLogoTag(100, true)}
-          </td>
-        </tr>
-      </table>
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
       <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
       <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
     </div>
@@ -1258,7 +1111,7 @@ export async function sendContactFormEmail(props: {
       return { success: false, error: 'Email service not configured' }
     }
 
-    const { data, error } = await getResend().emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'MOSE Contact <contact@orders.mosewear.nl>',
       to: [adminEmail],
       replyTo: email,
