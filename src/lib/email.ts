@@ -1,6 +1,5 @@
 import { Resend } from 'resend'
 import emailIcons from './email-icons.json'
-import emailLogoUrls from './email-logo-urls.json'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -27,13 +26,11 @@ function createImageTag(src: string, alt: string, width: number, height?: number
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" ${height && height !== 'auto' ? `height="${height}"` : ''} style="${styles}" role="presentation" />`
 }
 
-// Helper function to create logo with white version (Gmail-safe, no filter needed)
-function createLogoTag(size: 'header' | 'footer' = 'header'): string {
-  const logoUrls = emailLogoUrls as { header: string; footer: string }
-  const logoUrl = size === 'header' ? logoUrls.header : logoUrls.footer
-  const width = size === 'header' ? 140 : 100
-  
-  return `<img src="${logoUrl}" alt="MOSE" width="${width}" style="width: ${width}px; height: auto; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" role="presentation" />`
+// Helper function to create logo tag (white for dark backgrounds, black for light backgrounds)
+function createLogoTag(logoUrlWhite: string, logoUrlBlack: string, size: number = 140, isDarkBackground: boolean = true): string {
+  // Use white logo for dark backgrounds (header/footer), black logo for light backgrounds
+  const logoUrl = isDarkBackground ? logoUrlWhite : logoUrlBlack
+  return `<img src="${logoUrl}" alt="MOSE" width="${size}" style="width: ${size}px; height: auto; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" role="presentation" />`
 }
 
 // Helper function to create sum line with table layout (Gmail-safe, no flexbox)
@@ -202,7 +199,11 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const subtotalExclBtw = subtotal / 1.21
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
   
   const productItemsHtml = orderItems.map(item => {
     const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
@@ -231,7 +232,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('header')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
           </td>
         </tr>
       </table>
@@ -272,7 +273,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -316,7 +317,11 @@ export async function sendShippingConfirmationEmail(props: {
   const { customerEmail, customerName, orderId, trackingCode, trackingUrl, carrier, estimatedDelivery } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
 
   // Format delivery date
   let deliveryText = '2-3 werkdagen'
@@ -344,7 +349,7 @@ export async function sendShippingConfirmationEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('header')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
           </td>
         </tr>
       </table>
@@ -382,7 +387,7 @@ export async function sendShippingConfirmationEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -424,7 +429,11 @@ export async function sendOrderProcessingEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, estimatedShipDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -441,7 +450,7 @@ export async function sendOrderProcessingEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('header')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
           </td>
         </tr>
       </table>
@@ -478,7 +487,7 @@ export async function sendOrderProcessingEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -525,7 +534,11 @@ export async function sendOrderDeliveredEmail(props: {
   const { customerEmail, customerName, orderId, orderItems, deliveryDate } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
 
   // Format delivery date
   let dateText = 'vandaag'
@@ -553,7 +566,7 @@ export async function sendOrderDeliveredEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('header')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
           </td>
         </tr>
       </table>
@@ -613,7 +626,7 @@ export async function sendOrderDeliveredEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -655,7 +668,11 @@ export async function sendOrderCancelledEmail(props: {
   const { customerEmail, customerName, orderId, orderTotal, cancellationReason } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -672,7 +689,7 @@ export async function sendOrderCancelledEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('header')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
           </td>
         </tr>
       </table>
@@ -716,7 +733,7 @@ export async function sendOrderCancelledEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -785,7 +802,11 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   } = props
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
   
   const productItemsHtml = orderItems.map(item => {
     const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
@@ -813,7 +834,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   <div class="wrapper">
     <!-- Logo -->
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      ${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}
+      ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
     </div>
     
     <!-- Hero Section -->
@@ -925,7 +946,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -975,7 +996,11 @@ export async function sendBackInStockEmail(props: {
   const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
   const productUrl = `${siteUrl}/product/${productSlug}`
   const normalizedProductImageUrl = normalizeImageUrl(productImageUrl, siteUrl)
 
@@ -996,7 +1021,7 @@ export async function sendBackInStockEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('header')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
           </td>
         </tr>
       </table>
@@ -1054,7 +1079,7 @@ export async function sendBackInStockEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
@@ -1098,7 +1123,11 @@ export async function sendContactFormEmail(props: {
   const { name, email, subject, message } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = normalizeImageUrl('/logomose.png', siteUrl)
+  // Logo URLs
+  // - logomose_white.png: witte logo voor donkere achtergronden (header/footer)
+  // - logomose.png: zwarte logo voor lichte achtergronden
+  const logoUrlWhite = normalizeImageUrl('/logomose_white.png', siteUrl)
+  const logoUrlBlack = normalizeImageUrl('/logomose.png', siteUrl)
   const adminEmail = process.env.CONTACT_EMAIL || 'info@mosewear.nl'
 
   const subjectLabels: { [key: string]: string } = {
@@ -1121,7 +1150,7 @@ export async function sendContactFormEmail(props: {
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff;" data-ogsc="#ffffff">
   <div class="wrapper" style="max-width: 600px; margin: 0 auto;">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">
-      ${createImageTag(logoUrl, 'MOSE', 140, 'auto', 'filter: brightness(0) invert(1);')}
+      ${createLogoTag(logoUrlWhite, logoUrlBlack, 140, true)}
     </div>
     <div class="hero" style="padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%);">
       ${createIconCircle('check-circle-success')}
@@ -1160,7 +1189,7 @@ export async function sendContactFormEmail(props: {
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
         <tr>
           <td align="center" style="padding: 0;">
-            ${createLogoTag('footer')}
+            ${createLogoTag(logoUrlWhite, logoUrlBlack, 100, true)}
           </td>
         </tr>
       </table>
