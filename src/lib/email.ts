@@ -88,29 +88,22 @@ function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-deli
   const svgIcon = lucideIconSvgs[config.name] || ''
   const unicodeFallback = unicodeFallbacks[config.name] || '●'
   
-  // Create SVG with colored circle background
-  const svgWithBackground = `
-    <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="36" cy="36" r="36" fill="${config.bgColor.startsWith('linear-gradient') ? '#667eea' : config.bgColor}"/>
-      ${config.bgColor.startsWith('linear-gradient') ? `
-      <defs>
-        <linearGradient id="grad-${iconStyle}" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-        </linearGradient>
-      </defs>
-      <circle cx="36" cy="36" r="36" fill="url(#grad-${iconStyle})"/>
-      ` : ''}
-      <g transform="translate(20, 20)" fill="none" stroke="${config.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        ${svgIcon.replace(/<svg[^>]*>/, '').replace('</svg>', '').replace(/width="[^"]*"/, '').replace(/height="[^"]*"/, '').replace(/viewBox="[^"]*"/, '')}
-      </g>
-      <!-- Unicode fallback for Outlook -->
-      <text x="36" y="36" font-size="32" fill="${config.iconColor}" text-anchor="middle" dominant-baseline="central" style="font-family: Arial, sans-serif;">${unicodeFallback}</text>
-    </svg>
-  `
+  // Use hosted PNG icons (base64 SVG doesn't work in email clients)
+  // Map to existing hosted PNG icons
+  const iconUrlMap: Record<string, string> = {
+    'check-circle-success': (emailIcons as Record<string, string>)['check-circle-success'] || '',
+    'check-circle-delivered': (emailIcons as Record<string, string>)['check-circle-delivered'] || '',
+    'truck-shipping': (emailIcons as Record<string, string>)['truck-shipping'] || '',
+    'settings-processing': (emailIcons as Record<string, string>)['settings-processing'] || '',
+    'x-cancelled': (emailIcons as Record<string, string>)['x-cancelled'] || '',
+    'shopping-cart-abandoned': (emailIcons as Record<string, string>)['shopping-cart-abandoned'] || ''
+  }
   
-  // Convert SVG to base64 for inline embedding
-  const svgBase64 = `data:image/svg+xml;base64,${Buffer.from(svgWithBackground).toString('base64')}`
+  const iconUrl = iconUrlMap[iconStyle]
+  if (!iconUrl) {
+    console.warn(`Icon style ${iconStyle} not found in email-icons.json`)
+    return ''
+  }
   
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
@@ -119,7 +112,7 @@ function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-deli
           <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
             <tr>
               <td align="center" valign="middle" style="padding: 0;">
-                <img src="${svgBase64}" alt="${iconStyle}" width="72" height="72" style="width: 72px; height: 72px; display: block; border: 0; outline: none; text-decoration: none;" border="0" />
+                ${createImageTag(iconUrl, iconStyle, 72, 72, 'display: block;')}
               </td>
             </tr>
           </table>
@@ -129,17 +122,17 @@ function createIconCircle(iconStyle: 'check-circle-success' | 'check-circle-deli
   `
 }
 
-// Helper function to create inline checkmark with hybrid SVG + Unicode fallback (Option 3)
+// Helper function to create inline checkmark with hosted PNG (email-safe, works everywhere)
 function createCheckmark(color: 'green' | 'orange' = 'green'): string {
+  const iconStyle = color === 'orange' ? 'check-orange' : 'check-small'
+  const iconUrl = (emailIcons as Record<string, string>)[iconStyle]
+  const unicodeFallback = '✓'
   const iconColor = color === 'orange' ? '#FF9500' : '#2ECC71'
-  const svgIcon = lucideIconSvgs['check'] || ''
-  const unicodeFallback = unicodeFallbacks['check'] || '✓'
   
-  // Create inline SVG with Unicode fallback
-  const svgWithColor = svgIcon.replace(/stroke="currentColor"/g, `stroke="${iconColor}"`)
-  
-  // Convert to base64 for inline embedding
-  const svgBase64 = `data:image/svg+xml;base64,${Buffer.from(svgWithColor).toString('base64')}`
+  if (!iconUrl) {
+    // Fallback to Unicode if icon not found
+    return `<span style="color: ${iconColor}; font-weight: 900; font-size: 18px; line-height: 1;">${unicodeFallback}</span>`
+  }
   
   // Return table-based layout for perfect alignment in all email clients
   return `
@@ -150,7 +143,7 @@ function createCheckmark(color: 'green' | 'orange' = 'green'): string {
           <span style="color: ${iconColor}; font-size: 18px; font-weight: 900;">${unicodeFallback}</span>
           <![endif]-->
           <!--[if !mso]><!-->
-          <img src="${svgBase64}" alt="checkmark" width="18" height="18" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; border: 0; outline: none; text-decoration: none;" border="0" />
+          ${createImageTag(iconUrl, 'checkmark', 18, 18, 'display: inline-block; vertical-align: middle;')}
           <!--<![endif]-->
         </td>
       </tr>
