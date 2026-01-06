@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
             color: item.color,
             quantity: item.quantity,
             price: item.price,
-            imageUrl: item.image_url,
+            imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url.startsWith('/') ? item.image_url : '/' + item.image_url}`) : '',
           })),
           checkoutUrl: checkoutUrl,
           hoursSinceAbandoned: Math.round(cart.hours_since_abandonment),

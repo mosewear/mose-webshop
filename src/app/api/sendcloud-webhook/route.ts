@@ -174,11 +174,12 @@ async function sendDeliveredEmailForOrder(order: any) {
   try {
     const customerName = (order.shipping_address as any)?.name || 'Klant'
     const customerEmail = order.email
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
 
     const orderItems = order.order_items.map((item: any) => ({
       product_id: item.product_id || '',
       product_name: item.product_name,
-      image_url: item.image_url,
+      image_url: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url.startsWith('/') ? item.image_url : '/' + item.image_url}`) : '',
     }))
 
     const result = await sendOrderDeliveredEmail({

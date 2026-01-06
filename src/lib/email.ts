@@ -34,14 +34,33 @@ function getBase64Logos(): { light: string; dark: string } {
 // Helper function to normalize image URLs (ensure absolute URLs)
 function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   if (!url) return ''
-  // If already absolute URL, return as is
+  
+  // Clean up whitespace
+  url = url.trim()
+  
+  // Skip placeholder images
+  if (url === '/placeholder.png' || url === '/placeholder-product.png' || url === '') {
+    return ''
+  }
+  
+  // If already absolute URL (http/https), return as is
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
   }
-  // If relative URL, make it absolute
+  
+  // Handle Supabase storage URLs that might be missing protocol
+  if (url.includes('supabase') && url.includes('storage')) {
+    if (!url.startsWith('http')) {
+      return `https://${url}`
+    }
+    return url
+  }
+  
+  // If relative URL starts with /, make it absolute
   if (url.startsWith('/')) {
     return `${siteUrl}${url}`
   }
+  
   // If no leading slash, add it
   return `${siteUrl}/${url}`
 }
@@ -77,49 +96,116 @@ async function getImageAsBase64(imageUrl: string | undefined, siteUrl: string): 
   if (!imageUrl) return null
   
   try {
-    // Normalize URL
-    let url = imageUrl
-    if (!url.startsWith('http')) {
+    // Normalize URL - clean up any whitespace
+    let url = imageUrl.trim()
+    
+    // Skip if URL is empty or just a placeholder
+    if (!url || url === '/placeholder.png' || url === '/placeholder-product.png') {
+      return null
+    }
+    
+    // If already absolute URL (http/https), use as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      // For Supabase storage URLs, ensure they're publicly accessible
+      if (url.includes('supabase') && url.includes('storage')) {
+        // Supabase storage URLs should already be public, but if they're not, we'll try anyway
+        // The URL format is usually: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
+      }
+    } else {
+      // Convert relative URL to absolute
       url = `${siteUrl}${url.startsWith('/') ? url : '/' + url}`
     }
     
     // Try to read from local file system first (for public folder images)
-    if (url.includes(siteUrl) && !url.includes('supabase')) {
+    if (url.includes(siteUrl) && !url.includes('supabase') && !url.includes('storage')) {
       try {
         const relativePath = url.replace(siteUrl, '').replace(/^\//, '')
         const publicPath = process.cwd()
         const imagePath = join(publicPath, 'public', relativePath)
         const imageBuffer = readFileSync(imagePath)
-        const mimeType = relativePath.endsWith('.png') ? 'image/png' : relativePath.endsWith('.jpg') || relativePath.endsWith('.jpeg') ? 'image/jpeg' : 'image/png'
+        const mimeType = relativePath.endsWith('.png') ? 'image/png' 
+          : relativePath.endsWith('.jpg') || relativePath.endsWith('.jpeg') ? 'image/jpeg'
+          : relativePath.endsWith('.webp') ? 'image/webp'
+          : 'image/png'
         return `data:${mimeType};base64,${imageBuffer.toString('base64')}`
       } catch (localError) {
         // Fall through to fetch if local read fails
+        console.log(`Local file read failed for ${url}, trying fetch instead`)
       }
     }
     
     // Fetch from URL and convert to base64
-    const response = await fetch(url)
-    if (!response.ok) {
-      console.error(`Failed to fetch image: ${url} - ${response.status}`)
+    // Use a timeout and proper headers for better compatibility
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; MOSE-Email-Client/1.0)',
+          'Accept': 'image/*',
+        },
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        console.error(`Failed to fetch image: ${url} - ${response.status} ${response.statusText}`)
+        return null
+      }
+      
+      const arrayBuffer = await response.arrayBuffer()
+      
+      if (arrayBuffer.byteLength === 0) {
+        console.error(`Empty response for image: ${url}`)
+        return null
+      }
+      
+      const buffer = Buffer.from(arrayBuffer)
+      const mimeType = response.headers.get('content-type') || 
+        (url.endsWith('.png') ? 'image/png' 
+          : url.endsWith('.jpg') || url.endsWith('.jpeg') ? 'image/jpeg'
+          : url.endsWith('.webp') ? 'image/webp'
+          : 'image/png')
+      
+      return `data:${mimeType};base64,${buffer.toString('base64')}`
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      if (fetchError.name === 'AbortError') {
+        console.error(`Timeout fetching image: ${url}`)
+      } else {
+        console.error(`Error fetching image: ${url}`, fetchError.message)
+      }
       return null
     }
-    
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const mimeType = response.headers.get('content-type') || 'image/png'
-    return `data:${mimeType};base64,${buffer.toString('base64')}`
-  } catch (error) {
-    console.error(`Error converting image to base64: ${imageUrl}`, error)
+  } catch (error: any) {
+    console.error(`Error converting image to base64: ${imageUrl}`, error?.message || error)
     return null
   }
 }
 
 // Helper function to create safe image tag with base64 embedded (email-safe, 100% compatible)
 async function createProductImageTag(imageUrl: string | undefined, alt: string, width: number, height: number, siteUrl: string, additionalStyles?: string): Promise<string> {
-  if (!imageUrl) return ''
+  if (!imageUrl || imageUrl.trim() === '') {
+    return ''
+  }
   
-  const base64Image = await getImageAsBase64(imageUrl, siteUrl)
-  const src = base64Image || normalizeImageUrl(imageUrl, siteUrl) // Fallback to URL if base64 fails
+  // Clean up the URL
+  const cleanUrl = imageUrl.trim()
+  
+  // Try to get base64 version first (most reliable for emails)
+  const base64Image = await getImageAsBase64(cleanUrl, siteUrl)
+  
+  // Fallback to normalized absolute URL if base64 conversion fails
+  const normalizedUrl = normalizeImageUrl(cleanUrl, siteUrl)
+  const src = base64Image || normalizedUrl
+  
+  // If we have neither base64 nor a valid URL, return empty string
+  if (!src || src.trim() === '') {
+    console.warn(`No valid image source for: ${imageUrl}`)
+    return ''
+  }
   
   const styles = `width: ${width}px; height: ${height}px; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; object-fit: cover; ${additionalStyles || ''}`
   return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="${styles}" role="presentation" />`
