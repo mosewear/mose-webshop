@@ -5,27 +5,28 @@ import { join } from 'path'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Base64 encoded logos (embedded directly in email for 100% compatibility)
+// Note: light mode = zwarte header = wit logo, dark mode = donkere achtergrond = zwart logo
 function getBase64Logos(): { light: string; dark: string } {
   try {
     // In production/build, use process.cwd() or absolute paths
     const publicPath = process.cwd()
-    const logoLightPath = join(publicPath, 'public', 'logomose.png')
-    const logoDarkPath = join(publicPath, 'public', 'logomose_white.png')
+    const logoZwartPath = join(publicPath, 'public', 'logomose.png') // Zwart logo voor dark mode
+    const logoWitPath = join(publicPath, 'public', 'logomose_white.png') // Wit logo voor light mode
     
-    const logoLight = readFileSync(logoLightPath)
-    const logoDark = readFileSync(logoDarkPath)
+    const logoZwart = readFileSync(logoZwartPath)
+    const logoWit = readFileSync(logoWitPath)
     
     return {
-      light: `data:image/png;base64,${logoLight.toString('base64')}`,
-      dark: `data:image/png;base64,${logoDark.toString('base64')}`
+      light: `data:image/png;base64,${logoWit.toString('base64')}`, // Light mode = zwarte header = wit logo
+      dark: `data:image/png;base64,${logoZwart.toString('base64')}` // Dark mode = donkere achtergrond = zwart logo
     }
   } catch (error) {
     console.error('Error reading logo files:', error)
     // Fallback to URLs if files can't be read
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
     return {
-      light: `${siteUrl}/logomose.png`,
-      dark: `${siteUrl}/logomose_white.png`
+      light: `${siteUrl}/logomose_white.png`, // Light mode = wit logo
+      dark: `${siteUrl}/logomose.png` // Dark mode = zwart logo
     }
   }
 }
@@ -71,7 +72,60 @@ function createLogoTag(siteUrl: string, width: number = 140, height: number | 'a
   `
 }
 
-// Helper function to create safe image tag with all required attributes (email-safe)
+// Helper function to convert image URL to base64 (for product images in emails)
+async function getImageAsBase64(imageUrl: string | undefined, siteUrl: string): Promise<string | null> {
+  if (!imageUrl) return null
+  
+  try {
+    // Normalize URL
+    let url = imageUrl
+    if (!url.startsWith('http')) {
+      url = `${siteUrl}${url.startsWith('/') ? url : '/' + url}`
+    }
+    
+    // Try to read from local file system first (for public folder images)
+    if (url.includes(siteUrl) && !url.includes('supabase')) {
+      try {
+        const relativePath = url.replace(siteUrl, '').replace(/^\//, '')
+        const publicPath = process.cwd()
+        const imagePath = join(publicPath, 'public', relativePath)
+        const imageBuffer = readFileSync(imagePath)
+        const mimeType = relativePath.endsWith('.png') ? 'image/png' : relativePath.endsWith('.jpg') || relativePath.endsWith('.jpeg') ? 'image/jpeg' : 'image/png'
+        return `data:${mimeType};base64,${imageBuffer.toString('base64')}`
+      } catch (localError) {
+        // Fall through to fetch if local read fails
+      }
+    }
+    
+    // Fetch from URL and convert to base64
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.error(`Failed to fetch image: ${url} - ${response.status}`)
+      return null
+    }
+    
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const mimeType = response.headers.get('content-type') || 'image/png'
+    return `data:${mimeType};base64,${buffer.toString('base64')}`
+  } catch (error) {
+    console.error(`Error converting image to base64: ${imageUrl}`, error)
+    return null
+  }
+}
+
+// Helper function to create safe image tag with base64 embedded (email-safe, 100% compatible)
+async function createProductImageTag(imageUrl: string | undefined, alt: string, width: number, height: number, siteUrl: string, additionalStyles?: string): Promise<string> {
+  if (!imageUrl) return ''
+  
+  const base64Image = await getImageAsBase64(imageUrl, siteUrl)
+  const src = base64Image || normalizeImageUrl(imageUrl, siteUrl) // Fallback to URL if base64 fails
+  
+  const styles = `width: ${width}px; height: ${height}px; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; object-fit: cover; ${additionalStyles || ''}`
+  return `<img src="${src}" alt="${alt.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="${styles}" role="presentation" />`
+}
+
+// Helper function to create safe image tag with all required attributes (for non-product images)
 function createImageTag(src: string, alt: string, width: number, height?: number | 'auto', additionalStyles?: string): string {
   if (!src) return ''
   const normalizedSrc = src.startsWith('http') ? src : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'}${src.startsWith('/') ? src : '/' + src}`
@@ -251,17 +305,18 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
   
-  const productItemsHtml = orderItems.map(item => {
-    const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
+  // Convert product images to base64
+  const productItemsHtml = await Promise.all(orderItems.map(async (item) => {
+    const imageTag = await createProductImageTag(item.imageUrl, item.name, 60, 80, siteUrl, 'object-fit: cover;')
     return {
       name: item.name,
       size: item.size,
       color: item.color,
       quantity: item.quantity,
       total: (item.price * item.quantity).toFixed(2),
-      imageUrl: normalizedImageUrl
+      imageTag
     }
-  })
+  }))
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -287,7 +342,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
       ${productItemsHtml.map(item => `
         <div class="product">
           <div class="prod-img" style="width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
-            ${item.imageUrl ? createImageTag(item.imageUrl, item.name, 60, 80, 'object-fit: cover;') : ''}
+            ${item.imageTag || ''}
           </div>
           <div class="prod-info">
             <div class="prod-name">${item.name}</div>
@@ -594,6 +649,12 @@ export async function sendOrderDeliveredEmail(props: {
     }
   }
 
+  // Convert product images to base64
+  const orderItemsWithImages = await Promise.all((orderItems || []).map(async (item) => {
+    const imageTag = await createProductImageTag(item.image_url, item.product_name, 60, 80, siteUrl, 'object-fit: cover;')
+    return { ...item, imageTag }
+  }))
+
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -626,21 +687,18 @@ export async function sendOrderDeliveredEmail(props: {
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">We hopen dat alles in perfecte staat is aangekomen!</p>
       </div>
       
-      ${orderItems && orderItems.length > 0 ? `
+      ${orderItemsWithImages && orderItemsWithImages.length > 0 ? `
       <div class="section-title">Je Bestelde Items</div>
-      ${orderItems.map(item => {
-        const normalizedImageUrl = normalizeImageUrl(item.image_url, siteUrl)
-        return `
+      ${orderItemsWithImages.map(item => `
         <div class="product">
           <div class="prod-img" style="width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
-            ${normalizedImageUrl ? createImageTag(normalizedImageUrl, item.product_name, 60, 80, 'object-fit: cover;') : ''}
+            ${item.imageTag || ''}
           </div>
           <div class="prod-info">
             <div class="prod-name">${item.product_name}</div>
           </div>
         </div>
-      `
-      }).join('')}
+      `).join('')}
       ` : ''}
       
       <div class="section-title">Deel Je Ervaring</div>
@@ -841,17 +899,18 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
   
-  const productItemsHtml = orderItems.map(item => {
-    const normalizedImageUrl = normalizeImageUrl(item.imageUrl, siteUrl)
+  // Convert product images to base64
+  const productItemsHtml = await Promise.all(orderItems.map(async (item) => {
+    const imageTag = await createProductImageTag(item.imageUrl, item.name, 60, 80, siteUrl, 'object-fit: cover;')
     return {
       name: item.name,
       size: item.size,
       color: item.color,
       quantity: item.quantity,
       total: (item.price * item.quantity).toFixed(2),
-      imageUrl: normalizedImageUrl
+      imageTag
     }
-  })
+  }))
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -893,7 +952,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
         ${productItemsHtml.map(item => `
           <div class="product" style="margin-bottom: 12px; border-left-color: #FF9500;">
             <div class="prod-img" style="width: 60px; height: 80px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
-              ${item.imageUrl ? createImageTag(item.imageUrl, item.name, 60, 80, 'object-fit: cover;') : ''}
+              ${item.imageTag || ''}
             </div>
             <div class="prod-info">
               <div class="prod-name">${item.name}</div>
@@ -1040,7 +1099,9 @@ export async function sendBackInStockEmail(props: {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
   const productUrl = `${siteUrl}/product/${productSlug}`
-  const normalizedProductImageUrl = normalizeImageUrl(productImageUrl, siteUrl)
+  
+  // Convert product image to base64
+  const productImageTag = await createProductImageTag(productImageUrl, productName, 80, 100, siteUrl, 'object-fit: cover;')
 
   const variantText = variantInfo ? `${variantInfo.size} • ${variantInfo.color}` : ''
 
@@ -1070,9 +1131,9 @@ export async function sendBackInStockEmail(props: {
       </p>
 
       <div class="product" style="margin: 24px 0; border-left-color: #2ECC71;">
-        ${normalizedProductImageUrl ? `
+        ${productImageTag ? `
         <div class="prod-img" style="width: 80px; height: 100px; background: #fff; border: 1px solid #e0e0e0; flex-shrink: 0; overflow: hidden;">
-          ${createImageTag(normalizedProductImageUrl, productName, 80, 100, 'object-fit: cover;')}
+          ${productImageTag}
         </div>
         ` : ''}
         <div class="prod-info">
