@@ -28,6 +28,13 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   return `${siteUrl}/${url}`
 }
 
+// Helper function to create Gmail-safe logo image (with explicit dimensions and alt text)
+function createLogoImage(logoUrl: string, size: number = 140): string {
+  // Gmail requires explicit width/height attributes and proper alt text
+  // Remove role="presentation" to ensure Gmail displays the image
+  return `<img src="${logoUrl}" alt="MOSE Logo" width="${size}" height="${size}" style="width: ${size}px; height: auto; max-width: ${size}px; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" border="0" />`
+}
+
 // Helper function to create safe image tag with all required attributes
 function createImageTag(src: string, alt: string, width: number, height?: number | 'auto', additionalStyles?: string): string {
   if (!src) return ''
@@ -40,7 +47,8 @@ function createImageTag(src: string, alt: string, width: number, height?: number
 function createLogoTag(logoUrlWhite: string, logoUrlBlack: string, size: number = 140, isDarkBackground: boolean = true): string {
   // Use white logo for dark backgrounds (header/footer), black logo for light backgrounds
   const logoUrl = isDarkBackground ? logoUrlWhite : logoUrlBlack
-  return `<img src="${logoUrl}" alt="MOSE" width="${size}" style="width: ${size}px; height: auto; display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" role="presentation" />`
+  // Gmail-safe logo with explicit dimensions
+  return createLogoImage(logoUrl, size)
 }
 
 // Helper function to create sum line with table layout (Gmail-safe, no flexbox)
