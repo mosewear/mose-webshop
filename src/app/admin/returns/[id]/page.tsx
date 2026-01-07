@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Package, CheckCircle, XCircle, Download, RefreshCw, DollarSign } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { createClient } from '@/lib/supabase/client'
 
 interface ReturnData {
   id: string
@@ -72,6 +73,7 @@ export default function AdminReturnDetailsPage() {
   const [processing, setProcessing] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
+  const supabase = createClient()
 
   useEffect(() => {
     fetchReturn()
@@ -83,7 +85,38 @@ export default function AdminReturnDetailsPage() {
       }
     }, 5000)
     
-    return () => clearInterval(interval)
+    // Setup realtime subscription voor deze specifieke return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`return-${returnId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'returns',
+          filter: `id=eq.${returnId}`
+        },
+        (payload) => {
+          console.log('🔄 Return updated in real-time:', payload)
+          fetchReturn()
+        }
+      )
+      .subscribe()
+    
+    // Refresh data wanneer admin terugkomt naar tab
+    const handleFocus = () => {
+      console.log('👁️ Tab focused, refreshing return...')
+      fetchReturn()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      clearInterval(interval)
+      supabase.removeChannel(channel)
+      window.removeEventListener('focus', handleFocus)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [returnId, returnData?.status, returnData?.return_label_url])
 

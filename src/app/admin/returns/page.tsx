@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { RefreshCw } from 'lucide-react'
 
 interface Return {
   id: string
@@ -27,14 +28,47 @@ export default function AdminReturnsPage() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
+  const supabase = createClient()
 
   useEffect(() => {
     fetchReturns()
+    
+    // Setup realtime subscription voor alle return updates
+    const channel = supabase
+      .channel('all-returns-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Luister naar alle events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'returns'
+        },
+        (payload) => {
+          console.log('🔄 Returns table changed:', payload)
+          fetchReturns()
+        }
+      )
+      .subscribe()
+    
+    // Refresh data wanneer admin terugkomt naar tab
+    const handleFocus = () => {
+      console.log('👁️ Tab focused, refreshing returns...')
+      fetchReturns()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      supabase.removeChannel(channel)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [filter])
 
   const fetchReturns = async () => {
     try {
       setLoading(true)
+      setRefreshing(true)
       const response = await fetch('/api/returns?' + (filter !== 'all' ? `status=${filter}` : ''))
       const data = await response.json()
 
@@ -42,11 +76,13 @@ export default function AdminReturnsPage() {
         throw new Error(data.error || 'Failed to fetch returns')
       }
 
+      console.log('📦 Fetched returns:', data.returns?.length, 'returns')
       setReturns(data.returns || [])
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -110,6 +146,14 @@ export default function AdminReturnsPage() {
           <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">Retouren</h1>
           <p className="text-gray-600">Beheer alle retourverzoeken</p>
         </div>
+        <button
+          onClick={() => fetchReturns()}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Bezig...' : 'Ververs'}
+        </button>
       </div>
 
       {/* Filters */}

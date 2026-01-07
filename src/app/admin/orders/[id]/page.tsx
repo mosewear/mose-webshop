@@ -82,6 +82,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [creatingLabel, setCreatingLabel] = useState(false)
   const [labelSuccess, setLabelSuccess] = useState(false)
   const [labelUrl, setLabelUrl] = useState('')
+  const [refreshingReturns, setRefreshingReturns] = useState(false)
 
   const carrierOptions = getCarrierOptions()
 
@@ -90,20 +91,56 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     fetchOrderItems()
     fetchStatusHistory()
     fetchReturns()
+    
+    // Setup realtime subscription voor return status updates
+    const channel = supabase
+      .channel(`returns-for-order-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'returns',
+          filter: `order_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('🔄 Return status updated in real-time:', payload)
+          fetchReturns()
+        }
+      )
+      .subscribe()
+    
+    // Refresh data wanneer admin terugkomt naar tab
+    const handleFocus = () => {
+      console.log('👁️ Tab focused, refreshing data...')
+      fetchReturns()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      supabase.removeChannel(channel)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [id])
 
   const fetchReturns = async () => {
     try {
+      setRefreshingReturns(true)
       const { data, error } = await supabase
         .from('returns')
-        .select('id, status, return_label_payment_status, return_label_paid_at, created_at')
+        .select('id, status, return_label_payment_status, return_label_paid_at, created_at, updated_at')
         .eq('order_id', id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
+      
+      console.log('📦 Fetched returns:', data)
       setReturns(data || [])
     } catch (err: any) {
       console.error('Error fetching returns:', err)
+    } finally {
+      setRefreshingReturns(false)
     }
   }
 
@@ -581,7 +618,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           {/* Returns Information */}
           {returns.length > 0 && (
             <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
-              <h2 className="text-xl font-bold mb-4">Retouren</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Retouren</h2>
+                <button
+                  onClick={fetchReturns}
+                  disabled={refreshingReturns}
+                  className="flex items-center gap-2 px-3 py-1 text-sm font-semibold text-brand-primary hover:text-brand-primary-hover transition-colors disabled:opacity-50"
+                  title="Ververs retour statuses"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshingReturns ? 'animate-spin' : ''}`} />
+                  {refreshingReturns ? 'Bezig...' : 'Ververs'}
+                </button>
+              </div>
               <div className="space-y-3">
                 {returns.map((returnItem) => (
                   <div key={returnItem.id} className="border-2 border-gray-200 p-4 rounded">

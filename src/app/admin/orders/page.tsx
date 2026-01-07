@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { RefreshCw } from 'lucide-react'
 
 interface Order {
   id: string
@@ -29,15 +30,29 @@ export default function AdminOrdersPage() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([])
   const [bulkAction, setBulkAction] = useState('')
   const [bulkUpdating, setBulkUpdating] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     fetchOrders()
+    
+    // Refresh data wanneer admin terugkomt naar tab
+    const handleFocus = () => {
+      console.log('👁️ Tab focused, refreshing orders...')
+      fetchOrders()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [filter])
 
   const fetchOrders = async () => {
     try {
       setLoading(true)
+      setRefreshing(true)
       let query = supabase
         .from('orders')
         .select('*')
@@ -50,11 +65,13 @@ export default function AdminOrdersPage() {
       const { data, error } = await query
 
       if (error) throw error
+      console.log('📦 Fetched orders:', data?.length, 'orders')
       setOrders(data || [])
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -187,6 +204,14 @@ export default function AdminOrdersPage() {
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
         </div>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => fetchOrders()}
+            disabled={refreshing}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95 disabled:opacity-50 flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Bezig...' : 'Ververs'}
+          </button>
           <button className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95">
             Exporteren
           </button>
