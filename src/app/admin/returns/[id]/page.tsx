@@ -75,7 +75,17 @@ export default function AdminReturnDetailsPage() {
 
   useEffect(() => {
     fetchReturn()
-  }, [returnId])
+    
+    // Auto-refresh elke 5 seconden als return in "label generating" fase is
+    const interval = setInterval(() => {
+      if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url) {
+        fetchReturn()
+      }
+    }, 5000)
+    
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnId, returnData?.status, returnData?.return_label_url])
 
   async function fetchReturn() {
     try {

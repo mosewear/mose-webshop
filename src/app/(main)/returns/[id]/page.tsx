@@ -281,16 +281,21 @@ export default function ReturnDetailsPage() {
           if (attempts < maxAttempts) {
             if (data.return.status === 'return_label_payment_completed' || 
                 data.return.status === 'return_label_payment_pending') {
+              // Blijf pollen
               setTimeout(poll, 2000) // Poll elke 2 seconden
+            } else if (data.return.status === 'return_label_generated' && !data.return.return_label_url) {
+              // Status is generated maar geen URL - blijf even pollen (label wordt nog gegenereerd)
+              setTimeout(poll, 2000)
             } else {
               // Onverwachte status, stop polling
               setPollingLabel(false)
               shouldContinue = false
+              console.log(`Stopped polling: unexpected status ${data.return.status}`)
             }
           } else if (attempts >= maxAttempts) {
             setPollingLabel(false)
             shouldContinue = false
-            toast.error('Het genereren van het label duurt langer dan verwacht. Probeer de pagina te verversen.')
+            toast.error('Het genereren van het label duurt langer dan verwacht. Neem contact op met de klantenservice als het label niet verschijnt.')
           }
         } else {
           // Stop polling bij error response

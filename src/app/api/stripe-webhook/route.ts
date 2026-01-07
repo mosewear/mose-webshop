@@ -98,10 +98,31 @@ export async function POST(req: NextRequest) {
           
           if (returnError) {
             console.error('❌ Error updating return payment status:', returnError)
-          } else {
-            console.log('✅ Return payment status updated:', returnId)
-            
-            // Verstuur "Retourverzoek ontvangen" email na betaling
+            console.error('   Return ID:', returnId)
+            console.error('   Payment Intent ID:', paymentIntent.id)
+            // Return error - status update is critical
+            return NextResponse.json({ 
+              error: 'Failed to update return status', 
+              return_id: returnId,
+              payment_intent_id: paymentIntent.id,
+              details: returnError.message 
+            }, { status: 500 })
+          }
+          
+          if (!returnRecord) {
+            console.error('❌ Return record not returned after update')
+            return NextResponse.json({ 
+              error: 'Return not found after update', 
+              return_id: returnId,
+              payment_intent_id: paymentIntent.id 
+            }, { status: 404 })
+          }
+          
+          console.log('✅ Return payment status updated:', returnId)
+          console.log('   New status:', returnRecord.status)
+          console.log('   Payment status:', returnRecord.return_label_payment_status)
+          
+          // Verstuur "Retourverzoek ontvangen" email na betaling
             try {
               if (returnRecordBefore) {
                 const { sendReturnRequestedEmail } = await import('@/lib/email')
@@ -138,7 +159,11 @@ export async function POST(req: NextRequest) {
               const internalSecret = process.env.INTERNAL_API_SECRET
               
               if (internalSecret) {
-                const response = await fetch(`${siteUrl}/api/returns/${returnId}/generate-label`, {
+                console.log(`🔄 Attempting to generate label for return: ${returnId}`)
+                const labelUrl = `${siteUrl}/api/returns/${returnId}/generate-label`
+                console.log(`   URL: ${labelUrl}`)
+                
+                const response = await fetch(labelUrl, {
                   method: 'POST',
                   headers: {
                     'Authorization': `Bearer ${internalSecret}`,
@@ -146,22 +171,39 @@ export async function POST(req: NextRequest) {
                   },
                 })
                 
+                const responseText = await response.text()
+                
                 if (response.ok) {
                   console.log('✅ Return label generated automatically')
+                  console.log(`   Response: ${responseText.substring(0, 200)}`)
                 } else {
-                  console.error('❌ Failed to generate return label:', await response.text())
+                  console.error('❌ Failed to generate return label')
+                  console.error(`   Status: ${response.status}`)
+                  console.error(`   Response: ${responseText}`)
                 }
               } else {
                 console.warn('⚠️ INTERNAL_API_SECRET not set, cannot auto-generate label')
+                console.warn('   Admin must generate label manually')
               }
             } catch (labelError) {
               console.error('❌ Error generating return label:', labelError)
+              if (labelError instanceof Error) {
+                console.error('   Message:', labelError.message)
+                console.error('   Stack:', labelError.stack)
+              }
               // Don't fail webhook, admin can generate manually
             }
           }
           
           // Return early, don't process as order payment
-          return NextResponse.json({ received: true, type: 'return_label_payment' })
+          // Return success even if label generation failed (admin can generate manually)
+          return NextResponse.json({ 
+            received: true, 
+            type: 'return_label_payment',
+            return_id: returnId,
+            status_updated: !!returnRecord,
+            label_generation_attempted: !!returnRecord,
+          })
         }
         
         // Find order by payment intent ID
