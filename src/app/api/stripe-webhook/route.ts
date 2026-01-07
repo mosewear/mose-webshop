@@ -134,27 +134,63 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ received: true, type: 'return_label_payment' })
         }
         
-        // Find order by payment intent ID
-        const { data: order, error: findError } = await supabase
-          .from('orders')
-          .select('*, order_items(*)')
-          .eq('stripe_payment_intent_id', paymentIntent.id)
-          .single()
+        // Find order by payment intent ID or metadata orderId (fallback)
+        let order: any = null
+        let findError: any = null
         
-        if (findError || !order) {
-          console.error('❌ Webhook: Order not found for payment intent:', paymentIntent.id, findError)
+        // METHOD 1: Try via metadata orderId (primary - from checkout)
+        if (paymentIntent.metadata?.orderId) {
+          console.log('🔍 Webhook: Trying to find order via metadata.orderId:', paymentIntent.metadata.orderId)
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .eq('id', paymentIntent.metadata.orderId)
+            .single()
+          
+          if (!error && data) {
+            order = data
+            console.log('✅ Webhook: Order found via metadata.orderId')
+          } else {
+            console.log('⚠️ Webhook: Order not found via metadata.orderId:', error?.message)
+          }
+        }
+        
+        // METHOD 2: Fallback - Try via stripe_payment_intent_id
+        if (!order) {
+          console.log('🔍 Webhook: Trying to find order via stripe_payment_intent_id:', paymentIntent.id)
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .eq('stripe_payment_intent_id', paymentIntent.id)
+            .single()
+          
+          if (!error && data) {
+            order = data
+            console.log('✅ Webhook: Order found via stripe_payment_intent_id')
+          } else {
+            findError = error
+            console.log('⚠️ Webhook: Order not found via stripe_payment_intent_id:', error?.message)
+          }
+        }
+        
+        if (!order) {
+          console.error('❌ Webhook: Order not found for payment intent:', paymentIntent.id)
+          console.error('   Metadata orderId:', paymentIntent.metadata?.orderId)
+          console.error('   Error:', findError)
           return NextResponse.json({ 
             error: 'Order not found',
-            payment_intent_id: paymentIntent.id 
+            payment_intent_id: paymentIntent.id,
+            metadata_order_id: paymentIntent.metadata?.orderId || null
           }, { status: 404 })
         }
         
         console.log('✅ Webhook: Order found:', order.id)
         
-        // Update order to PAID
+        // Update order to PAID (also set stripe_payment_intent_id if not already set)
         const { data: updatedOrder, error: updateError } = await supabase
           .from('orders')
           .update({
+            stripe_payment_intent_id: paymentIntent.id, // Ensure this is set
             payment_status: 'paid',
             paid_at: new Date().toISOString(),
             payment_method: paymentIntent.payment_method_types?.[0] || 'unknown',
