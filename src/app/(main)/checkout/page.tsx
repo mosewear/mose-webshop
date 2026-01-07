@@ -228,12 +228,21 @@ export default function CheckoutPage() {
         }
       }
 
-      // 4. Fill form with data
+      // 4. Bouw volledig adres voor "Straat en huisnummer" veld
+      let fullAddress = addressOnly
+      if (huisnummer) {
+        fullAddress += ` ${huisnummer}`
+        if (toevoeging) {
+          fullAddress += toevoeging
+        }
+      }
+
+      // 5. Fill form with data
       setForm({
         email: userEmail || profile?.email || '',
         firstName: profile?.first_name || '',
         lastName: profile?.last_name || '',
-        address: addressOnly,
+        address: fullAddress.trim(),
         city: defaultAddress?.city || '',
         postalCode: defaultAddress?.postal_code || '',
         phone: defaultAddress?.phone || '',
@@ -335,11 +344,20 @@ export default function CheckoutPage() {
         }
       }
       
+      // Bouw volledig adres voor "Straat en huisnummer" veld
+      let fullAddress = addressOnly
+      if (huisnummer) {
+        fullAddress += ` ${huisnummer}`
+        if (toevoeging) {
+          fullAddress += toevoeging
+        }
+      }
+      
       setForm({
         email: order.email || '',
         firstName: firstName,
         lastName: lastName,
-        address: addressOnly,
+        address: fullAddress.trim(),
         city: shippingAddress?.city || '',
         postalCode: shippingAddress?.postalCode || shippingAddress?.postal_code || '',
         phone: shippingAddress?.phone || '',
