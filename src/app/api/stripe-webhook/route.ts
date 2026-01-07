@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
@@ -34,7 +34,13 @@ export async function POST(req: NextRequest) {
       // PRIMARY EVENT: Payment Intent Succeeded (for Payment Element flow)
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        const supabase = await createClient()
+        
+        // Use service role key for webhooks to bypass RLS policies
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } }
+        )
         
         console.log('💳 Webhook: Payment Intent Succeeded:', paymentIntent.id)
         
@@ -242,7 +248,12 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session
         
         // Find order using TRIPLE FALLBACK method for 100% reliability
-        const supabase = await createClient()
+        // Use service role key for webhooks to bypass RLS policies
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } }
+        )
         let orderId: string | null = null
         let order: any = null
         
@@ -387,7 +398,12 @@ export async function POST(req: NextRequest) {
 
       case 'checkout.session.expired': {
         const session = event.data.object as Stripe.Checkout.Session
-        const supabase = await createClient()
+        // Use service role key for webhooks to bypass RLS policies
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } }
+        )
         const orderId = session.metadata?.orderId
 
         if (orderId) {
@@ -409,7 +425,12 @@ export async function POST(req: NextRequest) {
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
-        const supabase = await createClient()
+        // Use service role key for webhooks to bypass RLS policies
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } }
+        )
 
         // Find order by payment intent ID
         const { data: order } = await supabase
@@ -438,7 +459,12 @@ export async function POST(req: NextRequest) {
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge
-        const supabase = await createClient()
+        // Use service role key for webhooks to bypass RLS policies
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } }
+        )
 
         // Check if this is a return refund
         const refundMetadata = charge.refunds?.data?.[0]?.metadata
