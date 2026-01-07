@@ -227,13 +227,6 @@ export async function POST(req: NextRequest) {
 
     // GEEN emails meer hier - email wordt verstuurd na betaling in webhook
     // Email "Retourverzoek ontvangen" wordt verstuurd na succesvolle betaling
-          quantity: item.quantity,
-          size: orderItem?.size || '',
-          color: orderItem?.color || '',
-        }
-      })
-
-    // Email wordt verstuurd NA betaling in de Stripe webhook
     // Dit zorgt ervoor dat klant eerst betaalt, dan pas email "Retourverzoek ontvangen"
 
     return NextResponse.json({
