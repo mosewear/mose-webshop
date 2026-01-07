@@ -82,9 +82,29 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  // Generate SKU from product name, size and color
+  const generateSKU = (productName: string, size: string, color: string) => {
+    const cleanName = productName
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .slice(0, 8)
+    const cleanSize = size.toUpperCase().replace(/\s/g, '')
+    const cleanColor = color
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')
+      .slice(0, 3)
+    return `${cleanName}-${cleanSize}-${cleanColor}`
+  }
+
   const handleAddVariant = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      // Auto-generate SKU if empty
+      let sku = newVariant.sku.trim()
+      if (!sku && product) {
+        sku = generateSKU(product.name, newVariant.size, newVariant.color)
+      }
+
       const { error } = await supabase
         .from('product_variants')
         .insert([
@@ -93,7 +113,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             size: newVariant.size,
             color: newVariant.color,
             color_hex: newVariant.color_hex || null,
-            sku: newVariant.sku || null,
+            sku: sku,
             stock_quantity: parseInt(newVariant.stock_quantity),
             price_adjustment: parseFloat(newVariant.price_adjustment),
             is_available: newVariant.is_available,
@@ -307,14 +327,14 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             {/* SKU */}
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                SKU
+                SKU <span className="text-gray-400 font-normal">(auto-gegenereerd als leeg)</span>
               </label>
               <input
                 type="text"
                 value={newVariant.sku}
                 onChange={(e) => setNewVariant({ ...newVariant, sku: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
-                placeholder="MOSE-H-M-BLK"
+                placeholder={product ? generateSKU(product.name, newVariant.size, newVariant.color) : 'MOSE-M-ZWA'}
               />
             </div>
 

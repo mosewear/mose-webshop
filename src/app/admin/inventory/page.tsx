@@ -21,8 +21,16 @@ interface VariantWithProduct {
   }
 }
 
+interface ProductWithoutVariants {
+  id: string
+  name: string
+  base_price: number
+  created_at: string
+}
+
 export default function InventoryPage() {
   const [variants, setVariants] = useState<VariantWithProduct[]>([])
+  const [productsWithoutVariants, setProductsWithoutVariants] = useState<ProductWithoutVariants[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
@@ -30,6 +38,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchInventory()
+    fetchProductsWithoutVariants()
   }, [])
 
   const fetchInventory = async () => {
@@ -49,6 +58,33 @@ export default function InventoryPage() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchProductsWithoutVariants = async () => {
+    try {
+      // Get all products
+      const { data: allProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id, name, base_price, created_at')
+        .order('created_at', { ascending: false })
+
+      if (productsError) throw productsError
+
+      // Get product IDs that have variants
+      const { data: variantProductIds, error: variantsError } = await supabase
+        .from('product_variants')
+        .select('product_id')
+
+      if (variantsError) throw variantsError
+
+      // Filter products without variants
+      const productIdsWithVariants = new Set(variantProductIds?.map(v => v.product_id) || [])
+      const withoutVariants = (allProducts || []).filter(p => !productIdsWithVariants.has(p.id))
+      
+      setProductsWithoutVariants(withoutVariants)
+    } catch (err: any) {
+      console.error('Error fetching products without variants:', err)
     }
   }
 
@@ -144,6 +180,39 @@ export default function InventoryPage() {
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Uitverkocht</div>
         </div>
       </div>
+
+      {/* Products Without Variants Warning */}
+      {productsWithoutVariants.length > 0 && (
+        <div className="bg-yellow-50 border-2 border-yellow-400 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-yellow-800 mb-2">
+                {productsWithoutVariants.length} product{productsWithoutVariants.length !== 1 ? 'en' : ''} zonder varianten
+              </h3>
+              <p className="text-sm text-yellow-700 mb-3">
+                Deze producten hebben nog geen maat/kleur varianten. Voeg varianten toe om ze verkoopbaar te maken.
+              </p>
+              <div className="space-y-2">
+                {productsWithoutVariants.map((product) => (
+                  <div key={product.id} className="flex items-center justify-between bg-white p-3 border border-yellow-300">
+                    <div>
+                      <span className="font-semibold text-gray-900">{product.name}</span>
+                      <span className="ml-2 text-sm text-gray-500">€{product.base_price.toFixed(2)}</span>
+                    </div>
+                    <Link
+                      href={`/admin/products/${product.id}/variants`}
+                      className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 px-4 text-xs uppercase tracking-wider transition-colors"
+                    >
+                      + Varianten Toevoegen
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white border-2 border-gray-200 p-4 mb-6 overflow-x-auto">

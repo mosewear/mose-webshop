@@ -15,6 +15,7 @@ interface ProductImage {
   id: string
   product_id: string
   variant_id: string | null
+  color: string | null
   url: string
   alt_text: string | null
   position: number
@@ -22,17 +23,26 @@ interface ProductImage {
   created_at: string
 }
 
+interface ProductVariant {
+  id: string
+  color: string
+  color_hex: string | null
+}
+
 export default function ProductImagesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [product, setProduct] = useState<Product | null>(null)
   const [images, setImages] = useState<ProductImage[]>([])
+  const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedColor, setSelectedColor] = useState<string | null>(null) // null = algemene afbeeldingen
   const supabase = createClient()
 
   useEffect(() => {
     fetchProduct()
     fetchImages()
+    fetchVariants()
   }, [id])
 
   const fetchProduct = async () => {
@@ -69,10 +79,47 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
     }
   }
 
+  const fetchVariants = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('product_variants')
+        .select('id, color, color_hex')
+        .eq('product_id', id)
+
+      if (error) throw error
+      
+      // Get unique colors
+      const uniqueColors = Array.from(
+        new Map((data || []).map(v => [v.color, v])).values()
+      )
+      setVariants(uniqueColors)
+    } catch (err: any) {
+      console.error('Error fetching variants:', err)
+    }
+  }
+
+  // Get filtered images based on selected color
+  const getFilteredImages = () => {
+    if (selectedColor === null) {
+      // Show general images (no color assigned)
+      return images.filter(img => !img.color)
+    }
+    return images.filter(img => img.color === selectedColor)
+  }
+
+  const filteredImages = getFilteredImages()
+
   const handleImageUploaded = async (url: string) => {
     try {
-      // Get next position
-      const maxPosition = images.length > 0 ? Math.max(...images.map(img => img.position)) : -1
+      // Get next position for current color filter
+      const relevantImages = selectedColor === null 
+        ? images.filter(img => !img.color)
+        : images.filter(img => img.color === selectedColor)
+      const maxPosition = relevantImages.length > 0 ? Math.max(...relevantImages.map(img => img.position)) : -1
+
+      // Check if this is the first general image (should be primary)
+      const generalImages = images.filter(img => !img.color)
+      const isPrimary = selectedColor === null && generalImages.length === 0
 
       const { error } = await supabase
         .from('product_images')
@@ -80,9 +127,10 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           {
             product_id: id,
             url,
-            alt_text: product?.name || null,
+            alt_text: product?.name ? `${product.name}${selectedColor ? ` - ${selectedColor}` : ''}` : null,
             position: maxPosition + 1,
-            is_primary: images.length === 0, // First image is primary
+            is_primary: isPrimary,
+            color: selectedColor, // null for general, color name for color-specific
           },
         ])
 
@@ -168,16 +216,17 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
   }
 
   const handleMoveImage = async (imageId: string, direction: 'up' | 'down') => {
-    const currentIndex = images.findIndex(img => img.id === imageId)
+    // Use filtered images for position swapping
+    const currentIndex = filteredImages.findIndex(img => img.id === imageId)
     if (currentIndex === -1) return
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-    if (newIndex < 0 || newIndex >= images.length) return
+    if (newIndex < 0 || newIndex >= filteredImages.length) return
 
     try {
       // Swap positions
-      const currentImage = images[currentIndex]
-      const otherImage = images[newIndex]
+      const currentImage = filteredImages[currentIndex]
+      const otherImage = filteredImages[newIndex]
 
       await supabase
         .from('product_images')
@@ -229,31 +278,89 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 border-2 border-gray-200">
           <div className="text-3xl font-bold text-brand-primary mb-2">{images.length}</div>
           <div className="text-sm text-gray-600 uppercase tracking-wide">Totaal Afbeeldingen</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-green-600 mb-2">
-            {images.filter(img => img.is_primary).length}
+          <div className="text-3xl font-bold text-blue-600 mb-2">
+            {images.filter(img => !img.color).length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Primaire Afbeelding</div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Algemeen</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-gray-800 mb-2">
-            {images.filter(img => img.alt_text).length}
+          <div className="text-3xl font-bold text-purple-600 mb-2">
+            {images.filter(img => img.color).length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Met Alt Text</div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Kleur-specifiek</div>
         </div>
+        <div className="bg-white p-6 border-2 border-gray-200">
+          <div className="text-3xl font-bold text-green-600 mb-2">
+            {variants.length}
+          </div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Kleuren</div>
+        </div>
+      </div>
+
+      {/* Color Tabs */}
+      <div className="bg-white border-2 border-gray-200 p-4 mb-6">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedColor(null)}
+            className={`px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 transition-all ${
+              selectedColor === null
+                ? 'bg-brand-primary border-brand-primary text-white'
+                : 'border-gray-300 text-gray-700 hover:border-gray-400'
+            }`}
+          >
+            📷 Algemeen ({images.filter(img => !img.color).length})
+          </button>
+          {variants.map((variant) => (
+            <button
+              key={variant.color}
+              onClick={() => setSelectedColor(variant.color)}
+              className={`px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 transition-all flex items-center gap-2 ${
+                selectedColor === variant.color
+                  ? 'bg-brand-primary border-brand-primary text-white'
+                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              {variant.color_hex && (
+                <span
+                  className="w-4 h-4 rounded border border-gray-400"
+                  style={{ backgroundColor: variant.color_hex }}
+                />
+              )}
+              {variant.color} ({images.filter(img => img.color === variant.color).length})
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-gray-500">
+          💡 <strong>Algemeen:</strong> Wordt getoond als fallback voor alle kleuren. 
+          <strong> Kleur-specifiek:</strong> Wordt alleen getoond als die kleur is geselecteerd.
+        </p>
       </div>
 
       {/* Upload Section */}
       <div className="bg-white border-2 border-gray-200 p-6 mb-8">
-        <h3 className="text-xl font-bold mb-4">Nieuwe Afbeelding Uploaden</h3>
+        <h3 className="text-xl font-bold mb-2">
+          Nieuwe Afbeelding Uploaden
+          {selectedColor && (
+            <span className="ml-2 text-brand-primary">voor {selectedColor}</span>
+          )}
+          {selectedColor === null && (
+            <span className="ml-2 text-gray-500">(algemeen)</span>
+          )}
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          {selectedColor 
+            ? `Deze afbeelding wordt alleen getoond als kleur "${selectedColor}" is geselecteerd.`
+            : 'Algemene afbeeldingen worden getoond als fallback voor alle kleuren.'}
+        </p>
         <ImageUpload
           bucket="product-images"
-          path={`products/${id}`}
+          path={`products/${id}${selectedColor ? `/${selectedColor.toLowerCase().replace(/\s/g, '-')}` : ''}`}
           onUploadComplete={handleImageUploaded}
           maxSizeMB={5}
         />
@@ -261,17 +368,25 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
 
       {/* Images Grid */}
       <div className="bg-white border-2 border-gray-200">
-        {images.length === 0 ? (
+        {filteredImages.length === 0 ? (
           <div className="text-center py-12">
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <h3 className="text-lg font-bold text-gray-700 mb-2">Nog geen afbeeldingen</h3>
-            <p className="text-gray-500">Upload je eerste productfoto hierboven!</p>
+            <h3 className="text-lg font-bold text-gray-700 mb-2">
+              {selectedColor 
+                ? `Nog geen afbeeldingen voor ${selectedColor}`
+                : 'Nog geen algemene afbeeldingen'}
+            </h3>
+            <p className="text-gray-500">
+              {selectedColor 
+                ? `Upload afbeeldingen specifiek voor de kleur ${selectedColor}`
+                : 'Upload algemene productfoto\'s die voor alle kleuren worden getoond'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {images.map((image, index) => (
+            {filteredImages.map((image, index) => (
               <div key={image.id} className="bg-white border-2 border-gray-200 overflow-hidden group">
                 {/* Image Preview */}
                 <div className="relative aspect-square bg-gray-100">
@@ -286,6 +401,13 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                   {image.is_primary && (
                     <div className="absolute top-2 left-2 bg-brand-primary text-white px-3 py-1 text-xs font-bold uppercase">
                       Primair
+                    </div>
+                  )}
+
+                  {/* Color Badge */}
+                  {image.color && (
+                    <div className="absolute bottom-2 left-2 bg-purple-600 text-white px-2 py-1 text-xs font-bold uppercase">
+                      {image.color}
                     </div>
                   )}
 
@@ -336,7 +458,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                       
                       <button
                         onClick={() => handleMoveImage(image.id, 'down')}
-                        disabled={index === images.length - 1}
+                        disabled={index === filteredImages.length - 1}
                         className="p-2 border-2 border-gray-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Naar beneden"
                       >

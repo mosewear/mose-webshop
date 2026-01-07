@@ -35,6 +35,7 @@ interface ProductImage {
   alt_text: string
   position: number
   is_primary: boolean
+  color: string | null
 }
 
 interface ProductVariant {
@@ -213,6 +214,25 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         .map((v) => ({ color: v.color, hex: v.color_hex }))
     : []
 
+  // Get images for selected color (with fallback to general images)
+  const getDisplayImages = () => {
+    if (!product) return []
+    
+    // Get color-specific images
+    const colorImages = product.product_images.filter(img => img.color === selectedColor)
+    
+    // If we have color-specific images, use those
+    if (colorImages.length > 0) {
+      return colorImages.sort((a, b) => a.position - b.position)
+    }
+    
+    // Otherwise, fall back to general images (no color assigned)
+    const generalImages = product.product_images.filter(img => !img.color)
+    return generalImages.sort((a, b) => a.position - b.position)
+  }
+  
+  const displayImages = getDisplayImages()
+
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return
 
@@ -225,7 +245,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       colorHex: selectedVariant.color_hex,
       price: finalPrice,
       quantity: quantity,
-      image: product.product_images[0]?.url || '/placeholder.png',
+      image: displayImages[0]?.url || '/placeholder.png',
       sku: selectedVariant.sku,
       stock: selectedVariant.stock_quantity,
     })
@@ -345,8 +365,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
               >
                 <Image
-                  src={product.product_images[selectedImage]?.url || '/placeholder.png'}
-                  alt={product.product_images[selectedImage]?.alt_text || product.name}
+                  src={displayImages[selectedImage]?.url || '/placeholder.png'}
+                  alt={displayImages[selectedImage]?.alt_text || product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover object-center"
@@ -366,9 +386,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </div>
 
               {/* Thumbnails - 4 on mobile, 5 on desktop */}
-              {product.product_images.length > 1 && (
+              {displayImages.length > 1 && (
                 <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
-                  {product.product_images.map((image, index) => (
+                  {displayImages.map((image, index) => (
                     <button
                       key={image.id}
                       onClick={() => setSelectedImage(index)}
@@ -519,7 +539,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       return (
                         <button
                           key={color}
-                          onClick={() => setSelectedColor(color)}
+                          onClick={() => {
+                            setSelectedColor(color)
+                            setSelectedImage(0) // Reset to first image when color changes
+                          }}
                           disabled={!colorAvailable}
                           className={`relative w-10 h-10 md:w-12 md:h-12 border-2 transition-all ${
                             selectedColor === color
@@ -917,17 +940,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </button>
           <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
             <Image
-              src={product.product_images[selectedImage]?.url || '/placeholder.png'}
-              alt={product.product_images[selectedImage]?.alt_text || product.name}
+              src={displayImages[selectedImage]?.url || '/placeholder.png'}
+              alt={displayImages[selectedImage]?.alt_text || product.name}
               fill
               sizes="100vw"
               className="object-contain"
             />
           </div>
           {/* Image Navigation */}
-          {product.product_images.length > 1 && (
+          {displayImages.length > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {product.product_images.map((_, index) => (
+              {displayImages.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
