@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
+import { createReturnLabel, isSendcloudConfigured } from '@/lib/sendcloud'
+import { sendReturnLabelGeneratedEmail } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -153,55 +155,104 @@ export async function POST(req: NextRequest) {
               // Don't fail webhook if email fails
             }
             
-            // Automatisch label genereren
+            // Automatisch label genereren (direct in webhook, geen fetch nodig)
             try {
-              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-              const internalSecret = process.env.INTERNAL_API_SECRET
+              console.log(`🔄 Attempting to generate label for return: ${returnId}`)
               
-              console.log('🔍 Label generation check:')
-              console.log(`   INTERNAL_API_SECRET exists: ${!!internalSecret}`)
-              console.log(`   INTERNAL_API_SECRET length: ${internalSecret?.length || 0}`)
-              console.log(`   Site URL: ${siteUrl}`)
-              console.log(`   Return ID: ${returnId}`)
-              
-              if (internalSecret) {
-                console.log(`🔄 Attempting to generate label for return: ${returnId}`)
-                const labelUrl = `${siteUrl}/api/returns/${returnId}/generate-label`
-                console.log(`   URL: ${labelUrl}`)
-                console.log(`   Authorization header: Bearer ${internalSecret.substring(0, 10)}...`)
-                
-                const fetchStartTime = Date.now()
-                const response = await fetch(labelUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${internalSecret}`,
-                    'Content-Type': 'application/json',
-                  },
-                  // Add timeout
-                  signal: AbortSignal.timeout(30000), // 30 second timeout
-                })
-                const fetchDuration = Date.now() - fetchStartTime
-                
-                const responseText = await response.text()
-                
-                console.log(`   Fetch duration: ${fetchDuration}ms`)
-                console.log(`   Response status: ${response.status}`)
-                console.log(`   Response statusText: ${response.statusText}`)
-                
-                if (response.ok) {
-                  console.log('✅ Return label generated automatically')
-                  console.log(`   Response: ${responseText.substring(0, 500)}`)
-                } else {
-                  console.error('❌ Failed to generate return label')
-                  console.error(`   Status: ${response.status}`)
-                  console.error(`   StatusText: ${response.statusText}`)
-                  console.error(`   Response: ${responseText}`)
-                  console.error(`   Response headers:`, Object.fromEntries(response.headers.entries()))
-                }
-              } else {
-                console.warn('⚠️ INTERNAL_API_SECRET not set, cannot auto-generate label')
+              // Check of Sendcloud is geconfigureerd
+              if (!isSendcloudConfigured()) {
+                console.warn('⚠️ Sendcloud niet geconfigureerd, cannot auto-generate label')
                 console.warn('   Admin must generate label manually')
-                console.warn('   Check Vercel environment variables')
+              } else {
+                // Check of label al is gegenereerd (korte check)
+                const { data: existingReturn } = await supabase
+                  .from('returns')
+                  .select('return_label_url')
+                  .eq('id', returnId)
+                  .single()
+                
+                if (existingReturn?.return_label_url) {
+                  console.log('✅ Label already exists for return:', returnId)
+                } else {
+                  // Haal volledige return op met order en items
+                  const { data: returnRecord, error: returnFetchError } = await supabase
+                    .from('returns')
+                    .select('*, orders!inner(*)')
+                    .eq('id', returnId)
+                    .single()
+                  
+                  if (returnFetchError || !returnRecord) {
+                    console.error('❌ Error fetching return for label generation:', returnFetchError)
+                  } else {
+                    // Haal order items op
+                    const { data: order, error: orderError } = await supabase
+                      .from('orders')
+                      .select('*, order_items(*)')
+                      .eq('id', returnRecord.order_id)
+                      .single()
+                    
+                    if (orderError || !order) {
+                      console.error('❌ Error fetching order for label generation:', orderError)
+                    } else {
+                      console.log('   Generating label via Sendcloud...')
+                      const labelData = await createReturnLabel(
+                        returnId,
+                        order,
+                        returnRecord.return_items as any[]
+                      )
+                      
+                      // Update return met label informatie
+                      const { data: updatedReturn, error: updateError } = await supabase
+                        .from('returns')
+                        .update({
+                          status: 'return_label_generated',
+                          sendcloud_return_id: labelData.sendcloud_return_id,
+                          return_tracking_code: labelData.tracking_code,
+                          return_tracking_url: labelData.tracking_url,
+                          return_label_url: labelData.label_url,
+                          label_generated_at: new Date().toISOString(),
+                        })
+                        .eq('id', returnId)
+                        .select()
+                        .single()
+                      
+                      if (updateError) {
+                        console.error('❌ Error updating return with label:', updateError)
+                      } else {
+                        console.log('✅ Return label generated automatically')
+                        console.log(`   Label URL: ${labelData.label_url}`)
+                        console.log(`   Tracking code: ${labelData.tracking_code}`)
+                        
+                        // Verstuur email naar klant met label (niet blokkerend)
+                        try {
+                          const { data: orderForEmail } = await supabase
+                            .from('orders')
+                            .select('email, shipping_address')
+                            .eq('id', updatedReturn.order_id)
+                            .single()
+                          
+                          if (orderForEmail) {
+                            const shippingAddress = orderForEmail.shipping_address as any
+                            
+                            await sendReturnLabelGeneratedEmail({
+                              customerEmail: orderForEmail.email,
+                              customerName: shippingAddress?.name || 'Klant',
+                              returnId: returnId,
+                              orderId: updatedReturn.order_id,
+                              trackingCode: labelData.tracking_code,
+                              trackingUrl: labelData.tracking_url,
+                              labelUrl: labelData.label_url,
+                            })
+                            console.log('✅ Return label email sent')
+                          }
+                        } catch (emailError) {
+                          console.error('❌ Error sending return label email:', emailError)
+                          // Don't fail webhook if email fails
+                        }
+                      }
+                    }
+                  }
+                }
               }
             } catch (labelError) {
               console.error('❌ Error generating return label:', labelError)
