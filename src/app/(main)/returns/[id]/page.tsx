@@ -99,11 +99,6 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
             applePay: 'auto',
             googlePay: 'auto',
           },
-          paymentMethodOptions: {
-            link: {
-              enabled: false, // Link uitschakelen
-            },
-          },
           layout: {
             type: 'tabs',
           },
@@ -420,6 +415,7 @@ export default function ReturnDetailsPage() {
                     theme: 'stripe',
                   },
                   locale: 'nl',
+                  loader: 'auto',
                 }}
               >
                 <CheckoutForm returnId={returnId} returnData={returnData} />
