@@ -193,7 +193,6 @@ export async function POST(req: NextRequest) {
               }
               // Don't fail webhook, admin can generate manually
             }
-          }
           
           // Return early, don't process as order payment
           // Return success even if label generation failed (admin can generate manually)
@@ -205,6 +204,8 @@ export async function POST(req: NextRequest) {
             label_generation_attempted: !!returnRecord,
           })
         }
+        
+        // Continue to normal order payment handling if not a return
         
         // Find order by payment intent ID
         const { data: order, error: findError } = await supabase
