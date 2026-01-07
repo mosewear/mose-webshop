@@ -1417,3 +1417,555 @@ export async function sendContactFormEmail(props: {
     return { success: false, error: error?.message || 'Unknown error' }
   }
 }
+
+// =====================================================
+// RETURN EMAILS
+// =====================================================
+
+export async function sendReturnRequestedEmail(props: {
+  customerEmail: string
+  customerName: string
+  returnId: string
+  orderId: string
+  returnReason: string
+  returnItems: Array<{
+    product_name: string
+    quantity: number
+    size: string
+    color: string
+  }>
+}) {
+  const { customerEmail, customerName, returnId, orderId, returnReason, returnItems } = props
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const returnUrl = `${siteUrl}/returns/${returnId}`
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body data-ogsc="#ffffff">
+  <div class="wrapper">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
+    <div class="hero">
+      ${createIconCircle('check-circle', '#2ECC71', 42)}
+      <h1>RETOUR AANGEVRAAGD</h1>
+      <div class="hero-sub">Je Verzoek Is Ontvangen</div>
+      <div class="hero-text">Hey ${customerName}, we hebben je retourverzoek ontvangen</div>
+      <div class="order-badge">#${returnId.slice(0,8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="section-title">Retour Details</div>
+      <div class="info-box">
+        <h3>Order Nummer</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; font-weight: 600; font-family: monospace;">#${orderId.slice(0,8).toUpperCase()}</p>
+      </div>
+      <div class="info-box">
+        <h3>Reden</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px;">${returnReason}</p>
+      </div>
+      <div class="section-title">Retour Items</div>
+      ${returnItems.map(item => `
+        <div class="product">
+          <div class="prod-info">
+            <div class="prod-name">${item.product_name}</div>
+            <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x</div>
+          </div>
+        </div>
+      `).join('')}
+      <div class="info-box" style="border-left-color: #FF9500;">
+        <h3>Volgende Stappen</h3>
+        <ul class="checklist">
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">We beoordelen je retourverzoek binnen 24 uur</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Na goedkeuring kun je het retourlabel betalen (€7,87)</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Je ontvangt een email zodra je retour is goedgekeurd</td>
+              </tr>
+            </table>
+          </li>
+        </ul>
+      </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${returnUrl}" class="button" style="color:#fff;text-decoration:none;">BEKIJK RETOUR STATUS</a>
+      </div>
+    </div>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Retouren <bestellingen@orders.mosewear.nl>',
+      to: [customerEmail],
+      subject: `Retourverzoek ontvangen #${returnId.slice(0, 8).toUpperCase()} - MOSE`,
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('Error sending return requested email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Return requested email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendReturnApprovedEmail(props: {
+  customerEmail: string
+  customerName: string
+  returnId: string
+  orderId: string
+  returnItems: Array<{
+    product_name: string
+    quantity: number
+  }>
+  refundAmount: number
+}) {
+  const { customerEmail, customerName, returnId, orderId, returnItems, refundAmount } = props
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const returnUrl = `${siteUrl}/returns/${returnId}`
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body data-ogsc="#ffffff">
+  <div class="wrapper">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
+    <div class="hero">
+      ${createIconCircle('check-circle', '#2ECC71', 42)}
+      <h1>RETOUR GOEDGEKEURD!</h1>
+      <div class="hero-sub">Je Kunt Nu Het Label Betalen</div>
+      <div class="hero-text">Hey ${customerName}, je retourverzoek is goedgekeurd</div>
+      <div class="order-badge">#${returnId.slice(0,8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="section-title">Retour Items</div>
+      ${returnItems.map(item => `
+        <div class="product">
+          <div class="prod-info">
+            <div class="prod-name">${item.product_name}</div>
+            <div class="prod-meta">${item.quantity}x stuks</div>
+          </div>
+        </div>
+      `).join('')}
+      <div class="summary">
+        <div class="sum-label">Refund Overzicht</div>
+        <div class="sum-line">
+          <span>Terug te betalen (items)</span>
+          <span style="font-weight:600">€${refundAmount.toFixed(2)}</span>
+        </div>
+        <div class="sum-line sum-btw">
+          <span>Retourlabel kosten</span>
+          <span>€7,87</span>
+        </div>
+        <div class="sum-divider"></div>
+        <div class="sum-grand">€${refundAmount.toFixed(2)}</div>
+        <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TERUG TE BETALEN</div>
+        <div style="text-align:center;font-size:11px;color:#999;margin-top:4px;">(na ontvangst retour)</div>
+      </div>
+      <div class="discount-highlight" style="background: #FF9500; color: #fff;">
+        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Betaal Nu Voor Retourlabel</h3>
+        <p style="margin: 0 0 16px 0; font-size: 15px; opacity: 0.95;">Om je retourlabel te ontvangen, betaal je eerst €7,87 voor de retourverzending.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${returnUrl}" class="button" style="background: #fff; color: #FF9500; font-size: 16px; padding: 18px 48px; text-decoration: none; border-radius: 4px; font-weight: 900;">
+            BETAAL VOOR RETOURLABEL (€7,87)
+          </a>
+        </div>
+        <p style="margin: 12px 0 0 0; font-size: 13px; opacity: 0.9; font-weight: 600;">Na betaling ontvang je direct je retourlabel per email</p>
+      </div>
+      <div class="info-box">
+        <h3>Wat Gebeurt Er Nu?</h3>
+        <ul class="checklist">
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Betaal €7,87 voor het retourlabel</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Je ontvangt automatisch je retourlabel per email</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Print het label en plak het op je pakket</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Breng je pakket naar een PostNL punt</td>
+              </tr>
+            </table>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Retouren <bestellingen@orders.mosewear.nl>',
+      to: [customerEmail],
+      subject: `Je retour is goedgekeurd - Betaal voor retourlabel - MOSE`,
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('Error sending return approved email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Return approved email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendReturnLabelGeneratedEmail(props: {
+  customerEmail: string
+  customerName: string
+  returnId: string
+  orderId: string
+  trackingCode: string
+  trackingUrl: string
+  labelUrl: string
+}) {
+  const { customerEmail, customerName, returnId, orderId, trackingCode, trackingUrl, labelUrl } = props
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const returnUrl = `${siteUrl}/returns/${returnId}`
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body data-ogsc="#ffffff">
+  <div class="wrapper">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
+    <div class="hero">
+      ${createIconCircle('package', '#2ECC71', 42)}
+      <h1>RETOURLABEL BESCHIKBAAR!</h1>
+      <div class="hero-sub">Je Kunt Nu Retourneren</div>
+      <div class="hero-text">Hey ${customerName}, je retourlabel is klaar</div>
+      <div class="order-badge">#${returnId.slice(0,8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="tracking-box">
+        <div style="font-size: 13px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Retour Tracking Code</div>
+        <div class="tracking-code">${trackingCode}</div>
+        ${trackingUrl ? `<a href="${trackingUrl}" class="button" style="color:#fff;text-decoration:none;">VOLG JE RETOUR</a>` : ''}
+      </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${labelUrl}" class="button" style="color:#fff;text-decoration:none;background:#000;">DOWNLOAD RETOURLABEL</a>
+        <p style="font-size: 12px; color: #999; margin-top: 12px;">
+          Print dit label en plak het op je pakket
+        </p>
+      </div>
+      <div class="info-box">
+        <h3>Hoe Retourneren?</h3>
+        <ul class="checklist">
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Download en print het retourlabel</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Pak je items in de originele verpakking</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Plak het label op je pakket</td>
+              </tr>
+            </table>
+          </li>
+          <li style="padding: 10px 0; padding-left: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+                <td valign="top" style="vertical-align: top;">Breng je pakket naar een PostNL punt</td>
+              </tr>
+            </table>
+          </li>
+        </ul>
+      </div>
+      <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
+        <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
+          <strong>Let op:</strong> Zorg dat je items ongedragen zijn en de labels er nog aan zitten. Na ontvangst krijg je binnen 5-7 werkdagen je geld terug.
+        </p>
+      </div>
+    </div>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Retouren <bestellingen@orders.mosewear.nl>',
+      to: [customerEmail],
+      subject: `Je retourlabel is klaar #${returnId.slice(0, 8).toUpperCase()} - MOSE`,
+      html: htmlContent,
+      attachments: [
+        {
+          filename: `retourlabel-${returnId.slice(0, 8)}.pdf`,
+          path: labelUrl,
+        },
+      ],
+    })
+
+    if (error) {
+      console.error('Error sending return label email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Return label email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendReturnRefundedEmail(props: {
+  customerEmail: string
+  customerName: string
+  returnId: string
+  orderId: string
+  refundAmount: number
+}) {
+  const { customerEmail, customerName, returnId, orderId, refundAmount } = props
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body data-ogsc="#ffffff">
+  <div class="wrapper">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
+    <div class="hero">
+      ${createIconCircle('check-circle', '#2ECC71', 46)}
+      <h1>TERUGBETALING VOLTOOID!</h1>
+      <div class="hero-sub">Je Geld Is Teruggestort</div>
+      <div class="hero-text">Hey ${customerName}, je retour is verwerkt</div>
+      <div class="order-badge">#${returnId.slice(0,8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="info-box" style="border-left-color: #2ECC71; text-align: center;">
+        <h3 style="text-align: center;">
+          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
+            <tr>
+              <td valign="middle" style="padding-right: 8px; vertical-align: middle;">${createCheckmark('#2ECC71', 20)}</td>
+              <td valign="middle" style="vertical-align: middle;">€${refundAmount.toFixed(2)} teruggestort</td>
+            </tr>
+          </table>
+        </h3>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">Het bedrag is teruggestort naar je originele betaalmethode</p>
+      </div>
+      <div class="summary">
+        <div class="sum-label">Terugbetaling Overzicht</div>
+        <div class="sum-line">
+          <span>Terugbetaald bedrag</span>
+          <span style="font-weight:600">€${refundAmount.toFixed(2)}</span>
+        </div>
+        <div class="sum-line sum-btw" style="font-size: 12px; color: #999;">
+          <span>Retourlabel kosten (al betaald)</span>
+          <span>€7,87</span>
+        </div>
+        <div class="sum-divider"></div>
+        <div class="sum-grand">€${refundAmount.toFixed(2)}</div>
+        <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TERUGGESTORT</div>
+      </div>
+      <div class="info-box">
+        <h3>Wanneer Zie Je Het Bedrag?</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.6;">
+          Het bedrag is teruggestort naar je originele betaalmethode. Afhankelijk van je bank kan het <strong>3-5 werkdagen</strong> duren voordat het bedrag zichtbaar is op je rekening.
+        </p>
+      </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${siteUrl}/shop" class="button" style="color:#fff;text-decoration:none;">VERDER SHOPPEN</a>
+      </div>
+    </div>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Retouren <bestellingen@orders.mosewear.nl>',
+      to: [customerEmail],
+      subject: `Terugbetaling voltooid #${returnId.slice(0, 8).toUpperCase()} - MOSE`,
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('Error sending return refunded email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Return refunded email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendReturnRejectedEmail(props: {
+  customerEmail: string
+  customerName: string
+  returnId: string
+  orderId: string
+  rejectionReason: string
+}) {
+  const { customerEmail, customerName, returnId, orderId, rejectionReason } = props
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body data-ogsc="#ffffff">
+  <div class="wrapper">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
+    <div class="hero">
+      ${createIconCircle('x', '#e74c3c', 42)}
+      <h1>RETOUR AFGEWEZEN</h1>
+      <div class="hero-sub">Retourverzoek Niet Goedgekeurd</div>
+      <div class="hero-text">Hey ${customerName}, je retourverzoek kon niet worden goedgekeurd</div>
+      <div class="order-badge">#${returnId.slice(0,8).toUpperCase()}</div>
+    </div>
+    <div class="content">
+      <div class="info-box" style="border-left-color: #e74c3c; background: #fff3f3;">
+        <h3>Reden van Afwijzing</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.6;">${rejectionReason}</p>
+      </div>
+      <div class="info-box">
+        <h3>Vragen?</h3>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #666; line-height: 1.6;">
+          Heb je vragen over deze afwijzing? Neem gerust contact met ons op. We helpen je graag verder!
+        </p>
+        <p style="margin: 12px 0 0 0;">
+          <a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
+          <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a>
+        </p>
+      </div>
+    </div>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Retouren <bestellingen@orders.mosewear.nl>',
+      to: [customerEmail],
+      subject: `Retourverzoek afgewezen #${returnId.slice(0, 8).toUpperCase()} - MOSE`,
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('Error sending return rejected email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Return rejected email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error }
+  }
+}

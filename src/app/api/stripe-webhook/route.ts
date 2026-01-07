@@ -37,6 +37,60 @@ export async function POST(req: NextRequest) {
         
         console.log('💳 Webhook: Payment Intent Succeeded:', paymentIntent.id)
         
+        // Check if this is a return label payment
+        if (paymentIntent.metadata?.type === 'return_label_payment' && paymentIntent.metadata?.return_id) {
+          const returnId = paymentIntent.metadata.return_id
+          console.log('🔄 Webhook: Return label payment detected for return:', returnId)
+          
+          // Update return status
+          const { data: returnRecord, error: returnError } = await supabase
+            .from('returns')
+            .update({
+              status: 'return_label_payment_completed',
+              return_label_payment_status: 'completed',
+              return_label_paid_at: new Date().toISOString(),
+            })
+            .eq('id', returnId)
+            .select()
+            .single()
+          
+          if (returnError) {
+            console.error('❌ Error updating return payment status:', returnError)
+          } else {
+            console.log('✅ Return payment status updated:', returnId)
+            
+            // Automatisch label genereren
+            try {
+              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+              const internalSecret = process.env.INTERNAL_API_SECRET
+              
+              if (internalSecret) {
+                const response = await fetch(`${siteUrl}/api/returns/${returnId}/generate-label`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${internalSecret}`,
+                    'Content-Type': 'application/json',
+                  },
+                })
+                
+                if (response.ok) {
+                  console.log('✅ Return label generated automatically')
+                } else {
+                  console.error('❌ Failed to generate return label:', await response.text())
+                }
+              } else {
+                console.warn('⚠️ INTERNAL_API_SECRET not set, cannot auto-generate label')
+              }
+            } catch (labelError) {
+              console.error('❌ Error generating return label:', labelError)
+              // Don't fail webhook, admin can generate manually
+            }
+          }
+          
+          // Return early, don't process as order payment
+          return NextResponse.json({ received: true, type: 'return_label_payment' })
+        }
+        
         // Find order by payment intent ID
         const { data: order, error: findError } = await supabase
           .from('orders')
@@ -319,27 +373,76 @@ export async function POST(req: NextRequest) {
         const charge = event.data.object as Stripe.Charge
         const supabase = await createClient()
 
-        // Find order by payment intent ID
-        const { data: order } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('stripe_payment_intent_id', charge.payment_intent as string)
-          .single()
-
-        if (order) {
-          await supabase
-            .from('orders')
+        // Check if this is a return refund
+        const refundMetadata = charge.refunds?.data?.[0]?.metadata
+        if (refundMetadata?.type === 'return_refund' && refundMetadata?.return_id) {
+          const returnId = refundMetadata.return_id
+          console.log('💰 Webhook: Return refund detected for return:', returnId)
+          
+          // Update return status
+          const { data: returnRecord, error: returnError } = await supabase
+            .from('returns')
             .update({
-              payment_status: 'refunded',
-              payment_metadata: {
-                refunded_at: new Date().toISOString(),
-                refund_amount: charge.amount_refunded,
-                refund_reason: charge.refunds?.data?.[0]?.reason,
-              },
+              status: 'refunded',
+              refunded_at: new Date().toISOString(),
+              stripe_refund_status: 'succeeded',
             })
-            .eq('id', order.id)
+            .eq('id', returnId)
+            .select()
+            .single()
+          
+          if (returnError) {
+            console.error('❌ Error updating return refund status:', returnError)
+          } else {
+            console.log('✅ Return refund status updated:', returnId)
+          }
+          
+          // Also update order if needed (for backwards compatibility)
+          const { data: order } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('stripe_payment_intent_id', charge.payment_intent as string)
+            .single()
 
-          console.log(`💰 Refund processed for order ${order.id}: €${(charge.amount_refunded / 100).toFixed(2)}`)
+          if (order) {
+            await supabase
+              .from('orders')
+              .update({
+                payment_status: 'refunded',
+                payment_metadata: {
+                  refunded_at: new Date().toISOString(),
+                  refund_amount: charge.amount_refunded,
+                  refund_reason: charge.refunds?.data?.[0]?.reason,
+                  return_id: returnId,
+                },
+              })
+              .eq('id', order.id)
+
+            console.log(`💰 Refund processed for order ${order.id} (return ${returnId}): €${(charge.amount_refunded / 100).toFixed(2)}`)
+          }
+        } else {
+          // Regular order refund (not a return)
+          const { data: order } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('stripe_payment_intent_id', charge.payment_intent as string)
+            .single()
+
+          if (order) {
+            await supabase
+              .from('orders')
+              .update({
+                payment_status: 'refunded',
+                payment_metadata: {
+                  refunded_at: new Date().toISOString(),
+                  refund_amount: charge.amount_refunded,
+                  refund_reason: charge.refunds?.data?.[0]?.reason,
+                },
+              })
+              .eq('id', order.id)
+
+            console.log(`💰 Refund processed for order ${order.id}: €${(charge.amount_refunded / 100).toFixed(2)}`)
+          }
         }
         break
       }

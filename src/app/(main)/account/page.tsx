@@ -50,8 +50,10 @@ export default function AccountPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [orders, setOrders] = useState<Order[]>([])
+  const [returns, setReturns] = useState<any[]>([])
+  const [returnsLoading, setReturnsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses' | 'returns'>('orders')
 
   // Profile state
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -97,6 +99,9 @@ export default function AccountPage() {
     if (activeTab === 'addresses' && user) {
       fetchAddresses()
     }
+    if (activeTab === 'returns' && user) {
+      fetchReturns()
+    }
   }, [activeTab, user])
 
   async function checkUser() {
@@ -126,6 +131,23 @@ export default function AccountPage() {
 
     if (!error && data) {
       setOrders(data)
+    }
+  }
+
+  async function fetchReturns() {
+    if (!user) return
+    
+    setReturnsLoading(true)
+    try {
+      const response = await fetch('/api/returns')
+      const data = await response.json()
+      if (data.returns) {
+        setReturns(data.returns)
+      }
+    } catch (error) {
+      console.error('Error fetching returns:', error)
+    } finally {
+      setReturnsLoading(false)
     }
   }
 
@@ -514,6 +536,16 @@ export default function AccountPage() {
             >
               Adressen
             </button>
+            <button
+              onClick={() => setActiveTab('returns')}
+              className={`px-4 py-3 font-bold uppercase text-sm whitespace-nowrap transition-colors ${
+                activeTab === 'returns'
+                  ? 'border-b-2 border-brand-primary text-brand-primary'
+                  : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              Retouren
+            </button>
           </div>
         </div>
 
@@ -551,6 +583,16 @@ export default function AccountPage() {
                   }`}
                 >
                   Adressen
+                </button>
+                <button
+                  onClick={() => setActiveTab('returns')}
+                  className={`w-full text-left px-4 py-3 font-bold transition-colors ${
+                    activeTab === 'returns'
+                      ? 'bg-brand-primary text-white'
+                      : 'hover:bg-gray-200'
+                  }`}
+                >
+                  Retouren
                 </button>
               </nav>
             </div>
@@ -648,12 +690,20 @@ export default function AccountPage() {
                             Bekijk details
                           </Link>
                           {order.status === 'delivered' && (
-                            <Link
-                              href="/shop"
-                              className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
-                            >
-                              Bestel opnieuw
-                            </Link>
+                            <>
+                              <Link
+                                href={`/returns/new?order_id=${order.id}`}
+                                className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
+                              >
+                                Retour aanvragen
+                              </Link>
+                              <Link
+                                href="/shop"
+                                className="px-6 py-3 border-2 border-gray-300 font-bold uppercase text-sm hover:bg-gray-100 transition-colors text-center"
+                              >
+                                Bestel opnieuw
+                              </Link>
+                            </>
                           )}
                         </div>
                       </div>
@@ -962,6 +1012,152 @@ export default function AccountPage() {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Returns Tab */}
+            {activeTab === 'returns' && (
+              <>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <h2 className="text-2xl md:text-3xl font-display">MIJN RETOUREN</h2>
+                  <Link
+                    href="/returns/new"
+                    className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
+                  >
+                    + Nieuwe Retour Aanvragen
+                  </Link>
+                </div>
+
+                {returnsLoading ? (
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Laden...</p>
+                  </div>
+                ) : returns.length === 0 ? (
+                  <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
+                    <p className="text-gray-600 mb-6 text-lg">Je hebt nog geen retouren aangevraagd</p>
+                    <Link
+                      href="/returns/new"
+                      className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                    >
+                      Retour Aanvragen
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {returns.map((returnItem) => {
+                      const getStatusColor = (status: string) => {
+                        switch (status) {
+                          case 'return_requested':
+                            return 'bg-yellow-400 text-black'
+                          case 'return_approved':
+                            return 'bg-blue-500 text-white'
+                          case 'return_label_payment_pending':
+                            return 'bg-orange-500 text-white'
+                          case 'return_label_payment_completed':
+                            return 'bg-purple-500 text-white'
+                          case 'return_label_generated':
+                            return 'bg-green-500 text-white'
+                          case 'return_in_transit':
+                            return 'bg-brand-primary text-white'
+                          case 'return_received':
+                            return 'bg-gray-600 text-white'
+                          case 'refund_processing':
+                            return 'bg-indigo-500 text-white'
+                          case 'refunded':
+                            return 'bg-gray-800 text-white'
+                          case 'return_rejected':
+                            return 'bg-red-600 text-white'
+                          default:
+                            return 'bg-gray-400 text-white'
+                        }
+                      }
+
+                      const getStatusText = (status: string) => {
+                        const labels: Record<string, string> = {
+                          return_requested: 'Aangevraagd',
+                          return_approved: 'Goedgekeurd',
+                          return_label_payment_pending: 'Betaling Label',
+                          return_label_payment_completed: 'Label Betaald',
+                          return_label_generated: 'Label Beschikbaar',
+                          return_in_transit: 'Onderweg',
+                          return_received: 'Ontvangen',
+                          refund_processing: 'Refund Bezig',
+                          refunded: 'Terugbetaald',
+                          return_rejected: 'Afgewezen',
+                        }
+                        return labels[status] || status
+                      }
+
+                      return (
+                        <div key={returnItem.id} className="bg-white border-2 border-black p-6">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                            <div className="flex-1">
+                              <div className="flex flex-wrap items-center gap-3 mb-2">
+                                <h3 className="font-bold text-lg md:text-xl">
+                                  Retour #{returnItem.id.slice(0, 8).toUpperCase()}
+                                </h3>
+                                <span className={`px-3 py-1 text-xs font-bold uppercase ${getStatusColor(returnItem.status)}`}>
+                                  {getStatusText(returnItem.status)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">
+                                Order #{returnItem.orders?.id?.slice(0, 8).toUpperCase() || 'N/A'}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(returnItem.created_at).toLocaleDateString('nl-NL', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}
+                              </p>
+                            </div>
+                            {returnItem.total_refund && (
+                              <div className="text-left md:text-right">
+                                <p className="text-2xl md:text-3xl font-display mb-1">€{returnItem.total_refund.toFixed(2)}</p>
+                                <p className="text-sm text-gray-600">Terug te betalen</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-t-2 border-gray-200 pt-4">
+                            <p className="font-bold mb-2">Reden: {returnItem.return_reason}</p>
+                            {returnItem.customer_notes && (
+                              <p className="text-sm text-gray-600 mb-4">{returnItem.customer_notes}</p>
+                            )}
+                          </div>
+
+                          <div className="border-t-2 border-gray-200 pt-4 mt-4 flex flex-col sm:flex-row gap-3">
+                            <Link
+                              href={`/returns/${returnItem.id}`}
+                              className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
+                            >
+                              Bekijk details
+                            </Link>
+                            {returnItem.status === 'return_approved' && (
+                              <Link
+                                href={`/returns/${returnItem.id}`}
+                                className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
+                              >
+                                Betaal voor label (€7,87)
+                              </Link>
+                            )}
+                            {returnItem.status === 'return_label_generated' && returnItem.return_label_url && (
+                              <a
+                                href={returnItem.return_label_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
+                              >
+                                Download label
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

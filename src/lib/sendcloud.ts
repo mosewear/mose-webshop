@@ -347,6 +347,106 @@ export async function cancelParcel(parcelId: number): Promise<boolean> {
 }
 
 /**
+ * Maak een retourlabel aan (is_return: true)
+ * Voor retouren van klanten naar MOSE
+ */
+export async function createReturnLabel(
+  returnId: string,
+  order: any,
+  returnItems: any[]
+): Promise<{
+  label_url: string
+  tracking_code: string
+  tracking_url: string
+  sendcloud_return_id: number
+}> {
+  try {
+    const shippingAddress = order.shipping_address as any
+    
+    // Bereken totaal gewicht (schatting op basis van return items)
+    let totalWeight = 0
+    returnItems.forEach((returnItem: any) => {
+      const orderItem = order.order_items.find((item: any) => item.id === returnItem.order_item_id)
+      if (orderItem) {
+        const isHoodie = orderItem.product_name.toLowerCase().includes('hoodie')
+        const type = isHoodie ? 'hoodie' : 'tshirt'
+        totalWeight += estimateClothingWeight(returnItem.quantity, type)
+      }
+    })
+
+    // Minimaal 0.5kg, afgerond naar boven
+    totalWeight = Math.max(0.5, Math.ceil(totalWeight * 10) / 10)
+
+    // Format adres (klant adres - waar het pakket vandaan komt)
+    const sendcloudAddress = formatAddressForSendcloud({
+      name: shippingAddress.name,
+      address: shippingAddress.address,
+      city: shippingAddress.city,
+      postalCode: shippingAddress.postalCode,
+      country: shippingAddress.country || 'NL',
+      email: order.email,
+      phone: shippingAddress.phone,
+    })
+
+    // Bepaal shipping method (gebruik standaard DHL)
+    const methodId = await getDefaultDHLMethodId()
+    if (!methodId) {
+      throw new Error('Geen geschikt verzendmethode gevonden voor retour')
+    }
+
+    // Bereken totaal waarde van return items
+    let totalOrderValue = 0
+    returnItems.forEach((returnItem: any) => {
+      const orderItem = order.order_items.find((item: any) => item.id === returnItem.order_item_id)
+      if (orderItem) {
+        totalOrderValue += orderItem.price_at_purchase * returnItem.quantity
+      }
+    })
+
+    // Maak retour parcel aan
+    const parcelData: CreateParcelRequest = {
+      name: sendcloudAddress.name,
+      address: sendcloudAddress.address,
+      city: sendcloudAddress.city,
+      postal_code: sendcloudAddress.postal_code,
+      country: sendcloudAddress.country,
+      email: sendcloudAddress.email,
+      telephone: sendcloudAddress.telephone,
+      order_number: `RETURN-${returnId.slice(0, 8).toUpperCase()}`,
+      weight: totalWeight.toFixed(1),
+      total_order_value: totalOrderValue.toFixed(2),
+      shipment: {
+        id: methodId,
+      },
+      is_return: true, // ← BELANGRIJK: Dit maakt het een retourlabel
+      request_label: true,
+      apply_shipping_rules: true,
+    }
+
+    const parcel = await createParcel(parcelData)
+
+    if (!parcel || !parcel.label) {
+      throw new Error('Label kon niet worden gegenereerd')
+    }
+
+    const labelUrl = parcel.label.normal_printer?.[0] || null
+    if (!labelUrl) {
+      throw new Error('Label URL niet beschikbaar')
+    }
+
+    return {
+      label_url: labelUrl,
+      tracking_code: parcel.tracking_number,
+      tracking_url: parcel.tracking_url,
+      sendcloud_return_id: parcel.id,
+    }
+  } catch (error: any) {
+    console.error('Error creating return label:', error)
+    throw new Error(`Kon retourlabel niet aanmaken: ${error.message || 'Onbekende fout'}`)
+  }
+}
+
+/**
  * Map Sendcloud status ID naar onze order status
  */
 export function mapSendcloudStatus(statusId: number): string {
