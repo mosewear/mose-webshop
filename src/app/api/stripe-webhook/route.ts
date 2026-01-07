@@ -42,6 +42,17 @@ export async function POST(req: NextRequest) {
           const returnId = paymentIntent.metadata.return_id
           console.log('🔄 Webhook: Return label payment detected for return:', returnId)
           
+          // Haal retour op voor email data
+          const { data: returnRecordBefore, error: fetchError } = await supabase
+            .from('returns')
+            .select('*, orders!inner(email, shipping_address)')
+            .eq('id', returnId)
+            .single()
+
+          if (fetchError || !returnRecordBefore) {
+            console.error('❌ Error fetching return before update:', fetchError)
+          }
+
           // Update return status
           const { data: returnRecord, error: returnError } = await supabase
             .from('returns')
@@ -58,6 +69,37 @@ export async function POST(req: NextRequest) {
             console.error('❌ Error updating return payment status:', returnError)
           } else {
             console.log('✅ Return payment status updated:', returnId)
+            
+            // Verstuur "Retourverzoek ontvangen" email na betaling
+            try {
+              if (returnRecordBefore) {
+                const { sendReturnRequestedEmail } = await import('@/lib/email')
+                const order = returnRecordBefore.orders as any
+                const shippingAddress = order.shipping_address as any
+                const returnItems = returnRecordBefore.return_items as any[]
+
+                await sendReturnRequestedEmail({
+                  customerEmail: order.email,
+                  customerName: shippingAddress?.name || 'Klant',
+                  returnId: returnId,
+                  orderId: returnRecordBefore.order_id,
+                  returnReason: returnRecordBefore.return_reason,
+                  returnItems: returnItems.map((item: any) => {
+                    // Try to get product details from order items if available
+                    return {
+                      product_name: item.product_name || 'Product',
+                      quantity: item.quantity,
+                      size: item.size || '',
+                      color: item.color || '',
+                    }
+                  }),
+                })
+                console.log('✅ Return requested email sent after payment')
+              }
+            } catch (emailError) {
+              console.error('❌ Error sending return requested email:', emailError)
+              // Don't fail webhook if email fails
+            }
             
             // Automatisch label genereren
             try {

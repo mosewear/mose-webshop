@@ -34,10 +34,10 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Check of status correct is
-    if (returnRecord.status !== 'return_approved') {
+    // Check of status correct is - klant moet direct kunnen betalen na aanvraag
+    if (returnRecord.status !== 'return_label_payment_pending') {
       return NextResponse.json({ 
-        error: `Cannot create payment intent. Return status must be 'return_approved', current status: ${returnRecord.status}` 
+        error: `Cannot create payment intent. Return status must be 'return_label_payment_pending', current status: ${returnRecord.status}` 
       }, { status: 400 })
     }
 

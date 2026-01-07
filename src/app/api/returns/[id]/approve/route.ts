@@ -32,13 +32,14 @@ export async function POST(
       return NextResponse.json({ error: 'Return not found' }, { status: 404 })
     }
 
-    if (returnRecord.status !== 'return_requested') {
+    // Retour kan alleen worden goedgekeurd als het al is ontvangen
+    if (returnRecord.status !== 'return_received') {
       return NextResponse.json({ 
-        error: `Cannot approve return with status ${returnRecord.status}` 
+        error: `Cannot approve return with status ${returnRecord.status}. Return must be received first.` 
       }, { status: 400 })
     }
 
-    // Update status
+    // Update status naar goedgekeurd (na beoordeling kleding)
     const { data: updatedReturn, error: updateError } = await supabase
       .from('returns')
       .update({

@@ -240,8 +240,8 @@ export default function ReturnDetailsPage() {
 
       setReturnData(data.return)
 
-      // Als status approved is, maak payment intent aan
-      if (data.return.status === 'return_approved' && !data.return.return_label_payment_intent_id) {
+      // Als status payment_pending is, maak payment intent aan (als deze nog niet bestaat)
+      if (data.return.status === 'return_label_payment_pending' && !data.return.return_label_payment_intent_id) {
         await createPaymentIntent()
       }
     } catch (error: any) {
@@ -383,12 +383,13 @@ export default function ReturnDetailsPage() {
           </div>
         </div>
 
-        {/* Payment Section */}
-        {returnData.status === 'return_approved' && (
+        {/* Payment Section - Klant moet direct betalen na aanvraag */}
+        {returnData.status === 'return_label_payment_pending' && (
           <div className="bg-orange-50 border-2 border-orange-500 p-6 mb-6">
             <h3 className="text-xl font-display mb-4">Betaal voor Retourlabel</h3>
             <p className="mb-4">
-              Om je retourlabel te ontvangen, betaal je eerst €{returnData.return_label_cost_incl_btw.toFixed(2)} voor de retourverzending.
+              Om je retourlabel te ontvangen, betaal je eerst €{returnData.return_label_cost_incl_btw.toFixed(2)} voor de retourverzending. 
+              Na betaling wordt je retourlabel automatisch gegenereerd.
             </p>
             {paymentLoading ? (
               <div className="text-center py-4">

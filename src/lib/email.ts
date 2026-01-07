@@ -1474,6 +1474,13 @@ export async function sendReturnRequestedEmail(props: {
           </div>
         </div>
       `).join('')}
+      <div class="info-box" style="border-left-color: #2ECC71; background: #f0fdf4;">
+        <h3>Je Retourlabel Wordt Nu Gegeneerd</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.6;">
+          Je betaling voor het retourlabel is succesvol ontvangen! We genereren nu je retourlabel. 
+          Je ontvangt een email zodra het label klaar is om te downloaden.
+        </p>
+      </div>
       <div class="info-box" style="border-left-color: #FF9500;">
         <h3>Volgende Stappen</h3>
         <ul class="checklist">
@@ -1481,7 +1488,7 @@ export async function sendReturnRequestedEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
-                <td valign="top" style="vertical-align: top;">We beoordelen je retourverzoek binnen 24 uur</td>
+                <td valign="top" style="vertical-align: top;">Download het retourlabel zodra je het ontvangt</td>
               </tr>
             </table>
           </li>
@@ -1489,7 +1496,7 @@ export async function sendReturnRequestedEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Na goedkeuring kun je het retourlabel betalen (€7,87)</td>
+                <td valign="top" style="vertical-align: top;">Plak het label op je pakket en stuur het terug</td>
               </tr>
             </table>
           </li>
@@ -1497,7 +1504,7 @@ export async function sendReturnRequestedEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#FF9500', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Je ontvangt een email zodra je retour is goedgekeurd</td>
+                <td valign="top" style="vertical-align: top;">Na ontvangst beoordelen we de kleding en krijg je een bericht</td>
               </tr>
             </table>
           </li>
@@ -1560,14 +1567,21 @@ export async function sendReturnApprovedEmail(props: {
 <body data-ogsc="#ffffff">
   <div class="wrapper">
     <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
-    <div class="hero">
+      <div class="hero">
       ${createIconCircle('check-circle', '#2ECC71', 42)}
-      <h1>RETOUR GOEDGEKEURD!</h1>
-      <div class="hero-sub">Je Kunt Nu Het Label Betalen</div>
-      <div class="hero-text">Hey ${customerName}, je retourverzoek is goedgekeurd</div>
+      <h1>JE RETOUR IS GOEDGEKEURD!</h1>
+      <div class="hero-sub">Je Kleding Is Beoordeeld</div>
+      <div class="hero-text">Hey ${customerName}, we hebben je retour ontvangen en goedgekeurd</div>
       <div class="order-badge">#${returnId.slice(0,8).toUpperCase()}</div>
     </div>
     <div class="content">
+      <div class="info-box" style="border-left-color: #2ECC71; background: #f0fdf4;">
+        <h3>Je Terugbetaling Wordt Verwerkt</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.6;">
+          We hebben je geretourneerde kleding ontvangen en gecontroleerd. Alles ziet er goed uit! 
+          Je terugbetaling wordt nu verwerkt en je ontvangt het geld binnen <strong>3-5 werkdagen</strong> op je rekening.
+        </p>
+      </div>
       <div class="section-title">Retour Items</div>
       ${returnItems.map(item => `
         <div class="product">
@@ -1578,29 +1592,18 @@ export async function sendReturnApprovedEmail(props: {
         </div>
       `).join('')}
       <div class="summary">
-        <div class="sum-label">Refund Overzicht</div>
+        <div class="sum-label">Terugbetaling Overzicht</div>
         <div class="sum-line">
           <span>Terug te betalen (items)</span>
           <span style="font-weight:600">€${refundAmount.toFixed(2)}</span>
         </div>
-        <div class="sum-line sum-btw">
-          <span>Retourlabel kosten</span>
+        <div class="sum-line sum-btw" style="font-size: 12px; color: #999;">
+          <span>Retourlabel kosten (al betaald)</span>
           <span>€7,87</span>
         </div>
         <div class="sum-divider"></div>
         <div class="sum-grand">€${refundAmount.toFixed(2)}</div>
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TERUG TE BETALEN</div>
-        <div style="text-align:center;font-size:11px;color:#999;margin-top:4px;">(na ontvangst retour)</div>
-      </div>
-      <div class="discount-highlight" style="background: #FF9500; color: #fff;">
-        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Betaal Nu Voor Retourlabel</h3>
-        <p style="margin: 0 0 16px 0; font-size: 15px; opacity: 0.95;">Om je retourlabel te ontvangen, betaal je eerst €7,87 voor de retourverzending.</p>
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${returnUrl}" class="button" style="background: #fff; color: #FF9500; font-size: 16px; padding: 18px 48px; text-decoration: none; border-radius: 4px; font-weight: 900;">
-            BETAAL VOOR RETOURLABEL (€7,87)
-          </a>
-        </div>
-        <p style="margin: 12px 0 0 0; font-size: 13px; opacity: 0.9; font-weight: 600;">Na betaling ontvang je direct je retourlabel per email</p>
       </div>
       <div class="info-box">
         <h3>Wat Gebeurt Er Nu?</h3>
@@ -1609,7 +1612,7 @@ export async function sendReturnApprovedEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Betaal €7,87 voor het retourlabel</td>
+                <td valign="top" style="vertical-align: top;">Je terugbetaling wordt verwerkt</td>
               </tr>
             </table>
           </li>
@@ -1617,7 +1620,7 @@ export async function sendReturnApprovedEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Je ontvangt automatisch je retourlabel per email</td>
+                <td valign="top" style="vertical-align: top;">Je ontvangt €${refundAmount.toFixed(2)} teruggestort naar je originele betaalmethode</td>
               </tr>
             </table>
           </li>
@@ -1625,19 +1628,14 @@ export async function sendReturnApprovedEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Print het label en plak het op je pakket</td>
-              </tr>
-            </table>
-          </li>
-          <li style="padding: 10px 0; padding-left: 0;">
-            <table cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Breng je pakket naar een PostNL punt</td>
+                <td valign="top" style="vertical-align: top;">Het bedrag is binnen 3-5 werkdagen zichtbaar op je rekening</td>
               </tr>
             </table>
           </li>
         </ul>
+      </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${returnUrl}" class="button" style="color:#fff;text-decoration:none;">BEKIJK RETOUR STATUS</a>
       </div>
     </div>
 ${await createEmailFooter(siteUrl)}
@@ -1649,7 +1647,7 @@ ${await createEmailFooter(siteUrl)}
     const { data, error } = await resend.emails.send({
       from: 'MOSE Retouren <bestellingen@orders.mosewear.nl>',
       to: [customerEmail],
-      subject: `Je retour is goedgekeurd - Betaal voor retourlabel - MOSE`,
+      subject: `Je retour is goedgekeurd - Terugbetaling verwerkt #${returnId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
     })
 
