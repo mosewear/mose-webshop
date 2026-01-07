@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
-import { sendReturnRequestedEmail } from '@/lib/email'
+import { sendReturnApprovedEmail, sendReturnRequestedEmail } from '@/lib/email'
+import Stripe from 'stripe'
 
 // GET /api/returns - Haal alle retouren op voor ingelogde gebruiker of admin
 export async function GET(req: NextRequest) {
@@ -164,7 +165,9 @@ export async function POST(req: NextRequest) {
       .insert({
         order_id,
         user_id: user.id,
-        status: 'return_requested',
+        // Direct goedkeuren voor snelle flow
+        status: 'return_approved',
+        approved_at: new Date().toISOString(),
         return_reason,
         customer_notes: customer_notes || null,
         return_items: return_items,
@@ -187,7 +190,37 @@ export async function POST(req: NextRequest) {
       .update({ has_returns: true })
       .eq('id', order_id)
 
-    // Verstuur email naar klant
+    // Maak alvast een Payment Intent aan voor het retourlabel, zodat de klant direct kan betalen
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
+      const amount = Math.round(7.87 * 100)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: 'eur',
+        metadata: {
+          return_id: returnRecord.id,
+          order_id,
+          type: 'return_label_payment',
+          user_id: user.id,
+        },
+        description: `Retourlabel kosten - Return ${returnRecord.id.slice(0, 8).toUpperCase()}`,
+        receipt_email: order.email,
+      })
+
+      // Sla intent op (status blijft 'return_approved' tot de klant het betaalformulier opent)
+      await supabase
+        .from('returns')
+        .update({
+          return_label_payment_intent_id: paymentIntent.id,
+          return_label_payment_status: 'pending',
+        })
+        .eq('id', returnRecord.id)
+    } catch (piError) {
+      console.error('Error creating payment intent on creation:', piError)
+      // Niet falen; klant kan via details alsnog intent laten (her)aanmaken
+    }
+
+    // Verstuur emails naar klant (requested + approved met link)
     try {
       const shippingAddress = order.shipping_address as any
       const returnItemsForEmail = return_items.map((item: any) => {
@@ -199,7 +232,8 @@ export async function POST(req: NextRequest) {
           color: orderItem?.color || '',
         }
       })
-      
+
+      // Stuur zowel "aangevraagd" (logisch voor klant) als "goedgekeurd" (met betaallink)
       await sendReturnRequestedEmail({
         customerEmail: order.email,
         customerName: shippingAddress?.name || 'Klant',
@@ -207,6 +241,15 @@ export async function POST(req: NextRequest) {
         orderId: order_id,
         returnReason: return_reason,
         returnItems: returnItemsForEmail,
+      })
+
+      await sendReturnApprovedEmail({
+        customerEmail: order.email,
+        customerName: shippingAddress?.name || 'Klant',
+        returnId: returnRecord.id,
+        orderId: order_id,
+        returnItems: returnItemsForEmail.map(({ product_name, quantity }) => ({ product_name, quantity })),
+        refundAmount: totalRefundAmount,
       })
     } catch (emailError) {
       console.error('Error sending return requested email:', emailError)

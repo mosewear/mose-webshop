@@ -50,6 +50,7 @@ export default function AccountPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [orders, setOrders] = useState<Order[]>([])
+  const [orderIdToReturn, setOrderIdToReturn] = useState<Record<string, { id: string; status: string }>>({})
   const [returns, setReturns] = useState<any[]>([])
   const [returnsLoading, setReturnsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -131,6 +132,25 @@ export default function AccountPage() {
 
     if (!error && data) {
       setOrders(data)
+      // Haal eventuele retouren voor deze orders op om statusbadges te tonen
+      try {
+        const orderIds = data.map((o: any) => o.id)
+        if (orderIds.length > 0) {
+          const { data: returns } = await supabase
+            .from('returns')
+            .select('id, order_id, status, created_at')
+            .in('order_id', orderIds)
+            .order('created_at', { ascending: false })
+          const map: Record<string, { id: string; status: string }> = {}
+          ;(returns || []).forEach((r: any) => {
+            if (!map[r.order_id]) map[r.order_id] = { id: r.id, status: r.status }
+          })
+          setOrderIdToReturn(map)
+        }
+      } catch (e) {
+        // non-blocking
+        console.warn('Could not fetch returns for orders', e)
+      }
     }
   }
 
@@ -629,6 +649,26 @@ export default function AccountPage() {
                               <span className={`px-3 py-1 text-xs font-bold uppercase ${getStatusColor(order.status)}`}>
                                 {getStatusText(order.status)}
                               </span>
+                              {orderIdToReturn[order.id] && (
+                                <span className="px-3 py-1 text-xs font-bold uppercase bg-purple-600 text-white">
+                                  Retour: {(() => {
+                                    const s = orderIdToReturn[order.id].status
+                                    const labels: Record<string, string> = {
+                                      return_requested: 'Aangevraagd',
+                                      return_approved: 'Goedgekeurd',
+                                      return_label_payment_pending: 'Betaling Label',
+                                      return_label_payment_completed: 'Label Betaald',
+                                      return_label_generated: 'Label',
+                                      return_in_transit: 'Onderweg',
+                                      return_received: 'Ontvangen',
+                                      refund_processing: 'Refund',
+                                      refunded: 'Terugbetaald',
+                                      return_rejected: 'Afgewezen',
+                                    }
+                                    return labels[s] || s
+                                  })()}
+                                </span>
+                              )}
                             </div>
                             <p className="text-sm text-gray-600">
                               {new Date(order.created_at).toLocaleDateString('nl-NL', {
@@ -689,7 +729,14 @@ export default function AccountPage() {
                           >
                             Bekijk details
                           </Link>
-                          {order.status === 'delivered' && (
+                          {orderIdToReturn[order.id] ? (
+                            <Link
+                              href={`/returns/${orderIdToReturn[order.id].id}`}
+                              className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
+                            >
+                              Bekijk retour
+                            </Link>
+                          ) : order.status === 'delivered' && (
                             <>
                               <Link
                                 href={`/returns/new?order_id=${order.id}`}
