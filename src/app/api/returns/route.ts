@@ -112,6 +112,8 @@ export async function POST(req: NextRequest) {
     // Check return deadline
     const settings = await getSiteSettings()
     const returnDays = settings.return_days || 14
+    const returnsAutoApprove =
+      (settings as any).returns_auto_approve === true || (settings as any).returns_auto_approve === 'true'
     
     if (order.delivered_at) {
       const deliveredDate = new Date(order.delivered_at)
@@ -165,9 +167,15 @@ export async function POST(req: NextRequest) {
       .insert({
         order_id,
         user_id: user.id,
-        // Direct goedkeuren voor snelle flow
-        status: 'return_approved',
-        approved_at: new Date().toISOString(),
+        ...(returnsAutoApprove
+          ? {
+              // Direct goedkeuren voor snelle flow
+              status: 'return_approved',
+              approved_at: new Date().toISOString(),
+            }
+          : {
+              status: 'return_requested',
+            }),
         return_reason,
         customer_notes: customer_notes || null,
         return_items: return_items,
@@ -190,34 +198,37 @@ export async function POST(req: NextRequest) {
       .update({ has_returns: true })
       .eq('id', order_id)
 
-    // Maak alvast een Payment Intent aan voor het retourlabel, zodat de klant direct kan betalen
-    try {
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
-      const amount = Math.round(7.87 * 100)
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency: 'eur',
-        metadata: {
-          return_id: returnRecord.id,
-          order_id,
-          type: 'return_label_payment',
-          user_id: user.id,
-        },
-        description: `Retourlabel kosten - Return ${returnRecord.id.slice(0, 8).toUpperCase()}`,
-        receipt_email: order.email,
-      })
-
-      // Sla intent op (status blijft 'return_approved' tot de klant het betaalformulier opent)
-      await supabase
-        .from('returns')
-        .update({
-          return_label_payment_intent_id: paymentIntent.id,
-          return_label_payment_status: 'pending',
+    // Maak alvast een Payment Intent aan voor het retourlabel als auto-approve aan staat,
+    // zodat de klant direct kan betalen
+    if (returnsAutoApprove) {
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
+        const amount = Math.round(7.87 * 100)
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: 'eur',
+          metadata: {
+            return_id: returnRecord.id,
+            order_id,
+            type: 'return_label_payment',
+            user_id: user.id,
+          },
+          description: `Retourlabel kosten - Return ${returnRecord.id.slice(0, 8).toUpperCase()}`,
+          receipt_email: order.email,
         })
-        .eq('id', returnRecord.id)
-    } catch (piError) {
-      console.error('Error creating payment intent on creation:', piError)
-      // Niet falen; klant kan via details alsnog intent laten (her)aanmaken
+
+        // Sla intent op
+        await supabase
+          .from('returns')
+          .update({
+            return_label_payment_intent_id: paymentIntent.id,
+            return_label_payment_status: 'pending',
+          })
+          .eq('id', returnRecord.id)
+      } catch (piError) {
+        console.error('Error creating payment intent on creation:', piError)
+        // Niet falen; klant kan via details alsnog intent laten (her)aanmaken
+      }
     }
 
     // Verstuur emails naar klant (requested + approved met link)
@@ -233,7 +244,7 @@ export async function POST(req: NextRequest) {
         }
       })
 
-      // Stuur zowel "aangevraagd" (logisch voor klant) als "goedgekeurd" (met betaallink)
+      // Stuur altijd "aangevraagd"
       await sendReturnRequestedEmail({
         customerEmail: order.email,
         customerName: shippingAddress?.name || 'Klant',
@@ -243,14 +254,17 @@ export async function POST(req: NextRequest) {
         returnItems: returnItemsForEmail,
       })
 
-      await sendReturnApprovedEmail({
-        customerEmail: order.email,
-        customerName: shippingAddress?.name || 'Klant',
-        returnId: returnRecord.id,
-        orderId: order_id,
-        returnItems: returnItemsForEmail.map(({ product_name, quantity }) => ({ product_name, quantity })),
-        refundAmount: totalRefundAmount,
-      })
+      // Alleen bij auto-approve direct de goedkeuringsmail met betaallink
+      if (returnsAutoApprove) {
+        await sendReturnApprovedEmail({
+          customerEmail: order.email,
+          customerName: shippingAddress?.name || 'Klant',
+          returnId: returnRecord.id,
+          orderId: order_id,
+          returnItems: returnItemsForEmail.map(({ product_name, quantity }) => ({ product_name, quantity })),
+          refundAmount: totalRefundAmount,
+        })
+      }
     } catch (emailError) {
       console.error('Error sending return requested email:', emailError)
       // Don't fail the request if email fails

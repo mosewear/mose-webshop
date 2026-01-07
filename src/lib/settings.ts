@@ -12,6 +12,7 @@ interface SiteSettings {
   low_stock_threshold: number
   maintenance_mode: boolean
   return_days: number
+  returns_auto_approve: boolean
 }
 
 let cachedSettings: SiteSettings | null = null
@@ -52,6 +53,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       low_stock_threshold: parseInt(settings.low_stock_threshold) || 5,
       maintenance_mode: settings.maintenance_mode === 'true' || settings.maintenance_mode === true,
       return_days: parseInt(settings.return_days) || 14,
+      returns_auto_approve:
+        settings.returns_auto_approve === 'true' || settings.returns_auto_approve === true || settings.returns_auto_approve === 1,
     }
 
     return cachedSettings
@@ -71,6 +74,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       low_stock_threshold: 5,
       maintenance_mode: false,
       return_days: 14,
+      returns_auto_approve: true,
     }
   }
 }
