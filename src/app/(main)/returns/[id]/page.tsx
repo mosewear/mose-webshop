@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { loadStripe } from '@stripe/stripe-js'
@@ -76,11 +76,14 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
         toast.error(error.message || 'Betaling mislukt')
         setProcessing(false)
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Voor redirect-based payment methods (zoals iDEAL, PayPal) wordt gebruiker doorgestuurd
+        // Voor non-redirect methods wordt dit niet aangeroepen omdat redirect: 'if_required' is gebruikt
+        // In plaats daarvan wachten we op de return_url redirect
         toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
         // Refresh page to show updated status
         setTimeout(() => {
-          window.location.reload()
-        }, 2000)
+          window.location.href = `${window.location.origin}/returns/${returnId}?payment=success`
+        }, 1000)
       }
     } catch (error: any) {
       toast.error(error.message || 'Er is iets misgegaan')
@@ -115,6 +118,7 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
 export default function ReturnDetailsPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const returnId = params.id as string
 
   const [user, setUser] = useState<any>(null)
@@ -122,6 +126,7 @@ export default function ReturnDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [paymentLoading, setPaymentLoading] = useState(false)
+  const [pollingLabel, setPollingLabel] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -132,6 +137,85 @@ export default function ReturnDetailsPage() {
       fetchReturn()
     }
   }, [user, returnId])
+
+  // Check voor payment success parameter en toon successmelding
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment')
+    if (paymentSuccess === 'success') {
+      toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
+      // Refresh data om de nieuwste status te krijgen
+      fetchReturn().then(() => {
+        // Remove query parameter na refresh
+        setTimeout(() => {
+          router.replace(`/returns/${returnId}`, { scroll: false })
+        }, 100)
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, returnId])
+
+  // Poll voor label generatie als betaling is voltooid maar label nog niet klaar is
+  useEffect(() => {
+    if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url && !pollingLabel) {
+      setPollingLabel(true)
+      startPollingForLabel()
+    } else if (returnData?.return_label_url && pollingLabel) {
+      setPollingLabel(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnData?.status, returnData?.return_label_url])
+
+  async function startPollingForLabel() {
+    let attempts = 0
+    const maxAttempts = 30 // Poll voor maximaal 30 seconden (elke seconde)
+    let shouldContinue = true
+    
+    const poll = async () => {
+      if (!shouldContinue) return
+      
+      attempts++
+      
+      try {
+        const response = await fetch(`/api/returns/${returnId}`)
+        const data = await response.json()
+        
+        if (response.ok && data.return) {
+          setReturnData(data.return)
+          
+          // Als label is gegenereerd, stop polling
+          if (data.return.status === 'return_label_generated' && data.return.return_label_url) {
+            setPollingLabel(false)
+            shouldContinue = false
+            toast.success('Je retourlabel is klaar!')
+            return
+          }
+          
+          // Blijf pollen als label nog niet klaar is en we nog niet te veel attempts hebben gedaan
+          if (attempts < maxAttempts && (data.return.status === 'return_label_payment_completed' || data.return.status === 'return_label_payment_pending')) {
+            setTimeout(poll, 1000) // Poll elke seconde
+          } else if (attempts >= maxAttempts) {
+            setPollingLabel(false)
+            shouldContinue = false
+            toast.error('Het genereren van het label duurt langer dan verwacht. Probeer de pagina te verversen.')
+          }
+        } else {
+          // Stop polling bij error response
+          setPollingLabel(false)
+          shouldContinue = false
+        }
+      } catch (error) {
+        console.error('Error polling for label:', error)
+        if (attempts < maxAttempts && shouldContinue) {
+          setTimeout(poll, 2000) // Retry na 2 seconden bij error
+        } else {
+          setPollingLabel(false)
+          shouldContinue = false
+        }
+      }
+    }
+    
+    poll()
+  }
 
   async function checkUser() {
     const supabase = createClient()
@@ -330,6 +414,35 @@ export default function ReturnDetailsPage() {
                 className="w-full px-8 py-4 bg-orange-500 text-white font-bold uppercase tracking-wider hover:bg-orange-600 transition-colors"
               >
                 Betaalformulier Laden
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Payment Completed - Label Generating */}
+        {(returnData.status === 'return_label_payment_completed' || returnData.status === 'return_label_payment_pending') && !returnData.return_label_url && (
+          <div className="bg-purple-50 border-2 border-purple-500 p-6 mb-6">
+            <h3 className="text-xl font-display mb-4">Betaling Voltooid</h3>
+            <p className="mb-4">
+              Je betaling is succesvol ontvangen! We genereren nu je retourlabel. Dit kan een paar momenten duren.
+            </p>
+            {pollingLabel && (
+              <div className="text-center py-4">
+                <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Retourlabel wordt gegenereerd...</p>
+                <p className="text-xs text-gray-500 mt-2">De pagina wordt automatisch bijgewerkt zodra het label klaar is.</p>
+              </div>
+            )}
+            {!pollingLabel && (
+              <button
+                onClick={async () => {
+                  await fetchReturn()
+                  setPollingLabel(true)
+                  startPollingForLabel()
+                }}
+                className="w-full px-8 py-4 bg-purple-500 text-white font-bold uppercase tracking-wider hover:bg-purple-600 transition-colors"
+              >
+                Status Vernieuwen
               </button>
             )}
           </div>
