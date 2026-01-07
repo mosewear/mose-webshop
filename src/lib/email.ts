@@ -1885,6 +1885,8 @@ export async function sendReturnRejectedEmail(props: {
 }) {
   const { customerEmail, customerName, returnId, orderId, rejectionReason } = props
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const settings = await getSiteSettings()
+  const emailFooter = await createEmailFooter(siteUrl)
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -1921,7 +1923,7 @@ export async function sendReturnRejectedEmail(props: {
         </p>
       </div>
     </div>
-${await createEmailFooter(siteUrl)}
+${emailFooter}
   </div>
 </body>
 </html>`
