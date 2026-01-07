@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -204,6 +204,9 @@ export default function ReturnDetailsPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [pollingLabel, setPollingLabel] = useState(false)
+  const pollingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isPollingRef = useRef<boolean>(false)
+  const maxAttemptsRef = useRef<number>(0)
 
   useEffect(() => {
     checkUser()
@@ -227,8 +230,7 @@ export default function ReturnDetailsPage() {
         
         // Start direct polling, ook als status nog niet is bijgewerkt (webhook kan vertraging hebben)
         // Poll tot we status 'return_label_payment_completed' zien of label is gegenereerd
-        if (!pollingLabel) {
-          setPollingLabel(true)
+        if (!isPollingRef.current) {
           startPollingForLabel()
         }
         
@@ -241,25 +243,55 @@ export default function ReturnDetailsPage() {
 
   // Poll voor label generatie als betaling is voltooid maar label nog niet klaar is
   useEffect(() => {
-    if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url && !pollingLabel) {
-      setPollingLabel(true)
-      // Start polling direct
+    // Stop polling als label is gegenereerd
+    if (returnData?.return_label_url && isPollingRef.current) {
+      stopPolling()
+      return
+    }
+
+    // Start polling als status payment_completed is en label nog niet klaar
+    if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url && !isPollingRef.current) {
       startPollingForLabel()
-    } else if (returnData?.return_label_url && pollingLabel) {
-      setPollingLabel(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [returnData?.status, returnData?.return_label_url])
 
+  // Cleanup polling bij unmount
+  useEffect(() => {
+    return () => {
+      stopPolling()
+    }
+  }, [])
+
+  function stopPolling() {
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current)
+      pollingTimeoutRef.current = null
+    }
+    isPollingRef.current = false
+    setPollingLabel(false)
+    maxAttemptsRef.current = 0
+  }
+
   async function startPollingForLabel() {
-    let attempts = 0
-    const maxAttempts = 60 // Poll voor maximaal 60 seconden (elke 2 seconden)
-    let shouldContinue = true
+    // Voorkom dubbele polling
+    if (isPollingRef.current) {
+      console.log('Polling al actief, skip...')
+      return
+    }
+
+    isPollingRef.current = true
+    setPollingLabel(true)
+    maxAttemptsRef.current = 0
+    const MAX_ATTEMPTS = 60 // Poll voor maximaal 60 seconden (elke 2 seconden)
     
     const poll = async () => {
-      if (!shouldContinue) return
-      
-      attempts++
+      // Check of we nog moeten pollen
+      if (!isPollingRef.current) {
+        return
+      }
+
+      maxAttemptsRef.current++
       
       try {
         const response = await fetch(`/api/returns/${returnId}`)
@@ -270,51 +302,49 @@ export default function ReturnDetailsPage() {
           
           // Als label is gegenereerd, stop polling
           if (data.return.status === 'return_label_generated' && data.return.return_label_url) {
-            setPollingLabel(false)
-            shouldContinue = false
+            stopPolling()
             toast.success('Je retourlabel is klaar!')
             return
           }
           
-          // Als betaling is voltooid maar label nog niet klaar, blijf pollen
-          // Ook als status nog 'return_label_payment_pending' is (webhook kan nog bezig zijn)
-          if (attempts < maxAttempts) {
-            if (data.return.status === 'return_label_payment_completed' || 
-                data.return.status === 'return_label_payment_pending') {
-              // Blijf pollen
-              setTimeout(poll, 2000) // Poll elke 2 seconden
-            } else if (data.return.status === 'return_label_generated' && !data.return.return_label_url) {
-              // Status is generated maar geen URL - blijf even pollen (label wordt nog gegenereerd)
-              setTimeout(poll, 2000)
-            } else {
-              // Onverwachte status, stop polling
-              setPollingLabel(false)
-              shouldContinue = false
-              console.log(`Stopped polling: unexpected status ${data.return.status}`)
-            }
-          } else if (attempts >= maxAttempts) {
-            setPollingLabel(false)
-            shouldContinue = false
+          // Als max attempts bereikt, stop polling
+          if (maxAttemptsRef.current >= MAX_ATTEMPTS) {
+            stopPolling()
             toast.error('Het genereren van het label duurt langer dan verwacht. Neem contact op met de klantenservice als het label niet verschijnt.')
+            return
+          }
+          
+          // Blijf pollen als status nog payment_completed of payment_pending is
+          // OF als status generated is maar URL nog niet bestaat
+          if (data.return.status === 'return_label_payment_completed' || 
+              data.return.status === 'return_label_payment_pending' ||
+              (data.return.status === 'return_label_generated' && !data.return.return_label_url)) {
+            // Schedule volgende poll (maar alleen als we nog actief zijn)
+            if (isPollingRef.current) {
+              pollingTimeoutRef.current = setTimeout(poll, 2000)
+            }
+          } else {
+            // Onverwachte status, stop polling
+            stopPolling()
+            console.log(`Stopped polling: unexpected status ${data.return.status}`)
           }
         } else {
           // Stop polling bij error response
-          setPollingLabel(false)
-          shouldContinue = false
+          stopPolling()
         }
       } catch (error) {
         console.error('Error polling for label:', error)
-        if (attempts < maxAttempts && shouldContinue) {
-          setTimeout(poll, 2000) // Retry na 2 seconden bij error
+        // Retry bij error, maar alleen als we onder max attempts zijn
+        if (maxAttemptsRef.current < MAX_ATTEMPTS && isPollingRef.current) {
+          pollingTimeoutRef.current = setTimeout(poll, 2000)
         } else {
-          setPollingLabel(false)
-          shouldContinue = false
+          stopPolling()
         }
       }
     }
     
     // Start eerste poll na 1 seconde (geef webhook tijd)
-    setTimeout(poll, 1000)
+    pollingTimeoutRef.current = setTimeout(poll, 1000)
   }
 
   async function checkUser() {
@@ -543,8 +573,9 @@ export default function ReturnDetailsPage() {
               <button
                 onClick={async () => {
                   await fetchReturn()
-                  setPollingLabel(true)
-                  startPollingForLabel()
+                  if (!isPollingRef.current) {
+                    startPollingForLabel()
+                  }
                 }}
                 className="w-full px-8 py-4 bg-purple-500 text-white font-bold uppercase tracking-wider hover:bg-purple-600 transition-colors"
               >

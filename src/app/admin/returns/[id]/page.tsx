@@ -78,13 +78,6 @@ export default function AdminReturnDetailsPage() {
   useEffect(() => {
     fetchReturn()
     
-    // Auto-refresh elke 5 seconden als return in "label generating" fase is
-    const interval = setInterval(() => {
-      if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url) {
-        fetchReturn()
-      }
-    }, 5000)
-    
     // Setup realtime subscription voor deze specifieke return
     const supabase = createClient()
     const channel = supabase
@@ -113,12 +106,34 @@ export default function AdminReturnDetailsPage() {
     window.addEventListener('focus', handleFocus)
     
     return () => {
-      clearInterval(interval)
       supabase.removeChannel(channel)
       window.removeEventListener('focus', handleFocus)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [returnId, returnData?.status, returnData?.return_label_url])
+  }, [returnId])
+  
+  // Separate effect voor interval polling - alleen als label nog niet klaar is
+  useEffect(() => {
+    // Stop polling als label al klaar is
+    if (returnData?.return_label_url) {
+      return
+    }
+    
+    // Alleen pollen als status payment_completed is
+    if (returnData?.status !== 'return_label_payment_completed') {
+      return
+    }
+    
+    // Auto-refresh elke 10 seconden (minder frequent dan voorheen om server load te verminderen)
+    const interval = setInterval(() => {
+      fetchReturn()
+    }, 10000)
+    
+    return () => {
+      clearInterval(interval)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnData?.status, returnData?.return_label_url])
 
   async function fetchReturn() {
     try {
