@@ -90,7 +90,17 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+      <PaymentElement 
+        options={{
+          wallets: {
+            applePay: 'auto',
+            googlePay: 'auto',
+          },
+          layout: {
+            type: 'tabs',
+          },
+        }}
+      />
       <button
         type="submit"
         disabled={!stripe || processing}
@@ -302,7 +312,16 @@ export default function ReturnDetailsPage() {
                 <p className="text-sm text-gray-600">Betalingsformulier voorbereiden...</p>
               </div>
             ) : clientSecret ? (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <Elements 
+                stripe={stripePromise} 
+                options={{ 
+                  clientSecret,
+                  appearance: {
+                    theme: 'stripe',
+                  },
+                  locale: 'nl',
+                }}
+              >
                 <CheckoutForm returnId={returnId} returnData={returnData} />
               </Elements>
             ) : (

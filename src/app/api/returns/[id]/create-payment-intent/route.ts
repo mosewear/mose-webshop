@@ -74,6 +74,7 @@ export async function POST(
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'eur',
+      payment_method_types: ['ideal', 'card'], // Alleen iDEAL en credit/debit cards (incl. Google Pay & Apple Pay)
       metadata: {
         return_id: id,
         order_id: returnRecord.order_id,
