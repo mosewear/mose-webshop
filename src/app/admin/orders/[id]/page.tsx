@@ -129,7 +129,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       setRefreshingReturns(true)
       const { data, error } = await supabase
         .from('returns')
-        .select('id, status, return_label_payment_status, return_label_paid_at, created_at, updated_at')
+        .select('id, status, return_label_payment_status, return_label_paid_at, return_label_url, created_at, updated_at')
         .eq('order_id', id)
         .order('created_at', { ascending: false })
 
