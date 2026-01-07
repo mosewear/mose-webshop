@@ -51,7 +51,7 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
-        .eq('user_id', user.id)
+        .or(`user_id.eq.${user.id},email.eq.${user.email}`)
         .eq('status', 'delivered')
         .order('delivered_at', { ascending: false })
 
@@ -228,7 +228,7 @@ export default function NewReturnPage() {
         .from('orders')
         .select('*, order_items(*)')
         .eq('id', orderId)
-        .eq('user_id', user.id)
+        .or(`user_id.eq.${user.id},email.eq.${user.email}`)
         .single()
 
       if (error || !orderData) {

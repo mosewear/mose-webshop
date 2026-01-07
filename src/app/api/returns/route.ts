@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       .from('orders')
       .select('*, order_items(*)')
       .eq('id', order_id)
-      .eq('user_id', user.id)
+      .or(`user_id.eq.${user.id},email.eq.${user.email}`)
       .single()
 
     if (orderError || !order) {
