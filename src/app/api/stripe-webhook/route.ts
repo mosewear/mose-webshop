@@ -5,7 +5,8 @@ import { sendOrderConfirmationEmail } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+// Trim whitespace from webhook secret (common issue when copying from Stripe Dashboard)
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
