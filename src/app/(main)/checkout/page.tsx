@@ -210,12 +210,21 @@ export default function CheckoutPage() {
       
       if (defaultAddress?.address) {
         // Probeer huisnummer en toevoeging te extraheren uit adres string
-        // Format: "Straatnaam 123A" of "Straatnaam 123 A"
-        const addressMatch = defaultAddress.address.match(/^(.+?)\s+(\d+)([A-Za-z0-9]*)$/)
+        // Format: "Straatnaam 123A", "Straatnaam 123 A", "Straatnaam 123", "Straatnaam 27a", "Straatnaam 27 a"
+        // Regex: vang straatnaam, dan spatie, dan cijfers (huisnummer), dan optioneel spatie + letters/cijfers OF direct letters/cijfers (toevoeging)
+        // Eerst proberen met spatie tussen nummer en toevoeging, dan zonder spatie
+        let addressMatch = defaultAddress.address.match(/^(.+?)\s+(\d+)\s+([A-Za-z0-9]+)$/) // Met spatie: "Straatnaam 123 A"
+        if (!addressMatch) {
+          addressMatch = defaultAddress.address.match(/^(.+?)\s+(\d+)([A-Za-z0-9]+)$/) // Zonder spatie: "Straatnaam 123A"
+        }
+        if (!addressMatch) {
+          addressMatch = defaultAddress.address.match(/^(.+?)\s+(\d+)$/) // Alleen nummer: "Straatnaam 123"
+        }
+        
         if (addressMatch) {
           addressOnly = addressMatch[1].trim()
           huisnummer = addressMatch[2]
-          toevoeging = addressMatch[3] || ''
+          toevoeging = (addressMatch[3] || '').trim()
         }
       }
 
@@ -307,11 +316,22 @@ export default function CheckoutPage() {
       let addressOnly = shippingAddress?.address || ''
       
       if (shippingAddress?.address) {
-        const addressMatch = shippingAddress.address.match(/^(.+?)\s+(\d+)([A-Za-z0-9]*)$/)
+        // Probeer huisnummer en toevoeging te extraheren uit adres string
+        // Format: "Straatnaam 123A", "Straatnaam 123 A", "Straatnaam 123", "Straatnaam 27a", "Straatnaam 27 a"
+        // Regex: vang straatnaam, dan spatie, dan cijfers (huisnummer), dan optioneel spatie + letters/cijfers OF direct letters/cijfers (toevoeging)
+        // Eerst proberen met spatie tussen nummer en toevoeging, dan zonder spatie
+        let addressMatch = shippingAddress.address.match(/^(.+?)\s+(\d+)\s+([A-Za-z0-9]+)$/) // Met spatie: "Straatnaam 123 A"
+        if (!addressMatch) {
+          addressMatch = shippingAddress.address.match(/^(.+?)\s+(\d+)([A-Za-z0-9]+)$/) // Zonder spatie: "Straatnaam 123A"
+        }
+        if (!addressMatch) {
+          addressMatch = shippingAddress.address.match(/^(.+?)\s+(\d+)$/) // Alleen nummer: "Straatnaam 123"
+        }
+        
         if (addressMatch) {
           addressOnly = addressMatch[1].trim()
           huisnummer = addressMatch[2]
-          toevoeging = addressMatch[3] || ''
+          toevoeging = (addressMatch[3] || '').trim()
         }
       }
       
