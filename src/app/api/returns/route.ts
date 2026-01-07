@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
         customerName: shippingAddress?.name || 'Klant',
         returnId: returnRecord.id,
         orderId: order_id,
-        returnReason,
+        returnReason: return_reason,
         returnItems: returnItemsForEmail,
       })
     } catch (emailError) {
