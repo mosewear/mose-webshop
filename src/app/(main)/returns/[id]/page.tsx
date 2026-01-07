@@ -220,18 +220,21 @@ export default function ReturnDetailsPage() {
     const paymentSuccess = searchParams.get('payment')
     if (paymentSuccess === 'success') {
       toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
-      // Refresh data om de nieuwste status te krijgen
-      fetchReturn().then((data) => {
-        // Start direct polling om te wachten tot label is gegenereerd
-        if (data?.status === 'return_label_payment_completed' && !pollingLabel) {
+      
+      // Wacht even om webhook tijd te geven, dan refresh data
+      setTimeout(async () => {
+        const data = await fetchReturn()
+        
+        // Start direct polling, ook als status nog niet is bijgewerkt (webhook kan vertraging hebben)
+        // Poll tot we status 'return_label_payment_completed' zien of label is gegenereerd
+        if (!pollingLabel) {
           setPollingLabel(true)
           startPollingForLabel()
         }
+        
         // Remove query parameter na refresh
-        setTimeout(() => {
-          router.replace(`/returns/${returnId}`, { scroll: false })
-        }, 100)
-      })
+        router.replace(`/returns/${returnId}`, { scroll: false })
+      }, 2000) // Wacht 2 seconden voor webhook verwerking
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, returnId])
@@ -250,7 +253,7 @@ export default function ReturnDetailsPage() {
 
   async function startPollingForLabel() {
     let attempts = 0
-    const maxAttempts = 30 // Poll voor maximaal 30 seconden (elke seconde)
+    const maxAttempts = 60 // Poll voor maximaal 60 seconden (elke 2 seconden)
     let shouldContinue = true
     
     const poll = async () => {
@@ -273,9 +276,17 @@ export default function ReturnDetailsPage() {
             return
           }
           
-          // Blijf pollen als label nog niet klaar is en we nog niet te veel attempts hebben gedaan
-          if (attempts < maxAttempts && (data.return.status === 'return_label_payment_completed' || data.return.status === 'return_label_payment_pending')) {
-            setTimeout(poll, 1000) // Poll elke seconde
+          // Als betaling is voltooid maar label nog niet klaar, blijf pollen
+          // Ook als status nog 'return_label_payment_pending' is (webhook kan nog bezig zijn)
+          if (attempts < maxAttempts) {
+            if (data.return.status === 'return_label_payment_completed' || 
+                data.return.status === 'return_label_payment_pending') {
+              setTimeout(poll, 2000) // Poll elke 2 seconden
+            } else {
+              // Onverwachte status, stop polling
+              setPollingLabel(false)
+              shouldContinue = false
+            }
           } else if (attempts >= maxAttempts) {
             setPollingLabel(false)
             shouldContinue = false
@@ -297,7 +308,8 @@ export default function ReturnDetailsPage() {
       }
     }
     
-    poll()
+    // Start eerste poll na 1 seconde (geef webhook tijd)
+    setTimeout(poll, 1000)
   }
 
   async function checkUser() {
