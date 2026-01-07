@@ -99,6 +99,11 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
             applePay: 'auto',
             googlePay: 'auto',
           },
+          paymentMethodOptions: {
+            link: {
+              enabled: false, // Link uitschakelen
+            },
+          },
           layout: {
             type: 'tabs',
           },
@@ -144,7 +149,12 @@ export default function ReturnDetailsPage() {
     if (paymentSuccess === 'success') {
       toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
       // Refresh data om de nieuwste status te krijgen
-      fetchReturn().then(() => {
+      fetchReturn().then((data) => {
+        // Start direct polling om te wachten tot label is gegenereerd
+        if (data?.status === 'return_label_payment_completed' && !pollingLabel) {
+          setPollingLabel(true)
+          startPollingForLabel()
+        }
         // Remove query parameter na refresh
         setTimeout(() => {
           router.replace(`/returns/${returnId}`, { scroll: false })
@@ -158,6 +168,7 @@ export default function ReturnDetailsPage() {
   useEffect(() => {
     if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url && !pollingLabel) {
       setPollingLabel(true)
+      // Start polling direct
       startPollingForLabel()
     } else if (returnData?.return_label_url && pollingLabel) {
       setPollingLabel(false)
@@ -244,9 +255,13 @@ export default function ReturnDetailsPage() {
       if (data.return.status === 'return_label_payment_pending' && !data.return.return_label_payment_intent_id) {
         await createPaymentIntent()
       }
+
+      // Return data voor gebruikers van deze functie
+      return data.return
     } catch (error: any) {
       toast.error(error.message || 'Kon retour niet laden')
       router.push('/account')
+      return null
     } finally {
       setLoading(false)
     }
@@ -421,7 +436,7 @@ export default function ReturnDetailsPage() {
         )}
 
         {/* Payment Completed - Label Generating */}
-        {(returnData.status === 'return_label_payment_completed' || returnData.status === 'return_label_payment_pending') && !returnData.return_label_url && (
+        {returnData.status === 'return_label_payment_completed' && !returnData.return_label_url && (
           <div className="bg-purple-50 border-2 border-purple-500 p-6 mb-6">
             <h3 className="text-xl font-display mb-4">Betaling Voltooid</h3>
             <p className="mb-4">
