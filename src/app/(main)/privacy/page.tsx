@@ -1,8 +1,28 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getSiteSettings } from '@/lib/settings'
 
 export default function PrivacyPage() {
+  const [settings, setSettings] = useState({
+    contact_email: 'info@mosewear.nl',
+    contact_phone: '+31 50 211 1931',
+    contact_address: 'Helper Brink 27a, 9722 EG Groningen',
+  })
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setSettings({
+        contact_email: s.contact_email,
+        contact_phone: s.contact_phone,
+        contact_address: s.contact_address,
+      })
+    })
+  }, [])
+
+  const addressLines = settings.contact_address.split(',').map(line => line.trim())
+
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
@@ -88,8 +108,8 @@ export default function PrivacyPage() {
               We bewaren je persoonsgegevens niet langer dan noodzakelijk voor de doeleinden waarvoor 
               ze zijn verzameld. Ordergegevens bewaren we 7 jaar conform fiscale wetgeving. Je kunt 
               altijd verzoeken om je gegevens te verwijderen via{' '}
-              <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
-                info@mosewear.nl
+              <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
+                {settings.contact_email}
               </a>
               .
             </p>
@@ -164,8 +184,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="text-gray-700 leading-relaxed mt-4">
               Neem contact op via{' '}
-              <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
-                info@mosewear.nl
+              <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
+                {settings.contact_email}
               </a>
               {' '}om gebruik te maken van deze rechten.
             </p>
@@ -186,18 +206,22 @@ export default function PrivacyPage() {
             </p>
             <div className="bg-gray-50 border-2 border-gray-300 p-6 mt-4">
               <p className="text-gray-800 font-bold">MOSE</p>
-              <p className="text-gray-700">Helper Brink 27a</p>
-              <p className="text-gray-700">9722 EG Groningen, Nederland</p>
+              {addressLines.map((line, idx) => (
+                <p key={idx} className="text-gray-700">{line}</p>
+              ))}
+              {!settings.contact_address.toLowerCase().includes('nederland') && (
+                <p className="text-gray-700">Nederland</p>
+              )}
               <p className="text-gray-700">
                 E-mail:{' '}
-                <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
-                  info@mosewear.nl
+                <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
+                  {settings.contact_email}
                 </a>
               </p>
               <p className="text-gray-700">
                 Telefoon:{' '}
-                <a href="tel:+31502111931" className="text-brand-primary hover:underline">
-                  +31 50 211 1931
+                <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="text-brand-primary hover:underline">
+                  {settings.contact_phone}
                 </a>
               </p>
             </div>

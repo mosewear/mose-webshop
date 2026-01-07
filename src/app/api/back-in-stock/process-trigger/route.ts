@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendBackInStockEmail } from '@/lib/email'
+import { getSiteSettings } from '@/lib/settings'
 
 // This endpoint is called by the database trigger via pg_net
 export async function POST(req: NextRequest) {
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
     if (!notification_id || !product_id || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
+
+    // Get site settings for email templates
+    const settings = await getSiteSettings()
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,6 +85,8 @@ export async function POST(req: NextRequest) {
           size: variant.size,
           color: variant.color,
         },
+        freeShippingThreshold: settings.free_shipping_threshold,
+        returnDays: settings.return_days,
       })
 
       if (emailResult.success) {
@@ -138,6 +144,8 @@ export async function POST(req: NextRequest) {
         productSlug: product.slug,
         productImageUrl: imageUrl,
         productPrice: product.base_price,
+        freeShippingThreshold: settings.free_shipping_threshold,
+        returnDays: settings.return_days,
       })
 
       if (emailResult.success) {

@@ -8,6 +8,9 @@ export default function TermsPage() {
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
+    contact_email: 'info@mosewear.nl',
+    contact_phone: '+31 50 211 1931',
+    contact_address: 'Helper Brink 27a, 9722 EG Groningen',
   })
 
   useEffect(() => {
@@ -15,9 +18,14 @@ export default function TermsPage() {
       setSettings({
         free_shipping_threshold: s.free_shipping_threshold,
         return_days: s.return_days,
+        contact_email: s.contact_email,
+        contact_phone: s.contact_phone,
+        contact_address: s.contact_address,
       })
     })
   }, [])
+
+  const addressLines = settings.contact_address.split(',').map(line => line.trim())
 
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
@@ -135,7 +143,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
-                <span>Neem contact op via info@mosewear.nl voor retourinstructies</span>
+                <span>Neem contact op via {settings.contact_email} voor retourinstructies</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
@@ -149,8 +157,8 @@ export default function TermsPage() {
             <p className="text-gray-700 leading-relaxed">
               Wil je ruilen voor een andere maat of kleur? Geen probleem! Neem contact met ons op 
               via{' '}
-              <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
-                info@mosewear.nl
+              <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
+                {settings.contact_email}
               </a>
               {' '}en we regelen het voor je. Ruilen is gratis binnen Nederland en België (eenmalig per bestelling).
             </p>
@@ -210,18 +218,22 @@ export default function TermsPage() {
             </p>
             <div className="bg-gray-50 border-2 border-gray-300 p-6 mt-4">
               <p className="text-gray-800 font-bold">MOSE</p>
-              <p className="text-gray-700">Helper Brink 27a</p>
-              <p className="text-gray-700">9722 EG Groningen, Nederland</p>
+              {addressLines.map((line, idx) => (
+                <p key={idx} className="text-gray-700">{line}</p>
+              ))}
+              {!settings.contact_address.toLowerCase().includes('nederland') && (
+                <p className="text-gray-700">Nederland</p>
+              )}
               <p className="text-gray-700">
                 E-mail:{' '}
-                <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
-                  info@mosewear.nl
+                <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
+                  {settings.contact_email}
                 </a>
               </p>
               <p className="text-gray-700">
                 Telefoon:{' '}
-                <a href="tel:+31502111931" className="text-brand-primary hover:underline">
-                  +31 50 211 1931
+                <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="text-brand-primary hover:underline">
+                  {settings.contact_phone}
                 </a>
               </p>
               <p className="text-gray-700">

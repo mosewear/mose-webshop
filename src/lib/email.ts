@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { getSiteSettings } from './settings'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -270,6 +271,21 @@ function createCheckmark(color: string = '#2ECC71', size: number = 18): string {
   return `<span style="color: ${color}; font-size: ${size}px; font-weight: 900; line-height: 1; display: inline-block; vertical-align: middle;">✓</span>`
 }
 
+// Helper function to create email footer with dynamic settings
+async function createEmailFooter(siteUrl: string): Promise<string> {
+  const settings = await getSiteSettings()
+  const addressParts = settings.contact_address.split(',').map(s => s.trim())
+  const addressDisplay = addressParts.join(' • ')
+  
+  return `
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • ${addressDisplay}</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:${settings.contact_email}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_email}</a> • <a href="tel:${settings.contact_phone.replace(/\s/g, '')}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_phone}</a></p>
+    </div>
+  `
+}
+
 // Shared email styles - consistent across all emails
 const EMAIL_STYLES = `
   body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff; }
@@ -457,11 +473,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -573,11 +585,7 @@ export async function sendShippingConfirmationEmail(props: {
         </li>
       </ul>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -678,11 +686,7 @@ export async function sendOrderProcessingEmail(props: {
         <div style="text-align:center;font-size:12px;color:#2ECC71;margin-top:8px;font-weight:600;letter-spacing:1px">TOTAAL BETAALD</div>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -829,11 +833,7 @@ export async function sendOrderDeliveredEmail(props: {
         <a href="${siteUrl}/shop" class="button" style="color:#fff;text-decoration:none;">BEKIJK SHOP</a>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -917,11 +917,7 @@ export async function sendOrderCancelledEmail(props: {
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">Heb je vragen over je annulering? Neem gerust contact met ons op. We helpen je graag!</p>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -984,6 +980,7 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
   } = props
   
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const settings = await getSiteSettings()
   
   // Convert product images to base64
   const productItemsHtml = await Promise.all(orderItems.map(async (item) => {
@@ -1129,8 +1126,8 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
         <h3 style="color: #FF9500;">Hulp Nodig?</h3>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
           Twijfel je nog of heb je vragen? Ons team staat voor je klaar!<br>
-          <a href="mailto:info@mosewear.nl" style="color: #FF9500; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
-          <a href="tel:+31502111931" style="color: #FF9500; font-weight: 600; text-decoration: none;">+31 50 211 1931</a>
+          <a href="mailto:${settings.contact_email}" style="color: #FF9500; font-weight: 600; text-decoration: none;">${settings.contact_email}</a> • 
+          <a href="tel:${settings.contact_phone.replace(/\s/g, '')}" style="color: #FF9500; font-weight: 600; text-decoration: none;">${settings.contact_phone}</a>
         </p>
       </div>
     </div>
@@ -1138,8 +1135,8 @@ export async function sendAbandonedCartEmail(props: AbandonedCartEmailProps) {
     <!-- Footer -->
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
       <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • ${settings.contact_address.split(',').map(s => s.trim()).join(' • ')}</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:${settings.contact_email}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_email}</a> • <a href="tel:${settings.contact_phone.replace(/\s/g, '')}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_phone}</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
         Deze email is verzonden omdat je items in je winkelwagen hebt achtergelaten.<br>
         Wil je geen herinneringen meer ontvangen? <a href="${siteUrl}/unsubscribe?email=${customerEmail}" style="color: #888;">Klik hier</a>
@@ -1180,10 +1177,13 @@ export async function sendBackInStockEmail(props: {
     size: string
     color: string
   }
+  freeShippingThreshold?: number
+  returnDays?: number
 }) {
-  const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo } = props
+  const { customerEmail, productName, productSlug, productImageUrl, productPrice, variantInfo, freeShippingThreshold = 100, returnDays = 14 } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const settings = await getSiteSettings()
   const productUrl = `${siteUrl}/product/${productSlug}`
   
   // Convert product image to base64
@@ -1251,7 +1251,7 @@ export async function sendBackInStockEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
-                <td valign="top" style="vertical-align: top;">Gratis verzending vanaf €100</td>
+                <td valign="top" style="vertical-align: top;">Gratis verzending vanaf €${freeShippingThreshold}</td>
               </tr>
             </table>
           </li>
@@ -1259,7 +1259,7 @@ export async function sendBackInStockEmail(props: {
             <table cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
-                <td valign="top" style="vertical-align: top;">14 dagen retourrecht</td>
+                <td valign="top" style="vertical-align: top;">${returnDays} dagen retourrecht</td>
               </tr>
             </table>
           </li>
@@ -1282,8 +1282,8 @@ export async function sendBackInStockEmail(props: {
     </div>
     <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
       <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • ${settings.contact_address.split(',').map(s => s.trim()).join(' • ')}</p>
+      <p style="margin: 8px 0 0 0;"><a href="mailto:${settings.contact_email}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_email}</a> • <a href="tel:${settings.contact_phone.replace(/\s/g, '')}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_phone}</a></p>
       <p style="margin-top: 16px; font-size: 11px; color: #666;">
         Je ontving deze email omdat je aangaf geïnteresseerd te zijn in dit product toen het uitverkocht was.
       </p>
@@ -1322,7 +1322,8 @@ export async function sendContactFormEmail(props: {
   const { name, email, subject, message } = props
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const adminEmail = process.env.CONTACT_EMAIL || 'info@mosewear.nl'
+  const settings = await getSiteSettings()
+  const adminEmail = process.env.CONTACT_EMAIL || settings.contact_email
 
   const subjectLabels: { [key: string]: string } = {
     order: 'Vraag over bestelling',
@@ -1379,11 +1380,7 @@ export async function sendContactFormEmail(props: {
         </p>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -1510,11 +1507,7 @@ export async function sendReturnRequestedEmail(props: {
         <a href="${returnUrl}" class="button" style="color:#fff;text-decoration:none;">BEKIJK RETOUR STATUS</a>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -1647,11 +1640,7 @@ export async function sendReturnApprovedEmail(props: {
         </ul>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -1764,11 +1753,7 @@ export async function sendReturnLabelGeneratedEmail(props: {
         </p>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -1865,11 +1850,7 @@ export async function sendReturnRefundedEmail(props: {
         <a href="${siteUrl}/shop" class="button" style="color:#fff;text-decoration:none;">VERDER SHOPPEN</a>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`
@@ -1935,16 +1916,12 @@ export async function sendReturnRejectedEmail(props: {
           Heb je vragen over deze afwijzing? Neem gerust contact met ons op. We helpen je graag verder!
         </p>
         <p style="margin: 12px 0 0 0;">
-          <a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
-          <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a>
+          <a href="mailto:${settings.contact_email}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_email}</a> • 
+          <a href="tel:${settings.contact_phone.replace(/\s/g, '')}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_phone}</a>
         </p>
       </div>
     </div>
-    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
-      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
-      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin: 8px 0 0 0;"><a href="mailto:info@mosewear.nl" style="color: #2ECC71; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • <a href="tel:+31502111931" style="color: #2ECC71; font-weight: 600; text-decoration: none;">+31 50 211 1931</a></p>
-    </div>
+${await createEmailFooter(siteUrl)}
   </div>
 </body>
 </html>`

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { getSiteSettings } from '@/lib/settings'
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -14,6 +15,24 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [settings, setSettings] = useState({
+    contact_email: 'info@mosewear.nl',
+    contact_phone: '+31 50 211 1931',
+    contact_address: 'Helper Brink 27a, 9722 EG Groningen',
+  })
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      setSettings({
+        contact_email: s.contact_email,
+        contact_phone: s.contact_phone,
+        contact_address: s.contact_address,
+      })
+    })
+  }, [])
+
+  // Parse address lines
+  const addressLines = settings.contact_address.split(',').map(line => line.trim())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -181,8 +200,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">E-mail</h3>
-                  <a href="mailto:info@mosewear.nl" className="text-brand-primary hover:underline">
-                    info@mosewear.nl
+                  <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
+                    {settings.contact_email}
                   </a>
                   <p className="text-sm text-gray-600 mt-2">
                     We reageren binnen 24 uur op werkdagen
@@ -201,8 +220,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">Telefoon</h3>
-                  <a href="tel:+31502111931" className="text-brand-primary hover:underline">
-                    +31 50 211 1931
+                  <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="text-brand-primary hover:underline">
+                    {settings.contact_phone}
                   </a>
                   <p className="text-sm text-gray-600 mt-2">
                     Bereikbaar op werkdagen 10:00 - 17:00
@@ -223,9 +242,18 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-bold text-lg mb-1">Locatie</h3>
                   <p className="text-gray-700">
-                    Helper Brink 27a<br />
-                    9722 EG Groningen<br />
-                    Nederland
+                    {addressLines.map((line, idx) => (
+                      <span key={idx}>
+                        {line}
+                        {idx < addressLines.length - 1 && <br />}
+                      </span>
+                    ))}
+                    {!settings.contact_address.toLowerCase().includes('nederland') && (
+                      <>
+                        <br />
+                        Nederland
+                      </>
+                    )}
                   </p>
                   <p className="text-sm text-gray-600 mt-2">
                     Geen fysieke winkel, alleen online

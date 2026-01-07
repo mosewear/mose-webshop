@@ -133,7 +133,9 @@ export async function GET() {
       variantInfo: {
         size: 'M',
         color: 'Zwart'
-      }
+      },
+      freeShippingThreshold: 100,
+      returnDays: 14,
     })
     results.push({ email: 'Back In Stock', success: result7.success })
 
