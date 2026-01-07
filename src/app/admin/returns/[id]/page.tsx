@@ -306,10 +306,10 @@ export default function AdminReturnDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
         <Link
           href="/admin/returns"
-          className="p-2 hover:bg-gray-100 transition-colors"
+          className="p-2 hover:bg-gray-100 transition-colors self-start"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -327,9 +327,30 @@ export default function AdminReturnDetailsPage() {
             })}
           </p>
         </div>
-        <span className={`px-4 py-2 text-sm font-semibold border-2 ${getStatusColor(returnData.status)}`}>
-          {getStatusLabel(returnData.status).toUpperCase()}
-        </span>
+        <div className="flex flex-col gap-2 items-end">
+          <span className={`px-4 py-2 text-sm font-semibold border-2 ${getStatusColor(returnData.status)}`}>
+            {getStatusLabel(returnData.status).toUpperCase()}
+          </span>
+          {/* Label betaling status - prominenter tonen */}
+          {returnData.return_label_payment_status && (
+            <span className={`px-3 py-1 text-xs font-semibold border ${
+              returnData.return_label_payment_status === 'completed' 
+                ? 'bg-green-100 text-green-700 border-green-200' 
+                : returnData.return_label_payment_status === 'pending'
+                ? 'bg-orange-100 text-orange-700 border-orange-200'
+                : 'bg-gray-100 text-gray-700 border-gray-200'
+            }`}>
+              {returnData.return_label_payment_status === 'completed' && '✓ Label betaald'}
+              {returnData.return_label_payment_status === 'pending' && '⏳ Label betaling wachtend'}
+              {returnData.return_label_payment_status !== 'completed' && returnData.return_label_payment_status !== 'pending' && `Label: ${returnData.return_label_payment_status}`}
+            </span>
+          )}
+          {returnData.return_label_paid_at && (
+            <span className="text-xs text-gray-500">
+              Betaald: {new Date(returnData.return_label_paid_at).toLocaleDateString('nl-NL')}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -425,28 +446,31 @@ export default function AdminReturnDetailsPage() {
                 <span>Refund bedrag (items)</span>
                 <span className="font-bold">€{returnData.refund_amount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Label kosten (betaald)</span>
-                <span>€{returnData.return_label_cost_incl_btw.toFixed(2)}</span>
+              <div className="flex justify-between">
+                <span>Label kosten</span>
+                <span className={`font-bold ${
+                  returnData.return_label_payment_status === 'completed' 
+                    ? 'text-green-600' 
+                    : returnData.return_label_payment_status === 'pending'
+                    ? 'text-orange-600'
+                    : 'text-gray-600'
+                }`}>
+                  €{returnData.return_label_cost_incl_btw.toFixed(2)}
+                  {returnData.return_label_payment_status === 'completed' && ' ✓'}
+                  {returnData.return_label_payment_status === 'pending' && ' ⏳'}
+                </span>
               </div>
+              {returnData.return_label_paid_at && (
+                <div className="text-xs text-gray-500 -mt-1 mb-2">
+                  Betaald op: {new Date(returnData.return_label_paid_at).toLocaleString('nl-NL')}
+                </div>
+              )}
               <div className="border-t-2 border-gray-200 pt-2 mt-2">
                 <div className="flex justify-between font-bold">
                   <span>Terug te betalen</span>
                   <span>€{returnData.total_refund.toFixed(2)}</span>
                 </div>
               </div>
-              {returnData.return_label_payment_status && (
-                <div className="mt-4 pt-4 border-t-2 border-gray-200">
-                  <div className="text-xs text-gray-600">
-                    <strong>Label betaling:</strong> {returnData.return_label_payment_status}
-                  </div>
-                  {returnData.return_label_paid_at && (
-                    <div className="text-xs text-gray-600">
-                      Betaald op: {new Date(returnData.return_label_paid_at).toLocaleString('nl-NL')}
-                    </div>
-                  )}
-                </div>
-              )}
               {returnData.stripe_refund_id && (
                 <div className="mt-4 pt-4 border-t-2 border-gray-200">
                   <div className="text-xs text-gray-600">

@@ -62,6 +62,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [statusHistory, setStatusHistory] = useState<StatusHistoryItem[]>([])
+  const [returns, setReturns] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState('')
@@ -88,7 +89,23 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     fetchOrder()
     fetchOrderItems()
     fetchStatusHistory()
+    fetchReturns()
   }, [id])
+
+  const fetchReturns = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('returns')
+        .select('id, status, return_label_payment_status, return_label_paid_at, created_at')
+        .eq('order_id', id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setReturns(data || [])
+    } catch (err: any) {
+      console.error('Error fetching returns:', err)
+    }
+  }
 
   const fetchOrder = async () => {
     try {
@@ -560,6 +577,67 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
           </div>
+
+          {/* Returns Information */}
+          {returns.length > 0 && (
+            <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
+              <h2 className="text-xl font-bold mb-4">Retouren</h2>
+              <div className="space-y-3">
+                {returns.map((returnItem) => (
+                  <div key={returnItem.id} className="border-2 border-gray-200 p-4 rounded">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <Link 
+                          href={`/admin/returns/${returnItem.id}`}
+                          className="font-bold text-brand-primary hover:underline"
+                        >
+                          Retour #{returnItem.id.slice(0, 8).toUpperCase()}
+                        </Link>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Aangevraagd: {new Date(returnItem.created_at).toLocaleDateString('nl-NL')}
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-semibold border ${
+                        returnItem.status === 'return_label_payment_pending' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                        returnItem.status === 'return_label_payment_completed' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                        returnItem.status === 'return_label_generated' ? 'bg-green-100 text-green-700 border-green-200' :
+                        returnItem.status === 'return_received' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                        returnItem.status === 'return_approved' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                        returnItem.status === 'refunded' ? 'bg-gray-800 text-white border-gray-900' :
+                        'bg-gray-100 text-gray-700 border-gray-200'
+                      }`}>
+                        {returnItem.status === 'return_label_payment_pending' && '⏳ Betaling Label'}
+                        {returnItem.status === 'return_label_payment_completed' && '✓ Label Betaald'}
+                        {returnItem.status === 'return_label_generated' && '✓ Label Beschikbaar'}
+                        {returnItem.status === 'return_received' && '📦 Ontvangen'}
+                        {returnItem.status === 'return_approved' && '✓ Goedgekeurd'}
+                        {returnItem.status === 'refunded' && '✓ Terugbetaald'}
+                        {!['return_label_payment_pending', 'return_label_payment_completed', 'return_label_generated', 'return_received', 'return_approved', 'refunded'].includes(returnItem.status) && returnItem.status}
+                      </span>
+                    </div>
+                    {returnItem.return_label_payment_status && (
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={`px-2 py-0.5 rounded ${
+                            returnItem.return_label_payment_status === 'completed' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {returnItem.return_label_payment_status === 'completed' ? '✓ Label betaald' : '⏳ Label betaling wachtend'}
+                          </span>
+                          {returnItem.return_label_paid_at && (
+                            <span className="text-gray-600">
+                              op {new Date(returnItem.return_label_paid_at).toLocaleDateString('nl-NL')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Payment Information */}
           <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
