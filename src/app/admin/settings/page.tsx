@@ -35,6 +35,9 @@ export default function SettingsPage() {
   const [abandonedCartEnabled, setAbandonedCartEnabled] = useState(true)
   const [abandonedCartHours, setAbandonedCartHours] = useState('24')
 
+  // Returns settings
+  const [returnsAutoApprove, setReturnsAutoApprove] = useState(true)
+
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
   const [showAddAdmin, setShowAddAdmin] = useState(false)
@@ -100,6 +103,9 @@ export default function SettingsPage() {
             case 'abandoned_cart_hours':
               setAbandonedCartHours(setting.value)
               break
+            case 'returns_auto_approve':
+              setReturnsAutoApprove(setting.value === 'true' || setting.value === true)
+              break
           }
         })
       }
@@ -129,6 +135,7 @@ export default function SettingsPage() {
         { key: 'low_stock_threshold', value: lowStockThreshold },
         { key: 'abandoned_cart_email_enabled', value: abandonedCartEnabled },
         { key: 'abandoned_cart_hours', value: abandonedCartHours },
+        { key: 'returns_auto_approve', value: returnsAutoApprove },
       ]
 
       for (const setting of settingsToSave) {
@@ -427,6 +434,46 @@ export default function SettingsPage() {
                 onChange={(e) => setLowStockThreshold(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Returns Settings */}
+        <div className="bg-white border-2 border-gray-200 p-6">
+          <h2 className="text-2xl font-bold mb-6">Retour Instellingen</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="returns_auto_approve"
+                checked={returnsAutoApprove}
+                onChange={(e) => setReturnsAutoApprove(e.target.checked)}
+                className="w-5 h-5"
+              />
+              <label htmlFor="returns_auto_approve" className="text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                Automatisch Retouren Goedkeuren
+              </label>
+            </div>
+
+            <div className="bg-blue-50 border-l-3 border-blue-400 p-4 text-sm text-blue-900">
+              <p className="font-bold mb-1">ℹ️ Hoe werkt het?</p>
+              <p className="mb-2">
+                <strong>Ingeschakeld:</strong> Retouraanvragen worden direct goedgekeurd en de klant kan meteen 
+                betalen voor het retourlabel (€7,87). Dit geeft de snelste flow.
+              </p>
+              <p>
+                <strong>Uitgeschakeld:</strong> Retouraanvragen blijven in afwachting tot jij ze goedkeurt 
+                in het admin panel. De klant krijgt pas de betaalstap na jouw goedkeuring.
+              </p>
+            </div>
+
+            <div className="bg-green-50 border-l-3 border-green-400 p-4 text-sm text-green-900">
+              <p className="font-bold mb-1">✅ Aanbevolen</p>
+              <p>
+                Voor de beste klantervaring raden we aan om auto-goedkeuring aan te laten staan. 
+                Dit zorgt voor een naadloze flow zonder wachttijden.
+              </p>
             </div>
           </div>
         </div>
