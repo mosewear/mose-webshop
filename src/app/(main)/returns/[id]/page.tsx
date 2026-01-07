@@ -54,6 +54,73 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
   const router = useRouter()
   const [processing, setProcessing] = useState(false)
 
+  // Verberg Stripe Link payment method
+  useEffect(() => {
+    const hideLink = () => {
+      const wrapper = document.querySelector('.payment-element-wrapper')
+      if (!wrapper) return
+
+      // Zoek en verberg Link tabs
+      const tabs = wrapper.querySelectorAll('[role="tab"]')
+      tabs.forEach((tab) => {
+        const text = tab.textContent?.toLowerCase() || ''
+        const ariaLabel = tab.getAttribute('aria-label')?.toLowerCase() || ''
+        if (text.includes('link') || ariaLabel.includes('link')) {
+          ;(tab as HTMLElement).style.display = 'none'
+        }
+      })
+
+      // Zoek en verberg Link iframes
+      const iframes = wrapper.querySelectorAll('iframe')
+      iframes.forEach((iframe) => {
+        const src = iframe.getAttribute('src')?.toLowerCase() || ''
+        if (src.includes('link')) {
+          ;(iframe as HTMLElement).style.display = 'none'
+          // Verberg ook de parent container
+          const parent = iframe.closest('[role="tabpanel"]')
+          if (parent) {
+            ;(parent as HTMLElement).style.display = 'none'
+          }
+        }
+      })
+
+      // Zoek en verberg buttons met Link
+      const buttons = wrapper.querySelectorAll('button')
+      buttons.forEach((button) => {
+        const text = button.textContent?.toLowerCase() || ''
+        const ariaLabel = button.getAttribute('aria-label')?.toLowerCase() || ''
+        if ((text.includes('link') || ariaLabel.includes('link')) && !text.includes('link in') && !text.includes('linken')) {
+          ;(button as HTMLElement).style.display = 'none'
+        }
+      })
+    }
+
+    // Direct proberen
+    hideLink()
+
+    // Observer voor dynamisch geladen content
+    const observer = new MutationObserver(() => {
+      hideLink()
+    })
+
+    const wrapper = document.querySelector('.payment-element-wrapper')
+    if (wrapper) {
+      observer.observe(wrapper, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      })
+    }
+
+    // Ook periodiek controleren (voor veiligheid)
+    const interval = setInterval(hideLink, 500)
+
+    return () => {
+      observer.disconnect()
+      clearInterval(interval)
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -93,17 +160,27 @@ function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement 
-        options={{
-          wallets: {
-            applePay: 'auto',
-            googlePay: 'auto',
-          },
-          layout: {
-            type: 'tabs',
-          },
-        }}
-      />
+      <div className="payment-element-wrapper">
+        <PaymentElement 
+          options={{
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+            },
+            layout: {
+              type: 'tabs',
+            },
+          }}
+        />
+      </div>
+      <style jsx global>{`
+        /* Verberg Stripe Link payment method - backup CSS voor JavaScript */
+        .payment-element-wrapper iframe[src*="link" i],
+        .payment-element-wrapper [data-testid*="link" i],
+        .payment-element-wrapper button[aria-label*="link" i]:not([aria-label*="link in"]):not([aria-label*="linken"]) {
+          display: none !important;
+        }
+      `}</style>
       <button
         type="submit"
         disabled={!stripe || processing}
