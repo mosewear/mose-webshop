@@ -15,15 +15,35 @@ export async function POST(
 
     // Check of dit automatisch wordt aangeroepen (via webhook) of handmatig door admin
     const authHeader = req.headers.get('authorization')
-    const isWebhookCall = authHeader === `Bearer ${process.env.INTERNAL_API_SECRET}`
+    const internalSecret = process.env.INTERNAL_API_SECRET
+    
+    console.log('🔍 Generate label endpoint called:')
+    console.log(`   Return ID: ${id}`)
+    console.log(`   Authorization header present: ${!!authHeader}`)
+    console.log(`   INTERNAL_API_SECRET present: ${!!internalSecret}`)
+    if (authHeader) {
+      console.log(`   Auth header starts with Bearer: ${authHeader.startsWith('Bearer ')}`)
+      console.log(`   Auth header length: ${authHeader.length}`)
+    }
+    if (internalSecret) {
+      console.log(`   INTERNAL_API_SECRET length: ${internalSecret.length}`)
+      const expectedAuth = `Bearer ${internalSecret}`
+      console.log(`   Expected auth length: ${expectedAuth.length}`)
+      console.log(`   Auth matches: ${authHeader === expectedAuth}`)
+    }
+    
+    const isWebhookCall = authHeader === `Bearer ${internalSecret}`
 
     let isAdmin = false
     if (!isWebhookCall) {
       const { authorized } = await requireAdmin()
       isAdmin = authorized
       if (!isAdmin) {
+        console.error('❌ Unauthorized: Not webhook call and not admin')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
+    } else {
+      console.log('✅ Webhook call authenticated')
     }
 
     if (!isSendcloudConfigured()) {

@@ -158,38 +158,62 @@ export async function POST(req: NextRequest) {
               const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
               const internalSecret = process.env.INTERNAL_API_SECRET
               
+              console.log('🔍 Label generation check:')
+              console.log(`   INTERNAL_API_SECRET exists: ${!!internalSecret}`)
+              console.log(`   INTERNAL_API_SECRET length: ${internalSecret?.length || 0}`)
+              console.log(`   Site URL: ${siteUrl}`)
+              console.log(`   Return ID: ${returnId}`)
+              
               if (internalSecret) {
                 console.log(`🔄 Attempting to generate label for return: ${returnId}`)
                 const labelUrl = `${siteUrl}/api/returns/${returnId}/generate-label`
                 console.log(`   URL: ${labelUrl}`)
+                console.log(`   Authorization header: Bearer ${internalSecret.substring(0, 10)}...`)
                 
+                const fetchStartTime = Date.now()
                 const response = await fetch(labelUrl, {
                   method: 'POST',
                   headers: {
                     'Authorization': `Bearer ${internalSecret}`,
                     'Content-Type': 'application/json',
                   },
+                  // Add timeout
+                  signal: AbortSignal.timeout(30000), // 30 second timeout
                 })
+                const fetchDuration = Date.now() - fetchStartTime
                 
                 const responseText = await response.text()
                 
+                console.log(`   Fetch duration: ${fetchDuration}ms`)
+                console.log(`   Response status: ${response.status}`)
+                console.log(`   Response statusText: ${response.statusText}`)
+                
                 if (response.ok) {
                   console.log('✅ Return label generated automatically')
-                  console.log(`   Response: ${responseText.substring(0, 200)}`)
+                  console.log(`   Response: ${responseText.substring(0, 500)}`)
                 } else {
                   console.error('❌ Failed to generate return label')
                   console.error(`   Status: ${response.status}`)
+                  console.error(`   StatusText: ${response.statusText}`)
                   console.error(`   Response: ${responseText}`)
+                  console.error(`   Response headers:`, Object.fromEntries(response.headers.entries()))
                 }
               } else {
                 console.warn('⚠️ INTERNAL_API_SECRET not set, cannot auto-generate label')
                 console.warn('   Admin must generate label manually')
+                console.warn('   Check Vercel environment variables')
               }
             } catch (labelError) {
               console.error('❌ Error generating return label:', labelError)
               if (labelError instanceof Error) {
-                console.error('   Message:', labelError.message)
-                console.error('   Stack:', labelError.stack)
+                console.error('   Error name:', labelError.name)
+                console.error('   Error message:', labelError.message)
+                if ('cause' in labelError) {
+                  console.error('   Error cause:', labelError.cause)
+                }
+                if (labelError.stack) {
+                  console.error('   Stack trace:', labelError.stack)
+                }
               }
               // Don't fail webhook, admin can generate manually
             }
