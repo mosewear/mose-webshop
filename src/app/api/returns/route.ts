@@ -115,6 +115,10 @@ export async function POST(req: NextRequest) {
     const returnsAutoApprove =
       (settings as any).returns_auto_approve === true || (settings as any).returns_auto_approve === 'true'
     
+    // Get return label costs from settings
+    const returnLabelCostExclBtw = settings.return_label_cost_excl_btw || 6.50
+    const returnLabelCostInclBtw = settings.return_label_cost_incl_btw || 7.87
+    
     if (order.delivered_at) {
       const deliveredDate = new Date(order.delivered_at)
       const deadline = new Date(deliveredDate)
@@ -180,8 +184,8 @@ export async function POST(req: NextRequest) {
         customer_notes: customer_notes || null,
         return_items: return_items,
         refund_amount: totalRefundAmount,
-        return_label_cost_excl_btw: 6.50,
-        return_label_cost_incl_btw: 7.87,
+        return_label_cost_excl_btw: returnLabelCostExclBtw,
+        return_label_cost_incl_btw: returnLabelCostInclBtw,
         total_refund: totalRefundAmount, // Label kosten worden later afgetrokken bij refund
       })
       .select()
@@ -203,7 +207,7 @@ export async function POST(req: NextRequest) {
     if (returnsAutoApprove) {
       try {
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
-        const amount = Math.round(7.87 * 100)
+        const amount = Math.round(returnLabelCostInclBtw * 100)
         const paymentIntent = await stripe.paymentIntents.create({
           amount,
           currency: 'eur',

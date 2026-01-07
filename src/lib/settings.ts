@@ -13,6 +13,8 @@ interface SiteSettings {
   maintenance_mode: boolean
   return_days: number
   returns_auto_approve: boolean
+  return_label_cost_excl_btw: number
+  return_label_cost_incl_btw: number
 }
 
 let cachedSettings: SiteSettings | null = null
@@ -55,6 +57,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_days: parseInt(settings.return_days) || 14,
       returns_auto_approve:
         settings.returns_auto_approve === 'true' || settings.returns_auto_approve === true || settings.returns_auto_approve === 1,
+      return_label_cost_excl_btw: parseFloat(settings.return_label_cost_excl_btw) || 6.50,
+      return_label_cost_incl_btw: parseFloat(settings.return_label_cost_incl_btw) || 7.87,
     }
 
     return cachedSettings
@@ -75,6 +79,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       maintenance_mode: false,
       return_days: 14,
       returns_auto_approve: true,
+      return_label_cost_excl_btw: 6.50,
+      return_label_cost_incl_btw: 7.87,
     }
   }
 }

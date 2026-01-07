@@ -37,6 +37,8 @@ export default function SettingsPage() {
 
   // Returns settings
   const [returnsAutoApprove, setReturnsAutoApprove] = useState(true)
+  const [returnLabelCostExclBtw, setReturnLabelCostExclBtw] = useState('6.50')
+  const [returnLabelCostInclBtw, setReturnLabelCostInclBtw] = useState('7.87')
 
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
@@ -48,6 +50,19 @@ export default function SettingsPage() {
     fetchSettings()
     fetchAdminUsers()
   }, [])
+
+  // Automatisch BTW herberekenen wanneer excl BTW of tax rate wijzigt
+  useEffect(() => {
+    if (returnLabelCostExclBtw && taxRate && !isNaN(parseFloat(returnLabelCostExclBtw)) && !isNaN(parseFloat(taxRate))) {
+      const taxMultiplier = 1 + (parseFloat(taxRate) / 100)
+      const calculatedIncl = (parseFloat(returnLabelCostExclBtw) * taxMultiplier).toFixed(2)
+      // Alleen updaten als de waarde anders is om infinite loops te voorkomen
+      if (Math.abs(parseFloat(calculatedIncl) - parseFloat(returnLabelCostInclBtw || '0')) > 0.01) {
+        setReturnLabelCostInclBtw(calculatedIncl)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnLabelCostExclBtw, taxRate])
 
   const fetchSettings = async () => {
     try {
@@ -106,6 +121,12 @@ export default function SettingsPage() {
             case 'returns_auto_approve':
               setReturnsAutoApprove(setting.value === 'true' || setting.value === true)
               break
+            case 'return_label_cost_excl_btw':
+              setReturnLabelCostExclBtw(String(setting.value))
+              break
+            case 'return_label_cost_incl_btw':
+              setReturnLabelCostInclBtw(String(setting.value))
+              break
           }
         })
       }
@@ -120,6 +141,13 @@ export default function SettingsPage() {
     try {
       setSaving(true)
       setError('')
+
+      // Als BTW percentage is gewijzigd, herbereken return label kosten incl BTW
+      let finalReturnLabelCostInclBtw = returnLabelCostInclBtw
+      if (parseFloat(returnLabelCostExclBtw) && parseFloat(taxRate)) {
+        const taxMultiplier = 1 + (parseFloat(taxRate) / 100)
+        finalReturnLabelCostInclBtw = (parseFloat(returnLabelCostExclBtw) * taxMultiplier).toFixed(2)
+      }
 
       const settingsToSave = [
         { key: 'site_name', value: siteName },
@@ -136,6 +164,8 @@ export default function SettingsPage() {
         { key: 'abandoned_cart_email_enabled', value: abandonedCartEnabled },
         { key: 'abandoned_cart_hours', value: abandonedCartHours },
         { key: 'returns_auto_approve', value: returnsAutoApprove },
+        { key: 'return_label_cost_excl_btw', value: returnLabelCostExclBtw },
+        { key: 'return_label_cost_incl_btw', value: finalReturnLabelCostInclBtw },
       ]
 
       for (const setting of settingsToSave) {
@@ -474,6 +504,81 @@ export default function SettingsPage() {
                 Voor de beste klantervaring raden we aan om auto-goedkeuring aan te laten staan. 
                 Dit zorgt voor een naadloze flow zonder wachttijden.
               </p>
+            </div>
+
+            <div className="border-t border-gray-200 pt-6 mt-6">
+              <h3 className="text-lg font-bold mb-4">Retourlabel Kosten</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                    Kosten Retourlabel (excl. BTW)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={returnLabelCostExclBtw}
+                    onChange={(e) => {
+                      const exclValue = e.target.value
+                      setReturnLabelCostExclBtw(exclValue)
+                      // Automatisch BTW berekenen op basis van BTW percentage
+                      if (exclValue && !isNaN(parseFloat(exclValue))) {
+                        const taxMultiplier = 1 + (parseFloat(taxRate) / 100)
+                        const inclValue = (parseFloat(exclValue) * taxMultiplier).toFixed(2)
+                        setReturnLabelCostInclBtw(inclValue)
+                      }
+                    }}
+                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                    placeholder="6.50"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Kosten voor retourlabel exclusief BTW. De prijs inclusief BTW wordt automatisch berekend op basis van het BTW percentage ({taxRate}%).
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                    Kosten Retourlabel (incl. BTW)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={returnLabelCostInclBtw}
+                    onChange={(e) => {
+                      const inclValue = e.target.value
+                      setReturnLabelCostInclBtw(inclValue)
+                      // Automatisch BTW terugrekenen
+                      if (inclValue && !isNaN(parseFloat(inclValue))) {
+                        const taxMultiplier = 1 + (parseFloat(taxRate) / 100)
+                        const exclValue = (parseFloat(inclValue) / taxMultiplier).toFixed(2)
+                        setReturnLabelCostExclBtw(exclValue)
+                      }
+                    }}
+                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors bg-gray-50"
+                    placeholder="7.87"
+                    readOnly={false}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Kosten voor retourlabel inclusief BTW. Je kunt dit handmatig aanpassen, of automatisch laten berekenen via het veld hierboven.
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border-l-3 border-blue-400 p-4 text-sm text-blue-900">
+                  <p className="font-bold mb-1">ℹ️ Waar wordt dit gebruikt?</p>
+                  <p className="mb-2">
+                    Deze kosten worden gebruikt wanneer klanten een retour aanvragen en betalen voor hun retourlabel.
+                  </p>
+                  <p className="mb-2">
+                    <strong>Huidige waarde:</strong> €{parseFloat(returnLabelCostExclBtw || '0').toFixed(2)} excl. BTW / €{parseFloat(returnLabelCostInclBtw || '0').toFixed(2)} incl. BTW
+                  </p>
+                  <p>
+                    Deze instellingen worden alleen toegepast op <strong>nieuwe retouren</strong>. 
+                    Bestaande retouren behouden hun oorspronkelijke kosten.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
