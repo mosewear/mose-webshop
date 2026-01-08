@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { mapSendcloudStatus } from '@/lib/sendcloud'
 import { sendOrderDeliveredEmail } from '@/lib/email'
 import { logEmail } from '@/lib/email-logger'
+import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 
 /**
  * Sendcloud Webhook Handler
@@ -83,24 +84,32 @@ export async function POST(req: NextRequest) {
  */
 async function handleStatusChange(payload: SendcloudWebhookPayload) {
   const { parcel } = payload
-  const orderId = parcel.order_number // We gebruiken order ID als order_number
+  const orderNumberOrReturnId = parcel.order_number // Kan order ID of RETURN-XXX zijn
 
-  if (!orderId) {
+  if (!orderNumberOrReturnId) {
     console.error('No order_number in webhook payload')
     return
   }
 
   const supabase = await createClient()
 
+  // Check of het een return is (order_number begint met RETURN-)
+  if (orderNumberOrReturnId.startsWith('RETURN-')) {
+    console.log('📦 Return tracking update detected:', orderNumberOrReturnId)
+    await handleReturnStatusChange(payload, supabase)
+    return
+  }
+
+  // Normale order handling
   // Haal order op
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .select('*, order_items(*)')
-    .eq('id', orderId)
+    .eq('id', orderNumberOrReturnId)
     .single()
 
   if (orderError || !order) {
-    console.error('Order not found:', orderId, orderError)
+    console.error('Order not found:', orderNumberOrReturnId, orderError)
     return
   }
 
@@ -118,18 +127,91 @@ async function handleStatusChange(payload: SendcloudWebhookPayload) {
       status: newStatus,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', orderId)
+    .eq('id', orderNumberOrReturnId)
 
   if (updateError) {
     console.error('Error updating order:', updateError)
     return
   }
 
-  console.log(`Order ${orderId} status updated: ${oldStatus} -> ${newStatus}`)
+  console.log(`Order ${orderNumberOrReturnId} status updated: ${oldStatus} -> ${newStatus}`)
 
   // Als status delivered is, stuur delivered email
   if (newStatus === 'delivered' && oldStatus !== 'delivered') {
     await sendDeliveredEmailForOrder(order)
+  }
+}
+
+/**
+ * Handle return parcel status change
+ */
+async function handleReturnStatusChange(payload: SendcloudWebhookPayload, supabase: any) {
+  const { parcel } = payload
+  const orderNumber = parcel.order_number // RETURN-XXXXXXXX
+  
+  console.log('🔍 Looking for return with order_number:', orderNumber)
+
+  // Haal return op via tracking code of order_number matching
+  const { data: returnRecord, error: returnError } = await supabase
+    .from('returns')
+    .select('*, orders!inner(id, email)')
+    .eq('return_tracking_code', parcel.tracking_number)
+    .maybeSingle()
+
+  if (returnError) {
+    console.error('Error fetching return:', returnError)
+    return
+  }
+
+  if (!returnRecord) {
+    console.warn('No return found for tracking:', parcel.tracking_number)
+    return
+  }
+
+  console.log(`📦 Found return ${returnRecord.id}, current status: ${returnRecord.status}`)
+
+  // Map Sendcloud status naar return status
+  const sendcloudStatusId = parcel.status.id
+  let newReturnStatus = returnRecord.status
+
+  // Sendcloud status mapping voor returns:
+  // 11 = In transit to carrier
+  // 13 = Delivered to carrier (dropoff)
+  // 80 = In transit
+  // 91 = Delivered
+  
+  if ([11, 13, 80].includes(sendcloudStatusId)) {
+    newReturnStatus = 'return_in_transit'
+  } else if (sendcloudStatusId === 91) {
+    // Delivered betekent voor een return: bij ons ontvangen!
+    // We updaten niet automatisch naar received - admin moet dit bevestigen
+    console.log('🎉 Return delivered! Admin moet ontvangst nog bevestigen.')
+    // Status blijft op return_in_transit - admin moet handmatig confirm doen
+    newReturnStatus = 'return_in_transit'
+  }
+
+  // Update return met tracking info
+  const { error: updateError } = await supabase
+    .from('returns')
+    .update({
+      status: newReturnStatus,
+      return_tracking_url: parcel.tracking_url,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', returnRecord.id)
+
+  if (updateError) {
+    console.error('Error updating return:', updateError)
+    return
+  }
+
+  console.log(`✅ Return ${returnRecord.id} status updated to: ${newReturnStatus}`)
+
+  // Update order status
+  try {
+    await updateOrderStatusForReturn(returnRecord.order_id, newReturnStatus)
+  } catch (error) {
+    console.error('Error updating order status for return:', error)
   }
 }
 

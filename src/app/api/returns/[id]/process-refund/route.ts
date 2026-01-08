@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { sendReturnRefundedEmail } from '@/lib/email'
+import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -108,6 +109,13 @@ export async function POST(
         .eq('id', id)
         .select()
         .single()
+
+      // Update order status naar return_completed
+      try {
+        await updateOrderStatusForReturn(returnRecord.order_id, 'refunded')
+      } catch (error) {
+        console.error('Error updating order status:', error)
+      }
 
       // Verstuur email naar klant
       try {

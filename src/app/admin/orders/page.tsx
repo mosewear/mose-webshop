@@ -59,7 +59,12 @@ export default function AdminOrdersPage() {
         .order('created_at', { ascending: false })
 
       if (filter !== 'all') {
-        query = query.eq('status', filter)
+        if (filter === 'returns') {
+          // Filter op alle return statussen
+          query = query.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
+        } else {
+          query = query.eq('status', filter)
+        }
       }
 
       const { data, error } = await query
@@ -83,6 +88,11 @@ export default function AdminOrdersPage() {
       shipped: 'bg-orange-100 text-orange-700 border-orange-200',
       delivered: 'bg-green-100 text-green-700 border-green-200',
       cancelled: 'bg-red-100 text-red-700 border-red-200',
+      // Return statussen
+      return_requested: 'bg-amber-100 text-amber-700 border-amber-200',
+      return_in_transit: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+      return_received: 'bg-slate-100 text-slate-700 border-slate-200',
+      return_completed: 'bg-teal-100 text-teal-700 border-teal-200',
     }
     return colors[status] || 'bg-gray-100 text-gray-700 border-gray-200'
   }
@@ -95,6 +105,11 @@ export default function AdminOrdersPage() {
       shipped: 'Verzonden',
       delivered: 'Afgeleverd',
       cancelled: 'Geannuleerd',
+      // Return statussen
+      return_requested: '🔄 Return Aangevraagd',
+      return_in_transit: '📦 Return Onderweg',
+      return_received: '✓ Return Ontvangen',
+      return_completed: '✓ Return Voltooid',
     }
     return labels[status] || status
   }
@@ -185,6 +200,7 @@ export default function AdminOrdersPage() {
     { value: 'processing', label: 'In behandeling', count: orders.filter(o => o.status === 'processing').length },
     { value: 'shipped', label: 'Verzonden', count: orders.filter(o => o.status === 'shipped').length },
     { value: 'delivered', label: 'Afgeleverd', count: orders.filter(o => o.status === 'delivered').length },
+    { value: 'returns', label: '🔄 Returns', count: orders.filter(o => ['return_requested', 'return_in_transit', 'return_received', 'return_completed'].includes(o.status)).length },
   ]
 
   if (loading) {

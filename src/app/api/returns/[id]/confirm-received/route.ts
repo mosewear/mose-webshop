@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/supabase/admin'
+import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 
 // POST /api/returns/[id]/confirm-received - Admin bevestigt ontvangst retour
 export async function POST(
@@ -65,6 +66,13 @@ export async function POST(
           quantity: returnItem.quantity,
         })
       }
+    }
+
+    // Update order status naar return_received
+    try {
+      await updateOrderStatusForReturn(returnRecord.order_id, 'return_received')
+    } catch (error) {
+      console.error('Error updating order status:', error)
     }
 
     return NextResponse.json({

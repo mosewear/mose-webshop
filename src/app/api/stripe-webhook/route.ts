@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 import { createReturnLabelSimple } from '@/lib/sendcloud-return-simple'
 import { sendReturnLabelGeneratedEmail } from '@/lib/email'
+import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -245,6 +246,13 @@ export async function POST(req: NextRequest) {
                         console.log('✅ Return label generated automatically')
                         console.log(`   Label URL: ${labelData.label_url}`)
                         console.log(`   Tracking code: ${labelData.tracking_number}`)
+                        
+                        // Update order status naar return_requested
+                        try {
+                          await updateOrderStatusForReturn(order.id, 'return_label_generated')
+                        } catch (error) {
+                          console.error('Error updating order status:', error)
+                        }
                         
                         // Verstuur email naar klant met label (niet blokkerend)
                         try {

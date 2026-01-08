@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
+import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import Stripe from 'stripe'
 
 // GET /api/returns - Haal alle retouren op voor ingelogde gebruiker of admin
@@ -187,11 +188,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create return' }, { status: 500 })
     }
 
-    // Update order has_returns flag
+    // Update order has_returns flag EN status
     await supabase
       .from('orders')
       .update({ has_returns: true })
       .eq('id', order_id)
+    
+    // Update order status naar return_requested
+    try {
+      await updateOrderStatusForReturn(order_id, 'return_label_payment_pending')
+    } catch (error) {
+      console.error('Error updating order status:', error)
+      // Niet falen - return is al aangemaakt
+    }
 
     // Maak altijd direct een Payment Intent aan voor het retourlabel
     // zodat de klant direct kan betalen (zolang binnen 14 dagen)
