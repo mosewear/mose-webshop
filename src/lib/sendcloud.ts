@@ -265,14 +265,68 @@ export async function createParcel(
   parcelData: CreateParcelRequest
 ): Promise<SendcloudParcel> {
   try {
+    // Build final parcel object - verwijder undefined/null values
+    const cleanParcelData: any = {}
+    for (const [key, value] of Object.entries(parcelData)) {
+      if (value !== undefined && value !== null && value !== '') {
+        cleanParcelData[key] = value
+      }
+    }
+    
+    const parcelPayload = {
+      ...cleanParcelData,
+      request_label: cleanParcelData.request_label !== undefined ? cleanParcelData.request_label : true,
+      apply_shipping_rules: cleanParcelData.apply_shipping_rules !== undefined ? cleanParcelData.apply_shipping_rules : true,
+    }
+    
+    // Log de volledige payload voor debugging (verwijder gevoelige data zoals email/telephone voor logging)
+    if (parcelPayload.is_return) {
+      console.log('📦 Creating RETURN parcel, payload structure:', {
+        // To address
+        name: parcelPayload.name,
+        address: parcelPayload.address,
+        house_number: parcelPayload.house_number,
+        city: parcelPayload.city,
+        postal_code: parcelPayload.postal_code,
+        country: parcelPayload.country,
+        email: parcelPayload.email ? '***' : undefined,
+        telephone: parcelPayload.telephone ? '***' : undefined,
+        // From address
+        from_name: parcelPayload.from_name,
+        from_address: parcelPayload.from_address,
+        from_house_number: parcelPayload.from_house_number,
+        from_city: parcelPayload.from_city,
+        from_postal_code: parcelPayload.from_postal_code,
+        from_country: parcelPayload.from_country,
+        from_email: parcelPayload.from_email ? '***' : undefined,
+        from_telephone: parcelPayload.from_telephone ? '***' : undefined,
+        // Other fields
+        order_number: parcelPayload.order_number,
+        weight: parcelPayload.weight,
+        total_order_value: parcelPayload.total_order_value,
+        is_return: parcelPayload.is_return,
+        has_shipment_id: !!parcelPayload.shipment?.id,
+        shipment_id: parcelPayload.shipment?.id,
+      })
+      
+      // Validate that all required fields are present
+      const requiredToFields = ['name', 'address', 'city', 'postal_code', 'country']
+      const requiredFromFields = ['from_name', 'from_address', 'from_city', 'from_postal_code', 'from_country']
+      const missingToFields = requiredToFields.filter(field => !parcelPayload[field])
+      const missingFromFields = requiredFromFields.filter(field => !parcelPayload[field])
+      
+      if (missingToFields.length > 0) {
+        throw new Error(`Missing required TO address fields: ${missingToFields.join(', ')}`)
+      }
+      if (missingFromFields.length > 0) {
+        throw new Error(`Missing required FROM address fields: ${missingFromFields.join(', ')}`)
+      }
+    }
+    
     const data = await sendcloudFetch('/parcels', {
       method: 'POST',
       body: JSON.stringify({
-        parcel: {
-          ...parcelData,
-          request_label: true, // Automatisch label genereren
-          apply_shipping_rules: true,
-        },
+        parcel: parcelPayload,
       }),
     })
 
@@ -411,6 +465,12 @@ export async function createReturnLabel(
     // Minimaal 0.5kg, afgerond naar boven
     totalWeight = Math.max(0.5, Math.ceil(totalWeight * 10) / 10)
 
+    // Validate shipping address
+    if (!shippingAddress?.name || !shippingAddress?.address || !shippingAddress?.city || !shippingAddress?.postalCode) {
+      console.error('❌ Invalid shipping address:', shippingAddress)
+      throw new Error('Shipping address ontbreekt of is incompleet')
+    }
+    
     // Format klant adres (from address - waar het pakket vandaan komt)
     const customerAddress = formatAddressForSendcloud({
       name: shippingAddress.name,
@@ -422,16 +482,43 @@ export async function createReturnLabel(
       phone: shippingAddress.phone,
     })
     
+    console.log('📋 Customer address formatted:', {
+      name: customerAddress.name,
+      address: customerAddress.address,
+      house_number: customerAddress.house_number,
+      city: customerAddress.city,
+      postal_code: customerAddress.postal_code,
+      country: customerAddress.country,
+    })
+    
     // Format MOSE adres (to address - waar het pakket naartoe gaat)
+    // Gebruik het volledige adres string, formatAddressForSendcloud split het zelf
     const moseAddress = formatAddressForSendcloud({
       name: 'MOSE Wear',
-      address: moseStreet,
+      address: moseStreet, // "Helper Brink 27a" - formatAddressForSendcloud split dit in street + house_number
       city: moseCity,
       postalCode: mosePostalCode,
       country: 'NL',
       email: settings.contact_email,
       phone: settings.contact_phone,
     })
+    
+    console.log('📋 MOSE address formatted:', {
+      name: moseAddress.name,
+      address: moseAddress.address,
+      house_number: moseAddress.house_number,
+      city: moseAddress.city,
+      postal_code: moseAddress.postal_code,
+      country: moseAddress.country,
+    })
+    
+    // Validate dat alle vereiste velden aanwezig zijn
+    if (!customerAddress.name || !customerAddress.address || !customerAddress.city || !customerAddress.postal_code) {
+      throw new Error('Klant adres is incompleet na formatting')
+    }
+    if (!moseAddress.name || !moseAddress.address || !moseAddress.city || !moseAddress.postal_code) {
+      throw new Error('MOSE adres is incompleet na formatting')
+    }
 
     // Bepaal shipping method (gebruik standaard DHL)
     const methodId = await getDefaultDHLMethodId()
@@ -450,25 +537,27 @@ export async function createReturnLabel(
 
     // Maak retour parcel aan
     // Voor returns: from_* = klant adres (waar het pakket vandaan komt)
-    //              to_* = MOSE adres (waar het pakket naartoe gaat)
+    //              to_* (normale velden) = MOSE adres (waar het pakket naartoe gaat)
     const parcelData: CreateParcelRequest = {
       // To address (MOSE - waar het pakket naartoe gaat)
       name: moseAddress.name,
       address: moseAddress.address,
+      house_number: moseAddress.house_number || '', // Belangrijk: niet vergeten!
       city: moseAddress.city,
       postal_code: moseAddress.postal_code,
       country: moseAddress.country,
       email: moseAddress.email,
-      telephone: moseAddress.telephone,
+      telephone: moseAddress.telephone || '',
       
       // From address (klant - waar het pakket vandaan komt) - VERPLICHT voor returns
       from_name: customerAddress.name,
       from_address: customerAddress.address,
+      from_house_number: customerAddress.house_number || '', // Belangrijk: niet vergeten!
       from_city: customerAddress.city,
       from_postal_code: customerAddress.postal_code,
       from_country: customerAddress.country,
       from_email: customerAddress.email,
-      from_telephone: customerAddress.telephone,
+      from_telephone: customerAddress.telephone || '',
       
       order_number: `RETURN-${returnId.slice(0, 8).toUpperCase()}`,
       weight: totalWeight.toFixed(1),
@@ -476,6 +565,23 @@ export async function createReturnLabel(
       shipment: {
         id: methodId,
       },
+      // Parcel items toevoegen (aangeraden door Sendcloud)
+      parcel_items: returnItems.map((returnItem: any) => {
+        const orderItem = order.order_items.find((item: any) => item.id === returnItem.order_item_id)
+        const itemWeight = orderItem ? (
+          estimateClothingWeight(returnItem.quantity, 
+            orderItem.product_name.toLowerCase().includes('hoodie') ? 'hoodie' : 'tshirt'
+          )
+        ) : 0.5
+        
+        return {
+          description: returnItem.product_name || orderItem?.product_name || 'Product',
+          quantity: returnItem.quantity,
+          weight: itemWeight.toFixed(3),
+          value: orderItem ? (orderItem.price_at_purchase * returnItem.quantity).toFixed(2) : '0.00',
+          origin_country: 'NL',
+        }
+      }),
       is_return: true, // ← BELANGRIJK: Dit maakt het een retourlabel
       request_label: true,
       apply_shipping_rules: true,
@@ -544,20 +650,33 @@ export function formatAddressForSendcloud(address: {
   email?: string
   phone?: string
 }): SendcloudAddress {
+  if (!address.name || !address.address || !address.city || !address.postalCode) {
+    throw new Error(`Incompleet adres: name=${!!address.name}, address=${!!address.address}, city=${!!address.city}, postalCode=${!!address.postalCode}`)
+  }
+  
   // Split huisnummer van straat (Nederlandse format)
-  const addressMatch = address.address.match(/^(.+?)\s+(\d+.*)$/)
-  const street = addressMatch ? addressMatch[1] : address.address
-  const houseNumber = addressMatch ? addressMatch[2] : ''
+  // Bijv. "Helper Brink 27a" -> street: "Helper Brink", house_number: "27a"
+  // Bijv. "Kalverstraat 123" -> street: "Kalverstraat", house_number: "123"
+  const addressMatch = address.address.match(/^(.+?)\s+(\d+[a-zA-Z]?.*)$/)
+  const street = addressMatch ? addressMatch[1].trim() : address.address.trim()
+  const houseNumber = addressMatch ? addressMatch[2].trim() : ''
 
-  return {
-    name: address.name,
+  const formatted: SendcloudAddress = {
+    name: address.name.trim(),
     address: street,
     house_number: houseNumber,
-    city: address.city,
-    postal_code: address.postalCode.replace(/\s/g, ''), // Remove spaces
-    country: address.country || 'NL',
-    email: address.email || '',
-    telephone: address.phone || '',
+    city: address.city.trim(),
+    postal_code: address.postalCode.replace(/\s/g, '').toUpperCase(), // Remove spaces and uppercase
+    country: (address.country || 'NL').toUpperCase(),
+    email: address.email?.trim() || '',
+    telephone: address.phone?.trim() || '',
   }
+  
+  // Validate dat alle vereiste velden gevuld zijn
+  if (!formatted.name || !formatted.address || !formatted.city || !formatted.postal_code) {
+    throw new Error(`Adres formatting faalt: ${JSON.stringify(formatted)}`)
+  }
+
+  return formatted
 }
 
