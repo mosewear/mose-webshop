@@ -199,6 +199,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [isMainVideoPlaying, setIsMainVideoPlaying] = useState(false)
+  const mainVideoRef = useRef<HTMLVideoElement>(null)
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
@@ -213,6 +215,29 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     loadWishlist()
     loadSettings()
   }, [])
+
+  // Main video event listeners
+  useEffect(() => {
+    const video = mainVideoRef.current
+    if (!video) return
+
+    const handlePlaying = () => setIsMainVideoPlaying(true)
+    const handlePause = () => setIsMainVideoPlaying(false)
+    const handleEnded = () => setIsMainVideoPlaying(false)
+    const handleWaiting = () => setIsMainVideoPlaying(false)
+
+    video.addEventListener('playing', handlePlaying)
+    video.addEventListener('pause', handlePause)
+    video.addEventListener('ended', handleEnded)
+    video.addEventListener('waiting', handleWaiting)
+
+    return () => {
+      video.removeEventListener('playing', handlePlaying)
+      video.removeEventListener('pause', handlePause)
+      video.removeEventListener('ended', handleEnded)
+      video.removeEventListener('waiting', handleWaiting)
+    }
+  }, [displayImages[selectedImage]])
 
   const loadSettings = async () => {
     try {
@@ -504,14 +529,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 }`}
               >
                 {displayImages[selectedImage]?.media_type === 'video' ? (
-                  <video
-                    src={displayImages[selectedImage]?.url}
-                    controls
-                    playsInline
-                    className="w-full h-full object-contain bg-black"
-                    poster={displayImages[selectedImage]?.url}
-                    preload="metadata"
-                  />
+                  <div className="relative w-full h-full">
+                    <video
+                      ref={mainVideoRef}
+                      src={displayImages[selectedImage]?.url}
+                      controls
+                      playsInline
+                      className="w-full h-full object-contain bg-black"
+                      poster={displayImages[selectedImage]?.video_thumbnail_url || undefined}
+                      preload="metadata"
+                    />
+                    {/* Custom play overlay - verdwijnt als video speelt */}
+                    {!isMainVideoPlaying && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                        <div className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center">
+                          <svg className="w-10 h-10 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <Image
