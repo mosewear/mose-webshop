@@ -156,13 +156,17 @@ export async function POST(req: NextRequest) {
             }
             
             // Automatisch label genereren (direct in webhook, geen fetch nodig)
+            let labelGenerationSuccess = false
+            let labelGenerationError: string | null = null
             try {
               console.log(`🔄 Attempting to generate label for return: ${returnId}`)
               
               // Check of Sendcloud is geconfigureerd
               if (!isSendcloudConfigured()) {
-                console.warn('⚠️ Sendcloud niet geconfigureerd, cannot auto-generate label')
+                const errorMsg = 'Sendcloud niet geconfigureerd'
+                console.warn(`⚠️ ${errorMsg}, cannot auto-generate label`)
                 console.warn('   Admin must generate label manually')
+                labelGenerationError = errorMsg
               } else {
                 // Check of label al is gegenereerd (korte check)
                 const { data: existingReturn } = await supabase
@@ -172,7 +176,9 @@ export async function POST(req: NextRequest) {
                   .single()
                 
                 if (existingReturn?.return_label_url) {
+                  labelGenerationSuccess = true
                   console.log('✅ Label already exists for return:', returnId)
+                  console.log(`   Existing label URL: ${existingReturn.return_label_url}`)
                 } else {
                   // Haal volledige return op met order en items
                   const { data: returnRecord, error: returnFetchError } = await supabase
@@ -182,7 +188,9 @@ export async function POST(req: NextRequest) {
                     .single()
                   
                   if (returnFetchError || !returnRecord) {
+                    const errorMsg = `Error fetching return: ${returnFetchError?.message || 'Return not found'}`
                     console.error('❌ Error fetching return for label generation:', returnFetchError)
+                    labelGenerationError = errorMsg
                   } else {
                     // Haal order items op
                     const { data: order, error: orderError } = await supabase
@@ -192,14 +200,26 @@ export async function POST(req: NextRequest) {
                       .single()
                     
                     if (orderError || !order) {
+                      const errorMsg = `Error fetching order: ${orderError?.message || 'Order not found'}`
                       console.error('❌ Error fetching order for label generation:', orderError)
+                      labelGenerationError = errorMsg
                     } else {
                       console.log('   Generating label via Sendcloud...')
+                      console.log(`   Return ID: ${returnId}`)
+                      console.log(`   Order ID: ${order.id}`)
+                      console.log(`   Return items count: ${returnRecord.return_items?.length || 0}`)
+                      
                       const labelData = await createReturnLabel(
                         returnId,
                         order,
                         returnRecord.return_items as any[]
                       )
+                      
+                      console.log('   Label data received from Sendcloud:', {
+                        hasLabelUrl: !!labelData.label_url,
+                        hasTrackingCode: !!labelData.tracking_code,
+                        sendcloudReturnId: labelData.sendcloud_return_id,
+                      })
                       
                       // Update return met label informatie
                       const { data: updatedReturn, error: updateError } = await supabase
@@ -217,8 +237,11 @@ export async function POST(req: NextRequest) {
                         .single()
                       
                       if (updateError) {
+                        const errorMsg = `Error updating return: ${updateError.message}`
                         console.error('❌ Error updating return with label:', updateError)
+                        labelGenerationError = errorMsg
                       } else {
+                        labelGenerationSuccess = true
                         console.log('✅ Return label generated automatically')
                         console.log(`   Label URL: ${labelData.label_url}`)
                         console.log(`   Tracking code: ${labelData.tracking_code}`)
@@ -255,6 +278,11 @@ export async function POST(req: NextRequest) {
                 }
               }
             } catch (labelError) {
+              const errorMsg = labelError instanceof Error 
+                ? labelError.message 
+                : 'Unknown error during label generation'
+              labelGenerationError = errorMsg
+              
               console.error('❌ Error generating return label:', labelError)
               if (labelError instanceof Error) {
                 console.error('   Error name:', labelError.name)
@@ -268,6 +296,12 @@ export async function POST(req: NextRequest) {
               }
               // Don't fail webhook, admin can generate manually
             }
+            
+            console.log('📊 Label generation summary:', {
+              returnId,
+              success: labelGenerationSuccess,
+              error: labelGenerationError,
+            })
           
           // Return early, don't process as order payment
           // Return success even if label generation failed (admin can generate manually)
@@ -276,7 +310,9 @@ export async function POST(req: NextRequest) {
             type: 'return_label_payment',
             return_id: returnId,
             status_updated: !!returnRecord,
-            label_generation_attempted: !!returnRecord,
+            label_generation_attempted: true,
+            label_generation_success: labelGenerationSuccess,
+            label_generation_error: labelGenerationError,
           })
         }
         
