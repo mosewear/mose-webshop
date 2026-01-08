@@ -36,6 +36,7 @@ interface ProductImage {
   position: number
   is_primary: boolean
   color: string | null
+  media_type: 'image' | 'video'
 }
 
 interface ProductVariant {
@@ -359,27 +360,51 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
             {/* LEFT: Image Gallery (55% width) */}
             <div className="space-y-4">
-              {/* Main Image - Clickable for zoom */}
+              {/* Main Media Display - Image or Video */}
               <div
-                onClick={() => setShowLightbox(true)}
-                className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group cursor-zoom-in"
+                onClick={() => displayImages[selectedImage]?.media_type === 'image' && setShowLightbox(true)}
+                className={`relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group ${
+                  displayImages[selectedImage]?.media_type === 'image' ? 'cursor-zoom-in' : ''
+                }`}
               >
-                <Image
-                  src={displayImages[selectedImage]?.url || '/placeholder.png'}
-                  alt={displayImages[selectedImage]?.alt_text || product.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover object-center"
-                  priority
-                />
-                {/* Zoom hint */}
-                <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                  </svg>
-                </div>
+                {displayImages[selectedImage]?.media_type === 'video' ? (
+                  <>
+                    <video
+                      src={displayImages[selectedImage]?.url}
+                      controls
+                      playsInline
+                      className="w-full h-full object-contain bg-black"
+                      poster={displayImages[selectedImage]?.url}
+                      preload="metadata"
+                    />
+                    {/* Video Badge */}
+                    <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1.5 text-xs font-bold uppercase flex items-center gap-1.5 pointer-events-none">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                      </svg>
+                      VIDEO
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Image
+                      src={displayImages[selectedImage]?.url || '/placeholder.png'}
+                      alt={displayImages[selectedImage]?.alt_text || product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover object-center"
+                      priority
+                    />
+                    {/* Zoom hint - only for images */}
+                    <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                      </svg>
+                    </div>
+                  </>
+                )}
                 {!inStock && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none">
                     <span className="text-white text-2xl md:text-4xl font-display">UITVERKOCHT</span>
                   </div>
                 )}
@@ -398,13 +423,31 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           : 'border-gray-300 hover:border-black'
                       }`}
                     >
-                      <Image
-                        src={image.url}
-                        alt={image.alt_text || product.name}
-                        fill
-                        sizes="(max-width: 768px) 25vw, 12vw"
-                        className="object-cover object-center"
-                      />
+                      {image.media_type === 'video' ? (
+                        <>
+                          <video
+                            src={image.url}
+                            className="w-full h-full object-cover"
+                            preload="metadata"
+                          />
+                          {/* Play Icon Overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 flex items-center justify-center">
+                              <svg className="w-4 h-4 md:w-5 md:h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <Image
+                          src={image.url}
+                          alt={image.alt_text || product.name}
+                          fill
+                          sizes="(max-width: 768px) 25vw, 12vw"
+                          className="object-cover object-center"
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -927,12 +970,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
       )}
 
-      {/* Image Lightbox (Feature 3) */}
-      {showLightbox && (
+      {/* Image/Video Lightbox */}
+      {showLightbox && displayImages[selectedImage]?.media_type === 'image' && (
         <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
           <button
             onClick={() => setShowLightbox(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
