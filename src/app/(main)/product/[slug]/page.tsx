@@ -67,10 +67,31 @@ function VideoThumbnail({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isHovering, setIsHovering] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
     // Detecteer mobiel
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+  }, [])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    // Event listeners om te tracken of video speelt
+    const handlePlay = () => setIsPlaying(true)
+    const handlePause = () => setIsPlaying(false)
+    const handleEnded = () => setIsPlaying(false)
+
+    video.addEventListener('play', handlePlay)
+    video.addEventListener('pause', handlePause)
+    video.addEventListener('ended', handleEnded)
+
+    return () => {
+      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('pause', handlePause)
+      video.removeEventListener('ended', handleEnded)
+    }
   }, [])
 
   useEffect(() => {
@@ -109,8 +130,8 @@ function VideoThumbnail({
         playsInline
         loop
       />
-      {/* Play icon - verdwijnt bij hover (desktop) */}
-      {(!isHovering || isMobile) && (
+      {/* Play icon - verdwijnt als video speelt */}
+      {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
           <svg 
             className="w-8 h-8 text-white/80" 
