@@ -594,7 +594,7 @@ export default function ReturnDetailsPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a
-                href={returnData.return_label_url}
+                href={`/api/returns/${returnData.id}/download-label`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-8 py-4 bg-green-500 text-white font-bold uppercase tracking-wider hover:bg-green-600 transition-colors text-center"
