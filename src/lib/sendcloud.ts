@@ -265,10 +265,10 @@ export async function createParcel(
   parcelData: CreateParcelRequest
 ): Promise<SendcloudParcel> {
   try {
-    // Build final parcel object - verwijder undefined/null values
+    // Build final parcel object - verwijder alleen undefined/null, behoud lege strings (kunnen vereist zijn)
     const cleanParcelData: any = {}
     for (const [key, value] of Object.entries(parcelData)) {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null) {
         cleanParcelData[key] = value
       }
     }
@@ -279,35 +279,15 @@ export async function createParcel(
       apply_shipping_rules: cleanParcelData.apply_shipping_rules !== undefined ? cleanParcelData.apply_shipping_rules : true,
     }
     
-    // Log de volledige payload voor debugging (verwijder gevoelige data zoals email/telephone voor logging)
+    // Log de volledige payload VOORDAT het wordt verstuurd (verwijder alleen gevoelige data)
     if (parcelPayload.is_return) {
-      console.log('📦 Creating RETURN parcel, payload structure:', {
-        // To address
-        name: parcelPayload.name,
-        address: parcelPayload.address,
-        house_number: parcelPayload.house_number,
-        city: parcelPayload.city,
-        postal_code: parcelPayload.postal_code,
-        country: parcelPayload.country,
-        email: parcelPayload.email ? '***' : undefined,
-        telephone: parcelPayload.telephone ? '***' : undefined,
-        // From address
-        from_name: parcelPayload.from_name,
-        from_address: parcelPayload.from_address,
-        from_house_number: parcelPayload.from_house_number,
-        from_city: parcelPayload.from_city,
-        from_postal_code: parcelPayload.from_postal_code,
-        from_country: parcelPayload.from_country,
-        from_email: parcelPayload.from_email ? '***' : undefined,
-        from_telephone: parcelPayload.from_telephone ? '***' : undefined,
-        // Other fields
-        order_number: parcelPayload.order_number,
-        weight: parcelPayload.weight,
-        total_order_value: parcelPayload.total_order_value,
-        is_return: parcelPayload.is_return,
-        has_shipment_id: !!parcelPayload.shipment?.id,
-        shipment_id: parcelPayload.shipment?.id,
-      })
+      const logPayload = { ...parcelPayload }
+      if (logPayload.email) logPayload.email = '***'
+      if (logPayload.telephone) logPayload.telephone = '***'
+      if (logPayload.from_email) logPayload.from_email = '***'
+      if (logPayload.from_telephone) logPayload.from_telephone = '***'
+      
+      console.log('📦 FULL RETURN parcel payload (wat wordt verstuurd naar Sendcloud):', JSON.stringify(logPayload, null, 2))
       
       // Validate that all required fields are present
       const requiredToFields = ['name', 'address', 'city', 'postal_code', 'country']
@@ -323,11 +303,24 @@ export async function createParcel(
       }
     }
     
+    // Log de exacte JSON die wordt verstuurd (voor debugging)
+    const requestBody = {
+      parcel: parcelPayload,
+    }
+    
+    if (parcelPayload.is_return) {
+      const debugPayload = JSON.parse(JSON.stringify(requestBody))
+      // Maskeer gevoelige data
+      if (debugPayload.parcel.email) debugPayload.parcel.email = '***'
+      if (debugPayload.parcel.telephone) debugPayload.parcel.telephone = '***'
+      if (debugPayload.parcel.from_email) debugPayload.parcel.from_email = '***'
+      if (debugPayload.parcel.from_telephone) debugPayload.parcel.from_telephone = '***'
+      console.log('📤 EXACT JSON payload naar Sendcloud API:', JSON.stringify(debugPayload, null, 2))
+    }
+    
     const data = await sendcloudFetch('/parcels', {
       method: 'POST',
-      body: JSON.stringify({
-        parcel: parcelPayload,
-      }),
+      body: JSON.stringify(requestBody),
     })
 
     return data.parcel
