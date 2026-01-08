@@ -222,13 +222,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     // Get color-specific images
     const colorImages = product.product_images.filter(img => img.color === selectedColor)
     
-    // If we have color-specific images, use those
+    // Get general images/videos (no color assigned) - these should ALWAYS show
+    const generalImages = product.product_images.filter(img => !img.color)
+    
+    // If we have color-specific images, combine them with general media
     if (colorImages.length > 0) {
-      return colorImages.sort((a, b) => a.position - b.position)
+      // Merge: general media first (like videos), then color-specific images
+      return [...generalImages, ...colorImages].sort((a, b) => a.position - b.position)
     }
     
-    // Otherwise, fall back to general images (no color assigned)
-    const generalImages = product.product_images.filter(img => !img.color)
+    // Otherwise, just show general images
     return generalImages.sort((a, b) => a.position - b.position)
   }
   
