@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
               console.log(`🔄 Attempting to generate label for return: ${returnId}`)
               
               // Check of Sendcloud is geconfigureerd
-              if (!isSendcloudConfigured()) {
+              if (!process.env.SENDCLOUD_PUBLIC_KEY || !process.env.SENDCLOUD_SECRET_KEY) {
                 const errorMsg = 'Sendcloud niet geconfigureerd'
                 console.warn(`⚠️ ${errorMsg}, cannot auto-generate label`)
                 console.warn('   Admin must generate label manually')

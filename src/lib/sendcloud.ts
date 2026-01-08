@@ -639,7 +639,6 @@ export async function createReturnLabel(
       country: moseAddress.country,
       email: moseAddress.email || 'info@mosewear.nl',
       telephone: moseAddress.telephone || '',
-      to_post_number: '',
       
       // From address (klant - waar het pakket vandaan komt) - VERPLICHT voor is_return!
       from_name: customerAddress.name,
@@ -988,7 +987,6 @@ export async function createReturnLabelV2(
     country: (shippingAddress.country || 'NL').toUpperCase(),
     email: order.email || '',
     telephone: shippingAddress.phone || '',
-    to_post_number: '',
     
     // SENDER (MOSE) address for return
     sender_address: 1, // Use default sender address or specify details below

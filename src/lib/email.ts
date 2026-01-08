@@ -1669,9 +1669,9 @@ export async function sendReturnLabelGeneratedEmail(props: {
   customerName: string
   returnId: string
   orderId: string
-  trackingCode: string
-  trackingUrl: string
-  labelUrl: string
+  trackingCode: string | null
+  trackingUrl: string | null
+  labelUrl: string | null
 }) {
   const { customerEmail, customerName, returnId, orderId, trackingCode, trackingUrl, labelUrl } = props
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
@@ -1762,12 +1762,12 @@ ${await createEmailFooter(siteUrl)}
       to: [customerEmail],
       subject: `Je retourlabel is klaar #${returnId.slice(0, 8).toUpperCase()} - MOSE`,
       html: htmlContent,
-      attachments: [
+      attachments: labelUrl ? [
         {
           filename: `retourlabel-${returnId.slice(0, 8)}.pdf`,
           path: labelUrl,
         },
-      ],
+      ] : [],
     })
 
     if (error) {

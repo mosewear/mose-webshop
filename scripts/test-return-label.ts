@@ -6,7 +6,7 @@
  * Dit script test de retourlabel generatie zonder Stripe betaling
  */
 
-import { createReturnLabel, isSendcloudConfigured } from '../src/lib/sendcloud'
+import { createReturnLabelSimple } from '../src/lib/sendcloud-return-simple'
 
 // Mock order data (zoals het in de database staat)
 const mockOrder = {
@@ -44,7 +44,7 @@ async function testReturnLabel() {
   console.log('================================\n')
 
   // Check Sendcloud config
-  if (!isSendcloudConfigured()) {
+  if (!process.env.SENDCLOUD_PUBLIC_KEY || !process.env.SENDCLOUD_SECRET_KEY) {
     console.error('❌ Sendcloud niet geconfigureerd!')
     console.error('   Zorg dat SENDCLOUD_PUBLIC_KEY en SENDCLOUD_SECRET_KEY in .env.local staan')
     process.exit(1)
@@ -66,17 +66,17 @@ async function testReturnLabel() {
   try {
     console.log('🔄 Attempting to create return label...\n')
     
-    const labelData = await createReturnLabel(
+    const labelData = await createReturnLabelSimple(
       testReturnId,
       mockOrder as any,
       mockReturnItems as any[]
     )
 
     console.log('\n✅ SUCCESS! Label created:')
+    console.log('   Parcel ID:', labelData.parcel_id)
     console.log('   Label URL:', labelData.label_url)
-    console.log('   Tracking code:', labelData.tracking_code)
+    console.log('   Tracking number:', labelData.tracking_number)
     console.log('   Tracking URL:', labelData.tracking_url)
-    console.log('   Sendcloud Return ID:', labelData.sendcloud_return_id)
     
     return labelData
   } catch (error: any) {

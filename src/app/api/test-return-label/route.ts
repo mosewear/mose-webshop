@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     console.log('✅ ==========================================')
     console.log('   Parcel ID:', labelData.parcel_id)
     console.log('   Label URL:', labelData.label_url || 'Not available yet')
-    console.log('   Tracking code:', labelData.tracking_code || 'Not available yet')
+    console.log('   Tracking number:', labelData.tracking_number || 'Not available yet')
     console.log('   Tracking URL:', labelData.tracking_url || 'Not available yet')
     console.log('')
     
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       data: {
         parcel_id: labelData.parcel_id,
         label_url: labelData.label_url,
-        tracking_code: labelData.tracking_code,
+        tracking_number: labelData.tracking_number,
         tracking_url: labelData.tracking_url,
       },
       testReturnId,
