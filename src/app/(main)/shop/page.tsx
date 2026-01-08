@@ -21,6 +21,7 @@ interface Product {
     url: string
     alt_text: string | null
     is_primary: boolean
+    media_type?: 'image' | 'video'
   }>
   variants?: Array<{
     stock_quantity: number
@@ -89,7 +90,7 @@ export default function ShopPage() {
         .select(`
           *,
           category:categories(name, slug),
-          images:product_images(url, alt_text, is_primary),
+          images:product_images(url, alt_text, is_primary, media_type),
           variants:product_variants(stock_quantity, is_available)
         `)
         .order('created_at', { ascending: false })
@@ -148,8 +149,22 @@ export default function ShopPage() {
   }
 
   const getPrimaryImage = (product: Product) => {
-    const primaryImg = product.images?.find(img => img.is_primary)
-    return primaryImg?.url || product.images?.[0]?.url || '/placeholder-product.png'
+    // Eerst proberen primary te vinden (image OF video)
+    const primaryMedia = product.images?.find(img => img.is_primary)
+    
+    // Als primary een video is, gebruik de eerste image als fallback voor thumbnail
+    if (primaryMedia?.url) {
+      // Als het een video is, zoek eerste image als thumbnail
+      if (primaryMedia.media_type === 'video') {
+        const firstImage = product.images?.find(img => img.media_type === 'image')
+        return firstImage?.url || primaryMedia.url  // Fallback to video URL if no images
+      }
+      return primaryMedia.url
+    }
+    
+    // Geen primary, pak eerste media (bij voorkeur een image)
+    const firstImage = product.images?.find(img => img.media_type === 'image')
+    return firstImage?.url || product.images?.[0]?.url || '/placeholder-product.png'
   }
 
   const handleApplyFilters = () => {
