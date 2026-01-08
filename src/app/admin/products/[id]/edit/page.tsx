@@ -16,6 +16,7 @@ interface Product {
   slug: string
   description: string | null
   base_price: number
+  sale_price: number | null
   category_id: string | null
   meta_title: string | null
   meta_description: string | null
@@ -35,6 +36,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     slug: '',
     description: '',
     base_price: '',
+    sale_price: '',
     category_id: '',
     meta_title: '',
     meta_description: '',
@@ -72,6 +74,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           slug: data.slug,
           description: data.description || '',
           base_price: data.base_price.toString(),
+          sale_price: data.sale_price?.toString() || '',
           category_id: data.category_id || '',
           meta_title: data.meta_title || '',
           meta_description: data.meta_description || '',
@@ -95,6 +98,19 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         throw new Error('Vul alle verplichte velden in')
       }
 
+      // Valideer sale price
+      if (formData.sale_price) {
+        const salePrice = parseFloat(formData.sale_price)
+        const basePrice = parseFloat(formData.base_price)
+        
+        if (salePrice < 0) {
+          throw new Error('Sale prijs kan niet negatief zijn')
+        }
+        if (salePrice >= basePrice) {
+          throw new Error('Sale prijs moet lager zijn dan de normale prijs')
+        }
+      }
+
       // Update product
       const { error: updateError } = await supabase
         .from('products')
@@ -103,6 +119,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           slug: formData.slug,
           description: formData.description || null,
           base_price: parseFloat(formData.base_price),
+          sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
           category_id: formData.category_id || null,
           meta_title: formData.meta_title || null,
           meta_description: formData.meta_description || null,
@@ -231,7 +248,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             {/* Base Price */}
             <div>
               <label htmlFor="base_price" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                Basisprijs (€) *
+                Normale Prijs (€) *
               </label>
               <input
                 type="number"
@@ -246,25 +263,72 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               />
             </div>
 
-            {/* Category */}
+            {/* Sale Price */}
             <div>
-              <label htmlFor="category_id" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                Categorie
+              <label htmlFor="sale_price" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Sale Prijs (€)
               </label>
-              <select
-                id="category_id"
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              <input
+                type="number"
+                id="sale_price"
+                step="0.01"
+                min="0"
+                value={formData.sale_price}
+                onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-              >
-                <option value="">Geen categorie</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="59.99"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Laat leeg voor geen korting
+              </p>
             </div>
+          </div>
+
+          {/* Sale Preview */}
+          {formData.sale_price && formData.base_price && parseFloat(formData.sale_price) < parseFloat(formData.base_price) && parseFloat(formData.sale_price) > 0 && (
+            <div className="bg-green-50 border-2 border-green-200 p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-red-600 text-white px-3 py-1 text-sm font-bold uppercase tracking-wider">
+                  {Math.round((1 - parseFloat(formData.sale_price) / parseFloat(formData.base_price)) * 100)}% KORTING
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-green-800 uppercase tracking-wide mb-2">
+                    Korting Actief
+                  </p>
+                  <div className="flex items-baseline gap-3">
+                    <p className="text-3xl font-bold text-red-600">
+                      €{parseFloat(formData.sale_price).toFixed(2)}
+                    </p>
+                    <p className="text-xl line-through text-gray-400">
+                      €{parseFloat(formData.base_price).toFixed(2)}
+                    </p>
+                  </div>
+                  <p className="text-sm text-green-600 font-semibold mt-1">
+                    Klant bespaart: €{(parseFloat(formData.base_price) - parseFloat(formData.sale_price)).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Category */}
+          <div>
+            <label htmlFor="category_id" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Categorie
+            </label>
+            <select
+              id="category_id"
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+            >
+              <option value="">Geen categorie</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* SEO Section */}
