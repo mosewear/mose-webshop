@@ -94,6 +94,39 @@ function VideoThumbnail({
     }
   }, [])
 
+  // Intersection Observer voor mobiel autoplay (alleen als 50%+ zichtbaar)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !isMobile || isSelected) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            // Video is 50%+ zichtbaar = autoplay
+            video.play().catch(() => {
+              // Silent fail als autoplay geblokkeerd is
+            })
+          } else {
+            // Video is <50% zichtbaar of uit beeld = pause
+            video.pause()
+          }
+        })
+      },
+      { 
+        threshold: 0.5, // Trigger bij 50% visibility
+        rootMargin: '0px' // Geen buffer
+      }
+    )
+
+    observer.observe(video)
+    
+    return () => {
+      observer.disconnect()
+    }
+  }, [isMobile, isSelected])
+
+  // Desktop hover autoplay
   useEffect(() => {
     if (!videoRef.current || isMobile) return
 
