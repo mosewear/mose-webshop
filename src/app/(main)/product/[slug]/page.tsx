@@ -79,18 +79,22 @@ function VideoThumbnail({
     if (!video) return
 
     // Event listeners om te tracken of video speelt
-    const handlePlay = () => setIsPlaying(true)
+    // Gebruik 'playing' in plaats van 'play' voor betrouwbaarder detection
+    const handlePlaying = () => setIsPlaying(true)
     const handlePause = () => setIsPlaying(false)
     const handleEnded = () => setIsPlaying(false)
+    const handleWaiting = () => setIsPlaying(false)
 
-    video.addEventListener('play', handlePlay)
+    video.addEventListener('playing', handlePlaying)  // Wordt gefired zodra video echt speelt
     video.addEventListener('pause', handlePause)
     video.addEventListener('ended', handleEnded)
+    video.addEventListener('waiting', handleWaiting)  // Buffering
 
     return () => {
-      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('playing', handlePlaying)
       video.removeEventListener('pause', handlePause)
       video.removeEventListener('ended', handleEnded)
+      video.removeEventListener('waiting', handleWaiting)
     }
   }, [])
 
