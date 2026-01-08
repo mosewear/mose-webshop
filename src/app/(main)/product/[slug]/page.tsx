@@ -200,7 +200,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
-  const mainVideoRef = useRef<HTMLVideoElement>(null)
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
@@ -507,7 +506,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               >
                 {displayImages[selectedImage]?.media_type === 'video' ? (
                   <video
-                    ref={mainVideoRef}
                     src={displayImages[selectedImage]?.url}
                     controls
                     playsInline
