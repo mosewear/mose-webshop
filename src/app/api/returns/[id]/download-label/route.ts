@@ -53,11 +53,19 @@ export async function GET(
     console.log('📋 Order found, user_id:', order.user_id)
 
     // Check of user eigenaar is van de return
-    const isOwner = order.user_id === user.id
+    // Voor oude orders of guest orders: check ook op email
+    const { data: userData } = await supabase.auth.getUser()
+    const userEmail = userData?.user?.email
+    
+    const isOwner = order.user_id === user.id || (order.email === userEmail && userEmail)
     
     console.log('🔐 Authorization check:', {
       currentUserId: user.id,
+      currentUserEmail: userEmail,
       orderUserId: order.user_id,
+      orderEmail: order.email,
+      matchById: order.user_id === user.id,
+      matchByEmail: order.email === userEmail,
       isOwner,
     })
 
