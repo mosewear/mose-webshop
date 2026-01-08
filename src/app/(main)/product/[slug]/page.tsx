@@ -237,7 +237,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       video.removeEventListener('ended', handleEnded)
       video.removeEventListener('waiting', handleWaiting)
     }
-  }, [displayImages[selectedImage]])
+  }, [selectedImage])
 
   const loadSettings = async () => {
     try {
