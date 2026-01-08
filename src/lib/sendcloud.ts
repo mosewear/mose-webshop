@@ -90,17 +90,29 @@ export interface SendcloudParcelItem {
 }
 
 export interface CreateParcelRequest {
-  name: string
+  name: string // To address (where parcel is going)
   company_name?: string
-  address: string
+  address: string // To address
   address_2?: string
   house_number?: string
-  city: string
-  postal_code: string
-  country: string
+  city: string // To city
+  postal_code: string // To postal code
+  country: string // To country
   email: string
   telephone?: string
   order_number: string
+  
+  // From address (required for returns)
+  from_name?: string
+  from_company_name?: string
+  from_address?: string
+  from_address_2?: string
+  from_house_number?: string
+  from_city?: string
+  from_postal_code?: string
+  from_country?: string
+  from_email?: string
+  from_telephone?: string
   
   // Parcel details
   weight: string // totaal gewicht in kg
@@ -363,6 +375,28 @@ export async function createReturnLabel(
   try {
     const shippingAddress = order.shipping_address as any
     
+    // Haal MOSE retour adres op uit settings
+    const { getSiteSettings } = await import('./settings')
+    let settings
+    try {
+      settings = await getSiteSettings()
+    } catch (error) {
+      console.error('Error fetching site settings for return label:', error)
+      // Use defaults if settings fetch fails
+      settings = {
+        contact_address: 'Helper Brink 27a, 9722 EG Groningen',
+        contact_email: 'info@mosewear.nl',
+        contact_phone: '+31 50 211 1931',
+      }
+    }
+    
+    // Parse MOSE adres (bijv. "Helper Brink 27a, 9722 EG Groningen")
+    const moseAddressParts = settings.contact_address.split(',')
+    const moseStreet = moseAddressParts[0]?.trim() || 'Helper Brink 27a'
+    const mosePostalCity = moseAddressParts[1]?.trim() || '9722 EG Groningen'
+    const mosePostalCode = mosePostalCity.split(' ').slice(0, 2).join(' ') || '9722 EG'
+    const moseCity = mosePostalCity.split(' ').slice(2).join(' ') || 'Groningen'
+    
     // Bereken totaal gewicht (schatting op basis van return items)
     let totalWeight = 0
     returnItems.forEach((returnItem: any) => {
@@ -377,8 +411,8 @@ export async function createReturnLabel(
     // Minimaal 0.5kg, afgerond naar boven
     totalWeight = Math.max(0.5, Math.ceil(totalWeight * 10) / 10)
 
-    // Format adres (klant adres - waar het pakket vandaan komt)
-    const sendcloudAddress = formatAddressForSendcloud({
+    // Format klant adres (from address - waar het pakket vandaan komt)
+    const customerAddress = formatAddressForSendcloud({
       name: shippingAddress.name,
       address: shippingAddress.address,
       city: shippingAddress.city,
@@ -386,6 +420,17 @@ export async function createReturnLabel(
       country: shippingAddress.country || 'NL',
       email: order.email,
       phone: shippingAddress.phone,
+    })
+    
+    // Format MOSE adres (to address - waar het pakket naartoe gaat)
+    const moseAddress = formatAddressForSendcloud({
+      name: 'MOSE Wear',
+      address: moseStreet,
+      city: moseCity,
+      postalCode: mosePostalCode,
+      country: 'NL',
+      email: settings.contact_email,
+      phone: settings.contact_phone,
     })
 
     // Bepaal shipping method (gebruik standaard DHL)
@@ -404,14 +449,27 @@ export async function createReturnLabel(
     })
 
     // Maak retour parcel aan
+    // Voor returns: from_* = klant adres (waar het pakket vandaan komt)
+    //              to_* = MOSE adres (waar het pakket naartoe gaat)
     const parcelData: CreateParcelRequest = {
-      name: sendcloudAddress.name,
-      address: sendcloudAddress.address,
-      city: sendcloudAddress.city,
-      postal_code: sendcloudAddress.postal_code,
-      country: sendcloudAddress.country,
-      email: sendcloudAddress.email,
-      telephone: sendcloudAddress.telephone,
+      // To address (MOSE - waar het pakket naartoe gaat)
+      name: moseAddress.name,
+      address: moseAddress.address,
+      city: moseAddress.city,
+      postal_code: moseAddress.postal_code,
+      country: moseAddress.country,
+      email: moseAddress.email,
+      telephone: moseAddress.telephone,
+      
+      // From address (klant - waar het pakket vandaan komt) - VERPLICHT voor returns
+      from_name: customerAddress.name,
+      from_address: customerAddress.address,
+      from_city: customerAddress.city,
+      from_postal_code: customerAddress.postal_code,
+      from_country: customerAddress.country,
+      from_email: customerAddress.email,
+      from_telephone: customerAddress.telephone,
+      
       order_number: `RETURN-${returnId.slice(0, 8).toUpperCase()}`,
       weight: totalWeight.toFixed(1),
       total_order_value: totalOrderValue.toFixed(2),
