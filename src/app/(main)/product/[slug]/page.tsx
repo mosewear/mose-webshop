@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -37,6 +37,8 @@ interface ProductImage {
   is_primary: boolean
   color: string | null
   media_type: 'image' | 'video'
+  video_thumbnail_url?: string | null
+  video_duration?: number | null
 }
 
 interface ProductVariant {
@@ -48,6 +50,79 @@ interface ProductVariant {
   stock_quantity: number
   price_adjustment: number
   is_available: boolean
+}
+
+// Video Thumbnail Component met autoplay on hover
+function VideoThumbnail({ 
+  videoUrl, 
+  posterUrl, 
+  isSelected, 
+  onClick 
+}: { 
+  videoUrl: string
+  posterUrl?: string | null
+  isSelected: boolean
+  onClick: () => void 
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isHovering, setIsHovering] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    // Detecteer mobiel
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+  }, [])
+
+  useEffect(() => {
+    if (!videoRef.current || isMobile) return
+
+    if (isHovering && !isSelected) {
+      // Start autoplay on hover (alleen desktop)
+      videoRef.current.play().catch(() => {
+        // Silent fail als autoplay geblokkeerd is
+      })
+    } else {
+      // Pause en reset
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
+  }, [isHovering, isSelected, isMobile])
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => !isMobile && setIsHovering(true)}
+      onMouseLeave={() => !isMobile && setIsHovering(false)}
+      className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
+        isSelected
+          ? 'border-brand-primary scale-95'
+          : 'border-gray-300 hover:border-black'
+      }`}
+    >
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        poster={posterUrl || undefined}
+        className="w-full h-full object-cover object-center"
+        preload="metadata"
+        muted
+        playsInline
+        loop
+      />
+      {/* Play icon - verdwijnt bij hover (desktop) */}
+      {(!isHovering || isMobile) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
+          <svg 
+            className="w-8 h-8 text-white/80" 
+            fill="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      )}
+    </button>
+  )
 }
 
 export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -416,42 +491,34 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {/* Thumbnails - 4 on mobile, 5 on desktop */}
               {displayImages.length > 1 && (
                 <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
-                  {displayImages.map((image, index) => (
-                    <button
-                      key={image.id}
-                      onClick={() => setSelectedImage(index)}
-                      className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
-                        selectedImage === index
-                          ? 'border-brand-primary scale-95'
-                          : 'border-gray-300 hover:border-black'
-                      }`}
-                    >
-                      {image.media_type === 'video' ? (
-                        <>
-                          <video
-                            src={image.url}
-                            className="w-full h-full object-cover"
-                            preload="metadata"
-                          />
-                          {/* Play Icon Overlay */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/90 flex items-center justify-center">
-                              <svg className="w-4 h-4 md:w-5 md:h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                              </svg>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
+                  {displayImages.map((media, index) => (
+                    media.media_type === 'video' ? (
+                      <VideoThumbnail
+                        key={media.id}
+                        videoUrl={media.url}
+                        posterUrl={media.video_thumbnail_url}
+                        isSelected={selectedImage === index}
+                        onClick={() => setSelectedImage(index)}
+                      />
+                    ) : (
+                      <button
+                        key={media.id}
+                        onClick={() => setSelectedImage(index)}
+                        className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
+                          selectedImage === index
+                            ? 'border-brand-primary scale-95'
+                            : 'border-gray-300 hover:border-black'
+                        }`}
+                      >
                         <Image
-                          src={image.url}
-                          alt={image.alt_text || product.name}
+                          src={media.url}
+                          alt={media.alt_text || product.name}
                           fill
                           sizes="(max-width: 768px) 25vw, 12vw"
                           className="object-cover object-center"
                         />
-                      )}
-                    </button>
+                      </button>
+                    )
                   ))}
                 </div>
               )}
