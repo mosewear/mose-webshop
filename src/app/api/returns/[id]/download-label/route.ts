@@ -18,20 +18,25 @@ export async function GET(
     // Check authentication
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('❌ No user authenticated')
+      return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
     }
 
-    // Haal return op
+    console.log('🔍 Checking authorization for user:', user.id)
+
+    // Haal return op met order_id
     const { data: returnRecord, error: fetchError } = await supabase
       .from('returns')
-      .select('*')
+      .select('order_id, return_label_url')
       .eq('id', id)
       .single()
 
     if (fetchError || !returnRecord) {
-      console.error('Return not found:', fetchError)
+      console.error('❌ Return not found:', id, fetchError)
       return NextResponse.json({ error: 'Return niet gevonden' }, { status: 404 })
     }
+
+    console.log('📦 Found return, order_id:', returnRecord.order_id)
 
     // Haal order op om user_id te checken
     const { data: order, error: orderError } = await supabase
@@ -41,46 +46,53 @@ export async function GET(
       .single()
 
     if (orderError || !order) {
-      console.error('Order not found:', orderError)
+      console.error('❌ Order not found:', returnRecord.order_id, orderError)
       return NextResponse.json({ error: 'Order niet gevonden' }, { status: 404 })
     }
+
+    console.log('📋 Order found, user_id:', order.user_id)
 
     // Check of user eigenaar is van de return
     const isOwner = order.user_id === user.id
     
-    // Check of user admin is
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    
-    const isAdmin = profile?.role === 'admin'
-
-    console.log('Authorization check:', {
-      userId: user.id,
+    console.log('🔐 Authorization check:', {
+      currentUserId: user.id,
       orderUserId: order.user_id,
       isOwner,
-      isAdmin,
     })
 
-    if (!isOwner && !isAdmin) {
-      console.error('User not authorized to download this label')
-      return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 403 })
+    // Check of user admin is (alleen als niet owner)
+    let isAdmin = false
+    if (!isOwner) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      isAdmin = profile?.role === 'admin'
+      console.log('👤 Admin check:', isAdmin)
     }
+
+    if (!isOwner && !isAdmin) {
+      console.error('❌ User not authorized:', {
+        userId: user.id,
+        orderUserId: order.user_id,
+      })
+      return NextResponse.json({ error: 'Niet geautoriseerd voor deze retour' }, { status: 403 })
+    }
+
+    console.log('✅ User authorized!')
 
     // Check of label beschikbaar is
     if (!returnRecord.return_label_url) {
+      console.log('⏳ Label not yet available')
       return NextResponse.json({ 
         error: 'Retourlabel nog niet beschikbaar. Probeer het over een paar minuten opnieuw.' 
       }, { status: 404 })
     }
 
-    console.log('📥 Downloading return label via proxy:', {
-      returnId: id,
-      labelUrl: returnRecord.return_label_url,
-      userId: user.id,
-    })
+    console.log('📥 Downloading label from Sendcloud:', returnRecord.return_label_url)
 
     // Haal PDF op van Sendcloud met credentials
     const labelUrl = returnRecord.return_label_url
