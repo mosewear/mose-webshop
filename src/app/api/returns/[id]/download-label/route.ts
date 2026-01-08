@@ -50,22 +50,17 @@ export async function GET(
       return NextResponse.json({ error: 'Order niet gevonden' }, { status: 404 })
     }
 
-    console.log('📋 Order found, user_id:', order.user_id)
+    console.log('📋 Order found, user_id:', order.user_id, 'email:', order.email)
 
     // Check of user eigenaar is van de return
-    // Voor oude orders of guest orders: check ook op email
-    const { data: userData } = await supabase.auth.getUser()
-    const userEmail = userData?.user?.email
-    
-    const isOwner = order.user_id === user.id || (order.email === userEmail && userEmail)
+    // Match op user_id (als die bestaat) OF op email
+    const isOwner = (order.user_id && order.user_id === user.id) || (order.email === user.email)
     
     console.log('🔐 Authorization check:', {
       currentUserId: user.id,
-      currentUserEmail: userEmail,
+      currentUserEmail: user.email,
       orderUserId: order.user_id,
       orderEmail: order.email,
-      matchById: order.user_id === user.id,
-      matchByEmail: order.email === userEmail,
       isOwner,
     })
 
