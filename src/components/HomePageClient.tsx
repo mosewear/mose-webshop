@@ -305,9 +305,36 @@ export default function HomePageClient({
                       <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
                         {product.name}
                       </h3>
-                      <p className="text-2xl font-bold text-brand-primary">
-                        €{typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
-                      </p>
+                      {(() => {
+                        const hasDiscount = product.sale_price && product.sale_price < product.price
+                        const discountPercentage = hasDiscount 
+                          ? Math.round(((product.price - product.sale_price) / product.price) * 100) 
+                          : 0
+
+                        if (hasDiscount) {
+                          return (
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-center gap-2">
+                                <p className="text-2xl font-bold text-red-600">
+                                  €{product.sale_price.toFixed(2)}
+                                </p>
+                                <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-red-600 text-white">
+                                  -{discountPercentage}%
+                                </span>
+                              </div>
+                              <p className="text-base text-gray-500 line-through">
+                                €{product.price.toFixed(2)}
+                              </p>
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <p className="text-2xl font-bold text-brand-primary">
+                            €{typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+                          </p>
+                        )
+                      })()}
                       
                       {/* Available Sizes - from variants */}
                       {product.variants && product.variants.length > 0 && (

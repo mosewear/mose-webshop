@@ -18,6 +18,7 @@ interface Product {
   slug: string
   description: string
   base_price: number
+  sale_price: number | null
   category_id: string
   meta_title: string
   meta_description: string
@@ -586,9 +587,48 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {product.categories.name}
                 </Link>
                 <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3">{product.name}</h1>
+                
+                {/* Price Display met Korting */}
                 <div className="mb-2">
-                  <p className="text-xl md:text-2xl font-bold">€{finalPrice.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500">Incl. BTW</p>
+                  {(() => {
+                    const basePrice = product.base_price + (selectedVariant?.price_adjustment || 0)
+                    const salePrice = product.sale_price ? product.sale_price + (selectedVariant?.price_adjustment || 0) : null
+                    const hasDiscount = salePrice && salePrice < basePrice
+                    const discountPercentage = hasDiscount 
+                      ? Math.round(((basePrice - salePrice) / basePrice) * 100) 
+                      : 0
+
+                    if (hasDiscount) {
+                      return (
+                        <>
+                          <div className="flex items-center gap-3 mb-1">
+                            <p className="text-xl md:text-2xl font-bold text-red-600">
+                              €{salePrice.toFixed(2)}
+                            </p>
+                            <span className="inline-flex items-center px-3 py-1 text-sm font-bold bg-red-600 text-white">
+                              -{discountPercentage}% KORTING
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-base text-gray-500 line-through">
+                              €{basePrice.toFixed(2)}
+                            </p>
+                            <p className="text-sm text-green-600 font-semibold">
+                              Je bespaart €{(basePrice - salePrice).toFixed(2)}
+                            </p>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">Incl. BTW</p>
+                        </>
+                      )
+                    }
+
+                    return (
+                      <>
+                        <p className="text-xl md:text-2xl font-bold">€{basePrice.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Incl. BTW</p>
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
 
@@ -1032,7 +1072,18 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         </div>
                         <div className="p-3 md:p-4">
                           <h3 className="font-bold text-sm md:text-base mb-1 line-clamp-2">{relProd.name}</h3>
-                          <p className="text-lg font-bold">€{relProd.base_price.toFixed(2)}</p>
+                          {(() => {
+                            const hasDiscount = relProd.sale_price && relProd.sale_price < relProd.base_price
+                            if (hasDiscount) {
+                              return (
+                                <div className="flex items-center gap-2">
+                                  <p className="text-lg font-bold text-red-600">€{relProd.sale_price.toFixed(2)}</p>
+                                  <p className="text-sm text-gray-500 line-through">€{relProd.base_price.toFixed(2)}</p>
+                                </div>
+                              )
+                            }
+                            return <p className="text-lg font-bold">€{relProd.base_price.toFixed(2)}</p>
+                          })()}
                         </div>
                       </div>
                     </Link>

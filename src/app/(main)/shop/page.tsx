@@ -11,6 +11,7 @@ interface Product {
   name: string
   slug: string
   base_price: number
+  sale_price: number | null
   category_id: string | null
   created_at: string
   category?: {
@@ -572,6 +573,22 @@ export default function ShopPage() {
                             </div>
                           )}
 
+                          {/* Discount Badge */}
+                          {(() => {
+                            const hasDiscount = product.sale_price && product.sale_price < product.base_price
+                            if (!hasDiscount) return null
+                            
+                            const discountPercentage = Math.round(
+                              ((product.base_price - product.sale_price) / product.base_price) * 100
+                            )
+                            
+                            return (
+                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} left-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:left-4 bg-green-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider`}>
+                                -{discountPercentage}% KORTING
+                              </div>
+                            )
+                          })()}
+
                           {/* Category Badge - Hidden on mobile */}
                           {product.category && (
                             <div className="hidden md:block absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
@@ -596,9 +613,28 @@ export default function ShopPage() {
                             {product.name}
                           </h3>
                           <div className="flex items-center justify-between">
-                            <span className="text-base md:text-2xl font-bold text-brand-primary">
-                              €{product.base_price.toFixed(2)}
-                            </span>
+                            {(() => {
+                              const hasDiscount = product.sale_price && product.sale_price < product.base_price
+                              
+                              if (hasDiscount) {
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-base md:text-2xl font-bold text-red-600">
+                                      €{product.sale_price.toFixed(2)}
+                                    </span>
+                                    <span className="text-xs md:text-sm text-gray-500 line-through">
+                                      €{product.base_price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                )
+                              }
+                              
+                              return (
+                                <span className="text-base md:text-2xl font-bold text-brand-primary">
+                                  €{product.base_price.toFixed(2)}
+                                </span>
+                              )
+                            })()}
                           </div>
                         </div>
                       </div>

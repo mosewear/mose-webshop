@@ -151,7 +151,7 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
     ] = await Promise.all([
       supabase
         .from('products')
-        .select('id, name, slug, base_price')
+        .select('id, name, slug, base_price, sale_price')
         .in('id', validIds),
       supabase
         .from('product_images')
@@ -194,6 +194,7 @@ export async function getFeaturedProducts(productIds: (string | null)[]) {
         name: p.name,
         slug: p.slug,
         price: p.base_price,
+        sale_price: p.sale_price,
         stock_quantity: totalStock, // Calculated from variants
         image_url: primaryImage?.url || productImages[0]?.url || '/placeholder.png',
         images: productImages,

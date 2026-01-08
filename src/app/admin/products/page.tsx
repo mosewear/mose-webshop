@@ -11,6 +11,7 @@ interface Product {
   slug: string
   description: string
   base_price: number
+  sale_price: number | null
   category_id: string | null
   created_at: string
   updated_at: string
@@ -116,14 +117,14 @@ export default function AdminProductsPage() {
           <div className="text-sm text-gray-600 uppercase tracking-wide">Met Categorie</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-orange-600 mb-2">
-            {products.filter(p => !p.category_id).length}
+          <div className="text-3xl font-bold text-red-600 mb-2">
+            {products.filter(p => p.sale_price && p.sale_price < p.base_price).length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Zonder Categorie</div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Met Korting</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
           <div className="text-3xl font-bold text-gray-800 mb-2">
-            €{products.reduce((sum, p) => sum + Number(p.base_price), 0).toFixed(2)}
+            €{products.reduce((sum, p) => sum + Number(p.sale_price || p.base_price), 0).toFixed(2)}
           </div>
           <div className="text-sm text-gray-600 uppercase tracking-wide">Totale Waarde</div>
         </div>
@@ -216,7 +217,36 @@ export default function AdminProductsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">€{Number(product.base_price).toFixed(2)}</div>
+                      {(() => {
+                        const hasDiscount = product.sale_price && product.sale_price < product.base_price
+                        const discountPercentage = hasDiscount 
+                          ? Math.round(((product.base_price - product.sale_price) / product.base_price) * 100) 
+                          : 0
+
+                        if (hasDiscount) {
+                          return (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-red-600">
+                                  €{Number(product.sale_price).toFixed(2)}
+                                </span>
+                                <span className="inline-flex items-center px-2 py-0.5 text-xs font-bold bg-red-600 text-white">
+                                  -{discountPercentage}%
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500 line-through">
+                                €{Number(product.base_price).toFixed(2)}
+                              </span>
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <div className="text-sm font-bold text-gray-900">
+                            €{Number(product.base_price).toFixed(2)}
+                          </div>
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(product.created_at).toLocaleDateString('nl-NL')}
