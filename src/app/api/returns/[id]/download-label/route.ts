@@ -24,22 +24,29 @@ export async function GET(
     // Haal return op
     const { data: returnRecord, error: fetchError } = await supabase
       .from('returns')
-      .select(`
-        *,
-        orders!inner(
-          user_id,
-          email
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single()
 
     if (fetchError || !returnRecord) {
+      console.error('Return not found:', fetchError)
       return NextResponse.json({ error: 'Return niet gevonden' }, { status: 404 })
     }
 
+    // Haal order op om user_id te checken
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('user_id, email')
+      .eq('id', returnRecord.order_id)
+      .single()
+
+    if (orderError || !order) {
+      console.error('Order not found:', orderError)
+      return NextResponse.json({ error: 'Order niet gevonden' }, { status: 404 })
+    }
+
     // Check of user eigenaar is van de return
-    const isOwner = returnRecord.orders.user_id === user.id
+    const isOwner = order.user_id === user.id
     
     // Check of user admin is
     const { data: profile } = await supabase
@@ -50,7 +57,15 @@ export async function GET(
     
     const isAdmin = profile?.role === 'admin'
 
+    console.log('Authorization check:', {
+      userId: user.id,
+      orderUserId: order.user_id,
+      isOwner,
+      isAdmin,
+    })
+
     if (!isOwner && !isAdmin) {
+      console.error('User not authorized to download this label')
       return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 403 })
     }
 
