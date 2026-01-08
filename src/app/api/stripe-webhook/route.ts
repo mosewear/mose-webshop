@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
-import { createReturnLabel, isSendcloudConfigured } from '@/lib/sendcloud'
+import { createReturnLabelSimple } from '@/lib/sendcloud-return-simple'
 import { sendReturnLabelGeneratedEmail } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
                       console.log(`   Order ID: ${order.id}`)
                       console.log(`   Return items count: ${returnRecord.return_items?.length || 0}`)
                       
-                      const labelData = await createReturnLabel(
+                      const labelData = await createReturnLabelSimple(
                         returnId,
                         order,
                         returnRecord.return_items as any[]
@@ -217,8 +217,8 @@ export async function POST(req: NextRequest) {
                       
                       console.log('   Label data received from Sendcloud:', {
                         hasLabelUrl: !!labelData.label_url,
-                        hasTrackingCode: !!labelData.tracking_code,
-                        sendcloudReturnId: labelData.sendcloud_return_id,
+                        hasTrackingCode: !!labelData.tracking_number,
+                        parcelId: labelData.parcel_id,
                       })
                       
                       // Update return met label informatie
@@ -226,8 +226,8 @@ export async function POST(req: NextRequest) {
                         .from('returns')
                         .update({
                           status: 'return_label_generated',
-                          sendcloud_return_id: labelData.sendcloud_return_id,
-                          return_tracking_code: labelData.tracking_code,
+                          sendcloud_return_id: labelData.parcel_id,
+                          return_tracking_code: labelData.tracking_number,
                           return_tracking_url: labelData.tracking_url,
                           return_label_url: labelData.label_url,
                           label_generated_at: new Date().toISOString(),
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
                         labelGenerationSuccess = true
                         console.log('✅ Return label generated automatically')
                         console.log(`   Label URL: ${labelData.label_url}`)
-                        console.log(`   Tracking code: ${labelData.tracking_code}`)
+                        console.log(`   Tracking code: ${labelData.tracking_number}`)
                         
                         // Verstuur email naar klant met label (niet blokkerend)
                         try {
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
                               customerName: shippingAddress?.name || 'Klant',
                               returnId: returnId,
                               orderId: updatedReturn.order_id,
-                              trackingCode: labelData.tracking_code,
+                              trackingCode: labelData.tracking_number,
                               trackingUrl: labelData.tracking_url,
                               labelUrl: labelData.label_url,
                             })

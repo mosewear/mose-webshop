@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createReturnLabel, isSendcloudConfigured } from '@/lib/sendcloud'
+import { createReturnLabelSimple } from '@/lib/sendcloud-return-simple'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { sendReturnLabelGeneratedEmail } from '@/lib/email'
 
@@ -46,7 +46,7 @@ export async function POST(
       console.log('✅ Webhook call authenticated')
     }
 
-    if (!isSendcloudConfigured()) {
+    if (!process.env.SENDCLOUD_PUBLIC_KEY || !process.env.SENDCLOUD_SECRET_KEY) {
       return NextResponse.json(
         { error: 'Sendcloud niet geconfigureerd' },
         { status: 500 }
@@ -93,8 +93,8 @@ export async function POST(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    // Genereer retourlabel
-    const labelData = await createReturnLabel(
+    // Genereer retourlabel (gewoon normaal label maar naar MOSE!)
+    const labelData = await createReturnLabelSimple(
       id,
       order,
       returnRecord.return_items as any[]
@@ -105,8 +105,8 @@ export async function POST(
       .from('returns')
       .update({
         status: 'return_label_generated',
-        sendcloud_return_id: labelData.sendcloud_return_id,
-        return_tracking_code: labelData.tracking_code,
+        sendcloud_return_id: labelData.parcel_id, // Use parcel_id as return_id
+        return_tracking_code: labelData.tracking_number,
         return_tracking_url: labelData.tracking_url,
         return_label_url: labelData.label_url,
         label_generated_at: new Date().toISOString(),
@@ -136,7 +136,7 @@ export async function POST(
           customerName: shippingAddress?.name || 'Klant',
           returnId: id,
           orderId: updatedReturn.order_id,
-          trackingCode: labelData.tracking_code,
+          trackingCode: labelData.tracking_number,
           trackingUrl: labelData.tracking_url,
           labelUrl: labelData.label_url,
         })
@@ -149,7 +149,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       label_url: labelData.label_url,
-      tracking_code: labelData.tracking_code,
+      tracking_code: labelData.tracking_number,
       tracking_url: labelData.tracking_url,
       return: updatedReturn,
     })

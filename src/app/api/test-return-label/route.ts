@@ -1,17 +1,12 @@
 /**
  * TEST ENDPOINT - Voor lokaal testen zonder betaling
  * 
- * Optie 1: Test met bestaande return uit database
- *   POST /api/test-return-label
- *   Body: { returnId: "uuid" }
- * 
- * Optie 2: Test met mock data (geen database nodig)
+ * Test V3 Returns API met mock data
  *   POST /api/test-return-label
  *   Body: { useMockData: true }
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createReturnLabel, isSendcloudConfigured } from '@/lib/sendcloud'
+import { createReturnLabelSimple } from '@/lib/sendcloud-return-simple'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
     }
 
-    if (!isSendcloudConfigured()) {
+    if (!process.env.SENDCLOUD_PUBLIC_KEY || !process.env.SENDCLOUD_SECRET_KEY) {
       return NextResponse.json(
         { error: 'Sendcloud niet geconfigureerd. Zorg dat SENDCLOUD_PUBLIC_KEY en SENDCLOUD_SECRET_KEY in .env.local staan' },
         { status: 500 }
@@ -28,124 +23,100 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { returnId, useMockData } = body
+    const { useMockData } = body
 
-    let order: any
-    let returnItems: any[]
-    let testReturnId: string
-
-    if (useMockData) {
-      // Gebruik mock data - geen database nodig
-      console.log('🧪 TEST: Using MOCK DATA')
-      testReturnId = `test-return-${Date.now()}`
-      
-      // Mock order (zoals het in de database staat)
-      order = {
-        id: 'test-order-' + Date.now(),
-        email: 'test@mosewear.nl',
-        shipping_address: {
-          name: 'Rick Schlimback',
-          address: 'Helper Brink 27a',
-          city: 'Groningen',
-          postalCode: '9722 EG',
-          country: 'NL',
-          phone: '+31 6 43219739',
-        },
-        order_items: [
-          {
-            id: 'test-order-item-1',
-            product_name: 'MOSE T-Shirt',
-            quantity: 1,
-            price_at_purchase: 29.95,
-          },
-        ],
-      }
-
-      returnItems = [
-        {
-          order_item_id: 'test-order-item-1',
-          quantity: 1,
-          product_name: 'MOSE T-Shirt',
-        },
-      ]
-
-      console.log('🧪 Mock Order ID:', order.id)
-      console.log('🧪 Mock Return ID:', testReturnId)
-      console.log('🧪 Mock Customer:', order.shipping_address.name)
-      console.log('🧪 Mock Address:', order.shipping_address.address)
-    } else {
-      // Gebruik echte data uit database
-      if (!returnId) {
-        return NextResponse.json({ 
-          error: 'returnId is verplicht OF gebruik { useMockData: true } voor mock data' 
-        }, { status: 400 })
-      }
-
-      const supabase = await createClient()
-
-      // Haal return op met order en items
-      const { data: returnRecord, error: returnError } = await supabase
-        .from('returns')
-        .select('*, orders!inner(*)')
-        .eq('id', returnId)
-        .single()
-
-      if (returnError || !returnRecord) {
-        return NextResponse.json(
-          { error: 'Return niet gevonden', details: returnError },
-          { status: 404 }
-        )
-      }
-
-      // Haal order items op
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
-        .eq('id', returnRecord.order_id)
-        .single()
-
-      if (orderError || !orderData) {
-        return NextResponse.json(
-          { error: 'Order niet gevonden', details: orderError },
-          { status: 404 }
-        )
-      }
-
-      order = orderData
-      returnItems = returnRecord.return_items as any[]
-      testReturnId = returnId
-
-      console.log('🧪 TEST: Using REAL DATA from database')
-      console.log('🧪 Return ID:', returnId)
-      console.log('🧪 Order ID:', order.id)
+    if (!useMockData) {
+      return NextResponse.json({ 
+        error: 'Deze test endpoint werkt alleen met mock data. Gebruik: { "useMockData": true }' 
+      }, { status: 400 })
     }
 
-    console.log('🧪 Shipping address:', order.shipping_address)
-    console.log('🧪 Return items count:', returnItems.length)
+    console.log('🧪 ==========================================')
+    console.log('🧪 TEST: V3 Returns API with MOCK DATA')
+    console.log('🧪 ==========================================')
+    
+    const testReturnId = `test-return-${Date.now()}`
+    
+    // Mock order (zoals het in de database staat)
+    const mockOrder = {
+      id: 'test-order-' + Date.now(),
+      email: 'test@mosewear.nl',
+      shipping_address: {
+        name: 'Rick Schlimback',
+        address: 'Helper Brink 27a',
+        city: 'Groningen',
+        postalCode: '9722 EG',
+        country: 'NL',
+        phone: '+31643219739',
+      },
+      order_items: [
+        {
+          id: 'test-order-item-1',
+          product_name: 'MOSE T-Shirt',
+          quantity: 1,
+          price_at_purchase: 29.95,
+          sku: 'MOSE-TS-001',
+        },
+      ],
+    }
+
+    const mockReturnItems = [
+      {
+        order_item_id: 'test-order-item-1',
+        quantity: 1,
+        product_name: 'MOSE T-Shirt',
+        return_reason_id: '22',
+        return_reason: 'Past niet goed',
+      },
+    ]
+
+    console.log('🧪 Mock Order ID:', mockOrder.id)
+    console.log('🧪 Mock Return ID:', testReturnId)
+    console.log('🧪 Mock Customer:', mockOrder.shipping_address.name)
+    console.log('🧪 Mock Address:', mockOrder.shipping_address.address)
     console.log('')
 
-    // Test label generatie
-    console.log('🔄 Attempting to create return label...\n')
-    const labelData = await createReturnLabel(
+    // Test SIMPLE method (normaal label maar andersom!)
+    console.log('🔄 Calling createReturnLabelSimple...\n')
+    
+    const labelData = await createReturnLabelSimple(
       testReturnId,
-      order,
-      returnItems
+      mockOrder,
+      mockReturnItems
     )
 
-    console.log('\n✅ TEST: Label created successfully!')
-    console.log('🧪 Label URL:', labelData.label_url)
-    console.log('🧪 Tracking code:', labelData.tracking_code)
-    console.log('🧪 Tracking URL:', labelData.tracking_url)
-
+    console.log('\n✅ ==========================================')
+    console.log('✅ TEST: RETURN LABEL SUCCESS!')
+    console.log('✅ ==========================================')
+    console.log('   Parcel ID:', labelData.parcel_id)
+    console.log('   Label URL:', labelData.label_url || 'Not available yet')
+    console.log('   Tracking code:', labelData.tracking_code || 'Not available yet')
+    console.log('   Tracking URL:', labelData.tracking_url || 'Not available yet')
+    console.log('')
+    
     return NextResponse.json({
       success: true,
-      data: labelData,
-      testReturnId: useMockData ? testReturnId : undefined,
+      message: 'Return label created successfully! 🎉',
+      data: {
+        parcel_id: labelData.parcel_id,
+        label_url: labelData.label_url,
+        tracking_code: labelData.tracking_code,
+        tracking_url: labelData.tracking_url,
+      },
+      testReturnId,
+      testOrderId: mockOrder.id,
     })
   } catch (error: any) {
-    console.error('\n❌ TEST: Error creating return label:', error)
+    console.error('\n❌ ==========================================')
+    console.error('❌ TEST: V3 Returns API test FAILED')
+    console.error('❌ ==========================================')
+    console.error('   Error:', error.message)
+    console.error('   Stack:', error.stack)
+    console.error('')
+    
     return NextResponse.json(
       {
+        success: false,
         error: error.message || 'Fout bij aanmaken test label',
         details: error.stack,
       },
