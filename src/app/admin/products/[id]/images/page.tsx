@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
-import ImageUpload from '@/components/admin/ImageUpload'
+import MediaUpload from '@/components/admin/MediaUpload'
 
 interface Product {
   id: string
@@ -20,6 +20,8 @@ interface ProductImage {
   alt_text: string | null
   position: number
   is_primary: boolean
+  media_type: 'image' | 'video'
+  video_thumbnail_url?: string | null
   created_at: string
 }
 
@@ -109,7 +111,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
 
   const filteredImages = getFilteredImages()
 
-  const handleImageUploaded = async (url: string) => {
+  const handleMediaUploaded = async (url: string, mediaType: 'image' | 'video') => {
     try {
       // Get next position for current color filter
       const relevantImages = selectedColor === null 
@@ -127,6 +129,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           {
             product_id: id,
             url,
+            media_type: mediaType,
             alt_text: product?.name ? `${product.name}${selectedColor ? ` - ${selectedColor}` : ''}` : null,
             position: maxPosition + 1,
             is_primary: isPrimary,
@@ -281,19 +284,19 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 border-2 border-gray-200">
           <div className="text-3xl font-bold text-brand-primary mb-2">{images.length}</div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Totaal Afbeeldingen</div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Totaal Media</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
           <div className="text-3xl font-bold text-blue-600 mb-2">
-            {images.filter(img => !img.color).length}
+            {images.filter(img => img.media_type === 'image').length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Algemeen</div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Afbeeldingen</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-purple-600 mb-2">
-            {images.filter(img => img.color).length}
+          <div className="text-3xl font-bold text-red-600 mb-2">
+            {images.filter(img => img.media_type === 'video').length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Kleur-specifiek</div>
+          <div className="text-sm text-gray-600 uppercase tracking-wide">Video's</div>
         </div>
         <div className="bg-white p-6 border-2 border-gray-200">
           <div className="text-3xl font-bold text-green-600 mb-2">
@@ -345,7 +348,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       {/* Upload Section */}
       <div className="bg-white border-2 border-gray-200 p-6 mb-8">
         <h3 className="text-xl font-bold mb-2">
-          Nieuwe Afbeelding Uploaden
+          Nieuwe Media Uploaden
           {selectedColor && (
             <span className="ml-2 text-brand-primary">voor {selectedColor}</span>
           )}
@@ -355,14 +358,13 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         </h3>
         <p className="text-sm text-gray-500 mb-4">
           {selectedColor 
-            ? `Deze afbeelding wordt alleen getoond als kleur "${selectedColor}" is geselecteerd.`
-            : 'Algemene afbeeldingen worden getoond als fallback voor alle kleuren.'}
+            ? `Deze media wordt alleen getoond als kleur "${selectedColor}" is geselecteerd.`
+            : 'Algemene media wordt getoond als fallback voor alle kleuren.'}
         </p>
-        <ImageUpload
-          bucket="product-images"
-          path={`products/${id}${selectedColor ? `/${selectedColor.toLowerCase().replace(/\s/g, '-')}` : ''}`}
-          onUploadComplete={handleImageUploaded}
-          maxSizeMB={5}
+        <MediaUpload
+          onUploadComplete={handleMediaUploaded}
+          acceptVideo={true}
+          maxSizeMB={100}
         />
       </div>
 
@@ -388,18 +390,34 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
             {filteredImages.map((image, index) => (
               <div key={image.id} className="bg-white border-2 border-gray-200 overflow-hidden group">
-                {/* Image Preview */}
+                {/* Media Preview */}
                 <div className="relative aspect-square bg-gray-100">
-                  <Image
-                    src={image.url}
-                    alt={image.alt_text || 'Product image'}
-                    fill
-                    className="object-cover"
-                  />
+                  {image.media_type === 'video' ? (
+                    <video
+                      src={image.url}
+                      controls
+                      className="w-full h-full object-contain bg-black"
+                      preload="metadata"
+                    />
+                  ) : (
+                    <Image
+                      src={image.url}
+                      alt={image.alt_text || 'Product image'}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
+                  
+                  {/* Media Type Badge */}
+                  {image.media_type === 'video' && (
+                    <div className="absolute top-2 left-2 bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase flex items-center gap-1">
+                      🎬 VIDEO
+                    </div>
+                  )}
                   
                   {/* Primary Badge */}
                   {image.is_primary && (
-                    <div className="absolute top-2 left-2 bg-brand-primary text-white px-3 py-1 text-xs font-bold uppercase">
+                    <div className={`absolute ${image.media_type === 'video' ? 'top-12' : 'top-2'} left-2 bg-brand-primary text-white px-3 py-1 text-xs font-bold uppercase`}>
                       Primair
                     </div>
                   )}
