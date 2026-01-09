@@ -99,28 +99,28 @@ function VideoThumbnail({
     }
   }, [])
 
-  // Intersection Observer voor mobiel autoplay (alleen als 50%+ zichtbaar)
+  // Intersection Observer voor mobiel autoplay (25%+ zichtbaar)
   useEffect(() => {
     const video = videoRef.current
-    if (!video || !isMobile || isSelected) return
+    if (!video || isSelected) return // Removed isMobile check - work on all devices
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            // Video is 50%+ zichtbaar = autoplay
-            video.play().catch(() => {
-              // Silent fail als autoplay geblokkeerd is
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+            // Video is 25%+ zichtbaar = autoplay
+            video.play().catch((err) => {
+              console.warn('Autoplay blocked:', err)
             })
           } else {
-            // Video is <50% zichtbaar of uit beeld = pause
+            // Video is <25% zichtbaar of uit beeld = pause
             video.pause()
           }
         })
       },
       { 
-        threshold: 0.5, // Trigger bij 50% visibility
-        rootMargin: '0px' // Geen buffer
+        threshold: 0.25, // Trigger bij 25% visibility
+        rootMargin: '0px'
       }
     )
 
@@ -129,16 +129,16 @@ function VideoThumbnail({
     return () => {
       observer.disconnect()
     }
-  }, [isMobile, isSelected])
+  }, [isSelected]) // Removed isMobile from dependencies
 
-  // Desktop hover autoplay
+  // Desktop hover autoplay (only if NOT using intersection observer logic)
   useEffect(() => {
-    if (!videoRef.current || isMobile) return
+    if (!videoRef.current || isMobile || isSelected) return
 
-    if (isHovering && !isSelected) {
+    if (isHovering) {
       // Start autoplay on hover (alleen desktop)
-      videoRef.current.play().catch(() => {
-        // Silent fail als autoplay geblokkeerd is
+      videoRef.current.play().catch((err) => {
+        console.warn('Hover autoplay blocked:', err)
       })
     } else {
       // Pause en reset
@@ -319,7 +319,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     (v) => v.size === selectedSize && v.color === selectedColor
   )
 
-  const finalPrice = product ? product.base_price + (selectedVariant?.price_adjustment || 0) : 0
+  // Calculate final price with sale price support
+  const finalPrice = product 
+    ? (product.sale_price || product.base_price) + (selectedVariant?.price_adjustment || 0) 
+    : 0
 
   // Smart size sorting: XS, S, M, L, XL, XXL, XXXL, etc.
   const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
@@ -1102,7 +1105,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <p className="text-xs text-gray-600">Prijs</p>
-              <p className="text-xl font-bold">€{(finalPrice * quantity).toFixed(2)}</p>
+              {(() => {
+                const basePrice = product.base_price + (selectedVariant?.price_adjustment || 0)
+                const salePrice = product.sale_price ? product.sale_price + (selectedVariant?.price_adjustment || 0) : null
+                const hasDiscount = salePrice && salePrice < basePrice
+                const totalPrice = (finalPrice * quantity).toFixed(2)
+                
+                if (hasDiscount) {
+                  return (
+                    <div className="flex items-center gap-2">
+                      <p className="text-xl font-bold text-red-600">€{totalPrice}</p>
+                      <span className="text-xs line-through text-gray-500">€{(basePrice * quantity).toFixed(2)}</span>
+                    </div>
+                  )
+                }
+                
+                return <p className="text-xl font-bold">€{totalPrice}</p>
+              })()}
             </div>
             <button
               onClick={handleAddToCart}
