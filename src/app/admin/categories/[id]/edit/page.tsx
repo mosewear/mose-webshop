@@ -19,6 +19,8 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
     slug: '',
     description: '',
     image_url: '',
+    default_product_details: '',
+    default_materials_care: '',
   })
 
   useEffect(() => {
@@ -41,6 +43,8 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
           slug: data.slug,
           description: data.description || '',
           image_url: data.image_url || '',
+          default_product_details: data.default_product_details || '',
+          default_materials_care: data.default_materials_care || '',
         })
       }
     } catch (err: any) {
@@ -67,6 +71,8 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
           slug: formData.slug,
           description: formData.description || null,
           image_url: formData.image_url || null,
+          default_product_details: formData.default_product_details || null,
+          default_materials_care: formData.default_materials_care || null,
         })
         .eq('id', id)
 
@@ -173,6 +179,44 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               onImageUploaded={(url) => setFormData({ ...formData, image_url: url })}
               onImageRemoved={() => setFormData({ ...formData, image_url: '' })}
               folder="categories"
+            />
+          </div>
+
+          {/* Product Details Template */}
+          <div className="pt-6 border-t-2 border-gray-200">
+            <label htmlFor="default_product_details" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Product Details Template
+            </label>
+            <p className="text-sm text-gray-600 mb-3">
+              Deze tekst wordt gebruikt voor alle producten in deze categorie. 
+              <br />Gebruik ** voor <strong>vetgedrukte labels</strong>, bijv: <code className="bg-gray-100 px-1">**Premium kwaliteit:** Hoogwaardige materialen</code>
+            </p>
+            <textarea
+              id="default_product_details"
+              rows={6}
+              value={formData.default_product_details}
+              onChange={(e) => setFormData({ ...formData, default_product_details: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none font-mono text-sm"
+              placeholder="**Premium kwaliteit:** Hoogwaardige materialen die lang meegaan&#10;**Perfect fit:** Ontworpen voor comfort en stijl&#10;**Lokaal gemaakt:** Met liefde geproduceerd in Groningen"
+            />
+          </div>
+
+          {/* Materials & Care Template */}
+          <div>
+            <label htmlFor="default_materials_care" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Materiaal & Verzorging Template
+            </label>
+            <p className="text-sm text-gray-600 mb-3">
+              Was- en verzorgingsinstructies voor producten in deze categorie.
+              <br />Gebruik ** voor <strong>vetgedrukte labels</strong>, bijv: <code className="bg-gray-100 px-1">**Materiaal:** 100% biologisch katoen</code>
+            </p>
+            <textarea
+              id="default_materials_care"
+              rows={6}
+              value={formData.default_materials_care}
+              onChange={(e) => setFormData({ ...formData, default_materials_care: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none font-mono text-sm"
+              placeholder="**Materiaal:** 100% biologisch katoen, 300gsm&#10;**Was instructies:** Machinewasbaar op 30°C&#10;**Strijken:** Op lage temperatuur, binnenstebuiten&#10;**Drogen:** Niet in de droger, ophangen"
             />
           </div>
         </div>

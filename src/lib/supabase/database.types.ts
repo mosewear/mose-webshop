@@ -38,6 +38,8 @@ export type Database = {
       categories: {
         Row: {
           created_at: string | null
+          default_materials_care: string | null
+          default_product_details: string | null
           description: string | null
           display_order: number | null
           featured: boolean | null
@@ -52,6 +54,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          default_materials_care?: string | null
+          default_product_details?: string | null
           description?: string | null
           display_order?: number | null
           featured?: boolean | null
@@ -66,6 +70,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          default_materials_care?: string | null
+          default_product_details?: string | null
           description?: string | null
           display_order?: number | null
           featured?: boolean | null

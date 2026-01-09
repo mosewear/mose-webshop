@@ -27,6 +27,8 @@ interface Product {
   categories: {
     name: string
     slug: string
+    default_product_details?: string | null
+    default_materials_care?: string | null
   }
 }
 
@@ -51,6 +53,24 @@ interface ProductVariant {
   stock_quantity: number
   price_adjustment: number
   is_available: boolean
+}
+
+// Helper functie om ** te vervangen door <strong> tags
+function formatTemplateText(text: string): JSX.Element[] {
+  const lines = text.split('\n')
+  return lines.map((line, index) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g)
+    return (
+      <p key={index}>
+        {parts.map((part, i) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <span key={i} className="font-semibold">{part.slice(2, -2)}</span>
+          }
+          return part
+        })}
+      </p>
+    )
+  })
 }
 
 // Main Video Component met autoplay (voor grote display)
@@ -256,7 +276,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         *,
         product_images(*),
         product_variants(*),
-        categories(name, slug)
+        categories(name, slug, default_product_details, default_materials_care)
       `)
       .eq('slug', slug)
       .single()
@@ -965,9 +985,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'details' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        <p><span className="font-semibold">Premium kwaliteit:</span> Hoogwaardige materialen die lang meegaan</p>
-                        <p><span className="font-semibold">Perfect fit:</span> Ontworpen voor comfort en stijl</p>
-                        <p><span className="font-semibold">Lokaal gemaakt:</span> Met liefde geproduceerd in Groningen</p>
+                        {product.categories?.default_product_details ? (
+                          formatTemplateText(product.categories.default_product_details)
+                        ) : (
+                          <>
+                            <p><span className="font-semibold">Premium kwaliteit:</span> Hoogwaardige materialen die lang meegaan</p>
+                            <p><span className="font-semibold">Perfect fit:</span> Ontworpen voor comfort en stijl</p>
+                            <p><span className="font-semibold">Lokaal gemaakt:</span> Met liefde geproduceerd in Groningen</p>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -990,10 +1016,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'materials' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        <p><span className="font-semibold">Materiaal:</span> 100% biologisch katoen, 300gsm</p>
-                        <p><span className="font-semibold">Was instructies:</span> Machinewasbaar op 30°C</p>
-                        <p><span className="font-semibold">Strijken:</span> Op lage temperatuur, binnenstebuiten</p>
-                        <p><span className="font-semibold">Drogen:</span> Niet in de droger, ophangen</p>
+                        {product.categories?.default_materials_care ? (
+                          formatTemplateText(product.categories.default_materials_care)
+                        ) : (
+                          <>
+                            <p><span className="font-semibold">Materiaal:</span> 100% biologisch katoen, 300gsm</p>
+                            <p><span className="font-semibold">Was instructies:</span> Machinewasbaar op 30°C</p>
+                            <p><span className="font-semibold">Strijken:</span> Op lage temperatuur, binnenstebuiten</p>
+                            <p><span className="font-semibold">Drogen:</span> Niet in de droger, ophangen</p>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
