@@ -357,6 +357,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return
 
+    // Get first IMAGE (not video) for cart thumbnail
+    const firstImage = displayImages.find(img => img.media_type === 'image')
+    const cartImage = firstImage?.url || displayImages[0]?.url || '/placeholder.png'
+
     addItem({
       productId: product.id,
       variantId: selectedVariant.id,
@@ -366,7 +370,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       colorHex: selectedVariant.color_hex,
       price: finalPrice,
       quantity: quantity,
-      image: displayImages[0]?.url || '/placeholder.png',
+      image: cartImage,
       sku: selectedVariant.sku,
       stock: selectedVariant.stock_quantity,
     })
