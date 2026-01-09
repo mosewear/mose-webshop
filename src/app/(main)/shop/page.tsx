@@ -23,6 +23,7 @@ interface Product {
     alt_text: string | null
     is_primary: boolean
     media_type?: 'image' | 'video'
+    color?: string | null
   }>
   variants?: Array<{
     stock_quantity: number
@@ -91,7 +92,7 @@ export default function ShopPage() {
         .select(`
           *,
           category:categories(name, slug),
-          images:product_images(url, alt_text, is_primary, media_type),
+          images:product_images(url, alt_text, is_primary, media_type, color),
           variants:product_variants(stock_quantity, is_available)
         `)
         .order('created_at', { ascending: false })
@@ -163,9 +164,21 @@ export default function ShopPage() {
       return primaryMedia.url
     }
     
-    // Geen primary, pak eerste media (bij voorkeur een image)
-    const firstImage = product.images?.find(img => img.media_type === 'image')
-    return firstImage?.url || product.images?.[0]?.url || '/placeholder-product.png'
+    // Geen primary? Probeer fallback logic:
+    // 1. Eerst algemene afbeelding (color = null, image type)
+    const generalImage = product.images?.find(img => 
+      img.media_type === 'image' && (img.color === null || img.color === undefined)
+    )
+    if (generalImage?.url) return generalImage.url
+    
+    // 2. Anders eerste afbeelding van eerste variant (color !== null, image type)
+    const variantImage = product.images?.find(img => 
+      img.media_type === 'image' && img.color
+    )
+    if (variantImage?.url) return variantImage.url
+    
+    // 3. Ultieme fallback: eerste media item (ook video) of placeholder
+    return product.images?.[0]?.url || '/placeholder-product.png'
   }
 
   const handleApplyFilters = () => {
