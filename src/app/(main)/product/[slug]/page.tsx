@@ -74,7 +74,7 @@ function formatTemplateText(text: string): ReactElement[] {
 }
 
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)
-function formatBoldText(text: string): ReactElement[] {
+function formatBoldText(text: string): (string | ReactElement)[] {
   const lines = text.split('\n')
   return lines.flatMap((line, lineIndex) => {
     const parts = line.split(/(\*\*[^*]+\*\*)/g)
