@@ -307,11 +307,11 @@ export default function HomePageClient({
                       </h3>
                       {(() => {
                         const hasDiscount = product.sale_price && product.sale_price < product.price
-                        const discountPercentage = hasDiscount 
+                        const discountPercentage = hasDiscount && product.sale_price
                           ? Math.round(((product.price - product.sale_price) / product.price) * 100) 
                           : 0
 
-                        if (hasDiscount) {
+                        if (hasDiscount && product.sale_price) {
                           return (
                             <div className="space-y-1">
                               <div className="flex items-center justify-center gap-2">

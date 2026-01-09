@@ -219,11 +219,11 @@ export default function AdminProductsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {(() => {
                         const hasDiscount = product.sale_price && product.sale_price < product.base_price
-                        const discountPercentage = hasDiscount 
+                        const discountPercentage = hasDiscount && product.sale_price
                           ? Math.round(((product.base_price - product.sale_price) / product.base_price) * 100) 
                           : 0
 
-                        if (hasDiscount) {
+                        if (hasDiscount && product.sale_price) {
                           return (
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-2">
