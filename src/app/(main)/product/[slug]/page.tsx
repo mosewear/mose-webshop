@@ -1170,61 +1170,73 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
       {/* Sticky Add to Cart Bar - Mobile (Feature 1) */}
       {inStock && selectedVariant && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black p-4 z-40 shadow-2xl">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <p className="text-xs text-gray-600">Prijs</p>
-              {(() => {
-                const basePrice = product.base_price + (selectedVariant?.price_adjustment || 0)
-                const salePrice = product.sale_price ? product.sale_price + (selectedVariant?.price_adjustment || 0) : null
-                const hasDiscount = salePrice && salePrice < basePrice
-                const totalPrice = (finalPrice * quantity).toFixed(2)
-                
-                if (hasDiscount) {
-                  return (
-                    <div className="flex items-center gap-2">
-                      <p className="text-xl font-bold text-red-600">€{totalPrice}</p>
-                      <span className="text-xs line-through text-gray-500">€{(basePrice * quantity).toFixed(2)}</span>
-                    </div>
-                  )
-                }
-                
-                return <p className="text-xl font-bold">€{totalPrice}</p>
-              })()}
-            </div>
-            <button
-              onClick={handleAddToCart}
-              disabled={addedToCart}
-              className={`flex-1 py-4 text-base font-bold uppercase tracking-wider transition-all ${
-                addedToCart
-                  ? 'bg-black text-white cursor-default animate-success'
-                  : 'bg-brand-primary text-white active:scale-95'
-              }`}
-            >
-              {addedToCart ? '✓ TOEGEVOEGD' : 'IN WINKELWAGEN'}
-            </button>
-            <button
-              onClick={async () => {
-                if (!product) return
-                if (isWishlisted) {
-                  await removeFromWishlist(product.id)
-                  setIsWishlisted(false)
-                } else {
-                  await addToWishlist(product.id)
-                  setIsWishlisted(true)
-                }
-              }}
-              className={`p-4 border-2 transition-all ${
-                isWishlisted
-                  ? 'bg-red-50 border-red-500 text-red-600'
-                  : 'border-gray-300'
-              }`}
-            >
-              <svg className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </button>
-          </div>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black p-3 z-40 shadow-2xl">
+          {(() => {
+            const basePrice = product.base_price + (selectedVariant?.price_adjustment || 0)
+            const salePrice = product.sale_price ? product.sale_price + (selectedVariant?.price_adjustment || 0) : null
+            const hasDiscount = salePrice && salePrice < basePrice
+            const totalPrice = (finalPrice * quantity).toFixed(2)
+            const discountPercentage = hasDiscount ? Math.round(((basePrice - salePrice!) / basePrice) * 100) : 0
+            
+            return (
+              <div className="flex items-center gap-2">
+                {/* Prijs + Korting Badge - Compact */}
+                <div className="flex flex-col gap-0.5 min-w-[85px]">
+                  <div className="flex items-center gap-1">
+                    <span className={`text-lg font-bold leading-none ${hasDiscount ? 'text-red-600' : 'text-black'}`}>
+                      €{totalPrice}
+                    </span>
+                    {hasDiscount && (
+                      <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                        -{discountPercentage}%
+                      </span>
+                    )}
+                  </div>
+                  {hasDiscount && (
+                    <span className="text-[11px] line-through text-gray-500 leading-none">
+                      €{(basePrice * quantity).toFixed(2)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Add to Cart Button - Flex 1 */}
+                <button
+                  onClick={handleAddToCart}
+                  disabled={addedToCart}
+                  className={`flex-1 py-3 text-sm font-bold uppercase tracking-wider transition-all ${
+                    addedToCart
+                      ? 'bg-black text-white cursor-default animate-success'
+                      : 'bg-brand-primary text-white active:scale-95'
+                  }`}
+                >
+                  {addedToCart ? '✓ TOEGEVOEGD' : 'IN WINKELWAGEN'}
+                </button>
+
+                {/* Wishlist Button - Compact */}
+                <button
+                  onClick={async () => {
+                    if (!product) return
+                    if (isWishlisted) {
+                      await removeFromWishlist(product.id)
+                      setIsWishlisted(false)
+                    } else {
+                      await addToWishlist(product.id)
+                      setIsWishlisted(true)
+                    }
+                  }}
+                  className={`p-3 border-2 transition-all ${
+                    isWishlisted
+                      ? 'bg-red-50 border-red-500 text-red-600'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+              </div>
+            )
+          })()}
         </div>
       )}
 
