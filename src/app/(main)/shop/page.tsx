@@ -75,6 +75,15 @@ export default function ShopPage() {
     fetchProducts()
   }, [])
 
+  // Auto-select category from URL parameter (from homepage category links)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const categorySlug = params.get('category')
+    if (categorySlug) {
+      setSelectedCategory(categorySlug)
+    }
+  }, [])
+
   const fetchCategories = async () => {
     const { data } = await supabase
       .from('categories')
