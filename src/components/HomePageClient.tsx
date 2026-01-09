@@ -506,7 +506,7 @@ export default function HomePageClient({
             <div className="relative">
               <div className="relative aspect-square overflow-hidden shadow-2xl border-2 border-white">
                 <Image
-                  src="/hoodieblack.png"
+                  src="/mosestory.png"
                   alt="MOSE Atelier Groningen"
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
