@@ -1072,7 +1072,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           <h3 className="font-bold text-sm md:text-base mb-1 line-clamp-2">{relProd.name}</h3>
                           {(() => {
                             const hasDiscount = relProd.sale_price && relProd.sale_price < relProd.base_price
-                            if (hasDiscount) {
+                            if (hasDiscount && relProd.sale_price) {
                               return (
                                 <div className="flex items-center gap-2">
                                   <p className="text-lg font-bold text-red-600">€{relProd.sale_price.toFixed(2)}</p>
