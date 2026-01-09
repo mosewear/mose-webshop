@@ -53,7 +53,76 @@ interface ProductVariant {
   is_available: boolean
 }
 
-// Video Thumbnail Component met autoplay on hover
+// Main Video Component met autoplay (voor grote display)
+function MainVideo({ 
+  videoUrl, 
+  posterUrl 
+}: { 
+  videoUrl: string
+  posterUrl?: string | null
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) {
+      console.log('❌ MainVideo: No video ref')
+      return
+    }
+
+    console.log('🎬 MainVideo SETUP:', videoUrl.substring(videoUrl.length - 30))
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const ratio = entry.intersectionRatio
+          
+          console.log('👁️ MainVideo INTERSECTION:', {
+            videoUrl: videoUrl.substring(videoUrl.length - 30),
+            isIntersecting: entry.isIntersecting,
+            intersectionRatio: ratio.toFixed(2),
+            shouldPlay: entry.isIntersecting && ratio >= 0.25
+          })
+          
+          if (entry.isIntersecting && ratio >= 0.25) {
+            console.log('🎬 MainVideo: Attempting AUTOPLAY...')
+            video.play()
+              .then(() => console.log('✅ MainVideo: Autoplay SUCCESS!'))
+              .catch((err) => console.error('❌ MainVideo: Autoplay BLOCKED:', err.message))
+          } else {
+            console.log('⏸️ MainVideo: Pausing (not visible)')
+            video.pause()
+          }
+        })
+      },
+      { threshold: 0.25 }
+    )
+
+    observer.observe(video)
+    console.log('👀 MainVideo: Observer ACTIVE')
+    
+    return () => {
+      console.log('🛑 MainVideo: Disconnecting observer')
+      observer.disconnect()
+    }
+  }, [videoUrl])
+
+  return (
+    <video
+      ref={videoRef}
+      src={videoUrl}
+      controls
+      playsInline
+      muted
+      loop
+      className="w-full h-full object-contain bg-black"
+      poster={posterUrl || undefined}
+      preload="metadata"
+    />
+  )
+}
+
+// Video Thumbnail Component ZONDER autoplay (alleen statische poster)
 function VideoThumbnail({ 
   videoUrl, 
   posterUrl, 
@@ -65,190 +134,32 @@ function VideoThumbnail({
   isSelected: boolean
   onClick: () => void 
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [isHovering, setIsHovering] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-
-  useEffect(() => {
-    // Detecteer mobiel
-    const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-    setIsMobile(mobile)
-    console.log('🎬 VideoThumbnail INIT:', {
-      videoUrl: videoUrl.substring(videoUrl.length - 30),
-      isMobile: mobile,
-      userAgent: navigator.userAgent.substring(0, 50)
-    })
-  }, [videoUrl])
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) {
-      console.log('❌ No video ref found')
-      return
-    }
-
-    console.log('🎥 Setting up video event listeners for:', videoUrl.substring(videoUrl.length - 30))
-
-    // Event listeners om te tracken of video speelt
-    const handlePlaying = () => {
-      console.log('▶️ VIDEO PLAYING:', videoUrl.substring(videoUrl.length - 30))
-      setIsPlaying(true)
-    }
-    const handlePause = () => {
-      console.log('⏸️ VIDEO PAUSED:', videoUrl.substring(videoUrl.length - 30))
-      setIsPlaying(false)
-    }
-    const handleEnded = () => {
-      console.log('⏹️ VIDEO ENDED:', videoUrl.substring(videoUrl.length - 30))
-      setIsPlaying(false)
-    }
-    const handleWaiting = () => {
-      console.log('⏳ VIDEO WAITING/BUFFERING:', videoUrl.substring(videoUrl.length - 30))
-      setIsPlaying(false)
-    }
-
-    video.addEventListener('playing', handlePlaying)
-    video.addEventListener('pause', handlePause)
-    video.addEventListener('ended', handleEnded)
-    video.addEventListener('waiting', handleWaiting)
-
-    return () => {
-      video.removeEventListener('playing', handlePlaying)
-      video.removeEventListener('pause', handlePause)
-      video.removeEventListener('ended', handleEnded)
-      video.removeEventListener('waiting', handleWaiting)
-    }
-  }, [videoUrl])
-
-  // Intersection Observer voor autoplay (25%+ zichtbaar)
-  useEffect(() => {
-    const video = videoRef.current
-    
-    console.log('🔍 Intersection Observer SETUP:', {
-      videoUrl: videoUrl.substring(videoUrl.length - 30),
-      hasVideo: !!video,
-      isSelected,
-      shouldSetup: !!video // CHANGED: removed isSelected check
-    })
-    
-    if (!video) {
-      console.log('⏭️ Skipping Intersection Observer setup: no video ref')
-      return
-    }
-
-    console.log('✅ Creating Intersection Observer for:', videoUrl.substring(videoUrl.length - 30))
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const ratio = entry.intersectionRatio
-          const isIntersecting = entry.isIntersecting
-          
-          console.log('👁️ INTERSECTION CHANGE:', {
-            videoUrl: videoUrl.substring(videoUrl.length - 30),
-            isIntersecting,
-            intersectionRatio: ratio.toFixed(2),
-            threshold: 0.25,
-            shouldPlay: isIntersecting && ratio >= 0.25,
-            isSelected // Added for clarity
-          })
-          
-          if (isIntersecting && ratio >= 0.25) {
-            console.log('🎬 Attempting AUTOPLAY (25%+ visible)...')
-            video.play()
-              .then(() => {
-                console.log('✅ Autoplay SUCCESS!')
-              })
-              .catch((err) => {
-                console.error('❌ Autoplay BLOCKED:', err.message)
-              })
-          } else {
-            console.log('⏸️ Pausing video (<25% visible or not intersecting)')
-            video.pause()
-          }
-        })
-      },
-      { 
-        threshold: 0.25,
-        rootMargin: '0px'
-      }
-    )
-
-    observer.observe(video)
-    console.log('👀 Observer ACTIVE for:', videoUrl.substring(videoUrl.length - 30))
-    
-    return () => {
-      console.log('🛑 Disconnecting observer for:', videoUrl.substring(videoUrl.length - 30))
-      observer.disconnect()
-    }
-  }, [videoUrl]) // CHANGED: removed isSelected from dependencies
-
-  // Desktop hover autoplay (additional feature, doesn't interfere with scroll autoplay)
-  useEffect(() => {
-    if (!videoRef.current || isMobile) {
-      console.log('⏭️ Skipping hover setup (mobile or no video):', { hasVideo: !!videoRef.current, isMobile })
-      return
-    }
-
-    console.log('🖱️ Hover effect:', {
-      videoUrl: videoUrl.substring(videoUrl.length - 30),
-      isHovering,
-      isMobile,
-      isSelected
-    })
-
-    // Desktop hover doesn't interfere - Intersection Observer still runs
-    // Hover just adds extra control on desktop
-    if (isHovering) {
-      console.log('🎬 HOVER: Attempting to play...')
-      videoRef.current.play()
-        .then(() => {
-          console.log('✅ Hover play SUCCESS!')
-        })
-        .catch((err) => {
-          console.error('❌ Hover play BLOCKED:', err.message)
-        })
-    } else {
-      console.log('⏸️ HOVER: Pausing and resetting video')
-      videoRef.current.pause()
-      videoRef.current.currentTime = 0
-    }
-  }, [isHovering, isMobile, videoUrl]) // CHANGED: removed isSelected from dependencies
-
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => !isMobile && setIsHovering(true)}
-      onMouseLeave={() => !isMobile && setIsHovering(false)}
       className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
         isSelected
           ? 'border-brand-primary scale-95'
           : 'border-gray-300 hover:border-black'
       }`}
     >
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        poster={posterUrl || undefined}
-        className="w-full h-full object-cover object-center"
-        preload="metadata"
-        muted
-        playsInline
-        loop
+      {/* Static poster image - NO autoplay, NO video tag */}
+      <Image
+        src={posterUrl || videoUrl}
+        alt="Video thumbnail"
+        fill
+        className="object-cover object-center"
       />
-      {/* Play icon - verdwijnt als video speelt */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
-          <svg 
-            className="w-8 h-8 text-white/80" 
-            fill="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </div>
-      )}
+      {/* Play icon overlay - always visible */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+        <svg 
+          className="w-12 h-12 text-white/90" 
+          fill="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </div>
     </button>
   )
 }
@@ -577,13 +488,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 }`}
               >
                 {displayImages[selectedImage]?.media_type === 'video' ? (
-                  <video
-                    src={displayImages[selectedImage]?.url}
-                    controls
-                    playsInline
-                    className="w-full h-full object-contain bg-black"
-                    poster={displayImages[selectedImage]?.video_thumbnail_url || undefined}
-                    preload="metadata"
+                  <MainVideo 
+                    videoUrl={displayImages[selectedImage]?.url}
+                    posterUrl={displayImages[selectedImage]?.video_thumbnail_url}
                   />
                 ) : (
                   <>
