@@ -129,11 +129,11 @@ function VideoThumbnail({
       videoUrl: videoUrl.substring(videoUrl.length - 30),
       hasVideo: !!video,
       isSelected,
-      shouldSetup: !!video && !isSelected
+      shouldSetup: !!video // CHANGED: removed isSelected check
     })
     
-    if (!video || isSelected) {
-      console.log('⏭️ Skipping Intersection Observer setup:', { hasVideo: !!video, isSelected })
+    if (!video) {
+      console.log('⏭️ Skipping Intersection Observer setup: no video ref')
       return
     }
 
@@ -150,7 +150,8 @@ function VideoThumbnail({
             isIntersecting,
             intersectionRatio: ratio.toFixed(2),
             threshold: 0.25,
-            shouldPlay: isIntersecting && ratio >= 0.25
+            shouldPlay: isIntersecting && ratio >= 0.25,
+            isSelected // Added for clarity
           })
           
           if (isIntersecting && ratio >= 0.25) {
@@ -181,12 +182,12 @@ function VideoThumbnail({
       console.log('🛑 Disconnecting observer for:', videoUrl.substring(videoUrl.length - 30))
       observer.disconnect()
     }
-  }, [isSelected, videoUrl])
+  }, [videoUrl]) // CHANGED: removed isSelected from dependencies
 
-  // Desktop hover autoplay
+  // Desktop hover autoplay (additional feature, doesn't interfere with scroll autoplay)
   useEffect(() => {
-    if (!videoRef.current || isMobile || isSelected) {
-      console.log('⏭️ Skipping hover setup:', { hasVideo: !!videoRef.current, isMobile, isSelected })
+    if (!videoRef.current || isMobile) {
+      console.log('⏭️ Skipping hover setup (mobile or no video):', { hasVideo: !!videoRef.current, isMobile })
       return
     }
 
@@ -197,6 +198,8 @@ function VideoThumbnail({
       isSelected
     })
 
+    // Desktop hover doesn't interfere - Intersection Observer still runs
+    // Hover just adds extra control on desktop
     if (isHovering) {
       console.log('🎬 HOVER: Attempting to play...')
       videoRef.current.play()
@@ -211,7 +214,7 @@ function VideoThumbnail({
       videoRef.current.pause()
       videoRef.current.currentTime = 0
     }
-  }, [isHovering, isSelected, isMobile, videoUrl])
+  }, [isHovering, isMobile, videoUrl]) // CHANGED: removed isSelected from dependencies
 
   return (
     <button
