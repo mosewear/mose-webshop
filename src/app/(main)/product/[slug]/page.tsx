@@ -72,24 +72,46 @@ function VideoThumbnail({
 
   useEffect(() => {
     // Detecteer mobiel
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-  }, [])
+    const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    setIsMobile(mobile)
+    console.log('🎬 VideoThumbnail INIT:', {
+      videoUrl: videoUrl.substring(videoUrl.length - 30),
+      isMobile: mobile,
+      userAgent: navigator.userAgent.substring(0, 50)
+    })
+  }, [videoUrl])
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video) {
+      console.log('❌ No video ref found')
+      return
+    }
+
+    console.log('🎥 Setting up video event listeners for:', videoUrl.substring(videoUrl.length - 30))
 
     // Event listeners om te tracken of video speelt
-    // Gebruik 'playing' in plaats van 'play' voor betrouwbaarder detection
-    const handlePlaying = () => setIsPlaying(true)
-    const handlePause = () => setIsPlaying(false)
-    const handleEnded = () => setIsPlaying(false)
-    const handleWaiting = () => setIsPlaying(false)
+    const handlePlaying = () => {
+      console.log('▶️ VIDEO PLAYING:', videoUrl.substring(videoUrl.length - 30))
+      setIsPlaying(true)
+    }
+    const handlePause = () => {
+      console.log('⏸️ VIDEO PAUSED:', videoUrl.substring(videoUrl.length - 30))
+      setIsPlaying(false)
+    }
+    const handleEnded = () => {
+      console.log('⏹️ VIDEO ENDED:', videoUrl.substring(videoUrl.length - 30))
+      setIsPlaying(false)
+    }
+    const handleWaiting = () => {
+      console.log('⏳ VIDEO WAITING/BUFFERING:', videoUrl.substring(videoUrl.length - 30))
+      setIsPlaying(false)
+    }
 
-    video.addEventListener('playing', handlePlaying)  // Wordt gefired zodra video echt speelt
+    video.addEventListener('playing', handlePlaying)
     video.addEventListener('pause', handlePause)
     video.addEventListener('ended', handleEnded)
-    video.addEventListener('waiting', handleWaiting)  // Buffering
+    video.addEventListener('waiting', handleWaiting)
 
     return () => {
       video.removeEventListener('playing', handlePlaying)
@@ -97,55 +119,99 @@ function VideoThumbnail({
       video.removeEventListener('ended', handleEnded)
       video.removeEventListener('waiting', handleWaiting)
     }
-  }, [])
+  }, [videoUrl])
 
-  // Intersection Observer voor mobiel autoplay (25%+ zichtbaar)
+  // Intersection Observer voor autoplay (25%+ zichtbaar)
   useEffect(() => {
     const video = videoRef.current
-    if (!video || isSelected) return // Removed isMobile check - work on all devices
+    
+    console.log('🔍 Intersection Observer SETUP:', {
+      videoUrl: videoUrl.substring(videoUrl.length - 30),
+      hasVideo: !!video,
+      isSelected,
+      shouldSetup: !!video && !isSelected
+    })
+    
+    if (!video || isSelected) {
+      console.log('⏭️ Skipping Intersection Observer setup:', { hasVideo: !!video, isSelected })
+      return
+    }
+
+    console.log('✅ Creating Intersection Observer for:', videoUrl.substring(videoUrl.length - 30))
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
-            // Video is 25%+ zichtbaar = autoplay
-            video.play().catch((err) => {
-              console.warn('Autoplay blocked:', err)
-            })
+          const ratio = entry.intersectionRatio
+          const isIntersecting = entry.isIntersecting
+          
+          console.log('👁️ INTERSECTION CHANGE:', {
+            videoUrl: videoUrl.substring(videoUrl.length - 30),
+            isIntersecting,
+            intersectionRatio: ratio.toFixed(2),
+            threshold: 0.25,
+            shouldPlay: isIntersecting && ratio >= 0.25
+          })
+          
+          if (isIntersecting && ratio >= 0.25) {
+            console.log('🎬 Attempting AUTOPLAY (25%+ visible)...')
+            video.play()
+              .then(() => {
+                console.log('✅ Autoplay SUCCESS!')
+              })
+              .catch((err) => {
+                console.error('❌ Autoplay BLOCKED:', err.message)
+              })
           } else {
-            // Video is <25% zichtbaar of uit beeld = pause
+            console.log('⏸️ Pausing video (<25% visible or not intersecting)')
             video.pause()
           }
         })
       },
       { 
-        threshold: 0.25, // Trigger bij 25% visibility
+        threshold: 0.25,
         rootMargin: '0px'
       }
     )
 
     observer.observe(video)
+    console.log('👀 Observer ACTIVE for:', videoUrl.substring(videoUrl.length - 30))
     
     return () => {
+      console.log('🛑 Disconnecting observer for:', videoUrl.substring(videoUrl.length - 30))
       observer.disconnect()
     }
-  }, [isSelected]) // Removed isMobile from dependencies
+  }, [isSelected, videoUrl])
 
-  // Desktop hover autoplay (only if NOT using intersection observer logic)
+  // Desktop hover autoplay
   useEffect(() => {
-    if (!videoRef.current || isMobile || isSelected) return
+    if (!videoRef.current || isMobile || isSelected) {
+      console.log('⏭️ Skipping hover setup:', { hasVideo: !!videoRef.current, isMobile, isSelected })
+      return
+    }
+
+    console.log('🖱️ Hover effect:', {
+      videoUrl: videoUrl.substring(videoUrl.length - 30),
+      isHovering,
+      isMobile,
+      isSelected
+    })
 
     if (isHovering) {
-      // Start autoplay on hover (alleen desktop)
-      videoRef.current.play().catch((err) => {
-        console.warn('Hover autoplay blocked:', err)
-      })
+      console.log('🎬 HOVER: Attempting to play...')
+      videoRef.current.play()
+        .then(() => {
+          console.log('✅ Hover play SUCCESS!')
+        })
+        .catch((err) => {
+          console.error('❌ Hover play BLOCKED:', err.message)
+        })
     } else {
-      // Pause en reset
+      console.log('⏸️ HOVER: Pausing and resetting video')
       videoRef.current.pause()
       videoRef.current.currentTime = 0
     }
-  }, [isHovering, isSelected, isMobile])
+  }, [isHovering, isSelected, isMobile, videoUrl])
 
   return (
     <button
