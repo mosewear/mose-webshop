@@ -576,7 +576,7 @@ export default function ShopPage() {
                           {/* Discount Badge */}
                           {(() => {
                             const hasDiscount = product.sale_price && product.sale_price < product.base_price
-                            if (!hasDiscount) return null
+                            if (!hasDiscount || !product.sale_price) return null
                             
                             const discountPercentage = Math.round(
                               ((product.base_price - product.sale_price) / product.base_price) * 100
@@ -616,7 +616,7 @@ export default function ShopPage() {
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
                               
-                              if (hasDiscount) {
+                              if (hasDiscount && product.sale_price) {
                                 return (
                                   <div className="flex flex-col gap-1">
                                     <span className="text-base md:text-2xl font-bold text-red-600">
