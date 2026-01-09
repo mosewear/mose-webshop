@@ -40,3 +40,4 @@ CREATE POLICY "System can update notifications" ON back_in_stock_notifications
   USING (true)
   WITH CHECK (true);
 
+

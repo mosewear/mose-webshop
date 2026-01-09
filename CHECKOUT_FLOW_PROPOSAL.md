@@ -225,3 +225,4 @@ async function handleLogin(e: React.FormEvent) {
    
    **Aanbeveling: Optie B** - sneller, minder friction
 
+

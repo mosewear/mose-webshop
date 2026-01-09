@@ -98,3 +98,4 @@ Als alle tests slagen:
 2. ✅ Test met een echte betaling
 3. ✅ Check Stripe Dashboard → Webhooks → Event Deliveries
 
+

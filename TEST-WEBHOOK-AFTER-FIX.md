@@ -68,3 +68,4 @@ Na de fix, monitor de webhook success rate:
 - Check "Foutpercentage" - zou nu 0% moeten zijn
 - Check "Activiteit" - zou recente succesvolle deliveries moeten tonen
 
+

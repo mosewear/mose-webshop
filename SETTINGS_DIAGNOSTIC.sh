@@ -103,3 +103,4 @@ echo "✅ Database tabel heeft correcte key names"
 echo "✅ RLS policies staan admin access toe"
 echo ""
 
+

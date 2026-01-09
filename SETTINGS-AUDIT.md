@@ -168,3 +168,4 @@ Na deze updates moet **ALTIJD** de admin settings page gebruikt worden om:
 
 **Geen hardcoded waardes meer!** 🚀
 
+

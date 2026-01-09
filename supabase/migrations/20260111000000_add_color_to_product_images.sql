@@ -10,3 +10,4 @@ CREATE INDEX IF NOT EXISTS idx_product_images_color ON product_images(product_id
 -- Comment for clarity
 COMMENT ON COLUMN product_images.color IS 'Color name this image belongs to. NULL means general product image shown for all colors.';
 
+

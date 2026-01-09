@@ -192,3 +192,4 @@
 3. Wil je account overzicht dashboard bovenaan?
 4. Zijn er andere functionaliteiten die je mist?
 
+

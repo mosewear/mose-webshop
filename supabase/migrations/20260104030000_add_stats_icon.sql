@@ -10,3 +10,4 @@ WHERE stats_3_icon IS NULL;
 -- Add comment
 COMMENT ON COLUMN homepage_settings.stats_3_icon IS 'Lucide icon name for stats_3 (Premium kwaliteit)';
 
+

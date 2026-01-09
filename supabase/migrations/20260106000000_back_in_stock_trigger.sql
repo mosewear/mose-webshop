@@ -108,3 +108,4 @@ CREATE TRIGGER trigger_check_back_in_stock
 COMMENT ON FUNCTION check_back_in_stock_notifications() IS 'Checks for back-in-stock notifications when stock is updated and queues them for email processing';
 COMMENT ON TRIGGER trigger_check_back_in_stock ON product_variants IS 'Triggers back-in-stock notification check when stock becomes available';
 
+

@@ -15,3 +15,4 @@ SET is_admin = true
 WHERE email = 'h.schlimback@gmail.com';
 
 
+

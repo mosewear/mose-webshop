@@ -30,3 +30,4 @@ CREATE POLICY "Users can remove from own wishlist"
   USING (auth.uid() = user_id);
 
 
+

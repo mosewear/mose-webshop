@@ -100,3 +100,4 @@ SELECT
   (SELECT COUNT(*) FROM orders) as remaining_orders,
   (SELECT COUNT(*) FROM order_items) as remaining_items;
 
+

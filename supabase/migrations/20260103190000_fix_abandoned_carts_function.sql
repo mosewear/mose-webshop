@@ -49,3 +49,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Add comment
 COMMENT ON FUNCTION get_abandoned_carts IS 'Returns abandoned carts based on hours threshold. Fixed type mismatch for customer_name (VARCHAR instead of TEXT).';
 
+

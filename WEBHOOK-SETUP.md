@@ -97,3 +97,4 @@ Dit checkt:
 
 De tests bewijzen dat de **logica correct is**, maar de **webhook moet nog geconfigureerd worden** in Stripe Dashboard voordat het werkt in productie.
 
+

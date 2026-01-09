@@ -266,3 +266,4 @@ SELECT
   (SELECT COUNT(*) FROM back_in_stock_notifications) as aantal_notificaties,
   (SELECT COUNT(*) FROM back_in_stock_notifications WHERE is_notified = false) as pending_notificaties;
 
+

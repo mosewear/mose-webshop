@@ -12,3 +12,4 @@ UPDATE categories SET image_url = '/blacktee.png' WHERE slug = 't-shirts' AND im
 UPDATE categories SET image_url = '/hoodie_cap.png' WHERE slug = 'caps' AND image_url IS NULL;
 UPDATE categories SET image_url = '/hoodie_cap.png' WHERE slug = 'accessoires' AND image_url IS NULL;
 
+

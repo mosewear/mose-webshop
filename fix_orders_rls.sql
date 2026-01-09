@@ -45,3 +45,4 @@ SET LOCAL jwt.claims.sub = '8d281470-b405-4685-9c29-5d12966185a0';
 SELECT COUNT(*) as orders_visible_as_admin FROM orders;
 
 
+

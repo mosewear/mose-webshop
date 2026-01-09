@@ -154,3 +154,4 @@ COMMENT ON COLUMN promo_codes.discount_type IS 'Type korting: percentage of fixe
 COMMENT ON COLUMN promo_codes.usage_limit IS 'Max aantal keer dat code gebruikt kan worden (NULL = unlimited)';
 COMMENT ON COLUMN promo_codes.usage_count IS 'Aantal keer dat code al gebruikt is';
 
+

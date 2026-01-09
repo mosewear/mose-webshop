@@ -7,3 +7,4 @@ VALUES
   ('return_label_cost_incl_btw', '7.87', 'Kosten voor retourlabel incl. BTW (wordt automatisch berekend op basis van BTW percentage)', NOW())
 ON CONFLICT (key) DO NOTHING;
 
+

@@ -85,3 +85,4 @@ Maak `vercel.json`:
 
 ## ✅ ALLE KRITIEKE ITEMS ZIJN NU GEÏMPLEMENTEERD!
 
+

@@ -57,3 +57,4 @@ COMMENT ON TABLE user_addresses IS 'Stores user saved addresses for shipping and
 COMMENT ON COLUMN user_addresses.is_default_shipping IS 'Marks the default shipping address';
 COMMENT ON COLUMN user_addresses.is_default_billing IS 'Marks the default billing address';
 
+

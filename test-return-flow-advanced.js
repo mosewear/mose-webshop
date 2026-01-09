@@ -481,3 +481,4 @@ tester.test('Polling cleanup: intervals worden gestopt bij unmount', async () =>
 // Run tests
 tester.run().catch(console.error)
 
+

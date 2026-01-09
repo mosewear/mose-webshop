@@ -98,3 +98,4 @@ CREATE POLICY "Users can delete own votes"
   USING (auth.uid() = user_id);
 
 
+

@@ -96,3 +96,4 @@ Check regelmatig:
 - Nieuwe domains hebben tijd nodig om "reputation" op te bouwen
 - Resend heeft goede deliverability, maar DNS records zijn essentieel
 
+

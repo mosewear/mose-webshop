@@ -66,3 +66,4 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - **ALTIJD** echte keys gebruiken in productie (Vercel environment variables)
 - **TEST** eerst met test/sandbox keys
 
+

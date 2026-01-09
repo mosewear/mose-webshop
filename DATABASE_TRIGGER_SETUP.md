@@ -111,3 +111,4 @@ Als je de oude cron job hebt ingesteld (EasyCron.com), kun je die nu verwijderen
 De migratie SQL staat op je klembord en is ook te vinden in:
 `supabase/migrations/20260106000000_back_in_stock_trigger.sql`
 
+

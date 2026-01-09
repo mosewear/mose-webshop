@@ -178,3 +178,4 @@ COMMENT ON TABLE order_status_history IS 'Tracks all status changes for orders w
 COMMENT ON TABLE order_emails IS 'Logs all emails sent for orders for audit trail';
 COMMENT ON FUNCTION get_order_timeline IS 'Returns complete timeline of order events (status changes and emails)';
 
+

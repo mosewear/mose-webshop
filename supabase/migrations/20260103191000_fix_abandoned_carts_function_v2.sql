@@ -53,3 +53,4 @@ SELECT
 FROM pg_proc p
 WHERE p.proname = 'get_abandoned_carts';
 
+

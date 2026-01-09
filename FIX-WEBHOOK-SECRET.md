@@ -61,3 +61,4 @@ Normale orders gebruiken een **fallback mechanisme**:
 
 Return label betalingen hebben deze fallback **NIET** - die zijn 100% afhankelijk van de webhook. Daarom werken normale orders wel, maar return label betalingen niet.
 
+

@@ -132,3 +132,4 @@ De opacity transition is waarschijnlijk de hoofdoorzaak - content wordt wel gere
 
 **Voorstel 3** is overkill voor dit specifieke probleem.
 
+

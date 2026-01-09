@@ -9,7 +9,7 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
-import { Truck, RotateCcw, MapPin } from 'lucide-react'
+import { Truck, RotateCcw, MapPin, Video } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 
 interface Product {
@@ -143,13 +143,22 @@ function VideoThumbnail({
           : 'border-gray-300 hover:border-black'
       }`}
     >
-      {/* Static poster image - NO autoplay, NO video tag */}
-      <Image
-        src={posterUrl || videoUrl}
-        alt="Video thumbnail"
-        fill
-        className="object-cover object-center"
-      />
+      {/* Static poster image OR generic video placeholder */}
+      {posterUrl ? (
+        <Image
+          src={posterUrl}
+          alt="Video thumbnail"
+          fill
+          className="object-cover object-center"
+        />
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+          <div className="text-center">
+            <Video className="w-12 h-12 text-white/80 mx-auto mb-1.5" />
+            <span className="text-white/60 text-[10px] font-bold tracking-wider">VIDEO</span>
+          </div>
+        </div>
+      )}
       {/* Play icon overlay - always visible */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
         <svg 

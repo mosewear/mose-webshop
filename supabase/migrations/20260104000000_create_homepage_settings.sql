@@ -95,3 +95,4 @@ INSERT INTO homepage_settings (id)
 SELECT gen_random_uuid()
 WHERE NOT EXISTS (SELECT 1 FROM homepage_settings);
 
+

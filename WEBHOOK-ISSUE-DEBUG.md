@@ -89,3 +89,4 @@ Als status wel is geüpdatet maar admin niet refresh:
 
 Als het nog steeds niet werkt, check de Vercel logs en deel de errors die je ziet.
 
+
