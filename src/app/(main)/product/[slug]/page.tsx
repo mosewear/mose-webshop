@@ -55,7 +55,7 @@ interface ProductVariant {
   is_available: boolean
 }
 
-// Helper functie om ** te vervangen door <strong> tags
+// Helper functie om ** te vervangen door <strong> tags (met <p> wrapper voor accordions)
 function formatTemplateText(text: string): ReactElement[] {
   const lines = text.split('\n')
   return lines.map((line, index) => {
@@ -70,6 +70,25 @@ function formatTemplateText(text: string): ReactElement[] {
         })}
       </p>
     )
+  })
+}
+
+// Helper functie om ** te vervangen door <strong> tags (inline, voor description)
+function formatBoldText(text: string): ReactElement[] {
+  const lines = text.split('\n')
+  return lines.flatMap((line, lineIndex) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g)
+    const elements = parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={`${lineIndex}-${i}`} className="font-bold">{part.slice(2, -2)}</strong>
+      }
+      return part
+    })
+    // Add line break between lines (except for the last one)
+    if (lineIndex < lines.length - 1) {
+      return [...elements, <br key={`br-${lineIndex}`} />]
+    }
+    return elements
   })
 }
 
@@ -668,9 +687,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* Description - Desktop: Expandable with line-clamp */}
               <div className="hidden md:block border-t border-b border-gray-200 py-3">
-                <p className={`text-sm text-gray-700 leading-relaxed whitespace-pre-line ${descriptionExpanded ? '' : 'line-clamp-3'}`}>
-                  {product.description}
-                </p>
+                <div className={`text-sm text-gray-700 leading-relaxed ${descriptionExpanded ? '' : 'line-clamp-3'}`}>
+                  {formatBoldText(product.description)}
+                </div>
                 {/* Only show button if text is actually clamped (more than 3 lines worth of text) */}
                 {product.description && product.description.split('\n').length > 3 && (
                   <button 
@@ -928,7 +947,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'description' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50">
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm">{product.description}</p>
+                        <div className="text-gray-700 leading-relaxed text-sm">
+                          {formatBoldText(product.description)}
+                        </div>
                       </div>
                     )}
                   </div>
