@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect, useRef } from 'react'
+import { use, useState, useEffect, useRef, ReactElement } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -56,7 +56,7 @@ interface ProductVariant {
 }
 
 // Helper functie om ** te vervangen door <strong> tags
-function formatTemplateText(text: string): JSX.Element[] {
+function formatTemplateText(text: string): ReactElement[] {
   const lines = text.split('\n')
   return lines.map((line, index) => {
     const parts = line.split(/(\*\*[^*]+\*\*)/g)
