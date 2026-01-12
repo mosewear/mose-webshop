@@ -45,8 +45,8 @@ export default function VerzendingPage() {
             </h1>
             
             <p className="text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto">
-              Geen gedoe. Gratis verzending vanaf €{settings.free_shipping_threshold}. 
-              {settings.return_days} dagen retour zonder vragen.
+              Gratis verzending vanaf €{settings.free_shipping_threshold}. 
+              Items mogen binnen {settings.return_days} dagen retour zonder gedoe.
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function VerzendingPage() {
                 <h3 className="font-bold text-xl uppercase">Track & Trace</h3>
               </div>
               <p className="text-sm mb-3">
-                Via <strong>PostNL</strong>. Je ontvangt:
+                Via <strong>DHL</strong>. Je ontvangt:
               </p>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
@@ -259,7 +259,7 @@ export default function VerzendingPage() {
                 {
                   number: '4',
                   title: 'Plak het label erop',
-                  text: 'Breng het pakket naar een PostNL punt bij jou in de buurt.',
+                  text: 'Breng het pakket naar een DHL ServicePoint bij jou in de buurt.',
                 },
                 {
                   number: '5',
