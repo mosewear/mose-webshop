@@ -235,34 +235,39 @@ export default function VerzendingPage() {
               {[
                 {
                   number: '1',
-                  title: 'Stuur een e-mail',
+                  title: 'Log in op je account',
                   text: (
                     <>
-                      Naar{' '}
-                      <a href="mailto:info@mosewear.nl" className="text-brand-primary font-bold underline hover:no-underline">
-                        info@mosewear.nl
-                      </a>{' '}
-                      met je ordernummer en artikelen.
+                      Ga naar{' '}
+                      <Link href="/account" className="text-brand-primary font-bold underline hover:no-underline">
+                        je klantportaal
+                      </Link>{' '}
+                      en log in met je gegevens.
                     </>
                   ),
                 },
                 {
                   number: '2',
-                  title: 'Ontvang retourlabel',
-                  text: 'Binnen 24 uur sturen we je een retourlabel per e-mail.',
+                  title: 'Selecteer je order',
+                  text: 'Kies de bestelling en selecteer de artikelen die je wilt retourneren.',
                 },
                 {
                   number: '3',
+                  title: 'Betaal retourkosten',
+                  text: 'Betaal €5,95 retourkosten direct online en download je retourlabel.',
+                },
+                {
+                  number: '4',
                   title: 'Pak je artikel(en) in',
                   text: 'Stop alles veilig in de originele verpakking of een stevige doos.',
                 },
                 {
-                  number: '4',
+                  number: '5',
                   title: 'Plak het label erop',
                   text: 'Breng het pakket naar een DHL ServicePoint bij jou in de buurt.',
                 },
                 {
-                  number: '5',
+                  number: '6',
                   title: 'Ontvang je geld terug',
                   text: 'Binnen 5-7 werkdagen na ontvangst storten we het bedrag terug.',
                 },
