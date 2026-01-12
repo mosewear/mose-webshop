@@ -288,7 +288,7 @@ export default function VerzendingPage() {
             </h3>
             <p className="text-lg mb-3">
               Retourneren binnen Nederland en België kost <strong className="text-xl">€5,95</strong>. 
-              Dit bedrag wordt in mindering gebracht op je terugbetaling.
+              Je betaalt dit direct bij het aanmaken van het retourlabel in je klantportaal.
             </p>
             <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
               <Check className="w-5 h-5" />
