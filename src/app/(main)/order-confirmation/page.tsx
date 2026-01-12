@@ -97,15 +97,24 @@ export default function OrderConfirmationPage({
       setLoading(false)
       
       // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
+      // Dual tracking: Client + Server (CAPI) with user data
       trackPixelEvent('Purchase', {
         content_ids: data.items.map((item: OrderItem) => item.id),
         value: data.order.total,
         currency: 'EUR',
         num_items: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
         transaction_id: data.order.id
+      }, {
+        email: data.order.email,
+        firstName: data.order.shipping_address?.firstName,
+        lastName: data.order.shipping_address?.lastName,
+        phone: data.order.shipping_address?.phone,
+        city: data.order.shipping_address?.city,
+        zip: data.order.shipping_address?.postalCode,
+        country: data.order.shipping_address?.country || 'NL'
       })
       
-      console.log('✅ Facebook Pixel Purchase event tracked:', data.order.id)
+      console.log('✅ Facebook Pixel Purchase event tracked (Client + Server):', data.order.id)
     } catch (error) {
       console.error('❌ Failed to fetch order:', error)
       setLoading(false)

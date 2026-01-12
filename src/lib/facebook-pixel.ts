@@ -1,6 +1,6 @@
 /**
  * Facebook Pixel Helper Functions
- * Standard Events Only - No Custom Events
+ * Dual Tracking: Client-Side Pixel + Server-Side CAPI
  */
 
 type PixelEvent = 
@@ -23,12 +23,84 @@ interface PixelParams {
   transaction_id?: string
 }
 
+interface UserData {
+  email?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  city?: string
+  state?: string
+  zip?: string
+  country?: string
+}
+
 /**
- * Track standard Facebook Pixel event
+ * Generate unique event ID for deduplication
+ */
+function generateEventId(): string {
+  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+/**
+ * Get Facebook cookies for better tracking
+ */
+function getFacebookCookies() {
+  if (typeof document === 'undefined') return {}
+  
+  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+    const [key, value] = cookie.trim().split('=')
+    acc[key] = value
+    return acc
+  }, {} as Record<string, string>)
+  
+  return {
+    fbc: cookies._fbc || undefined,
+    fbp: cookies._fbp || undefined,
+  }
+}
+
+/**
+ * Send event to server-side Conversions API
+ */
+async function sendToConversionsAPI(
+  event: PixelEvent,
+  params: PixelParams,
+  userData: UserData,
+  eventId: string
+) {
+  try {
+    const cookies = getFacebookCookies()
+    
+    await fetch('/api/facebook-capi', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        event_name: event,
+        event_id: eventId,
+        event_source_url: window.location.href,
+        user_data: {
+          ...userData,
+          ...cookies,
+        },
+        custom_data: params,
+      }),
+    })
+    
+    console.log(`[FB CAPI] ✅ Server event sent: ${event}`)
+  } catch (error) {
+    console.error(`[FB CAPI] Error sending ${event}:`, error)
+  }
+}
+
+/**
+ * Track standard Facebook Pixel event (DUAL: Client + Server)
  */
 export function trackPixelEvent(
   event: PixelEvent,
-  params?: PixelParams
+  params?: PixelParams,
+  userData?: UserData
 ) {
   if (typeof window === 'undefined' || !window.fbq) {
     console.warn('[FB Pixel] Not initialized')
@@ -36,6 +108,9 @@ export function trackPixelEvent(
   }
 
   try {
+    // Generate unique event ID for deduplication
+    const eventId = generateEventId()
+    
     // Prepare parameters
     const eventParams: any = {
       currency: params?.currency || 'EUR',
@@ -50,10 +125,19 @@ export function trackPixelEvent(
     if (params?.num_items) eventParams.num_items = params.num_items
     if (params?.search_string) eventParams.search_string = params.search_string
     if (params?.transaction_id) eventParams.transaction_id = params.transaction_id
+    
+    // Add event_id for deduplication
+    eventParams.eventID = eventId
 
-    // Track event
-    console.log(`[FB Pixel] ${event}`, eventParams)
+    // 1. Track client-side (browser pixel)
+    console.log(`[FB Pixel Client] ${event}`, eventParams)
     window.fbq('track', event, eventParams)
+    
+    // 2. Track server-side (Conversions API) - async, don't wait
+    if (userData || params?.transaction_id) {
+      // Only send to CAPI for important events with user data
+      sendToConversionsAPI(event, params || {}, userData || {}, eventId)
+    }
   } catch (error) {
     console.error(`[FB Pixel] Error tracking ${event}:`, error)
   }

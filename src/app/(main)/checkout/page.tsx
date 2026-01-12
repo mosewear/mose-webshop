@@ -613,11 +613,19 @@ export default function CheckoutPage() {
       // Go to payment step - Payment Intent will be created when user selects method
       setCurrentStep('payment')
       
-      // Track Facebook Pixel AddPaymentInfo event
+      // Track Facebook Pixel AddPaymentInfo event (with user data for CAPI)
       trackPixelEvent('AddPaymentInfo', {
         value: total,
         currency: 'EUR',
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
+      }, {
+        email: form.email,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phone: form.phone,
+        city: form.city,
+        zip: form.postalCode,
+        country: form.country
       })
       
       setLoading(false)
