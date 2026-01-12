@@ -574,7 +574,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       alt={displayImages[selectedImage]?.alt_text || product.name}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-center"
+                      className="object-contain object-center"
                       priority
                     />
                     {/* Zoom hint - only for images */}
