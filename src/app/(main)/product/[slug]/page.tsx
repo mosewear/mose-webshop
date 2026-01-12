@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
 import { Truck, RotateCcw, MapPin, Video } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 
 interface Product {
   id: string
@@ -310,6 +311,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       data.product_images.sort((a: ProductImage, b: ProductImage) => a.position - b.position)
       setProduct(data)
 
+      // Track Facebook Pixel ViewContent event
+      const price = data.sale_price || data.base_price
+      trackPixelEvent('ViewContent', {
+        content_ids: [data.id],
+        content_name: data.name,
+        content_type: 'product',
+        content_category: data.categories?.name,
+        value: price,
+        currency: 'EUR'
+      })
+
       // Auto-select first available variant
       if (data.product_variants.length > 0) {
         const firstAvailable = data.product_variants.find((v: ProductVariant) => v.is_available && v.stock_quantity > 0)
@@ -421,6 +433,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       image: cartImage,
       sku: selectedVariant.sku,
       stock: selectedVariant.stock_quantity,
+    })
+
+    // Track Facebook Pixel AddToCart event
+    trackPixelEvent('AddToCart', {
+      content_ids: [selectedVariant.id],
+      content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
+      content_type: 'product',
+      content_category: product.categories?.name,
+      value: finalPrice * quantity,
+      currency: 'EUR',
+      num_items: quantity
     })
 
     // Open cart drawer immediately

@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/store/cart'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 
 interface Order {
   id: string
@@ -94,6 +95,17 @@ export default function OrderConfirmationPage({
       setOrder(data.order)
       setOrderItems(data.items)
       setLoading(false)
+      
+      // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
+      trackPixelEvent('Purchase', {
+        content_ids: data.items.map((item: OrderItem) => item.id),
+        value: data.order.total,
+        currency: 'EUR',
+        num_items: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
+        transaction_id: data.order.id
+      })
+      
+      console.log('✅ Facebook Pixel Purchase event tracked:', data.order.id)
     } catch (error) {
       console.error('❌ Failed to fetch order:', error)
       setLoading(false)

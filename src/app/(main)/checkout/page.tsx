@@ -11,6 +11,7 @@ import { loadStripe, Stripe } from '@stripe/stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -158,6 +159,18 @@ export default function CheckoutPage() {
 
     // Check if user is already logged in and load data
     loadUserData()
+
+    // Track Facebook Pixel InitiateCheckout event
+    if (items.length > 0) {
+      const total = subtotalAfterDiscount + shipping
+      
+      trackPixelEvent('InitiateCheckout', {
+        content_ids: items.map(item => item.variantId),
+        value: total,
+        currency: 'EUR',
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0)
+      })
+    }
   }, [])
 
   // Separate useEffect for recover parameter (runs when searchParams change)
@@ -599,6 +612,14 @@ export default function CheckoutPage() {
 
       // Go to payment step - Payment Intent will be created when user selects method
       setCurrentStep('payment')
+      
+      // Track Facebook Pixel AddPaymentInfo event
+      trackPixelEvent('AddPaymentInfo', {
+        value: total,
+        currency: 'EUR',
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0)
+      })
+      
       setLoading(false)
     } catch (error: any) {
       console.error('💥 CHECKOUT ERROR:', error)

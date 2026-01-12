@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { X, SlidersHorizontal, Search } from 'lucide-react'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 
 interface Product {
   id: string
@@ -83,6 +84,19 @@ export default function ShopPage() {
       setSelectedCategory(categorySlug)
     }
   }, [])
+
+  // Track search event (debounced to avoid tracking every keystroke)
+  useEffect(() => {
+    if (searchQuery.trim().length > 2) {
+      const timer = setTimeout(() => {
+        trackPixelEvent('Search', {
+          search_string: searchQuery.trim()
+        })
+      }, 1000) // Wait 1 second after user stops typing
+      
+      return () => clearTimeout(timer)
+    }
+  }, [searchQuery])
 
   const fetchCategories = async () => {
     const { data } = await supabase
