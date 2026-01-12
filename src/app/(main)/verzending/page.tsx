@@ -81,7 +81,7 @@ export default function VerzendingPage() {
           </div>
           
           {/* Hero Card - Gratis Verzending */}
-          <div className="bg-brand-primary text-white p-8 md:p-12 border-4 border-black mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-brand-primary text-white p-8 md:p-12 border-4 border-black mb-8">
             <div className="flex items-start gap-4 mb-4">
               <Package className="w-8 h-8 flex-shrink-0" />
               <div>
@@ -194,7 +194,7 @@ export default function VerzendingPage() {
           </div>
           
           {/* Hero Card - Bedenktijd */}
-          <div className="bg-black text-white p-8 md:p-12 border-4 border-black mb-8 shadow-[8px_8px_0px_0px_rgba(0,166,118,1)]">
+          <div className="bg-black text-white p-8 md:p-12 border-4 border-black mb-8">
             <h3 className="text-3xl md:text-4xl font-bold mb-3 uppercase">
               {settings.return_days} Dagen Bedenktijd
             </h3>
@@ -322,7 +322,7 @@ export default function VerzendingPage() {
 
         {/* CTA Section - Brutalist */}
         <section className="mt-16 md:mt-24">
-          <div className="bg-black text-white p-12 md:p-16 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,166,118,1)] text-center">
+          <div className="bg-black text-white p-12 md:p-16 border-4 border-black text-center">
             <h2 className="font-display text-4xl md:text-5xl mb-6 uppercase">
               Nog Vragen?
             </h2>
