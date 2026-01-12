@@ -584,11 +584,11 @@ export default function ShopPage() {
                     <Link
                       key={product.id}
                       href={`/product/${product.slug}`}
-                      className="group block"
+                      className="group block h-full"
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:shadow-2xl md:hover:-translate-y-2">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:shadow-2xl md:hover:-translate-y-2 h-full flex flex-col">
                         {/* Image - Larger on mobile */}
-                        <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden">
+                        <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
                             src={getPrimaryImage(product)}
                             alt={product.name}
@@ -644,11 +644,11 @@ export default function ShopPage() {
                         </div>
 
                         {/* Product Info - Smaller padding on mobile */}
-                        <div className="p-2 md:p-4">
-                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
+                        <div className="p-2 md:p-4 flex flex-col flex-grow">
+                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[2.5rem] md:min-h-[3.5rem]">
                             {product.name}
                           </h3>
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mt-auto">
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
                               
