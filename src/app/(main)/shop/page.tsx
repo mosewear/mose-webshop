@@ -586,7 +586,7 @@ export default function ShopPage() {
                       href={`/product/${product.slug}`}
                       className="group block h-full"
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:shadow-2xl md:hover:-translate-y-2 h-full flex flex-col">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
