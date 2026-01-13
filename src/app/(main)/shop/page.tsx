@@ -82,6 +82,9 @@ export default function ShopPage() {
     const categorySlug = params.get('category')
     if (categorySlug) {
       setSelectedCategory(categorySlug)
+    } else {
+      // Reset to 'all' when no category parameter is present
+      setSelectedCategory('all')
     }
   }, [])
 
