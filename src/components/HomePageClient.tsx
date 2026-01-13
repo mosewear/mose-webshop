@@ -37,7 +37,7 @@ export default function HomePageClient({
         {/* Background Image with Parallax Effect */}
         <div className="absolute inset-0">
         <Image
-            src={homepageSettings?.hero_image_url || '/hero_mose.png'}
+            src={homepageSettings?.hero_image_url || '/hero-mose-new.png'}
             alt="MOSE Hero"
             fill
             className="object-cover object-center scale-105"
