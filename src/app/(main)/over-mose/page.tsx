@@ -34,7 +34,7 @@ export default function AboutPage() {
         {/* Story Image */}
         <div className="relative aspect-[16/9] mb-12 border-2 border-black overflow-hidden">
           <Image
-            src="/hero_mose.png"
+            src="/hero-mose-new.png"
             alt="MOSE Groningen"
             fill
             sizes="(max-width: 896px) 100vw, 896px"
