@@ -414,7 +414,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   
   const displayImages = getDisplayImages()
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || !selectedVariant) return
 
     // Get first IMAGE (not video) for cart thumbnail
@@ -435,16 +435,36 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       stock: selectedVariant.stock_quantity,
     })
 
-    // Track Facebook Pixel AddToCart event
-    trackPixelEvent('AddToCart', {
-      content_ids: [selectedVariant.id],
-      content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
-      content_type: 'product',
-      content_category: product.categories?.name,
-      value: finalPrice * quantity,
-      currency: 'EUR',
-      num_items: quantity
-    })
+    // Track Facebook Pixel AddToCart event with user data if logged in
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      trackPixelEvent('AddToCart', {
+        content_ids: [selectedVariant.id],
+        content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
+        content_type: 'product',
+        content_category: product.categories?.name,
+        value: finalPrice * quantity,
+        currency: 'EUR',
+        num_items: quantity
+      }, user ? {
+        email: user.email || undefined,
+        firstName: user.user_metadata?.first_name || undefined,
+        lastName: user.user_metadata?.last_name || undefined,
+        phone: user.phone || undefined
+      } : undefined)
+    } catch (error) {
+      // If user check fails, still track without userData
+      trackPixelEvent('AddToCart', {
+        content_ids: [selectedVariant.id],
+        content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
+        content_type: 'product',
+        content_category: product.categories?.name,
+        value: finalPrice * quantity,
+        currency: 'EUR',
+        num_items: quantity
+      })
+    }
 
     // Open cart drawer immediately
     openDrawer()

@@ -161,6 +161,8 @@ export default function CheckoutPage() {
     loadUserData()
 
     // Track Facebook Pixel InitiateCheckout event
+    // Note: This runs on page load, so we might not have form data yet
+    // We'll track again with userData when user proceeds to payment
     if (items.length > 0) {
       const total = subtotalAfterDiscount + shipping
       
