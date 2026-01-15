@@ -26,11 +26,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "MOSE - Geen poespas. Wel karakter.",
+    default: "MOSE | Premium Basics voor Mannen - Lokaal Gemaakt in Groningen",
     template: "%s | MOSE"
   },
-  description: "Lokaal gemaakte premium basics uit Groningen. Kleding zonder concessies, gebouwd om lang mee te gaan. Voor stoere moderne mannen.",
-  keywords: ["MOSE", "streetwear", "Nederlandse kleding", "Groningen", "premium basics", "lokaal gemaakt", "mannenmode", "duurzame kleding", "hoodies", "t-shirts"],
+  description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
+  keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "Groningen", "lokaal gemaakt", "Nederlands merk", "duurzame kleding", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
   authors: [{ name: "MOSE", url: "https://mosewear.com" }],
   creator: "MOSE",
   publisher: "MOSE",
@@ -52,22 +52,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "nl_NL",
     url: "https://mosewear.com",
-    title: "MOSE - Geen poespas. Wel karakter.",
-    description: "Lokaal gemaakte premium basics uit Groningen. Kleding zonder concessies.",
+    title: "MOSE | Premium Basics voor Mannen - Lokaal Gemaakt in Groningen",
+    description: "Tijdloze basics zonder gedoe. Premium hoodies, t-shirts en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €75.",
     siteName: "MOSE",
     images: [
       {
         url: "/logomose.png",
         width: 1200,
         height: 630,
-        alt: "MOSE - Premium basics",
+        alt: "MOSE - Premium Basics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MOSE - Geen poespas. Wel karakter.",
-    description: "Lokaal gemaakte premium basics uit Groningen",
+    title: "MOSE | Premium Basics voor Mannen",
+    description: "Tijdloze basics zonder gedoe. Lokaal gemaakt in Groningen.",
     images: ["/logomose.png"],
   },
   robots: {
