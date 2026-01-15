@@ -13,6 +13,8 @@ import { Truck, RotateCcw, MapPin, Video } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 
+const supabase = createClient()
+
 interface Product {
   id: string
   name: string
