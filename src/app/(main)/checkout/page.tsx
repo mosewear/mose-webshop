@@ -460,6 +460,17 @@ export default function CheckoutPage() {
       if (error) newErrors[field] = error
     })
 
+    // Extra check: Ensure full name is at least 3 characters (Stripe requirement)
+    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim()
+    if (fullName.length < 3) {
+      if (form.firstName.trim().length < 2) {
+        newErrors.firstName = 'Voornaam moet minimaal 2 karakters bevatten'
+      }
+      if (form.lastName.trim().length < 2) {
+        newErrors.lastName = 'Achternaam moet minimaal 2 karakters bevatten'
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -1465,7 +1476,7 @@ export default function CheckoutPage() {
                 isCreatingIntent={isCreatingIntent}
                 orderId={orderId}
                 billingDetails={{
-                  name: `${form.firstName} ${form.lastName}`,
+                  name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim() || 'Klant', // Stripe requires min 3 chars
                   email: form.email,
                   phone: form.phone,
                   address: {

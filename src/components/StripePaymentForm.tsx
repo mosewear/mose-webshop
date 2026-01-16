@@ -112,12 +112,18 @@ function PaymentForm({
     setErrorMessage(undefined)
 
     try {
+      // Ensure name is at least 3 characters (Stripe requirement)
+      const safeBillingDetails = {
+        ...billingDetails,
+        name: billingDetails.name.trim().length >= 3 ? billingDetails.name.trim() : 'Klant'
+      }
+
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/checkout/payment-status`,
           payment_method_data: {
-            billing_details: billingDetails // Pass billing details we already collected!
+            billing_details: safeBillingDetails // Pass billing details we already collected!
           }
         },
       })
