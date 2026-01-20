@@ -563,7 +563,7 @@ export default function CheckoutPage() {
     try {
       // Step 1: Create order via server-side API
       const orderData = {
-        email: form.email,
+        email: form.email.trim(),
         status: 'pending',
         total: total,
         subtotal: subtotalAfterDiscount, // After discount
@@ -572,19 +572,19 @@ export default function CheckoutPage() {
         promo_code: promoCode || null,
         discount_amount: promoDiscount,
         shipping_address: {
-          name: `${form.firstName} ${form.lastName}`,
-          address: form.address,
-          city: form.city,
-          postalCode: form.postalCode,
-          phone: form.phone,
+          name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+          address: form.address.trim(),
+          city: form.city.trim(),
+          postalCode: form.postalCode.trim(),
+          phone: form.phone.trim(),
           country: form.country,
         },
         billing_address: {
-          name: `${form.firstName} ${form.lastName}`,
-          address: form.address,
-          city: form.city,
-          postalCode: form.postalCode,
-          phone: form.phone,
+          name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+          address: form.address.trim(),
+          city: form.city.trim(),
+          postalCode: form.postalCode.trim(),
+          phone: form.phone.trim(),
           country: form.country,
         },
         payment_status: 'pending',
@@ -632,12 +632,12 @@ export default function CheckoutPage() {
         currency: 'EUR',
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
       }, {
-        email: form.email,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        phone: form.phone,
-        city: form.city,
-        zip: form.postalCode,
+        email: form.email.trim(),
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        phone: form.phone.trim(),
+        city: form.city.trim(),
+        zip: form.postalCode.trim(),
         country: form.country
       })
       
@@ -1500,12 +1500,12 @@ export default function CheckoutPage() {
                 orderId={orderId}
                 billingDetails={{
                   name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim() || 'Klant', // Stripe requires min 3 chars
-                  email: form.email,
-                  phone: form.phone,
+                  email: form.email.trim(),
+                  phone: form.phone.trim(),
                   address: {
-                    line1: form.address,
-                    city: form.city,
-                    postal_code: form.postalCode,
+                    line1: form.address.trim(),
+                    city: form.city.trim(),
+                    postal_code: form.postalCode.trim(),
                     country: form.country,
                     state: null, // Not required for NL/EU countries
                   }
