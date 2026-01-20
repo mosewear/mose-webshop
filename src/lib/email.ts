@@ -1387,9 +1387,13 @@ ${await createEmailFooter(siteUrl)}
 
   try {
     if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY is not set')
+      console.error('❌ RESEND_API_KEY is not set')
       return { success: false, error: 'Email service not configured' }
     }
+
+    console.log('📧 Sending contact form email to:', adminEmail)
+    console.log('📧 From:', email)
+    console.log('📧 Subject:', `Contactformulier: ${subjectLabel} - ${name}`)
 
     const { data, error } = await resend.emails.send({
       from: 'MOSE Contact <contact@orders.mosewear.nl>',
@@ -1403,14 +1407,14 @@ ${await createEmailFooter(siteUrl)}
     })
 
     if (error) {
-      console.error('Error sending contact form email:', error)
+      console.error('❌ Error sending contact form email:', error)
       return { success: false, error }
     }
 
     console.log('✅ Contact form email sent:', data)
     return { success: true, data }
   } catch (error: any) {
-    console.error('Error sending email:', error)
+    console.error('💥 Error sending email:', error)
     return { success: false, error: error?.message || 'Unknown error' }
   }
 }
