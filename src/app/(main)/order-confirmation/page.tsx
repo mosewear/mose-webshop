@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/store/cart'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
+import { trackPurchase } from '@/lib/analytics'
 
 interface Order {
   id: string
@@ -112,6 +113,19 @@ export default function OrderConfirmationPage({
         city: data.order.shipping_address?.city,
         zip: data.order.shipping_address?.postalCode,
         country: data.order.shipping_address?.country || 'NL'
+      })
+      
+      // Track custom analytics purchase event
+      trackPurchase({
+        id: data.order.id,
+        total: data.order.total,
+        items_count: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
+        items: data.items.map((item: OrderItem) => ({
+          id: item.id,
+          name: item.product_name,
+          quantity: item.quantity,
+          price: item.price_at_purchase,
+        })),
       })
       
       console.log('✅ Facebook Pixel Purchase event tracked (Client + Server):', data.order.id)

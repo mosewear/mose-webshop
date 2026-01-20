@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
+import { PostHogProvider } from './providers'
 import "./globals.css";
 
 const anton = Anton({
@@ -124,7 +125,9 @@ export default function RootLayout({
         </noscript>
       </head>
       <body className="antialiased font-sans">
-        {children}
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
         <Toaster 
           position="top-center"
           toastOptions={{

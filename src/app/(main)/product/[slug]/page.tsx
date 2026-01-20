@@ -12,6 +12,7 @@ import ProductReviews from '@/components/ProductReviews'
 import { Truck, RotateCcw, MapPin, Video } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
+import { trackProductView, trackAddToCart } from '@/lib/analytics'
 
 const supabase = createClient()
 
@@ -265,6 +266,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   useEffect(() => {
     if (product) {
       setIsWishlisted(isInWishlist(product.id))
+      
+      // Track product view in custom analytics
+      trackProductView({
+        id: product.id,
+        name: product.name,
+        category: product.categories?.name || 'uncategorized',
+        price: product.sale_price || product.base_price,
+      })
     }
   }, [product, isInWishlist])
 
@@ -467,6 +476,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         num_items: quantity
       })
     }
+    
+    // Track custom analytics AddToCart event
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      category: product.categories?.name || 'uncategorized',
+      price: finalPrice,
+      quantity: quantity,
+    })
 
     // Open cart drawer immediately
     openDrawer()

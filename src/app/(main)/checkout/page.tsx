@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
+import { trackCheckoutStarted } from '@/lib/analytics'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -171,6 +172,12 @@ export default function CheckoutPage() {
         value: total,
         currency: 'EUR',
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
+      })
+      
+      // Track custom analytics checkout started event
+      trackCheckoutStarted({
+        items_count: items.reduce((sum, item) => sum + item.quantity, 0),
+        total_value: total,
       })
     }
   }, [])
