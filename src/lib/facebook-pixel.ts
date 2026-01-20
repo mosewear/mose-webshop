@@ -71,7 +71,7 @@ async function sendToConversionsAPI(
   try {
     const cookies = getFacebookCookies()
     
-    await fetch('/api/facebook-capi', {
+    const response = await fetch('/api/facebook-capi', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -88,9 +88,16 @@ async function sendToConversionsAPI(
       }),
     })
     
-    console.log(`[FB CAPI] ✅ Server event sent: ${event}`)
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error(`[FB CAPI] ❌ Server error for ${event}:`, errorData)
+      return
+    }
+    
+    const result = await response.json()
+    console.log(`[FB CAPI] ✅ Server event sent: ${event}`, result)
   } catch (error) {
-    console.error(`[FB CAPI] Error sending ${event}:`, error)
+    console.error(`[FB CAPI] ❌ Error sending ${event}:`, error)
   }
 }
 
