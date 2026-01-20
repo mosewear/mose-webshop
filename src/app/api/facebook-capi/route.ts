@@ -107,39 +107,44 @@ export async function POST(request: NextRequest) {
       client_user_agent: request.headers.get('user-agent') || undefined,
     }
 
-    // Hash PII fields
-    if (user_data.email) {
+    // Hash PII fields (only if non-empty)
+    if (user_data.email && user_data.email.trim()) {
       hashedUserData.em = [hashData(user_data.email)]
     }
-    if (user_data.phone) {
+    if (user_data.phone && user_data.phone.trim()) {
       const normalized = normalizePhone(user_data.phone)
-      hashedUserData.ph = [hashData(normalized)]
+      if (normalized) { // Only add if not empty after normalization
+        hashedUserData.ph = [hashData(normalized)]
+      }
     }
-    if (user_data.firstName) {
+    if (user_data.firstName && user_data.firstName.trim()) {
       hashedUserData.fn = [hashData(user_data.firstName)]
     }
-    if (user_data.lastName) {
+    if (user_data.lastName && user_data.lastName.trim()) {
       hashedUserData.ln = [hashData(user_data.lastName)]
     }
-    if (user_data.city) {
+    if (user_data.city && user_data.city.trim()) {
       hashedUserData.ct = [hashData(user_data.city)]
     }
-    if (user_data.state) {
+    if (user_data.state && user_data.state.trim()) {
       hashedUserData.st = [hashData(user_data.state)]
     }
-    if (user_data.zip) {
+    if (user_data.zip && user_data.zip.trim()) {
       hashedUserData.zp = [hashData(user_data.zip)]
     }
-    if (user_data.country) {
-      // Country code is NOT hashed
-      hashedUserData.country = [user_data.country.toLowerCase()]
+    if (user_data.country && user_data.country.trim()) {
+      // Country code is NOT hashed, but must be lowercase 2-letter code
+      const countryCode = user_data.country.toLowerCase().substring(0, 2)
+      if (countryCode) {
+        hashedUserData.country = [countryCode]
+      }
     }
 
-    // Facebook cookies (NOT hashed)
-    if (user_data.fbc) {
+    // Facebook cookies (NOT hashed, only if present and non-empty)
+    if (user_data.fbc && user_data.fbc.trim()) {
       hashedUserData.fbc = user_data.fbc
     }
-    if (user_data.fbp) {
+    if (user_data.fbp && user_data.fbp.trim()) {
       hashedUserData.fbp = user_data.fbp
     }
 
