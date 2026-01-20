@@ -123,27 +123,29 @@ export default function BehaviorAnalyticsPage() {
                 <ArrowLeft size={20} />
               </Link>
               <div>
-                <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-3">
-                  <MousePointer size={32} className="text-brand-primary" />
-                  Winkelgedrag Analytics
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold flex items-center gap-2 md:gap-3">
+                  <MousePointer size={24} className="text-brand-primary md:w-8 md:h-8" />
+                  <span className="hidden sm:inline">Winkelgedrag Analytics</span>
+                  <span className="sm:hidden">Winkelgedrag</span>
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">PRECIES zien wat klanten doen</p>
+                <p className="text-xs md:text-sm text-gray-600 mt-1">PRECIES zien wat klanten doen</p>
               </div>
             </div>
             
-            {/* Time Range Selector */}
-            <div className="flex gap-2">
+            {/* Time Range Selector - Mobile Optimized */}
+            <div className="flex gap-2 w-full md:w-auto">
               {(['7d', '30d', '90d'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
-                  className={`px-4 py-2 text-sm font-bold border-2 transition-all ${
+                  className={`flex-1 md:flex-none px-3 md:px-4 py-2 text-xs md:text-sm font-bold border-2 transition-all ${
                     timeRange === range
                       ? 'bg-brand-primary text-white border-brand-primary'
                       : 'bg-white text-gray-700 border-gray-300 hover:border-brand-primary'
                   }`}
                 >
-                  {range === '7d' ? '7 dagen' : range === '30d' ? '30 dagen' : '90 dagen'}
+                  <span className="md:hidden">{range}</span>
+                  <span className="hidden md:inline">{range === '7d' ? '7 dagen' : range === '30d' ? '30 dagen' : '90 dagen'}</span>
                 </button>
               ))}
             </div>
@@ -234,56 +236,104 @@ export default function BehaviorAnalyticsPage() {
           </div>
         )}
 
-        {/* Product Performance Table */}
-        <div className="bg-white border-2 border-gray-200 p-6 md:p-8">
-          <h2 className="text-2xl md:text-3xl font-display font-bold mb-6 flex items-center gap-3">
-            <Package size={28} className="text-brand-primary" />
+        {/* Product Performance Table - Mobile Optimized with Cards */}
+        <div className="bg-white border-2 border-gray-200 p-4 md:p-6 lg:p-8">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-display font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3">
+            <Package size={24} className="text-brand-primary md:w-7 md:h-7" />
             Product Performance
           </h2>
           
           {productPerformance && productPerformance.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-2 border-gray-200">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold uppercase border-b-2 border-gray-200">Product</th>
-                    <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Views</th>
-                    <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Add to Cart</th>
-                    <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Cart Rate</th>
-                    <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Purchases</th>
-                    <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Conv. Rate</th>
-                    <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productPerformance.slice(0, 10).map((product, index) => (
-                    <tr key={product.product_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-4 py-3 text-sm font-semibold border-b border-gray-200">{product.product_name}</td>
-                      <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
-                        <Eye size={14} className="inline mr-1" />
-                        {String(product.views)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
-                        <ShoppingCart size={14} className="inline mr-1" />
-                        {String(product.add_to_carts)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
-                        <span className={`font-bold ${Number(product.add_to_cart_rate) > 10 ? 'text-green-600' : Number(product.add_to_cart_rate) > 5 ? 'text-yellow-600' : 'text-red-600'}`}>
-                          {Number(product.add_to_cart_rate).toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right border-b border-gray-200">{String(product.purchases)}</td>
-                      <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
-                        <span className={`font-bold ${Number(product.purchase_rate) > 2 ? 'text-green-600' : Number(product.purchase_rate) > 1 ? 'text-yellow-600' : 'text-red-600'}`}>
-                          {Number(product.purchase_rate).toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-bold border-b border-gray-200">€{Number(product.revenue).toFixed(2)}</td>
+            <>
+              {/* Desktop: Table view */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full border-2 border-gray-200">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase border-b-2 border-gray-200">Product</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Views</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Add to Cart</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Cart Rate</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Purchases</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Conv. Rate</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase border-b-2 border-gray-200">Revenue</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {productPerformance.slice(0, 10).map((product, index) => (
+                      <tr key={product.product_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-4 py-3 text-sm font-semibold border-b border-gray-200">{product.product_name}</td>
+                        <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
+                          <Eye size={14} className="inline mr-1" />
+                          {String(product.views)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
+                          <ShoppingCart size={14} className="inline mr-1" />
+                          {String(product.add_to_carts)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
+                          <span className={`font-bold ${Number(product.add_to_cart_rate) > 10 ? 'text-green-600' : Number(product.add_to_cart_rate) > 5 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {Number(product.add_to_cart_rate).toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right border-b border-gray-200">{String(product.purchases)}</td>
+                        <td className="px-4 py-3 text-sm text-right border-b border-gray-200">
+                          <span className={`font-bold ${Number(product.purchase_rate) > 2 ? 'text-green-600' : Number(product.purchase_rate) > 1 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {Number(product.purchase_rate).toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-bold border-b border-gray-200">€{Number(product.revenue).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile: Card view */}
+              <div className="md:hidden space-y-3">
+                {productPerformance.slice(0, 10).map((product, index) => (
+                  <div key={product.product_id} className="border-2 border-gray-200 p-4 bg-gray-50">
+                    <div className="font-bold text-sm mb-3 text-gray-900">{product.product_name}</div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <div className="text-gray-500 uppercase font-semibold mb-1">Views</div>
+                        <div className="font-bold text-gray-900">
+                          <Eye size={12} className="inline mr-1" />
+                          {String(product.views)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase font-semibold mb-1">Cart Rate</div>
+                        <div className={`font-bold ${Number(product.add_to_cart_rate) > 10 ? 'text-green-600' : Number(product.add_to_cart_rate) > 5 ? 'text-yellow-600' : 'text-red-600'}`}>
+                          {Number(product.add_to_cart_rate).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase font-semibold mb-1">Add to Cart</div>
+                        <div className="font-bold text-gray-900">
+                          <ShoppingCart size={12} className="inline mr-1" />
+                          {String(product.add_to_carts)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase font-semibold mb-1">Conv. Rate</div>
+                        <div className={`font-bold ${Number(product.purchase_rate) > 2 ? 'text-green-600' : Number(product.purchase_rate) > 1 ? 'text-yellow-600' : 'text-red-600'}`}>
+                          {Number(product.purchase_rate).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase font-semibold mb-1">Purchases</div>
+                        <div className="font-bold text-gray-900">{String(product.purchases)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 uppercase font-semibold mb-1">Revenue</div>
+                        <div className="font-bold text-brand-primary">€{Number(product.revenue).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <p className="text-gray-500 text-sm">Nog geen product performance data. Start met shoppen om data te verzamelen!</p>
           )}
