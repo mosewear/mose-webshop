@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// Force this page to be dynamic (never prerendered)
-export const dynamic = 'force-dynamic'
-
+// Inner component that uses useSearchParams (wrapped in Suspense)
 function PaymentStatusContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -100,17 +98,20 @@ function PaymentStatusContent() {
   return null
 }
 
+// Outer component with Suspense boundary
 export default function PaymentStatusPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen pt-24 md:pt-32 px-4 flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <h1 className="text-2xl font-display mb-2">BETALING CONTROLEREN</h1>
-          <p className="text-gray-600">Even geduld, we controleren je betaling...</p>
+    <Suspense 
+      fallback={
+        <div className="min-h-screen pt-24 md:pt-32 px-4 flex items-center justify-center bg-gray-50">
+          <div className="text-center max-w-md">
+            <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <h1 className="text-2xl font-display mb-2">LADEN...</h1>
+            <p className="text-gray-600">Even geduld...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentStatusContent />
     </Suspense>
   )

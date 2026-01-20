@@ -5,14 +5,14 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import posthog from '@/lib/posthog-client'
 
 /**
- * Track pageviews automatically when route changes
+ * Track pageviews automatically when route changes (inner component)
  */
-export function PostHogPageview(): null {
+function PostHogPageviewInner(): null {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -33,6 +33,17 @@ export function PostHogPageview(): null {
   }, [pathname, searchParams])
 
   return null
+}
+
+/**
+ * PostHog pageview tracker with Suspense boundary
+ */
+export function PostHogPageview() {
+  return (
+    <Suspense fallback={null}>
+      <PostHogPageviewInner />
+    </Suspense>
+  )
 }
 
 /**
