@@ -3,6 +3,9 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+// Force this page to be dynamic (never prerendered)
+export const dynamic = 'force-dynamic'
+
 function PaymentStatusContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
