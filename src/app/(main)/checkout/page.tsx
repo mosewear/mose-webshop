@@ -223,7 +223,7 @@ export default function CheckoutPage() {
         .select('*')
         .eq('user_id', userId)
         .eq('is_default_shipping', true)
-        .single()
+        .maybeSingle() // Use maybeSingle() instead of single() to avoid 406 error
 
       // 3. Parse address voor huisnummer en toevoeging (als adres al bestaat)
       let huisnummer = ''
