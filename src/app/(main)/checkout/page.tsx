@@ -1035,10 +1035,11 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* Postcode + Huisnummer + Toevoeging + Lookup Button */}
-                    <div className="space-y-3">
-                      {/* Desktop: Grid layout */}
-                      <div className="hidden md:grid md:grid-cols-12 gap-3">
+                    {/* Postcode + Huisnummer + Toevoeging + Lookup Button (ALLEEN VOOR NL) */}
+                    {form.country === 'NL' ? (
+                      <div className="space-y-3">
+                        {/* Desktop: Grid layout */}
+                        <div className="hidden md:grid md:grid-cols-12 gap-3">
                         <div className="col-span-3 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                             Postcode <span className="text-red-600 ml-0.5">*</span>
@@ -1284,8 +1285,30 @@ export default function CheckoutPage() {
                         </div>
                       )}
                     </div>
+                    ) : (
+                      /* Voor NIET-NL landen: Gewone postcode + address velden ZONDER lookup */
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700">
+                            Postcode <span className="text-red-600 ml-0.5">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={form.postalCode}
+                            onChange={(e) => updateForm('postalCode', e.target.value)}
+                            onBlur={(e) => updateForm('postalCode', e.target.value, true)}
+                            className={`w-full px-4 py-3 border-2 ${
+                              errors.postalCode ? 'border-red-600' : 'border-gray-300'
+                            } focus:border-brand-primary focus:outline-none`}
+                            placeholder="Postcode"
+                            autoComplete="postal-code"
+                          />
+                          {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Address (read-only na lookup) */}
+                    {/* Address (lees-only na lookup voor NL, altijd bewerkbaar voor andere landen) */}
                     <div className="flex flex-col">
                       <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                         Straat en huisnummer <span className="text-red-600 ml-0.5">*</span>
@@ -1297,16 +1320,16 @@ export default function CheckoutPage() {
                         className={`w-full px-4 py-3 border-2 ${
                           errors.address ? 'border-red-600' : 'border-gray-300'
                         } focus:border-brand-primary focus:outline-none ${
-                          addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
+                          form.country === 'NL' && addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
                         }`}
                         placeholder="Straat en huisnummer"
                         autoComplete="street-address"
-                        readOnly={addressLookup.isLookedUp}
+                        readOnly={form.country === 'NL' && addressLookup.isLookedUp}
                       />
                       {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
                     </div>
 
-                    {/* City (read-only na lookup) */}
+                    {/* City (lees-only na lookup voor NL, altijd bewerkbaar voor andere landen) */}
                     <div className="flex flex-col">
                       <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                         Plaats <span className="text-red-600 ml-0.5">*</span>
@@ -1318,11 +1341,11 @@ export default function CheckoutPage() {
                         className={`w-full px-4 py-3 border-2 ${
                           errors.city ? 'border-red-600' : 'border-gray-300'
                         } focus:border-brand-primary focus:outline-none ${
-                          addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
+                          form.country === 'NL' && addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
                         }`}
                         placeholder="Plaats"
                         autoComplete="address-level2"
-                        readOnly={addressLookup.isLookedUp}
+                        readOnly={form.country === 'NL' && addressLookup.isLookedUp}
                       />
                       {errors.city && <p className="text-red-600 text-xs mt-1">{errors.city}</p>}
                     </div>
