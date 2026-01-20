@@ -9,7 +9,7 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
-import { Truck, RotateCcw, MapPin, Video } from 'lucide-react'
+import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackProductView, trackAddToCart } from '@/lib/analytics'
@@ -986,6 +986,58 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </button>
+              </div>
+
+              {/* Verzendkosten Informatie - NIEUW */}
+              <div className="mt-3 bg-gray-50 border border-gray-300 p-3 hidden md:block">
+                <div className="flex items-start gap-2 text-sm">
+                  <Truck className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      Verzending: €3,95 (NL) / €5,95 (BE)
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      💚 Gratis verzending vanaf €75 (alleen Nederland)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust Badges - NIEUW */}
+              <div className="mt-3 bg-white border-2 border-gray-200 p-4 hidden md:block">
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium">2 jaar garantie</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium">14 dagen retour</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium">Gratis vanaf €75</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium">Veilig betalen</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Urgentie Badge - NIEUW */}
+              <div className="mt-3 bg-yellow-50 border-2 border-yellow-400 p-3 hidden md:block">
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="w-5 h-5 text-yellow-700 flex-shrink-0" />
+                  <div>
+                    <p className="font-bold text-yellow-900">
+                      🔥 POPULAIR • Nog {Math.floor(Math.random() * 10) + 3} stuks op voorraad
+                    </p>
+                    <p className="text-xs text-yellow-800 mt-0.5">
+                      Bestel nu om teleurstelling te voorkomen
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Product Tabs / Accordion */}

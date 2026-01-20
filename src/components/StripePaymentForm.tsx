@@ -104,7 +104,14 @@ function PaymentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    console.log('💳 [Stripe] Submit payment form')
+    console.log('💳 [Stripe] Stripe loaded:', !!stripe)
+    console.log('💳 [Stripe] Elements loaded:', !!elements)
+    console.log('💳 [Stripe] Selected method:', selectedMethod)
+    console.log('💳 [Stripe] Order ID:', orderId)
+
     if (!stripe || !elements) {
+      console.error('❌ [Stripe] Stripe or Elements not loaded')
       return
     }
 
@@ -112,11 +119,15 @@ function PaymentForm({
     setErrorMessage(undefined)
 
     try {
+      console.log('💳 [Stripe] Confirming payment...')
+      
       // Ensure name is at least 3 characters (Stripe requirement)
       const safeBillingDetails = {
         ...billingDetails,
         name: billingDetails.name.trim().length >= 3 ? billingDetails.name.trim() : 'Klant'
       }
+
+      console.log('💳 [Stripe] Billing details:', safeBillingDetails)
 
       const { error } = await stripe.confirmPayment({
         elements,
@@ -129,13 +140,16 @@ function PaymentForm({
       })
 
       if (error) {
+        console.error('❌ [Stripe] Payment error:', error)
         setErrorMessage(error.message || 'Er is een fout opgetreden')
         onError(error.message || 'Payment failed')
         setIsProcessing(false)
       } else {
+        console.log('✅ [Stripe] Payment confirmed, redirecting...')
         onSuccess()
       }
     } catch (err: any) {
+      console.error('💥 [Stripe] Exception:', err)
       setErrorMessage(err.message || 'Er is een fout opgetreden')
       onError(err.message || 'Payment failed')
       setIsProcessing(false)

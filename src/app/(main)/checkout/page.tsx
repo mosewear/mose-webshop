@@ -986,6 +986,70 @@ export default function CheckoutPage() {
                   ) : (
                     /* GUEST CHECKOUT FORM */
                   <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Payment Trust Section - BOVEN ALLES */}
+                <div className="bg-gray-50 border-2 border-gray-200 p-4 mb-6">
+                  <div className="text-center mb-3">
+                    <p className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-2">
+                      💳 Betaal veilig met
+                    </p>
+                    <div className="flex items-center justify-center gap-3 flex-wrap">
+                      {/* iDEAL - alleen voor NL */}
+                      {form.country === 'NL' && (
+                        <div className="bg-white border border-gray-300 px-3 py-2 rounded flex items-center gap-2">
+                          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                            <rect width="24" height="24" rx="2" fill="#CC0066"/>
+                            <text x="12" y="16" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">iDEAL</text>
+                          </svg>
+                        </div>
+                      )}
+                      {/* Bancontact - alleen voor BE */}
+                      {form.country === 'BE' && (
+                        <div className="bg-white border border-gray-300 px-3 py-2 rounded flex items-center gap-2">
+                          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                            <rect width="24" height="24" rx="2" fill="#005498"/>
+                            <text x="12" y="10" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">Bancontact</text>
+                          </svg>
+                        </div>
+                      )}
+                      {/* Visa */}
+                      <div className="bg-white border border-gray-300 px-3 py-2 rounded">
+                        <svg className="w-10 h-6" viewBox="0 0 48 16" fill="none">
+                          <rect width="48" height="16" rx="2" fill="#1A1F71"/>
+                          <text x="24" y="11" textAnchor="middle" fill="#F7B600" fontSize="8" fontWeight="bold">VISA</text>
+                        </svg>
+                      </div>
+                      {/* Mastercard */}
+                      <div className="bg-white border border-gray-300 px-3 py-2 rounded">
+                        <svg className="w-10 h-6" viewBox="0 0 48 16">
+                          <circle cx="16" cy="8" r="6" fill="#EB001B"/>
+                          <circle cx="22" cy="8" r="6" fill="#F79E1B"/>
+                        </svg>
+                      </div>
+                      {/* Apple Pay */}
+                      <div className="bg-white border border-gray-300 px-3 py-2 rounded">
+                        <svg className="w-10 h-6" viewBox="0 0 48 16" fill="none">
+                          <rect width="48" height="16" rx="2" fill="black"/>
+                          <text x="24" y="11" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">Apple Pay</text>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 text-xs text-gray-600 pt-2 border-t border-gray-300">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      SSL versleuteld
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      256-bit encryptie
+                    </span>
+                  </div>
+                </div>
+
                 {/* Contact - Compact */}
                 <div>
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -996,6 +1060,7 @@ export default function CheckoutPage() {
                     type="email"
                     value={form.email}
                     onChange={(e) => updateForm('email', e.target.value)}
+                    inputMode="email"
                     className={`w-full px-4 py-3 border-2 ${
                       errors.email ? 'border-red-600' : 'border-gray-300'
                     } focus:border-brand-primary focus:outline-none transition-colors`}
@@ -1361,9 +1426,10 @@ export default function CheckoutPage() {
                     <div>
                       <input
                         type="tel"
+                        inputMode="tel"
                         value={form.phone}
                         onChange={(e) => updateForm('phone', e.target.value)}
-                        className={`w-full px-4 py-3 border-2 ${
+                        className={`w-full px-4 py-3 min-h-[48px] border-2 ${
                           errors.phone ? 'border-red-600' : 'border-gray-300'
                         } focus:border-brand-primary focus:outline-none`}
                         placeholder="06 12345678"
