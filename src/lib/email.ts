@@ -66,12 +66,14 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   return `${siteUrl}/${url}`
 }
 
-// Helper function to create logo image tag with dark mode support (using base64 embedded images)
+// Helper function to create logo image tag (only white logo for black header - no dark mode support to avoid double logos)
 function createLogoTag(siteUrl: string, width: number = 140, height: number | 'auto' = 'auto'): string {
   const logos = getBase64Logos()
   const heightAttr = height === 'auto' ? '' : ` height="${height}"`
   const heightStyle = height === 'auto' ? 'height: auto;' : `height: ${height}px;`
   
+  // Only return white logo (for black header)
+  // We removed dark mode logo support to prevent double logo rendering in some email clients
   return `
     <img 
       src="${logos.light}" 
@@ -79,15 +81,6 @@ function createLogoTag(siteUrl: string, width: number = 140, height: number | 'a
       width="${width}"${heightAttr}
       style="width: ${width}px; ${heightStyle} display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none; max-width: ${width}px;"
       role="presentation"
-      class="logo-light"
-    />
-    <img 
-      src="${logos.dark}" 
-      alt="MOSE" 
-      width="${width}"${heightAttr}
-      style="width: ${width}px; ${heightStyle} display: none; margin: 0 auto; border: 0; outline: none; text-decoration: none; max-width: ${width}px;"
-      role="presentation"
-      class="logo-dark"
     />
   `
 }
@@ -292,8 +285,6 @@ const EMAIL_STYLES = `
   .wrapper { max-width: 600px; margin: 0 auto; }
   .logo-bar { padding: 24px; text-align: center; background: #000; }
   .logo-bar img { max-width: 140px; display: block; margin: 0 auto; }
-  .logo-bar .logo-light { display: block !important; }
-  .logo-bar .logo-dark { display: none !important; }
   .hero { padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%); }
   .icon-circle { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
   .icon-success { background: #2ECC71; }
@@ -339,39 +330,6 @@ const EMAIL_STYLES = `
   .urgency-banner { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); color: #fff; padding: 20px; text-align: center; font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
   .cart-items { background: #f8f8f8; padding: 20px; margin: 20px 0; border-left: 3px solid #FF6B6B; }
   .testimonial { background: #f0f9f4; padding: 20px; border-left: 3px solid #2ECC71; margin: 20px 0; font-style: italic; }
-
-  @media (prefers-color-scheme: dark) {
-    body { background: #1a1a1a !important; color: #e0e0e0 !important; }
-    .wrapper { background: #1a1a1a !important; }
-    .content { background: #1a1a1a !important; color: #e0e0e0 !important; }
-    .hero { background: #1a1a1a !important; }
-    h1 { color: #ffffff !important; }
-    .hero-sub { color: #cccccc !important; }
-    .hero-text { color: #aaaaaa !important; }
-    .info-box { background: #2a2a2a !important; border-left-color: #2ECC71 !important; }
-    .info-box h3 { color: #ffffff !important; }
-    .info-box p { color: #e0e0e0 !important; }
-    .summary { background: #000000 !important; color: #ffffff !important; }
-    .sum-label { color: #999 !important; }
-    .sum-line { color: #ffffff !important; }
-    .sum-btw { color: #999 !important; }
-    .product { background: #2a2a2a !important; border-left-color: #2ECC71 !important; }
-    .prod-img { background: #1a1a1a !important; border-color: #444 !important; }
-    .prod-name { color: #ffffff !important; }
-    .prod-meta { color: #cccccc !important; }
-    .prod-price { color: #ffffff !important; }
-    .section-title { color: #ffffff !important; }
-    .testimonial { background: #2a2a2a !important; color: #e0e0e0 !important; border-left-color: #2ECC71 !important; }
-    .cart-items { background: #2a2a2a !important; border-left-color: #FF6B6B !important; }
-    p { color: #e0e0e0 !important; }
-    a { color: #2ECC71 !important; }
-    strong { color: #ffffff !important; }
-    .logo-bar { background: #1a1a1a !important; }
-    .logo-bar .logo-light { display: none !important; }
-    .logo-bar .logo-dark { display: block !important; }
-    .footer .logo-light { display: none !important; }
-    .footer .logo-dark { display: block !important; }
-  }
 `
 
 interface OrderEmailProps {
@@ -1387,13 +1345,9 @@ ${await createEmailFooter(siteUrl)}
 
   try {
     if (!process.env.RESEND_API_KEY) {
-      console.error('❌ RESEND_API_KEY is not set')
+      console.error('RESEND_API_KEY is not set')
       return { success: false, error: 'Email service not configured' }
     }
-
-    console.log('📧 Sending contact form email to:', adminEmail)
-    console.log('📧 From:', email)
-    console.log('📧 Subject:', `Contactformulier: ${subjectLabel} - ${name}`)
 
     const { data, error } = await resend.emails.send({
       from: 'MOSE Contact <contact@orders.mosewear.nl>',
@@ -1407,14 +1361,14 @@ ${await createEmailFooter(siteUrl)}
     })
 
     if (error) {
-      console.error('❌ Error sending contact form email:', error)
+      console.error('Error sending contact form email:', error)
       return { success: false, error }
     }
 
     console.log('✅ Contact form email sent:', data)
     return { success: true, data }
   } catch (error: any) {
-    console.error('💥 Error sending email:', error)
+    console.error('Error sending email:', error)
     return { success: false, error: error?.message || 'Unknown error' }
   }
 }
