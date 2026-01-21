@@ -199,36 +199,51 @@ export default function StickyBuyNow({
   if (!isVisible) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black p-3 z-50 shadow-2xl md:shadow-none">
-      <div className="max-w-7xl mx-auto flex items-center gap-2 md:gap-3">
-        {/* Product info - hidden on very small screens */}
-        <div className="hidden xs:block flex-shrink-0">
-          <p className="text-xs md:text-sm font-bold line-clamp-1">{product.name}</p>
-          <p className="text-sm md:text-lg font-bold">
-            €{(finalPrice * quantity).toFixed(2)}
-          </p>
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black z-50 shadow-2xl md:shadow-none">
+      <div className="max-w-7xl mx-auto px-3 py-3">
+        {/* Product naam - altijd zichtbaar */}
+        <p className="text-xs md:text-sm text-gray-700 mb-2 line-clamp-1">
+          {product.name}
+        </p>
+
+        {/* Prijs + Buttons row */}
+        <div className="flex items-center gap-3">
+          {/* Prijs - prominent */}
+          <div className="flex-shrink-0">
+            <p className="text-lg md:text-xl font-bold">
+              €{(finalPrice * quantity).toFixed(2)}
+            </p>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1"></div>
+
+          {/* Toevoegen button met icon */}
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock || isAdding || isBuying}
+            className="flex items-center gap-2 px-4 py-3 md:py-3.5 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+          >
+            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">TOEVOEGEN</span>
+          </button>
+
+          {/* Nu Kopen button met pijl */}
+          <button
+            onClick={handleBuyNow}
+            disabled={!inStock || isAdding || isBuying}
+            className="flex items-center gap-2 px-4 md:px-6 py-3 md:py-3.5 bg-black text-white border-2 border-black hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+          >
+            {isBuying ? 'BEZIG...' : (
+              <>
+                <span>NU KOPEN</span>
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </>
+            )}
+          </button>
         </div>
-
-        {/* Spacer */}
-        <div className="flex-1"></div>
-
-        {/* Buttons */}
-        <button
-          onClick={handleAddToCart}
-          disabled={!inStock || isAdding || isBuying}
-          className="flex-shrink-0 p-2 md:px-4 md:py-3 border-2 border-black hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Toevoegen aan winkelwagen"
-        >
-          <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-        </button>
-
-        <button
-          onClick={handleBuyNow}
-          disabled={!inStock || isAdding || isBuying}
-          className="flex-1 md:flex-none md:px-8 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm whitespace-nowrap"
-        >
-          {isBuying ? 'BEZIG...' : 'NU KOPEN'}
-        </button>
       </div>
     </div>
   )
