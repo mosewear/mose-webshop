@@ -235,6 +235,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
+    shipping_cost: 6.95,
   })
 
   const addItem = useCart((state) => state.addItem)
@@ -253,6 +254,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       setSettings({
         free_shipping_threshold: siteSettings.free_shipping_threshold,
         return_days: siteSettings.return_days,
+        shipping_cost: siteSettings.shipping_cost,
       })
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -988,54 +990,40 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </button>
               </div>
 
-              {/* Verzendkosten Informatie - NIEUW */}
-              <div className="mt-3 bg-gray-50 border border-gray-300 p-3 hidden md:block">
-                <div className="flex items-start gap-2 text-sm">
-                  <Truck className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      Verzending: €3,95 (NL) / €5,95 (BE)
-                    </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      💚 Gratis verzending vanaf €75 (alleen Nederland)
-                    </p>
+              {/* MOSE-Style Trust Section - CORRECT DATA */}
+              <div className="mt-4 border-2 border-black hidden md:block">
+                {/* Verzending Info */}
+                <div className="p-3 border-b-2 border-black">
+                  <div className="flex items-start gap-2">
+                    <Truck className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-bold uppercase tracking-wide mb-1">VERZENDING</p>
+                      <p className="text-gray-700">
+                        €{settings.shipping_cost.toFixed(2)} • Gratis vanaf €{settings.free_shipping_threshold}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Trust Badges - NIEUW */}
-              <div className="mt-3 bg-white border-2 border-gray-200 p-4 hidden md:block">
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-gray-700 font-medium">2 jaar garantie</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RotateCcw className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-gray-700 font-medium">14 dagen retour</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-gray-700 font-medium">Gratis vanaf €75</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-gray-700 font-medium">Veilig betalen</span>
+                
+                {/* Retour Info */}
+                <div className="p-3 border-b-2 border-black">
+                  <div className="flex items-start gap-2">
+                    <RotateCcw className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-bold uppercase tracking-wide mb-1">RETOUR</p>
+                      <p className="text-gray-700">{settings.return_days} dagen bedenktijd</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Urgentie Badge - NIEUW */}
-              <div className="mt-3 bg-yellow-50 border-2 border-yellow-400 p-3 hidden md:block">
-                <div className="flex items-center gap-2 text-sm">
-                  <AlertCircle className="w-5 h-5 text-yellow-700 flex-shrink-0" />
-                  <div>
-                    <p className="font-bold text-yellow-900">
-                      🔥 POPULAIR • Nog {Math.floor(Math.random() * 10) + 3} stuks op voorraad
-                    </p>
-                    <p className="text-xs text-yellow-800 mt-0.5">
-                      Bestel nu om teleurstelling te voorkomen
-                    </p>
+                {/* Garantie Info */}
+                <div className="p-3">
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-bold uppercase tracking-wide mb-1">GARANTIE</p>
+                      <p className="text-gray-700">2 jaar fabrieksgarantie</p>
+                    </div>
                   </div>
                 </div>
               </div>
