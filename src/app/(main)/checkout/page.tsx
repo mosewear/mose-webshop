@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
-import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check } from 'lucide-react'
+import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
@@ -1022,65 +1022,88 @@ export default function CheckoutPage() {
                     /* GUEST CHECKOUT FORM */
                   <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Payment Trust Section - BOVEN ALLES */}
-                <div className="bg-gray-50 border-2 border-gray-200 p-4 mb-6">
-                  <div className="text-center mb-3">
-                    <p className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-2">
-                      💳 Betaal veilig met
-                    </p>
-                    <div className="flex items-center justify-center gap-3 flex-wrap">
+                <div className="bg-white border-2 border-black p-4 md:p-6 mb-6">
+                  <div className="text-center mb-4">
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <CreditCard className="w-5 h-5" />
+                      <p className="text-sm font-bold uppercase tracking-wide">
+                        Betaal veilig met
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
                       {/* iDEAL - alleen voor NL */}
                       {form.country === 'NL' && (
-                        <div className="bg-white border border-gray-300 px-3 py-2 rounded flex items-center gap-2">
-                          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
-                            <rect width="24" height="24" rx="2" fill="#CC0066"/>
-                            <text x="12" y="16" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">iDEAL</text>
+                        <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[60px]">
+                          <svg height="32" viewBox="0 0 100 40" className="w-auto h-full">
+                            <rect fill="#CC0066" width="100" height="40" rx="4"/>
+                            <text x="50" y="26" fontFamily="Arial, sans-serif" fontSize="16" fontWeight="bold" fill="white" textAnchor="middle">iDEAL</text>
                           </svg>
                         </div>
                       )}
+                      
                       {/* Bancontact - alleen voor BE */}
                       {form.country === 'BE' && (
-                        <div className="bg-white border border-gray-300 px-3 py-2 rounded flex items-center gap-2">
-                          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
-                            <rect width="24" height="24" rx="2" fill="#005498"/>
-                            <text x="12" y="10" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">Bancontact</text>
+                        <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[80px]">
+                          <svg height="32" viewBox="0 0 120 40" className="w-auto h-full">
+                            <rect fill="#005498" width="120" height="40" rx="4"/>
+                            <text x="60" y="14" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="bold" fill="white" textAnchor="middle">Bancontact</text>
+                            <text x="60" y="28" fontFamily="Arial, sans-serif" fontSize="8" fill="white" textAnchor="middle">Payconiq</text>
                           </svg>
                         </div>
                       )}
+                      
                       {/* Visa */}
-                      <div className="bg-white border border-gray-300 px-3 py-2 rounded">
-                        <svg className="w-10 h-6" viewBox="0 0 48 16" fill="none">
-                          <rect width="48" height="16" rx="2" fill="#1A1F71"/>
-                          <text x="24" y="11" textAnchor="middle" fill="#F7B600" fontSize="8" fontWeight="bold">VISA</text>
+                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[60px]">
+                        <svg height="32" viewBox="0 0 100 40" className="w-auto h-full">
+                          <rect fill="#1A1F71" width="100" height="40" rx="4"/>
+                          <path d="M37 12 L41 28 L45 12 L50 12 L44 28 L40 28 L36 12 Z M52 12 L48 28 L52 28 L56 12 Z M58 12 L54 28 L58 28 L60 22 C60 22 63 24 65 24 C67 24 69 23 69 20 C69 17 67 16 65 16 C63 16 61 17 60 18 L61 12 Z M72 16 C70 16 68 17 68 19 L71 19 C71 18 72 17 73 17 C74 17 75 18 75 19 L75 20 L73 20 C70 20 68 21 68 23 C68 25 70 26 72 26 C74 26 75 25 75 25 L75 26 L79 26 L79 19 C79 17 77 16 72 16 Z M73 22 L75 22 L75 23 C75 23 74 24 73 24 C72 24 71 23 71 23 C71 22 72 22 73 22 Z" fill="#F7B600"/>
                         </svg>
                       </div>
+                      
                       {/* Mastercard */}
-                      <div className="bg-white border border-gray-300 px-3 py-2 rounded">
-                        <svg className="w-10 h-6" viewBox="0 0 48 16">
-                          <circle cx="16" cy="8" r="6" fill="#EB001B"/>
-                          <circle cx="22" cy="8" r="6" fill="#F79E1B"/>
+                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[60px]">
+                        <svg height="32" viewBox="0 0 80 50" className="w-auto h-full">
+                          <circle cx="25" cy="25" r="20" fill="#EB001B"/>
+                          <circle cx="45" cy="25" r="20" fill="#F79E1B"/>
+                          <path d="M35 10 A 20 20 0 0 1 35 40 A 20 20 0 0 1 35 10" fill="#FF5F00"/>
                         </svg>
                       </div>
+                      
                       {/* Apple Pay */}
-                      <div className="bg-white border border-gray-300 px-3 py-2 rounded">
-                        <svg className="w-10 h-6" viewBox="0 0 48 16" fill="none">
-                          <rect width="48" height="16" rx="2" fill="black"/>
-                          <text x="24" y="11" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold">Apple Pay</text>
+                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[70px]">
+                        <svg height="32" viewBox="0 0 120 40" className="w-auto h-full">
+                          <g>
+                            <path d="M25 10c-1.5-2-4-3-6.5-3-.3 3.5 1 6.5 2.5 8 1.5 1.8 4 3 6.5 2.5.3-3.2-1-6-2.5-8z" fill="#000"/>
+                            <path d="M19 18c-3.5-.2-6.5 2-8 2-1.6 0-4-2-6.5-2-3.5 0-6.5 2-8.5 5-3.5 6-1 15 2.5 20 1.7 2.5 3.6 5 6 5 2.5-.1 3.5-1.6 6.5-1.6 3 0 3.9 1.6 6.5 1.6 2.7-.1 4.4-2.5 6-5 1.9-2.8 2.7-5.5 2.8-5.6-.1 0-5.3-2-5.4-8-.1-5 4.1-7.5 4.3-7.7-2.3-3.5-6-4-7.2-4z" fill="#000"/>
+                          </g>
+                          <text x="70" y="16" fontFamily="system-ui, -apple-system, sans-serif" fontSize="10" fontWeight="500" fill="#000">Pay</text>
+                        </svg>
+                      </div>
+                      
+                      {/* Google Pay */}
+                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[80px]">
+                        <svg height="32" viewBox="0 0 130 40" className="w-auto h-full">
+                          <g>
+                            <path d="M20 12c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0-2c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z" fill="#EA4335"/>
+                            <path d="M20 18c-2.2 0-4 1.8-4 4h8c0-2.2-1.8-4-4-4z" fill="#FBBC04"/>
+                            <path d="M20 18c2.2 0 4-1.8 4-4h-8c0 2.2 1.8 4 4 4z" fill="#4285F4"/>
+                            <circle cx="20" cy="18" r="3" fill="#34A853"/>
+                          </g>
+                          <text x="38" y="16" fontFamily="Google Sans, sans-serif" fontSize="10" fontWeight="500" fill="#5F6368">Pay</text>
                         </svg>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center gap-4 text-xs text-gray-600 pt-2 border-t border-gray-300">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      SSL versleuteld
+                  
+                  <div className="flex items-center justify-center gap-4 text-xs text-gray-600 pt-3 border-t border-gray-300 mt-3">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-4 h-4 text-green-600" />
+                      <span>SSL versleuteld</span>
                     </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      256-bit encryptie
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-4 h-4 text-green-600" />
+                      <span>256-bit encryptie</span>
                     </span>
                   </div>
                 </div>
