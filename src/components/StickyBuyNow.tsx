@@ -199,18 +199,12 @@ export default function StickyBuyNow({
   if (!isVisible) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black z-50 shadow-2xl md:shadow-none">
-      <div className="max-w-7xl mx-auto px-3 py-3">
-        {/* Product naam - altijd zichtbaar */}
-        <p className="text-xs md:text-sm text-gray-700 mb-2 line-clamp-1">
-          {product.name}
-        </p>
-
-        {/* Prijs + Buttons row */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black z-50 shadow-2xl">
+      <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center gap-3">
-          {/* Prijs - prominent */}
+          {/* Prijs - prominent links */}
           <div className="flex-shrink-0">
-            <p className="text-lg md:text-xl font-bold">
+            <p className="text-xl md:text-2xl font-bold">
               €{(finalPrice * quantity).toFixed(2)}
             </p>
           </div>
@@ -218,26 +212,28 @@ export default function StickyBuyNow({
           {/* Spacer */}
           <div className="flex-1"></div>
 
-          {/* Toevoegen button met icon */}
+          {/* Toevoegen button - wit bg, zwarte border */}
           <button
             onClick={handleAddToCart}
             disabled={!inStock || isAdding || isBuying}
-            className="flex items-center gap-2 px-4 py-3 md:py-3.5 border-2 border-black bg-white hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+            className="flex items-center gap-2 px-4 md:px-5 py-3 md:py-3.5 border-2 border-black bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
           >
             <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
             <span className="hidden sm:inline">TOEVOEGEN</span>
           </button>
 
-          {/* Nu Kopen button met pijl */}
+          {/* Nu Kopen button - GROEN! */}
           <button
             onClick={handleBuyNow}
             disabled={!inStock || isAdding || isBuying}
-            className="flex items-center gap-2 px-4 md:px-6 py-3 md:py-3.5 bg-black text-white border-2 border-black hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+            className="flex items-center gap-2 px-5 md:px-8 py-3 md:py-3.5 bg-brand-primary border-2 border-brand-primary text-white hover:bg-[#009966] hover:border-[#009966] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
           >
-            {isBuying ? 'BEZIG...' : (
+            {isBuying ? (
+              <span>BEZIG...</span>
+            ) : (
               <>
                 <span>NU KOPEN</span>
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 md:w-5 md:h-5 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </>
