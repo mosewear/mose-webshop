@@ -9,6 +9,7 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
+import StickyBuyNow from '@/components/StickyBuyNow'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -427,6 +428,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   
   const displayImages = getDisplayImages()
 
+  const handleVariantRequired = () => {
+    // Scroll to variant selector
+    const variantSection = document.querySelector('[data-variant-section]')
+    if (variantSection) {
+      variantSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      
+      // Add pulse animation
+      variantSection.classList.add('animate-pulse')
+      setTimeout(() => {
+        variantSection.classList.remove('animate-pulse')
+      }, 2000)
+    }
+    
+    toast.error('Selecteer eerst een maat en kleur')
+  }
+
   const handleAddToCart = async () => {
     if (!product || !selectedVariant) return
 
@@ -776,7 +793,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* Size Selector with Size Guide */}
               {availableSizes.length > 0 && (
-                <div>
+                <div data-variant-section>
                   <div className="flex items-center justify-between mb-2 md:mb-3">
                     <label className="block text-xs md:text-sm font-bold uppercase tracking-wider">
                       Maat: {selectedSize}
@@ -1445,6 +1462,18 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             </button>
           </div>
         </div>
+      )}
+
+      {/* Sticky Buy Now Bar */}
+      {product && (
+        <StickyBuyNow
+          product={product}
+          selectedVariant={selectedVariant}
+          quantity={quantity}
+          cartImage={displayImages.find(img => img.media_type === 'image')?.url || displayImages[0]?.url || '/placeholder.png'}
+          inStock={inStock}
+          onVariantRequired={handleVariantRequired}
+        />
       )}
     </>
   )

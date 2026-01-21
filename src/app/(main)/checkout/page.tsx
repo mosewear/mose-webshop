@@ -7,12 +7,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
-import { loadStripe, Stripe } from '@stripe/stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
+import ExpressCheckout from '@/components/ExpressCheckout'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -157,6 +159,38 @@ export default function CheckoutPage() {
       setFreeShippingThreshold(settings.free_shipping_threshold)
       setReturnDays(settings.return_days)
     })
+
+    // Auto-detect country based on browser/IP
+    const detectCountry = async () => {
+      try {
+        // First try browser language
+        const browserLang = navigator.language || navigator.languages?.[0]
+        if (browserLang?.startsWith('nl-BE') || browserLang?.startsWith('fr-BE')) {
+          setForm(prev => ({ ...prev, country: 'BE' }))
+          return
+        }
+        if (browserLang?.startsWith('nl') || browserLang?.startsWith('nl-NL')) {
+          setForm(prev => ({ ...prev, country: 'NL' }))
+          return
+        }
+
+        // Fallback: Try IP geolocation (free service)
+        const response = await fetch('https://ipapi.co/json/')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.country_code === 'BE') {
+            setForm(prev => ({ ...prev, country: 'BE' }))
+          } else if (data.country_code === 'NL') {
+            setForm(prev => ({ ...prev, country: 'NL' }))
+          }
+        }
+      } catch (error) {
+        console.log('Country detection failed, using default (NL)')
+        // Default stays NL
+      }
+    }
+
+    detectCountry()
 
     // Check if user is already logged in and load data
     loadUserData()
@@ -844,7 +878,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16 bg-gray-50">
+    <Elements stripe={stripePromise}>
+      <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -1049,6 +1084,16 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Express Checkout (Apple Pay / Google Pay) */}
+                <ExpressCheckout
+                  cartItems={items}
+                  subtotal={subtotal}
+                  shippingCost={shipping}
+                  discount={promoDiscount}
+                  promoCode={promoCode}
+                  userEmail={user?.email}
+                />
 
                 {/* Contact - Compact */}
                 <div>
@@ -1759,5 +1804,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+    </Elements>
   )
 }

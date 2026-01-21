@@ -1,0 +1,236 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { ShoppingCart } from 'lucide-react'
+import { useCart } from '@/store/cart'
+import { trackAddToCart } from '@/lib/analytics'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
+import toast from 'react-hot-toast'
+
+interface StickyBuyNowProps {
+  product: {
+    id: string
+    name: string
+    base_price: number
+    sale_price: number | null
+  }
+  selectedVariant: {
+    id: string
+    size: string
+    color: string
+    color_hex: string
+    price_adjustment: number
+    stock_quantity: number
+    sku: string
+  } | null | undefined
+  quantity: number
+  cartImage: string
+  inStock: boolean
+  onVariantRequired: () => void
+}
+
+export default function StickyBuyNow({
+  product,
+  selectedVariant,
+  quantity,
+  cartImage,
+  inStock,
+  onVariantRequired,
+}: StickyBuyNowProps) {
+  const [isVisible, setIsVisible] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
+  const [isBuying, setIsBuying] = useState(false)
+  const router = useRouter()
+  const addItem = useCart((state) => state.addItem)
+
+  // Scroll detection - show on mobile always, on desktop after scrolling past add to cart button
+  useEffect(() => {
+    const handleScroll = () => {
+      // Mobile: always show (except on cart/checkout pages)
+      if (window.innerWidth < 768) {
+        setIsVisible(true)
+        return
+      }
+
+      // Desktop: show after scrolling 600px (past the add to cart button)
+      if (window.scrollY > 600) {
+        setIsVisible(true)
+      } else {
+        setIsVisible(false)
+      }
+    }
+
+    // Initial check
+    handleScroll()
+
+    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleScroll)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [])
+
+  // Hide on cart/checkout pages
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname
+      if (path.includes('/cart') || path.includes('/checkout')) {
+        setIsVisible(false)
+      }
+    }
+  }, [])
+
+  const finalPrice = product.sale_price 
+    ? product.sale_price + (selectedVariant?.price_adjustment || 0)
+    : product.base_price + (selectedVariant?.price_adjustment || 0)
+
+  const handleAddToCart = async () => {
+    if (!selectedVariant) {
+      onVariantRequired()
+      return
+    }
+
+    if (!inStock) {
+      toast.error('Dit product is niet op voorraad')
+      return
+    }
+
+    setIsAdding(true)
+
+    try {
+      addItem({
+        productId: product.id,
+        variantId: selectedVariant.id,
+        name: product.name,
+        size: selectedVariant.size,
+        color: selectedVariant.color,
+        colorHex: selectedVariant.color_hex,
+        price: finalPrice,
+        quantity: quantity,
+        image: cartImage,
+        sku: selectedVariant.sku,
+        stock: selectedVariant.stock_quantity,
+      })
+
+      // Track analytics
+      trackAddToCart({
+        id: product.id,
+        name: product.name,
+        category: 'product',
+        price: finalPrice,
+        quantity: quantity,
+      })
+
+      trackPixelEvent('AddToCart', {
+        content_ids: [selectedVariant.id],
+        content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
+        content_type: 'product',
+        value: finalPrice * quantity,
+        currency: 'EUR',
+      })
+
+      toast.success('Toegevoegd aan winkelwagen!')
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      toast.error('Er is iets misgegaan')
+    } finally {
+      setIsAdding(false)
+    }
+  }
+
+  const handleBuyNow = async () => {
+    if (!selectedVariant) {
+      onVariantRequired()
+      return
+    }
+
+    if (!inStock) {
+      toast.error('Dit product is niet op voorraad')
+      return
+    }
+
+    setIsBuying(true)
+
+    try {
+      // Add to cart first
+      addItem({
+        productId: product.id,
+        variantId: selectedVariant.id,
+        name: product.name,
+        size: selectedVariant.size,
+        color: selectedVariant.color,
+        colorHex: selectedVariant.color_hex,
+        price: finalPrice,
+        quantity: quantity,
+        image: cartImage,
+        sku: selectedVariant.sku,
+        stock: selectedVariant.stock_quantity,
+      })
+
+      // Track analytics
+      trackAddToCart({
+        id: product.id,
+        name: product.name,
+        category: 'product',
+        price: finalPrice,
+        quantity: quantity,
+      })
+
+      trackPixelEvent('AddToCart', {
+        content_ids: [selectedVariant.id],
+        content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
+        content_type: 'product',
+        value: finalPrice * quantity,
+        currency: 'EUR',
+      })
+
+      // Redirect to checkout immediately
+      router.push('/checkout')
+    } catch (error) {
+      console.error('Error during buy now:', error)
+      toast.error('Er is iets misgegaan')
+      setIsBuying(false)
+    }
+  }
+
+  if (!isVisible) return null
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black p-3 z-50 shadow-2xl md:shadow-none">
+      <div className="max-w-7xl mx-auto flex items-center gap-2 md:gap-3">
+        {/* Product info - hidden on very small screens */}
+        <div className="hidden xs:block flex-shrink-0">
+          <p className="text-xs md:text-sm font-bold line-clamp-1">{product.name}</p>
+          <p className="text-sm md:text-lg font-bold">
+            €{(finalPrice * quantity).toFixed(2)}
+          </p>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1"></div>
+
+        {/* Buttons */}
+        <button
+          onClick={handleAddToCart}
+          disabled={!inStock || isAdding || isBuying}
+          className="flex-shrink-0 p-2 md:px-4 md:py-3 border-2 border-black hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Toevoegen aan winkelwagen"
+        >
+          <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
+
+        <button
+          onClick={handleBuyNow}
+          disabled={!inStock || isAdding || isBuying}
+          className="flex-1 md:flex-none md:px-8 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm whitespace-nowrap"
+        >
+          {isBuying ? 'BEZIG...' : 'NU KOPEN'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
