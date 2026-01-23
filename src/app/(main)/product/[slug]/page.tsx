@@ -844,13 +844,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
-              {/* Color Selector - Enhanced */}
+              {/* Color Selector - Enhanced (Minimal) */}
               {availableColors.length > 0 && (
                 <div>
                   <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
                     Kleur:
                   </label>
-                  <div className="flex flex-wrap gap-2 md:gap-3 mb-2">
+                  <div className="flex flex-wrap gap-2 md:gap-3">
                     {availableColors.map(({ color, hex }) => {
                       const colorVariant = product.product_variants.find(
                         (v) => v.size === selectedSize && v.color === color
@@ -867,7 +867,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           disabled={!colorAvailable}
                           className={`relative border-2 transition-all ${
                             isSelected
-                              ? 'w-14 h-14 md:w-16 md:h-16 border-4 border-brand-primary shadow-lg animate-pulse-slow'
+                              ? 'w-14 h-14 md:w-16 md:h-16 border-4 border-brand-primary'
                               : 'w-10 h-10 md:w-12 md:h-12'
                           } ${
                             colorAvailable
@@ -896,15 +896,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       )
                     })}
                   </div>
-                  {/* Selected Color Label */}
-                  {selectedColor && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg className="w-4 h-4 text-brand-primary" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                      </svg>
-                      <span className="font-bold text-brand-primary">Geselecteerd: {selectedColor}</span>
-                    </div>
-                  )}
                 </div>
               )}
 
