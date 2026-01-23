@@ -266,23 +266,24 @@ export default function StickyBuyNow({
             <button
               onClick={handleAddToCart}
               disabled={!inStock || isAdding || isBuying}
-              className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-5 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+              className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2 sm:px-2.5 md:px-5 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
             >
               <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-              <span>IN WAGEN</span>
+              <span className="hidden min-[400px]:inline">IN WAGEN</span>
             </button>
 
             {/* BESTEL NU button - GROEN met PULSE! */}
             <button
               onClick={handleBuyNow}
               disabled={!inStock || isAdding || isBuying}
-              className="pulse-button flex items-center gap-1.5 md:gap-2 px-3 md:px-8 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+              className="pulse-button flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-8 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
             >
               {isBuying ? (
                 <span>BEZIG...</span>
               ) : (
                 <>
-                  <span>BESTEL NU</span>
+                  <span className="min-[400px]:hidden">KOPEN</span>
+                  <span className="hidden min-[400px]:inline">BESTEL NU</span>
                   <svg className="w-4 h-4 md:w-5 md:h-5 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
