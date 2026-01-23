@@ -470,22 +470,36 @@ export default function CheckoutPage() {
         const normalizedPostcode = value.replace(/\s+/g, '').toUpperCase()
         if (!value.trim()) return 'Verplicht veld'
         
-        // Validate based on detected country
-        if (form.country === 'BE') {
-          // Belgian postcode: 4 digits
-          if (!/^\d{4}$/.test(normalizedPostcode)) {
-            return 'Ongeldig formaat. Belgische postcode: 4 cijfers (bijv. 2000)'
-          }
-        } else if (form.country === 'NL') {
-          // Dutch postcode: 4 digits + 2 letters
-          if (!/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
+        // Smart validation: detect format based on postcode itself, not just country
+        // Belgian format: exactly 4 digits
+        if (/^\d{4}$/.test(normalizedPostcode)) {
+          // Valid Belgian postcode
+          return undefined
+        }
+        // Dutch format: 4 digits + 2 letters
+        else if (/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
+          // Valid Dutch postcode
+          return undefined
+        }
+        // Invalid format - determine which error message to show
+        else {
+          // If it looks like they're typing a Dutch postcode (has letters)
+          if (/[A-Z]/.test(normalizedPostcode)) {
             return 'Ongeldig formaat. Nederlandse postcode: 1234AB'
           }
-        } else {
-          // For other countries, just check it's not empty
-          // We could add more country-specific validation here if needed
+          // If it's only digits but not 4
+          else if (/^\d+$/.test(normalizedPostcode)) {
+            if (normalizedPostcode.length < 4) {
+              return 'Te kort. Belgische postcode: 4 cijfers (bijv. 2000)'
+            } else {
+              return 'Te lang. Belgische postcode: 4 cijfers (bijv. 2000)'
+            }
+          }
+          // Mixed or invalid
+          else {
+            return 'Ongeldig formaat. Gebruik: 1234AB (NL) of 2000 (BE)'
+          }
         }
-        return undefined
       case 'huisnummer':
         if (!value.trim()) return 'Verplicht veld'
         const huisnummerNum = parseInt(value, 10)
