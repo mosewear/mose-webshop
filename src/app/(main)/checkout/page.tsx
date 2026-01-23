@@ -185,6 +185,7 @@ export default function CheckoutPage() {
           }
         }
       } catch (error) {
+        console.log('Country detection failed, using default (NL)')
         // Default stays NL
       }
     }
@@ -584,12 +585,20 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    console.log('🚀 CHECKOUT STARTED')
+    console.log('📋 Form data:', form)
+    console.log('🛒 Cart items:', items)
+    console.log('💰 Totals:', { subtotal, subtotalAfterDiscount, promoDiscount, shipping, total })
+    console.log('🎟️ Promo code:', promoCode || 'None')
+
     if (!validateForm()) {
+      console.log('❌ Form validation failed:', errors)
       const firstError = document.querySelector('.border-red-600')
       firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
+    console.log('✅ Form validation passed')
     setLoading(true)
 
     try {
@@ -636,6 +645,8 @@ export default function CheckoutPage() {
         subtotal: item.price * item.quantity,
         image_url: item.image,
       }))
+
+      console.log('📦 Creating order via API...')
       
       const checkoutResponse = await fetch('/api/checkout', {
         method: 'POST',
@@ -650,6 +661,7 @@ export default function CheckoutPage() {
       }
 
       const { order } = await checkoutResponse.json()
+      console.log('✅ Order created via API:', order)
       setOrderId(order.id)
 
       // Go to payment step - Payment Intent will be created when user selects method
@@ -683,12 +695,14 @@ export default function CheckoutPage() {
     
     // Prevent duplicate Payment Intent creation
     if (clientSecret && isCreatingIntent) {
+      console.log('⚠️ Payment Intent already being created, skipping...')
       return
     }
     
     setIsCreatingIntent(true)
 
     try {
+      console.log('💳 Creating Payment Intent for:', paymentMethod)
       
       // Create Payment Intent with specific payment method
       const paymentResponse = await fetch('/api/create-payment-intent', {
@@ -718,6 +732,7 @@ export default function CheckoutPage() {
       }
 
       const { clientSecret: secret, paymentIntentId } = await paymentResponse.json()
+      console.log('✅ Payment Intent created:', paymentIntentId)
       
       // Note: Order is already updated by create-payment-intent route
       // (stripe_payment_intent_id, payment_method, payment_status, checkout_started_at)
@@ -732,6 +747,7 @@ export default function CheckoutPage() {
   }
 
   const handlePaymentSuccess = () => {
+    console.log('✅ Payment successful!')
     clearCart()
     router.push(`/order-confirmation?order=${orderId}`)
   }
@@ -889,6 +905,87 @@ export default function CheckoutPage() {
               <span className={`ml-2 text-sm ${currentStep === 'payment' ? 'text-gray-900 font-semibold' : 'text-gray-500'} hidden sm:inline`}>Betalen</span>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Order Summary - Compact & Inline */}
+        <div className="lg:hidden mb-6">
+          <button
+            onClick={() => setShowOrderSummary(!showOrderSummary)}
+            className="w-full bg-white border-2 border-gray-300 p-4 flex items-center justify-between hover:border-gray-400 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <ShoppingBag size={18} className="text-gray-600" />
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900">
+                  {showOrderSummary ? 'Verberg' : 'Toon'} bestelling
+                </p>
+                <p className="text-xs text-gray-500">
+                  {items.length} {items.length === 1 ? 'product' : 'producten'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-xl">€{total.toFixed(2)}</span>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-600 transition-transform ${showOrderSummary ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </button>
+
+          {/* Collapsible Order Details */}
+          {showOrderSummary && (
+            <div className="bg-white border-2 border-gray-300 border-t-0 p-4 space-y-4">
+              {/* Cart Items */}
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {items.map((item) => (
+                  <div key={item.variantId} className="flex gap-3">
+                    <div className="relative w-14 h-16 bg-gray-100 flex-shrink-0 border border-gray-300">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="56px"
+                        className="object-cover object-center"
+                      />
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md border border-white">
+                        {item.quantity}
+                      </div>
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <p className="font-semibold text-sm truncate">{item.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.size} • {item.color}
+                      </p>
+                      <p className="font-bold text-sm mt-0.5">€{(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="space-y-2 border-t border-gray-200 pt-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotaal</span>
+                  <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Verzending</span>
+                  <span className="font-semibold">
+                    {shipping === 0 ? (
+                      <span className="text-brand-primary font-bold">GRATIS</span>
+                    ) : (
+                      `€${shipping.toFixed(2)}`
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-base border-t border-gray-200 pt-2 mt-2">
+                  <span className="font-bold">Totaal</span>
+                  <span className="font-bold text-xl">€{total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-5 gap-6">
@@ -1558,27 +1655,9 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-          {/* Order Summary - 2/5 width - Sticky */}
-          <div className="lg:col-span-2">
-            {/* Mobile: Sticky Top Bar - ALWAYS VISIBLE */}
-            <button
-              onClick={() => setShowOrderSummary(!showOrderSummary)}
-              className="lg:hidden fixed top-16 left-0 right-0 z-40 w-full bg-white border-b-4 border-black p-4 flex items-center justify-between shadow-lg"
-            >
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span className="font-bold">{showOrderSummary ? 'Verberg' : 'Toon'} bestelling</span>
-              </div>
-              <span className="font-bold text-xl">€{total.toFixed(2)}</span>
-            </button>
-
-            {/* Mobile: Spacer for fixed button */}
-            <div className="lg:hidden h-16"></div>
-
-            {/* Desktop: Always visible / Mobile: Collapsible */}
-            <div className={`${showOrderSummary ? 'block' : 'hidden'} lg:block bg-white border-2 border-black p-6 lg:sticky lg:top-24 space-y-6`}>
+          {/* Order Summary - 2/5 width - Sticky (Desktop Only) */}
+          <div className="hidden lg:block lg:col-span-2">
+            <div className="bg-white border-2 border-black p-6 lg:sticky lg:top-24 space-y-6">
               <h2 className="text-xl font-display">BESTELLING ({items.length})</h2>
 
               {/* Cart Items - Scrollable */}
