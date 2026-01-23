@@ -58,6 +58,7 @@ interface ProductVariant {
   stock_quantity: number
   price_adjustment: number
   is_available: boolean
+  display_order: number
 }
 
 // Helper functie om ** te vervangen door <strong> tags (met <p> wrapper voor accordions)
@@ -323,7 +324,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
     if (data) {
       data.product_images.sort((a: ProductImage, b: ProductImage) => a.position - b.position)
+      data.product_variants.sort((a: ProductVariant, b: ProductVariant) => a.display_order - b.display_order)
       setProduct(data)
+
+      // Set page title
+      document.title = `${data.name} - MOSE`
 
       // Track Facebook Pixel ViewContent event
       const price = data.sale_price || data.base_price

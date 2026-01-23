@@ -433,6 +433,7 @@ export type Database = {
           color: string
           color_hex: string | null
           created_at: string | null
+          display_order: number
           id: string
           is_available: boolean | null
           price_adjustment: number | null
@@ -445,6 +446,7 @@ export type Database = {
           color: string
           color_hex?: string | null
           created_at?: string | null
+          display_order?: number
           id?: string
           is_available?: boolean | null
           price_adjustment?: number | null
@@ -457,6 +459,7 @@ export type Database = {
           color?: string
           color_hex?: string | null
           created_at?: string | null
+          display_order?: number
           id?: string
           is_available?: boolean | null
           price_adjustment?: number | null

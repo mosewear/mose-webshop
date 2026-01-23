@@ -19,7 +19,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "MOSE Wear - Minimalistisch & Stoer",
+  title: "MOSE - Kleding en accessoires voor mannen",
   description: "Lokaal ontworpen, gebouwd om lang mee te gaan. Kleding zonder poespas. Wel karakter.",
 };
 

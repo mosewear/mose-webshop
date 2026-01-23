@@ -76,6 +76,18 @@ export default function ShopPage() {
     fetchProducts()
   }, [])
 
+  // Set page title based on selected category
+  useEffect(() => {
+    if (selectedCategory === 'all') {
+      document.title = 'Shop - MOSE'
+    } else {
+      const category = categories.find(c => c.slug === selectedCategory)
+      if (category) {
+        document.title = `${category.name} - MOSE`
+      }
+    }
+  }, [selectedCategory, categories])
+
   // Auto-select category from URL parameter (from homepage category links)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

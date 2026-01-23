@@ -27,8 +27,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "MOSE | Premium Basics voor Mannen - Lokaal Gemaakt in Groningen",
-    template: "%s | MOSE"
+    default: "MOSE - Kleding en accessoires voor mannen",
+    template: "%s - MOSE"
   },
   description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
   keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "Groningen", "lokaal gemaakt", "Nederlands merk", "duurzame kleding", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "nl_NL",
     url: "https://mosewear.com",
-    title: "MOSE | Premium Basics voor Mannen - Lokaal Gemaakt in Groningen",
+    title: "MOSE - Kleding en accessoires voor mannen",
     description: "Tijdloze basics zonder gedoe. Premium hoodies, t-shirts en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €75.",
     siteName: "MOSE",
     images: [
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MOSE | Premium Basics voor Mannen",
+    title: "MOSE - Kleding en accessoires voor mannen",
     description: "Tijdloze basics zonder gedoe. Lokaal gemaakt in Groningen.",
     images: ["/logomose.png"],
   },

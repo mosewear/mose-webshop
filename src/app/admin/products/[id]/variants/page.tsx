@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 
 interface Product {
   id: string
@@ -20,6 +21,7 @@ interface ProductVariant {
   stock_quantity: number
   price_adjustment: number
   is_available: boolean
+  display_order: number
   created_at: string
 }
 
@@ -70,8 +72,8 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         .from('product_variants')
         .select('*')
         .eq('product_id', id)
-        .order('size')
-        .order('color')
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true })
 
       if (error) throw error
       setVariants(data || [])
@@ -105,6 +107,11 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         sku = generateSKU(product.name, newVariant.size, newVariant.color)
       }
 
+      // Get next display_order (max + 1)
+      const maxOrder = variants.length > 0 
+        ? Math.max(...variants.map(v => v.display_order))
+        : 0
+
       const { error } = await supabase
         .from('product_variants')
         .insert([
@@ -117,6 +124,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             stock_quantity: parseInt(newVariant.stock_quantity),
             price_adjustment: parseFloat(newVariant.price_adjustment),
             is_available: newVariant.is_available,
+            display_order: maxOrder + 1,
           },
         ])
 
@@ -171,12 +179,58 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     if (!confirm(`Weet je zeker dat je variant ${size} / ${color} wilt verwijderen?`)) return
 
     try {
-      const { error } = await supabase
+      const { error} = await supabase
         .from('product_variants')
         .delete()
         .eq('id', variantId)
 
       if (error) throw error
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleMoveUp = async (variantId: string, currentOrder: number) => {
+    // Find variant directly above (lower order number)
+    const variantAbove = variants.find(v => v.display_order === currentOrder - 1)
+    if (!variantAbove) return // Already at top
+
+    try {
+      // Swap display_order values
+      await supabase
+        .from('product_variants')
+        .update({ display_order: currentOrder })
+        .eq('id', variantAbove.id)
+
+      await supabase
+        .from('product_variants')
+        .update({ display_order: currentOrder - 1 })
+        .eq('id', variantId)
+
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleMoveDown = async (variantId: string, currentOrder: number) => {
+    // Find variant directly below (higher order number)
+    const variantBelow = variants.find(v => v.display_order === currentOrder + 1)
+    if (!variantBelow) return // Already at bottom
+
+    try {
+      // Swap display_order values
+      await supabase
+        .from('product_variants')
+        .update({ display_order: currentOrder })
+        .eq('id', variantBelow.id)
+
+      await supabase
+        .from('product_variants')
+        .update({ display_order: currentOrder + 1 })
+        .eq('id', variantId)
+
       fetchVariants()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -414,6 +468,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             <table className="min-w-full divide-y-2 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-20">
+                    Volgorde
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Maat
                   </th>
@@ -438,8 +495,44 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {variants.map((variant) => (
+                {variants.map((variant, index) => {
+                  const isFirst = index === 0
+                  const isLast = index === variants.length - 1
+                  
+                  return (
                   <tr key={variant.id} className="hover:bg-gray-50 transition-colors">
+                    {/* Order Controls */}
+                    <td className="px-2 py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => handleMoveUp(variant.id, variant.display_order)}
+                          disabled={isFirst}
+                          className={`p-1 border-2 transition-colors ${
+                            isFirst
+                              ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                              : 'border-gray-300 hover:border-black hover:bg-gray-100 text-gray-700'
+                          }`}
+                          title="Verplaats omhoog"
+                          aria-label="Verplaats omhoog"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleMoveDown(variant.id, variant.display_order)}
+                          disabled={isLast}
+                          className={`p-1 border-2 transition-colors ${
+                            isLast
+                              ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                              : 'border-gray-300 hover:border-black hover:bg-gray-100 text-gray-700'
+                          }`}
+                          title="Verplaats omlaag"
+                          aria-label="Verplaats omlaag"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-bold text-gray-900">{variant.size}</span>
                     </td>
@@ -507,7 +600,8 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       </button>
                     </td>
                   </tr>
-                ))}
+                )
+              })}
               </tbody>
             </table>
           </div>
