@@ -697,7 +697,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 >
                   {product.categories.name}
                 </Link>
-                <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3">{product.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3 transition-all duration-300">
+                  {product.name}
+                  {selectedVariant && selectedColor && (
+                    <span className="text-brand-primary"> - {selectedColor.toUpperCase()}</span>
+                  )}
+                </h1>
                 
                 {/* Price Display met Korting */}
                 <div className="mb-2">
@@ -839,18 +844,19 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
-              {/* Color Selector */}
+              {/* Color Selector - Enhanced */}
               {availableColors.length > 0 && (
                 <div>
                   <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
-                    Kleur: {selectedColor}
+                    Kleur:
                   </label>
-                  <div className="flex flex-wrap gap-2 md:gap-3">
+                  <div className="flex flex-wrap gap-2 md:gap-3 mb-2">
                     {availableColors.map(({ color, hex }) => {
                       const colorVariant = product.product_variants.find(
                         (v) => v.size === selectedSize && v.color === color
                       )
                       const colorAvailable = colorVariant && colorVariant.is_available && colorVariant.stock_quantity > 0
+                      const isSelected = selectedColor === color
                       return (
                         <button
                           key={color}
@@ -859,10 +865,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             setSelectedImage(0) // Reset to first image when color changes
                           }}
                           disabled={!colorAvailable}
-                          className={`relative w-10 h-10 md:w-12 md:h-12 border-2 transition-all ${
-                            selectedColor === color
-                              ? 'border-brand-primary scale-110'
-                              : colorAvailable
+                          className={`relative border-2 transition-all ${
+                            isSelected
+                              ? 'w-14 h-14 md:w-16 md:h-16 border-4 border-brand-primary shadow-lg animate-pulse-slow'
+                              : 'w-10 h-10 md:w-12 md:h-12'
+                          } ${
+                            colorAvailable
                               ? 'border-gray-400 hover:border-black'
                               : 'border-gray-300 cursor-not-allowed opacity-50'
                           }`}
@@ -872,6 +880,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             className="w-full h-full"
                             style={{ backgroundColor: hex }}
                           />
+                          {isSelected && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <svg className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                              </svg>
+                            </div>
+                          )}
                           {!colorAvailable && (
                             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                               <span className="text-red-600 text-2xl font-bold">✕</span>
@@ -881,6 +896,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       )
                     })}
                   </div>
+                  {/* Selected Color Label */}
+                  {selectedColor && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <svg className="w-4 h-4 text-brand-primary" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                      </svg>
+                      <span className="font-bold text-brand-primary">Geselecteerd: {selectedColor}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
