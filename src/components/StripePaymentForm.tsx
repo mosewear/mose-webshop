@@ -295,11 +295,6 @@ export default function StripePaymentForm({
                       <div className="font-bold text-black group-hover:text-brand-primary transition-colors">{method.name}</div>
                       <div className="text-sm text-gray-600">{method.description}</div>
                     </div>
-                    {method.popular && (
-                      <span className="absolute top-2 right-2 px-2 py-1 bg-black text-white text-xs font-bold">
-                        POPULAIR
-                      </span>
-                    )}
                     <svg 
                       className="w-6 h-6 text-gray-400 group-hover:text-brand-primary transition-colors flex-shrink-0" 
                       fill="none" 

@@ -90,7 +90,16 @@ export default function ExpressCheckout({
 
       // Check if payment request is available
       const result = await pr.canMakePayment()
+      console.log('🍎 [Express Checkout] Apple Pay availability check:', {
+        available: !!result,
+        result: result,
+        userAgent: navigator.userAgent,
+        isHttps: window.location.protocol === 'https:',
+        domain: window.location.hostname,
+      })
+      
       if (result) {
+        console.log('✅ [Express Checkout] Payment request available:', result)
         setPaymentRequest(pr)
 
         // Handle payment method
@@ -253,6 +262,12 @@ export default function ExpressCheckout({
           console.log('⚠️ [Express Checkout] User cancelled payment')
           setIsProcessing(false)
         })
+      } else {
+        console.log('❌ [Express Checkout] Payment request NOT available - possible reasons:')
+        console.log('- Not using Safari on iOS')
+        console.log('- Apple Pay not set up on device')
+        console.log('- Not on HTTPS (except localhost)')
+        console.log('- Domain not registered with Apple')
       }
     }
 
