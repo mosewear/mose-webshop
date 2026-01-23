@@ -1215,8 +1215,8 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* Postcode + Huisnummer + Toevoeging + Lookup Button (ALLEEN VOOR NL) */}
-                    {form.country === 'NL' ? (
+                    {/* Postcode + Huisnummer + Toevoeging (Voor NL en BE) + Lookup Button (ALLEEN VOOR NL) */}
+                    {(form.country === 'NL' || form.country === 'BE') ? (
                       <div className="space-y-3">
                         {/* Desktop: Grid layout */}
                         <div className="hidden md:grid md:grid-cols-12 gap-3">
@@ -1322,30 +1322,33 @@ export default function CheckoutPage() {
                             {errors.toevoeging && <p className="text-red-600 text-xs">{errors.toevoeging}</p>}
                           </div>
                         </div>
-                        <div className="col-span-5 flex flex-col">
-                          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
-                            {/* Invisible label voor alignment */}
-                            &nbsp;
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleAddressLookup}
-                            disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                            className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                          >
-                            {addressLookup.isLookingUp ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Ophalen...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Search size={18} />
-                                <span>Adres ophalen</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
+                        {/* Lookup button - ALLEEN voor Nederland */}
+                        {form.country === 'NL' && (
+                          <div className="col-span-5 flex flex-col">
+                            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
+                              {/* Invisible label voor alignment */}
+                              &nbsp;
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleAddressLookup}
+                              disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
+                              className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              {addressLookup.isLookingUp ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <span>Ophalen...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Search size={18} />
+                                  <span>Adres ophalen</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Mobile: Stacked layout */}
@@ -1420,35 +1423,38 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={handleAddressLookup}
-                          disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                          className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                          {addressLookup.isLookingUp ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              <span>Adres wordt opgehaald...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Search size={18} />
-                              <span>Adres ophalen</span>
-                            </>
-                          )}
-                        </button>
+                        {/* Lookup button - ALLEEN voor Nederland */}
+                        {form.country === 'NL' && (
+                          <button
+                            type="button"
+                            onClick={handleAddressLookup}
+                            disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
+                            className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {addressLookup.isLookingUp ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <span>Adres wordt opgehaald...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Search size={18} />
+                                <span>Adres ophalen</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
 
-                      {/* Error message */}
-                      {addressLookup.error && (
+                      {/* Error message - ALLEEN voor NL (lookup feature) */}
+                      {form.country === 'NL' && addressLookup.error && (
                         <div className="p-3 bg-red-50 border-2 border-red-600 text-red-900 text-sm rounded">
                           {addressLookup.error}
                         </div>
                       )}
 
-                      {/* Success message */}
-                      {addressLookup.isLookedUp && (
+                      {/* Success message - ALLEEN voor NL (lookup feature) */}
+                      {form.country === 'NL' && addressLookup.isLookedUp && (
                         <div className="p-3 bg-green-50 border-2 border-green-600 text-green-900 text-sm rounded flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Check size={18} className="text-green-600" />
