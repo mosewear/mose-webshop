@@ -532,7 +532,6 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         </button>
                       </div>
                     </td>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-bold text-gray-900">{variant.size}</span>
                     </td>
