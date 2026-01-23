@@ -44,7 +44,7 @@ export default function StickyBuyNow({
   const [isBuying, setIsBuying] = useState(false)
   const router = useRouter()
   const addItem = useCart((state) => state.addItem)
-  const { openDrawer } = useCartDrawer()
+  const { openDrawer, isOpen: isCartOpen } = useCartDrawer()
 
   // Scroll detection - show on mobile always, on desktop after scrolling past add to cart button
   useEffect(() => {
@@ -205,7 +205,8 @@ export default function StickyBuyNow({
     }
   }
 
-  if (!isVisible) return null
+  // Hide sticky bar if cart drawer is open or not visible
+  if (!isVisible || isCartOpen) return null
 
   return (
     <>
