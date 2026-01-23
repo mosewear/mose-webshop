@@ -1021,102 +1021,7 @@ export default function CheckoutPage() {
                   ) : (
                     /* GUEST CHECKOUT FORM */
                   <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Payment Trust Section - BOVEN ALLES */}
-                <div className="bg-white border-2 border-black p-4 md:p-6 mb-6">
-                  <div className="text-center mb-4">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                      <CreditCard className="w-5 h-5" />
-                      <p className="text-sm font-bold uppercase tracking-wide">
-                        Betaal veilig met
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-                      {/* iDEAL - alleen voor NL */}
-                      {form.country === 'NL' && (
-                        <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[60px]">
-                          <Image 
-                            src="/payment-icons/ideal.webp" 
-                            alt="iDEAL" 
-                            width={60} 
-                            height={32}
-                            className="h-8 w-auto object-contain"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Bancontact - alleen voor BE */}
-                      {form.country === 'BE' && (
-                        <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[80px]">
-                          <Image 
-                            src="/payment-icons/Bancontact.png" 
-                            alt="Bancontact" 
-                            width={80} 
-                            height={32}
-                            className="h-8 w-auto object-contain"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Visa */}
-                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[60px]">
-                        <Image 
-                          src="/payment-icons/visa.png" 
-                          alt="Visa" 
-                          width={60} 
-                          height={32}
-                          className="h-8 w-auto object-contain"
-                        />
-                      </div>
-                      
-                      {/* Mastercard */}
-                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[60px]">
-                        <Image 
-                          src="/payment-icons/mastercard.png" 
-                          alt="Mastercard" 
-                          width={60} 
-                          height={32}
-                          className="h-8 w-auto object-contain"
-                        />
-                      </div>
-                      
-                      {/* Apple Pay */}
-                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[70px]">
-                        <Image 
-                          src="/payment-icons/applepay.png" 
-                          alt="Apple Pay" 
-                          width={70} 
-                          height={32}
-                          className="h-8 w-auto object-contain"
-                        />
-                      </div>
-                      
-                      {/* Google Pay */}
-                      <div className="bg-white border-2 border-gray-300 p-2 h-12 flex items-center justify-center min-w-[80px]">
-                        <Image 
-                          src="/payment-icons/googlepay.png" 
-                          alt="Google Pay" 
-                          width={80} 
-                          height={32}
-                          className="h-8 w-auto object-contain"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-center gap-4 text-xs text-gray-600 pt-3 border-t border-gray-300 mt-3">
-                    <span className="flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-green-600" />
-                      <span>SSL versleuteld</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-green-600" />
-                      <span>256-bit encryptie</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Express Checkout (Apple Pay / Google Pay) */}
+                {/* Express Checkout (Apple Pay / Google Pay) - Direct bovenaan, compact */}
                 <ExpressCheckout
                   cartItems={items}
                   subtotal={subtotal}
@@ -1148,9 +1053,15 @@ export default function CheckoutPage() {
 
                 {/* Delivery - Compact */}
                 <div className="border-t-2 border-gray-200 pt-6">
-                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs">2</span>
-                    Bezorging
+                  <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs">2</span>
+                      Bezorging
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs font-normal text-gray-600">
+                      <Lock className="w-3.5 h-3.5 text-green-600" />
+                      <span className="hidden sm:inline">Veilig & versleuteld</span>
+                    </div>
                   </h2>
                   <div className="space-y-4">
                     {/* Name - Single Row */}
@@ -1533,25 +1444,23 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Trust Signals */}
-                <div className="border-t-2 border-gray-200 pt-6 space-y-2 text-sm text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Trust Signals - Compact inline */}
+                <div className="border-t-2 border-gray-200 pt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    <span>Veilig betalen via Stripe</span>
+                    <span>Veilig betalen</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>{returnDays} dagen bedenktijd</span>
+                    <span>{returnDays} dagen retour</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span>SSL beveiligde verbinding</span>
+                  <div className="flex items-center gap-1.5">
+                    <Lock className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span>SSL beveiligd</span>
                   </div>
                 </div>
 

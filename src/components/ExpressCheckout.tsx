@@ -264,33 +264,26 @@ export default function ExpressCheckout({
   }
 
   return (
-    <div className="mb-6">
-      <div className="bg-white border-2 border-black p-4 md:p-6">
-        <h3 className="text-sm md:text-base font-bold uppercase tracking-wide mb-4 text-center">
-          ⚡ Snel afrekenen
-        </h3>
-        
-        <div className="space-y-3">
-          {/* Stripe Payment Request Button (Apple Pay / Google Pay) */}
-          <PaymentRequestButtonElement
-            options={{
-              paymentRequest,
-              style: {
-                paymentRequestButton: {
-                  type: 'buy',
-                  theme: 'dark',
-                  height: '56px',
-                },
-              },
-            }}
-          />
+    <div className="mb-6 space-y-3">
+      {/* Stripe Payment Request Button (Apple Pay / Google Pay) - Direct, geen box */}
+      <PaymentRequestButtonElement
+        options={{
+          paymentRequest,
+          style: {
+            paymentRequestButton: {
+              type: 'buy',
+              theme: 'dark',
+              height: '56px',
+            },
+          },
+        }}
+      />
 
-          <div className="flex items-center gap-3 text-xs text-gray-600">
-            <div className="flex-1 h-px bg-gray-300"></div>
-            <span className="uppercase tracking-wide">of vul formulier in</span>
-            <div className="flex-1 h-px bg-gray-300"></div>
-          </div>
-        </div>
+      {/* Divider - subtiel */}
+      <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex-1 h-px bg-gray-300"></div>
+        <span className="uppercase tracking-wide">of vul in</span>
+        <div className="flex-1 h-px bg-gray-300"></div>
       </div>
     </div>
   )
