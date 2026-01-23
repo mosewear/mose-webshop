@@ -236,28 +236,28 @@ export default function StickyBuyNow({
         }
       `}</style>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black z-50 shadow-2xl">
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Prijs sectie - prominent links */}
+            {/* Prijs sectie - prominent links - WIT op ZWART */}
             <div className="flex-shrink-0 flex items-center gap-2">
               {hasDiscount ? (
                 <>
                   {/* Originele prijs doorgestreept */}
-                  <p className="text-sm md:text-base text-gray-500 line-through">
+                  <p className="text-sm md:text-base text-gray-400 line-through">
                     €{(originalPrice * quantity).toFixed(2)}
                   </p>
                   {/* Nieuwe prijs - rood en bold */}
-                  <p className="text-xl md:text-2xl font-bold text-red-600">
+                  <p className="text-xl md:text-2xl font-bold text-red-500">
                     €{(finalPrice * quantity).toFixed(2)}
                   </p>
-                  {/* Korting badge */}
-                  <span className="bg-black text-white px-2 py-1 text-xs font-bold">
+                  {/* Korting badge - wit op zwart */}
+                  <span className="bg-white text-black px-2 py-1 text-xs font-bold">
                     -{discountPercentage}%
                   </span>
                 </>
               ) : (
-                <p className="text-xl md:text-2xl font-bold">
+                <p className="text-xl md:text-2xl font-bold text-white">
                   €{(finalPrice * quantity).toFixed(2)}
                 </p>
               )}
@@ -266,17 +266,17 @@ export default function StickyBuyNow({
             {/* Spacer */}
             <div className="flex-1"></div>
 
-            {/* Toevoegen button - wit bg, zwarte border */}
+            {/* IN WAGEN button - WIT met zwarte tekst */}
             <button
               onClick={handleAddToCart}
               disabled={!inStock || isAdding || isBuying}
-              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-3 md:py-3.5 border-2 border-black bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
             >
               <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="hidden sm:inline">TOEVOEGEN</span>
+              <span>IN WAGEN</span>
             </button>
 
-            {/* Nu Kopen button - GROEN met PULSE! */}
+            {/* BESTEL NU button - GROEN met PULSE! */}
             <button
               onClick={handleBuyNow}
               disabled={!inStock || isAdding || isBuying}
@@ -286,7 +286,7 @@ export default function StickyBuyNow({
                 <span>BEZIG...</span>
               ) : (
                 <>
-                  <span>NU KOPEN</span>
+                  <span>BESTEL NU</span>
                   <svg className="w-4 h-4 md:w-5 md:h-5 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
