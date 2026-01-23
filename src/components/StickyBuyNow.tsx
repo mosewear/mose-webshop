@@ -269,7 +269,7 @@ export default function StickyBuyNow({
               className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-5 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
             >
               <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="hidden xs:inline">IN WAGEN</span>
+              <span>IN WAGEN</span>
             </button>
 
             {/* BESTEL NU button - GROEN met PULSE! */}
@@ -282,8 +282,7 @@ export default function StickyBuyNow({
                 <span>BEZIG...</span>
               ) : (
                 <>
-                  <span className="xs:hidden">KOPEN</span>
-                  <span className="hidden xs:inline">BESTEL NU</span>
+                  <span>BESTEL NU</span>
                   <svg className="w-4 h-4 md:w-5 md:h-5 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
