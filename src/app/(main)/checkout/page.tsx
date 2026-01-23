@@ -774,41 +774,28 @@ export default function CheckoutPage() {
     setForm((prev) => {
       const updated = { ...prev, [field]: value }
       
-      // Auto-format postcode + auto-detect country
+      // Auto-format postcode (ZONDER auto-detect tijdens typen)
       if (field === 'postalCode') {
         const normalized = value.replace(/\s+/g, '').toUpperCase()
         
-        // Auto-detect country based on postcode format
-        if (normalized.length >= 4) {
-          // Check if it's Belgian format (4 digits only)
+        // Alleen formatting, GEEN country detection tijdens typen
+        if (normalized.length > 4 && /^\d{4}[A-Z]{0,2}$/.test(normalized)) {
+          // Add space after 4 digits for Dutch format
+          updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
+        } else {
+          updated.postalCode = normalized
+        }
+        
+        // Auto-detect country ALLEEN bij blur (validateNow = true)
+        if (validateNow && normalized.length >= 4) {
+          // Check if it's Belgian format (exactly 4 digits, nothing more)
           if (/^\d{4}$/.test(normalized)) {
             updated.country = 'BE' // Belgian postcode
-            updated.postalCode = normalized
           }
           // Check if it's Dutch format (4 digits + letters)
           else if (/^\d{4}[A-Z]{1,2}$/.test(normalized)) {
             updated.country = 'NL' // Dutch postcode
-            // Add space after 4 digits for Dutch format
-            if (normalized.length > 4) {
-              updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
-            } else {
-              updated.postalCode = normalized
-            }
           }
-          // Still typing or invalid format - keep as is
-          else if (/^\d{1,4}[A-Z]{0,2}$/.test(normalized)) {
-            // Could be typing Dutch postcode
-            if (normalized.length > 4) {
-              updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
-            } else {
-              updated.postalCode = normalized
-            }
-          }
-          else {
-            updated.postalCode = normalized
-          }
-        } else {
-          updated.postalCode = normalized
         }
       }
       
