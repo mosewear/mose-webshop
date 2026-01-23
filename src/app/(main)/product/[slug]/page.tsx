@@ -109,32 +109,18 @@ function MainVideo({
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) {
-      console.log('❌ MainVideo: No video ref')
-      return
-    }
-
-    console.log('🎬 MainVideo SETUP:', videoUrl.substring(videoUrl.length - 30))
+    if (!video) return
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const ratio = entry.intersectionRatio
           
-          console.log('👁️ MainVideo INTERSECTION:', {
-            videoUrl: videoUrl.substring(videoUrl.length - 30),
-            isIntersecting: entry.isIntersecting,
-            intersectionRatio: ratio.toFixed(2),
-            shouldPlay: entry.isIntersecting && ratio >= 0.25
-          })
-          
           if (entry.isIntersecting && ratio >= 0.25) {
-            console.log('🎬 MainVideo: Attempting AUTOPLAY...')
-            video.play()
-              .then(() => console.log('✅ MainVideo: Autoplay SUCCESS!'))
-              .catch((err) => console.error('❌ MainVideo: Autoplay BLOCKED:', err.message))
+            video.play().catch(() => {
+              // Autoplay blocked - silently fail
+            })
           } else {
-            console.log('⏸️ MainVideo: Pausing (not visible)')
             video.pause()
           }
         })
@@ -143,10 +129,8 @@ function MainVideo({
     )
 
     observer.observe(video)
-    console.log('👀 MainVideo: Observer ACTIVE')
     
     return () => {
-      console.log('🛑 MainVideo: Disconnecting observer')
       observer.disconnect()
     }
   }, [videoUrl])

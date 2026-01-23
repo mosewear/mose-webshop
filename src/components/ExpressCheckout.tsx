@@ -90,22 +90,13 @@ export default function ExpressCheckout({
 
       // Check if payment request is available
       const result = await pr.canMakePayment()
-      console.log('🍎 [Express Checkout] Apple Pay availability check:', {
-        available: !!result,
-        result: result,
-        userAgent: navigator.userAgent,
-        isHttps: window.location.protocol === 'https:',
-        domain: window.location.hostname,
-      })
       
       if (result) {
-        console.log('✅ [Express Checkout] Payment request available:', result)
         setPaymentRequest(pr)
 
         // Handle payment method
         pr.on('paymentmethod', async (e: PaymentRequestPaymentMethodEvent) => {
           setIsProcessing(true)
-          console.log('💳 [Express Checkout] Payment method received:', e.paymentMethod)
 
           try {
             // Validate stock availability
@@ -157,14 +148,11 @@ export default function ExpressCheckout({
               .single()
 
             if (orderError || !order) {
-              console.error('❌ [Express Checkout] Order creation failed:', orderError)
               e.complete('fail')
               toast.error('Fout bij het aanmaken van de bestelling')
               setIsProcessing(false)
               return
             }
-
-            console.log('✅ [Express Checkout] Order created:', order.id)
 
             // Create order items
             const orderItems = cartItems.map(item => ({
@@ -182,7 +170,6 @@ export default function ExpressCheckout({
               .insert(orderItems)
 
             if (itemsError) {
-              console.error('❌ [Express Checkout] Order items creation failed:', itemsError)
               e.complete('fail')
               toast.error('Fout bij het toevoegen van producten')
               setIsProcessing(false)
@@ -203,7 +190,6 @@ export default function ExpressCheckout({
             const { clientSecret, error: intentError } = await response.json()
 
             if (intentError || !clientSecret) {
-              console.error('❌ [Express Checkout] Payment intent creation failed:', intentError)
               e.complete('fail')
               toast.error('Fout bij het verwerken van de betaling')
               setIsProcessing(false)
@@ -224,7 +210,6 @@ export default function ExpressCheckout({
             )
 
             if (confirmError) {
-              console.error('❌ [Express Checkout] Payment confirmation failed:', confirmError)
               e.complete('fail')
               toast.error(confirmError.message || 'Betaling mislukt')
               setIsProcessing(false)
@@ -233,7 +218,6 @@ export default function ExpressCheckout({
 
             // Success!
             e.complete('success')
-            console.log('✅ [Express Checkout] Payment successful!')
 
             // Track conversion
             trackPixelEvent('Purchase', {
@@ -250,7 +234,6 @@ export default function ExpressCheckout({
             router.push(`/order-confirmation?order_id=${order.id}`)
             
           } catch (error: any) {
-            console.error('❌ [Express Checkout] Unexpected error:', error)
             e.complete('fail')
             toast.error('Er is een fout opgetreden')
             setIsProcessing(false)
@@ -259,15 +242,8 @@ export default function ExpressCheckout({
 
         // Handle cancel
         pr.on('cancel', () => {
-          console.log('⚠️ [Express Checkout] User cancelled payment')
           setIsProcessing(false)
         })
-      } else {
-        console.log('❌ [Express Checkout] Payment request NOT available - possible reasons:')
-        console.log('- Not using Safari on iOS')
-        console.log('- Apple Pay not set up on device')
-        console.log('- Not on HTTPS (except localhost)')
-        console.log('- Domain not registered with Apple')
       }
     }
 
