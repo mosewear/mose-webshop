@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
 import { useCart } from '@/store/cart'
+import { useCartDrawer } from '@/store/cartDrawer'
 import { trackAddToCart } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
@@ -43,6 +44,7 @@ export default function StickyBuyNow({
   const [isBuying, setIsBuying] = useState(false)
   const router = useRouter()
   const addItem = useCart((state) => state.addItem)
+  const { openDrawer } = useCartDrawer()
 
   // Scroll detection - show on mobile always, on desktop after scrolling past add to cart button
   useEffect(() => {
@@ -138,7 +140,8 @@ export default function StickyBuyNow({
         currency: 'EUR',
       })
 
-      toast.success('Toegevoegd aan winkelwagen!')
+      // Open cart drawer automatically (consistent met desktop)
+      openDrawer()
     } catch (error) {
       console.error('Error adding to cart:', error)
       toast.error('Er is iets misgegaan')
