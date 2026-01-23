@@ -970,7 +970,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* Add to Cart Buttons - Mobile & Desktop */}
               <div className="flex gap-2 md:gap-3">
-                {/* IN WAGEN button - primary action */}
+                {/* IN WINKELWAGEN button - primary action */}
                 <button
                   onClick={handleAddToCart}
                   disabled={!inStock || !selectedVariant || addedToCart}
@@ -982,7 +982,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {addedToCart ? '✓ TOEGEVOEGD' : inStock ? 'IN WAGEN' : 'UITVERKOCHT'}
+                  {addedToCart ? '✓ TOEGEVOEGD' : inStock ? 'IN WINKELWAGEN' : 'UITVERKOCHT'}
                 </button>
                 
                 {/* Wishlist button - secondary */}
