@@ -469,8 +469,21 @@ export default function CheckoutPage() {
       case 'postalCode':
         const normalizedPostcode = value.replace(/\s+/g, '').toUpperCase()
         if (!value.trim()) return 'Verplicht veld'
-        if (!/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
-          return 'Ongeldig formaat. Gebruik: 1234AB'
+        
+        // Validate based on detected country
+        if (form.country === 'BE') {
+          // Belgian postcode: 4 digits
+          if (!/^\d{4}$/.test(normalizedPostcode)) {
+            return 'Ongeldig formaat. Belgische postcode: 4 cijfers (bijv. 2000)'
+          }
+        } else if (form.country === 'NL') {
+          // Dutch postcode: 4 digits + 2 letters
+          if (!/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
+            return 'Ongeldig formaat. Nederlandse postcode: 1234AB'
+          }
+        } else {
+          // For other countries, just check it's not empty
+          // We could add more country-specific validation here if needed
         }
         return undefined
       case 'huisnummer':
@@ -761,12 +774,39 @@ export default function CheckoutPage() {
     setForm((prev) => {
       const updated = { ...prev, [field]: value }
       
-      // Auto-format postcode
+      // Auto-format postcode + auto-detect country
       if (field === 'postalCode') {
         const normalized = value.replace(/\s+/g, '').toUpperCase()
-        // Voeg spatie toe na 4 cijfers als gebruiker typt
-        if (normalized.length > 4 && /^\d{4}[A-Z]{0,2}$/.test(normalized)) {
-          updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
+        
+        // Auto-detect country based on postcode format
+        if (normalized.length >= 4) {
+          // Check if it's Belgian format (4 digits only)
+          if (/^\d{4}$/.test(normalized)) {
+            updated.country = 'BE' // Belgian postcode
+            updated.postalCode = normalized
+          }
+          // Check if it's Dutch format (4 digits + letters)
+          else if (/^\d{4}[A-Z]{1,2}$/.test(normalized)) {
+            updated.country = 'NL' // Dutch postcode
+            // Add space after 4 digits for Dutch format
+            if (normalized.length > 4) {
+              updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
+            } else {
+              updated.postalCode = normalized
+            }
+          }
+          // Still typing or invalid format - keep as is
+          else if (/^\d{1,4}[A-Z]{0,2}$/.test(normalized)) {
+            // Could be typing Dutch postcode
+            if (normalized.length > 4) {
+              updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
+            } else {
+              updated.postalCode = normalized
+            }
+          }
+          else {
+            updated.postalCode = normalized
+          }
         } else {
           updated.postalCode = normalized
         }
