@@ -934,77 +934,68 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
-              {/* Stock Indicator */}
+              {/* 🎯 SMART AVAILABILITY & TRUST BANNER - Consolidated, Dynamic, No Duplicates */}
               {selectedVariant && (
-                <div className="flex items-center gap-2">
-                  {inStock ? (
-                    <>
-                      <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-black font-bold">
-                        {lowStock ? `Nog maar ${selectedVariant.stock_quantity} op voorraad!` : 'Op voorraad'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span className="text-red-600 font-semibold">Uitverkocht</span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* 🔥 URGENCY & SOCIAL PROOF BANNER */}
-              {selectedVariant && inStock && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-3 md:p-4 rounded-r space-y-2">
-                  {/* Low Stock Urgency */}
-                  {lowStock && (
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-gray-900">
-                          🔥 Laatste {selectedVariant.stock_quantity} stuks beschikbaar!
-                        </p>
-                        <p className="text-xs text-gray-600 mt-0.5">
-                          Veel interesse in dit product. Bestel snel voor het uitverkocht is.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                <div className={`border-l-4 p-3 md:p-4 rounded-r space-y-2.5 ${
+                  inStock 
+                    ? lowStock 
+                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500' 
+                      : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-500'
+                    : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-400'
+                }`}>
+                  {/* Row 1: Stock Status (Dynamic: Urgency OR Availability OR Out of Stock) */}
+                  <div className="flex items-center gap-2">
+                    {inStock ? (
+                      lowStock ? (
+                        <>
+                          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-900">
+                              🔥 Laatste {selectedVariant.stock_quantity} stuks - Bestel snel!
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Package className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-900">
+                              ✓ Op voorraad - Morgen in huis
+                            </p>
+                          </div>
+                        </>
+                      )
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-red-600">
+                            Tijdelijk uitverkocht
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
                   
-                  {/* Social Proof - Always show for available items */}
-                  <div className="flex items-start gap-2">
-                    <Package className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-900">
-                        ✓ Populair product
-                      </p>
-                      <p className="text-xs text-gray-600 mt-0.5">
-                        {Math.floor(Math.random() * 50) + 20} mensen hebben dit product deze maand bekeken
-                      </p>
+                  {/* Row 2: Trust Badges (Always show, using dynamic settings) */}
+                  {inStock && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 pl-7">
+                      <span className="flex items-center gap-1">
+                        <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                        {settings.return_days} dagen niet goed, geld terug
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                        Gratis verzending vanaf €{settings.free_shipping_threshold}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                        2 jaar garantie
+                      </span>
                     </div>
-                  </div>
-
-                  {/* Trust Signal - 30 dagen niet goed, geld terug */}
-                  <div className="flex items-start gap-2">
-                    <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-900">
-                        30 dagen niet goed, geld terug
-                      </p>
-                      <p className="text-xs text-gray-600 mt-0.5">
-                        Probeer het risico-vrij. Niet tevreden? Gratis retour.
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
 
