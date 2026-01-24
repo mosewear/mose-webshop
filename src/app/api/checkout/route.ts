@@ -163,14 +163,10 @@ export async function POST(request: Request) {
       
       console.log('✅ Promo code validated:', order.promo_code, 'Discount:', validatedDiscount)
       
-      // Increment usage count
-      await supabase
-        .from('promo_codes')
-        .update({ 
-          times_used: supabase.raw('times_used + 1'),
-          last_used_at: new Date().toISOString()
-        })
-        .eq('code', order.promo_code.toUpperCase())
+      // Increment usage count (using RPC for atomic increment)
+      await supabase.rpc('increment_promo_usage', { 
+        promo_code_value: order.promo_code.toUpperCase() 
+      })
     }
     
     // Override client-provided discount with server-validated discount

@@ -376,21 +376,26 @@ export async function POST(req: NextRequest) {
           console.log('📦 Decrementing stock for order:', order.id)
           
           for (const item of updatedOrder.order_items) {
+            // Use direct SQL in update query
             const { data: variant, error: stockError } = await supabase
               .from('product_variants')
-              .update({ 
-                stock_quantity: supabase.raw(`GREATEST(stock_quantity - ${item.quantity}, 0)`)
-              })
+              .select('stock_quantity')
               .eq('id', item.variant_id)
               .gte('stock_quantity', item.quantity)
-              .select('id, stock_quantity')
               .single()
             
-            if (stockError || !variant) {
-              console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
-              // Don't fail webhook if stock decrement fails - log it for manual review
+            if (!stockError && variant) {
+              // Now update with calculated value
+              await supabase
+                .from('product_variants')
+                .update({ 
+                  stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
+                })
+                .eq('id', item.variant_id)
+              
+              console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity - item.quantity} remaining`)
             } else {
-              console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity} remaining`)
+              console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
             }
           }
           
@@ -562,18 +567,22 @@ export async function POST(req: NextRequest) {
               for (const item of updatedOrder.order_items) {
                 const { data: variant, error: stockError } = await supabase
                   .from('product_variants')
-                  .update({ 
-                    stock_quantity: supabase.raw(`GREATEST(stock_quantity - ${item.quantity}, 0)`)
-                  })
+                  .select('stock_quantity')
                   .eq('id', item.variant_id)
                   .gte('stock_quantity', item.quantity)
-                  .select('id, stock_quantity')
                   .single()
                 
-                if (stockError || !variant) {
-                  console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
+                if (!stockError && variant) {
+                  await supabase
+                    .from('product_variants')
+                    .update({ 
+                      stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
+                    })
+                    .eq('id', item.variant_id)
+                  
+                  console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity - item.quantity} remaining`)
                 } else {
-                  console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity} remaining`)
+                  console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
                 }
               }
               
@@ -725,19 +734,27 @@ export async function POST(req: NextRequest) {
               
               if (!itemsError && returnItems) {
                 for (const item of returnItems) {
-                  const { data: variant, error: stockError } = await supabase
+                  const { data: currentVariant, error: fetchError } = await supabase
                     .from('product_variants')
-                    .update({ 
-                      stock_quantity: supabase.raw(`stock_quantity + ${item.quantity}`)
-                    })
+                    .select('stock_quantity')
                     .eq('id', item.variant_id)
-                    .select('id, stock_quantity')
                     .single()
                   
-                  if (stockError || !variant) {
-                    console.error(`⚠️ Could not increment stock for ${item.product_name}:`, stockError)
-                  } else {
-                    console.log(`✅ Stock incremented for ${item.product_name}: ${variant.stock_quantity} in stock`)
+                  if (!fetchError && currentVariant) {
+                    const { data: variant, error: stockError } = await supabase
+                      .from('product_variants')
+                      .update({ 
+                        stock_quantity: currentVariant.stock_quantity + item.quantity
+                      })
+                      .eq('id', item.variant_id)
+                      .select('id, stock_quantity')
+                      .single()
+                    
+                    if (stockError || !variant) {
+                      console.error(`⚠️ Could not increment stock for ${item.product_name}:`, stockError)
+                    } else {
+                      console.log(`✅ Stock incremented for ${item.product_name}: ${variant.stock_quantity} in stock`)
+                    }
                   }
                 }
                 
