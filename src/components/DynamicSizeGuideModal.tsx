@@ -30,7 +30,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
         aria-label="Sluit maattabel"
       >
         <div 
-          className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[95vh] overflow-y-auto"
+          className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[calc(95vh-100px)] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -110,7 +110,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
         aria-label="Sluit specificaties"
       >
         <div 
-          className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[95vh] overflow-y-auto"
+          className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[calc(95vh-100px)] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4 sm:mb-6">
