@@ -64,7 +64,7 @@ export function Footer() {
             {/* Social Media Icons */}
             <div className="flex gap-4">
               <a 
-                href="https://instagram.com/mosewear.nl" 
+                href="https://instagram.com/mosewearcom" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-10 h-10 border-2 border-white flex items-center justify-center hover:bg-brand-primary hover:border-brand-primary transition-all duration-300 group"
