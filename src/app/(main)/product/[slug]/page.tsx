@@ -783,30 +783,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               </div>
 
-              {/* Trust Badges - Desktop: Ultra compact inline, Mobile: Accordion */}
-              <div className="hidden md:flex items-center justify-start gap-3 text-xs text-gray-600 py-2">
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-medium">Gratis verzending &gt;€{settings.free_shipping_threshold}</span>
-                </div>
-                <span className="text-gray-300">|</span>
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-medium">{settings.return_days} dagen retour</span>
-                </div>
-                <span className="text-gray-300">|</span>
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-medium">Lokaal gemaakt</span>
-                </div>
-              </div>
-
               {/* Description - Desktop: Expandable with line-clamp */}
               <div className="hidden md:block border-t border-b border-gray-200 py-3">
                 <div className={`text-sm text-gray-700 leading-relaxed ${descriptionExpanded ? '' : 'line-clamp-3'}`}>
