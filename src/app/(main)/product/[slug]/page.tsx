@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
 import StickyBuyNow from '@/components/StickyBuyNow'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
+import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -28,12 +29,14 @@ interface Product {
   category_id: string
   meta_title: string
   meta_description: string
+  size_guide_content?: any | null
   product_images: ProductImage[]
   product_variants: ProductVariant[]
   categories: {
     name: string
     slug: string
     size_guide_type?: string | null
+    size_guide_content?: any | null
     default_product_details?: string | null
     default_materials_care?: string | null
   }
@@ -343,7 +346,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         *,
         product_images(*),
         product_variants(*),
-        categories(name, slug, size_guide_type, default_product_details, default_materials_care)
+        categories(name, slug, size_guide_type, size_guide_content, default_product_details, default_materials_care)
       `)
       .eq('slug', slug)
       .single()
@@ -1373,104 +1376,119 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
       )}
 
-      {/* Dynamic Size Guide / Specs Modal */}
-      {showSizeGuide && product.categories.size_guide_type === 'watch' && (
-        <WatchSpecsModal onClose={() => setShowSizeGuide(false)} />
-      )}
-
-      {/* Clothing Size Guide Modal */}
-      {showSizeGuide && product.categories.size_guide_type !== 'watch' && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
-          onClick={() => setShowSizeGuide(false)}
-          aria-label="Sluit maattabel"
-        >
+      {/* Hybrid Size Guide Modal: Product Override OR Category Template */}
+      {showSizeGuide && (() => {
+        // Priority 1: Product-specific content (override)
+        const sizeGuideContent = product.size_guide_content || product.categories.size_guide_content
+        
+        // If we have JSON content, use DynamicSizeGuideModal
+        if (sizeGuideContent) {
+          return (
+            <DynamicSizeGuideModal
+              content={sizeGuideContent}
+              onClose={() => setShowSizeGuide(false)}
+            />
+          )
+        }
+        
+        // Fallback: Hardcoded modals for backward compatibility
+        if (product.categories.size_guide_type === 'watch') {
+          return <WatchSpecsModal onClose={() => setShowSizeGuide(false)} />
+        }
+        
+        // Fallback: Default clothing size guide
+        return (
           <div 
-            className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[95vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
+            onClick={() => setShowSizeGuide(false)}
+            aria-label="Sluit maattabel"
           >
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">MAATTABEL</h2>
+            <div 
+              className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[95vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">MAATTABEL</h2>
+                <button
+                  onClick={() => setShowSizeGuide(false)}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
+                  aria-label="Sluit maattabel"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="sm:hidden mb-2 text-xs text-gray-600 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <span>Swipe naar links voor meer →</span>
+              </div>
+              
+              <div className="overflow-x-auto -mx-2 px-2">
+                <table className="w-full border-2 border-black min-w-[500px]">
+                  <thead>
+                    <tr className="bg-black text-white">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Maat</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Borst (cm)</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Lengte (cm)</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Schouders (cm)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-xs sm:text-sm">
+                    <tr className="border-b-2 border-black">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">S</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">100-104</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">68-70</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">44-46</td>
+                    </tr>
+                    <tr className="border-b-2 border-black bg-gray-50">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">M</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">104-108</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">70-72</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">46-48</td>
+                    </tr>
+                    <tr className="border-b-2 border-black">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">L</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">108-112</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">72-74</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">48-50</td>
+                    </tr>
+                    <tr className="border-b-2 border-black bg-gray-50">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XL</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">112-116</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">74-76</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">50-52</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XXL</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">116-120</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">76-78</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">52-54</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-4 sm:mt-6 bg-gray-50 border-2 border-gray-300 p-3 sm:p-4 text-xs sm:text-sm space-y-2">
+                <h3 className="font-bold text-sm sm:text-base">Hoe meet je?</h3>
+                <p><span className="font-semibold">Borst:</span> Meet rond de breedste punt van je borst</p>
+                <p><span className="font-semibold">Lengte:</span> Meet vanaf de halsnaad tot aan de onderkant</p>
+                <p><span className="font-semibold">Schouders:</span> Meet van schouder tot schouder over de rug</p>
+              </div>
+
               <button
                 onClick={() => setShowSizeGuide(false)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
-                aria-label="Sluit maattabel"
+                className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                Sluiten
               </button>
             </div>
-            
-            {/* Scroll hint for mobile */}
-            <div className="sm:hidden mb-2 text-xs text-gray-600 flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-              <span>Swipe naar links voor meer →</span>
-            </div>
-            
-            <div className="overflow-x-auto -mx-2 px-2">
-              <table className="w-full border-2 border-black min-w-[500px]">
-                <thead>
-                  <tr className="bg-black text-white">
-                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Maat</th>
-                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Borst (cm)</th>
-                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Lengte (cm)</th>
-                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Schouders (cm)</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs sm:text-sm">
-                  <tr className="border-b-2 border-black">
-                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">S</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">100-104</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">68-70</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">44-46</td>
-                  </tr>
-                  <tr className="border-b-2 border-black bg-gray-50">
-                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">M</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">104-108</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">70-72</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">46-48</td>
-                  </tr>
-                  <tr className="border-b-2 border-black">
-                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">L</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">108-112</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">72-74</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">48-50</td>
-                  </tr>
-                  <tr className="border-b-2 border-black bg-gray-50">
-                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XL</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">112-116</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">74-76</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">50-52</td>
-                  </tr>
-                  <tr>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XXL</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">116-120</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">76-78</td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3">52-54</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 sm:mt-6 bg-gray-50 border-2 border-gray-300 p-3 sm:p-4 text-xs sm:text-sm space-y-2">
-              <h3 className="font-bold text-sm sm:text-base">Hoe meet je?</h3>
-              <p><span className="font-semibold">Borst:</span> Meet rond de breedste punt van je borst</p>
-              <p><span className="font-semibold">Lengte:</span> Meet vanaf de halsnaad tot aan de onderkant</p>
-              <p><span className="font-semibold">Schouders:</span> Meet van schouder tot schouder over de rug</p>
-            </div>
-
-            <button
-              onClick={() => setShowSizeGuide(false)}
-              className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
-            >
-              Sluiten
-            </button>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Sticky Buy Now Bar */}
       {product && (

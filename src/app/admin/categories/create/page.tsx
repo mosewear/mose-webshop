@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import ImageUpload from '@/components/admin/ImageUpload'
+import SizeGuideEditor from '@/components/admin/SizeGuideEditor'
 
 export default function CreateCategoryPage() {
   const [loading, setLoading] = useState(false)
@@ -18,6 +19,7 @@ export default function CreateCategoryPage() {
     description: '',
     image_url: '',
     size_guide_type: 'clothing' as 'clothing' | 'watch' | 'accessory' | 'shoes' | 'jewelry' | 'none',
+    size_guide_content: null as any,
     default_product_details: '',
     default_materials_care: '',
   })
@@ -52,6 +54,7 @@ export default function CreateCategoryPage() {
             description: formData.description || null,
             image_url: formData.image_url || null,
             size_guide_type: formData.size_guide_type,
+            size_guide_content: formData.size_guide_content || null,
             default_product_details: formData.default_product_details || null,
             default_materials_care: formData.default_materials_care || null,
           },
@@ -182,6 +185,22 @@ export default function CreateCategoryPage() {
             <p className="text-xs text-gray-500 mt-2">
               💡 <strong>Tip:</strong> Kies "Horloge" voor horloges, "Kleding" voor shirts/hoodies/sweaters
             </p>
+          </div>
+
+          {/* Size Guide Content Editor */}
+          <div className="bg-purple-50 border-2 border-purple-200 p-4">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              📝 Maattabel / Specificaties Content (Template)
+            </label>
+            <p className="text-sm text-gray-600 mb-4">
+              Dit is de <strong>standaard template</strong> voor alle producten in deze categorie. 
+              Producten kunnen dit later individueel overriden.
+            </p>
+            <SizeGuideEditor
+              initialContent={formData.size_guide_content}
+              sizeGuideType={formData.size_guide_type}
+              onChange={(content) => setFormData({ ...formData, size_guide_content: content })}
+            />
           </div>
 
           {/* Product Details Template */}
