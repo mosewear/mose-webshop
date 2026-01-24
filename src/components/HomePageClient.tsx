@@ -7,6 +7,8 @@ import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
 import * as LucideIcons from 'lucide-react'
+import { useState, FormEvent } from 'react'
+import toast from 'react-hot-toast'
 
 interface HomePageClientProps {
   siteSettings: {
@@ -28,6 +30,55 @@ export default function HomePageClient({
   const homepageSettings = initialHomepageSettings
   const featuredProducts = initialFeaturedProducts
   const categories = initialCategories
+
+  // Newsletter form state
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterLoading, setNewsletterLoading] = useState(false)
+  const [newsletterSuccess, setNewsletterSuccess] = useState(false)
+
+  const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    if (!newsletterEmail || newsletterLoading) return
+
+    setNewsletterLoading(true)
+
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail,
+          source: 'homepage',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        toast.error(data.error || 'Er ging iets mis. Probeer het opnieuw.')
+        setNewsletterLoading(false)
+        return
+      }
+
+      // Success!
+      toast.success('Je bent ingeschreven! Check je inbox.')
+      setNewsletterSuccess(true)
+      setNewsletterEmail('')
+
+      // Reset success state after 5 seconds
+      setTimeout(() => {
+        setNewsletterSuccess(false)
+      }, 5000)
+    } catch (error) {
+      console.error('Newsletter subscription error:', error)
+      toast.error('Er ging iets mis. Probeer het opnieuw.')
+    } finally {
+      setNewsletterLoading(false)
+    }
+  }
 
   return (
     <>
@@ -574,7 +625,7 @@ export default function HomePageClient({
             <span className="font-bold">Geen spam — alleen MOSE.</span>
           </p>
 
-          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label="Nieuwsbrief inschrijving">
+          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label="Nieuwsbrief inschrijving" onSubmit={handleNewsletterSubmit}>
             <div className="flex flex-col sm:flex-row gap-4">
               <label htmlFor="newsletter-email" className="sr-only">E-mailadres voor nieuwsbrief</label>
               <input
@@ -585,17 +636,40 @@ export default function HomePageClient({
                 required
                 autoComplete="email"
                 aria-required="true"
-                className="flex-1 px-6 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                disabled={newsletterLoading || newsletterSuccess}
+                className="flex-1 px-6 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
                 aria-label="Schrijf je in voor de MOSE nieuwsbrief"
-                className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-gray-900 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black"
+                disabled={newsletterLoading || newsletterSuccess}
+                className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-gray-900 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:active:scale-100"
               >
-                Join nu
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+                {newsletterLoading ? (
+                  <>
+                    <svg className="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Bezig...
+                  </>
+                ) : newsletterSuccess ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Ingeschreven!
+                  </>
+                ) : (
+                  <>
+                    Join nu
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </>
+                )}
               </button>
             </div>
             

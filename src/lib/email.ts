@@ -1904,3 +1904,129 @@ ${emailFooter}
     return { success: false, error }
   }
 }
+
+// =====================================================
+// NEWSLETTER WELCOME EMAIL
+// =====================================================
+
+export async function sendNewsletterWelcomeEmail(props: {
+  email: string
+  source?: string
+}) {
+  const { email, source = 'homepage' } = props
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+  const settings = await getSiteSettings()
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>${EMAIL_STYLES}</style>
+</head>
+<body data-ogsc="#ffffff">
+  <div class="wrapper">
+    <div class="logo-bar" style="padding: 24px; text-align: center; background: #000;">${createLogoTag(siteUrl, 140, 'auto')}</div>
+    <div class="hero">
+      ${createIconCircle('check-circle', '#2ECC71', 42)}
+      <h1>WELKOM BIJ DE PACK!</h1>
+      <div class="hero-sub">Je Bent Ingeschreven</div>
+      <div class="hero-text">Je ontvangt nu als eerste updates over drops, restocks en het atelier</div>
+    </div>
+    <div class="content">
+      <div class="section-title">Wat Krijg Je Van Ons?</div>
+      <ul class="checklist">
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;"><strong>Nieuwe drops</strong> - Als eerste weten wanneer nieuwe items live gaan</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;"><strong>Restocks</strong> - Notificaties wanneer uitverkochte items terug zijn</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;"><strong>Behind the scenes</strong> - Verhalen uit ons atelier in Groningen</td>
+            </tr>
+          </table>
+        </li>
+        <li style="padding: 10px 0; padding-left: 0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td width="24" valign="top" style="padding-right: 10px; vertical-align: top;">${createCheckmark('#2ECC71', 18)}</td>
+              <td valign="top" style="vertical-align: top;"><strong>Exclusieve aanbiedingen</strong> - Kortingen alleen voor subscribers</td>
+            </tr>
+          </table>
+        </li>
+      </ul>
+
+      <div class="info-box" style="border-left-color: #2ECC71; background: #f0fdf4;">
+        <h3>Geen Spam, Alleen MOSE</h3>
+        <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.6;">
+          We sturen alleen emails als we écht iets belangrijks te melden hebben. 
+          Geen dagelijkse spam, alleen waardevolle updates.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${siteUrl}/shop" class="button" style="color:#fff;text-decoration:none;">ONTDEK ONZE COLLECTIE</a>
+        <p style="font-size: 12px; color: #999; margin-top: 12px;">
+          Bekijk alle beschikbare items
+        </p>
+      </div>
+
+      <div style="background: #000; color: #fff; padding: 28px 24px; text-align: center; margin-top: 28px; border-radius: 8px;">
+        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Gemaakt In Groningen</h3>
+        <p style="margin: 0 0 20px 0; font-size: 14px; color: #999;">
+          Lokaal gemaakt. Kwaliteit die blijft. Geen poespas, wel karakter.
+        </p>
+      </div>
+    </div>
+    <div class="footer" style="background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px;">
+      <div style="margin-bottom: 16px;">${createLogoTag(siteUrl, 100, 'auto')}</div>
+      <p style="margin: 0 0 8px 0;"><strong style="color: #fff; font-weight: 700;">MOSE</strong> • ${settings.contact_address.split(',').map(s => s.trim()).join(' • ')}</p>
+      <p style="margin: 8px 0 0 0;">
+        <a href="mailto:${settings.contact_email}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_email}</a> • 
+        <a href="tel:${settings.contact_phone.replace(/\s/g, '')}" style="color: #2ECC71; font-weight: 600; text-decoration: none;">${settings.contact_phone}</a>
+      </p>
+      <p style="margin-top: 16px; font-size: 11px; color: #666;">
+        Je ontving deze email omdat je je hebt ingeschreven voor de MOSE nieuwsbrief.<br>
+        <a href="${siteUrl}/unsubscribe?email=${encodeURIComponent(email)}" style="color: #888; text-decoration: underline;">Uitschrijven</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Nieuwsbrief <nieuws@orders.mosewear.nl>',
+      to: [email],
+      subject: 'Welkom bij de MOSE pack!',
+      html: htmlContent,
+    })
+
+    if (error) {
+      console.error('❌ Error sending newsletter welcome email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Newsletter welcome email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Error sending newsletter welcome email:', error)
+    return { success: false, error }
+  }
+}
