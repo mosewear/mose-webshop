@@ -77,6 +77,7 @@ export default function CheckoutPage() {
   })
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
   const [loading, setLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false) // Prevent duplicate submissions
   const [addressLookup, setAddressLookup] = useState({
     isLookingUp: false,
     isLookedUp: false,
@@ -128,6 +129,49 @@ export default function CheckoutPage() {
       sessionStorage.removeItem('order_id')
     }
   }, [])
+
+  // ============================================
+  // CHECK PAYMENT INTENT EXPIRY ON MOUNT
+  // ============================================
+  useEffect(() => {
+    const checkPaymentIntentExpiry = async () => {
+      if (!clientSecret || !orderId) return
+      
+      try {
+        console.log('🔍 Checking if payment intent is expired...')
+        
+        // Fetch order to get payment intent ID
+        const { data: order } = await supabase
+          .from('orders')
+          .select('stripe_payment_intent_id, checkout_started_at')
+          .eq('id', orderId)
+          .single()
+        
+        if (!order || !order.stripe_payment_intent_id) {
+          console.log('⚠️ No payment intent found for order')
+          return
+        }
+        
+        // Check if payment intent is older than 1 hour (Stripe default expiry)
+        const checkoutTime = new Date(order.checkout_started_at)
+        const now = new Date()
+        const hoursSinceCheckout = (now.getTime() - checkoutTime.getTime()) / (1000 * 60 * 60)
+        
+        if (hoursSinceCheckout > 1) {
+          console.log('⚠️ Payment intent expired (>1 hour old)')
+          setClientSecret(undefined)
+          setCurrentStep('details')
+          toast.error('Je betalingsessie is verlopen. Vul je gegevens opnieuw in.')
+        } else {
+          console.log('✅ Payment intent is still valid')
+        }
+      } catch (error) {
+        console.error('Error checking payment intent expiry:', error)
+      }
+    }
+    
+    checkPaymentIntentExpiry()
+  }, [clientSecret, orderId])
 
   // Auto-scroll naar de juiste sectie bij step wijziging
   useEffect(() => {
@@ -560,6 +604,106 @@ export default function CheckoutPage() {
       setUser(data.user)
       setIsLoggedIn(true)
 
+      // ============================================
+      // MERGE GUEST CART WITH USER CART
+      // ============================================
+      const guestCartItems = items // Current cart (guest)
+      
+      if (guestCartItems.length > 0) {
+        console.log('🛒 Merging guest cart with user cart...')
+        console.log('   Guest cart items:', guestCartItems.length)
+        
+        // Fetch user's saved cart from database
+        const { data: savedCartItems, error: cartError } = await supabase
+          .from('cart_items')
+          .select('*, product_variants(product_id, size, color)')
+          .eq('user_id', data.user!.id)
+        
+        if (!cartError && savedCartItems && savedCartItems.length > 0) {
+          console.log('   Saved cart items:', savedCartItems.length)
+          
+          // Merge logic: Add guest items that aren't in saved cart
+          const mergedItems = [...guestCartItems]
+          
+          for (const savedItem of savedCartItems) {
+            const variantInfo = savedItem.product_variants as any
+            
+            // Check if this variant is already in guest cart
+            const existsInGuest = guestCartItems.find(
+              item => item.variantId === savedItem.variant_id
+            )
+            
+            if (!existsInGuest) {
+              // Add saved item to merged cart
+              const { data: variant } = await supabase
+                .from('product_variants')
+                .select('*, products(name, product_images(url))')
+                .eq('id', savedItem.variant_id)
+                .single()
+              
+              if (variant) {
+                const product = variant.products as any
+                const imageUrl = product.product_images?.[0]?.url || '/placeholder.png'
+                
+                mergedItems.push({
+                  productId: variantInfo.product_id,
+                  variantId: savedItem.variant_id,
+                  name: product.name,
+                  size: variant.size,
+                  color: variant.color,
+                  colorHex: variant.color_hex,
+                  price: savedItem.price_at_add,
+                  quantity: savedItem.quantity,
+                  image: imageUrl,
+                  sku: variant.sku,
+                  stock: variant.stock_quantity,
+                })
+              }
+            }
+          }
+          
+          console.log('   Merged cart items:', mergedItems.length)
+          setItems(mergedItems)
+          
+          // Update user's saved cart in database with merged items
+          // Delete old cart items
+          await supabase
+            .from('cart_items')
+            .delete()
+            .eq('user_id', data.user!.id)
+          
+          // Insert merged cart items
+          const cartItemsToSave = mergedItems.map(item => ({
+            user_id: data.user!.id,
+            variant_id: item.variantId,
+            quantity: item.quantity,
+            price_at_add: item.price,
+          }))
+          
+          await supabase
+            .from('cart_items')
+            .insert(cartItemsToSave)
+          
+          console.log('✅ Cart merged and saved to database')
+        } else {
+          console.log('   No saved cart, keeping guest cart')
+          
+          // Save guest cart to database
+          const cartItemsToSave = guestCartItems.map(item => ({
+            user_id: data.user!.id,
+            variant_id: item.variantId,
+            quantity: item.quantity,
+            price_at_add: item.price,
+          }))
+          
+          await supabase
+            .from('cart_items')
+            .insert(cartItemsToSave)
+          
+          console.log('✅ Guest cart saved to database')
+        }
+      }
+
       // Load profile and address data
       await loadProfileAndAddress(data.user!.id, loginForm.email)
 
@@ -612,6 +756,14 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // ============================================
+    // PREVENT DUPLICATE SUBMISSIONS
+    // ============================================
+    if (isSubmitting) {
+      console.log('⚠️ Submission already in progress, ignoring...')
+      return
+    }
+
     console.log('🚀 CHECKOUT STARTED')
     console.log('📋 Form data:', form)
     console.log('🛒 Cart items:', items)
@@ -627,6 +779,7 @@ export default function CheckoutPage() {
 
     console.log('✅ Form validation passed')
     setLoading(true)
+    setIsSubmitting(true) // Lock submissions
 
     try {
       // Step 1: Create order via server-side API
@@ -714,6 +867,7 @@ export default function CheckoutPage() {
       console.error('💥 CHECKOUT ERROR:', error)
       toast.error(`Er is een fout opgetreden: ${error.message}`)
       setLoading(false)
+      setIsSubmitting(false) // Unlock on error
     }
   }
 

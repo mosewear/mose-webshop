@@ -369,6 +369,37 @@ export async function POST(req: NextRequest) {
         
         console.log(`✅ Order ${order.id} marked as PAID (payment_status: paid, status: processing)`)
         
+        // ============================================
+        // DECREMENT STOCK AFTER PAYMENT SUCCESS
+        // ============================================
+        try {
+          console.log('📦 Decrementing stock for order:', order.id)
+          
+          for (const item of updatedOrder.order_items) {
+            const { data: variant, error: stockError } = await supabase
+              .from('product_variants')
+              .update({ 
+                stock_quantity: supabase.raw(`GREATEST(stock_quantity - ${item.quantity}, 0)`)
+              })
+              .eq('id', item.variant_id)
+              .gte('stock_quantity', item.quantity)
+              .select('id, stock_quantity')
+              .single()
+            
+            if (stockError || !variant) {
+              console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
+              // Don't fail webhook if stock decrement fails - log it for manual review
+            } else {
+              console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity} remaining`)
+            }
+          }
+          
+          console.log('✅ Stock decrement completed for all items')
+        } catch (stockError) {
+          console.error('❌ Error during stock decrement:', stockError)
+          // Don't fail webhook - order is already paid, stock can be adjusted manually
+        }
+        
         // Send order confirmation email
         if (updatedOrder) {
           try {
@@ -522,6 +553,35 @@ export async function POST(req: NextRequest) {
           } else {
             console.log(`✅ Order ${orderId} marked as PAID (payment_status: paid, status: processing)`)
             
+            // ============================================
+            // DECREMENT STOCK AFTER PAYMENT SUCCESS
+            // ============================================
+            try {
+              console.log('📦 Decrementing stock for order:', orderId)
+              
+              for (const item of updatedOrder.order_items) {
+                const { data: variant, error: stockError } = await supabase
+                  .from('product_variants')
+                  .update({ 
+                    stock_quantity: supabase.raw(`GREATEST(stock_quantity - ${item.quantity}, 0)`)
+                  })
+                  .eq('id', item.variant_id)
+                  .gte('stock_quantity', item.quantity)
+                  .select('id, stock_quantity')
+                  .single()
+                
+                if (stockError || !variant) {
+                  console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
+                } else {
+                  console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity} remaining`)
+                }
+              }
+              
+              console.log('✅ Stock decrement completed for all items')
+            } catch (stockError) {
+              console.error('❌ Error during stock decrement:', stockError)
+            }
+            
             // Send order confirmation email
             if (updatedOrder && session.customer_email) {
               try {
@@ -650,6 +710,42 @@ export async function POST(req: NextRequest) {
             console.error('❌ Error updating return refund status:', returnError)
           } else {
             console.log('✅ Return refund status updated:', returnId)
+            
+            // ============================================
+            // INCREMENT STOCK AFTER REFUND (Return items back to inventory)
+            // ============================================
+            try {
+              console.log('📦 Incrementing stock for returned items:', returnId)
+              
+              // Get return items
+              const { data: returnItems, error: itemsError } = await supabase
+                .from('return_items')
+                .select('variant_id, quantity, product_name')
+                .eq('return_id', returnId)
+              
+              if (!itemsError && returnItems) {
+                for (const item of returnItems) {
+                  const { data: variant, error: stockError } = await supabase
+                    .from('product_variants')
+                    .update({ 
+                      stock_quantity: supabase.raw(`stock_quantity + ${item.quantity}`)
+                    })
+                    .eq('id', item.variant_id)
+                    .select('id, stock_quantity')
+                    .single()
+                  
+                  if (stockError || !variant) {
+                    console.error(`⚠️ Could not increment stock for ${item.product_name}:`, stockError)
+                  } else {
+                    console.log(`✅ Stock incremented for ${item.product_name}: ${variant.stock_quantity} in stock`)
+                  }
+                }
+                
+                console.log('✅ Stock increment completed for all returned items')
+              }
+            } catch (stockError) {
+              console.error('❌ Error during stock increment:', stockError)
+            }
           }
           
           // Also update order if needed (for backwards compatibility)
