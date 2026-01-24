@@ -26,6 +26,14 @@ interface CartStore {
   getItemCount: () => number
 }
 
+// BroadcastChannel for multi-tab sync (only works in browser)
+let cartChannel: BroadcastChannel | null = null
+
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  cartChannel = new BroadcastChannel('mose-cart-sync')
+  console.log('🔄 Cart multi-tab sync enabled')
+}
+
 export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
@@ -37,43 +45,72 @@ export const useCart = create<CartStore>()(
             (i) => i.variantId === item.variantId
           )
           
+          let newItems: CartItem[]
+          
           if (existingItem) {
-            return {
-              items: state.items.map((i) =>
-                i.variantId === item.variantId
-                  ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock) }
-                  : i
-              ),
-            }
+            newItems = state.items.map((i) =>
+              i.variantId === item.variantId
+                ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock) }
+                : i
+            )
+          } else {
+            newItems = [...state.items, item]
           }
           
-          return {
-            items: [...state.items, item],
+          // Broadcast to other tabs
+          if (cartChannel) {
+            cartChannel.postMessage({ type: 'UPDATE', items: newItems })
           }
+          
+          return { items: newItems }
         })
       },
       
       removeItem: (variantId) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.variantId !== variantId),
-        }))
+        set((state) => {
+          const newItems = state.items.filter((item) => item.variantId !== variantId)
+          
+          // Broadcast to other tabs
+          if (cartChannel) {
+            cartChannel.postMessage({ type: 'UPDATE', items: newItems })
+          }
+          
+          return { items: newItems }
+        })
       },
       
       updateQuantity: (variantId, quantity) => {
-        set((state) => ({
-          items: state.items.map((item) =>
+        set((state) => {
+          const newItems = state.items.map((item) =>
             item.variantId === variantId
               ? { ...item, quantity: Math.max(1, Math.min(quantity, item.stock)) }
               : item
-          ),
-        }))
+          )
+          
+          // Broadcast to other tabs
+          if (cartChannel) {
+            cartChannel.postMessage({ type: 'UPDATE', items: newItems })
+          }
+          
+          return { items: newItems }
+        })
       },
       
       clearCart: () => {
+        // Broadcast to other tabs
+        if (cartChannel) {
+          cartChannel.postMessage({ type: 'CLEAR' })
+        }
+        
         set({ items: [] })
       },
       
       setItems: (newItems) => {
+        // Broadcast to other tabs
+        if (cartChannel) {
+          cartChannel.postMessage({ type: 'UPDATE', items: newItems })
+        }
+        
         set({ items: newItems })
       },
       
@@ -89,9 +126,25 @@ export const useCart = create<CartStore>()(
     }),
     {
       name: 'mose-cart',
+      // Listen to messages from other tabs
+      onRehydrateStorage: () => (state) => {
+        if (cartChannel && state) {
+          cartChannel.onmessage = (event) => {
+            const { type, items } = event.data
+            
+            if (type === 'UPDATE' && items) {
+              // Update this tab's cart with items from other tab
+              state.items = items
+            } else if (type === 'CLEAR') {
+              state.items = []
+            }
+          }
+        }
+      },
     }
   )
 )
+
 
 
 

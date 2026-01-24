@@ -1765,7 +1765,12 @@ export default function CheckoutPage() {
                   disabled={loading}
                   className="w-full lg:hidden py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'BEZIG...' : 'DOORGAAN NAAR BETALEN'}
+                  {loading ? 'BEZIG...' : (
+                    <>
+                      <span className="hidden min-[400px]:inline">NAAR BETALEN</span>
+                      <span className="min-[400px]:hidden">BETALEN</span>
+                    </>
+                  )}
                 </button>
               </form>
               )}
@@ -2003,7 +2008,7 @@ export default function CheckoutPage() {
                   disabled={loading}
                   className="hidden lg:block w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'BEZIG...' : 'DOORGAAN NAAR BETALEN'}
+                  {loading ? 'BEZIG...' : 'NAAR BETALEN'}
                 </button>
               )}
             </div>

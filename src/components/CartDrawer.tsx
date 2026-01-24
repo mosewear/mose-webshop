@@ -479,11 +479,35 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="flex-shrink-0 border-t-2 border-black bg-gray-50 sticky bottom-0">
               {/* Desktop Summary */}
               <div className="hidden md:block p-3 space-y-2">
-                {/* Progress to Free Shipping - Compact */}
+                {/* Progress to Free Shipping - Enhanced with Progress Bar */}
                 {subtotalAfterDiscount < freeShippingThreshold && (
-                  <div className="bg-white border-l-2 border-brand-primary px-2 py-1.5">
-                    <p className="text-xs text-gray-600">
-                      Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)}</span> tot gratis verzending
+                  <div className="bg-white border-l-2 border-brand-primary px-2 py-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs text-gray-600">
+                        Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)}</span> tot gratis verzending!
+                      </p>
+                      <span className="text-xs font-bold text-brand-primary">
+                        {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%
+                      </span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 bg-gray-200 overflow-hidden">
+                      <div 
+                        className="h-full bg-brand-primary transition-all duration-300"
+                        style={{ width: `${Math.min((subtotalAfterDiscount / freeShippingThreshold) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Free Shipping Achieved Message */}
+                {subtotalAfterDiscount >= freeShippingThreshold && (
+                  <div className="bg-green-50 border-l-2 border-green-600 px-2 py-1.5">
+                    <p className="text-xs text-green-800 font-semibold flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Je krijgt gratis verzending!
                     </p>
                   </div>
                 )}
@@ -600,10 +624,34 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       Afrekenen
                     </Link>
                   </div>
-                  {subtotalAfterDiscount < freeShippingThreshold && (
-                    <p className="text-xs text-gray-400 text-center border-t border-gray-700 pt-2">
-                      Nog €{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)} tot gratis verzending
-                    </p>
+                  {/* Enhanced shipping progress for mobile */}
+                  {subtotalAfterDiscount < freeShippingThreshold ? (
+                    <div className="border-t border-gray-700 pt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs text-gray-400">
+                          Nog <span className="font-bold text-white">€{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)}</span> tot gratis verzending
+                        </p>
+                        <span className="text-xs font-bold text-brand-primary">
+                          {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%
+                        </span>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="w-full h-1 bg-gray-700 overflow-hidden">
+                        <div 
+                          className="h-full bg-brand-primary transition-all duration-300"
+                          style={{ width: `${Math.min((subtotalAfterDiscount / freeShippingThreshold) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-t border-gray-700 pt-2">
+                      <p className="text-xs text-green-400 font-semibold flex items-center gap-1 justify-center">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Je krijgt gratis verzending!
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
