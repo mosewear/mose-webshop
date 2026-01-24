@@ -10,6 +10,7 @@ import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
 import StickyBuyNow from '@/components/StickyBuyNow'
+import WatchSpecsModal from '@/components/WatchSpecsModal'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -32,6 +33,7 @@ interface Product {
   categories: {
     name: string
     slug: string
+    size_guide_type?: string | null
     default_product_details?: string | null
     default_materials_care?: string | null
   }
@@ -814,15 +816,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <label className="block text-xs md:text-sm font-bold uppercase tracking-wider">
                       Maat: {selectedSize}
                     </label>
-                    <button
-                      onClick={() => setShowSizeGuide(true)}
-                      className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      Maattabel
-                    </button>
+                    {/* Dynamic Size Guide Button - only show if not 'none' */}
+                    {product.categories.size_guide_type !== 'none' && (
+                      <button
+                        onClick={() => setShowSizeGuide(true)}
+                        className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        {product.categories.size_guide_type === 'watch' ? 'Specificaties' : 
+                         product.categories.size_guide_type === 'accessory' ? 'Info' :
+                         product.categories.size_guide_type === 'shoes' ? 'Maattabel' :
+                         product.categories.size_guide_type === 'jewelry' ? 'Maten' :
+                         'Maattabel'}
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {availableSizes.map((size) => {
@@ -1364,8 +1373,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
       )}
 
-      {/* Size Guide Modal - IMPROVED (All 7 fixes!) */}
-      {showSizeGuide && (
+      {/* Dynamic Size Guide / Specs Modal */}
+      {showSizeGuide && product.categories.size_guide_type === 'watch' && (
+        <WatchSpecsModal onClose={() => setShowSizeGuide(false)} />
+      )}
+
+      {/* Clothing Size Guide Modal */}
+      {showSizeGuide && product.categories.size_guide_type !== 'watch' && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
           onClick={() => setShowSizeGuide(false)}

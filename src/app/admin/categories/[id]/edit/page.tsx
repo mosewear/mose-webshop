@@ -19,6 +19,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
     slug: '',
     description: '',
     image_url: '',
+    size_guide_type: 'clothing' as 'clothing' | 'watch' | 'accessory' | 'shoes' | 'jewelry' | 'none',
     default_product_details: '',
     default_materials_care: '',
   })
@@ -43,6 +44,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
           slug: data.slug,
           description: data.description || '',
           image_url: data.image_url || '',
+          size_guide_type: data.size_guide_type || 'clothing',
           default_product_details: data.default_product_details || '',
           default_materials_care: data.default_materials_care || '',
         })
@@ -71,6 +73,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
           slug: formData.slug,
           description: formData.description || null,
           image_url: formData.image_url || null,
+          size_guide_type: formData.size_guide_type,
           default_product_details: formData.default_product_details || null,
           default_materials_care: formData.default_materials_care || null,
         })
@@ -180,6 +183,32 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               onImageRemoved={() => setFormData({ ...formData, image_url: '' })}
               folder="categories"
             />
+          </div>
+
+          {/* Size Guide Type */}
+          <div className="bg-blue-50 border-2 border-blue-200 p-4">
+            <label htmlFor="size_guide_type" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              📏 Maattabel / Specificaties Type
+            </label>
+            <p className="text-sm text-gray-600 mb-3">
+              Bepaal welk type maattabel getoond wordt op de productpagina.
+            </p>
+            <select
+              id="size_guide_type"
+              value={formData.size_guide_type}
+              onChange={(e) => setFormData({ ...formData, size_guide_type: e.target.value as typeof formData.size_guide_type })}
+              className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors bg-white"
+            >
+              <option value="clothing">👕 Kleding (Maattabel S/M/L/XL)</option>
+              <option value="watch">⌚ Horloge (Specificaties)</option>
+              <option value="accessory">🎒 Accessoire (Info)</option>
+              <option value="shoes">👟 Schoenen (Maten)</option>
+              <option value="jewelry">💍 Sieraden (Ring/Armband maten)</option>
+              <option value="none">🚫 Geen maattabel (verberg knop)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-2">
+              💡 <strong>Tip:</strong> Kies "Horloge" voor horloges, "Kleding" voor shirts/hoodies/sweaters
+            </p>
           </div>
 
           {/* Product Details Template */}
