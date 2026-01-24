@@ -47,24 +47,54 @@ export async function POST(request: Request) {
     const results = []
     for (const item of orderItems) {
       try {
-        // Use atomic update to prevent race conditions
-        const { data: updatedVariant, error: updateError } = await supabase
+        // First get current stock
+        const { data: currentVariant, error: fetchError } = await supabase
           .from('product_variants')
-          .update({ 
-            stock_quantity: supabase.raw(`stock_quantity - ${item.quantity}`)
-          })
+          .select('stock_quantity')
           .eq('id', item.variant_id)
-          .gte('stock_quantity', item.quantity) // Only update if enough stock
-          .select('id, stock_quantity')
           .single()
 
-        if (updateError || !updatedVariant) {
-          console.error(`❌ Failed to decrement stock for ${item.product_name}:`, updateError)
+        if (fetchError || !currentVariant) {
+          console.error(`❌ Failed to fetch variant for ${item.product_name}:`, fetchError)
           results.push({
             variant_id: item.variant_id,
             product_name: `${item.product_name} (${item.size} - ${item.color})`,
             success: false,
-            error: 'Insufficient stock or variant not found'
+            error: 'Variant not found'
+          })
+          continue
+        }
+
+        // Check if enough stock
+        if (currentVariant.stock_quantity < item.quantity) {
+          console.error(`❌ Insufficient stock for ${item.product_name}`)
+          results.push({
+            variant_id: item.variant_id,
+            product_name: `${item.product_name} (${item.size} - ${item.color})`,
+            success: false,
+            error: 'Insufficient stock'
+          })
+          continue
+        }
+
+        // Calculate new stock
+        const newStock = currentVariant.stock_quantity - item.quantity
+
+        // Update stock
+        const { data: updatedVariant, error: updateError } = await supabase
+          .from('product_variants')
+          .update({ stock_quantity: newStock })
+          .eq('id', item.variant_id)
+          .select('id, stock_quantity')
+          .single()
+
+        if (updateError || !updatedVariant) {
+          console.error(`❌ Failed to update stock for ${item.product_name}:`, updateError)
+          results.push({
+            variant_id: item.variant_id,
+            product_name: `${item.product_name} (${item.size} - ${item.color})`,
+            success: false,
+            error: 'Failed to update stock'
           })
         } else {
           console.log(`✅ Stock decremented for ${item.product_name}: ${updatedVariant.stock_quantity} remaining`)
