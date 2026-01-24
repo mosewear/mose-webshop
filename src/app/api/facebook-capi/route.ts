@@ -133,10 +133,10 @@ export async function POST(request: NextRequest) {
       hashedUserData.zp = [hashData(user_data.zip)]
     }
     if (user_data.country && user_data.country.trim()) {
-      // Country code is NOT hashed, but must be lowercase 2-letter code
+      // Country code MUST be hashed (lowercase 2-letter code, then hashed)
       const countryCode = user_data.country.toLowerCase().substring(0, 2)
       if (countryCode) {
-        hashedUserData.country = [countryCode]
+        hashedUserData.country = [hashData(countryCode)]
       }
     }
 
