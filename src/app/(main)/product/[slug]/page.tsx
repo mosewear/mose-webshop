@@ -107,6 +107,7 @@ function MainVideo({
   posterUrl?: string | null
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
@@ -132,11 +133,15 @@ function MainVideo({
           if (entry.isIntersecting && ratio >= 0.25) {
             console.log('🎬 MainVideo: Attempting AUTOPLAY...')
             video.play()
-              .then(() => console.log('✅ MainVideo: Autoplay SUCCESS!'))
+              .then(() => {
+                console.log('✅ MainVideo: Autoplay SUCCESS!')
+                setIsPlaying(true)
+              })
               .catch((err) => console.error('❌ MainVideo: Autoplay BLOCKED:', err.message))
           } else {
             console.log('⏸️ MainVideo: Pausing (not visible)')
             video.pause()
+            setIsPlaying(false)
           }
         })
       },
@@ -152,18 +157,43 @@ function MainVideo({
     }
   }, [videoUrl])
 
+  // Toggle play/pause on click
+  const handleVideoClick = () => {
+    const video = videoRef.current
+    if (!video) return
+
+    if (video.paused) {
+      video.play()
+      setIsPlaying(true)
+    } else {
+      video.pause()
+      setIsPlaying(false)
+    }
+  }
+
   return (
-    <video
-      ref={videoRef}
-      src={videoUrl}
-      controls
-      playsInline
-      muted
-      loop
-      className="w-full h-full object-contain bg-black"
-      poster={posterUrl || undefined}
-      preload="metadata"
-    />
+    <div className="relative w-full h-full cursor-pointer" onClick={handleVideoClick}>
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        playsInline
+        muted
+        loop
+        className="w-full h-full object-contain bg-black"
+        poster={posterUrl || undefined}
+        preload="metadata"
+      />
+      {/* Optional: Show pause icon overlay when paused (fades out quickly) */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none">
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-black/60 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
