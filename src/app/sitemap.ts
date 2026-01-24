@@ -1,9 +1,28 @@
 import type { MetadataRoute } from 'next'
+import { createClient } from '@/lib/supabase/server'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600 // Revalidate every hour
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://mosewear.com'
+  const supabase = await createClient()
   
-  return [
+  // Fetch all products
+  const { data: products } = await supabase
+    .from('products')
+    .select('slug, updated_at')
+    .eq('is_active', true)
+    .order('updated_at', { ascending: false })
+
+  // Fetch all categories
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('slug, updated_at')
+    .eq('is_active', true)
+    .order('updated_at', { ascending: false })
+
+  // Static pages
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -47,6 +66,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
   ]
+
+  // Product pages
+  const productPages: MetadataRoute.Sitemap = (products || []).map((product) => ({
+    url: `${baseUrl}/product/${product.slug}`,
+    lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
+
+  // Category pages
+  const categoryPages: MetadataRoute.Sitemap = (categories || []).map((category) => ({
+    url: `${baseUrl}/shop/${category.slug}`,
+    lastModified: category.updated_at ? new Date(category.updated_at) : new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }))
+
+  return [...staticPages, ...productPages, ...categoryPages]
 }
 
 
