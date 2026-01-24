@@ -343,7 +343,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         *,
         product_images(*),
         product_variants(*),
-        categories(name, slug, default_product_details, default_materials_care)
+        categories(name, slug, size_guide_type, default_product_details, default_materials_care)
       `)
       .eq('slug', slug)
       .single()
