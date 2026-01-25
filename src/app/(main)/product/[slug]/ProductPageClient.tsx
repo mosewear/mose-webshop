@@ -939,7 +939,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {availableColors.length > 0 && (
                 <div>
                   <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
-                    Kleur:
+                    Kleur: <span className="text-brand-primary font-bold">{selectedColor}</span>
                   </label>
                   <div className="flex flex-wrap gap-2 md:gap-3">
                     {availableColors.map(({ color, hex }) => {
@@ -965,7 +965,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                               ? 'border-gray-400 hover:border-black'
                               : 'border-gray-300 cursor-not-allowed opacity-50'
                           }`}
-                          title={color}
+                          aria-label={`Selecteer kleur ${color}`}
                         >
                           <div
                             className="w-full h-full"
