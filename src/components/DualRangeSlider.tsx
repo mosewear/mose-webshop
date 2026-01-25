@@ -88,7 +88,7 @@ export default function DualRangeSlider({
   const maxPercent = ((localValue[1] - min) / (max - min)) * 100
 
   return (
-    <div className="py-2">
+    <div className="py-2 px-2">
       {/* Slider Container */}
       <div className="relative pt-6 pb-2">
         {/* Slider Track */}
