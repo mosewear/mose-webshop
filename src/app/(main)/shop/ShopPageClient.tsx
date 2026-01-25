@@ -777,7 +777,7 @@ export default function ShopPageClient() {
                             )
                             
                             return (
-                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} left-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:left-4 bg-green-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider`}>
+                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} left-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:left-4 bg-brand-primary text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider`}>
                                 -{discountPercentage}% KORTING
                               </div>
                             )
