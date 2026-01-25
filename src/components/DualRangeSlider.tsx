@@ -36,14 +36,11 @@ export default function DualRangeSlider({
     let newValue: [number, number] = [...localValue]
 
     if (isDragging === 'min') {
-      // Min handle: can't go above max handle
       newValue[0] = Math.min(steppedValue, localValue[1] - step)
     } else {
-      // Max handle: can't go below min handle
       newValue[1] = Math.max(steppedValue, localValue[0] + step)
     }
 
-    // Clamp to bounds
     newValue[0] = Math.max(min, Math.min(max, newValue[0]))
     newValue[1] = Math.max(min, Math.min(max, newValue[1]))
 
@@ -92,38 +89,45 @@ export default function DualRangeSlider({
 
   return (
     <div className="space-y-4">
-      {/* Price Display */}
-      <div className="flex items-center justify-between text-sm font-bold">
-        <div className="px-3 py-2 border-2 border-black bg-white">
-          €{localValue[0]}
+      {/* BRUTALIST Price Display - BOLD & IN YOUR FACE */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="border-2 border-black bg-white p-3 text-center">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-600 mb-1">MIN</div>
+          <div className="text-xl md:text-2xl font-bold">€{localValue[0]}</div>
         </div>
-        <div className="px-2 text-gray-600">tot</div>
-        <div className="px-3 py-2 border-2 border-black bg-white">
-          €{localValue[1]}
+        <div className="border-2 border-black bg-white p-3 text-center">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-600 mb-1">MAX</div>
+          <div className="text-xl md:text-2xl font-bold">€{localValue[1]}</div>
         </div>
       </div>
 
-      {/* Slider */}
-      <div className="py-4">
+      {/* BRUTALIST Slider - THICK BORDERS */}
+      <div className="py-6">
+        {/* Min/Max Labels - Bold & Clear */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold text-gray-900">€{min}</span>
+          <span className="text-xs font-bold text-gray-900">€{max}</span>
+        </div>
+
         <div
           ref={sliderRef}
-          className="relative h-2 bg-gray-200 border-2 border-black cursor-pointer"
+          className="relative h-3 bg-gray-200 border-2 border-black cursor-pointer"
           style={{ touchAction: 'none' }}
         >
-          {/* Active Range */}
+          {/* Active Range - BRUTALIST GREEN */}
           <div
-            className="absolute h-full bg-brand-primary border-l-2 border-r-2 border-black"
+            className="absolute h-full bg-brand-primary"
             style={{
               left: `${minPercent}%`,
               width: `${maxPercent - minPercent}%`,
             }}
           />
 
-          {/* Min Handle */}
+          {/* Min Handle - SQUARE & BRUTAL */}
           <div
-            className={`absolute top-1/2 -translate-y-1/2 w-6 h-6 md:w-7 md:h-7 bg-white border-4 border-black cursor-grab ${
-              isDragging === 'min' ? 'cursor-grabbing scale-110' : ''
-            } transition-transform hover:scale-110 active:cursor-grabbing`}
+            className={`absolute top-1/2 w-8 h-8 md:w-10 md:h-10 bg-white border-2 border-black cursor-grab ${
+              isDragging === 'min' ? 'cursor-grabbing scale-110 shadow-lg' : ''
+            } transition-all hover:scale-110 hover:shadow-md active:cursor-grabbing flex items-center justify-center font-bold text-xs`}
             style={{
               left: `${minPercent}%`,
               transform: `translate(-50%, -50%) ${isDragging === 'min' ? 'scale(1.1)' : ''}`,
@@ -137,13 +141,18 @@ export default function DualRangeSlider({
             aria-valuenow={localValue[0]}
             aria-label="Minimum prijs"
             tabIndex={0}
-          />
+          >
+            {/* Left Arrow Icon */}
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+          </div>
 
-          {/* Max Handle */}
+          {/* Max Handle - SQUARE & BRUTAL */}
           <div
-            className={`absolute top-1/2 -translate-y-1/2 w-6 h-6 md:w-7 md:h-7 bg-white border-4 border-black cursor-grab ${
-              isDragging === 'max' ? 'cursor-grabbing scale-110' : ''
-            } transition-transform hover:scale-110 active:cursor-grabbing`}
+            className={`absolute top-1/2 w-8 h-8 md:w-10 md:h-10 bg-white border-2 border-black cursor-grab ${
+              isDragging === 'max' ? 'cursor-grabbing scale-110 shadow-lg' : ''
+            } transition-all hover:scale-110 hover:shadow-md active:cursor-grabbing flex items-center justify-center font-bold text-xs`}
             style={{
               left: `${maxPercent}%`,
               transform: `translate(-50%, -50%) ${isDragging === 'max' ? 'scale(1.1)' : ''}`,
@@ -157,13 +166,12 @@ export default function DualRangeSlider({
             aria-valuenow={localValue[1]}
             aria-label="Maximum prijs"
             tabIndex={0}
-          />
-        </div>
-
-        {/* Min/Max Labels */}
-        <div className="flex items-center justify-between mt-2 text-xs text-gray-600 font-semibold">
-          <span>€{min}</span>
-          <span>€{max}</span>
+          >
+            {/* Right Arrow Icon */}
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
