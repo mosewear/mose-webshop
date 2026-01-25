@@ -868,10 +868,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         <Truck className="w-3.5 h-3.5 text-emerald-600" />
                         Gratis verzending vanaf €{settings.free_shipping_threshold}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                        2 jaar garantie
-                      </span>
+                      {/* Only show warranty for watches */}
+                      {product.categories.size_guide_type === 'watch' && (
+                        <span className="flex items-center gap-1">
+                          <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                          2 jaar garantie
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1141,10 +1144,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         <Truck className="w-3.5 h-3.5 text-emerald-600" />
                         Gratis verzending vanaf €{settings.free_shipping_threshold}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                        2 jaar garantie
-                      </span>
+                      {/* Only show warranty for watches */}
+                      {product.categories.size_guide_type === 'watch' && (
+                        <span className="flex items-center gap-1">
+                          <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                          2 jaar garantie
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
