@@ -46,6 +46,7 @@ export default function ShopPageClient() {
   const [sortBy, setSortBy] = useState<string>('newest')
   const [searchQuery, setSearchQuery] = useState('')
   const [priceRange, setPriceRange] = useState<string>('all')
+  const [showInStockOnly, setShowInStockOnly] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const supabase = createClient()
 
@@ -179,6 +180,14 @@ export default function ShopPageClient() {
       })
     }
 
+    // Filter by stock availability
+    if (showInStockOnly) {
+      filtered = filtered.filter(p => {
+        const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
+        return totalStock > 0
+      })
+    }
+
     // Sort
     switch (sortBy) {
       case 'price-asc':
@@ -249,6 +258,7 @@ export default function ShopPageClient() {
     setSelectedCategory('all')
     setSearchQuery('')
     setPriceRange('all')
+    setShowInStockOnly(false)
   }
 
   return (
@@ -280,9 +290,9 @@ export default function ShopPageClient() {
         >
           <SlidersHorizontal className="w-5 h-5" />
           <span>Filters & Sorteren</span>
-          {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all') && (
+          {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all' || showInStockOnly) && (
             <span className="bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-sm">
-              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (priceRange !== 'all' ? 1 : 0)}
+              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (priceRange !== 'all' ? 1 : 0) + (showInStockOnly ? 1 : 0)}
             </span>
           )}
         </button>
@@ -328,6 +338,21 @@ export default function ShopPageClient() {
                     />
                     <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   </div>
+                </div>
+
+                {/* Stock Filter */}
+                <div>
+                  <label className="flex items-center gap-3 p-4 border-2 border-gray-300 cursor-pointer transition-all hover:border-gray-400 active:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={showInStockOnly}
+                      onChange={(e) => setShowInStockOnly(e.target.checked)}
+                      className="w-5 h-5 border-2 border-gray-400 rounded text-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
+                    />
+                    <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                      Alleen op voorraad
+                    </span>
+                  </label>
                 </div>
 
                 {/* Categories */}
@@ -442,7 +467,7 @@ export default function ShopPageClient() {
                 </div>
 
                 {/* Active Filters Summary */}
-                {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all') && (
+                {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all' || showInStockOnly) && (
                   <div className="pt-4 border-t-2 border-gray-200">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -484,6 +509,17 @@ export default function ShopPageClient() {
                           </span>
                           <button
                             onClick={() => setPriceRange('all')}
+                            className="text-gray-600 hover:text-black"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      {showInStockOnly && (
+                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
+                          <span className="text-sm font-semibold">Alleen op voorraad</span>
+                          <button
+                            onClick={() => setShowInStockOnly(false)}
                             className="text-gray-600 hover:text-black"
                           >
                             <X className="w-4 h-4" />
@@ -535,6 +571,21 @@ export default function ShopPageClient() {
                   />
                   <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
+              </div>
+
+              {/* Stock Filter */}
+              <div>
+                <label className="flex items-center gap-3 p-3 border-2 border-gray-300 cursor-pointer transition-all hover:border-gray-400 active:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={showInStockOnly}
+                    onChange={(e) => setShowInStockOnly(e.target.checked)}
+                    className="w-4 h-4 border-2 border-gray-400 rounded text-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
+                  />
+                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    Alleen op voorraad
+                  </span>
+                </label>
               </div>
 
               {/* Categories */}
@@ -649,7 +700,7 @@ export default function ShopPageClient() {
               </div>
 
               {/* Active Filters Summary */}
-              {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all') && (
+              {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all' || showInStockOnly) && (
                 <div className="pt-4 border-t-2 border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -660,6 +711,7 @@ export default function ShopPageClient() {
                         setSelectedCategory('all')
                         setSearchQuery('')
                         setPriceRange('all')
+                        setShowInStockOnly(false)
                       }}
                       className="text-xs text-brand-primary hover:text-brand-primary-hover font-bold uppercase"
                     >
@@ -701,6 +753,17 @@ export default function ShopPageClient() {
                         </span>
                         <button
                           onClick={() => setPriceRange('all')}
+                          className="text-gray-600 hover:text-black"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    {showInStockOnly && (
+                      <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
+                        <span className="text-sm font-semibold">Alleen op voorraad</span>
+                        <button
+                          onClick={() => setShowInStockOnly(false)}
                           className="text-gray-600 hover:text-black"
                         >
                           <X className="w-4 h-4" />
