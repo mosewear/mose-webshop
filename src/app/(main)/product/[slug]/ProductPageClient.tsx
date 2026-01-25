@@ -12,10 +12,12 @@ import ProductReviews from '@/components/ProductReviews'
 import StickyBuyNow from '@/components/StickyBuyNow'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
+import RecentlyViewed from '@/components/RecentlyViewed'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackProductView, trackAddToCart } from '@/lib/analytics'
+import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 
 const supabase = createClient()
 
@@ -305,6 +307,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   useEffect(() => {
     if (product) {
       setIsWishlisted(isInWishlist(product.id))
+      
+      // Add to recently viewed
+      addToRecentlyViewed(product.id, product.slug)
       
       // Track product view in custom analytics
       trackProductView({
@@ -1404,6 +1409,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </div>
             </div>
           )}
+
+          {/* Recently Viewed Products */}
+          <RecentlyViewed currentProductId={product.id} />
 
           {/* Product Reviews */}
           <ProductReviews productId={product.id} />

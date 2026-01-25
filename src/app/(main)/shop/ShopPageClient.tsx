@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { X, SlidersHorizontal, Search } from 'lucide-react'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
+import RecentlyViewed from '@/components/RecentlyViewed'
 
 interface Product {
   id: string
@@ -931,6 +932,9 @@ export default function ShopPageClient() {
             )}
           </main>
         </div>
+
+        {/* Recently Viewed Products */}
+        <RecentlyViewed />
       </div>
     </div>
   )
