@@ -86,7 +86,7 @@ export default function LanguageSelector() {
 
       {/* Dropdown Menu - Brutalist Style */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50">
+        <div className="absolute right-0 mt-2 w-48 bg-white border-4 border-black z-50">
           <div className="py-2">
             {languages.map((lang) => (
               <button
