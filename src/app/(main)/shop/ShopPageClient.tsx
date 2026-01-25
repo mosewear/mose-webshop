@@ -45,6 +45,7 @@ export default function ShopPageClient() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('newest')
   const [searchQuery, setSearchQuery] = useState('')
+  const [priceRange, setPriceRange] = useState<string>('all')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const supabase = createClient()
 
@@ -159,6 +160,25 @@ export default function ShopPageClient() {
       )
     }
 
+    // Filter by price range
+    if (priceRange !== 'all') {
+      filtered = filtered.filter(p => {
+        const price = p.sale_price || p.base_price
+        switch (priceRange) {
+          case '0-50':
+            return price <= 50
+          case '50-100':
+            return price > 50 && price <= 100
+          case '100-200':
+            return price > 100 && price <= 200
+          case '200+':
+            return price > 200
+          default:
+            return true
+        }
+      })
+    }
+
     // Sort
     switch (sortBy) {
       case 'price-asc':
@@ -228,6 +248,7 @@ export default function ShopPageClient() {
   const handleResetFilters = () => {
     setSelectedCategory('all')
     setSearchQuery('')
+    setPriceRange('all')
   }
 
   return (
@@ -259,9 +280,9 @@ export default function ShopPageClient() {
         >
           <SlidersHorizontal className="w-5 h-5" />
           <span>Filters & Sorteren</span>
-          {(selectedCategory !== 'all' || searchQuery) && (
+          {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all') && (
             <span className="bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-sm">
-              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0)}
+              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (priceRange !== 'all' ? 1 : 0)}
             </span>
           )}
         </button>
@@ -344,6 +365,65 @@ export default function ShopPageClient() {
                   </div>
                 </div>
 
+                {/* Price Range */}
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                    Prijsrange
+                  </h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setPriceRange('all')}
+                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                        priceRange === 'all'
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                      }`}
+                    >
+                      Alle Prijzen
+                    </button>
+                    <button
+                      onClick={() => setPriceRange('0-50')}
+                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                        priceRange === '0-50'
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                      }`}
+                    >
+                      €0 - €50
+                    </button>
+                    <button
+                      onClick={() => setPriceRange('50-100')}
+                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                        priceRange === '50-100'
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                      }`}
+                    >
+                      €50 - €100
+                    </button>
+                    <button
+                      onClick={() => setPriceRange('100-200')}
+                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                        priceRange === '100-200'
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                      }`}
+                    >
+                      €100 - €200
+                    </button>
+                    <button
+                      onClick={() => setPriceRange('200+')}
+                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                        priceRange === '200+'
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                      }`}
+                    >
+                      €200+
+                    </button>
+                  </div>
+                </div>
+
                 {/* Sort */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
@@ -362,7 +442,7 @@ export default function ShopPageClient() {
                 </div>
 
                 {/* Active Filters Summary */}
-                {(selectedCategory !== 'all' || searchQuery) && (
+                {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all') && (
                   <div className="pt-4 border-t-2 border-gray-200">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -388,6 +468,22 @@ export default function ShopPageClient() {
                           <span className="text-sm font-semibold">"{searchQuery}"</span>
                           <button
                             onClick={() => setSearchQuery('')}
+                            className="text-gray-600 hover:text-black"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      {priceRange !== 'all' && (
+                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
+                          <span className="text-sm font-semibold">
+                            {priceRange === '0-50' && '€0 - €50'}
+                            {priceRange === '50-100' && '€50 - €100'}
+                            {priceRange === '100-200' && '€100 - €200'}
+                            {priceRange === '200+' && '€200+'}
+                          </span>
+                          <button
+                            onClick={() => setPriceRange('all')}
                             className="text-gray-600 hover:text-black"
                           >
                             <X className="w-4 h-4" />
@@ -476,6 +572,65 @@ export default function ShopPageClient() {
                 </div>
               </div>
 
+              {/* Price Range */}
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                  Prijsrange
+                </h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setPriceRange('all')}
+                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                      priceRange === 'all'
+                        ? 'bg-brand-primary border-brand-primary text-white'
+                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                    }`}
+                  >
+                    Alle Prijzen
+                  </button>
+                  <button
+                    onClick={() => setPriceRange('0-50')}
+                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                      priceRange === '0-50'
+                        ? 'bg-brand-primary border-brand-primary text-white'
+                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                    }`}
+                  >
+                    €0 - €50
+                  </button>
+                  <button
+                    onClick={() => setPriceRange('50-100')}
+                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                      priceRange === '50-100'
+                        ? 'bg-brand-primary border-brand-primary text-white'
+                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                    }`}
+                  >
+                    €50 - €100
+                  </button>
+                  <button
+                    onClick={() => setPriceRange('100-200')}
+                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                      priceRange === '100-200'
+                        ? 'bg-brand-primary border-brand-primary text-white'
+                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                    }`}
+                  >
+                    €100 - €200
+                  </button>
+                  <button
+                    onClick={() => setPriceRange('200+')}
+                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
+                      priceRange === '200+'
+                        ? 'bg-brand-primary border-brand-primary text-white'
+                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
+                    }`}
+                  >
+                    €200+
+                  </button>
+                </div>
+              </div>
+
               {/* Sort */}
               <div>
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
@@ -494,7 +649,7 @@ export default function ShopPageClient() {
               </div>
 
               {/* Active Filters Summary */}
-              {(selectedCategory !== 'all' || searchQuery) && (
+              {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all') && (
                 <div className="pt-4 border-t-2 border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -504,6 +659,7 @@ export default function ShopPageClient() {
                       onClick={() => {
                         setSelectedCategory('all')
                         setSearchQuery('')
+                        setPriceRange('all')
                       }}
                       className="text-xs text-brand-primary hover:text-brand-primary-hover font-bold uppercase"
                     >
@@ -529,6 +685,22 @@ export default function ShopPageClient() {
                         <span className="text-sm font-semibold">"{searchQuery}"</span>
                         <button
                           onClick={() => setSearchQuery('')}
+                          className="text-gray-600 hover:text-black"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    {priceRange !== 'all' && (
+                      <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
+                        <span className="text-sm font-semibold">
+                          {priceRange === '0-50' && '€0 - €50'}
+                          {priceRange === '50-100' && '€50 - €100'}
+                          {priceRange === '100-200' && '€100 - €200'}
+                          {priceRange === '200+' && '€200+'}
+                        </span>
+                        <button
+                          onClick={() => setPriceRange('all')}
                           className="text-gray-600 hover:text-black"
                         >
                           <X className="w-4 h-4" />
