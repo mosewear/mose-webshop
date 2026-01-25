@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { X, SlidersHorizontal, Search } from 'lucide-react'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import RecentlyViewed from '@/components/RecentlyViewed'
+import DualRangeSlider from '@/components/DualRangeSlider'
 
 interface Product {
   id: string
@@ -46,7 +47,9 @@ export default function ShopPageClient() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('newest')
   const [searchQuery, setSearchQuery] = useState('')
-  const [priceRange, setPriceRange] = useState<string>('all')
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500])
+  const [minPrice, setMinPrice] = useState(0)
+  const [maxPrice, setMaxPrice] = useState(500)
   const [showInStockOnly, setShowInStockOnly] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const supabase = createClient()
@@ -140,6 +143,16 @@ export default function ShopPageClient() {
 
       if (error) throw error
       setProducts(data || [])
+      
+      // Calculate min/max prices from products
+      if (data && data.length > 0) {
+        const prices = data.map(p => p.sale_price || p.base_price)
+        const min = Math.floor(Math.min(...prices) / 10) * 10 // Round down to nearest 10
+        const max = Math.ceil(Math.max(...prices) / 10) * 10 // Round up to nearest 10
+        setMinPrice(min)
+        setMaxPrice(max)
+        setPriceRange([min, max])
+      }
     } catch (err) {
       console.error('Error fetching products:', err)
     } finally {
@@ -163,21 +176,11 @@ export default function ShopPageClient() {
     }
 
     // Filter by price range
-    if (priceRange !== 'all') {
+    const isPriceFiltered = priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+    if (isPriceFiltered) {
       filtered = filtered.filter(p => {
         const price = p.sale_price || p.base_price
-        switch (priceRange) {
-          case '0-50':
-            return price <= 50
-          case '50-100':
-            return price > 50 && price <= 100
-          case '100-200':
-            return price > 100 && price <= 200
-          case '200+':
-            return price > 200
-          default:
-            return true
-        }
+        return price >= priceRange[0] && price <= priceRange[1]
       })
     }
 
@@ -258,7 +261,7 @@ export default function ShopPageClient() {
   const handleResetFilters = () => {
     setSelectedCategory('all')
     setSearchQuery('')
-    setPriceRange('all')
+    setPriceRange([minPrice, maxPrice])
     setShowInStockOnly(false)
   }
 
@@ -291,9 +294,9 @@ export default function ShopPageClient() {
         >
           <SlidersHorizontal className="w-5 h-5" />
           <span>Filters & Sorteren</span>
-          {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all' || showInStockOnly) && (
+          {(selectedCategory !== 'all' || searchQuery || (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) || showInStockOnly) && (
             <span className="bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-sm">
-              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (priceRange !== 'all' ? 1 : 0) + (showInStockOnly ? 1 : 0)}
+              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + ((priceRange[0] !== minPrice || priceRange[1] !== maxPrice) ? 1 : 0) + (showInStockOnly ? 1 : 0)}
             </span>
           )}
         </button>
@@ -396,58 +399,13 @@ export default function ShopPageClient() {
                   <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
                     Prijsrange
                   </h3>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setPriceRange('all')}
-                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                        priceRange === 'all'
-                          ? 'bg-brand-primary border-brand-primary text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                      }`}
-                    >
-                      Alle Prijzen
-                    </button>
-                    <button
-                      onClick={() => setPriceRange('0-50')}
-                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                        priceRange === '0-50'
-                          ? 'bg-brand-primary border-brand-primary text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                      }`}
-                    >
-                      €0 - €50
-                    </button>
-                    <button
-                      onClick={() => setPriceRange('50-100')}
-                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                        priceRange === '50-100'
-                          ? 'bg-brand-primary border-brand-primary text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                      }`}
-                    >
-                      €50 - €100
-                    </button>
-                    <button
-                      onClick={() => setPriceRange('100-200')}
-                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                        priceRange === '100-200'
-                          ? 'bg-brand-primary border-brand-primary text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                      }`}
-                    >
-                      €100 - €200
-                    </button>
-                    <button
-                      onClick={() => setPriceRange('200+')}
-                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                        priceRange === '200+'
-                          ? 'bg-brand-primary border-brand-primary text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                      }`}
-                    >
-                      €200+
-                    </button>
-                  </div>
+                  <DualRangeSlider
+                    min={minPrice}
+                    max={maxPrice}
+                    value={priceRange}
+                    onChange={setPriceRange}
+                    step={5}
+                  />
                 </div>
 
                 {/* Sort */}
@@ -468,7 +426,7 @@ export default function ShopPageClient() {
                 </div>
 
                 {/* Active Filters Summary */}
-                {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all' || showInStockOnly) && (
+                {(selectedCategory !== 'all' || searchQuery || (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) || showInStockOnly) && (
                   <div className="pt-4 border-t-2 border-gray-200">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -500,16 +458,13 @@ export default function ShopPageClient() {
                           </button>
                         </div>
                       )}
-                      {priceRange !== 'all' && (
+                      {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                         <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
                           <span className="text-sm font-semibold">
-                            {priceRange === '0-50' && '€0 - €50'}
-                            {priceRange === '50-100' && '€50 - €100'}
-                            {priceRange === '100-200' && '€100 - €200'}
-                            {priceRange === '200+' && '€200+'}
+                            €{priceRange[0]} - €{priceRange[1]}
                           </span>
                           <button
-                            onClick={() => setPriceRange('all')}
+                            onClick={() => setPriceRange([minPrice, maxPrice])}
                             className="text-gray-600 hover:text-black"
                           >
                             <X className="w-4 h-4" />
@@ -629,58 +584,13 @@ export default function ShopPageClient() {
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
                   Prijsrange
                 </h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setPriceRange('all')}
-                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                      priceRange === 'all'
-                        ? 'bg-brand-primary border-brand-primary text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                    }`}
-                  >
-                    Alle Prijzen
-                  </button>
-                  <button
-                    onClick={() => setPriceRange('0-50')}
-                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                      priceRange === '0-50'
-                        ? 'bg-brand-primary border-brand-primary text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                    }`}
-                  >
-                    €0 - €50
-                  </button>
-                  <button
-                    onClick={() => setPriceRange('50-100')}
-                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                      priceRange === '50-100'
-                        ? 'bg-brand-primary border-brand-primary text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                    }`}
-                  >
-                    €50 - €100
-                  </button>
-                  <button
-                    onClick={() => setPriceRange('100-200')}
-                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                      priceRange === '100-200'
-                        ? 'bg-brand-primary border-brand-primary text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                    }`}
-                  >
-                    €100 - €200
-                  </button>
-                  <button
-                    onClick={() => setPriceRange('200+')}
-                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                      priceRange === '200+'
-                        ? 'bg-brand-primary border-brand-primary text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                    }`}
-                  >
-                    €200+
-                  </button>
-                </div>
+                <DualRangeSlider
+                  min={minPrice}
+                  max={maxPrice}
+                  value={priceRange}
+                  onChange={setPriceRange}
+                  step={5}
+                />
               </div>
 
               {/* Sort */}
@@ -701,7 +611,7 @@ export default function ShopPageClient() {
               </div>
 
               {/* Active Filters Summary */}
-              {(selectedCategory !== 'all' || searchQuery || priceRange !== 'all' || showInStockOnly) && (
+              {(selectedCategory !== 'all' || searchQuery || (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) || showInStockOnly) && (
                 <div className="pt-4 border-t-2 border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -711,7 +621,7 @@ export default function ShopPageClient() {
                       onClick={() => {
                         setSelectedCategory('all')
                         setSearchQuery('')
-                        setPriceRange('all')
+                        setPriceRange([minPrice, maxPrice])
                         setShowInStockOnly(false)
                       }}
                       className="text-xs text-brand-primary hover:text-brand-primary-hover font-bold uppercase"
@@ -744,16 +654,13 @@ export default function ShopPageClient() {
                         </button>
                       </div>
                     )}
-                    {priceRange !== 'all' && (
+                    {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                       <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
                         <span className="text-sm font-semibold">
-                          {priceRange === '0-50' && '€0 - €50'}
-                          {priceRange === '50-100' && '€50 - €100'}
-                          {priceRange === '100-200' && '€100 - €200'}
-                          {priceRange === '200+' && '€200+'}
+                          €{priceRange[0]} - €{priceRange[1]}
                         </span>
                         <button
-                          onClick={() => setPriceRange('all')}
+                          onClick={() => setPriceRange([minPrice, maxPrice])}
                           className="text-gray-600 hover:text-black"
                         >
                           <X className="w-4 h-4" />
