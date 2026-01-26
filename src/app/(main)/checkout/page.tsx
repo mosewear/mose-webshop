@@ -76,6 +76,7 @@ export default function CheckoutPage() {
     toevoeging: '',
   })
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
+  const [touchedFields, setTouchedFields] = useState<Set<keyof CheckoutForm>>(new Set())
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false) // Prevent duplicate submissions
   const [addressLookup, setAddressLookup] = useState({
@@ -770,6 +771,13 @@ export default function CheckoutPage() {
     console.log('💰 Totals:', { subtotal, subtotalAfterDiscount, promoDiscount, shipping, total })
     console.log('🎟️ Promo code:', promoCode || 'None')
 
+    // ✨ PROGRESSIVE VALIDATION: Mark alle velden als touched bij submit
+    const allFields: (keyof CheckoutForm)[] = [
+      'email', 'firstName', 'lastName', 'postalCode', 'huisnummer', 
+      'toevoeging', 'address', 'city', 'phone', 'country'
+    ]
+    setTouchedFields(new Set(allFields))
+
     if (!validateForm()) {
       console.log('❌ Form validation failed:', errors)
       const firstError = document.querySelector('.border-red-600')
@@ -938,7 +946,7 @@ export default function CheckoutPage() {
     toast.error(`Betaling mislukt: ${error}`)
   }
 
-  const updateForm = (field: keyof CheckoutForm, value: string, validateNow: boolean = false) => {
+  const updateForm = (field: keyof CheckoutForm, value: string, forceValidate: boolean = false) => {
     setForm((prev) => {
       const updated = { ...prev, [field]: value }
       
@@ -954,8 +962,8 @@ export default function CheckoutPage() {
           updated.postalCode = normalized
         }
         
-        // Auto-detect country ALLEEN bij blur (validateNow = true)
-        if (validateNow && normalized.length >= 4) {
+        // Auto-detect country ALLEEN bij blur (forceValidate = true)
+        if (forceValidate && normalized.length >= 4) {
           // Check if it's Belgian format (exactly 4 digits, nothing more)
           if (/^\d{4}$/.test(normalized)) {
             updated.country = 'BE' // Belgian postcode
@@ -970,22 +978,50 @@ export default function CheckoutPage() {
       return updated
     })
     
-    // Alleen valideren als validateNow true is (bij blur) of als het veld leeg wordt gemaakt
-    // Voor postcode en huisnummer: alleen valideren bij blur, niet tijdens typen
-    if (validateNow || (field !== 'postalCode' && field !== 'huisnummer')) {
+    // ✨ PROGRESSIVE VALIDATION (OPTIE 3):
+    // 1. Bij forceValidate (blur) → Altijd valideren en error tonen
+    // 2. Als veld al touched → Alleen valideren om errors WEG te halen (instant positieve feedback)
+    // 3. Als veld nog niet touched → Geen validatie (laat gebruiker rustig typen)
+    
+    if (forceValidate) {
+      // Bij blur: valideer en toon error indien nodig
       const error = validateField(field, value)
       setErrors((prev) => ({ ...prev, [field]: error }))
-    } else {
-      // Clear error tijdens typen voor postcode en huisnummer
-      if (field === 'postalCode' || field === 'huisnummer') {
+    } else if (touchedFields.has(field)) {
+      // Veld is al touched: geef instant positieve feedback
+      const error = validateField(field, value)
+      if (!error) {
+        // Alleen error clearen als veld nu geldig is (positieve feedback)
         setErrors((prev) => ({ ...prev, [field]: undefined }))
       }
+      // Als nog steeds error: laat staan (geen negatieve realtime feedback)
     }
+    // Anders: pristine veld, geen validatie tijdens typen
     
     // Reset address lookup state als gebruiker handmatig wijzigt
     if (field === 'postalCode' || field === 'huisnummer' || field === 'toevoeging') {
       setAddressLookup({ isLookingUp: false, isLookedUp: false, error: null })
     }
+  }
+
+  const handleBlur = (field: keyof CheckoutForm) => {
+    // Mark veld als touched
+    setTouchedFields((prev) => new Set(prev).add(field))
+    
+    // Valideer en toon error indien nodig
+    const error = validateField(field, form[field])
+    setErrors((prev) => ({ ...prev, [field]: error }))
+  }
+
+  // Helper functie voor input border classes (progressive validation styling)
+  const getInputBorderClass = (field: keyof CheckoutForm): string => {
+    if (errors[field]) {
+      return 'border-red-600' // Error state
+    }
+    if (touchedFields.has(field) && !errors[field] && form[field]) {
+      return 'border-green-600' // Success state (alleen als touched + geen error + niet leeg)
+    }
+    return 'border-gray-300' // Default state
   }
 
   const handleAddressLookup = async () => {
@@ -1317,10 +1353,9 @@ export default function CheckoutPage() {
                     type="email"
                     value={form.email}
                     onChange={(e) => updateForm('email', e.target.value)}
+                    onBlur={() => handleBlur('email')}
                     inputMode="email"
-                    className={`w-full px-4 py-3 border-2 ${
-                      errors.email ? 'border-red-600' : 'border-gray-300'
-                    } focus:border-brand-primary focus:outline-none transition-colors`}
+                    className={`w-full px-4 py-3 border-2 ${getInputBorderClass('email')} focus:border-brand-primary focus:outline-none transition-colors`}
                     placeholder="jouw@email.nl"
                     autoComplete="email"
                   />
@@ -1347,9 +1382,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={form.firstName}
                           onChange={(e) => updateForm('firstName', e.target.value)}
-                          className={`w-full px-4 py-3 border-2 ${
-                            errors.firstName ? 'border-red-600' : 'border-gray-300'
-                          } focus:border-brand-primary focus:outline-none`}
+                          onBlur={() => handleBlur('firstName')}
+                          className={`w-full px-4 py-3 border-2 ${getInputBorderClass('firstName')} focus:border-brand-primary focus:outline-none`}
                           placeholder="Voornaam"
                           autoComplete="given-name"
                         />
@@ -1360,9 +1394,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={form.lastName}
                           onChange={(e) => updateForm('lastName', e.target.value)}
-                          className={`w-full px-4 py-3 border-2 ${
-                            errors.lastName ? 'border-red-600' : 'border-gray-300'
-                          } focus:border-brand-primary focus:outline-none`}
+                          onBlur={() => handleBlur('lastName')}
+                          className={`w-full px-4 py-3 border-2 ${getInputBorderClass('lastName')} focus:border-brand-primary focus:outline-none`}
                           placeholder="Achternaam"
                           autoComplete="family-name"
                         />
@@ -1384,8 +1417,7 @@ export default function CheckoutPage() {
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
                             onBlur={(e) => {
-                              // Valideer bij blur
-                              updateForm('postalCode', e.target.value, true)
+                              handleBlur('postalCode')
                               
                               // Auto-trigger lookup als postcode + huisnummer compleet zijn
                               if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
@@ -1402,7 +1434,7 @@ export default function CheckoutPage() {
                               }
                             }}
                             className={`w-full px-4 py-3 border-2 ${
-                              errors.postalCode ? 'border-red-600' : 'border-gray-300'
+                              getInputBorderClass('postalCode')
                             } focus:border-brand-primary focus:outline-none`}
                             placeholder="1234 AB"
                             autoComplete="postal-code"
@@ -1426,8 +1458,7 @@ export default function CheckoutPage() {
                               updateForm('huisnummer', value)
                             }}
                             onBlur={(e) => {
-                              // Valideer bij blur
-                              updateForm('huisnummer', e.target.value, true)
+                              handleBlur('huisnummer')
                               
                               // Auto-trigger lookup als postcode + huisnummer compleet zijn
                               if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
@@ -1443,7 +1474,7 @@ export default function CheckoutPage() {
                               }
                             }}
                             className={`w-full px-4 py-3 border-2 ${
-                              errors.huisnummer ? 'border-red-600' : 'border-gray-300'
+                              getInputBorderClass('huisnummer')
                             } focus:border-brand-primary focus:outline-none`}
                             placeholder="27"
                             autoComplete="off"
@@ -1465,8 +1496,9 @@ export default function CheckoutPage() {
                               const value = e.target.value.slice(0, 10)
                               updateForm('toevoeging', value)
                             }}
+                            onBlur={() => handleBlur('toevoeging')}
                             className={`w-full px-4 py-3 border-2 ${
-                              errors.toevoeging ? 'border-red-600' : 'border-gray-300'
+                              getInputBorderClass('toevoeging')
                             } focus:border-brand-primary focus:outline-none`}
                             placeholder="A"
                             autoComplete="off"
@@ -1516,9 +1548,9 @@ export default function CheckoutPage() {
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
-                            onBlur={(e) => updateForm('postalCode', e.target.value, true)}
+                            onBlur={() => handleBlur('postalCode')}
                             className={`w-full px-4 py-3 border-2 ${
-                              errors.postalCode ? 'border-red-600' : 'border-gray-300'
+                              getInputBorderClass('postalCode')
                             } focus:border-brand-primary focus:outline-none`}
                             placeholder="1234 AB"
                             autoComplete="postal-code"
@@ -1541,9 +1573,9 @@ export default function CheckoutPage() {
                                 const value = e.target.value.replace(/\D/g, '')
                                 updateForm('huisnummer', value)
                               }}
-                              onBlur={(e) => updateForm('huisnummer', e.target.value, true)}
+                              onBlur={() => handleBlur('huisnummer')}
                               className={`w-full px-4 py-3 border-2 ${
-                                errors.huisnummer ? 'border-red-600' : 'border-gray-300'
+                                getInputBorderClass('huisnummer')
                               } focus:border-brand-primary focus:outline-none`}
                               placeholder="27"
                               autoComplete="off"
@@ -1565,8 +1597,9 @@ export default function CheckoutPage() {
                                 const value = e.target.value.slice(0, 10)
                                 updateForm('toevoeging', value)
                               }}
+                              onBlur={() => handleBlur('toevoeging')}
                               className={`w-full px-4 py-3 border-2 ${
-                                errors.toevoeging ? 'border-red-600' : 'border-gray-300'
+                                getInputBorderClass('toevoeging')
                               } focus:border-brand-primary focus:outline-none`}
                               placeholder="A"
                               autoComplete="off"
@@ -1637,9 +1670,9 @@ export default function CheckoutPage() {
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
-                            onBlur={(e) => updateForm('postalCode', e.target.value, true)}
+                            onBlur={() => handleBlur('postalCode')}
                             className={`w-full px-4 py-3 border-2 ${
-                              errors.postalCode ? 'border-red-600' : 'border-gray-300'
+                              getInputBorderClass('postalCode')
                             } focus:border-brand-primary focus:outline-none`}
                             placeholder="Postcode"
                             autoComplete="postal-code"
@@ -1658,8 +1691,9 @@ export default function CheckoutPage() {
                         type="text"
                         value={form.address}
                         onChange={(e) => updateForm('address', e.target.value)}
+                        onBlur={() => handleBlur('address')}
                         className={`w-full px-4 py-3 border-2 ${
-                          errors.address ? 'border-red-600' : 'border-gray-300'
+                          getInputBorderClass('address')
                         } focus:border-brand-primary focus:outline-none ${
                           form.country === 'NL' && addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
                         }`}
@@ -1679,8 +1713,9 @@ export default function CheckoutPage() {
                         type="text"
                         value={form.city}
                         onChange={(e) => updateForm('city', e.target.value)}
+                        onBlur={() => handleBlur('city')}
                         className={`w-full px-4 py-3 border-2 ${
-                          errors.city ? 'border-red-600' : 'border-gray-300'
+                          getInputBorderClass('city')
                         } focus:border-brand-primary focus:outline-none ${
                           form.country === 'NL' && addressLookup.isLookedUp ? 'bg-gray-50 cursor-not-allowed' : ''
                         }`}
@@ -1698,8 +1733,9 @@ export default function CheckoutPage() {
                         inputMode="tel"
                         value={form.phone}
                         onChange={(e) => updateForm('phone', e.target.value)}
+                        onBlur={() => handleBlur('phone')}
                         className={`w-full px-4 py-3 min-h-[48px] border-2 ${
-                          errors.phone ? 'border-red-600' : 'border-gray-300'
+                          getInputBorderClass('phone')
                         } focus:border-brand-primary focus:outline-none`}
                         placeholder="06 12345678"
                         autoComplete="tel"
@@ -1713,6 +1749,7 @@ export default function CheckoutPage() {
                       <select
                         value={form.country}
                         onChange={(e) => updateForm('country', e.target.value)}
+                        onBlur={() => handleBlur('country')}
                         className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none bg-white"
                       >
                         <option value="NL">🇳🇱 Nederland</option>
