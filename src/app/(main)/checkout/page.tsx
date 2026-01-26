@@ -1008,9 +1008,14 @@ export default function CheckoutPage() {
     // Mark veld als touched
     setTouchedFields((prev) => new Set(prev).add(field))
     
-    // Valideer en toon error indien nodig
-    const error = validateField(field, form[field])
-    setErrors((prev) => ({ ...prev, [field]: error }))
+    // Voor postcode: trigger auto-detect (via forceValidate flag)
+    if (field === 'postalCode') {
+      updateForm('postalCode', form.postalCode, true)
+    } else {
+      // Voor andere velden: gewoon valideren
+      const error = validateField(field, form[field])
+      setErrors((prev) => ({ ...prev, [field]: error }))
+    }
   }
 
   // Helper functie voor input border classes (progressive validation styling)
