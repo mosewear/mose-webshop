@@ -253,6 +253,25 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     )
   }
 
+  if (error || !product) {
+    return (
+      <div className="max-w-2xl mx-auto mt-12">
+        <div className="bg-red-50 border-2 border-red-600 p-6 text-center">
+          <h2 className="text-2xl font-bold text-red-900 mb-2">Admin Error</h2>
+          <p className="text-red-800 mb-4">
+            {error || 'Product kon niet worden geladen. Probeer het opnieuw.'}
+          </p>
+          <Link
+            href="/admin/products"
+            className="inline-block bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+          >
+            Terug naar Producten
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Header */}
@@ -268,10 +287,12 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
           </Link>
           <div>
             <h1 className="text-3xl font-display font-bold mb-2">Product Varianten</h1>
-            {product && (
+            {product ? (
               <p className="text-gray-600">
                 {product.name} <span className="text-brand-primary">€{product.base_price.toFixed(2)}</span>
               </p>
+            ) : (
+              <p className="text-gray-500">Product laden...</p>
             )}
           </div>
         </div>
@@ -556,10 +577,14 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">
-                        €{(product!.base_price + variant.price_adjustment).toFixed(2)}
-                      </div>
-                      {variant.price_adjustment !== 0 && (
+                      {product ? (
+                        <div className="text-sm font-bold text-gray-900">
+                          €{(product.base_price + variant.price_adjustment).toFixed(2)}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-400">-</div>
+                      )}
+                      {product && variant.price_adjustment !== 0 && (
                         <div className="text-xs text-gray-500">
                           ({variant.price_adjustment > 0 ? '+' : ''}€{variant.price_adjustment.toFixed(2)})
                         </div>
