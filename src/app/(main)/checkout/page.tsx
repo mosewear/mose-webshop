@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
-import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock, Globe, Info, X } from 'lucide-react'
+import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
@@ -1508,16 +1508,16 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* Country - NIEUW: Nu direct na naam! */}
-                    <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded">
-                      <label className="block text-sm font-bold mb-2 uppercase tracking-wide text-gray-800 flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-blue-600" /> Land <span className="text-red-600">*</span>
+                    {/* Country - BRUTALIST MINIMAL STYLE */}
+                    <div>
+                      <label className="block text-sm font-bold mb-2 uppercase tracking-wider">
+                        Land <span className="text-red-600">*</span>
                       </label>
                       <select
                         value={form.country}
                         onChange={(e) => updateForm('country', e.target.value)}
                         onBlur={() => handleBlur('country')}
-                        className={`w-full px-4 py-3 border-2 ${getInputBorderClass('country')} focus:border-brand-primary focus:outline-none bg-white text-base font-medium rounded transition-colors`}
+                        className={`w-full px-4 py-3 border-2 ${getInputBorderClass('country')} focus:border-brand-primary focus:outline-none bg-white`}
                         autoComplete="country"
                       >
                         <option value="NL">Nederland</option>
@@ -1527,35 +1527,27 @@ export default function CheckoutPage() {
                         <option value="GB">Verenigd Koninkrijk</option>
                         <option value="OTHER">Overig land</option>
                       </select>
-                      {errors.country && <p className="text-red-600 text-sm mt-2">{errors.country}</p>}
-                      
-                      {/* Land-specifieke hulptekst */}
-                      <div className="mt-3 p-2.5 bg-white border border-blue-300 rounded-sm">
-                        <p className="text-xs text-blue-900">
-                          <span className="font-semibold">💡 {getPostcodeInfo(form.country).helpText}</span>
-                          <br />
-                          <span className="text-blue-700 mt-0.5 inline-block">{getPostcodeInfo(form.country).example}</span>
-                        </p>
-                      </div>
+                      {errors.country && <p className="text-red-600 text-xs mt-1">{errors.country}</p>}
                     </div>
 
-                    {/* Land gewijzigd melding */}
+                    {/* Land gewijzigd melding - Zwart-wit */}
                     {countryChangedInfo?.show && (
-                      <div className="p-4 bg-blue-600 text-white rounded-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                      <div className="p-4 bg-black text-white flex items-start gap-3">
                         <div className="flex-1">
-                          <p className="font-semibold text-sm">Land gewijzigd naar {getCountryName(countryChangedInfo.newCountry)}</p>
-                          <p className="text-xs mt-1 text-blue-100">
-                            Je postcode en adresgegevens zijn gewist omdat {getCountryName(countryChangedInfo.newCountry)} een ander formaat gebruikt: {getPostcodeInfo(countryChangedInfo.newCountry).format}
+                          <p className="text-sm font-bold uppercase tracking-wider">
+                            Land gewijzigd → {getCountryName(countryChangedInfo.newCountry)}
+                          </p>
+                          <p className="text-xs mt-1 text-gray-300">
+                            Postcode gewist (formaat: {getPostcodeInfo(countryChangedInfo.newCountry).format})
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setCountryChangedInfo(null)}
-                          className="text-white hover:text-blue-200 transition-colors"
+                          className="text-white hover:text-gray-300 transition-colors text-xl leading-none"
                           aria-label="Sluiten"
                         >
-                          <X className="w-4 h-4" />
+                          ×
                         </button>
                       </div>
                     )}
@@ -1599,7 +1591,11 @@ export default function CheckoutPage() {
                             maxLength={form.country === 'BE' ? 4 : form.country === 'NL' ? 7 : 10}
                           />
                           <div className="min-h-[20px] mt-1">
-                            {errors.postalCode && <p className="text-red-600 text-xs">{errors.postalCode}</p>}
+                            {errors.postalCode ? (
+                              <p className="text-red-600 text-xs">{errors.postalCode}</p>
+                            ) : !form.postalCode && touchedFields.has('postalCode') ? (
+                              <p className="text-xs text-gray-500">{getPostcodeInfo(form.country).format}</p>
+                            ) : null}
                           </div>
                         </div>
                         <div className="col-span-2 flex flex-col">
@@ -1715,7 +1711,11 @@ export default function CheckoutPage() {
                             maxLength={form.country === 'BE' ? 4 : form.country === 'NL' ? 7 : 10}
                           />
                           <div className="min-h-[20px] mt-1">
-                            {errors.postalCode && <p className="text-red-600 text-xs">{errors.postalCode}</p>}
+                            {errors.postalCode ? (
+                              <p className="text-red-600 text-xs">{errors.postalCode}</p>
+                            ) : !form.postalCode && touchedFields.has('postalCode') ? (
+                              <p className="text-xs text-gray-500">{getPostcodeInfo(form.country).format}</p>
+                            ) : null}
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
@@ -1834,7 +1834,11 @@ export default function CheckoutPage() {
                             placeholder={getPostcodeInfo(form.country).placeholder}
                             autoComplete="postal-code"
                           />
-                          {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
+                          {errors.postalCode ? (
+                            <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>
+                          ) : !form.postalCode && touchedFields.has('postalCode') ? (
+                            <p className="text-xs text-gray-500 mt-1">{getPostcodeInfo(form.country).format}</p>
+                          ) : null}
                         </div>
                       </div>
                     )}
