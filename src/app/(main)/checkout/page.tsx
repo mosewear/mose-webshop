@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
-import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock } from 'lucide-react'
+import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock, Globe, Info, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
@@ -84,6 +84,7 @@ export default function CheckoutPage() {
     isLookedUp: false,
     error: null as string | null,
   })
+  const [countryChangedInfo, setCountryChangedInfo] = useState<{show: boolean, oldCountry: string, newCountry: string} | null>(null)
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [shippingCost, setShippingCost] = useState(5.95)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
@@ -500,6 +501,72 @@ export default function CheckoutPage() {
     }
   }, [items, router, isRecovering])
 
+  // Helper functies voor land-specifieke informatie
+  const getPostcodeInfo = (country: string) => {
+    switch(country) {
+      case 'NL': 
+        return {
+          placeholder: '1234AB',
+          format: '4 cijfers + 2 letters',
+          example: 'Bijvoorbeeld: 1012AB',
+          showLookup: true,
+          helpText: 'Nederlandse postcode (formaat: 1234AB)'
+        }
+      case 'BE':
+        return {
+          placeholder: '2000',
+          format: '4 cijfers',
+          example: 'Bijvoorbeeld: 2000 (Antwerpen)',
+          showLookup: false,
+          helpText: 'Belgische postcode (formaat: 2000)'
+        }
+      case 'DE':
+        return {
+          placeholder: '12345',
+          format: '5 cijfers',
+          example: 'Bijvoorbeeld: 10115 (Berlijn)',
+          showLookup: false,
+          helpText: 'Duitse postcode (formaat: 12345)'
+        }
+      case 'FR':
+        return {
+          placeholder: '75001',
+          format: '5 cijfers',
+          example: 'Bijvoorbeeld: 75001 (Parijs)',
+          showLookup: false,
+          helpText: 'Franse postcode (formaat: 75001)'
+        }
+      case 'GB':
+        return {
+          placeholder: 'SW1A 1AA',
+          format: 'UK formaat',
+          example: 'Bijvoorbeeld: SW1A 1AA',
+          showLookup: false,
+          helpText: 'UK postcode (formaat: SW1A 1AA)'
+        }
+      default:
+        return {
+          placeholder: 'Postcode',
+          format: 'Postcode',
+          example: 'Vul je postcode in',
+          showLookup: false,
+          helpText: 'Postcode'
+        }
+    }
+  }
+
+  const getCountryName = (countryCode: string): string => {
+    const names: Record<string, string> = {
+      'NL': 'Nederland',
+      'BE': 'België',
+      'DE': 'Duitsland',
+      'FR': 'Frankrijk',
+      'GB': 'Verenigd Koninkrijk',
+      'OTHER': 'Overig land'
+    }
+    return names[countryCode] || countryCode
+  }
+
   const validateField = (field: keyof CheckoutForm, value: string): string | undefined => {
     switch (field) {
       case 'email':
@@ -515,36 +582,45 @@ export default function CheckoutPage() {
         const normalizedPostcode = value.replace(/\s+/g, '').toUpperCase()
         if (!value.trim()) return 'Verplicht veld'
         
-        // Smart validation: detect format based on postcode itself, not just country
-        // Belgian format: exactly 4 digits
-        if (/^\d{4}$/.test(normalizedPostcode)) {
-          // Valid Belgian postcode
-          return undefined
-        }
-        // Dutch format: 4 digits + 2 letters
-        else if (/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
-          // Valid Dutch postcode
-          return undefined
-        }
-        // Invalid format - determine which error message to show
-        else {
-          // If it looks like they're typing a Dutch postcode (has letters)
-          if (/[A-Z]/.test(normalizedPostcode)) {
-            return 'Ongeldig formaat. Nederlandse postcode: 1234AB'
-          }
-          // If it's only digits but not 4
-          else if (/^\d+$/.test(normalizedPostcode)) {
-            if (normalizedPostcode.length < 4) {
-              return 'Te kort. Belgische postcode: 4 cijfers (bijv. 2000)'
-            } else {
-              return 'Te lang. Belgische postcode: 4 cijfers (bijv. 2000)'
+        // Land-specifieke validatie op basis van gekozen land
+        switch (form.country) {
+          case 'NL':
+            if (!/^\d{4}[A-Z]{2}$/.test(normalizedPostcode)) {
+              return 'Nederlandse postcode: 4 cijfers + 2 letters (bijv. 1234AB)'
             }
-          }
-          // Mixed or invalid
-          else {
-            return 'Ongeldig formaat. Gebruik: 1234AB (NL) of 2000 (BE)'
-          }
+            break
+          
+          case 'BE':
+            if (!/^\d{4}$/.test(normalizedPostcode)) {
+              return 'Belgische postcode: 4 cijfers (bijv. 2000)'
+            }
+            break
+          
+          case 'DE':
+            if (!/^\d{5}$/.test(normalizedPostcode)) {
+              return 'Duitse postcode: 5 cijfers (bijv. 12345)'
+            }
+            break
+          
+          case 'FR':
+            if (!/^\d{5}$/.test(normalizedPostcode)) {
+              return 'Franse postcode: 5 cijfers (bijv. 75001)'
+            }
+            break
+          
+          case 'GB':
+            // UK postcodes zijn complex: SW1A 1AA, EC1A 1BB, etc.
+            if (!/^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i.test(value.toUpperCase())) {
+              return 'UK postcode (bijv. SW1A 1AA)'
+            }
+            break
+          
+          default:
+            // Voor OTHER: accepteer alles dat niet leeg is
+            if (!value.trim()) return 'Vul een postcode in'
         }
+        
+        return undefined
       case 'huisnummer':
         if (!value.trim()) return 'Verplicht veld'
         const huisnummerNum = parseInt(value, 10)
@@ -950,28 +1026,52 @@ export default function CheckoutPage() {
     setForm((prev) => {
       const updated = { ...prev, [field]: value }
       
+      // Clear postcode + adres velden als land wijzigt
+      if (field === 'country' && value !== prev.country) {
+        const hadPostcode = prev.postalCode.length > 0
+        
+        updated.postalCode = ''
+        updated.huisnummer = ''
+        updated.toevoeging = ''
+        updated.address = ''
+        updated.city = ''
+        
+        // Toon info melding als er al een postcode was ingevuld
+        if (hadPostcode) {
+          setCountryChangedInfo({
+            show: true,
+            oldCountry: prev.country,
+            newCountry: value
+          })
+          // Auto-hide na 8 seconden
+          setTimeout(() => {
+            setCountryChangedInfo(null)
+          }, 8000)
+        }
+        
+        // Clear errors
+        setErrors(prevErrors => ({
+          ...prevErrors,
+          postalCode: undefined,
+          huisnummer: undefined,
+          address: undefined,
+          city: undefined,
+        }))
+        
+        // Reset address lookup
+        setAddressLookup({ isLookingUp: false, isLookedUp: false, error: null })
+      }
+      
       // Auto-format postcode (ZONDER auto-detect tijdens typen)
       if (field === 'postalCode') {
         const normalized = value.replace(/\s+/g, '').toUpperCase()
         
-        // Alleen formatting, GEEN country detection tijdens typen
-        if (normalized.length > 4 && /^\d{4}[A-Z]{0,2}$/.test(normalized)) {
+        // Alleen formatting voor Nederlandse postcode
+        if (form.country === 'NL' && normalized.length > 4 && /^\d{4}[A-Z]{0,2}$/.test(normalized)) {
           // Add space after 4 digits for Dutch format
           updated.postalCode = normalized.slice(0, 4) + ' ' + normalized.slice(4)
         } else {
           updated.postalCode = normalized
-        }
-        
-        // Auto-detect country ALLEEN bij blur (forceValidate = true)
-        if (forceValidate && normalized.length >= 4) {
-          // Check if it's Belgian format (exactly 4 digits, nothing more)
-          if (/^\d{4}$/.test(normalized)) {
-            updated.country = 'BE' // Belgian postcode
-          }
-          // Check if it's Dutch format (4 digits + letters)
-          else if (/^\d{4}[A-Z]{1,2}$/.test(normalized)) {
-            updated.country = 'NL' // Dutch postcode
-          }
         }
       }
       
@@ -1408,6 +1508,58 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
+                    {/* Country - NIEUW: Nu direct na naam! */}
+                    <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded">
+                      <label className="block text-sm font-bold mb-2 uppercase tracking-wide text-gray-800 flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-blue-600" /> Land <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        value={form.country}
+                        onChange={(e) => updateForm('country', e.target.value)}
+                        onBlur={() => handleBlur('country')}
+                        className={`w-full px-4 py-3 border-2 ${getInputBorderClass('country')} focus:border-brand-primary focus:outline-none bg-white text-base font-medium rounded transition-colors`}
+                        autoComplete="country"
+                      >
+                        <option value="NL">Nederland</option>
+                        <option value="BE">België</option>
+                        <option value="DE">Duitsland</option>
+                        <option value="FR">Frankrijk</option>
+                        <option value="GB">Verenigd Koninkrijk</option>
+                        <option value="OTHER">Overig land</option>
+                      </select>
+                      {errors.country && <p className="text-red-600 text-sm mt-2">{errors.country}</p>}
+                      
+                      {/* Land-specifieke hulptekst */}
+                      <div className="mt-3 p-2.5 bg-white border border-blue-300 rounded-sm">
+                        <p className="text-xs text-blue-900">
+                          <span className="font-semibold">💡 {getPostcodeInfo(form.country).helpText}</span>
+                          <br />
+                          <span className="text-blue-700 mt-0.5 inline-block">{getPostcodeInfo(form.country).example}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Land gewijzigd melding */}
+                    {countryChangedInfo?.show && (
+                      <div className="p-4 bg-blue-600 text-white rounded-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">Land gewijzigd naar {getCountryName(countryChangedInfo.newCountry)}</p>
+                          <p className="text-xs mt-1 text-blue-100">
+                            Je postcode en adresgegevens zijn gewist omdat {getCountryName(countryChangedInfo.newCountry)} een ander formaat gebruikt: {getPostcodeInfo(countryChangedInfo.newCountry).format}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCountryChangedInfo(null)}
+                          className="text-white hover:text-blue-200 transition-colors"
+                          aria-label="Sluiten"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
                     {/* Postcode + Huisnummer + Toevoeging (Voor NL en BE) + Lookup Button (ALLEEN VOOR NL) */}
                     {(form.country === 'NL' || form.country === 'BE') ? (
                       <div className="space-y-3">
@@ -1424,8 +1576,8 @@ export default function CheckoutPage() {
                             onBlur={(e) => {
                               handleBlur('postalCode')
                               
-                              // Auto-trigger lookup als postcode + huisnummer compleet zijn
-                              if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
+                              // Auto-trigger lookup als postcode + huisnummer compleet zijn (ALLEEN NL)
+                              if (form.country === 'NL' && form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
                                 const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
                                 const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
                                 if (postcodeValid && huisnummerValid) {
@@ -1441,10 +1593,10 @@ export default function CheckoutPage() {
                             className={`w-full px-4 py-3 border-2 ${
                               getInputBorderClass('postalCode')
                             } focus:border-brand-primary focus:outline-none`}
-                            placeholder="1234 AB"
+                            placeholder={getPostcodeInfo(form.country).placeholder}
                             autoComplete="postal-code"
                             disabled={addressLookup.isLookingUp}
-                            maxLength={7}
+                            maxLength={form.country === 'BE' ? 4 : form.country === 'NL' ? 7 : 10}
                           />
                           <div className="min-h-[20px] mt-1">
                             {errors.postalCode && <p className="text-red-600 text-xs">{errors.postalCode}</p>}
@@ -1465,8 +1617,8 @@ export default function CheckoutPage() {
                             onBlur={(e) => {
                               handleBlur('huisnummer')
                               
-                              // Auto-trigger lookup als postcode + huisnummer compleet zijn
-                              if (form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
+                              // Auto-trigger lookup als postcode + huisnummer compleet zijn (ALLEEN NL)
+                              if (form.country === 'NL' && form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
                                 const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
                                 const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
                                 if (postcodeValid && huisnummerValid) {
@@ -1557,10 +1709,10 @@ export default function CheckoutPage() {
                             className={`w-full px-4 py-3 border-2 ${
                               getInputBorderClass('postalCode')
                             } focus:border-brand-primary focus:outline-none`}
-                            placeholder="1234 AB"
+                            placeholder={getPostcodeInfo(form.country).placeholder}
                             autoComplete="postal-code"
                             disabled={addressLookup.isLookingUp}
-                            maxLength={7}
+                            maxLength={form.country === 'BE' ? 4 : form.country === 'NL' ? 7 : 10}
                           />
                           <div className="min-h-[20px] mt-1">
                             {errors.postalCode && <p className="text-red-600 text-xs">{errors.postalCode}</p>}
@@ -1665,7 +1817,7 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     ) : (
-                      /* Voor NIET-NL landen: Gewone postcode + address velden ZONDER lookup */
+                      /* Voor NIET-NL/BE landen: Gewone postcode + address velden ZONDER lookup */
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700">
@@ -1679,7 +1831,7 @@ export default function CheckoutPage() {
                             className={`w-full px-4 py-3 border-2 ${
                               getInputBorderClass('postalCode')
                             } focus:border-brand-primary focus:outline-none`}
-                            placeholder="Postcode"
+                            placeholder={getPostcodeInfo(form.country).placeholder}
                             autoComplete="postal-code"
                           />
                           {errors.postalCode && <p className="text-red-600 text-xs mt-1">{errors.postalCode}</p>}
@@ -1746,24 +1898,6 @@ export default function CheckoutPage() {
                         autoComplete="tel"
                       />
                       {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
-                    </div>
-
-                    {/* Country */}
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">Land</label>
-                      <select
-                        value={form.country}
-                        onChange={(e) => updateForm('country', e.target.value)}
-                        onBlur={() => handleBlur('country')}
-                        className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none bg-white"
-                      >
-                        <option value="NL">🇳🇱 Nederland</option>
-                        <option value="BE">🇧🇪 België</option>
-                        <option value="DE">🇩🇪 Duitsland</option>
-                        <option value="FR">🇫🇷 Frankrijk</option>
-                        <option value="GB">🇬🇧 Verenigd Koninkrijk</option>
-                        <option value="OTHER">🌍 Overig</option>
-                      </select>
                     </div>
                   </div>
                 </div>
