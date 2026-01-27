@@ -1068,12 +1068,12 @@ export default function AccountPage() {
             {activeTab === 'returns' && (
               <>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                  <h2 className="text-2xl md:text-3xl font-display">MIJN RETOUREN</h2>
+                  <h2 className="text-2xl md:text-3xl font-display">{t('myReturns')}</h2>
                   <LocaleLink
                     href="/returns/new"
                     className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
                   >
-                    + Nieuwe Retour Aanvragen
+                    {t('newReturn')}
                     </LocaleLink>
                 </div>
 
@@ -1084,12 +1084,12 @@ export default function AccountPage() {
                   </div>
                 ) : returns.length === 0 ? (
                   <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
-                    <p className="text-gray-600 mb-6 text-lg">Je hebt nog geen retouren aangevraagd</p>
+                    <p className="text-gray-600 mb-6 text-lg">{t('returnLabels.emptyMessage')}</p>
                     <LocaleLink
                       href="/returns/new"
                       className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
                     >
-                      Retour Aanvragen
+                      {t('returnLabels.requestButton')}
                     </LocaleLink>
                   </div>
                 ) : (
@@ -1123,19 +1123,19 @@ export default function AccountPage() {
                       }
 
                       const getStatusText = (status: string) => {
-                        const labels: Record<string, string> = {
-                          return_requested: 'Aangevraagd',
-                          return_approved: 'Goedgekeurd',
-                          return_label_payment_pending: 'Betaling Label',
-                          return_label_payment_completed: 'Label Betaald',
-                          return_label_generated: 'Label Beschikbaar',
-                          return_in_transit: 'Onderweg',
-                          return_received: 'Ontvangen',
-                          refund_processing: 'Refund Bezig',
-                          refunded: 'Terugbetaald',
-                          return_rejected: 'Afgewezen',
+                        const statusMap: Record<string, string> = {
+                          return_requested: t('returnStatuses.return_requested'),
+                          return_approved: t('returnStatuses.return_approved'),
+                          return_label_payment_pending: t('returnStatuses.return_label_payment_pending'),
+                          return_label_payment_completed: t('returnStatuses.return_label_payment_completed'),
+                          return_label_generated: t('returnStatuses.return_label_generated'),
+                          return_in_transit: t('returnStatuses.return_in_transit'),
+                          return_received: t('returnStatuses.return_received'),
+                          refund_processing: t('returnStatuses.refund_processing'),
+                          refunded: t('returnStatuses.refunded'),
+                          return_rejected: t('returnStatuses.return_rejected'),
                         }
-                        return labels[status] || status
+                        return statusMap[status] || status
                       }
 
                       return (
@@ -1144,17 +1144,17 @@ export default function AccountPage() {
                             <div className="flex-1">
                               <div className="flex flex-wrap items-center gap-3 mb-2">
                                 <h3 className="font-bold text-lg md:text-xl">
-                                  Retour #{returnItem.id.slice(0, 8).toUpperCase()}
+                                  {t('returnLabels.returnNumber', { id: returnItem.id.slice(0, 8).toUpperCase() })}
                                 </h3>
                                 <span className={`px-3 py-1 text-xs font-bold uppercase ${getStatusColor(returnItem.status)}`}>
                                   {getStatusText(returnItem.status)}
                                 </span>
                               </div>
                               <p className="text-sm text-gray-600">
-                                Order #{returnItem.orders?.id?.slice(0, 8).toUpperCase() || 'N/A'}
+                                {t('returnLabels.orderNumber', { id: returnItem.orders?.id?.slice(0, 8).toUpperCase() || 'N/A' })}
                               </p>
                               <p className="text-sm text-gray-600">
-                                {new Date(returnItem.created_at).toLocaleDateString('nl-NL', {
+                                {new Date(returnItem.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'nl-NL', {
                                   day: 'numeric',
                                   month: 'long',
                                   year: 'numeric',
@@ -1164,13 +1164,13 @@ export default function AccountPage() {
                             {returnItem.total_refund && (
                               <div className="text-left md:text-right">
                                 <p className="text-2xl md:text-3xl font-display mb-1">€{returnItem.total_refund.toFixed(2)}</p>
-                                <p className="text-sm text-gray-600">Terug te betalen</p>
+                                <p className="text-sm text-gray-600">{t('returnLabels.refundAmount')}</p>
                               </div>
                             )}
                           </div>
 
                           <div className="border-t-2 border-gray-200 pt-4">
-                            <p className="font-bold mb-2">Reden: {returnItem.return_reason}</p>
+                            <p className="font-bold mb-2">{t('returnLabels.reason')} {returnItem.return_reason}</p>
                             {returnItem.customer_notes && (
                               <p className="text-sm text-gray-600 mb-4">{returnItem.customer_notes}</p>
                             )}
@@ -1181,14 +1181,14 @@ export default function AccountPage() {
                               href={`/returns/${returnItem.id}`}
                               className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
                             >
-                              Bekijk details
+                              {t('returnLabels.viewDetails')}
                             </LocaleLink>
                             {returnItem.status === 'return_approved' && (
                               <LocaleLink
                                 href={`/returns/${returnItem.id}`}
                                 className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
                               >
-                                Betaal voor label (€7,87)
+                                {t('returnLabels.payForLabel')}
                               </LocaleLink>
                             )}
                             {returnItem.status === 'return_label_generated' && returnItem.return_label_url && (
@@ -1198,7 +1198,7 @@ export default function AccountPage() {
                                 rel="noopener noreferrer"
                                 className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
                               >
-                                Download label
+                                {t('returnLabels.downloadLabel')}
                               </a>
                             )}
                           </div>

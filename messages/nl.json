@@ -440,6 +440,29 @@
       "delivered": "Afgeleverd",
       "cancelled": "Geannuleerd"
     },
+    "returnStatuses": {
+      "return_requested": "Aangevraagd",
+      "return_approved": "Goedgekeurd",
+      "return_label_payment_pending": "Betaling Label",
+      "return_label_payment_completed": "Label Betaald",
+      "return_label_generated": "Label Beschikbaar",
+      "return_in_transit": "Onderweg",
+      "return_received": "Ontvangen",
+      "refund_processing": "Refund Bezig",
+      "refunded": "Terugbetaald",
+      "return_rejected": "Afgewezen"
+    },
+    "returnLabels": {
+      "returnNumber": "Retour #{id}",
+      "orderNumber": "Order #{id}",
+      "refundAmount": "Terug te betalen",
+      "reason": "Reden:",
+      "viewDetails": "Bekijk details",
+      "payForLabel": "Betaal voor label (€7,87)",
+      "downloadLabel": "Download label",
+      "emptyMessage": "Je hebt nog geen retouren aangevraagd",
+      "requestButton": "Retour Aanvragen"
+    },
     "toast": {
       "passwordUpdated": "Wachtwoord bijgewerkt!",
       "addressUpdated": "Adres bijgewerkt!",

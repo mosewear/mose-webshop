@@ -453,6 +453,29 @@
       "delivered": "Delivered",
       "cancelled": "Cancelled"
     },
+    "returnStatuses": {
+      "return_requested": "Requested",
+      "return_approved": "Approved",
+      "return_label_payment_pending": "Label Payment",
+      "return_label_payment_completed": "Label Paid",
+      "return_label_generated": "Label Available",
+      "return_in_transit": "In Transit",
+      "return_received": "Received",
+      "refund_processing": "Refund Processing",
+      "refunded": "Refunded",
+      "return_rejected": "Rejected"
+    },
+    "returnLabels": {
+      "returnNumber": "Return #{id}",
+      "orderNumber": "Order #{id}",
+      "refundAmount": "To be refunded",
+      "reason": "Reason:",
+      "viewDetails": "View details",
+      "payForLabel": "Pay for label (€7.87)",
+      "downloadLabel": "Download label",
+      "emptyMessage": "You haven't requested any returns yet",
+      "requestButton": "Request Return"
+    },
     "toast": {
       "passwordUpdated": "Password updated!",
       "addressUpdated": "Address updated!",
