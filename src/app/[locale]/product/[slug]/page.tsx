@@ -5,7 +5,9 @@ import { getTranslations } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
 
-export const revalidate = 3600 // Revalidate every hour
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function generateMetadata({
   params,
