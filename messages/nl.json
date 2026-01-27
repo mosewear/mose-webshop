@@ -472,8 +472,14 @@
     },
     "addressSection": {
       "title": "ADRESSEN",
-      "add": "+ Nieuw Adres Toevoegen",
+      "add": "+ Nieuw Adres",
+      "addFirst": "Voeg eerste adres toe",
+      "empty": "Je hebt nog geen adressen opgeslagen",
+      "editTitle": "Adres Bewerken",
+      "newTitle": "Nieuw Adres",
       "default": "STANDAARD",
+      "defaultShipping": "Standaard verzending",
+      "defaultBilling": "Standaard factuur",
       "setDefault": "Maak standaard",
       "edit": "Bewerk",
       "delete": "Verwijderen",
@@ -484,7 +490,20 @@
       "saving": "Opslaan...",
       "cancel": "Annuleren",
       "saveError": "Kon adres niet opslaan",
-      "saveSuccess": "Adres opgeslagen"
+      "saveSuccess": "Adres opgeslagen",
+      "fields": {
+        "name": "Naam",
+        "nameHint": "(bijv. Thuis, Werk)",
+        "namePlaceholder": "Bijv. Thuis",
+        "address": "Adres",
+        "addressHint": "(straat + huisnummer)",
+        "postalCode": "Postcode",
+        "city": "Stad",
+        "phone": "Telefoon",
+        "country": "Land",
+        "isDefaultShipping": "Standaard verzendadres",
+        "isDefaultBilling": "Standaard factuuradres"
+      }
     }
   },
   "wishlist": {

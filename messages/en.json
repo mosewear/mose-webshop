@@ -485,8 +485,14 @@
     },
     "addressSection": {
       "title": "ADDRESSES",
-      "add": "+ Add New Address",
+      "add": "+ New Address",
+      "addFirst": "Add first address",
+      "empty": "You haven't saved any addresses yet",
+      "editTitle": "Edit Address",
+      "newTitle": "New Address",
       "default": "DEFAULT",
+      "defaultShipping": "Default shipping",
+      "defaultBilling": "Default billing",
       "setDefault": "Make default",
       "edit": "Edit",
       "delete": "Delete",
@@ -497,7 +503,20 @@
       "saving": "Saving...",
       "cancel": "Cancel",
       "saveError": "Could not save address",
-      "saveSuccess": "Address saved"
+      "saveSuccess": "Address saved",
+      "fields": {
+        "name": "Name",
+        "nameHint": "(e.g. Home, Work)",
+        "namePlaceholder": "E.g. Home",
+        "address": "Address",
+        "addressHint": "(street + number)",
+        "postalCode": "Postal code",
+        "city": "City",
+        "phone": "Phone",
+        "country": "Country",
+        "isDefaultShipping": "Default shipping address",
+        "isDefaultBilling": "Default billing address"
+      }
     }
   },
   "wishlist": {

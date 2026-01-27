@@ -865,13 +865,13 @@ export default function AccountPage() {
             {activeTab === 'addresses' && (
               <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <h2 className="text-2xl md:text-3xl font-display">ADRESSEN</h2>
+                  <h2 className="text-2xl md:text-3xl font-display">{t('addressSection.title')}</h2>
                   {!showAddressForm && (
                     <button
                       onClick={() => setShowAddressForm(true)}
                       className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors"
                     >
-                      + Nieuw Adres
+                      {t('addressSection.add')}
                     </button>
                   )}
                 </div>
@@ -884,24 +884,24 @@ export default function AccountPage() {
                 ) : showAddressForm ? (
                   <div className="bg-white border-2 border-black p-6 md:p-8">
                     <h3 className="text-xl font-display mb-6">
-                      {editingAddress ? 'Adres Bewerken' : 'Nieuw Adres'}
+                      {editingAddress ? t('addressSection.editTitle') : t('addressSection.newTitle')}
                     </h3>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-bold mb-2">
-                          Naam * <span className="text-gray-500 font-normal">(bijv. Thuis, Werk)</span>
+                          {t('addressSection.fields.name')} * <span className="text-gray-500 font-normal">{t('addressSection.fields.nameHint')}</span>
                         </label>
                         <input
                           type="text"
                           value={addressForm.name}
                           onChange={(e) => setAddressForm({ ...addressForm, name: e.target.value })}
                           className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                          placeholder="Bijv. Thuis"
+                          placeholder={t('addressSection.fields.namePlaceholder')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-bold mb-2">
-                          Adres * <span className="text-gray-500 font-normal">(straat + huisnummer)</span>
+                          {t('addressSection.fields.address')} * <span className="text-gray-500 font-normal">{t('addressSection.fields.addressHint')}</span>
                         </label>
                         <input
                           type="text"
@@ -914,7 +914,7 @@ export default function AccountPage() {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-bold mb-2">
-                            Postcode *
+                            {t('addressSection.fields.postalCode')} *
                           </label>
                           <input
                             type="text"
@@ -926,7 +926,7 @@ export default function AccountPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-bold mb-2">
-                            Stad *
+                            {t('addressSection.fields.city')} *
                           </label>
                           <input
                             type="text"
@@ -940,7 +940,7 @@ export default function AccountPage() {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-bold mb-2">
-                            Telefoon
+                            {t('addressSection.fields.phone')}
                           </label>
                           <input
                             type="tel"
@@ -952,7 +952,7 @@ export default function AccountPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-bold mb-2">
-                            Land *
+                            {t('addressSection.fields.country')} *
                           </label>
                           <select
                             value={addressForm.country}
@@ -973,7 +973,7 @@ export default function AccountPage() {
                             onChange={(e) => setAddressForm({ ...addressForm, is_default_shipping: e.target.checked })}
                             className="w-5 h-5 border-2 border-gray-300 focus:border-brand-primary"
                           />
-                          <span className="text-sm font-bold">Gebruik als standaard verzendadres</span>
+                          <span className="text-sm font-bold">{t('addressSection.fields.isDefaultShipping')}</span>
                         </label>
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input
@@ -982,7 +982,7 @@ export default function AccountPage() {
                             onChange={(e) => setAddressForm({ ...addressForm, is_default_billing: e.target.checked })}
                             className="w-5 h-5 border-2 border-gray-300 focus:border-brand-primary"
                           />
-                          <span className="text-sm font-bold">Gebruik als standaard factuuradres</span>
+                          <span className="text-sm font-bold">{t('addressSection.fields.isDefaultBilling')}</span>
                         </label>
                       </div>
                       {addressError && (
@@ -995,25 +995,25 @@ export default function AccountPage() {
                           onClick={saveAddress}
                           className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors"
                         >
-                          Opslaan
+                          {t('addressSection.save')}
                         </button>
                         <button
                           onClick={cancelAddressForm}
                           className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors"
                         >
-                          Annuleren
+                          {t('addressSection.cancel')}
                         </button>
                       </div>
                     </div>
                   </div>
                 ) : addresses.length === 0 ? (
                   <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
-                    <p className="text-gray-600 mb-6 text-lg">Je hebt nog geen adressen opgeslagen</p>
+                    <p className="text-gray-600 mb-6 text-lg">{t('addressSection.empty')}</p>
                     <button
                       onClick={() => setShowAddressForm(true)}
                       className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
                     >
-                      Voeg eerste adres toe
+                      {t('addressSection.addFirst')}
                     </button>
                   </div>
                 ) : (
@@ -1026,12 +1026,12 @@ export default function AccountPage() {
                               <h3 className="font-bold text-lg">{address.name}</h3>
                               {address.is_default_shipping && (
                                 <span className="px-2 py-1 text-xs font-bold uppercase bg-brand-primary text-white">
-                                  Standaard verzending
+                                  {t('addressSection.defaultShipping')}
                                 </span>
                               )}
                               {address.is_default_billing && (
                                 <span className="px-2 py-1 text-xs font-bold uppercase bg-gray-800 text-white">
-                                  Standaard factuur
+                                  {t('addressSection.defaultBilling')}
                                 </span>
                               )}
                             </div>
