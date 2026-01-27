@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
@@ -9,6 +8,8 @@ import { type HomepageSettings } from '@/lib/homepage'
 import * as LucideIcons from 'lucide-react'
 import { useState, FormEvent } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslations, useLocale } from 'next-intl'
+import { Link as LocaleLink } from '@/i18n/routing'
 
 interface HomePageClientProps {
   siteSettings: {
@@ -26,6 +27,12 @@ export default function HomePageClient({
   featuredProducts: initialFeaturedProducts,
   categories: initialCategories,
 }: HomePageClientProps) {
+  const t = useTranslations('homepage')
+  const locale = useLocale()
+  
+  // Helper for locale-aware links
+  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
+  
   const settings = initialSettings
   const homepageSettings = initialHomepageSettings
   const featuredProducts = initialFeaturedProducts
@@ -58,13 +65,13 @@ export default function HomePageClient({
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        toast.error(data.error || 'Er ging iets mis. Probeer het opnieuw.')
+        toast.error(data.error || t('newsletter.error'))
         setNewsletterLoading(false)
         return
       }
 
       // Success!
-      toast.success('Je bent ingeschreven! Check je inbox.')
+      toast.success(t('newsletter.success'))
       setNewsletterSuccess(true)
       setNewsletterEmail('')
 
@@ -74,7 +81,7 @@ export default function HomePageClient({
       }, 5000)
     } catch (error) {
       console.error('Newsletter subscription error:', error)
-      toast.error('Er ging iets mis. Probeer het opnieuw.')
+      toast.error(t('newsletter.error'))
     } finally {
       setNewsletterLoading(false)
     }
@@ -120,49 +127,49 @@ export default function HomePageClient({
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
-                  {homepageSettings?.hero_badge_text || 'Gemaakt in Groningen'}
+                  {homepageSettings?.hero_badge_text || t('hero.badge')}
                 </div>
 
             {/* Main Heading - Responsive Sizes */}
             <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl text-white mb-6 md:mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">
-              {homepageSettings?.hero_title_line1 || 'GEEN POESPAS.'}
+              {homepageSettings?.hero_title_line1 || t('hero.title1')}
               <br />
-              <span className="text-brand-primary">{homepageSettings?.hero_title_line2 || 'WEL KARAKTER.'}</span>
+              <span className="text-brand-primary">{homepageSettings?.hero_title_line2 || t('hero.title2')}</span>
             </h1>
 
             {/* Subtitle - Responsive */}
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-8 md:mb-12 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              {homepageSettings?.hero_subtitle || 'Lokaal gemaakt. Kwaliteit die blijft.'}
+              {homepageSettings?.hero_subtitle || t('hero.subtitle')}
             </p>
 
             {/* Modern CTA Buttons - Touch Optimized */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link 
+              <LocaleLink 
                 href={homepageSettings?.hero_cta1_link || '/shop'} 
                 className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl hover:shadow-brand-primary/50 block text-center"
-                aria-label="Bekijk onze shop met alle MOSE producten"
+                aria-label={t('hero.cta1.aria')}
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  {homepageSettings?.hero_cta1_text || 'Shop MOSE'}
+                  {homepageSettings?.hero_cta1_text || t('hero.cta1.text')}
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </span>
                 <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-              </Link>
-              <Link 
+              </LocaleLink>
+              <LocaleLink 
                 href={homepageSettings?.hero_cta2_link || '/lookbook'} 
                 className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black active:scale-95 block text-center"
-                aria-label="Bekijk ons lookbook met MOSE outfit inspiratie"
+                aria-label={t('hero.cta2.aria')}
               >
                 <span className="flex items-center justify-center gap-2">
-                  {homepageSettings?.hero_cta2_text || 'Bekijk Lookbook'}
+                  {homepageSettings?.hero_cta2_text || t('hero.cta2.text')}
                   <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 </span>
-              </Link>
+              </LocaleLink>
             </div>
           </div>
         </div>
@@ -170,7 +177,7 @@ export default function HomePageClient({
         {/* Animated Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
           <div className="flex flex-col items-center gap-2 animate-bounce">
-            <span className="text-white/60 text-sm uppercase tracking-wider">Scroll</span>
+            <span className="text-white/60 text-sm uppercase tracking-wider">{t('hero.scroll')}</span>
             <div className="w-6 h-10 border-2 border-white/40 rounded-full flex items-start justify-center p-2">
               <div className="w-1.5 h-3 bg-brand-primary rounded-full animate-pulse" />
             </div>
@@ -185,13 +192,13 @@ export default function HomePageClient({
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
               <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_1_number || '100%'}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
-                {homepageSettings?.stats_1_text || 'Lokaal geproduceerd'}
+                {homepageSettings?.stats_1_text || t('stats.local')}
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
               <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{settings.return_days}</div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
-                {homepageSettings?.stats_2_text || 'Dagen retourrecht'}
+                {homepageSettings?.stats_2_text || t('stats.returns')}
               </div>
             </div>
             <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
@@ -204,7 +211,7 @@ export default function HomePageClient({
                 })()}
               </div>
               <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
-                {homepageSettings?.stats_3_text || 'Premium kwaliteit'}
+                {homepageSettings?.stats_3_text || t('stats.quality')}
               </div>
             </div>
           </div>
@@ -220,7 +227,7 @@ export default function HomePageClient({
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="font-medium">Lokaal gemaakt</span>
+              <span className="font-medium">{t('trust.local')}</span>
             </div>
             
             <div className="hidden sm:block w-px h-4 bg-gray-300" />
@@ -230,7 +237,7 @@ export default function HomePageClient({
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-              <span className="font-medium">Gratis verzending vanaf €{settings.free_shipping_threshold}</span>
+              <span className="font-medium">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
             </div>
             
             <div className="hidden sm:block w-px h-4 bg-gray-300" />
@@ -240,7 +247,7 @@ export default function HomePageClient({
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span className="font-medium">{settings.return_days} dagen retour</span>
+              <span className="font-medium">{t('trust.returns', { days: settings.return_days })}</span>
             </div>
             
             <div className="hidden md:block w-px h-4 bg-gray-300" />
@@ -250,7 +257,7 @@ export default function HomePageClient({
               <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span className="font-medium">Veilig betalen</span>
+              <span className="font-medium">{t('trust.secure')}</span>
             </div>
           </div>
         </div>
@@ -280,11 +287,11 @@ export default function HomePageClient({
           {/* Section Header */}
           <div className="text-center mb-12 md:mb-16 px-4">
             <div className="inline-block px-4 py-2 bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-[0.2em] text-sm mb-4">
-              {homepageSettings?.featured_label || 'Bestsellers'}
+              {homepageSettings?.featured_label || t('featured.label')}
             </div>
-            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">{homepageSettings?.featured_title || 'ESSENTIALS DIE BLIJVEN'}</h2>
+            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">{homepageSettings?.featured_title || t('featured.title')}</h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              {homepageSettings?.featured_description || 'No-nonsense basics die jarenlang meegaan'}
+              {homepageSettings?.featured_description || t('featured.description')}
             </p>
           </div>
 
@@ -295,7 +302,7 @@ export default function HomePageClient({
           <div className="hidden md:grid grid-cols-3 gap-8">
             {featuredProducts && featuredProducts.length > 0 ? (
               featuredProducts.slice(0, 3).map((product: any) => (
-                <Link
+                <LocaleLink
                   key={product.id}
                   href={`/product/${product.slug}`}
                   className="group active:scale-95 transition-transform"
@@ -314,12 +321,12 @@ export default function HomePageClient({
                       {/* Badge - show if in stock */}
                       {product.stock_quantity > 0 && (
                         <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          Op voorraad
+                          {t('featured.inStock')}
                         </div>
                       )}
                       {product.stock_quantity === 0 && (
                         <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          Uitverkocht
+                          {t('featured.outOfStock')}
                         </div>
                       )}
                       
@@ -346,7 +353,7 @@ export default function HomePageClient({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          Quick View
+                          {t('featured.quickView')}
                         </button>
                       </div>
                     </div>
@@ -399,13 +406,13 @@ export default function HomePageClient({
                       )}
                     </div>
                   </div>
-                </Link>
+                </LocaleLink>
               ))
             ) : (
               // Fallback: show placeholder if no products
               <div className="col-span-3 text-center py-12 text-gray-500">
-                <p className="text-lg">Geen featured producten ingesteld.</p>
-                <p className="text-sm mt-2">Selecteer producten in de admin homepage settings.</p>
+                <p className="text-lg">{t('featured.noProducts')}</p>
+                <p className="text-sm mt-2">{t('featured.noProductsDesc')}</p>
               </div>
             )}
           </div>
@@ -416,8 +423,8 @@ export default function HomePageClient({
       <section className="py-16 md:py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">SHOP OP CATEGORIE</h2>
-            <p className="text-lg text-gray-600">Ontdek onze collectie</p>
+            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">{t('categories.title')}</h2>
+            <p className="text-lg text-gray-600">{t('categories.subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -427,7 +434,7 @@ export default function HomePageClient({
                 const categoryHref = `/shop?category=${category.slug}`
                 
                 return (
-                  <Link
+                  <LocaleLink
                     key={category.id}
                     href={categoryHref}
                     className="group relative aspect-[3/4] overflow-hidden shadow-md hover:shadow-2xl active:scale-95 transition-all duration-500 border-2 border-black"
@@ -453,7 +460,7 @@ export default function HomePageClient({
                         {category.name.toUpperCase()}
                       </h3>
                       <div className="flex items-center gap-2 text-brand-primary font-bold group-hover:gap-4 transition-all">
-                        <span className="uppercase tracking-wider text-sm">Shop nu</span>
+                        <span className="uppercase tracking-wider text-sm">{t('categories.shopNow')}</span>
                         <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
@@ -462,13 +469,13 @@ export default function HomePageClient({
                     
                     {/* Corner Accent */}
                     <div className="absolute top-0 right-0 w-16 h-16 bg-brand-primary transform translate-x-full translate-y-full rotate-45 group-hover:translate-x-8 group-hover:translate-y-8 transition-transform duration-500" />
-                  </Link>
+                  </LocaleLink>
                 )
               })
             ) : (
               // Fallback
               <div className="col-span-4 text-center py-12 text-gray-500">
-                <p>Geen categorieën geselecteerd. Configureer ze in het admin panel.</p>
+                <p>{t('categories.noCategories')}</p>
               </div>
             )}
           </div>
@@ -494,21 +501,20 @@ export default function HomePageClient({
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                Ons Verhaal
+                {t('story.badge')}
               </div>
 
               <h2 className="font-display text-4xl md:text-6xl leading-tight">
-                GEMAAKT IN<br />
-                <span className="text-brand-primary">GRONINGEN</span>
+                {t('story.title')}<br />
+                <span className="text-brand-primary">{t('story.titleHighlight')}</span>
               </h2>
               
               <div className="space-y-4 text-lg text-gray-300 leading-relaxed">
                 <p>
-                  Geen poespas. Alleen karakter. We maken kleding die lang meegaat, 
-                  lokaal geproduceerd zonder compromissen op kwaliteit.
+                  {t('story.description1')}
                 </p>
                 <p className="text-white font-semibold">
-                  Premium basics met een ziel. Gebouwd voor het echte leven.
+                  {t('story.description2')}
                 </p>
               </div>
 
@@ -519,18 +525,18 @@ export default function HomePageClient({
                     icon: <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>,
-                    label: '100% Lokaal', 
-                    sublabel: 'Made in NL' 
+                    label: t('story.stat1.label'), 
+                    sublabel: t('story.stat1.sublabel') 
                   },
                   { 
                     icon: <LucideIcons.CalendarCheck className="w-8 h-8 mx-auto" strokeWidth={2} />,
-                    label: 'Built 2024', 
-                    sublabel: 'Opgericht' 
+                    label: t('story.stat2.label'), 
+                    sublabel: t('story.stat2.sublabel') 
                   },
                   { 
                     icon: <LucideIcons.Crown className="w-8 h-8 mx-auto" strokeWidth={2} />,
-                    label: 'Premium', 
-                    sublabel: 'Materialen' 
+                    label: t('story.stat3.label'), 
+                    sublabel: t('story.stat3.sublabel') 
                   },
                 ].map((stat, idx) => (
                   <div key={idx} className="group text-center p-4 border-2 border-gray-700 hover:border-brand-primary transition-all duration-300 hover:bg-brand-primary/10">
@@ -541,16 +547,16 @@ export default function HomePageClient({
                 ))}
               </div>
 
-              <Link 
+              <LocaleLink 
                 href="/over-mose" 
                 className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-brand-primary-hover active:scale-95 transition-all duration-300 group-hover:gap-5 shadow-lg shadow-brand-primary/30"
-                aria-label="Lees het volledige verhaal over MOSE en onze lokale productie"
+                aria-label={t('story.cta.aria')}
               >
-                Lees ons verhaal
+                {t('story.cta.text')}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </Link>
+              </LocaleLink>
             </div>
 
             {/* Image with Frame Effect */}
@@ -616,13 +622,13 @@ export default function HomePageClient({
           </div>
 
           <h2 className="font-display text-4xl md:text-6xl text-white mb-6 tracking-tight">
-            JOIN THE PACK
+            {t('newsletter.title')}
           </h2>
           
           <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Nieuws over drops, restocks en het atelier.
+            {t('newsletter.description')}
             <br />
-            <span className="font-bold">Geen spam — alleen MOSE.</span>
+            <span className="font-bold">{t('newsletter.noSpam')}</span>
           </p>
 
           <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label="Nieuwsbrief inschrijving" onSubmit={handleNewsletterSubmit}>
@@ -632,7 +638,7 @@ export default function HomePageClient({
                 id="newsletter-email"
                 name="email"
                 type="email"
-                placeholder="Jouw e-mailadres"
+                placeholder={t('newsletter.placeholder')}
                 required
                 autoComplete="email"
                 aria-required="true"
@@ -653,18 +659,18 @@ export default function HomePageClient({
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Bezig...
+                    {t('newsletter.submitting')}
                   </>
                 ) : newsletterSuccess ? (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Ingeschreven!
+                    {t('newsletter.subscribed')}
                   </>
                 ) : (
                   <>
-                    Join nu
+                    {t('newsletter.submit')}
                     <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
@@ -678,7 +684,7 @@ export default function HomePageClient({
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
-              We respecteren je privacy. Uitschrijven kan altijd.
+              {t('newsletter.privacy')}
             </p>
           </form>
         </div>

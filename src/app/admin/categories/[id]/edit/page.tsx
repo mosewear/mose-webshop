@@ -6,19 +6,23 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import ImageUpload from '@/components/admin/ImageUpload'
 import SizeGuideEditor from '@/components/admin/SizeGuideEditor'
+import LanguageTabs from '@/components/admin/LanguageTabs'
 
 export default function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [activeLanguage, setActiveLanguage] = useState<'nl' | 'en'>('nl')
   const router = useRouter()
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
     name: '',
+    name_en: '',
     slug: '',
     description: '',
+    description_en: '',
     image_url: '',
     size_guide_type: 'clothing' as 'clothing' | 'watch' | 'accessory' | 'shoes' | 'jewelry' | 'none',
     size_guide_content: null as any,
@@ -43,8 +47,10 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
       if (data) {
         setFormData({
           name: data.name,
+          name_en: data.name_en || '',
           slug: data.slug,
           description: data.description || '',
+          description_en: data.description_en || '',
           image_url: data.image_url || '',
           size_guide_type: data.size_guide_type || 'clothing',
           size_guide_content: data.size_guide_content || null,
@@ -73,8 +79,10 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
         .from('categories')
         .update({
           name: formData.name,
+          name_en: formData.name_en || null,
           slug: formData.slug,
           description: formData.description || null,
+          description_en: formData.description_en || null,
           image_url: formData.image_url || null,
           size_guide_type: formData.size_guide_type,
           size_guide_content: formData.size_guide_content || null,
@@ -128,56 +136,71 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-200 p-8">
+        {/* Language Tabs */}
+        <LanguageTabs 
+          activeLanguage={activeLanguage}
+          onLanguageChange={setActiveLanguage}
+        />
+        
         <div className="space-y-6">
           {/* Category Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Categorienaam *
+            <label htmlFor={`name_${activeLanguage}`} className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Categorienaam ({activeLanguage === 'nl' ? 'Nederlands' : 'Engels'}) {activeLanguage === 'nl' && '*'}
             </label>
             <input
               type="text"
-              id="name"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              id={`name_${activeLanguage}`}
+              required={activeLanguage === 'nl'}
+              value={activeLanguage === 'nl' ? formData.name : formData.name_en}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                [activeLanguage === 'nl' ? 'name' : 'name_en']: e.target.value 
+              })}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-              placeholder="Bijv. Hoodies"
+              placeholder={activeLanguage === 'nl' ? 'Bijv. Hoodies' : 'E.g. Hoodies'}
             />
           </div>
 
-          {/* Slug */}
-          <div>
-            <label htmlFor="slug" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              URL Slug *
-            </label>
-            <input
-              type="text"
-              id="slug"
-              required
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
-              placeholder="hoodies"
-            />
-          </div>
+          {/* Slug - Only in NL mode */}
+          {activeLanguage === 'nl' && (
+            <div>
+              <label htmlFor="slug" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                URL Slug *
+              </label>
+              <input
+                type="text"
+                id="slug"
+                required
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
+                placeholder="hoodies"
+              />
+            </div>
+          )}
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Beschrijving
+            <label htmlFor={`description_${activeLanguage}`} className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Beschrijving ({activeLanguage === 'nl' ? 'Nederlands' : 'Engels - optioneel'})
             </label>
             <textarea
-              id="description"
+              id={`description_${activeLanguage}`}
               rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              value={activeLanguage === 'nl' ? formData.description : formData.description_en}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                [activeLanguage === 'nl' ? 'description' : 'description_en']: e.target.value 
+              })}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none"
-              placeholder="Korte beschrijving van de categorie..."
+              placeholder={activeLanguage === 'nl' ? 'Korte beschrijving van de categorie...' : 'Short category description...'}
             />
           </div>
 
-          {/* Image Upload */}
-          <div>
+          {/* Image Upload - Only in NL mode */}
+          {activeLanguage === 'nl' && (
+            <div>
             <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               Categorie Afbeelding
             </label>
@@ -188,8 +211,10 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               folder="categories"
             />
           </div>
+          )}
 
           {/* Size Guide Type */}
+          {activeLanguage === 'nl' && (
           <div className="bg-blue-50 border-2 border-blue-200 p-4">
             <label htmlFor="size_guide_type" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               📏 Maattabel / Specificaties Type
@@ -214,8 +239,10 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               💡 <strong>Tip:</strong> Kies "Horloge" voor horloges, "Kleding" voor shirts/hoodies/sweaters
             </p>
           </div>
+          )}
 
           {/* Size Guide Content Editor */}
+          {activeLanguage === 'nl' && (
           <div className="bg-purple-50 border-2 border-purple-200 p-4">
             <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               📝 Maattabel / Specificaties Content (Template)
@@ -230,8 +257,10 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               onChange={(content) => setFormData({ ...formData, size_guide_content: content })}
             />
           </div>
+          )}
 
           {/* Product Details Template */}
+          {activeLanguage === 'nl' && (
           <div className="pt-6 border-t-2 border-gray-200">
             <label htmlFor="default_product_details" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               Product Details Template
@@ -249,8 +278,10 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               placeholder="**Premium kwaliteit:** Hoogwaardige materialen die lang meegaan&#10;**Perfect fit:** Ontworpen voor comfort en stijl&#10;**Lokaal gemaakt:** Met liefde geproduceerd in Groningen"
             />
           </div>
+          )}
 
           {/* Materials & Care Template */}
+          {activeLanguage === 'nl' && (
           <div>
             <label htmlFor="default_materials_care" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               Materiaal & Verzorging Template
@@ -268,6 +299,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
               placeholder="**Materiaal:** 100% biologisch katoen, 300gsm&#10;**Was instructies:** Machinewasbaar op 30°C&#10;**Strijken:** Op lage temperatuur, binnenstebuiten&#10;**Drogen:** Niet in de droger, ophangen"
             />
           </div>
+          )}
         </div>
 
         {/* Actions */}

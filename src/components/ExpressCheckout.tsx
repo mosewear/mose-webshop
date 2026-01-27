@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
+import { useTranslations } from 'next-intl'
 
 interface ExpressCheckoutProps {
   cartItems: Array<{
@@ -40,6 +41,7 @@ export default function ExpressCheckout({
   const stripe = useStripe()
   const router = useRouter()
   const supabase = createClient()
+  const t = useTranslations('errors')
 
   useEffect(() => {
     if (cartItems.length === 0 || !stripe) return
@@ -184,7 +186,7 @@ export default function ExpressCheckout({
             if (itemsError) {
               console.error('❌ [Express Checkout] Order items creation failed:', itemsError)
               e.complete('fail')
-              toast.error('Fout bij het toevoegen van producten')
+              toast.error(t('generic'))
               setIsProcessing(false)
               return
             }

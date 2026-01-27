@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import LanguageTabs from '@/components/admin/LanguageTabs'
 
 interface Category {
   id: string
@@ -14,13 +15,16 @@ export default function CreateProductPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [activeLanguage, setActiveLanguage] = useState<'nl' | 'en'>('nl')
   const router = useRouter()
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
     name: '',
+    name_en: '',
     slug: '',
     description: '',
+    description_en: '',
     base_price: '',
     sale_price: '',
     category_id: '',
@@ -50,6 +54,11 @@ export default function CreateProductPage() {
       .replace(/(^-|-$)/g, '')
     
     setFormData({ ...formData, name, slug })
+  }
+
+  const handleNameEnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name_en = e.target.value
+    setFormData({ ...formData, name_en })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,8 +91,10 @@ export default function CreateProductPage() {
         .insert([
           {
             name: formData.name,
+            name_en: formData.name_en || null,
             slug: formData.slug,
             description: formData.description || null,
+            description_en: formData.description_en || null,
             base_price: parseFloat(formData.base_price),
             sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
             category_id: formData.category_id || null,
@@ -132,25 +143,32 @@ export default function CreateProductPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-200 p-8">
+        {/* Language Tabs */}
+        <LanguageTabs 
+          activeLanguage={activeLanguage}
+          onLanguageChange={setActiveLanguage}
+        />
+        
         <div className="space-y-6">
           {/* Product Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Productnaam *
+            <label htmlFor={`name_${activeLanguage}`} className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Productnaam ({activeLanguage === 'nl' ? 'Nederlands' : 'Engels'}) {activeLanguage === 'nl' && '*'}
             </label>
             <input
               type="text"
-              id="name"
-              required
-              value={formData.name}
-              onChange={handleNameChange}
+              id={`name_${activeLanguage}`}
+              required={activeLanguage === 'nl'}
+              value={activeLanguage === 'nl' ? formData.name : formData.name_en}
+              onChange={activeLanguage === 'nl' ? handleNameChange : handleNameEnChange}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-              placeholder="Bijv. MOSE Classic Hoodie"
+              placeholder={activeLanguage === 'nl' ? 'Bijv. MOSE Classic Hoodie' : 'E.g. MOSE Classic Hoodie - Black'}
             />
           </div>
 
-          {/* Slug */}
-          <div>
+          {/* Slug - Only in NL mode */}
+          {activeLanguage === 'nl' && (
+            <div>
             <label htmlFor="slug" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               URL Slug *
             </label>
@@ -167,24 +185,33 @@ export default function CreateProductPage() {
               Automatisch gegenereerd, maar je kunt het aanpassen
             </p>
           </div>
+          )}
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Beschrijving
+            <label htmlFor={`description_${activeLanguage}`} className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              Beschrijving ({activeLanguage === 'nl' ? 'Nederlands' : 'Engels - optioneel'})
             </label>
             <textarea
-              id="description"
-              rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              id={`description_${activeLanguage}`}
+              rows={6}
+              value={activeLanguage === 'nl' ? formData.description : formData.description_en}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                [activeLanguage === 'nl' ? 'description' : 'description_en']: e.target.value 
+              })}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none"
-              placeholder="Uitgebreide productbeschrijving..."
+              placeholder={activeLanguage === 'nl' ? 'Uitgebreide productbeschrijving...' : 'Detailed product description...'}
             />
+            <p className="text-sm text-gray-500 mt-1">
+              💡 Tip: Gebruik ** om tekst <strong>bold</strong> te maken (bijvoorbeeld: **premium materials**)
+            </p>
           </div>
 
-          {/* Price & Category - Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Price & Category - Only in NL mode */}
+          {activeLanguage === 'nl' && (
+            <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Base Price */}
             <div>
               <label htmlFor="base_price" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
@@ -315,6 +342,8 @@ export default function CreateProductPage() {
               </p>
             </div>
           </div>
+          </>
+          )}
         </div>
 
         {/* Actions */}

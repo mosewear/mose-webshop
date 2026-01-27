@@ -8,6 +8,8 @@ import { X, Minus, Plus, Trash2, Truck, Lock, RotateCcw, ShoppingBag, Ticket, Ch
 import { useState } from 'react'
 import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslations, useLocale } from 'next-intl'
+import { Link as LocaleLink } from '@/i18n/routing'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -15,6 +17,16 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
+  const t = useTranslations('cart')
+  const locale = useLocale()
+  
+  // Helper for locale-aware links
+  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
+  
+  // Helper to get localized product name
+  const getProductName = (product: any) => 
+    locale === 'en' && product.name_en ? product.name_en : product.name
+  
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount, addItem } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
@@ -67,6 +79,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         .select(`
           id,
           name,
+          name_en,
           slug,
           base_price,
           product_images!inner(url, is_primary),
@@ -140,12 +153,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         setPromoDiscount(data.discountAmount)
         setPromoCodeExpanded(false)
       } else {
-        setPromoError(data.error || 'Code ongeldig')
+        setPromoError(data.error || t('promo.error'))
         setPromoDiscount(0)
       }
     } catch (error) {
       console.error('Error validating promo code:', error)
-      setPromoError('Kon code niet valideren')
+      setPromoError(t('promo.validationFailed'))
       setPromoDiscount(0)
     }
   }
@@ -179,7 +192,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     addItem({
       productId: product.id,
       variantId: variant.id,
-      name: product.name,
+      name: getProductName(product),
       size: variant.size,
       color: variant.color || 'Zwart',
       colorHex: variant.color_hex || '#000000',
@@ -225,16 +238,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         <div className="flex-shrink-0 flex items-center justify-between p-6 border-b-2 border-black bg-white sticky top-0 z-10">
           <div>
             <h2 id="cart-drawer-title" className="font-display text-2xl md:text-3xl uppercase">
-              Winkelwagen
+              {t('title')}
             </h2>
             <p className="text-sm text-gray-600 uppercase tracking-wider mt-1">
-              {getItemCount()} {getItemCount() === 1 ? 'Item' : 'Items'}
+              {t('items', { count: getItemCount() })}
             </p>
           </div>
           <button
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-            aria-label="Sluit winkelwagen"
+            aria-label={t('close')}
           >
             <X size={24} />
           </button>
@@ -246,13 +259,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="w-20 h-20 border-4 border-gray-300 flex items-center justify-center mb-6">
               <ShoppingBag size={40} className="text-gray-300" />
             </div>
-            <h3 className="font-display text-2xl uppercase mb-2">Leeg</h3>
-            <p className="text-gray-600 mb-6">Je winkelwagen is leeg</p>
+            <h3 className="font-display text-2xl uppercase mb-2">{t('empty.title')}</h3>
+            <p className="text-gray-600 mb-6">{t('empty.message')}</p>
             <button
               onClick={onClose}
               className="px-8 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
             >
-              Verder shoppen
+              {t('empty.continue')}
             </button>
           </div>
         ) : (
@@ -267,7 +280,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div className="py-4 md:py-6 group">
                       <div className="flex gap-4">
                         {/* Product Image */}
-                        <Link
+                        <LocaleLink
                           href={`/product/${item.productId}`}
                           onClick={onClose}
                           className="relative w-20 h-26 md:w-[100px] md:h-[130px] bg-gray-100 flex-shrink-0 overflow-hidden"
@@ -279,24 +292,24 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             sizes="100px"
                             className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                           />
-                        </Link>
+                        </LocaleLink>
 
                         {/* Product Info */}
                         <div className="flex-1 flex flex-col justify-between min-w-0">
                           {/* Top Section */}
                           <div>
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <Link
+                              <LocaleLink
                                 href={`/product/${item.productId}`}
                                 onClick={onClose}
                                 className="font-display text-lg md:text-xl uppercase hover:text-brand-primary transition-colors leading-tight"
                               >
                                 {item.name}
-                              </Link>
+                              </LocaleLink>
                               <button
                                 onClick={() => removeItem(item.variantId)}
                                 className="flex-shrink-0 w-8 h-8 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                                aria-label="Verwijder item"
+                                aria-label={t('remove')}
                               >
                                 <X size={16} />
                               </button>
@@ -304,7 +317,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             <div className="text-gray-600 text-sm space-x-2">
                               <span>{item.color}</span>
                               <span>•</span>
-                              <span>Maat {item.size}</span>
+                              <span>{t('size')} {item.size}</span>
                             </div>
                           </div>
 
@@ -315,7 +328,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               <button
                                 onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
                                 className="w-11 h-11 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                                aria-label="Verlaag aantal"
+                                aria-label={t('decrease')}
                               >
                                 <Minus size={16} />
                               </button>
@@ -323,7 +336,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               <button
                                 onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                                 className="w-11 h-11 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                                aria-label="Verhoog aantal"
+                                aria-label={t('increase')}
                               >
                                 <Plus size={16} />
                               </button>
@@ -345,7 +358,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               {upsellProducts.length > 0 && (
                 <div className="px-4 md:px-6 pb-4 border-t-2 border-gray-200 pt-4">
                   <h3 className="font-display text-base uppercase mb-3 tracking-wide">
-                    Maak je look compleet
+                    {t('upsell.completeLook')}
                   </h3>
                   <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
                     {upsellProducts.map((product) => {
@@ -380,29 +393,29 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           {/* Top Row: Image + Info */}
                           <div className="flex items-start gap-3 mb-2">
                             {/* Image */}
-                            <Link
+                            <LocaleLink
                               href={`/product/${product.slug}`}
                               onClick={onClose}
                               className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
                             >
                               <Image
                                 src={product.product_images[0]?.url || '/placeholder.png'}
-                                alt={product.name}
+                                alt={getProductName(product)}
                                 fill
                                 sizes="60px"
                                 className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                               />
-                            </Link>
+                            </LocaleLink>
                             
                             {/* Product Info + Price */}
                             <div className="flex-1 min-w-0">
-                              <Link
+                              <LocaleLink
                                 href={`/product/${product.slug}`}
                                 onClick={onClose}
                                 className="block text-xs font-semibold uppercase leading-tight mb-1 hover:text-brand-primary transition-colors line-clamp-2"
                               >
-                                {product.name}
-                              </Link>
+                                {getProductName(product)}
+                              </LocaleLink>
                               <span className="text-brand-primary font-bold text-sm">
                                 €{product.base_price.toFixed(2)}
                               </span>
@@ -450,9 +463,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   OK
                                 </span>
                               ) : !selectedSize ? (
-                                'Kies'
+                                t('size')
                               ) : (
-                                '+ ADD'
+                                t('upsell.quickAdd')
                               )}
                             </button>
                           </div>
@@ -470,7 +483,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
                 >
                   <Trash2 size={16} />
-                  <span>Leeg winkelwagen</span>
+                  <span>{t('remove')}</span>
                 </button>
               </div>
             </div>
@@ -521,7 +534,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     >
                       <div className="flex items-center gap-2">
                         <Ticket size={16} />
-                        <span>Kortingscode?</span>
+                        <span>{t('promo.title')}</span>
                       </div>
                       <ChevronDown size={16} />
                     </button>
@@ -530,7 +543,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm font-semibold">
                           <Ticket size={16} />
-                          <span>Kortingscode</span>
+                          <span>{t('promo.title')}</span>
                         </div>
                         <button
                           onClick={() => {
@@ -552,7 +565,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             setPromoError('')
                           }}
                           onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
-                          placeholder="CODE"
+                          placeholder={t('placeholder.promoCode', { ns: 'checkout' })}
                           className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
                         />
                         <button
@@ -560,7 +573,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           disabled={!promoCode}
                           className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          Toepassen
+                          {t('promo.apply')}
                         </button>
                       </div>
                       {promoError && (
@@ -577,7 +590,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         onClick={handleRemovePromo}
                         className="text-xs text-gray-600 hover:text-black font-semibold uppercase"
                       >
-                        Verwijder
+                        {t('remove', { ns: 'common' })}
                       </button>
                     </div>
                   )}
@@ -586,7 +599,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 {/* Minimal Total - PROMINENT */}
                 <div className="border-t-2 border-black pt-3">
                   <div className="flex justify-between items-baseline">
-                    <span className="font-display text-xl uppercase tracking-wide">Totaal</span>
+                    <span className="font-display text-xl uppercase tracking-wide">{t('total')}</span>
                     <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
                   </div>
                   <p className="text-xs text-gray-500 text-right mt-1">
@@ -595,13 +608,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
 
                 {/* CTA Button - GREEN! */}
-                <Link
+                <LocaleLink
                   href="/checkout"
                   onClick={onClose}
                   className="block w-full py-3 bg-brand-primary text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors border-2 border-brand-primary"
                 >
-                  Afrekenen
-                </Link>
+                  {t('checkout')}
+                </LocaleLink>
               </div>
 
               {/* Mobile Fixed Bottom Bar */}
@@ -610,19 +623,19 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="p-4 bg-black text-white">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Totaal</div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{t('total')}</div>
                       <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
                       <div className="text-xs text-gray-400">
                         Incl. BTW & verzending
                       </div>
                     </div>
-                    <Link
+                    <LocaleLink
                       href="/checkout"
                       onClick={onClose}
                       className="px-6 py-3 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
                     >
-                      Afrekenen
-                    </Link>
+                      {t('checkout')}
+                    </LocaleLink>
                   </div>
                   {/* Enhanced shipping progress for mobile */}
                   {subtotalAfterDiscount < freeShippingThreshold ? (
@@ -664,7 +677,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white border-4 border-black p-6 md:p-8 max-w-md w-full">
-            <h3 className="font-display text-2xl md:text-3xl mb-4 uppercase">Winkelwagen legen?</h3>
+            <h3 className="font-display text-2xl md:text-3xl mb-4 uppercase">{t('title')} legen?</h3>
             <p className="text-gray-600 mb-6">
               Weet je zeker dat je alle items wilt verwijderen?
             </p>
@@ -673,7 +686,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 onClick={() => setShowClearConfirm(false)}
                 className="flex-1 py-3 border-2 border-black font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
               >
-                Annuleren
+                {t('cancel', { ns: 'common' })}
               </button>
               <button
                 onClick={() => {

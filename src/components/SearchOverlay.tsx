@@ -5,14 +5,19 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { X, Search as SearchIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface SearchResult {
   id: string
   name: string
+  name_en?: string
   slug: string
   base_price: number
   product_images: Array<{ url: string }>
-  category?: { name: string }
+  category?: { 
+    name: string
+    name_en?: string
+  }
 }
 
 interface SearchOverlayProps {
@@ -26,6 +31,14 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+  const locale = useLocale()
+  const t = useTranslations('searchOverlay')
+  
+  // Helper to get localized names
+  const getProductName = (product: SearchResult) => 
+    locale === 'en' && product.name_en ? product.name_en : product.name
+  const getCategoryName = (category: SearchResult['category']) => 
+    locale === 'en' && category?.name_en ? category.name_en : category?.name
 
   // Auto-focus input when overlay opens
   useEffect(() => {
@@ -74,10 +87,11 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           .select(`
             id,
             name,
+            name_en,
             slug,
             base_price,
             product_images (url),
-            categories (name)
+            categories (name, name_en)
           `)
           .ilike('name', `%${query}%`)
           .limit(8)
@@ -123,13 +137,13 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Zoek producten..."
+              placeholder={t('placeholder')}
               className="flex-1 text-2xl md:text-3xl font-bold placeholder:text-gray-400 focus:outline-none bg-transparent"
             />
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 transition-colors"
-              aria-label="Sluiten"
+              aria-label={t('closeLabel')}
             >
               <X className="w-8 h-8" strokeWidth={2.5} />
             </button>
@@ -148,10 +162,10 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <div className="text-center py-12">
               <SearchIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" strokeWidth={1.5} />
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Geen resultaten voor "{query}"
+                {t('noResults', { query })}
               </h3>
               <p className="text-gray-600">
-                Probeer een andere zoekterm
+                {t('tryAgain')}
               </p>
             </div>
           )}
@@ -169,7 +183,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 border-2 border-black">
                     <Image
                       src={product.product_images[0]?.url || '/placeholder.png'}
-                      alt={product.name}
+                      alt={getProductName(product)}
                       fill
                       sizes="80px"
                       className="object-cover"
@@ -179,11 +193,11 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h4 className="text-lg font-bold group-hover:text-brand-primary transition-colors truncate">
-                      {product.name}
+                      {getProductName(product)}
                     </h4>
                     {product.category && (
                       <p className="text-sm text-gray-600">
-                        {product.category.name}
+                        {getCategoryName(product.category)}
                       </p>
                     )}
                   </div>
@@ -203,10 +217,10 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <div className="text-center py-12">
               <SearchIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" strokeWidth={1.5} />
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Zoek MOSE Producten
+                {t('emptyTitle')}
               </h3>
               <p className="text-gray-600">
-                Type om te beginnen met zoeken
+                {t('emptyDescription')}
               </p>
             </div>
           )}
@@ -216,11 +230,11 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         <div className="border-t-2 border-gray-200 px-6 md:px-8 py-3 bg-gray-50 text-xs text-gray-600 flex items-center justify-between">
           <span>
             <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">ESC</kbd>
-            {' '}om te sluiten
+            {' '}{t('closeHint')}
           </span>
           {results.length > 0 && (
             <span className="text-gray-500">
-              {results.length} {results.length === 1 ? 'resultaat' : 'resultaten'}
+              {t('resultCount', { count: results.length })}
             </span>
           )}
         </div>

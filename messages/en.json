@@ -1,0 +1,855 @@
+{
+  "common": {
+    "shop": "Shop",
+    "lookbook": "Lookbook",
+    "about": "About MOSE",
+    "contact": "Contact",
+    "cart": "Shopping Cart",
+    "account": "Account",
+    "wishlist": "Wishlist",
+    "search": "Search",
+    "menu": "Menu",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "breadcrumb": {
+      "home": "Home",
+      "shop": "Shop"
+    }
+  },
+  "footer": {
+    "tagline": "Clothing without fuss. Locally made. Built to last.",
+    "shop": {
+      "title": "Shop",
+      "hoodies": "Hoodies",
+      "tshirts": "T-Shirts",
+      "caps": "Caps",
+      "all": "All Products"
+    },
+    "info": {
+      "title": "Info",
+      "about": "About MOSE",
+      "lookbook": "Lookbook",
+      "contact": "Contact",
+      "shipping": "Shipping & Returns"
+    },
+    "service": {
+      "title": "Service",
+      "account": "My Account",
+      "cart": "Shopping Cart",
+      "privacy": "Privacy",
+      "terms": "Terms & Conditions"
+    },
+    "copyright": "© {year} MOSE. All rights reserved.",
+    "prices": "All prices incl. {rate}% VAT",
+    "made": "Made with ❤️ in Groningen"
+  },
+  "checkout": {
+    "title": "CHECKOUT",
+    "mode": {
+      "guest": "Guest Checkout",
+      "guestShort": "Guest",
+      "login": "Login & Checkout",
+      "loginShort": "Login",
+      "loggedIn": "You are logged in"
+    },
+    "login": {
+      "title": "Login",
+      "description": "Log in to use your saved details and checkout faster.",
+      "email": "Email Address",
+      "password": "Password",
+      "submit": "LOGIN & CONTINUE",
+      "submitting": "LOGGING IN...",
+      "noAccount": "Don't have an account?",
+      "register": "Register here"
+    },
+    "section": {
+      "contact": "Contact",
+      "delivery": "Delivery",
+      "secure": "Secure & encrypted"
+    },
+    "field": {
+      "email": "Email Address",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "country": "Country",
+      "postalCode": "Postcode",
+      "houseNumber": "House Number",
+      "addition": "Addition",
+      "address": "Street and house number",
+      "city": "City",
+      "phone": "Phone"
+    },
+    "placeholder": {
+      "email": "your@email.com",
+      "password": "••••••••",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "houseNumber": "27",
+      "addition": "A",
+      "address": "Street and house number",
+      "city": "City",
+      "phone": "+31 6 12345678",
+      "promoCode": "CODE"
+    },
+    "country": {
+      "nl": "Netherlands",
+      "be": "Belgium",
+      "de": "Germany",
+      "fr": "France",
+      "gb": "United Kingdom",
+      "other": "Other country"
+    },
+    "postcode": {
+      "help": {
+        "nl": "Dutch postcode (format: 1234AB)",
+        "be": "Belgian postcode (format: 2000)",
+        "de": "German postcode (format: 12345)",
+        "fr": "French postcode (format: 75001)",
+        "gb": "UK postcode (format: SW1A 1AA)"
+      },
+      "example": {
+        "nl": "For example: 1012AB",
+        "be": "For example: 2000 (Antwerp)",
+        "de": "For example: 10115 (Berlin)",
+        "fr": "For example: 75001 (Paris)",
+        "gb": "For example: SW1A 1AA"
+      }
+    },
+    "lookup": {
+      "button": "Get Address",
+      "loading": "Loading...",
+      "success": "Address retrieved!",
+      "edit": "Edit"
+    },
+    "countryChanged": {
+      "title": "Country changed → {country}",
+      "message": "Postcode cleared (format: {format})"
+    },
+    "terms": {
+      "text": "By placing your order you agree to our",
+      "terms": "terms and conditions",
+      "and": "and",
+      "privacy": "privacy policy"
+    },
+    "submit": "Place Order",
+    "submitting": "Placing Order...",
+    "progress": {
+      "cart": "Shopping Cart",
+      "details": "Details",
+      "payment": "Payment"
+    },
+    "messages": {
+      "cartRestored": "Your cart has been restored!",
+      "orderRestoreFailed": "Could not restore order",
+      "unknownError": "Unknown error",
+      "paymentExpired": "Your payment session has expired. Please fill in your details again.",
+      "orderCannotRestore": "This order cannot be restored",
+      "loginFailed": "Login failed. Please check your details.",
+      "paymentFailed": "Payment failed",
+      "errorOccurred": "An error occurred"
+    }
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "items": "{count} {count, plural, one {Item} other {Items}}",
+    "close": "Close cart",
+    "empty": {
+      "title": "Empty",
+      "message": "Your cart is empty",
+      "continue": "Continue Shopping"
+    },
+    "remove": "Remove item",
+    "size": "Size",
+    "color": "Color",
+    "quantity": "Quantity",
+    "price": "Price",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "shippingFree": "FREE",
+    "total": "Total",
+    "checkout": "Go to Checkout",
+    "promo": {
+      "title": "Have a promo code?",
+      "apply": "Apply",
+      "error": "Invalid promo code",
+      "success": "Promo code applied!",
+      "codeInvalid": "Code invalid",
+      "validationFailed": "Could not validate code"
+    },
+    "trust": {
+      "secure": "Secure Payment",
+      "returns": "{days} days return",
+      "ssl": "SSL secured"
+    },
+    "upsell": {
+      "title": "You might also like",
+      "add": "Add",
+      "completeLook": "Complete your look",
+      "quickAdd": "Add",
+      "adding": "Adding..."
+    }
+  },
+    "product": {
+      "notFound": "Product not found",
+      "notFoundDesc": "The product you are looking for no longer exists.",
+      "backToShop": "Back to shop",
+    "addToCart": "Add to Cart",
+    "added": "✓ Added",
+    "buyNow": "Buy Now",
+    "size": "Size",
+    "color": "Color",
+    "selectColor": "Select color {color}",
+    "quantity": "Quantity",
+    "showMore": "Read more",
+    "showLess": "Show less",
+    "stock": {
+      "inStock": "✓ In Stock - Tomorrow at home",
+      "outOfStock": "Temporarily out of stock",
+      "lowStock": "🔥 Last {count} pieces - Order now!"
+    },
+    "shipping": {
+      "title": "Shipping",
+      "nl": "€{price} (NL)",
+      "be": "€{price} (BE)",
+      "free": "Free shipping from €{threshold} (Netherlands only)"
+    },
+    "trust": {
+      "guarantee": "2 year warranty",
+      "warranty": "2 year warranty",
+      "returns": "14 days return",
+      "freeShipping": "Free from €{amount}",
+      "secure": "Secure Payment"
+    },
+    "urgency": {
+      "title": "POPULAR • Only {count} left in stock",
+      "message": "Order now to avoid disappointment"
+    },
+    "reviews": {
+      "title": "Reviews",
+      "noReviews": "No reviews yet",
+      "write": "Write a review"
+    },
+    "description": {
+      "title": "Description"
+    },
+    "specs": {
+      "title": "Specifications"
+    },
+    "sizeGuide": {
+      "title": "Size Guide",
+      "open": "View Size Guide",
+      "close": "Close size guide",
+      "specs": "Specifications",
+      "info": "Info",
+      "shoes": "Size Chart",
+      "jewelry": "Sizes",
+      "default": "Size Chart"
+    },
+    "video": {
+      "thumbnail": "Video thumbnail",
+      "label": "VIDEO"
+    },
+    "notify": {
+      "title": "Don't miss this product!",
+      "description": "Receive an email when this product is back in stock.",
+      "email": "Email Address",
+      "submit": "Send",
+      "success": "You'll receive an email as soon as it's back in stock!"
+    },
+    "wishlist": {
+      "add": "Add to wishlist",
+      "remove": "Remove from wishlist"
+    },
+    "tabs": {
+      "description": "Product description",
+      "details": "Product details",
+      "materials": "Materials & Care",
+      "shipping": "SHIPPING",
+      "returns": "RETURNS",
+      "warranty": "WARRANTY",
+      "shippingReturns": "Shipping & Returns"
+    },
+    "madeLocally": "Made locally in the Netherlands",
+    "trust": {
+      "localMade": "Locally made",
+      "freeShipping": "Free shipping from €{threshold}",
+      "returns": "{days} days return",
+      "warranty": "2 year warranty",
+      "secure": "Secure payment"
+    },
+    "shipping": {
+      "info": "€{cost} • Free from €{threshold}",
+      "label": "Shipping",
+      "deliveryTime": "Delivery time",
+      "deliveryTimeValue": "2-3 business days within Netherlands"
+    },
+    "returns": {
+      "info": "{days} days hassle-free returns",
+      "label": "Returns",
+      "cost": "Return costs",
+      "costValue": "Free returns"
+    },
+    "warranty": {
+      "info": "2 year manufacturer warranty on all products"
+    },
+    "related": {
+      "title": "You might also like"
+    }
+  },
+  "shipping": {
+    "title": "SHIPPING",
+    "returns": "RETURNS",
+    "service": "Service",
+    "freeShipping": "Free shipping from €{threshold}",
+    "returnPolicy": "Items can be returned within {days} days hassle-free",
+    "freeFrom": "Free from €{threshold}",
+    "shipping": "Shipping",
+    "deliveryTime": "2-5 Days",
+    "deliveryTimeLabel": "Delivery Time",
+    "returnDays": "{days} Days",
+    "free": "Free",
+    "manufacturingFault": "For manufacturing defects",
+    "shippingCost": "Under €{threshold}? Then you pay €{cost} shipping costs.",
+    "shippingAreas": "Shipping Areas",
+    "netherlands": "Netherlands",
+    "belgium": "Belgium",
+    "processing": "Processing: 1-2 days",
+    "delivery": "Delivery: 1-3 days",
+    "total": "Total: 2-5 business days",
+    "trackTrace": "Track & Trace",
+    "viaDHL": "Via <strong>DHL</strong>. You will receive:",
+    "trackCode": "Track & trace code",
+    "expectedDelivery": "Expected delivery time",
+    "trackLink": "Link to track",
+    "trackOrder": "Track your order?",
+    "goToAccount": "Go to your",
+    "account": "account",
+    "orUseTrack": "or use the track & trace link in your shipping confirmation."
+  },
+  "returns": {
+    "info": "{days} days return period",
+    "label": "Returns",
+    "cost": "Return costs",
+    "costValue": "Free returns"
+  },
+  "shop": {
+    "title": "Shop",
+    "filters": {
+      "title": "Filters",
+      "clear": "Clear Filters",
+      "category": "Category",
+      "size": "Size",
+      "color": "Color",
+      "price": "Price"
+    },
+    "sort": {
+      "title": "Sort by",
+      "relevance": "Relevance",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "newest": "Newest"
+    },
+    "results": "{count} {count, plural, =1 {product} other {products}} found",
+    "noResults": "No products found",
+    "noResultsDesc": "Try different filters or search terms",
+    "loading": "Loading...",
+    "inCategory": "in {category}",
+    "lastItems": "LAST ITEMS",
+    "discount": "OFF",
+    "filters": {
+      "title": "Filters",
+      "clear": "Clear all",
+      "show": "Show {count}",
+      "search": "Search",
+      "searchPlaceholder": "Search products...",
+      "category": "Category",
+      "allProducts": "All Products",
+      "price": "Price Range",
+      "inStockOnly": "In Stock Only",
+      "active": "Active Filters",
+      "close": "Close filters"
+    },
+    "sort": {
+      "title": "Sort",
+      "newest": "Newest",
+      "priceAsc": "Price: Low - High",
+      "priceDesc": "Price: High - Low",
+      "name": "Name: A - Z"
+    }
+  },
+  "errors": {
+    "required": "Required field",
+    "email": {
+      "invalid": "Please enter a valid email address"
+    },
+    "postcode": {
+      "nl": "Dutch postcode: 4 digits + 2 letters (e.g. 1234AB)",
+      "be": "Belgian postcode: 4 digits (e.g. 2000)",
+      "de": "German postcode: 5 digits (e.g. 12345)",
+      "fr": "French postcode: 5 digits (e.g. 75001)",
+      "gb": "UK postcode (e.g. SW1A 1AA)"
+    },
+    "houseNumber": {
+      "invalid": "Invalid house number"
+    },
+    "name": {
+      "minLength": "{field} must contain at least {min} characters"
+    },
+    "phone": {
+      "required": "Required field"
+    },
+    "generic": "An error occurred. Please try again.",
+    "network": "Network error. Check your internet connection."
+  },
+  "paymentStatus": {
+    "checking": "CHECKING PAYMENT",
+    "checkingMessage": "Please wait, we are checking your payment...",
+    "error": "ERROR",
+    "checkError": "An error occurred while checking your payment.",
+    "statusError": "Payment status: {status}. Please try again later.",
+    "backToCart": "Back to cart"
+  },
+  "account": {
+    "title": "MY ACCOUNT",
+    "orders": "Orders",
+    "returns": "Returns",
+    "ordersEmpty": "You haven't placed any orders yet",
+    "returnsEmpty": "You haven't requested any returns yet",
+    "viewOrder": "View order",
+    "viewReturn": "View return",
+    "requestReturn": "Request return",
+    "newReturn": "+ Request New Return",
+    "profile": "Profile",
+    "address": "Address",
+    "addresses": "Addresses",
+    "logout": "Logout",
+    "myOrders": "MY ORDERS",
+    "myReturns": "MY RETURNS",
+    "orderNumber": "Order #{id}",
+    "returnStatus": "Return: {status}",
+    "profileSection": {
+      "title": "PROFILE",
+      "name": "Name",
+      "email": "Email address",
+      "emailReadonly": "Email address (cannot be changed)",
+      "save": "Save profile",
+      "saving": "Saving...",
+      "saveError": "Could not save profile",
+      "saveSuccess": "Profile updated"
+    },
+    "passwordSection": {
+      "title": "CHANGE PASSWORD",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "save": "Change password",
+      "saving": "Saving...",
+      "saveError": "Could not change password",
+      "saveSuccess": "Password changed",
+      "mismatch": "Passwords do not match"
+    },
+    "addressSection": {
+      "title": "ADDRESSES",
+      "add": "+ Add New Address",
+      "default": "DEFAULT",
+      "setDefault": "Make default",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this address?",
+      "deleteError": "Could not delete address",
+      "deleteSuccess": "Address deleted",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saveError": "Could not save address",
+      "saveSuccess": "Address saved"
+    }
+  },
+  "wishlist": {
+    "title": "My wishlist",
+    "empty": {
+      "title": "Your wishlist is empty",
+      "description": "Discover our collection and add your favorite items to your wishlist",
+      "cta": "Shop now"
+    },
+    "itemCount": "{count} {count, plural, =1 {item} other {items}}",
+    "loading": "Loading wishlist...",
+    "addToCart": "Add to cart",
+    "remove": "Remove from wishlist",
+    "removeTitle": "Remove from wishlist",
+    "noImage": "No image",
+    "outOfStock": "This product is unfortunately out of stock",
+    "addedToCart": "Added to cart!"
+  },
+  "auth": {
+    "login": {
+      "title": "LOGIN",
+      "titleAlt": "Login",
+      "welcome": "Welcome back!",
+      "email": "Email Address",
+      "emailLabel": "Email *",
+      "password": "Password",
+      "passwordLabel": "Password *",
+      "submit": "LOGIN",
+      "submitting": "LOADING...",
+      "forgot": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "register": "Create account",
+      "hasAccount": "Already have an account?",
+      "backToShop": "← Back to shop",
+      "placeholder": {
+        "email": "your@email.com",
+        "password": "At least 6 characters"
+      }
+    },
+    "register": {
+      "title": "CREATE ACCOUNT",
+      "titleAlt": "Register",
+      "welcome": "Become part of MOSE",
+      "name": "Name",
+      "nameLabel": "Name *",
+      "email": "Email Address",
+      "emailLabel": "Email *",
+      "password": "Password",
+      "passwordLabel": "Password *",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordLabel": "Confirm Password *",
+      "submit": "CREATE ACCOUNT",
+      "submitting": "LOADING...",
+      "placeholder": {
+        "name": "Your name",
+        "email": "your@email.com",
+        "password": "At least 6 characters",
+        "confirmPassword": "Repeat your password"
+      },
+      "success": "Account created! Check your email for verification."
+    },
+    "forgotPassword": {
+      "title": "FORGOT PASSWORD?",
+      "description": "No problem. Enter your email address and we'll send you a link to reset your password.",
+      "emailLabel": "Email address",
+      "submit": "SEND RESET LINK",
+      "submitting": "SENDING...",
+      "success": "Email sent!",
+      "successMessage": "Check your inbox (and spam folder) for a link to reset your password.",
+      "backToLogin": "← Back to login",
+      "placeholder": {
+        "email": "your@email.com"
+      }
+    },
+    "resetPassword": {
+      "title": "NEW PASSWORD",
+      "description": "Set a new password for your account.",
+      "passwordLabel": "New password",
+      "confirmPasswordLabel": "Confirm password",
+      "submit": "SAVE PASSWORD",
+      "submitting": "SAVING...",
+      "success": "Password updated!",
+      "successMessage": "You will be redirected to the login page...",
+      "backToLogin": "← Back to login",
+      "placeholder": {
+        "password": "At least 6 characters",
+        "confirmPassword": "Repeat your password"
+      }
+    },
+    "errors": {
+      "generic": "Something went wrong",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "passwordMinLength": "Password must be at least 6 characters long",
+      "invalidSession": "Invalid session",
+      "somethingWrong": "Something went wrong"
+    }
+  },
+  "orders": {
+    "title": "Order #{id}",
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "date": "Ordered on",
+    "total": "Total",
+    "shipping": "Shipping",
+    "tracking": "Track & Trace",
+    "items": "Items",
+    "confirmation": {
+      "title": "Order Confirmed!",
+      "message": "Thank you for your order!",
+      "email": "We've sent a confirmation to your email address."
+    }
+  },
+  "returns": {
+    "title": "Return",
+    "new": "New Return",
+    "selectOrder": "Select Order",
+    "reason": "Reason",
+    "items": "Items",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "completed": "Completed"
+    },
+    "label": "Return Label",
+    "download": "Download Label"
+  },
+  "emails": {
+    "orderConfirmation": {
+      "subject": "Order Confirmed - #{orderId}",
+      "greeting": "Dear {name},",
+      "message": "Thank you for your order!",
+      "orderNumber": "Order Number"
+    },
+    "shipping": {
+      "subject": "Your order has been shipped",
+      "tracking": "Track & Trace"
+    },
+    "return": {
+      "subject": "Return Label",
+      "instructions": "Download your return label below"
+    }
+  },
+  "metadata": {
+    "title": "MOSE - Clothing and accessories for men",
+    "description": "Timeless basics without the fuss. MOSE makes premium hoodies, t-shirts and accessories for men who appreciate quality. Locally produced in Groningen. Free shipping from €75.",
+    "keywords": "MOSE, menswear, premium basics, hoodies, t-shirts, Groningen, locally made",
+    "shop": {
+      "title": "Shop",
+      "description": "Discover our collection of premium basics. Timeless clothing and accessories for men. Made locally in Groningen. Free shipping from €75.",
+      "keywords": "MOSE shop, premium basics, hoodies, t-shirts, menswear, Groningen, locally made, streetwear"
+    },
+    "product": {
+      "notFound": "Product not found",
+      "notFoundDesc": "The product you are looking for no longer exists."
+    }
+  },
+  "trackOrder": {
+    "title": "Track Your Order",
+    "description": "Enter your order number and email to view the status",
+    "orderNumber": "Order Number",
+    "orderNumberPlaceholder": "e.g: ABC12345",
+    "orderNumberHint": "Find this in your confirmation email (first 8 characters)",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "your@email.com",
+    "searchButton": "Track Order",
+    "searching": "Searching...",
+    "errorFillFields": "Please fill in all fields",
+    "errorNotFound": "Order not found. Please check your order number and email.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "orderDetails": "Order #{id}",
+    "placedOn": "Placed on",
+    "newSearch": "New search",
+    "status": {
+      "pending": "Pending",
+      "pendingDesc": "We have received your order and are processing the payment.",
+      "paid": "Paid",
+      "paidDesc": "Your payment has been received! We are preparing your order.",
+      "processing": "Processing",
+      "processingDesc": "Your order is being packed and prepared for shipping.",
+      "shipped": "Shipped",
+      "shippedDesc": "Your package is on its way! Track your shipment with the tracking code.",
+      "delivered": "Delivered",
+      "deliveredDesc": "Your package has been delivered! Enjoy your new MOSE items.",
+      "cancelled": "Cancelled",
+      "cancelledDesc": "This order has been cancelled. You will receive a refund."
+    },
+    "progress": {
+      "ordered": "Ordered",
+      "processed": "Processed",
+      "shipped": "Shipped",
+      "delivered": "Delivered"
+    },
+    "tracking": {
+      "title": "Track & Trace",
+      "via": "Via",
+      "button": "Track Shipment →",
+      "expectedDelivery": "Expected delivery:"
+    },
+    "items": {
+      "title": "Your Items",
+      "size": "Size",
+      "total": "Total"
+    },
+    "help": {
+      "title": "Questions about your order?",
+      "description": "We're happy to help! Contact us.",
+      "button": "Contact Us"
+    }
+  },
+  "orderConfirmation": {
+    "title": "Order Confirmed!",
+    "thankYou": "Thank you for your order!",
+    "orderNumber": "Order Number",
+    "orderDate": "Order Date",
+    "email": "Email Address",
+    "confirmationSent": "We've sent a confirmation to {email}",
+    "whatNow": "What happens now?",
+    "step1": {
+      "title": "1. We process your payment",
+      "description": "Your payment is being verified and approved."
+    },
+    "step2": {
+      "title": "2. We pack your order",
+      "description": "Your items are carefully packed in our workshop."
+    },
+    "step3": {
+      "title": "3. Your package is shipped",
+      "description": "You'll receive a Track & Trace code via email."
+    },
+    "items": "Your items",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "shippingAddress": "Shipping Address",
+    "billingAddress": "Billing Address",
+    "paymentMethod": "Payment Method",
+    "continueShopping": "Continue Shopping",
+    "viewAccount": "View My Account",
+    "loading": "Loading order...",
+    "error": "Something went wrong while fetching your order."
+  },
+  "language": {
+    "selector": "Language",
+    "nl": "Nederlands",
+    "en": "English"
+  },
+  "homepage": {
+    "hero": {
+      "badge": "Made in Groningen",
+      "title1": "NO NONSENSE.",
+      "title2": "JUST CHARACTER.",
+      "subtitle": "Locally made. Quality that lasts.",
+      "cta1": {
+        "text": "Shop MOSE",
+        "aria": "View our shop with all MOSE products"
+      },
+      "cta2": {
+        "text": "View Lookbook",
+        "aria": "View our lookbook with MOSE outfit inspiration"
+      },
+      "scroll": "Scroll"
+    },
+    "stats": {
+      "local": "Locally produced",
+      "returns": "Days return policy",
+      "quality": "Premium quality"
+    },
+    "trust": {
+      "local": "Locally made",
+      "freeShipping": "Free shipping from €{threshold}",
+      "returns": "{days} days return",
+      "secure": "Secure payment"
+    },
+    "featured": {
+      "label": "Bestsellers",
+      "title": "ESSENTIALS THAT LAST",
+      "description": "No-nonsense basics that last for years",
+      "noProducts": "No featured products set.",
+      "noProductsDesc": "Select products in the admin homepage settings.",
+      "inStock": "In stock",
+      "outOfStock": "Out of stock",
+      "quickView": "Quick View"
+    },
+    "categories": {
+      "title": "SHOP BY CATEGORY",
+      "subtitle": "Discover our collection",
+      "shopNow": "Shop now",
+      "noCategories": "No categories selected. Configure them in the admin panel."
+    },
+    "story": {
+      "badge": "Our Story",
+      "title": "MADE IN",
+      "titleHighlight": "GRONINGEN",
+      "description1": "No nonsense. Just character. We make clothing that lasts, locally produced without compromise on quality.",
+      "description2": "Premium basics with a soul. Built for real life.",
+      "stat1": {
+        "label": "100% Local",
+        "sublabel": "Made in NL"
+      },
+      "stat2": {
+        "label": "Built 2024",
+        "sublabel": "Founded"
+      },
+      "stat3": {
+        "label": "Premium",
+        "sublabel": "Materials"
+      },
+      "cta": {
+        "text": "Read our story",
+        "aria": "Read the full story about MOSE and our local production"
+      }
+    },
+    "newsletter": {
+      "title": "JOIN THE PACK",
+      "description": "News about drops, restocks and the atelier.",
+      "noSpam": "No spam — only MOSE.",
+      "placeholder": "Your email address",
+      "submit": "JOIN NOW",
+      "submitting": "Submitting...",
+      "subscribed": "Subscribed!",
+      "success": "You're subscribed! Check your inbox.",
+      "error": "Something went wrong. Please try again.",
+      "submitAria": "Subscribe to the MOSE newsletter",
+      "privacy": "We respect your privacy. You can unsubscribe anytime."
+    }
+  },
+  "searchOverlay": {
+    "placeholder": "Search products...",
+    "closeLabel": "Close",
+    "noResults": "No results for \"{query}\"",
+    "tryAgain": "Try a different search term",
+    "emptyTitle": "Search MOSE Products",
+    "emptyDescription": "Type to start searching",
+    "closeHint": "to close",
+    "resultCount": "{count} {count, plural, =1 {result} other {results}}"
+  },
+  "faq": {
+    "badge": "Questions?",
+    "title": "FREQUENTLY ASKED",
+    "description": "Everything you need to know about MOSE, shipping and returns",
+    "contactCta": "Can't find your question?",
+    "contactButton": "Contact us",
+    "items": [
+      {
+        "question": "How do MOSE garments fit?",
+        "answer": "Our clothing fits true to size. We recommend ordering your usual size. Unsure between two sizes? Choose the larger size for a relaxed fit. All sizes are designed for optimal comfort."
+      },
+      {
+        "question": "What are the shipping costs and delivery time?",
+        "answer": "Shipping within the Netherlands is free from €{freeShipping}. Below that you pay €4.95. Orders are processed and shipped within 1-2 business days. Delivery then takes 1-3 business days via PostNL."
+      },
+      {
+        "question": "Can I return my order?",
+        "answer": "Yes! You have {returnDays} days to return from receipt. Returns are free and easy. Items must be unworn with tags still attached. Fill in the return form in your package and send it back. You'll receive your refund within 5 business days."
+      },
+      {
+        "question": "How do I care for my MOSE clothing?",
+        "answer": "Wash at 30°C inside out, do not use bleach and preferably do not tumble dry. Iron at low temperature if necessary. This way your MOSE garment will stay beautiful for years."
+      },
+      {
+        "question": "Is MOSE really locally produced?",
+        "answer": "Absolutely! All our clothing is 100% produced in the Netherlands, mainly in Groningen. We work together with a local atelier that shares our quality standards. No long transport chains, just fair production."
+      },
+      {
+        "question": "Which payment methods do you accept?",
+        "answer": "We accept iDEAL, Mastercard, Visa, American Express, PayPal and Bancontact. All payments are securely processed via Stripe. Your payment details are always protected."
+      }
+    ]
+  }
+}

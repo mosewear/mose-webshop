@@ -1,0 +1,842 @@
+{
+  "common": {
+    "shop": "Shop",
+    "lookbook": "Lookbook",
+    "about": "Over MOSE",
+    "contact": "Contact",
+    "cart": "Winkelwagen",
+    "account": "Account",
+    "wishlist": "Wishlist",
+    "search": "Zoeken",
+    "menu": "Menu",
+    "close": "Sluiten",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "add": "Toevoegen",
+    "remove": "Verwijderen",
+    "continue": "Doorgaan",
+    "back": "Terug",
+    "next": "Volgende",
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Succes",
+    "breadcrumb": {
+      "home": "Home",
+      "shop": "Shop"
+    }
+  },
+  "footer": {
+    "tagline": "Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.",
+    "shop": {
+      "title": "Shop",
+      "hoodies": "Hoodies",
+      "tshirts": "T-Shirts",
+      "caps": "Caps",
+      "all": "Alle Producten"
+    },
+    "info": {
+      "title": "Info",
+      "about": "Over MOSE",
+      "lookbook": "Lookbook",
+      "contact": "Contact",
+      "shipping": "Verzending & Retour"
+    },
+    "service": {
+      "title": "Service",
+      "account": "Mijn Account",
+      "cart": "Winkelwagen",
+      "privacy": "Privacy",
+      "terms": "Algemene Voorwaarden"
+    },
+    "copyright": "© {year} MOSE. Alle rechten voorbehouden.",
+    "prices": "Alle prijzen incl. {rate}% BTW",
+    "made": "Gemaakt met ❤️ in Groningen"
+  },
+  "checkout": {
+    "title": "AFREKENEN",
+    "mode": {
+      "guest": "Gast Checkout",
+      "guestShort": "Gast",
+      "login": "Login & Checkout",
+      "loginShort": "Login",
+      "loggedIn": "Je bent ingelogd"
+    },
+    "login": {
+      "title": "Inloggen",
+      "description": "Log in om je opgeslagen gegevens te gebruiken en sneller af te rekenen.",
+      "email": "E-mailadres",
+      "password": "Wachtwoord",
+      "submit": "INLOGGEN & DOORGAAN",
+      "submitting": "INLOGGEN...",
+      "noAccount": "Nog geen account?",
+      "register": "Registreer hier"
+    },
+    "section": {
+      "contact": "Contact",
+      "delivery": "Bezorging",
+      "secure": "Veilig & versleuteld"
+    },
+    "field": {
+      "email": "E-mailadres",
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "country": "Land",
+      "postalCode": "Postcode",
+      "houseNumber": "Huisnummer",
+      "addition": "Toevoeging",
+      "address": "Straat en huisnummer",
+      "city": "Plaats",
+      "phone": "Telefoon"
+    },
+    "placeholder": {
+      "email": "jouw@email.nl",
+      "password": "••••••••",
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "houseNumber": "27",
+      "addition": "A",
+      "address": "Straat en huisnummer",
+      "city": "Plaats",
+      "phone": "06 12345678",
+      "promoCode": "CODE"
+    },
+    "country": {
+      "nl": "Nederland",
+      "be": "België",
+      "de": "Duitsland",
+      "fr": "Frankrijk",
+      "gb": "Verenigd Koninkrijk",
+      "other": "Overig land"
+    },
+    "postcode": {
+      "help": {
+        "nl": "Nederlandse postcode (formaat: 1234AB)",
+        "be": "Belgische postcode (formaat: 2000)",
+        "de": "Duitse postcode (formaat: 12345)",
+        "fr": "Franse postcode (formaat: 75001)",
+        "gb": "UK postcode (formaat: SW1A 1AA)"
+      },
+      "example": {
+        "nl": "Bijvoorbeeld: 1012AB",
+        "be": "Bijvoorbeeld: 2000 (Antwerpen)",
+        "de": "Bijvoorbeeld: 10115 (Berlijn)",
+        "fr": "Bijvoorbeeld: 75001 (Parijs)",
+        "gb": "Bijvoorbeeld: SW1A 1AA"
+      }
+    },
+    "lookup": {
+      "button": "Adres ophalen",
+      "loading": "Ophalen...",
+      "success": "Adres opgehaald!",
+      "edit": "Wijzig"
+    },
+    "countryChanged": {
+      "title": "Land gewijzigd → {country}",
+      "message": "Postcode gewist (formaat: {format})"
+    },
+    "terms": {
+      "text": "Door je bestelling te plaatsen ga je akkoord met onze",
+      "terms": "algemene voorwaarden",
+      "and": "en",
+      "privacy": "privacybeleid"
+    },
+    "submit": "Bestelling plaatsen",
+    "submitting": "Bestelling plaatsen...",
+    "progress": {
+      "cart": "Winkelwagen",
+      "details": "Gegevens",
+      "payment": "Betalen"
+    },
+    "messages": {
+      "cartRestored": "Je winkelwagen is hersteld!",
+      "orderRestoreFailed": "Kon bestelling niet herstellen",
+      "unknownError": "Onbekende fout",
+      "paymentExpired": "Je betalingsessie is verlopen. Vul je gegevens opnieuw in.",
+      "orderCannotRestore": "Deze bestelling kan niet worden hersteld",
+      "loginFailed": "Inloggen mislukt. Controleer je gegevens.",
+      "paymentFailed": "Betaling mislukt",
+      "errorOccurred": "Er is een fout opgetreden"
+    }
+  },
+  "cart": {
+    "title": "Winkelwagen",
+    "items": "{count} {count, plural, one {Item} other {Items}}",
+    "close": "Sluit winkelwagen",
+    "empty": {
+      "title": "Leeg",
+      "message": "Je winkelwagen is leeg",
+      "continue": "Verder shoppen"
+    },
+    "remove": "Verwijder item",
+    "size": "Maat",
+    "color": "Kleur",
+    "quantity": "Aantal",
+    "price": "Prijs",
+    "decrease": "Verlaag aantal",
+    "increase": "Verhoog aantal",
+    "subtotal": "Subtotaal",
+    "shipping": "Verzending",
+    "shippingFree": "GRATIS",
+    "total": "Totaal",
+    "checkout": "Naar checkout",
+    "promo": {
+      "title": "Heb je een kortingscode?",
+      "apply": "Toepassen",
+      "error": "Ongeldige kortingscode",
+      "success": "Kortingscode toegepast!",
+      "codeInvalid": "Code ongeldig",
+      "validationFailed": "Kon code niet valideren"
+    },
+    "trust": {
+      "secure": "Veilig betalen",
+      "returns": "{days} dagen retour",
+      "ssl": "SSL beveiligd"
+    },
+    "upsell": {
+      "title": "Misschien vind je dit ook leuk",
+      "add": "Toevoegen",
+      "completeLook": "Maak je look compleet",
+      "quickAdd": "Toevoegen",
+      "adding": "Toevoegen..."
+    }
+  },
+  "product": {
+    "notFound": "Product niet gevonden",
+    "backToShop": "Terug naar shop",
+    "addToCart": "In winkelwagen",
+    "added": "✓ Toegevoegd",
+    "buyNow": "Nu kopen",
+    "size": "Maat",
+    "color": "Kleur",
+    "selectColor": "Selecteer kleur {color}",
+    "quantity": "Aantal",
+    "showMore": "Lees meer",
+    "showLess": "Toon minder",
+    "stock": {
+      "inStock": "✓ Op voorraad - Morgen in huis",
+      "outOfStock": "Tijdelijk uitverkocht",
+      "lowStock": "🔥 Laatste {count} stuks - Bestel snel!"
+    },
+    "shipping": {
+      "title": "Verzending",
+      "nl": "€{price} (NL)",
+      "be": "€{price} (BE)",
+      "free": "Gratis verzending vanaf €{threshold} (alleen Nederland)"
+    },
+    "trust": {
+      "guarantee": "2 jaar garantie",
+      "warranty": "2 jaar garantie",
+      "returns": "14 dagen retour",
+      "freeShipping": "Gratis vanaf €{amount}",
+      "secure": "Veilig betalen"
+    },
+    "urgency": {
+      "title": "POPULAIR • Nog {count} stuks op voorraad",
+      "message": "Bestel nu om teleurstelling te voorkomen"
+    },
+    "reviews": {
+      "title": "Reviews",
+      "noReviews": "Nog geen reviews",
+      "write": "Schrijf een review"
+    },
+    "description": {
+      "title": "Beschrijving"
+    },
+    "specs": {
+      "title": "Specificaties"
+    },
+    "sizeGuide": {
+      "title": "Maattabel",
+      "open": "Bekijk maattabel",
+      "close": "Sluit maattabel",
+      "specs": "Specificaties",
+      "info": "Info",
+      "shoes": "Maattabel",
+      "jewelry": "Maten",
+      "default": "Maattabel"
+    },
+    "video": {
+      "thumbnail": "Video thumbnail",
+      "label": "VIDEO"
+    },
+    "notify": {
+      "title": "Mis dit product niet!",
+      "description": "Ontvang een email als dit product weer op voorraad is.",
+      "email": "E-mailadres",
+      "submit": "Stuur",
+      "success": "Je ontvangt een email zodra het op voorraad is!"
+    },
+    "wishlist": {
+      "add": "Toevoegen aan wishlist",
+      "remove": "Verwijderen uit wishlist"
+    },
+    "tabs": {
+      "description": "Product beschrijving",
+      "details": "Product details",
+      "materials": "Materiaal & verzorging",
+      "shipping": "VERZENDING",
+      "returns": "RETOUR",
+      "warranty": "GARANTIE",
+      "shippingReturns": "Verzending & retour"
+    },
+    "madeLocally": "Lokaal gemaakt in Nederland",
+    "trust": {
+      "localMade": "Lokaal gemaakt",
+      "freeShipping": "Gratis verzending vanaf €{threshold}",
+      "returns": "{days} dagen retour",
+      "warranty": "2 jaar garantie",
+      "secure": "Veilig betalen"
+    },
+    "shipping": {
+      "info": "€{cost} • Gratis vanaf €{threshold}",
+      "label": "Verzending",
+      "deliveryTime": "Levertijd",
+      "deliveryTimeValue": "2-3 werkdagen binnen Nederland"
+    },
+    "returns": {
+      "info": "{days} dagen retour zonder gedoe",
+      "label": "Retour",
+      "cost": "Retourkosten",
+      "costValue": "Gratis retourneren"
+    },
+    "warranty": {
+      "info": "2 jaar fabrieksgarantie op alle producten"
+    },
+    "related": {
+      "title": "Dit vind je ook leuk"
+    }
+  },
+  "shipping": {
+    "title": "VERZENDING",
+    "returns": "RETOUR",
+    "service": "Service",
+    "freeShipping": "Gratis verzending vanaf €{threshold}",
+    "returnPolicy": "Items mogen binnen {days} dagen retour zonder gedoe",
+    "freeFrom": "Gratis vanaf €{threshold}",
+    "shipping": "Verzending",
+    "deliveryTime": "2-5 Dagen",
+    "deliveryTimeLabel": "Levertijd",
+    "returnDays": "{days} Dagen",
+    "free": "Gratis",
+    "manufacturingFault": "Bij fabricagefout",
+    "shippingCost": "Onder €{threshold}? Dan betaal je €{cost} verzendkosten.",
+    "shippingAreas": "Verzendgebieden",
+    "netherlands": "Nederland",
+    "belgium": "België",
+    "processing": "Verwerking: 1-2 dagen",
+    "delivery": "Bezorging: 1-3 dagen",
+    "total": "Totaal: 2-5 werkdagen",
+    "trackTrace": "Track & Trace",
+    "viaDHL": "Via <strong>DHL</strong>. Je ontvangt:",
+    "trackCode": "Track & trace code",
+    "expectedDelivery": "Verwachte levertijd",
+    "trackLink": "Link om te volgen",
+    "trackOrder": "Bestelling volgen?",
+    "goToAccount": "Ga naar je",
+    "account": "account",
+    "orUseTrack": "of gebruik de track & trace link in je verzendbevestiging."
+  },
+  "returns": {
+    "info": "{days} dagen bedenktijd",
+    "label": "Retour",
+    "cost": "Retourkosten",
+    "costValue": "Gratis retourneren"
+  },
+  "shop": {
+    "title": "Shop",
+    "filters": {
+      "title": "Filters",
+      "clear": "Wis alles",
+      "show": "Toon {count}",
+      "search": "Zoeken",
+      "searchPlaceholder": "Zoek producten...",
+      "category": "Categorie",
+      "allProducts": "Alle Producten",
+      "size": "Maat",
+      "color": "Kleur",
+      "price": "Prijsrange",
+      "inStockOnly": "Alleen op voorraad",
+      "active": "Actieve Filters",
+      "close": "Sluit filters"
+    },
+    "sort": {
+      "title": "Sorteren",
+      "relevance": "Relevantie",
+      "priceAsc": "Prijs: Laag - Hoog",
+      "priceDesc": "Prijs: Hoog - Laag",
+      "newest": "Nieuwste",
+      "name": "Naam: A - Z"
+    },
+    "results": "{count} {count, plural, =1 {product} other {producten}} gevonden",
+    "noResults": "Geen producten gevonden",
+    "noResultsDesc": "Probeer andere filters of zoektermen",
+    "loading": "Laden...",
+    "inCategory": "in {category}",
+    "lastItems": "LAATSTE ITEMS",
+    "discount": "KORTING"
+  },
+  "errors": {
+    "required": "Verplicht veld",
+    "email": {
+      "invalid": "Vul een geldig e-mailadres in"
+    },
+    "postcode": {
+      "nl": "Nederlandse postcode: 4 cijfers + 2 letters (bijv. 1234AB)",
+      "be": "Belgische postcode: 4 cijfers (bijv. 2000)",
+      "de": "Duitse postcode: 5 cijfers (bijv. 12345)",
+      "fr": "Franse postcode: 5 cijfers (bijv. 75001)",
+      "gb": "UK postcode (bijv. SW1A 1AA)"
+    },
+    "houseNumber": {
+      "invalid": "Ongeldig huisnummer"
+    },
+    "name": {
+      "minLength": "{field} moet minimaal {min} karakters bevatten"
+    },
+    "phone": {
+      "required": "Verplicht veld"
+    },
+    "generic": "Er is een fout opgetreden. Probeer het opnieuw.",
+    "network": "Netwerkfout. Controleer je internetverbinding."
+  },
+  "paymentStatus": {
+    "checking": "BETALING CONTROLEREN",
+    "checkingMessage": "Even geduld, we controleren je betaling...",
+    "error": "FOUT",
+    "checkError": "Er is een fout opgetreden bij het controleren van je betaling.",
+    "statusError": "Betaling status: {status}. Probeer het later opnieuw.",
+    "backToCart": "Terug naar winkelwagen"
+  },
+  "account": {
+    "title": "MIJN ACCOUNT",
+    "orders": "Bestellingen",
+    "returns": "Retouren",
+    "ordersEmpty": "Je hebt nog geen bestellingen geplaatst",
+    "returnsEmpty": "Je hebt nog geen retouren aangevraagd",
+    "viewOrder": "Bekijk bestelling",
+    "viewReturn": "Bekijk retour",
+    "requestReturn": "Retour aanvragen",
+    "newReturn": "+ Nieuwe Retour Aanvragen",
+    "profile": "Profiel",
+    "address": "Adres",
+    "addresses": "Adressen",
+    "logout": "Uitloggen",
+    "myOrders": "MIJN BESTELLINGEN",
+    "myReturns": "MIJN RETOUREN",
+    "orderNumber": "Bestelling #{id}",
+    "returnStatus": "Retour: {status}",
+    "profileSection": {
+      "title": "PROFIEL",
+      "name": "Naam",
+      "email": "E-mailadres",
+      "emailReadonly": "E-mailadres (niet aanpasbaar)",
+      "save": "Profiel opslaan",
+      "saving": "Opslaan...",
+      "saveError": "Kon profiel niet opslaan",
+      "saveSuccess": "Profiel bijgewerkt"
+    },
+    "passwordSection": {
+      "title": "WACHTWOORD WIJZIGEN",
+      "current": "Huidig wachtwoord",
+      "new": "Nieuw wachtwoord",
+      "confirm": "Bevestig nieuw wachtwoord",
+      "save": "Wachtwoord wijzigen",
+      "saving": "Opslaan...",
+      "saveError": "Kon wachtwoord niet wijzigen",
+      "saveSuccess": "Wachtwoord gewijzigd",
+      "mismatch": "Wachtwoorden komen niet overeen"
+    },
+    "addressSection": {
+      "title": "ADRESSEN",
+      "add": "+ Nieuw Adres Toevoegen",
+      "default": "STANDAARD",
+      "setDefault": "Maak standaard",
+      "edit": "Bewerk",
+      "delete": "Verwijderen",
+      "deleteConfirm": "Weet je zeker dat je dit adres wilt verwijderen?",
+      "deleteError": "Kon adres niet verwijderen",
+      "deleteSuccess": "Adres verwijderd",
+      "save": "Opslaan",
+      "saving": "Opslaan...",
+      "cancel": "Annuleren",
+      "saveError": "Kon adres niet opslaan",
+      "saveSuccess": "Adres opgeslagen"
+    }
+  },
+  "wishlist": {
+    "title": "Mijn wishlist",
+    "empty": {
+      "title": "Je wishlist is leeg",
+      "description": "Ontdek onze collectie en voeg je favoriete items toe aan je wishlist",
+      "cta": "Shop nu"
+    },
+    "itemCount": "{count} {count, plural, =1 {item} other {items}}",
+    "loading": "Wishlist laden...",
+    "addToCart": "Toevoegen",
+    "remove": "Verwijderen uit wishlist",
+    "removeTitle": "Verwijderen uit wishlist",
+    "noImage": "Geen afbeelding",
+    "outOfStock": "Dit product is helaas uitverkocht",
+    "addedToCart": "Toegevoegd aan winkelwagen!"
+  },
+  "auth": {
+    "login": {
+      "title": "INLOGGEN",
+      "titleAlt": "Inloggen",
+      "welcome": "Welkom terug!",
+      "email": "E-mailadres",
+      "emailLabel": "E-mail *",
+      "password": "Wachtwoord",
+      "passwordLabel": "Wachtwoord *",
+      "submit": "INLOGGEN",
+      "submitting": "BEZIG...",
+      "forgot": "Wachtwoord vergeten?",
+      "noAccount": "Nog geen account?",
+      "register": "Account aanmaken",
+      "hasAccount": "Al een account?",
+      "backToShop": "← Terug naar shop",
+      "placeholder": {
+        "email": "jouw@email.nl",
+        "password": "Minimaal 6 karakters"
+      }
+    },
+    "register": {
+      "title": "ACCOUNT AANMAKEN",
+      "titleAlt": "Registreren",
+      "welcome": "Word onderdeel van MOSE",
+      "name": "Naam",
+      "nameLabel": "Naam *",
+      "email": "E-mailadres",
+      "emailLabel": "E-mail *",
+      "password": "Wachtwoord",
+      "passwordLabel": "Wachtwoord *",
+      "confirmPassword": "Bevestig wachtwoord",
+      "confirmPasswordLabel": "Bevestig wachtwoord *",
+      "submit": "ACCOUNT AANMAKEN",
+      "submitting": "BEZIG...",
+      "placeholder": {
+        "name": "Je naam",
+        "email": "jouw@email.nl",
+        "password": "Minimaal 6 karakters",
+        "confirmPassword": "Herhaal je wachtwoord"
+      },
+      "success": "Account aangemaakt! Check je email voor verificatie."
+    },
+    "forgotPassword": {
+      "title": "WACHTWOORD VERGETEN?",
+      "description": "Geen probleem. Vul je email adres in en we sturen je een link om je wachtwoord opnieuw in te stellen.",
+      "emailLabel": "Email adres",
+      "submit": "VERSTUUR RESET LINK",
+      "submitting": "VERZENDEN...",
+      "success": "Email verzonden!",
+      "successMessage": "Check je inbox (en spam folder) voor een link om je wachtwoord opnieuw in te stellen.",
+      "backToLogin": "← Terug naar inloggen",
+      "placeholder": {
+        "email": "jouw@email.nl"
+      }
+    },
+    "resetPassword": {
+      "title": "NIEUW WACHTWOORD",
+      "description": "Stel een nieuw wachtwoord in voor je account.",
+      "passwordLabel": "Nieuw wachtwoord",
+      "confirmPasswordLabel": "Bevestig wachtwoord",
+      "submit": "WACHTWOORD OPSLAAN",
+      "submitting": "OPSLAAN...",
+      "success": "Wachtwoord bijgewerkt!",
+      "successMessage": "Je wordt doorgestuurd naar de login pagina...",
+      "backToLogin": "← Terug naar inloggen",
+      "placeholder": {
+        "password": "Minimaal 6 karakters",
+        "confirmPassword": "Herhaal je wachtwoord"
+      }
+    },
+    "errors": {
+      "generic": "Er is iets misgegaan",
+      "passwordMismatch": "Wachtwoorden komen niet overeen",
+      "passwordTooShort": "Wachtwoord moet minimaal 6 karakters zijn",
+      "passwordMinLength": "Wachtwoord moet minimaal 6 karakters lang zijn",
+      "invalidSession": "Ongeldige sessie",
+      "somethingWrong": "Er ging iets mis"
+    }
+  },
+  "orders": {
+    "title": "Bestelling #{id}",
+    "status": {
+      "pending": "In behandeling",
+      "processing": "Wordt verwerkt",
+      "shipped": "Verzonden",
+      "delivered": "Bezorgd",
+      "cancelled": "Geannuleerd"
+    },
+    "date": "Besteld op",
+    "total": "Totaal",
+    "shipping": "Verzending",
+    "tracking": "Track & Trace",
+    "items": "Artikelen",
+    "confirmation": {
+      "title": "Bestelling Bevestigd!",
+      "message": "Bedankt voor je bestelling!",
+      "email": "We hebben een bevestiging naar je e-mailadres gestuurd."
+    }
+  },
+  "returns": {
+    "title": "Retourneren",
+    "new": "Nieuwe retour",
+    "selectOrder": "Selecteer bestelling",
+    "reason": "Reden",
+    "items": "Artikelen",
+    "status": {
+      "pending": "In behandeling",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "completed": "Voltooid"
+    },
+    "label": "Retourlabel",
+    "download": "Download label"
+  },
+  "emails": {
+    "orderConfirmation": {
+      "subject": "Bestelling Bevestigd - #{orderId}",
+      "greeting": "Beste {name},",
+      "message": "Bedankt voor je bestelling!",
+      "orderNumber": "Bestelnummer"
+    },
+    "shipping": {
+      "subject": "Je bestelling is verzonden",
+      "tracking": "Track & Trace"
+    },
+    "return": {
+      "subject": "Retourlabel",
+      "instructions": "Download je retourlabel hieronder"
+    }
+  },
+  "metadata": {
+    "title": "MOSE - Kleding en accessoires voor mannen",
+    "description": "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
+    "keywords": "MOSE, mannenkleding, premium basics, hoodies, t-shirts, Groningen, lokaal gemaakt",
+    "shop": {
+      "title": "Shop",
+      "description": "Ontdek onze collectie premium basics. Tijdloze kleding en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €75.",
+      "keywords": "MOSE shop, premium basics, hoodies, t-shirts, mannenkleding, Groningen, lokaal gemaakt, streetwear"
+    },
+    "product": {
+      "notFound": "Product niet gevonden",
+      "notFoundDesc": "Het door jou gezochte product bestaat niet meer."
+    }
+  },
+  "trackOrder": {
+    "title": "Volg Je Bestelling",
+    "description": "Voer je order nummer en email in om de status te bekijken",
+    "orderNumber": "Order Nummer",
+    "orderNumberPlaceholder": "bijv: ABC12345",
+    "orderNumberHint": "Vind je dit in je bevestigingsmail (eerste 8 tekens)",
+    "emailAddress": "Email Adres",
+    "emailPlaceholder": "jouw@email.nl",
+    "searchButton": "Volg Bestelling",
+    "searching": "Zoeken...",
+    "errorFillFields": "Vul alle velden in",
+    "errorNotFound": "Order niet gevonden. Controleer je order nummer en email.",
+    "errorGeneric": "Er ging iets fout. Probeer het opnieuw.",
+    "orderDetails": "Order #{id}",
+    "placedOn": "Geplaatst op",
+    "newSearch": "Nieuwe zoekopdracht",
+    "status": {
+      "pending": "In afwachting",
+      "pendingDesc": "We hebben je bestelling ontvangen en verwerken de betaling.",
+      "paid": "Betaald",
+      "paidDesc": "Je betaling is ontvangen! We gaan je bestelling voorbereiden.",
+      "processing": "In behandeling",
+      "processingDesc": "Je bestelling wordt ingepakt en verzendklaar gemaakt.",
+      "shipped": "Verzonden",
+      "shippedDesc": "Je pakket is onderweg! Volg je zending met de tracking code.",
+      "delivered": "Afgeleverd",
+      "deliveredDesc": "Je pakket is bezorgd! Geniet van je nieuwe MOSE items.",
+      "cancelled": "Geannuleerd",
+      "cancelledDesc": "Deze bestelling is geannuleerd. Je ontvangt een terugbetaling."
+    },
+    "progress": {
+      "ordered": "Besteld",
+      "processed": "Verwerkt",
+      "shipped": "Verzonden",
+      "delivered": "Afgeleverd"
+    },
+    "tracking": {
+      "title": "Track & Trace",
+      "via": "Via",
+      "button": "Volg Zending →",
+      "expectedDelivery": "Verwachte levering:"
+    },
+    "items": {
+      "title": "Je Items",
+      "size": "Maat",
+      "total": "Totaal"
+    },
+    "help": {
+      "title": "Vragen over je bestelling?",
+      "description": "We helpen je graag! Neem contact met ons op.",
+      "button": "Contact Opnemen"
+    }
+  },
+  "orderConfirmation": {
+    "title": "Bestelling Bevestigd!",
+    "thankYou": "Bedankt voor je bestelling!",
+    "orderNumber": "Bestelnummer",
+    "orderDate": "Besteldatum",
+    "email": "E-mailadres",
+    "confirmationSent": "We hebben een bevestiging gestuurd naar {email}",
+    "whatNow": "Wat gebeurt er nu?",
+    "step1": {
+      "title": "1. We verwerken je betaling",
+      "description": "Je betaling wordt gecontroleerd en goedgekeurd."
+    },
+    "step2": {
+      "title": "2. We pakken je bestelling in",
+      "description": "Je items worden zorgvuldig ingepakt in ons atelier."
+    },
+    "step3": {
+      "title": "3. Je pakket wordt verstuurd",
+      "description": "Je ontvangt een Track & Trace code per email."
+    },
+    "items": "Je items",
+    "subtotal": "Subtotaal",
+    "shipping": "Verzending",
+    "total": "Totaal",
+    "shippingAddress": "Verzendadres",
+    "billingAddress": "Factuuradres",
+    "paymentMethod": "Betaalmethode",
+    "continueShopping": "Verder Shoppen",
+    "viewAccount": "Bekijk Mijn Account",
+    "loading": "Bestelling laden...",
+    "error": "Er ging iets fout bij het ophalen van je bestelling."
+  },
+  "language": {
+    "selector": "Taal",
+    "nl": "Nederlands",
+    "en": "English"
+  },
+  "homepage": {
+    "hero": {
+      "badge": "Gemaakt in Groningen",
+      "title1": "GEEN POESPAS.",
+      "title2": "WEL KARAKTER.",
+      "subtitle": "Lokaal gemaakt. Kwaliteit die blijft.",
+      "cta1": {
+        "text": "Shop MOSE",
+        "aria": "Bekijk onze shop met alle MOSE producten"
+      },
+      "cta2": {
+        "text": "Bekijk Lookbook",
+        "aria": "Bekijk ons lookbook met MOSE outfit inspiratie"
+      },
+      "scroll": "Scroll"
+    },
+    "stats": {
+      "local": "Lokaal geproduceerd",
+      "returns": "Dagen retourrecht",
+      "quality": "Premium kwaliteit"
+    },
+    "trust": {
+      "local": "Lokaal gemaakt",
+      "freeShipping": "Gratis verzending vanaf €{threshold}",
+      "returns": "{days} dagen retour",
+      "secure": "Veilig betalen"
+    },
+    "featured": {
+      "label": "Bestsellers",
+      "title": "ESSENTIALS DIE BLIJVEN",
+      "description": "No-nonsense basics die jarenlang meegaan",
+      "noProducts": "Geen featured producten ingesteld.",
+      "noProductsDesc": "Selecteer producten in de admin homepage settings.",
+      "inStock": "Op voorraad",
+      "outOfStock": "Uitverkocht",
+      "quickView": "Quick View"
+    },
+    "categories": {
+      "title": "SHOP OP CATEGORIE",
+      "subtitle": "Ontdek onze collectie",
+      "shopNow": "Shop nu",
+      "noCategories": "Geen categorieën geselecteerd. Configureer ze in het admin panel."
+    },
+    "story": {
+      "badge": "Ons Verhaal",
+      "title": "GEMAAKT IN",
+      "titleHighlight": "GRONINGEN",
+      "description1": "Geen poespas. Alleen karakter. We maken kleding die lang meegaat, lokaal geproduceerd zonder compromissen op kwaliteit.",
+      "description2": "Premium basics met een ziel. Gebouwd voor het echte leven.",
+      "stat1": {
+        "label": "100% Lokaal",
+        "sublabel": "Made in NL"
+      },
+      "stat2": {
+        "label": "Built 2024",
+        "sublabel": "Opgericht"
+      },
+      "stat3": {
+        "label": "Premium",
+        "sublabel": "Materialen"
+      },
+      "cta": {
+        "text": "Lees ons verhaal",
+        "aria": "Lees het volledige verhaal over MOSE en onze lokale productie"
+      }
+    },
+    "newsletter": {
+      "title": "JOIN THE PACK",
+      "description": "Nieuws over drops, restocks en het atelier.",
+      "noSpam": "Geen spam — alleen MOSE.",
+      "placeholder": "Jouw e-mailadres",
+      "submit": "JOIN NU",
+      "submitting": "Verzenden...",
+      "subscribed": "Ingeschreven!",
+      "success": "Je bent ingeschreven! Check je inbox.",
+      "error": "Er ging iets mis. Probeer het opnieuw.",
+      "submitAria": "Schrijf je in voor de MOSE nieuwsbrief",
+      "privacy": "We respecteren je privacy. Uitschrijven kan altijd."
+    }
+  },
+  "searchOverlay": {
+    "placeholder": "Zoek producten...",
+    "closeLabel": "Sluiten",
+    "noResults": "Geen resultaten voor \"{query}\"",
+    "tryAgain": "Probeer een andere zoekterm",
+    "emptyTitle": "Zoek MOSE Producten",
+    "emptyDescription": "Type om te beginnen met zoeken",
+    "closeHint": "om te sluiten",
+    "resultCount": "{count} {count, plural, =1 {resultaat} other {resultaten}}"
+  },
+  "faq": {
+    "badge": "Vragen?",
+    "title": "VAAK GESTELD",
+    "description": "Alles wat je moet weten over MOSE, verzending en retourneren",
+    "contactCta": "Staat je vraag er niet bij?",
+    "contactButton": "Neem contact op",
+    "items": [
+      {
+        "question": "Hoe vallen de MOSE kledingstukken?",
+        "answer": "Onze kleding valt normaal qua maat. We adviseren je gebruikelijke maat te bestellen. Bij twijfel tussen twee maten? Kies dan de grotere maat voor een relaxed fit. Alle maten zijn ontworpen voor optimaal comfort."
+      },
+      {
+        "question": "Wat zijn de verzendkosten en levertijd?",
+        "answer": "Verzending binnen Nederland is gratis vanaf €{freeShipping}. Daaronder betaal je €4,95. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL."
+      },
+      {
+        "question": "Kan ik mijn bestelling retourneren?",
+        "answer": "Ja! Je hebt {returnDays} dagen bedenktijd vanaf ontvangst. Retourneren is gratis en eenvoudig. De artikelen moeten ongedragen zijn met labels er nog aan. Vul het retourformulier in je pakket in en stuur het terug. Je krijgt binnen 5 werkdagen je geld terug."
+      },
+      {
+        "question": "Hoe verzorg ik mijn MOSE kleding?",
+        "answer": "Was op 30°C binnenstebuiten, gebruik geen bleekmiddel en droog bij voorkeur niet in de droger. Strijk op lage temperatuur als dat nodig is. Zo blijft je MOSE kledingstuk jarenlang mooi."
+      },
+      {
+        "question": "Is MOSE echt lokaal geproduceerd?",
+        "answer": "Absoluut! Al onze kleding wordt 100% in Nederland geproduceerd, voornamelijk in Groningen. We werken samen met een lokaal atelier die onze kwaliteitseisen deelt. Geen lange transportketens, wel eerlijke productie."
+      },
+      {
+        "question": "Welke betaalmethoden accepteren jullie?",
+        "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Stripe. Je betaalgegevens zijn altijd beschermd."
+      }
+    ]
+  }
+}

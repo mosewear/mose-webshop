@@ -5,8 +5,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Instagram, Facebook } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
+import { useTranslations, useLocale } from 'next-intl'
+import { Link as LocaleLink } from '@/i18n/routing'
 
 export function Footer() {
+  const t = useTranslations('footer')
+  const locale = useLocale()
+  
+  // Helper for locale-aware links
+  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   const [settings, setSettings] = useState({
     contact_address: 'Helper Brink 27a, 9722 EG Groningen',
     contact_phone: '+31 50 211 1931',
@@ -44,7 +51,7 @@ export function Footer() {
               className="h-8 w-auto mb-4 brightness-0 invert"
             />
             <p className="text-gray-400 mb-4">
-              Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.
+              {t('tagline')}
             </p>
             <div className="space-y-2 text-sm text-gray-400 mb-4">
               {addressLines.map((line, idx) => (
@@ -86,34 +93,34 @@ export function Footer() {
 
           {/* Shop */}
           <div>
-            <h4 className="font-display text-lg mb-4 uppercase">Shop</h4>
+            <h4 className="font-display text-lg mb-4 uppercase">{t('shop.title')}</h4>
             <ul className="space-y-2">
-              <li><Link href="/shop?category=hoodies" className="text-gray-400 hover:text-white transition-colors">Hoodies</Link></li>
-              <li><Link href="/shop?category=t-shirts" className="text-gray-400 hover:text-white transition-colors">T-Shirts</Link></li>
-              <li><Link href="/shop?category=caps" className="text-gray-400 hover:text-white transition-colors">Caps</Link></li>
-              <li><Link href="/shop" className="text-gray-400 hover:text-white transition-colors">Alle Producten</Link></li>
+              <li><LocaleLink href="/shop?category=hoodies" className="text-gray-400 hover:text-white transition-colors">{t('shop.hoodies')}</LocaleLink></li>
+              <li><LocaleLink href="/shop?category=t-shirts" className="text-gray-400 hover:text-white transition-colors">{t('shop.tshirts')}</LocaleLink></li>
+              <li><LocaleLink href="/shop?category=caps" className="text-gray-400 hover:text-white transition-colors">{t('shop.caps')}</LocaleLink></li>
+              <li><LocaleLink href="/shop" className="text-gray-400 hover:text-white transition-colors">{t('shop.all')}</LocaleLink></li>
             </ul>
           </div>
 
           {/* Info */}
           <div>
-            <h4 className="font-display text-lg mb-4 uppercase">Info</h4>
+            <h4 className="font-display text-lg mb-4 uppercase">{t('info.title')}</h4>
             <ul className="space-y-2">
-              <li><Link href="/over-mose" className="text-gray-400 hover:text-white transition-colors">Over MOSE</Link></li>
-              <li><Link href="/lookbook" className="text-gray-400 hover:text-white transition-colors">Lookbook</Link></li>
-              <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
-              <li><Link href="/verzending" className="text-gray-400 hover:text-white transition-colors">Verzending & Retour</Link></li>
+              <li><LocaleLink href="/over-mose" className="text-gray-400 hover:text-white transition-colors">{t('info.about')}</LocaleLink></li>
+              <li><LocaleLink href="/lookbook" className="text-gray-400 hover:text-white transition-colors">{t('info.lookbook')}</LocaleLink></li>
+              <li><LocaleLink href="/contact" className="text-gray-400 hover:text-white transition-colors">{t('info.contact')}</LocaleLink></li>
+              <li><LocaleLink href="/verzending" className="text-gray-400 hover:text-white transition-colors">{t('info.shipping')}</LocaleLink></li>
             </ul>
           </div>
 
           {/* Service */}
           <div>
-            <h4 className="font-display text-lg mb-4 uppercase">Service</h4>
+            <h4 className="font-display text-lg mb-4 uppercase">{t('service.title')}</h4>
             <ul className="space-y-2">
-              <li><Link href="/account" className="text-gray-400 hover:text-white transition-colors">Mijn Account</Link></li>
-              <li><Link href="/cart" className="text-gray-400 hover:text-white transition-colors">Winkelwagen</Link></li>
-              <li><Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy</Link></li>
-              <li><Link href="/algemene-voorwaarden" className="text-gray-400 hover:text-white transition-colors">Algemene Voorwaarden</Link></li>
+              <li><LocaleLink href="/account" className="text-gray-400 hover:text-white transition-colors">{t('service.account')}</LocaleLink></li>
+              <li><LocaleLink href="/cart" className="text-gray-400 hover:text-white transition-colors">{t('service.cart')}</LocaleLink></li>
+              <li><LocaleLink href="/privacy" className="text-gray-400 hover:text-white transition-colors">{t('service.privacy')}</LocaleLink></li>
+              <li><LocaleLink href="/algemene-voorwaarden" className="text-gray-400 hover:text-white transition-colors">{t('service.terms')}</LocaleLink></li>
             </ul>
           </div>
         </div>
@@ -121,12 +128,12 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm mb-4 md:mb-0">
-            © {new Date().getFullYear()} MOSE. Alle rechten voorbehouden.
+            {t('copyright', { year: new Date().getFullYear() })}
           </p>
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center text-sm text-gray-400">
-            <p>Alle prijzen incl. {settings.tax_rate}% BTW</p>
+            <p>{t('prices', { rate: settings.tax_rate })}</p>
             <span className="hidden md:inline">•</span>
-            <p>Gemaakt met ❤️ in Groningen</p>
+            <p>{t('made')}</p>
           </div>
         </div>
       </div>

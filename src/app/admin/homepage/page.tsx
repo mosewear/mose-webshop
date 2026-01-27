@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Home, Package, FileText, Settings } from 'lucide-react'
 import IconSelector from '@/components/admin/IconSelector'
 import RevalidateButton from '@/components/admin/RevalidateButton'
+import LanguageTabs from '@/components/admin/LanguageTabs'
 
 interface HomepageSettings {
   id: string
@@ -83,6 +84,7 @@ interface Category {
 
 export default function HomepageSettingsPage() {
   const [activeTab, setActiveTab] = useState<'hero' | 'products' | 'content' | 'advanced'>('hero')
+  const [activeLanguage, setActiveLanguage] = useState<'nl' | 'en'>('nl')
   const [settings, setSettings] = useState<HomepageSettings | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -234,6 +236,18 @@ export default function HomepageSettingsPage() {
 
           {/* Tab Content */}
           <div className="p-4 md:p-6">
+            {/* Language Tabs */}
+            <div className="mb-6">
+              <LanguageTabs 
+                activeLanguage={activeLanguage}
+                onLanguageChange={setActiveLanguage}
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                💡 Switch tussen Nederlands en Engels om de content voor beide talen in te stellen.
+                {activeLanguage === 'en' && ' (Engelse velden zijn optioneel - indien leeg wordt de Nederlandse tekst gebruikt)'}
+              </p>
+            </div>
+
             {/* TAB 1: HERO & STATS */}
             {activeTab === 'hero' && (
               <div className="space-y-8">
@@ -242,86 +256,128 @@ export default function HomepageSettingsPage() {
                   <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4 pb-2 border-b-2 border-black">🦁 Hero Sectie</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <div>
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Locatie Badge</label>
+                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                        Locatie Badge {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.hero_badge_text}
-                        onChange={(e) => setSettings({ ...settings, hero_badge_text: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.hero_badge_text : (settings as any).hero_badge_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'hero_badge_text' : 'hero_badge_text_en']: e.target.value 
+                        })}
                         className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        placeholder={activeLanguage === 'nl' ? 'Gemaakt in Groningen' : 'Made in Groningen'}
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hero Afbeelding URL</label>
-                      <input
-                        type="text"
-                        value={settings.hero_image_url}
-                        onChange={(e) => setSettings({ ...settings, hero_image_url: e.target.value })}
-                        className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
-                      />
-                    </div>
+                    {activeLanguage === 'nl' && (
+                      <div>
+                        <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hero Afbeelding URL</label>
+                        <input
+                          type="text"
+                          value={settings.hero_image_url}
+                          onChange={(e) => setSettings({ ...settings, hero_image_url: e.target.value })}
+                          className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        />
+                      </div>
+                    )}
                     <div className="md:col-span-2">
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hoofdtitel Regel 1</label>
+                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                        Hoofdtitel Regel 1 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.hero_title_line1}
-                        onChange={(e) => setSettings({ ...settings, hero_title_line1: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.hero_title_line1 : (settings as any).hero_title_line1_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'hero_title_line1' : 'hero_title_line1_en']: e.target.value 
+                        })}
                         className="w-full px-3 md:px-4 py-2 text-base md:text-2xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold transition-colors"
+                        placeholder={activeLanguage === 'nl' ? 'GEEN POESPAS.' : 'NO NONSENSE.'}
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hoofdtitel Regel 2 (groen)</label>
+                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                        Hoofdtitel Regel 2 (groen) {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.hero_title_line2}
-                        onChange={(e) => setSettings({ ...settings, hero_title_line2: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.hero_title_line2 : (settings as any).hero_title_line2_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'hero_title_line2' : 'hero_title_line2_en']: e.target.value 
+                        })}
                         className="w-full px-3 md:px-4 py-2 text-base md:text-2xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold text-brand-primary transition-colors"
+                        placeholder={activeLanguage === 'nl' ? 'WEL KARAKTER.' : 'PURE CHARACTER.'}
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Subtitel</label>
+                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                        Subtitel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.hero_subtitle}
-                        onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.hero_subtitle : (settings as any).hero_subtitle_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'hero_subtitle' : 'hero_subtitle_en']: e.target.value 
+                        })}
                         className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        placeholder={activeLanguage === 'nl' ? 'Lokaal gemaakt. Kwaliteit die blijft.' : 'Locally made. Quality that lasts.'}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">CTA Button 1 Tekst</label>
+                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                        CTA Button 1 Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.hero_cta1_text}
-                        onChange={(e) => setSettings({ ...settings, hero_cta1_text: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.hero_cta1_text : (settings as any).hero_cta1_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'hero_cta1_text' : 'hero_cta1_text_en']: e.target.value 
+                        })}
                         className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        placeholder={activeLanguage === 'nl' ? 'Shop MOSE' : 'Shop MOSE'}
                       />
                     </div>
+                    {activeLanguage === 'nl' && (
+                      <div>
+                        <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">CTA Button 1 Link</label>
+                        <input
+                          type="text"
+                          value={settings.hero_cta1_link}
+                          onChange={(e) => setSettings({ ...settings, hero_cta1_link: e.target.value })}
+                          className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        />
+                      </div>
+                    )}
                     <div>
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">CTA Button 1 Link</label>
+                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                        CTA Button 2 Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.hero_cta1_link}
-                        onChange={(e) => setSettings({ ...settings, hero_cta1_link: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.hero_cta2_text : (settings as any).hero_cta2_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'hero_cta2_text' : 'hero_cta2_text_en']: e.target.value 
+                        })}
                         className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        placeholder={activeLanguage === 'nl' ? 'Bekijk Lookbook' : 'View Lookbook'}
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">CTA Button 2 Tekst</label>
-                      <input
-                        type="text"
-                        value={settings.hero_cta2_text}
-                        onChange={(e) => setSettings({ ...settings, hero_cta2_text: e.target.value })}
-                        className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">CTA Button 2 Link</label>
-                      <input
-                        type="text"
-                        value={settings.hero_cta2_link}
-                        onChange={(e) => setSettings({ ...settings, hero_cta2_link: e.target.value })}
-                        className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
-                      />
-                    </div>
+                    {activeLanguage === 'nl' && (
+                      <div>
+                        <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">CTA Button 2 Link</label>
+                        <input
+                          type="text"
+                          value={settings.hero_cta2_link}
+                          onChange={(e) => setSettings({ ...settings, hero_cta2_link: e.target.value })}
+                          className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -329,52 +385,76 @@ export default function HomepageSettingsPage() {
                 <div>
                   <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">📊 Stats Bar</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {activeLanguage === 'nl' && (
+                      <div>
+                        <label className="block text-sm font-bold mb-2">Stat 1 Cijfer</label>
+                        <input
+                          type="text"
+                          value={settings.stats_1_number}
+                          onChange={(e) => setSettings({ ...settings, stats_1_number: e.target.value })}
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        />
+                      </div>
+                    )}
                     <div>
-                      <label className="block text-sm font-bold mb-2">Stat 1 Cijfer</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Stat 1 Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.stats_1_number}
-                        onChange={(e) => setSettings({ ...settings, stats_1_number: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.stats_1_text : (settings as any).stats_1_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'stats_1_text' : 'stats_1_text_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Lokaal geproduceerd' : 'Locally produced'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Stat 1 Tekst</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Stat 2 Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'} (cijfer = retour dagen)
+                      </label>
                       <input
                         type="text"
-                        value={settings.stats_1_text}
-                        onChange={(e) => setSettings({ ...settings, stats_1_text: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.stats_2_text : (settings as any).stats_2_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'stats_2_text' : 'stats_2_text_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'dagen retour' : 'days return'}
                       />
                     </div>
+                    {activeLanguage === 'nl' && (
+                      <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
+                        💡 <strong>Tip:</strong> Stat 2 cijfer wordt automatisch gehaald uit de retour dagen setting
+                      </div>
+                    )}
                     <div>
-                      <label className="block text-sm font-bold mb-2">Stat 2 Tekst (cijfer = retour dagen)</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Stat 3 Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.stats_2_text}
-                        onChange={(e) => setSettings({ ...settings, stats_2_text: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.stats_3_text : (settings as any).stats_3_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'stats_3_text' : 'stats_3_text_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Premium kwaliteit' : 'Premium quality'}
                       />
                     </div>
-                    <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
-                      💡 <strong>Tip:</strong> Stat 2 cijfer wordt automatisch gehaald uit de retour dagen setting
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold mb-2">Stat 3 Tekst</label>
-                      <input
-                        type="text"
-                        value={settings.stats_3_text}
-                        onChange={(e) => setSettings({ ...settings, stats_3_text: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold mb-2">Stat 3 Icon</label>
-                      <IconSelector
-                        value={settings.stats_3_icon || 'Star'}
-                        onChange={(iconName) => setSettings({ ...settings, stats_3_icon: iconName })}
-                      />
-                    </div>
+                    {activeLanguage === 'nl' && (
+                      <div>
+                        <label className="block text-sm font-bold mb-2">Stat 3 Icon</label>
+                        <IconSelector
+                          value={settings.stats_3_icon || 'Star'}
+                          onChange={(iconName) => setSettings({ ...settings, stats_3_icon: iconName })}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -383,45 +463,73 @@ export default function HomepageSettingsPage() {
                   <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">🏷️ Trust Badges</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-bold mb-2">Badge 1</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Badge 1 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.trust_badge_1}
-                        onChange={(e) => setSettings({ ...settings, trust_badge_1: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.trust_badge_1 : (settings as any).trust_badge_1_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'trust_badge_1' : 'trust_badge_1_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Lokaal gemaakt' : 'Locally made'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Badge 2 Prefix (bijv. "Gratis verzending vanaf")</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Badge 2 Prefix {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'} (bijv. "Gratis verzending vanaf")
+                      </label>
                       <input
                         type="text"
-                        value={settings.trust_badge_2_prefix}
-                        onChange={(e) => setSettings({ ...settings, trust_badge_2_prefix: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.trust_badge_2_prefix : (settings as any).trust_badge_2_prefix_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'trust_badge_2_prefix' : 'trust_badge_2_prefix_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Gratis verzending vanaf' : 'Free shipping from'}
                       />
                     </div>
-                    <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
-                      💡 <strong>Tip:</strong> Badge 2 toont automatisch: "{settings.trust_badge_2_prefix} €[gratis verzending drempel]"
-                    </div>
+                    {activeLanguage === 'nl' && (
+                      <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
+                        💡 <strong>Tip:</strong> Badge 2 toont automatisch: "{settings.trust_badge_2_prefix} €[gratis verzending drempel]"
+                      </div>
+                    )}
                     <div>
-                      <label className="block text-sm font-bold mb-2">Badge 3 Suffix (bijv. "dagen retour")</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Badge 3 Suffix {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'} (bijv. "dagen retour")
+                      </label>
                       <input
                         type="text"
-                        value={settings.trust_badge_3_suffix}
-                        onChange={(e) => setSettings({ ...settings, trust_badge_3_suffix: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.trust_badge_3_suffix : (settings as any).trust_badge_3_suffix_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'trust_badge_3_suffix' : 'trust_badge_3_suffix_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'dagen retour' : 'days return'}
                       />
                     </div>
-                    <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
-                      💡 <strong>Tip:</strong> Badge 3 toont automatisch: "[retour dagen] {settings.trust_badge_3_suffix}"
-                    </div>
+                    {activeLanguage === 'nl' && (
+                      <div className="md:col-span-2 text-sm text-gray-600 bg-blue-50 p-3 border-l-4 border-blue-500">
+                        💡 <strong>Tip:</strong> Badge 3 toont automatisch: "[retour dagen] {settings.trust_badge_3_suffix}"
+                      </div>
+                    )}
                     <div>
-                      <label className="block text-sm font-bold mb-2">Badge 4</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Badge 4 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.trust_badge_4}
-                        onChange={(e) => setSettings({ ...settings, trust_badge_4: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.trust_badge_4 : (settings as any).trust_badge_4_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'trust_badge_4' : 'trust_badge_4_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Veilig betalen' : 'Secure payment'}
                       />
                     </div>
                   </div>
@@ -437,34 +545,53 @@ export default function HomepageSettingsPage() {
                   <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">⭐ Featured Products</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-bold mb-2">Label Tekst</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Label Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.featured_label}
-                        onChange={(e) => setSettings({ ...settings, featured_label: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.featured_label : (settings as any).featured_label_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'featured_label' : 'featured_label_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Bestsellers' : 'Bestsellers'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Sectie Titel</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Sectie Titel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.featured_title}
-                        onChange={(e) => setSettings({ ...settings, featured_title: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.featured_title : (settings as any).featured_title_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'featured_title' : 'featured_title_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
+                        placeholder={activeLanguage === 'nl' ? 'ESSENTIALS DIE BLIJVEN' : 'ESSENTIALS THAT LAST'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Sectie Beschrijving</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Sectie Beschrijving {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.featured_description}
-                        onChange={(e) => setSettings({ ...settings, featured_description: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.featured_description : (settings as any).featured_description_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'featured_description' : 'featured_description_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Basics zonder poespas die jarenlang meegaan' : 'No-nonsense basics that last for years'}
                       />
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    {activeLanguage === 'nl' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                       <div>
                         <label className="block text-sm font-bold mb-2">Featured Product 1</label>
                         <select
@@ -511,6 +638,7 @@ export default function HomepageSettingsPage() {
                         </select>
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
 
@@ -519,25 +647,38 @@ export default function HomepageSettingsPage() {
                   <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">📂 Categorieën Sectie</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-bold mb-2">Sectie Titel</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Sectie Titel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.categories_title}
-                        onChange={(e) => setSettings({ ...settings, categories_title: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.categories_title : (settings as any).categories_title_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'categories_title' : 'categories_title_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
+                        placeholder={activeLanguage === 'nl' ? 'SHOP PER CATEGORIE' : 'SHOP BY CATEGORY'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Sectie Beschrijving</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Sectie Beschrijving {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.categories_description}
-                        onChange={(e) => setSettings({ ...settings, categories_description: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.categories_description : (settings as any).categories_description_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'categories_description' : 'categories_description_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Ontdek onze collectie' : 'Discover our collection'}
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    {activeLanguage === 'nl' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div>
                         <label className="block text-sm font-bold mb-2">Categorie 1</label>
                         <select
@@ -599,6 +740,7 @@ export default function HomepageSettingsPage() {
                         </select>
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -613,141 +755,219 @@ export default function HomepageSettingsPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-bold mb-2">Badge Tekst</label>
+                        <label className="block text-sm font-bold mb-2">
+                          Badge Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.story_badge}
-                          onChange={(e) => setSettings({ ...settings, story_badge: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.story_badge : (settings as any).story_badge_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_badge' : 'story_badge_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Ons Verhaal' : 'Our Story'}
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-bold mb-2">Oprichtingsjaar</label>
-                        <input
-                          type="text"
-                          value={settings.story_founded_year}
-                          onChange={(e) => setSettings({ ...settings, story_founded_year: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                        />
-                      </div>
+                      {activeLanguage === 'nl' && (
+                        <div>
+                          <label className="block text-sm font-bold mb-2">Oprichtingsjaar</label>
+                          <input
+                            type="text"
+                            value={settings.story_founded_year}
+                            onChange={(e) => setSettings({ ...settings, story_founded_year: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Titel Regel 1</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Titel Regel 1 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.story_title_line1}
-                        onChange={(e) => setSettings({ ...settings, story_title_line1: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.story_title_line1 : (settings as any).story_title_line1_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'story_title_line1' : 'story_title_line1_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
+                        placeholder={activeLanguage === 'nl' ? 'GEMAAKT IN' : 'MADE IN'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Titel Regel 2 (groen)</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Titel Regel 2 (groen) {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.story_title_line2}
-                        onChange={(e) => setSettings({ ...settings, story_title_line2: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.story_title_line2 : (settings as any).story_title_line2_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'story_title_line2' : 'story_title_line2_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold text-brand-primary"
+                        placeholder={activeLanguage === 'nl' ? 'GRONINGEN' : 'GRONINGEN'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Paragraaf 1</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Paragraaf 1 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <textarea
-                        value={settings.story_paragraph1}
-                        onChange={(e) => setSettings({ ...settings, story_paragraph1: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.story_paragraph1 : (settings as any).story_paragraph1_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'story_paragraph1' : 'story_paragraph1_en']: e.target.value 
+                        })}
                         rows={3}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Geen poespas. Gewoon karakter...' : 'No nonsense. Just character...'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Paragraaf 2</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Paragraaf 2 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <textarea
-                        value={settings.story_paragraph2}
-                        onChange={(e) => setSettings({ ...settings, story_paragraph2: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.story_paragraph2 : (settings as any).story_paragraph2_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'story_paragraph2' : 'story_paragraph2_en']: e.target.value 
+                        })}
                         rows={2}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Premium basics met een ziel...' : 'Premium basics with a soul...'}
                       />
                     </div>
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                       <div>
-                        <label className="block text-sm font-bold mb-2">Stat 1 Label</label>
+                        <label className="block text-sm font-bold mb-2">
+                          Stat 1 Label {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.story_stat1_label}
-                          onChange={(e) => setSettings({ ...settings, story_stat1_label: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.story_stat1_label : (settings as any).story_stat1_label_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_stat1_label' : 'story_stat1_label_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? '100% Lokaal' : '100% Local'}
                         />
-                        <label className="block text-sm font-bold mb-2 mt-2">Stat 1 Sublabel</label>
+                        <label className="block text-sm font-bold mb-2 mt-2">
+                          Stat 1 Sublabel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.story_stat1_sublabel}
-                          onChange={(e) => setSettings({ ...settings, story_stat1_sublabel: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.story_stat1_sublabel : (settings as any).story_stat1_sublabel_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_stat1_sublabel' : 'story_stat1_sublabel_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold mb-2">Stat 2 Label</label>
-                        <input
-                          type="text"
-                          value={settings.story_stat2_label}
-                          onChange={(e) => setSettings({ ...settings, story_stat2_label: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                        />
-                        <label className="block text-sm font-bold mb-2 mt-2">Stat 2 Sublabel</label>
-                        <input
-                          type="text"
-                          value={settings.story_stat2_sublabel}
-                          onChange={(e) => setSettings({ ...settings, story_stat2_sublabel: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Gemaakt in NL' : 'Made in NL'}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold mb-2">Stat 3 Label</label>
+                        <label className="block text-sm font-bold mb-2">
+                          Stat 2 Label {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.story_stat3_label}
-                          onChange={(e) => setSettings({ ...settings, story_stat3_label: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.story_stat2_label : (settings as any).story_stat2_label_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_stat2_label' : 'story_stat2_label_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? '14 Dagen' : '14 Days'}
                         />
-                        <label className="block text-sm font-bold mb-2 mt-2">Stat 3 Sublabel</label>
+                        <label className="block text-sm font-bold mb-2 mt-2">
+                          Stat 2 Sublabel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.story_stat3_sublabel}
-                          onChange={(e) => setSettings({ ...settings, story_stat3_sublabel: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.story_stat2_sublabel : (settings as any).story_stat2_sublabel_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_stat2_sublabel' : 'story_stat2_sublabel_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Retourbeleid' : 'Return policy'}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold mb-2">
+                          Stat 3 Label {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
+                        <input
+                          type="text"
+                          value={activeLanguage === 'nl' ? settings.story_stat3_label : (settings as any).story_stat3_label_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_stat3_label' : 'story_stat3_label_en']: e.target.value 
+                          })}
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Premium' : 'Premium'}
+                        />
+                        <label className="block text-sm font-bold mb-2 mt-2">
+                          Stat 3 Sublabel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
+                        <input
+                          type="text"
+                          value={activeLanguage === 'nl' ? settings.story_stat3_sublabel : (settings as any).story_stat3_sublabel_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_stat3_sublabel' : 'story_stat3_sublabel_en']: e.target.value 
+                          })}
+                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Materialen' : 'Materials'}
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div>
-                        <label className="block text-sm font-bold mb-2">CTA Button Tekst</label>
+                        <label className="block text-sm font-bold mb-2">
+                          CTA Button Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.story_cta_text}
-                          onChange={(e) => setSettings({ ...settings, story_cta_text: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.story_cta_text : (settings as any).story_cta_text_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'story_cta_text' : 'story_cta_text_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Lees ons verhaal' : 'Read our story'}
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-bold mb-2">CTA Button Link</label>
-                        <input
-                          type="text"
-                          value={settings.story_cta_link}
-                          onChange={(e) => setSettings({ ...settings, story_cta_link: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold mb-2">Story Afbeelding URL</label>
-                        <input
-                          type="text"
-                          value={settings.story_image_url}
-                          onChange={(e) => setSettings({ ...settings, story_image_url: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                        />
-                      </div>
+                      {activeLanguage === 'nl' && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-bold mb-2">CTA Button Link</label>
+                            <input
+                              type="text"
+                              value={settings.story_cta_link}
+                              onChange={(e) => setSettings({ ...settings, story_cta_link: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold mb-2">Story Afbeelding URL</label>
+                            <input
+                              type="text"
+                              value={settings.story_image_url}
+                              onChange={(e) => setSettings({ ...settings, story_image_url: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -757,59 +977,95 @@ export default function HomepageSettingsPage() {
                   <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">📧 Newsletter Sectie</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-bold mb-2">Titel</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Titel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.newsletter_title}
-                        onChange={(e) => setSettings({ ...settings, newsletter_title: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.newsletter_title : (settings as any).newsletter_title_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'newsletter_title' : 'newsletter_title_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-2xl font-bold"
+                        placeholder={activeLanguage === 'nl' ? 'BLIJF OP DE HOOGTE' : 'STAY UPDATED'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Beschrijving Regel 1</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Beschrijving Regel 1 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.newsletter_description1}
-                        onChange={(e) => setSettings({ ...settings, newsletter_description1: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.newsletter_description1 : (settings as any).newsletter_description1_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'newsletter_description1' : 'newsletter_description1_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Nieuws over drops, restocks en het atelier.' : 'News about drops, restocks, and the atelier.'}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Beschrijving Regel 2</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Beschrijving Regel 2 {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.newsletter_description2}
-                        onChange={(e) => setSettings({ ...settings, newsletter_description2: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.newsletter_description2 : (settings as any).newsletter_description2_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'newsletter_description2' : 'newsletter_description2_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'Geen spam — gewoon MOSE.' : 'No spam — just MOSE.'}
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-bold mb-2">Input Placeholder</label>
+                        <label className="block text-sm font-bold mb-2">
+                          Input Placeholder {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.newsletter_input_placeholder}
-                          onChange={(e) => setSettings({ ...settings, newsletter_input_placeholder: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.newsletter_input_placeholder : (settings as any).newsletter_input_placeholder_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'newsletter_input_placeholder' : 'newsletter_input_placeholder_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Je e-mailadres' : 'Your email address'}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold mb-2">Button Tekst</label>
+                        <label className="block text-sm font-bold mb-2">
+                          Button Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                        </label>
                         <input
                           type="text"
-                          value={settings.newsletter_button_text}
-                          onChange={(e) => setSettings({ ...settings, newsletter_button_text: e.target.value })}
+                          value={activeLanguage === 'nl' ? settings.newsletter_button_text : (settings as any).newsletter_button_text_en || ''}
+                          onChange={(e) => setSettings({ 
+                            ...settings, 
+                            [activeLanguage === 'nl' ? 'newsletter_button_text' : 'newsletter_button_text_en']: e.target.value 
+                          })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          placeholder={activeLanguage === 'nl' ? 'Meld je aan' : 'Sign up'}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Trust Tekst</label>
+                      <label className="block text-sm font-bold mb-2">
+                        Trust Tekst {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
+                      </label>
                       <input
                         type="text"
-                        value={settings.newsletter_trust_text}
-                        onChange={(e) => setSettings({ ...settings, newsletter_trust_text: e.target.value })}
+                        value={activeLanguage === 'nl' ? settings.newsletter_trust_text : (settings as any).newsletter_trust_text_en || ''}
+                        onChange={(e) => setSettings({ 
+                          ...settings, 
+                          [activeLanguage === 'nl' ? 'newsletter_trust_text' : 'newsletter_trust_text_en']: e.target.value 
+                        })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                        placeholder={activeLanguage === 'nl' ? 'We respecteren je privacy. Geen spam, uitschrijven kan altijd.' : 'We respect your privacy. No spam, unsubscribe anytime.'}
                       />
                     </div>
                   </div>

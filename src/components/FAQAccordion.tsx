@@ -2,38 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getSiteSettings } from '@/lib/settings'
-
-interface FAQ {
-  question: string
-  answer: string | ((settings: { free_shipping_threshold: number; return_days: number }) => string)
-}
-
-const faqs: FAQ[] = [
-  {
-    question: 'Hoe vallen de MOSE kledingstukken?',
-    answer: 'Onze kleding valt normaal qua maat. We adviseren je gebruikelijke maat te bestellen. Bij twijfel tussen twee maten? Kies dan de grotere maat voor een relaxed fit. Alle maten zijn ontworpen voor optimaal comfort.',
-  },
-  {
-    question: 'Wat zijn de verzendkosten en levertijd?',
-    answer: (s) => `Verzending binnen Nederland is gratis vanaf €${s.free_shipping_threshold}. Daaronder betaal je €4,95. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL.`,
-  },
-  {
-    question: 'Kan ik mijn bestelling retourneren?',
-    answer: (s) => `Ja! Je hebt ${s.return_days} dagen bedenktijd vanaf ontvangst. Retourneren is gratis en eenvoudig. De artikelen moeten ongedragen zijn met labels er nog aan. Vul het retourformulier in je pakket in en stuur het terug. Je krijgt binnen 5 werkdagen je geld terug.`,
-  },
-  {
-    question: 'Hoe verzorg ik mijn MOSE kleding?',
-    answer: 'Was op 30°C binnenstebuiten, gebruik geen bleekmiddel en droog bij voorkeur niet in de droger. Strijk op lage temperatuur als dat nodig is. Zo blijft je MOSE kledingstuk jarenlang mooi.',
-  },
-  {
-    question: 'Is MOSE echt lokaal geproduceerd?',
-    answer: 'Absoluut! Al onze kleding wordt 100% in Nederland geproduceerd, voornamelijk in Groningen. We werken samen met een lokaal atelier die onze kwaliteitseisen deelt. Geen lange transportketens, wel eerlijke productie.',
-  },
-  {
-    question: 'Welke betaalmethoden accepteren jullie?',
-    answer: 'We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Stripe. Je betaalgegevens zijn altijd beschermd.',
-  },
-]
+import { useTranslations } from 'next-intl'
 
 export default function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -41,6 +10,7 @@ export default function FAQAccordion() {
     free_shipping_threshold: 100,
     return_days: 14,
   })
+  const t = useTranslations('faq')
 
   useEffect(() => {
     getSiteSettings().then((s) => {
@@ -55,8 +25,14 @@ export default function FAQAccordion() {
     setOpenIndex(openIndex === index ? null : index)
   }
 
-  const getAnswer = (answer: string | ((settings: any) => string)) => {
-    return typeof answer === 'function' ? answer(settings) : answer
+  // Get FAQ items from translations
+  const faqItems = t.raw('items') as Array<{ question: string; answer: string }>
+  
+  // Replace dynamic values in answers
+  const getAnswer = (answer: string) => {
+    return answer
+      .replace('{freeShipping}', settings.free_shipping_threshold.toString())
+      .replace('{returnDays}', settings.return_days.toString())
   }
 
   return (
@@ -65,19 +41,19 @@ export default function FAQAccordion() {
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <div className="inline-block px-4 py-2 bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-[0.2em] text-sm mb-4">
-            Vragen?
+            {t('badge')}
           </div>
           <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">
-            VAAK GESTELD
+            {t('title')}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Alles wat je moet weten over MOSE, verzending en retourneren
+            {t('description')}
           </p>
         </div>
 
         {/* FAQ Items */}
         <div className="space-y-4">
-          {faqs.map((faq, index) => (
+          {faqItems.map((faq, index) => (
             <div
               key={index}
               className="border-2 border-black overflow-hidden transition-all duration-300 hover:shadow-md"
@@ -124,13 +100,13 @@ export default function FAQAccordion() {
         {/* Contact CTA */}
         <div className="mt-12 text-center p-8 border-2 border-gray-200 bg-gray-50">
           <p className="text-gray-600 mb-4">
-            Staat je vraag er niet bij?
+            {t('contactCta')}
           </p>
           <a
             href="/contact"
             className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors active:scale-95"
           >
-            Neem contact op
+            {t('contactButton')}
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>

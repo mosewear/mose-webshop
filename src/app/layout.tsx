@@ -93,8 +93,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl" className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth">
+    <html className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        {/* Set lang attribute dynamically based on URL */}
+        <Script
+          id="set-lang"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const path = window.location.pathname;
+                const locale = path.split('/')[1];
+                if (locale === 'en' || locale === 'nl') {
+                  document.documentElement.lang = locale;
+                } else {
+                  document.documentElement.lang = 'nl';
+                }
+              })();
+            `,
+          }}
+        />
         {/* Facebook Pixel */}
         <Script
           id="facebook-pixel"
