@@ -432,6 +432,20 @@
     "myReturns": "MIJN RETOUREN",
     "orderNumber": "Bestelling #{id}",
     "returnStatus": "Retour: {status}",
+    "loading": "Laden...",
+    "orderStatus": {
+      "pending": "In behandeling",
+      "processing": "Wordt verwerkt",
+      "shipped": "Verzonden",
+      "delivered": "Afgeleverd",
+      "cancelled": "Geannuleerd"
+    },
+    "toast": {
+      "passwordUpdated": "Wachtwoord bijgewerkt!",
+      "addressUpdated": "Adres bijgewerkt!",
+      "addressDeleted": "Adres verwijderd!",
+      "addressTableNotExist": "Adres tabel bestaat nog niet."
+    },
     "profileSection": {
       "title": "PROFIEL",
       "name": "Naam",

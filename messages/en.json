@@ -445,6 +445,20 @@
     "myReturns": "MY RETURNS",
     "orderNumber": "Order #{id}",
     "returnStatus": "Return: {status}",
+    "loading": "Loading...",
+    "orderStatus": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "toast": {
+      "passwordUpdated": "Password updated!",
+      "addressUpdated": "Address updated!",
+      "addressDeleted": "Address deleted!",
+      "addressTableNotExist": "Address table does not exist yet."
+    },
     "profileSection": {
       "title": "PROFILE",
       "name": "Name",

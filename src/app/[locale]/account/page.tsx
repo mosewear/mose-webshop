@@ -280,7 +280,7 @@ export default function AccountPage() {
 
       if (error) throw error
 
-      toast.success('Wachtwoord bijgewerkt!')
+      toast.success(t('toast.passwordUpdated'))
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -370,7 +370,7 @@ export default function AccountPage() {
           .eq('id', editingAddress.id)
 
         if (error) throw error
-        toast.success('Adres bijgewerkt!')
+        toast.success(t('toast.addressUpdated'))
       } else {
         // Create new address
         const { error } = await supabase
@@ -417,12 +417,12 @@ export default function AccountPage() {
 
       if (error) {
         if (error.code === '42P01' || error.message?.includes('does not exist')) {
-          toast.error('Adres tabel bestaat nog niet.')
+          toast.error(t('toast.addressTableNotExist'))
           return
         }
         throw error
       }
-      toast.success('Adres verwijderd!')
+      toast.success(t('toast.addressDeleted'))
       await fetchAddresses()
     } catch (error: any) {
       toast.error(t('addressSection.deleteError'))
@@ -484,15 +484,15 @@ export default function AccountPage() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'In behandeling'
+        return t('orderStatus.pending')
       case 'processing':
-        return 'Wordt verwerkt'
+        return t('orderStatus.processing')
       case 'shipped':
-        return 'Verzonden'
+        return t('orderStatus.shipped')
       case 'delivered':
-        return 'Afgeleverd'
+        return t('orderStatus.delivered')
       case 'cancelled':
-        return 'Geannuleerd'
+        return t('orderStatus.cancelled')
       default:
         return status
     }
@@ -503,7 +503,7 @@ export default function AccountPage() {
       <div className="min-h-screen pt-24 px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Laden...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     )
@@ -879,7 +879,7 @@ export default function AccountPage() {
                 {addressesLoading ? (
                   <div className="text-center py-12">
                     <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Laden...</p>
+                    <p className="text-gray-600">{t('loading')}</p>
                   </div>
                 ) : showAddressForm ? (
                   <div className="bg-white border-2 border-black p-6 md:p-8">
@@ -1080,7 +1080,7 @@ export default function AccountPage() {
                 {returnsLoading ? (
                   <div className="text-center py-12">
                     <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Laden...</p>
+                    <p className="text-gray-600">{t('loading')}</p>
                   </div>
                 ) : returns.length === 0 ? (
                   <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
