@@ -93,6 +93,11 @@ function formatTemplateText(text: string): ReactElement[] {
   })
 }
 
+// Helper functie om HTML content te renderen (voor database content)
+function renderHTMLContent(html: string): ReactElement {
+  return <div dangerouslySetInnerHTML={{ __html: html }} />
+}
+
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)
 function formatBoldText(text: string): (string | ReactElement)[] {
   const lines = text.split('\n')
@@ -1331,7 +1336,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     {activeTab === 'details' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {product.categories?.default_product_details || product.categories?.default_product_details_en ? (
-                          formatTemplateText(
+                          renderHTMLContent(
                             locale === 'en' && product.categories?.default_product_details_en 
                               ? product.categories.default_product_details_en 
                               : product.categories?.default_product_details || ''
@@ -1366,7 +1371,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     {activeTab === 'materials' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
-                          formatTemplateText(
+                          renderHTMLContent(
                             locale === 'en' && product.categories?.default_materials_care_en 
                               ? product.categories.default_materials_care_en 
                               : product.categories?.default_materials_care || ''
