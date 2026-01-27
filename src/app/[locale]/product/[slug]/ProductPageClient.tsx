@@ -45,7 +45,9 @@ interface Product {
     size_guide_type?: string | null
     size_guide_content?: any | null
     default_product_details?: string | null
+    default_product_details_en?: string | null
     default_materials_care?: string | null
+    default_materials_care_en?: string | null
   }
 }
 
@@ -372,7 +374,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         description_en,
         product_images(*),
         product_variants(*),
-        categories(name, name_en, slug, size_guide_type, size_guide_content, default_product_details, default_materials_care)
+        categories(name, name_en, slug, size_guide_type, size_guide_content, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en)
       `)
       .eq('slug', slug)
       .single()
@@ -1328,13 +1330,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'details' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {product.categories?.default_product_details ? (
-                          formatTemplateText(product.categories.default_product_details)
+                        {product.categories?.default_product_details || product.categories?.default_product_details_en ? (
+                          formatTemplateText(
+                            locale === 'en' && product.categories?.default_product_details_en 
+                              ? product.categories.default_product_details_en 
+                              : product.categories?.default_product_details || ''
+                          )
                         ) : (
                           <>
-                            <p><span className="font-semibold">Premium kwaliteit:</span> Hoogwaardige materialen die lang meegaan</p>
-                            <p><span className="font-semibold">Perfect fit:</span> Ontworpen voor comfort en stijl</p>
-                            <p><span className="font-semibold">Lokaal gemaakt:</span> Met liefde geproduceerd in Groningen</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Premium quality:' : 'Premium kwaliteit:'}</span> {locale === 'en' ? 'High-quality materials that last' : 'Hoogwaardige materialen die lang meegaan'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Perfect fit:' : 'Perfect fit:'}</span> {locale === 'en' ? 'Designed for comfort and style' : 'Ontworpen voor comfort en stijl'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Locally made:' : 'Lokaal gemaakt:'}</span> {locale === 'en' ? 'Produced with love in Groningen' : 'Met liefde geproduceerd in Groningen'}</p>
                           </>
                         )}
                       </div>
@@ -1359,14 +1365,18 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'materials' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {product.categories?.default_materials_care ? (
-                          formatTemplateText(product.categories.default_materials_care)
+                        {product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
+                          formatTemplateText(
+                            locale === 'en' && product.categories?.default_materials_care_en 
+                              ? product.categories.default_materials_care_en 
+                              : product.categories?.default_materials_care || ''
+                          )
                         ) : (
                           <>
-                            <p><span className="font-semibold">Materiaal:</span> 100% biologisch katoen, 300gsm</p>
-                            <p><span className="font-semibold">Was instructies:</span> Machinewasbaar op 30°C</p>
-                            <p><span className="font-semibold">Strijken:</span> Op lage temperatuur, binnenstebuiten</p>
-                            <p><span className="font-semibold">Drogen:</span> Niet in de droger, ophangen</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Material:' : 'Materiaal:'}</span> {locale === 'en' ? '100% organic cotton, 300gsm' : '100% biologisch katoen, 300gsm'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Washing instructions:' : 'Was instructies:'}</span> {locale === 'en' ? 'Machine washable at 30°C' : 'Machinewasbaar op 30°C'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Ironing:' : 'Strijken:'}</span> {locale === 'en' ? 'Low temperature, inside out' : 'Op lage temperatuur, binnenstebuiten'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Drying:' : 'Drogen:'}</span> {locale === 'en' ? 'Do not tumble dry, hang to dry' : 'Niet in de droger, ophangen'}</p>
                           </>
                         )}
                       </div>
