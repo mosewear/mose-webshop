@@ -202,10 +202,14 @@
       "adding": "Adding..."
     }
   },
-    "product": {
-      "notFound": "Product not found",
-      "notFoundDesc": "The product you are looking for no longer exists.",
-      "backToShop": "Back to shop",
+  "product": {
+    "notFound": "Product not found",
+    "notFoundDesc": "The product you are looking for no longer exists.",
+    "backToShop": "Back to shop",
+    "breadcrumb": {
+      "home": "Home",
+      "shop": "Shop"
+    },
     "addToCart": "Add to Cart",
     "added": "✓ Added",
     "buyNow": "Buy Now",

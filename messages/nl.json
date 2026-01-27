@@ -205,6 +205,10 @@
   "product": {
     "notFound": "Product niet gevonden",
     "backToShop": "Terug naar shop",
+    "breadcrumb": {
+      "home": "Home",
+      "shop": "Shop"
+    },
     "addToCart": "In winkelwagen",
     "added": "✓ Toegevoegd",
     "buyNow": "Nu kopen",
