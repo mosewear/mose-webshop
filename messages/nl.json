@@ -218,6 +218,7 @@
     "quantity": "Aantal",
     "showMore": "Lees meer",
     "showLess": "Toon minder",
+    "inclVat": "Incl. BTW",
     "stock": {
       "inStock": "✓ Op voorraad - Morgen in huis",
       "outOfStock": "Tijdelijk uitverkocht",

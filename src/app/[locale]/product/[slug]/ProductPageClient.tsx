@@ -833,7 +833,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                               Je bespaart €{(basePrice - salePrice).toFixed(2)}
                             </p>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">Incl. BTW</p>
+                          <p className="text-xs text-gray-500 mt-1">{t('inclVat')}</p>
                         </>
                       )
                     }
@@ -841,7 +841,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     return (
                       <>
                         <p className="text-xl md:text-2xl font-bold">€{basePrice.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">Incl. BTW</p>
+                        <p className="text-xs text-gray-500">{t('inclVat')}</p>
                       </>
                     )
                   })()}

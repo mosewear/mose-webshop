@@ -219,6 +219,7 @@
     "quantity": "Quantity",
     "showMore": "Read more",
     "showLess": "Show less",
+    "inclVat": "Incl. VAT",
     "stock": {
       "inStock": "✓ In Stock - Tomorrow at home",
       "outOfStock": "Temporarily out of stock",
