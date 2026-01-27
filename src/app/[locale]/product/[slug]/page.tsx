@@ -28,13 +28,14 @@ export async function generateMetadata({
       sale_price,
       meta_title,
       meta_description,
+      category_id,
       product_images (
         url,
         alt_text,
         is_primary,
         position
       ),
-      categories (
+      categories!inner (
         name,
         name_en,
         slug
@@ -42,7 +43,7 @@ export async function generateMetadata({
     `)
     .eq('slug', slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
 
   if (!product) {
     return {
@@ -53,7 +54,8 @@ export async function generateMetadata({
 
   // Map localized fields
   const localizedProduct = mapLocalizedProduct(product, locale)
-  const category = Array.isArray(product.categories) ? product.categories[0] : product.categories
+  // Type assertion: categories!inner returns single object, not array
+  const category = product.categories as any as { name: string; name_en?: string; slug: string }
   const localizedCategory = category 
     ? { ...category, name: locale === 'en' && category.name_en ? category.name_en : category.name }
     : null
@@ -123,6 +125,7 @@ export default async function ProductPage({
       base_price,
       sale_price,
       slug,
+      category_id,
       product_images (
         url,
         alt_text,
@@ -132,7 +135,7 @@ export default async function ProductPage({
         stock_quantity,
         is_available
       ),
-      categories (
+      categories!inner (
         name,
         name_en,
         slug
@@ -140,14 +143,15 @@ export default async function ProductPage({
     `)
     .eq('slug', slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
 
   // Generate structured data for SEO
   let structuredData = null
   if (product) {
     // Map localized fields
     const localizedProduct = mapLocalizedProduct(product, localeParam)
-    const category = Array.isArray(product.categories) ? product.categories[0] : product.categories
+    // Type assertion: categories!inner returns single object, not array
+    const category = product.categories as any as { name: string; name_en?: string; slug: string }
     const localizedCategory = category 
       ? { ...category, name: localeParam === 'en' && category.name_en ? category.name_en : category.name }
       : null
