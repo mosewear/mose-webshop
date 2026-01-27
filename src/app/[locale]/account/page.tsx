@@ -823,19 +823,19 @@ export default function AccountPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-bold mb-2">
-                        Nieuw Wachtwoord *
+                        {t('passwordSection.newLabel')} *
                       </label>
                       <input
                         type="password"
                         value={passwordForm.newPassword}
                         onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                         className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                        placeholder="Minimaal 6 karakters"
+                        placeholder={t('passwordSection.placeholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
-                        Bevestig Wachtwoord *
+                        {t('passwordSection.confirmLabel')} *
                       </label>
                       <input
                         type="password"
