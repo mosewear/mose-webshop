@@ -436,6 +436,32 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     setLoading(false)
   }
 
+  // Helper function to translate color names
+  const getTranslatedColor = (color: string) => {
+    const colorMap: { [key: string]: { nl: string; en: string } } = {
+      'zwart': { nl: 'ZWART', en: 'BLACK' },
+      'wit': { nl: 'WIT', en: 'WHITE' },
+      'grijs': { nl: 'GRIJS', en: 'GREY' },
+      'blauw': { nl: 'BLAUW', en: 'BLUE' },
+      'rood': { nl: 'ROOD', en: 'RED' },
+      'groen': { nl: 'GROEN', en: 'GREEN' },
+      'geel': { nl: 'GEEL', en: 'YELLOW' },
+      'bruin': { nl: 'BRUIN', en: 'BROWN' },
+      'beige': { nl: 'BEIGE', en: 'BEIGE' },
+      'roze': { nl: 'ROZE', en: 'PINK' },
+      'paars': { nl: 'PAARS', en: 'PURPLE' },
+      'oranje': { nl: 'ORANJE', en: 'ORANGE' },
+    }
+    
+    const colorLower = color.toLowerCase()
+    if (colorMap[colorLower]) {
+      return locale === 'en' ? colorMap[colorLower].en : colorMap[colorLower].nl
+    }
+    
+    // Fallback to uppercase if no translation
+    return color.toUpperCase()
+  }
+
   const selectedVariant = product?.product_variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor
   )
@@ -767,7 +793,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3 transition-all duration-300">
                   {product && getLocalizedName(product)}
                   {selectedVariant && selectedColor && (
-                    <span className="text-brand-primary"> - {selectedColor.toUpperCase()}</span>
+                    <span className="text-brand-primary"> - {getTranslatedColor(selectedColor)}</span>
                   )}
                 </h1>
                 
@@ -966,7 +992,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {availableColors.length > 0 && (
                 <div>
                   <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
-                    {t('color')}: <span className="text-brand-primary font-bold">{selectedColor}</span>
+                    {t('color')}: <span className="text-brand-primary font-bold">{getTranslatedColor(selectedColor)}</span>
                   </label>
                   <div className="flex flex-wrap gap-2 md:gap-3">
                     {availableColors.map(({ color, hex }) => {
