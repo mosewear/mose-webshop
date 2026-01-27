@@ -843,5 +843,50 @@
         "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Stripe. Je betaalgegevens zijn altijd beschermd."
       }
     ]
+  },
+  "contactPage": {
+    "title": "CONTACT",
+    "subtitle": "Vragen over je bestelling, product of iets anders? We helpen je graag.",
+    "form": {
+      "title": "STUUR EEN BERICHT",
+      "name": "Naam",
+      "email": "E-mail",
+      "subject": "Onderwerp",
+      "message": "Bericht",
+      "namePlaceholder": "Je naam",
+      "emailPlaceholder": "jouw@email.nl",
+      "messagePlaceholder": "Vertel ons hoe we je kunnen helpen...",
+      "selectSubject": "Kies een onderwerp",
+      "subjects": {
+        "order": "Vraag over mijn bestelling",
+        "product": "Vraag over een product",
+        "return": "Retour of ruil",
+        "other": "Iets anders"
+      },
+      "submit": "VERSTUUR BERICHT",
+      "submitting": "VERSTUREN...",
+      "success": "Bedankt! We hebben je bericht ontvangen en nemen zo snel mogelijk contact op.",
+      "error": "Er ging iets mis bij het versturen van je bericht"
+    },
+    "info": {
+      "email": {
+        "title": "E-mail",
+        "response": "We reageren binnen 24 uur op werkdagen"
+      },
+      "phone": {
+        "title": "Telefoon",
+        "hours": "Bereikbaar op werkdagen 10:00 - 17:00"
+      },
+      "location": {
+        "title": "Locatie",
+        "note": "Geen fysieke winkel, alleen online",
+        "country": "Nederland"
+      },
+      "faq": {
+        "title": "Veelgestelde vragen?",
+        "description": "Check eerst onze FAQ. Misschien staat je antwoord er al!",
+        "button": "Naar Voorwaarden"
+      }
+    }
   }
 }

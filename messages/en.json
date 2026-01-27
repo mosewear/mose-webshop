@@ -856,5 +856,50 @@
         "answer": "We accept iDEAL, Mastercard, Visa, American Express, PayPal and Bancontact. All payments are securely processed via Stripe. Your payment details are always protected."
       }
     ]
+  },
+  "contactPage": {
+    "title": "CONTACT",
+    "subtitle": "Questions about your order, product or something else? We're happy to help.",
+    "form": {
+      "title": "SEND A MESSAGE",
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "namePlaceholder": "Your name",
+      "emailPlaceholder": "your@email.com",
+      "messagePlaceholder": "Tell us how we can help you...",
+      "selectSubject": "Choose a subject",
+      "subjects": {
+        "order": "Question about my order",
+        "product": "Question about a product",
+        "return": "Return or exchange",
+        "other": "Something else"
+      },
+      "submit": "SEND MESSAGE",
+      "submitting": "SENDING...",
+      "success": "Thank you! We have received your message and will contact you as soon as possible.",
+      "error": "Something went wrong while sending your message"
+    },
+    "info": {
+      "email": {
+        "title": "Email",
+        "response": "We respond within 24 hours on business days"
+      },
+      "phone": {
+        "title": "Phone",
+        "hours": "Available on business days 10:00 AM - 5:00 PM"
+      },
+      "location": {
+        "title": "Location",
+        "note": "No physical store, online only",
+        "country": "The Netherlands"
+      },
+      "faq": {
+        "title": "Frequently asked questions?",
+        "description": "Check our FAQ first. Your answer might already be there!",
+        "button": "To Terms & Conditions"
+      }
+    }
   }
 }

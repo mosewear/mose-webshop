@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function ContactPage() {
+  const t = useTranslations('contactPage')
+  const locale = useLocale()
+  
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -64,7 +67,7 @@ export default function ContactPage() {
       }
 
       if (!response.ok) {
-        setError(data.error || 'Er ging iets mis bij het versturen van je bericht')
+        setError(data.error || t('form.error'))
         setLoading(false)
         return
       }
@@ -90,33 +93,33 @@ export default function ContactPage() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-6">CONTACT</h1>
+          <h1 className="text-5xl md:text-7xl font-display mb-6">{t('title')}</h1>
           <p className="text-xl text-gray-700 max-w-2xl mx-auto">
-            Vragen over je bestelling, product of iets anders? We helpen je graag.
+            {t('subtitle')}
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Contact Form */}
           <div className="bg-white border-2 border-black p-6 md:p-8">
-            <h2 className="text-2xl font-display mb-6">STUUR EEN BERICHT</h2>
+            <h2 className="text-2xl font-display mb-6">{t('form.title')}</h2>
             
             {submitted && (
               <div className="mb-6 p-4 bg-green-50 border-2 border-green-600 text-green-800">
-                <strong>Bedankt!</strong> We hebben je bericht ontvangen en nemen zo snel mogelijk contact op.
+                <strong>{locale === 'en' ? 'Thank you!' : 'Bedankt!'}</strong> {t('form.success')}
               </div>
             )}
 
             {error && (
               <div className="mb-6 p-4 bg-red-50 border-2 border-red-600 text-red-900">
-                <strong>Fout:</strong> {error}
+                <strong>{locale === 'en' ? 'Error:' : 'Fout:'}</strong> {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-bold mb-2">
-                  Naam *
+                  {t('form.name')} *
                 </label>
                 <input
                   type="text"
@@ -125,13 +128,13 @@ export default function ContactPage() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                  placeholder="Je naam"
+                  placeholder={t('form.namePlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-bold mb-2">
-                  E-mail *
+                  {t('form.email')} *
                 </label>
                 <input
                   type="email"
@@ -140,13 +143,13 @@ export default function ContactPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                  placeholder="jouw@email.nl"
+                  placeholder={t('form.emailPlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-bold mb-2">
-                  Onderwerp *
+                  {t('form.subject')} *
                 </label>
                 <select
                   id="subject"
@@ -155,17 +158,17 @@ export default function ContactPage() {
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 >
-                  <option value="">Kies een onderwerp</option>
-                  <option value="order">Vraag over mijn bestelling</option>
-                  <option value="product">Vraag over een product</option>
-                  <option value="return">Retour of ruil</option>
-                  <option value="other">Iets anders</option>
+                  <option value="">{t('form.selectSubject')}</option>
+                  <option value="order">{t('form.subjects.order')}</option>
+                  <option value="product">{t('form.subjects.product')}</option>
+                  <option value="return">{t('form.subjects.return')}</option>
+                  <option value="other">{t('form.subjects.other')}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-bold mb-2">
-                  Bericht *
+                  {t('form.message')} *
                 </label>
                 <textarea
                   id="message"
@@ -174,7 +177,7 @@ export default function ContactPage() {
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none"
-                  placeholder="Vertel ons hoe we je kunnen helpen..."
+                  placeholder={t('form.messagePlaceholder')}
                 />
               </div>
 
@@ -183,7 +186,7 @@ export default function ContactPage() {
                 disabled={loading}
                 className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {loading ? 'VERSTUREN...' : 'VERSTUUR BERICHT'}
+                {loading ? t('form.submitting') : t('form.submit')}
               </button>
             </form>
           </div>
@@ -199,12 +202,12 @@ export default function ContactPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-1">E-mail</h3>
+                  <h3 className="font-bold text-lg mb-1">{t('info.email.title')}</h3>
                   <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
                     {settings.contact_email}
                   </a>
                   <p className="text-sm text-gray-600 mt-2">
-                    We reageren binnen 24 uur op werkdagen
+                    {t('info.email.response')}
                   </p>
                 </div>
               </div>
@@ -219,12 +222,12 @@ export default function ContactPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-1">Telefoon</h3>
+                  <h3 className="font-bold text-lg mb-1">{t('info.phone.title')}</h3>
                   <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="text-brand-primary hover:underline">
                     {settings.contact_phone}
                   </a>
                   <p className="text-sm text-gray-600 mt-2">
-                    Bereikbaar op werkdagen 10:00 - 17:00
+                    {t('info.phone.hours')}
                   </p>
                 </div>
               </div>
@@ -240,7 +243,7 @@ export default function ContactPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-1">Locatie</h3>
+                  <h3 className="font-bold text-lg mb-1">{t('info.location.title')}</h3>
                   <p className="text-gray-700">
                     {addressLines.map((line, idx) => (
                       <span key={idx}>
@@ -248,15 +251,16 @@ export default function ContactPage() {
                         {idx < addressLines.length - 1 && <br />}
                       </span>
                     ))}
-                    {!settings.contact_address.toLowerCase().includes('nederland') && (
+                    {!settings.contact_address.toLowerCase().includes('nederland') && 
+                     !settings.contact_address.toLowerCase().includes('netherlands') && (
                       <>
                         <br />
-                        Nederland
+                        {t('info.location.country')}
                       </>
                     )}
                   </p>
                   <p className="text-sm text-gray-600 mt-2">
-                    Geen fysieke winkel, alleen online
+                    {t('info.location.note')}
                   </p>
                 </div>
               </div>
@@ -264,15 +268,15 @@ export default function ContactPage() {
 
             {/* FAQ Link */}
             <div className="bg-brand-primary text-white p-6 border-2 border-brand-primary">
-              <h3 className="font-bold text-lg mb-2">Veelgestelde vragen?</h3>
+              <h3 className="font-bold text-lg mb-2">{t('info.faq.title')}</h3>
               <p className="text-sm mb-4 opacity-90">
-                Check eerst onze FAQ. Misschien staat je antwoord er al!
+                {t('info.faq.description')}
               </p>
               <Link
-                href="/algemene-voorwaarden"
+                href={`/${locale}/algemene-voorwaarden`}
                 className="inline-block px-6 py-3 bg-white text-brand-primary font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors text-sm"
               >
-                Naar Voorwaarden
+                {t('info.faq.button')}
               </Link>
             </div>
           </div>
