@@ -9,6 +9,8 @@ export default function FAQAccordion() {
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
+    shipping_cost_nl: 4.95,
+    shipping_cost_be: 4.95,
   })
   const t = useTranslations('faq')
 
@@ -17,6 +19,8 @@ export default function FAQAccordion() {
       setSettings({
         free_shipping_threshold: s.free_shipping_threshold,
         return_days: s.return_days,
+        shipping_cost_nl: s.shipping_cost_nl || 4.95,
+        shipping_cost_be: s.shipping_cost_be || 4.95,
       })
     })
   }, [])
@@ -33,6 +37,8 @@ export default function FAQAccordion() {
     return answer
       .replace('{freeShipping}', settings.free_shipping_threshold.toString())
       .replace('{returnDays}', settings.return_days.toString())
+      .replace('{shippingCostNL}', settings.shipping_cost_nl.toFixed(2))
+      .replace('{shippingCostBE}', settings.shipping_cost_be.toFixed(2))
   }
 
   return (
