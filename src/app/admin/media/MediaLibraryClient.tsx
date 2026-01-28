@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -34,7 +34,7 @@ export default function MediaLibraryClient() {
   const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
   const [dragActive, setDragActive] = useState(false);
   
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const buckets = ['product-images', 'images', 'videos'];
 
   const loadFiles = useCallback(async () => {
