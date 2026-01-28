@@ -61,7 +61,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 
   try {
     // Render React Email template to HTML
-    const html = render(
+    const html = await render(
       OrderConfirmationEmail({
         ...props,
         t,
@@ -115,7 +115,7 @@ export async function sendShippingConfirmationEmail(props: {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
 
   try {
-    const html = render(
+    const html = await render(
       ShippingConfirmationEmail({
         ...props,
         t,
