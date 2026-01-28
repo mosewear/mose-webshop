@@ -75,7 +75,7 @@ export default function ShippingConfirmationEmail({
             
             <Section style={trackingBox}>
               <Text style={trackingLabel}>{t('shipping.trackAndTrace')}</Text>
-              <Text style={trackingCode}>{trackingCode}</Text>
+              <Text style={trackingCodeStyle}>{trackingCode}</Text>
               {trackingUrl && (
                 <EmailButton href={trackingUrl}>
                   {t('shipping.trackOrder')}
@@ -204,7 +204,7 @@ const trackingLabel = {
   marginBottom: '8px',
 }
 
-const trackingCode = {
+const trackingCodeStyle = {
   fontSize: '24px',
   fontWeight: 900,
   letterSpacing: '3px',
