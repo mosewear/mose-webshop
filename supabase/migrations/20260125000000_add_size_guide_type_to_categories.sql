@@ -28,3 +28,4 @@ BEGIN
   RAISE NOTICE 'Updated % categories with appropriate size guide types', (SELECT COUNT(*) FROM categories);
 END $$;
 
+

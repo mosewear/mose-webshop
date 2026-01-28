@@ -960,5 +960,57 @@
         "button": "To Terms & Conditions"
       }
     }
+  },
+  "orderConfirmation": {
+    "loading": "Loading order...",
+    "notFound": {
+      "title": "ORDER NOT FOUND",
+      "message": "We cannot find this order. Please check the link or contact us.",
+      "button": "Go to shop"
+    },
+    "success": {
+      "title": "THANK YOU!",
+      "subtitle": "Your order has been placed",
+      "emailSent": "We've sent a confirmation to",
+      "orderNumber": "Order number",
+      "scrollHint": "Scroll for details"
+    },
+    "items": {
+      "title": "YOUR ITEMS",
+      "size": "Size:",
+      "color": "Color:",
+      "quantity": "Quantity:"
+    },
+    "summary": {
+      "subtotal": "Subtotal",
+      "vat": "Including VAT (21%)",
+      "shipping": "Shipping",
+      "free": "FREE",
+      "total": "Total",
+      "inclVat": "Incl. €{amount} VAT"
+    },
+    "delivery": {
+      "shippingAddress": "Shipping address",
+      "contact": "Contact"
+    },
+    "timeline": {
+      "title": "WHAT HAPPENS NOW?",
+      "step1": {
+        "title": "Email confirmation",
+        "description": "You'll receive a confirmation with all details within a few minutes."
+      },
+      "step2": {
+        "title": "We pack your order",
+        "description": "Within 1-2 business days we'll carefully pack everything."
+      },
+      "step3": {
+        "title": "Shipping & tracking",
+        "description": "Track & trace code upon shipping. Delivery time: 2-3 business days."
+      }
+    },
+    "actions": {
+      "continueShopping": "Continue shopping",
+      "contact": "Contact us"
+    }
   }
 }

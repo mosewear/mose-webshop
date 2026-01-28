@@ -674,7 +674,7 @@ export default function AccountPage() {
                               )}
                             </div>
                             <p className="text-sm text-gray-600">
-                              {new Date(order.created_at).toLocaleDateString('nl-NL', {
+                              {new Date(order.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'nl-NL', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric',

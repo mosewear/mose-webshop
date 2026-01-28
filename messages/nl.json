@@ -947,5 +947,57 @@
         "button": "Naar Voorwaarden"
       }
     }
+  },
+  "orderConfirmation": {
+    "loading": "Bestelling laden...",
+    "notFound": {
+      "title": "BESTELLING NIET GEVONDEN",
+      "message": "We kunnen deze bestelling niet vinden. Controleer de link of neem contact met ons op.",
+      "button": "Naar shop"
+    },
+    "success": {
+      "title": "BEDANKT!",
+      "subtitle": "Je bestelling is geplaatst",
+      "emailSent": "We hebben een bevestiging gestuurd naar",
+      "orderNumber": "Bestelnummer",
+      "scrollHint": "Scroll voor details"
+    },
+    "items": {
+      "title": "JOUW ITEMS",
+      "size": "Maat:",
+      "color": "Kleur:",
+      "quantity": "Aantal:"
+    },
+    "summary": {
+      "subtotal": "Subtotaal",
+      "vat": "Waarvan BTW (21%)",
+      "shipping": "Verzending",
+      "free": "GRATIS",
+      "total": "Totaal",
+      "inclVat": "Incl. €{amount} BTW"
+    },
+    "delivery": {
+      "shippingAddress": "Bezorgadres",
+      "contact": "Contact"
+    },
+    "timeline": {
+      "title": "WAT GEBEURT ER NU?",
+      "step1": {
+        "title": "Bevestiging per e-mail",
+        "description": "Je ontvangt binnen enkele minuten een bevestiging met alle details."
+      },
+      "step2": {
+        "title": "We pakken je bestelling in",
+        "description": "Binnen 1-2 werkdagen pakken we alles zorgvuldig in."
+      },
+      "step3": {
+        "title": "Verzending & tracking",
+        "description": "Track & trace code bij verzending. Levertijd: 2-3 werkdagen."
+      }
+    },
+    "actions": {
+      "continueShopping": "Verder shoppen",
+      "contact": "Contact opnemen"
+    }
   }
 }

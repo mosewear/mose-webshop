@@ -120,3 +120,4 @@ ADD COLUMN IF NOT EXISTS description_en TEXT;
 -- 5. Remember to update the admin panel to edit both languages
 -- =====================================================
 
+

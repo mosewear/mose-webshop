@@ -283,3 +283,4 @@ test.describe('Progressive Validation - Checkout Form', () => {
 console.log('\n✅ ALL TESTS COMPLETED!\n');
 console.log(`📂 Screenshots saved to: ${screenshotsDir}\n`);
 
+
