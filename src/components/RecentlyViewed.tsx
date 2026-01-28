@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getRecentlyViewed, type RecentlyViewedProduct } from '@/lib/recentlyViewed'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslations } from 'next-intl'
 
 interface Product {
   id: string
@@ -21,6 +22,7 @@ interface Product {
 }
 
 export default function RecentlyViewed({ currentProductId }: { currentProductId?: string }) {
+  const t = useTranslations('product.recentlyViewed')
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -78,7 +80,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
   return (
     <div className="mt-12 md:mt-16 border-t-2 border-gray-200 pt-8 md:pt-12">
       <h2 className="text-2xl md:text-3xl font-display mb-6 text-center md:text-left uppercase tracking-wide">
-        Recent bekeken
+        {t('title')}
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
         {products.map((product) => {

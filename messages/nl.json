@@ -311,6 +311,37 @@
     },
     "related": {
       "title": "Dit vind je ook leuk"
+    },
+    "recentlyViewed": {
+      "title": "Recent bekeken"
+    },
+    "reviews": {
+      "beFirst": "Wees de eerste om te reviewen",
+      "beFirstLong": "Wees de eerste om een review te schrijven!",
+      "writeReview": "Schrijf een review",
+      "close": "Sluiten",
+      "yourReview": "Jouw review",
+      "rating": "Beoordeling",
+      "name": "Naam",
+      "email": "Email",
+      "emailNote": "(wordt niet gepubliceerd)",
+      "title": "Titel",
+      "titlePlaceholder": "Vat je ervaring samen",
+      "comment": "Jouw review",
+      "commentPlaceholder": "Vertel ons over je ervaring met dit product",
+      "submit": "Verstuur review",
+      "submitting": "Verzenden...",
+      "customerReviews": "Klantervaringen",
+      "basedOn": "Gebaseerd op {count} {count, plural, =1 {review} other {reviews}}",
+      "noReviews": "Nog geen reviews voor dit product.",
+      "optional": "(optioneel)",
+      "required": "*"
+    },
+    "sticky": {
+      "addToCart": "IN WAGEN",
+      "buyNow": "BESTEL NU",
+      "buyNowMobile": "KOPEN",
+      "adding": "BEZIG..."
     }
   },
   "shipping": {
@@ -998,6 +1029,150 @@
     "actions": {
       "continueShopping": "Verder shoppen",
       "contact": "Contact opnemen"
+    }
+  },
+  "privacy": {
+    "title": "PRIVACYBELEID",
+    "lastUpdated": "Laatst bijgewerkt: 1 januari 2025",
+    "backToHome": "Terug naar home",
+    "sections": {
+      "intro": {
+        "title": "1. INTRODUCTIE",
+        "content": "MOSE (mosewear.com) respecteert de privacy van alle bezoekers van de website en draagt er zorg voor dat de persoonlijke informatie die je ons verschaft vertrouwelijk wordt behandeld. Dit privacybeleid legt uit welke gegevens we verzamelen en waarvoor we deze gebruiken."
+      },
+      "dataCollection": {
+        "title": "2. WELKE GEGEVENS VERZAMELEN WE?",
+        "intro": "We verzamelen de volgende persoonsgegevens:",
+        "items": [
+          "Naam en adresgegevens (voor verzending van bestellingen)",
+          "E-mailadres (voor orderbevestigingen en communicatie)",
+          "Telefoonnummer (voor levering en klantenservice)",
+          "Betaalgegevens (veilig verwerkt via Stripe, niet opgeslagen bij ons)",
+          "Ordergeschiedenis en voorkeuren"
+        ]
+      },
+      "dataUsage": {
+        "title": "3. WAARVOOR GEBRUIKEN WE JE GEGEVENS?",
+        "intro": "We gebruiken je gegevens voor:",
+        "items": [
+          "Het verwerken en verzenden van je bestellingen",
+          "Communicatie over je bestelling (bevestiging, verzending, tracking)",
+          "Klantenservice en ondersteuning",
+          "Verbetering van onze website en diensten",
+          "Marketing (alleen met je toestemming)"
+        ]
+      },
+      "dataRetention": {
+        "title": "4. HOE LANG BEWAREN WE JE GEGEVENS?",
+        "content": "We bewaren je persoonsgegevens niet langer dan noodzakelijk voor de doeleinden waarvoor ze zijn verzameld. Ordergegevens bewaren we 7 jaar conform fiscale wetgeving. Je kunt altijd verzoeken om je gegevens te verwijderen via"
+      },
+      "thirdParties": {
+        "title": "5. DELEN MET DERDEN",
+        "intro": "We delen je gegevens alleen met:",
+        "items": [
+          "Verzendpartners (voor levering van je bestelling)",
+          "Stripe (voor veilige betalingsverwerking)",
+          "Hosting providers (voor opslag van gegevens)"
+        ],
+        "outro": "We verkopen je gegevens nooit aan derden en delen ze alleen wanneer dit noodzakelijk is voor de uitvoering van je bestelling."
+      },
+      "security": {
+        "title": "6. BEVEILIGING",
+        "content": "We nemen de bescherming van je gegevens serieus en hebben passende technische en organisatorische maatregelen genomen om je persoonsgegevens te beschermen tegen verlies of onrechtmatige verwerking. We gebruiken SSL-encryptie voor alle data-overdracht en beveiligde servers voor opslag."
+      },
+      "cookies": {
+        "title": "7. COOKIES",
+        "content": "We gebruiken functionele cookies die noodzakelijk zijn voor het goed functioneren van de website (zoals je winkelwagen). Voor analytische cookies vragen we je toestemming. Je kunt cookies altijd weigeren via je browserinstellingen."
+      },
+      "rights": {
+        "title": "8. JOUW RECHTEN",
+        "intro": "Je hebt het recht om:",
+        "items": [
+          "Inzage te vragen in je persoonsgegevens",
+          "Je gegevens te laten corrigeren of verwijderen",
+          "Bezwaar te maken tegen verwerking",
+          "Je gegevens over te dragen (dataportabiliteit)"
+        ],
+        "outro": "Neem contact op via {email} om gebruik te maken van deze rechten."
+      },
+      "changes": {
+        "title": "9. WIJZIGINGEN",
+        "content": "We kunnen dit privacybeleid van tijd tot tijd aanpassen. De meest recente versie vind je altijd op deze pagina. Belangrijke wijzigingen communiceren we via e-mail."
+      },
+      "contact": {
+        "title": "10. CONTACT",
+        "intro": "Heb je vragen over dit privacybeleid? Neem contact met ons op:",
+        "email": "E-mail:",
+        "phone": "Telefoon:",
+        "country": "Nederland"
+      }
+    }
+  },
+  "terms": {
+    "title": "ALGEMENE VOORWAARDEN",
+    "lastUpdated": "Laatst bijgewerkt: 1 januari 2025",
+    "backToHome": "Terug naar home",
+    "sections": {
+      "general": {
+        "title": "1. ALGEMEEN",
+        "content": "Deze algemene voorwaarden zijn van toepassing op alle aanbiedingen en overeenkomsten van MOSE (mosewear.com), gevestigd in Groningen, Nederland. Door een bestelling te plaatsen ga je akkoord met deze voorwaarden."
+      },
+      "pricing": {
+        "title": "2. AANBIEDINGEN EN PRIJZEN",
+        "items": [
+          "Alle prijzen zijn in euro's en inclusief BTW",
+          "Verzendkosten worden apart vermeld bij het afrekenen",
+          "Gratis verzending vanaf €{threshold} binnen Nederland en België",
+          "Prijzen en voorraad kunnen wijzigen zonder voorafgaande kennisgeving"
+        ]
+      },
+      "ordering": {
+        "title": "3. BESTELLEN",
+        "content": "Je bestelling is pas definitief nadat we een orderbevestiging per e-mail hebben verstuurd. We behouden het recht om bestellingen te weigeren of te annuleren, bijvoorbeeld bij onjuiste prijzen of bij vermoeden van misbruik."
+      },
+      "payment": {
+        "title": "4. BETALING",
+        "items": [
+          "Betaling verloopt veilig via Stripe",
+          "We accepteren iDEAL, creditcard en Bancontact",
+          "Je betaling moet voltooid zijn voordat we je bestelling verzenden",
+          "Bij mislukte betalingen wordt je bestelling automatisch geannuleerd"
+        ]
+      },
+      "shipping": {
+        "title": "5. VERZENDING",
+        "items": [
+          "Bestellingen binnen Nederland worden verzonden via DHL",
+          "Levertijd is 2-5 werkdagen binnen Nederland en België",
+          "Je ontvangt een track & trace code bij verzending",
+          "Verzendkosten: €4,95 (gratis vanaf €{threshold})"
+        ]
+      },
+      "returns": {
+        "title": "6. RETOURNEREN",
+        "items": [
+          "Je hebt {days} dagen bedenktijd vanaf ontvangst",
+          "Producten moeten ongedragen en in originele staat zijn",
+          "Retourneren is gratis binnen Nederland en België",
+          "Retourzendingen worden binnen 5 werkdagen verwerkt"
+        ]
+      },
+      "warranty": {
+        "title": "7. GARANTIE",
+        "content": "Op alle producten geldt 2 jaar fabrieksgarantie tegen materiaal- en fabricagefouten. Deze garantie dekt geen normale slijtage of schade door verkeerd gebruik."
+      },
+      "liability": {
+        "title": "8. AANSPRAKELIJKHEID",
+        "content": "MOSE is niet aansprakelijk voor indirecte schade of gevolgschade die voortvloeit uit het gebruik van onze producten, tenzij er sprake is van opzet of grove schuld."
+      },
+      "disputes": {
+        "title": "9. GESCHILLEN",
+        "content": "Op alle overeenkomsten is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de bevoegde rechter in Groningen."
+      },
+      "contact": {
+        "title": "10. VRAGEN",
+        "content": "Heb je vragen over deze voorwaarden? Neem contact met ons op via {email} of bel {phone}."
+      }
     }
   }
 }

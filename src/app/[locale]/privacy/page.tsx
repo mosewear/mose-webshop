@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
+import { useTranslations } from 'next-intl'
 
 export default function PrivacyPage() {
+  const t = useTranslations('privacy')
   const [settings, setSettings] = useState({
     contact_email: 'info@mosewear.nl',
     contact_phone: '+31 50 211 1931',
@@ -28,198 +30,148 @@ export default function PrivacyPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-4">PRIVACYBELEID</h1>
-          <p className="text-gray-600">Laatst bijgewerkt: 1 januari 2025</p>
+          <h1 className="text-5xl md:text-7xl font-display mb-4">{t('title')}</h1>
+          <p className="text-gray-600">{t('lastUpdated')}</p>
         </div>
 
         {/* Content */}
         <div className="prose prose-lg max-w-none space-y-8">
+          {/* 1. Introduction */}
           <div>
-            <h2 className="text-3xl font-display mb-4">1. INTRODUCTIE</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.intro.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              MOSE (mosewear.com) respecteert de privacy van alle bezoekers van de website en 
-              draagt er zorg voor dat de persoonlijke informatie die je ons verschaft vertrouwelijk 
-              wordt behandeld. Dit privacybeleid legt uit welke gegevens we verzamelen en waarvoor 
-              we deze gebruiken.
+              {t('sections.intro.content')}
             </p>
           </div>
 
+          {/* 2. Data Collection */}
           <div>
-            <h2 className="text-3xl font-display mb-4">2. WELKE GEGEVENS VERZAMELEN WE?</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.dataCollection.title')}</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              We verzamelen de volgende persoonsgegevens:
+              {t('sections.dataCollection.intro')}
             </p>
             <ul className="space-y-2 text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Naam en adresgegevens (voor verzending van bestellingen)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>E-mailadres (voor orderbevestigingen en communicatie)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Telefoonnummer (voor levering en klantenservice)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Betaalgegevens (veilig verwerkt via Stripe, niet opgeslagen bij ons)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Ordergeschiedenis en voorkeuren</span>
-              </li>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-brand-primary font-bold">•</span>
+                  <span>{t(`sections.dataCollection.items.${i}`)}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* 3. Data Usage */}
           <div>
-            <h2 className="text-3xl font-display mb-4">3. WAARV OOR GEBRUIKEN WE JE GEGEVENS?</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.dataUsage.title')}</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              We gebruiken je gegevens voor:
+              {t('sections.dataUsage.intro')}
             </p>
             <ul className="space-y-2 text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Het verwerken en verzenden van je bestellingen</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Communicatie over je bestelling (bevestiging, verzending, tracking)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Klantenservice en ondersteuning</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Verbetering van onze website en diensten</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Marketing (alleen met je toestemming)</span>
-              </li>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-brand-primary font-bold">•</span>
+                  <span>{t(`sections.dataUsage.items.${i}`)}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* 4. Data Retention */}
           <div>
-            <h2 className="text-3xl font-display mb-4">4. HOE LANG BEWAREN WE JE GEGEVENS?</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.dataRetention.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              We bewaren je persoonsgegevens niet langer dan noodzakelijk voor de doeleinden waarvoor 
-              ze zijn verzameld. Ordergegevens bewaren we 7 jaar conform fiscale wetgeving. Je kunt 
-              altijd verzoeken om je gegevens te verwijderen via{' '}
+              {t('sections.dataRetention.content')}{' '}
               <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
                 {settings.contact_email}
-              </a>
-              .
+              </a>.
             </p>
           </div>
 
+          {/* 5. Third Parties */}
           <div>
-            <h2 className="text-3xl font-display mb-4">5. DELEN MET DERDEN</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.thirdParties.title')}</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              We delen je gegevens alleen met:
+              {t('sections.thirdParties.intro')}
             </p>
             <ul className="space-y-2 text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Verzendpartners (voor levering van je bestelling)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Stripe (voor veilige betalingsverwerking)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Hosting providers (voor opslag van gegevens)</span>
-              </li>
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-brand-primary font-bold">•</span>
+                  <span>{t(`sections.thirdParties.items.${i}`)}</span>
+                </li>
+              ))}
             </ul>
             <p className="text-gray-700 leading-relaxed mt-4">
-              We verkopen je gegevens nooit aan derden en delen ze alleen wanneer dit noodzakelijk 
-              is voor de uitvoering van je bestelling.
+              {t('sections.thirdParties.outro')}
             </p>
           </div>
 
+          {/* 6. Security */}
           <div>
-            <h2 className="text-3xl font-display mb-4">6. BEVEILIGING</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.security.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              We nemen de bescherming van je gegevens serieus en hebben passende technische en 
-              organisatorische maatregelen genomen om je persoonsgegevens te beschermen tegen 
-              verlies of onrechtmatige verwerking. We gebruiken SSL-encryptie voor alle data-overdracht 
-              en beveiligde servers voor opslag.
+              {t('sections.security.content')}
             </p>
           </div>
 
+          {/* 7. Cookies */}
           <div>
-            <h2 className="text-3xl font-display mb-4">7. COOKIES</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.cookies.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              We gebruiken functionele cookies die noodzakelijk zijn voor het goed functioneren van 
-              de website (zoals je winkelwagen). Voor analytische cookies vragen we je toestemming. 
-              Je kunt cookies altijd weigeren via je browserinstellingen.
+              {t('sections.cookies.content')}
             </p>
           </div>
 
+          {/* 8. Rights */}
           <div>
-            <h2 className="text-3xl font-display mb-4">8. JOUW RECHTEN</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.rights.title')}</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Je hebt het recht om:
+              {t('sections.rights.intro')}
             </p>
             <ul className="space-y-2 text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Inzage te vragen in je persoonsgegevens</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Je gegevens te laten corrigeren of verwijderen</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Bezwaar te maken tegen verwerking</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-brand-primary font-bold">•</span>
-                <span>Je gegevens over te dragen (dataportabiliteit)</span>
-              </li>
+              {[0, 1, 2, 3].map((i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-brand-primary font-bold">•</span>
+                  <span>{t(`sections.rights.items.${i}`)}</span>
+                </li>
+              ))}
             </ul>
             <p className="text-gray-700 leading-relaxed mt-4">
-              Neem contact op via{' '}
-              <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
-                {settings.contact_email}
-              </a>
-              {' '}om gebruik te maken van deze rechten.
+              {t('sections.rights.outro', { email: settings.contact_email })}
             </p>
           </div>
 
+          {/* 9. Changes */}
           <div>
-            <h2 className="text-3xl font-display mb-4">9. WIJZIGINGEN</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.changes.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              We kunnen dit privacybeleid van tijd tot tijd aanpassen. De meest recente versie 
-              vind je altijd op deze pagina. Belangrijke wijzigingen communiceren we via e-mail.
+              {t('sections.changes.content')}
             </p>
           </div>
 
+          {/* 10. Contact */}
           <div>
-            <h2 className="text-3xl font-display mb-4">10. CONTACT</h2>
+            <h2 className="text-3xl font-display mb-4">{t('sections.contact.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              Heb je vragen over dit privacybeleid? Neem contact met ons op:
+              {t('sections.contact.intro')}
             </p>
             <div className="bg-gray-50 border-2 border-gray-300 p-6 mt-4">
               <p className="text-gray-800 font-bold">MOSE</p>
               {addressLines.map((line, idx) => (
                 <p key={idx} className="text-gray-700">{line}</p>
               ))}
-              {!settings.contact_address.toLowerCase().includes('nederland') && (
-                <p className="text-gray-700">Nederland</p>
+              {!settings.contact_address.toLowerCase().includes('nederland') && 
+               !settings.contact_address.toLowerCase().includes('netherlands') && (
+                <p className="text-gray-700">{t('sections.contact.country')}</p>
               )}
               <p className="text-gray-700">
-                E-mail:{' '}
+                {t('sections.contact.email')}{' '}
                 <a href={`mailto:${settings.contact_email}`} className="text-brand-primary hover:underline">
                   {settings.contact_email}
                 </a>
               </p>
               <p className="text-gray-700">
-                Telefoon:{' '}
+                {t('sections.contact.phone')}{' '}
                 <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="text-brand-primary hover:underline">
                   {settings.contact_phone}
                 </a>
@@ -234,7 +186,7 @@ export default function PrivacyPage() {
             href="/"
             className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
           >
-            Terug naar home
+            {t('backToHome')}
           </Link>
         </div>
       </div>

@@ -312,6 +312,37 @@
     },
     "related": {
       "title": "You might also like"
+    },
+    "recentlyViewed": {
+      "title": "Recently viewed"
+    },
+    "reviews": {
+      "beFirst": "Be the first to review",
+      "beFirstLong": "Be the first to write a review!",
+      "writeReview": "Write a review",
+      "close": "Close",
+      "yourReview": "Your review",
+      "rating": "Rating",
+      "name": "Name",
+      "email": "Email",
+      "emailNote": "(will not be published)",
+      "title": "Title",
+      "titlePlaceholder": "Summarize your experience",
+      "comment": "Your review",
+      "commentPlaceholder": "Tell us about your experience with this product",
+      "submit": "Submit review",
+      "submitting": "Submitting...",
+      "customerReviews": "Customer reviews",
+      "basedOn": "Based on {count} {count, plural, =1 {review} other {reviews}}",
+      "noReviews": "No reviews for this product yet.",
+      "optional": "(optional)",
+      "required": "*"
+    },
+    "sticky": {
+      "addToCart": "ADD TO CART",
+      "buyNow": "BUY NOW",
+      "buyNowMobile": "BUY",
+      "adding": "ADDING..."
     }
   },
   "shipping": {
@@ -1011,6 +1042,150 @@
     "actions": {
       "continueShopping": "Continue shopping",
       "contact": "Contact us"
+    }
+  },
+  "privacy": {
+    "title": "PRIVACY POLICY",
+    "lastUpdated": "Last updated: January 1, 2025",
+    "backToHome": "Back to home",
+    "sections": {
+      "intro": {
+        "title": "1. INTRODUCTION",
+        "content": "MOSE (mosewear.com) respects the privacy of all visitors to the website and ensures that the personal information you provide is treated confidentially. This privacy policy explains what data we collect and what we use it for."
+      },
+      "dataCollection": {
+        "title": "2. WHAT DATA DO WE COLLECT?",
+        "intro": "We collect the following personal data:",
+        "items": [
+          "Name and address (for shipping orders)",
+          "Email address (for order confirmations and communication)",
+          "Phone number (for delivery and customer service)",
+          "Payment details (securely processed via Stripe, not stored by us)",
+          "Order history and preferences"
+        ]
+      },
+      "dataUsage": {
+        "title": "3. WHAT DO WE USE YOUR DATA FOR?",
+        "intro": "We use your data for:",
+        "items": [
+          "Processing and shipping your orders",
+          "Communication about your order (confirmation, shipping, tracking)",
+          "Customer service and support",
+          "Improving our website and services",
+          "Marketing (only with your consent)"
+        ]
+      },
+      "dataRetention": {
+        "title": "4. HOW LONG DO WE KEEP YOUR DATA?",
+        "content": "We do not retain your personal data longer than necessary for the purposes for which it was collected. We keep order data for 7 years in accordance with tax legislation. You can always request deletion of your data via"
+      },
+      "thirdParties": {
+        "title": "5. SHARING WITH THIRD PARTIES",
+        "intro": "We only share your data with:",
+        "items": [
+          "Shipping partners (for delivery of your order)",
+          "Stripe (for secure payment processing)",
+          "Hosting providers (for data storage)"
+        ],
+        "outro": "We never sell your data to third parties and only share it when necessary for fulfilling your order."
+      },
+      "security": {
+        "title": "6. SECURITY",
+        "content": "We take the protection of your data seriously and have implemented appropriate technical and organizational measures to protect your personal data against loss or unlawful processing. We use SSL encryption for all data transfer and secure servers for storage."
+      },
+      "cookies": {
+        "title": "7. COOKIES",
+        "content": "We use functional cookies that are necessary for the proper functioning of the website (such as your shopping cart). We ask for your consent for analytical cookies. You can always refuse cookies through your browser settings."
+      },
+      "rights": {
+        "title": "8. YOUR RIGHTS",
+        "intro": "You have the right to:",
+        "items": [
+          "Request access to your personal data",
+          "Have your data corrected or deleted",
+          "Object to processing",
+          "Transfer your data (data portability)"
+        ],
+        "outro": "Contact us via {email} to exercise these rights."
+      },
+      "changes": {
+        "title": "9. CHANGES",
+        "content": "We may update this privacy policy from time to time. You can always find the most recent version on this page. We will communicate important changes via email."
+      },
+      "contact": {
+        "title": "10. CONTACT",
+        "intro": "Do you have questions about this privacy policy? Contact us:",
+        "email": "Email:",
+        "phone": "Phone:",
+        "country": "Netherlands"
+      }
+    }
+  },
+  "terms": {
+    "title": "TERMS & CONDITIONS",
+    "lastUpdated": "Last updated: January 1, 2025",
+    "backToHome": "Back to home",
+    "sections": {
+      "general": {
+        "title": "1. GENERAL",
+        "content": "These terms and conditions apply to all offers and agreements of MOSE (mosewear.com), located in Groningen, Netherlands. By placing an order, you agree to these terms."
+      },
+      "pricing": {
+        "title": "2. OFFERS AND PRICES",
+        "items": [
+          "All prices are in euros and include VAT",
+          "Shipping costs are listed separately at checkout",
+          "Free shipping from €{threshold} within the Netherlands and Belgium",
+          "Prices and stock may change without prior notice"
+        ]
+      },
+      "ordering": {
+        "title": "3. ORDERING",
+        "content": "Your order is only final after we have sent an order confirmation by email. We reserve the right to refuse or cancel orders, for example in case of incorrect prices or suspected abuse."
+      },
+      "payment": {
+        "title": "4. PAYMENT",
+        "items": [
+          "Payment is processed securely via Stripe",
+          "We accept iDEAL, credit card and Bancontact",
+          "Your payment must be completed before we ship your order",
+          "Failed payments will automatically cancel your order"
+        ]
+      },
+      "shipping": {
+        "title": "5. SHIPPING",
+        "items": [
+          "Orders within the Netherlands are shipped via DHL",
+          "Delivery time is 2-5 business days within the Netherlands and Belgium",
+          "You will receive a track & trace code upon shipment",
+          "Shipping costs: €4.95 (free from €{threshold})"
+        ]
+      },
+      "returns": {
+        "title": "6. RETURNS",
+        "items": [
+          "You have {days} days cooling-off period from receipt",
+          "Products must be unworn and in original condition",
+          "Returns are free within the Netherlands and Belgium",
+          "Return shipments are processed within 5 business days"
+        ]
+      },
+      "warranty": {
+        "title": "7. WARRANTY",
+        "content": "All products come with a 2-year manufacturer warranty against material and manufacturing defects. This warranty does not cover normal wear and tear or damage from improper use."
+      },
+      "liability": {
+        "title": "8. LIABILITY",
+        "content": "MOSE is not liable for indirect damage or consequential damage arising from the use of our products, unless there is intent or gross negligence."
+      },
+      "disputes": {
+        "title": "9. DISPUTES",
+        "content": "Dutch law applies to all agreements. Disputes will be submitted to the competent court in Groningen."
+      },
+      "contact": {
+        "title": "10. QUESTIONS",
+        "content": "Do you have questions about these terms? Contact us via {email} or call {phone}."
+      }
     }
   }
 }

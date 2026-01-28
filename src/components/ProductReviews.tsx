@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PenLine } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface Review {
   id: string
@@ -162,17 +163,17 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
           className="w-full md:w-auto bg-gray-100 hover:bg-brand-primary hover:text-white border-2 border-gray-300 hover:border-brand-primary text-black font-bold py-4 px-8 uppercase tracking-wider transition-all flex items-center justify-center gap-2"
         >
           <PenLine size={18} />
-          <span>Wees de eerste om te reviewen</span>
+          <span>{t('beFirst')}</span>
         </button>
 
         {/* Review Form (alleen als open) */}
         {showForm && (
           <form onSubmit={handleSubmitReview} className="bg-white border-2 border-gray-200 p-6 mt-6">
-            <h3 className="text-xl font-bold mb-4">Jouw review</h3>
+            <h3 className="text-xl font-bold mb-4">{t('yourReview')}</h3>
 
             {/* Rating */}
             <div className="mb-4">
-              <label className="block text-sm font-bold mb-2">Beoordeling *</label>
+              <label className="block text-sm font-bold mb-2">{t('rating')} {t('required')}</label>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -195,7 +196,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
             {/* Name */}
             <div className="mb-4">
-              <label className="block text-sm font-bold mb-2">Naam *</label>
+              <label className="block text-sm font-bold mb-2">{t('name')} {t('required')}</label>
               <input
                 type="text"
                 value={formData.reviewer_name}
@@ -207,7 +208,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
             {/* Email */}
             <div className="mb-4">
-              <label className="block text-sm font-bold mb-2">Email * (wordt niet gepubliceerd)</label>
+              <label className="block text-sm font-bold mb-2">{t('email')} {t('required')} {t('emailNote')}</label>
               <input
                 type="email"
                 value={formData.reviewer_email}
@@ -219,25 +220,25 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
             {/* Title */}
             <div className="mb-4">
-              <label className="block text-sm font-bold mb-2">Titel (optioneel)</label>
+              <label className="block text-sm font-bold mb-2">{t('title')} {t('optional')}</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                placeholder="Vat je ervaring samen"
+                placeholder={t('titlePlaceholder')}
               />
             </div>
 
             {/* Comment */}
             <div className="mb-4">
-              <label className="block text-sm font-bold mb-2">Jouw review (optioneel)</label>
+              <label className="block text-sm font-bold mb-2">{t('comment')} {t('optional')}</label>
               <textarea
                 value={formData.comment}
                 onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 rows={5}
-                placeholder="Vertel ons over je ervaring met dit product"
+                placeholder={t('commentPlaceholder')}
               />
             </div>
 
@@ -247,7 +248,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               disabled={submitting}
               className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Verzenden...' : 'Verstuur review'}
+              {submitting ? t('submitting') : t('submit')}
             </button>
           </form>
         )}
@@ -258,7 +259,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
   // Als er WEL reviews zijn, toon volledige reviews section
   return (
     <div className="border-t-2 border-gray-200 pt-8 mt-8">
-      <h2 className="text-3xl font-bold mb-6">Klantervaringen</h2>
+      <h2 className="text-3xl font-bold mb-6">{t('customerReviews')}</h2>
 
       {/* Rating Summary */}
       {totalReviews > 0 ? (
@@ -268,7 +269,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             <div className="text-center">
               <div className="text-5xl font-bold mb-2">{averageRating.toFixed(1)}</div>
               {renderStars(Math.round(averageRating), 'lg')}
-              <p className="text-gray-600 mt-2">Gebaseerd op {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}</p>
+              <p className="text-gray-600 mt-2">{t('basedOn', { count: totalReviews })}</p>
             </div>
 
             {/* Rating Distribution */}
@@ -295,8 +296,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         </div>
       ) : (
         <div className="bg-gray-50 border-2 border-gray-200 p-8 mb-8 text-center">
-          <p className="text-gray-600">Nog geen reviews voor dit product.</p>
-          <p className="text-sm text-gray-500 mt-2">Wees de eerste om een review te schrijven!</p>
+          <p className="text-gray-600">{t('noReviews')}</p>
+          <p className="text-sm text-gray-500 mt-2">{t('beFirstLong')}</p>
         </div>
       )}
 
@@ -307,11 +308,11 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
           className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors flex items-center gap-2"
         >
           {showForm ? (
-            'Sluiten'
+            t('close')
           ) : (
             <>
               <PenLine size={18} />
-              <span>Schrijf een review</span>
+              <span>{t('writeReview')}</span>
             </>
           )}
         </button>
