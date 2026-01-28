@@ -35,6 +35,8 @@ export default function MediaLibraryClient() {
   const [dragActive, setDragActive] = useState(false);
   
   const supabase = createClient();
+  
+  // Define buckets outside component to avoid dependency issues
   const buckets = ['product-images', 'images', 'videos'];
 
   const loadFiles = useCallback(async () => {
@@ -45,33 +47,41 @@ export default function MediaLibraryClient() {
       const bucketsToLoad = selectedBucket === 'all' ? buckets : [selectedBucket];
 
       for (const bucket of bucketsToLoad) {
-        const { data, error } = await supabase.storage.from(bucket).list('', {
-          limit: 1000,
-          sortBy: { column: 'created_at', order: 'desc' },
-        });
+        try {
+          const { data, error } = await supabase.storage.from(bucket).list('', {
+            limit: 1000,
+            sortBy: { column: 'created_at', order: 'desc' },
+          });
 
-        if (error) throw error;
+          if (error) {
+            console.error(`Error loading bucket ${bucket}:`, error);
+            continue; // Skip dit bucket en ga door met de volgende
+          }
 
-        if (data) {
-          const filesWithUrls = data
-            .filter((file) => file.id)
-            .map((file) => {
-              const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(file.name);
-              
-              const isVideo = file.name.toLowerCase().match(/\.(mp4|webm|mov|avi)$/);
-              
-              return {
-                name: file.name,
-                id: file.id,
-                bucket,
-                size: file.metadata?.size || 0,
-                created_at: file.created_at,
-                url: urlData.publicUrl,
-                type: isVideo ? 'video' : 'image',
-              } as MediaFile;
-            });
+          if (data) {
+            const filesWithUrls = data
+              .filter((file) => file.id)
+              .map((file) => {
+                const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(file.name);
+                
+                const isVideo = file.name.toLowerCase().match(/\.(mp4|webm|mov|avi)$/);
+                
+                return {
+                  name: file.name,
+                  id: file.id,
+                  bucket,
+                  size: file.metadata?.size || 0,
+                  created_at: file.created_at,
+                  url: urlData.publicUrl,
+                  type: isVideo ? 'video' : 'image',
+                } as MediaFile;
+              });
 
-          allFiles.push(...filesWithUrls);
+            allFiles.push(...filesWithUrls);
+          }
+        } catch (bucketError) {
+          console.error(`Error processing bucket ${bucket}:`, bucketError);
+          // Ga door met de volgende bucket
         }
       }
 
@@ -83,10 +93,11 @@ export default function MediaLibraryClient() {
       setFiles(filtered);
     } catch (error) {
       console.error('Error loading files:', error);
+      alert('Fout bij laden van bestanden. Check console voor details.');
     } finally {
       setLoading(false);
     }
-  }, [selectedBucket, searchQuery, supabase, buckets]);
+  }, [selectedBucket, searchQuery]);
 
   useEffect(() => {
     loadFiles();
@@ -260,7 +271,12 @@ export default function MediaLibraryClient() {
       ) : files.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
           <ImageIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600">Geen bestanden gevonden</p>
+          <p className="text-gray-600 mb-2">Geen bestanden gevonden</p>
+          {searchQuery ? (
+            <p className="text-sm text-gray-500">Probeer een andere zoekterm</p>
+          ) : (
+            <p className="text-sm text-gray-500">Upload je eerste bestand om te beginnen</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
