@@ -42,48 +42,15 @@ export default function MediaLibraryClient() {
   const loadFiles = useCallback(async () => {
     setLoading(true);
     try {
-      const allFiles: MediaFile[] = [];
-
-      const bucketsToLoad = selectedBucket === 'all' ? buckets : [selectedBucket];
-
-      for (const bucket of bucketsToLoad) {
-        try {
-          const { data, error } = await supabase.storage.from(bucket).list('', {
-            limit: 1000,
-            sortBy: { column: 'created_at', order: 'desc' },
-          });
-
-          if (error) {
-            console.error(`Error loading bucket ${bucket}:`, error);
-            continue; // Skip dit bucket en ga door met de volgende
-          }
-
-          if (data) {
-            const filesWithUrls = data
-              .filter((file) => file.id)
-              .map((file) => {
-                const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(file.name);
-                
-                const isVideo = file.name.toLowerCase().match(/\.(mp4|webm|mov|avi)$/);
-                
-                return {
-                  name: file.name,
-                  id: file.id,
-                  bucket,
-                  size: file.metadata?.size || 0,
-                  created_at: file.created_at,
-                  url: urlData.publicUrl,
-                  type: isVideo ? 'video' : 'image',
-                } as MediaFile;
-              });
-
-            allFiles.push(...filesWithUrls);
-          }
-        } catch (bucketError) {
-          console.error(`Error processing bucket ${bucket}:`, bucketError);
-          // Ga door met de volgende bucket
-        }
+      // Use API route with service role to list files
+      const bucket = selectedBucket === 'all' ? 'all' : selectedBucket;
+      const response = await fetch(`/api/media?bucket=${bucket}`);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
       }
+
+      const allFiles: MediaFile[] = await response.json();
 
       // Filter op zoekquery
       const filtered = searchQuery
