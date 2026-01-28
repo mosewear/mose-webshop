@@ -22,6 +22,7 @@ interface ProductReviewsProps {
 }
 
 export default function ProductReviews({ productId }: ProductReviewsProps) {
+  const t = useTranslations('product.reviews')
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [averageRating, setAverageRating] = useState(0)
