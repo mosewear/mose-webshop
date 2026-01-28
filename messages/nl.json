@@ -914,7 +914,7 @@
       },
       {
         "question": "Wat zijn de verzendkosten en levertijd?",
-        "answer": "Verzending binnen Nederland is gratis vanaf €{freeShipping}. Daaronder betaal je €{shippingCostNL}. Voor België betaal je €{shippingCostBE} (gratis vanaf €{freeShipping}). Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL."
+        "answer": "Verzending binnen Nederland en België is gratis vanaf €{freeShipping}. Daaronder betaal je €{shippingCost}. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL."
       },
       {
         "question": "Kan ik mijn bestelling retourneren?",
