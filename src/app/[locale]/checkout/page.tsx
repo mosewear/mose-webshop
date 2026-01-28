@@ -889,6 +889,7 @@ export default function CheckoutPage() {
         tax_amount: 0,
         promo_code: promoCode || null,
         discount_amount: promoDiscount,
+        locale: locale, // Save customer's language preference for emails
         shipping_address: {
           name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
           address: form.address.trim(),

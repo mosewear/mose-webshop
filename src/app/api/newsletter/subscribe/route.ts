@@ -36,7 +36,7 @@ function checkRateLimit(key: string): boolean {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, source = 'homepage' } = body
+    const { email, source = 'homepage', locale = 'nl' } = body
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -110,7 +110,11 @@ export async function POST(req: NextRequest) {
 
         // Send welcome email
         try {
-          await sendNewsletterWelcomeEmail({ email: email.toLowerCase(), source })
+          await sendNewsletterWelcomeEmail({ 
+            email: email.toLowerCase(), 
+            source,
+            locale // Pass locale for multi-language emails
+          })
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError)
           // Don't fail the subscription if email fails
@@ -143,7 +147,11 @@ export async function POST(req: NextRequest) {
 
     // Send welcome email (async, don't wait)
     try {
-      await sendNewsletterWelcomeEmail({ email: email.toLowerCase(), source })
+      await sendNewsletterWelcomeEmail({ 
+        email: email.toLowerCase(), 
+        source,
+        locale // Pass locale for multi-language emails
+      })
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError)
       // Don't fail the subscription if email fails

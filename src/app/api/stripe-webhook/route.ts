@@ -430,6 +430,7 @@ export async function POST(req: NextRequest) {
                 city: shippingAddress?.city || '',
                 postalCode: shippingAddress?.postalCode || '',
               },
+              locale: updatedOrder.locale || 'nl', // Pass locale for multi-language emails
             })
             console.log('✅ Order confirmation email sent')
           } catch (emailError) {
@@ -616,6 +617,7 @@ export async function POST(req: NextRequest) {
                     city: shippingAddress?.city || '',
                     postalCode: shippingAddress?.postalCode || '',
                   },
+                  locale: updatedOrder.locale || 'nl', // Pass locale for multi-language emails
                 })
                 console.log('✅ Order confirmation email sent')
               } catch (emailError) {

@@ -59,6 +59,7 @@ export default function HomePageClient({
         body: JSON.stringify({
           email: newsletterEmail,
           source: 'homepage',
+          locale, // Pass current locale for multi-language emails
         }),
       })
 

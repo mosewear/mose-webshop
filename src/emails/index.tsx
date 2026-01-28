@@ -1,0 +1,24 @@
+/**
+ * All React Email Templates - Centralized Export
+ * 
+ * This file exports all email templates used in the application.
+ * Each template uses i18next for internationalization support.
+ */
+
+export { default as OrderConfirmationEmail } from './OrderConfirmation'
+export { default as ShippingConfirmationEmail } from './ShippingConfirmation'
+
+// Additional exports will be added as more templates are created
+// export { default as OrderProcessingEmail } from './OrderProcessing'
+// export { default as OrderDeliveredEmail } from './OrderDelivered'
+// export { default as OrderCancelledEmail } from './OrderCancelled'
+// export { default as ReturnRequestedEmail } from './ReturnRequested'
+// export { default as ReturnLabelGeneratedEmail } from './ReturnLabelGenerated'
+// export { default as ReturnApprovedEmail } from './ReturnApproved'
+// export { default as ReturnRefundedEmail } from './ReturnRefunded'
+// export { default as ReturnRejectedEmail } from './ReturnRejected'
+// export { default as AbandonedCartEmail } from './AbandonedCart'
+// export { default as BackInStockEmail } from './BackInStock'
+// export { default as NewsletterWelcomeEmail } from './NewsletterWelcome'
+// export { default as ContactFormEmail } from './ContactForm'
+
