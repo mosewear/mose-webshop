@@ -695,8 +695,13 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       <input
                         type="number"
                         min="0"
-                        value={variant.stock_quantity}
-                        onChange={(e) => handleUpdateStock(variant.id, parseInt(e.target.value))}
+                        defaultValue={variant.stock_quantity}
+                        onBlur={(e) => {
+                          const newValue = parseInt(e.target.value) || 0
+                          if (newValue !== variant.stock_quantity) {
+                            handleUpdateStock(variant.id, newValue)
+                          }
+                        }}
                         className={`w-20 px-3 py-2 border-2 focus:outline-none transition-colors ${
                           variant.stock_quantity < 5
                             ? 'border-red-300 focus:border-red-500 bg-red-50'
@@ -711,8 +716,13 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <input
                             type="number"
                             min="0"
-                            value={variant.presale_stock_quantity}
-                            onChange={(e) => handleUpdatePresaleStock(variant.id, parseInt(e.target.value))}
+                            defaultValue={variant.presale_stock_quantity}
+                            onBlur={(e) => {
+                              const newValue = parseInt(e.target.value) || 0
+                              if (newValue !== variant.presale_stock_quantity) {
+                                handleUpdatePresaleStock(variant.id, newValue)
+                              }
+                            }}
                             className="w-16 px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                           />
                         </div>
@@ -730,9 +740,13 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         <div>
                           <input
                             type="text"
-                            value={variant.presale_expected_date || ''}
-                            onChange={(e) => handleUpdatePresaleDate(variant.id, e.target.value)}
-                            onBlur={(e) => handleUpdatePresaleDate(variant.id, e.target.value)}
+                            defaultValue={variant.presale_expected_date || ''}
+                            onBlur={(e) => {
+                              const newValue = e.target.value
+                              if (newValue !== (variant.presale_expected_date || '')) {
+                                handleUpdatePresaleDate(variant.id, newValue)
+                              }
+                            }}
                             placeholder="bijv. Week 10 feb"
                             className="w-full px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                           />
