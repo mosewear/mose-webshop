@@ -201,6 +201,20 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  const handleUpdatePresaleDate = async (variantId: string, date: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ presale_expected_date: date || null })
+        .eq('id', variantId)
+
+      if (error) throw error
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
   const handleToggleAvailability = async (variantId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
@@ -713,9 +727,16 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                             <span className="text-xs text-gray-600">Enabled</span>
                           </label>
                         </div>
-                        {variant.presale_expected_date && (
-                          <div className="text-xs text-gray-500">{variant.presale_expected_date}</div>
-                        )}
+                        <div>
+                          <input
+                            type="text"
+                            value={variant.presale_expected_date || ''}
+                            onChange={(e) => handleUpdatePresaleDate(variant.id, e.target.value)}
+                            onBlur={(e) => handleUpdatePresaleDate(variant.id, e.target.value)}
+                            placeholder="bijv. Week 10 feb"
+                            className="w-full px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          />
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
