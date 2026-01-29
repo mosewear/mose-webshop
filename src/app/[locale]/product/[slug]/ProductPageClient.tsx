@@ -727,6 +727,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const totalStock = selectedVariant ? selectedVariant.stock_quantity + selectedVariant.presale_stock_quantity : 0
   const hasAnyStock = totalStock > 0
 
+  // Debug logging
+  if (selectedVariant) {
+    console.log('🔍 Selected Variant:', {
+      size: selectedVariant.size,
+      color: selectedVariant.color,
+      stock_quantity: selectedVariant.stock_quantity,
+      presale_stock_quantity: selectedVariant.presale_stock_quantity,
+      presale_enabled: selectedVariant.presale_enabled,
+      presale_expected_date: selectedVariant.presale_expected_date,
+      isPresale,
+      hasAnyStock,
+      totalStock
+    })
+  } else {
+    console.log('⚠️ No variant selected')
+  }
+
   return (
     <>
       <div className="min-h-screen pt-6 md:pt-8 px-4 pb-24 md:pb-16">
