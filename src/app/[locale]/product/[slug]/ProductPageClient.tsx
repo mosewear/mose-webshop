@@ -100,7 +100,9 @@ function formatTemplateText(text: string): ReactElement[] {
 
 // Helper functie om HTML content te renderen (voor database content)
 function renderHTMLContent(html: string): ReactElement {
-  return <div dangerouslySetInnerHTML={{ __html: html }} />
+  // Convert **text** to <strong>text</strong> before rendering
+  const processedHTML = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  return <div dangerouslySetInnerHTML={{ __html: processedHTML }} />
 }
 
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)
@@ -752,7 +754,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </div>
                   </>
                 )}
-                {!inStock && (
+                {/* Out of Stock OR Presale Overlay */}
+                {!hasAnyStock && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none">
                     <span className="text-white text-2xl md:text-4xl font-display">UITVERKOCHT</span>
                   </div>
@@ -870,6 +873,42 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   </>
                 )}
               </div>
+
+              {/* 🎯 PRESALE STATUS BAR (Optie 2) */}
+              {isPresale && selectedVariant && (
+                <div className="bg-gradient-to-r from-[#f0f4e8] to-[#e8f0e4] border-l-4 border-[#86A35A] p-4 rounded-r space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#86A35A] rounded-full flex items-center justify-center border-2 border-[#6b8547]">
+                      <Package className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-[#4a5c2a] uppercase tracking-wide mb-1">
+                        📦 Pre-sale beschikbaar
+                      </p>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        <strong>Verwacht:</strong> {selectedVariant.presale_expected_date || 'Binnenkort'}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {selectedVariant.presale_stock_quantity} {selectedVariant.presale_stock_quantity === 1 ? 'stuk' : 'stuks'} beschikbaar voor pre-order
+                      </p>
+                    </div>
+                  </div>
+                  <div className="pl-13 text-xs text-gray-600 space-y-1">
+                    <p className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-[#86A35A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Betaal nu, ontvang zodra binnen
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-[#86A35A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Direct verzonden na binnenkomst
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Description - Desktop: Expandable with line-clamp */}
               <div className="hidden md:block border-t border-b border-gray-200 py-3">
@@ -1134,16 +1173,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 {/* IN WINKELWAGEN button - primary action */}
                 <button
                   onClick={handleAddToCart}
-                  disabled={!inStock || !selectedVariant || addedToCart}
+                  disabled={!hasAnyStock || !selectedVariant || addedToCart}
                   className={`flex-1 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
                     addedToCart
                       ? 'bg-black text-white cursor-default animate-success'
-                      : inStock && selectedVariant
+                      : hasAnyStock && selectedVariant
                       ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {addedToCart ? t('added') : inStock ? t('addToCart') : t('outOfStock')}
+                  {addedToCart ? t('added') : hasAnyStock ? t('addToCart') : t('outOfStock')}
                 </button>
                 
                 {/* Wishlist button - secondary */}
