@@ -232,6 +232,9 @@
       "available": "PRE-SALE AVAILABLE",
       "expectedDelivery": "Expected delivery: {date}",
       "itemsAvailable": "{count} items available for pre-order",
+      "itemAvailable": "item available",
+      "itemsAvailableShort": "items available",
+      "comingSoon": "Coming soon",
       "reserveNow": "RESERVE NOW",
       "payNowReceiveLater": "Pay now, receive when in stock",
       "shippedImmediately": "Shipped immediately upon arrival"

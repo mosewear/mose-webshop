@@ -231,6 +231,9 @@
       "available": "PRE-SALE BESCHIKBAAR",
       "expectedDelivery": "Verwachte levering: {date}",
       "itemsAvailable": "{count} stuks beschikbaar voor pre-order",
+      "itemAvailable": "stuk beschikbaar",
+      "itemsAvailableShort": "stuks beschikbaar",
+      "comingSoon": "Binnenkort",
       "reserveNow": "RESERVEER NU",
       "payNowReceiveLater": "Betaal nu, ontvang zodra binnen",
       "shippedImmediately": "Direct verzonden na binnenkomst"

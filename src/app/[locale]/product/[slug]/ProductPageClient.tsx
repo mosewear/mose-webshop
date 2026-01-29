@@ -896,14 +896,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <div className="flex items-center gap-2 mb-2">
                     <Package className="w-5 h-5 text-[#86A35A] flex-shrink-0" />
                     <p className="text-sm font-bold text-[#4a5c2a] uppercase tracking-wide">
-                      Pre-sale beschikbaar
+                      {t('presale.available', { ns: 'product' })}
                     </p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2">
-                    <strong>Verwacht:</strong> {selectedVariant.presale_expected_date || 'Binnenkort'} • <strong>{selectedVariant.presale_stock_quantity}</strong> {selectedVariant.presale_stock_quantity === 1 ? 'stuk' : 'stuks'} beschikbaar
+                    <strong>{t('presale.expected', { ns: 'product' })}:</strong> {selectedVariant.presale_expected_date || t('presale.comingSoon', { ns: 'product' })} • <strong>{selectedVariant.presale_stock_quantity}</strong> {selectedVariant.presale_stock_quantity === 1 ? t('presale.itemAvailable', { ns: 'product' }) : t('presale.itemsAvailableShort', { ns: 'product' })}
                   </p>
                   <p className="text-xs text-gray-600">
-                    ✓ Betaal nu, ontvang zodra binnen  •  ✓ Direct verzonden na binnenkomst
+                    ✓ {t('presale.payNowReceiveLater', { ns: 'product' })}  •  ✓ {t('presale.shippedImmediately', { ns: 'product' })}
                   </p>
                 </div>
               )}
