@@ -787,17 +787,17 @@ export default function ShopPageClient() {
                           
                           {/* Stock Badge */}
                           {hasPresale && !inStock && (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
+                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 z-10">
                               <PresaleBadge variant="compact" />
                             </div>
                           )}
                           {!hasPresale && !inStock && (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
+                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
                               {t('outOfStock')}
                             </div>
                           )}
                           {inStock && totalStock < 5 && (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
+                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
                               {t('lastItems')}
                             </div>
                           )}
