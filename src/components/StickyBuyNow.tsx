@@ -8,7 +8,8 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { trackAddToCart } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { formatPrice } from '@/lib/format-price'
 
 interface StickyBuyNowProps {
   product: {
@@ -41,6 +42,7 @@ export default function StickyBuyNow({
   onVariantRequired,
 }: StickyBuyNowProps) {
   const t = useTranslations('product.sticky')
+  const locale = useLocale()
   const [isVisible, setIsVisible] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [isBuying, setIsBuying] = useState(false)
@@ -248,16 +250,16 @@ export default function StickyBuyNow({
                 <>
                   {/* Originele prijs doorgestreept */}
                   <p className="text-sm md:text-base text-gray-400 line-through">
-                    €{(originalPrice * quantity).toFixed(2)}
+                    {formatPrice(originalPrice * quantity, locale)}
                   </p>
                   {/* Nieuwe prijs - rood en bold - GEEN BADGE meer (ruimtebesparing) */}
                   <p className="text-xl md:text-2xl font-bold text-red-500">
-                    €{(finalPrice * quantity).toFixed(2)}
+                    {formatPrice(finalPrice * quantity, locale)}
                   </p>
                 </>
               ) : (
                 <p className="text-xl md:text-2xl font-bold text-white">
-                  €{(finalPrice * quantity).toFixed(2)}
+                  {formatPrice(finalPrice * quantity, locale)}
                 </p>
               )}
             </div>
