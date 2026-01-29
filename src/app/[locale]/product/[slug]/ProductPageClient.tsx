@@ -13,8 +13,6 @@ import StickyBuyNow from '@/components/StickyBuyNow'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
-import PresaleBadge from '@/components/PresaleBadge'
-import PresaleInfoBox from '@/components/PresaleInfoBox'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -907,56 +905,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     )
                   })()}
                 </div>
-                
-                {/* Presale Badge & Info */}
-                {isPresale && (
-                  <>
-                    <div className="mt-3">
-                      <PresaleBadge 
-                        expectedDate={selectedVariant.presale_expected_date} 
-                        variant="large"
-                      />
-                    </div>
-                    <PresaleInfoBox 
-                      expectedDate={selectedVariant.presale_expected_date}
-                    />
-                  </>
-                )}
               </div>
 
-              {/* 🎯 PRESALE STATUS BAR (Optie 2) */}
+              {/* 🎯 COMPACT PRESALE CARD */}
               {isPresale && selectedVariant && (
-                <div className="bg-gradient-to-r from-[#f0f4e8] to-[#e8f0e4] border-l-4 border-[#86A35A] p-4 rounded-r space-y-2">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-[#86A35A] rounded-full flex items-center justify-center border-2 border-[#6b8547]">
-                      <Package className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-[#4a5c2a] uppercase tracking-wide mb-1">
-                        📦 Pre-sale beschikbaar
-                      </p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        <strong>Verwacht:</strong> {selectedVariant.presale_expected_date || 'Binnenkort'}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {selectedVariant.presale_stock_quantity} {selectedVariant.presale_stock_quantity === 1 ? 'stuk' : 'stuks'} beschikbaar voor pre-order
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pl-13 text-xs text-gray-600 space-y-1">
-                    <p className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-[#86A35A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Betaal nu, ontvang zodra binnen
-                    </p>
-                    <p className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-[#86A35A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Direct verzonden na binnenkomst
+                <div className="bg-gradient-to-r from-[#f0f4e8] to-[#e8f0e4] border-l-4 border-[#86A35A] p-3 md:p-4 rounded-r">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="w-5 h-5 text-[#86A35A] flex-shrink-0" />
+                    <p className="text-sm font-bold text-[#4a5c2a] uppercase tracking-wide">
+                      Pre-sale beschikbaar
                     </p>
                   </div>
+                  <p className="text-sm text-gray-700 mb-2">
+                    <strong>Verwacht:</strong> {selectedVariant.presale_expected_date || 'Binnenkort'} • <strong>{selectedVariant.presale_stock_quantity}</strong> {selectedVariant.presale_stock_quantity === 1 ? 'stuk' : 'stuks'} beschikbaar
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    ✓ Betaal nu, ontvang zodra binnen  •  ✓ Direct verzonden na binnenkomst
+                  </p>
                 </div>
               )}
 
