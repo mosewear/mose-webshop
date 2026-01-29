@@ -3,6 +3,8 @@
 import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useLocale } from 'next-intl'
+import { formatPrice } from '@/lib/format-price'
 
 interface Product {
   id: string
@@ -24,6 +26,7 @@ interface MobileProductCarouselProps {
 export default function MobileProductCarousel({ products: propProducts }: MobileProductCarouselProps) {
   const carouselRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const locale = useLocale()
 
   // Fallback products (matching new Product interface)
   const fallbackProducts: Product[] = [
@@ -164,7 +167,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                     {product.name}
                   </h3>
                   <p className="text-2xl font-bold text-brand-primary mb-3">
-                    €{typeof product.price === 'number' ? product.price.toFixed(2) : (typeof product.base_price === 'number' ? product.base_price.toFixed(2) : '0.00')}
+                    {typeof product.price === 'number' ? formatPrice(product.price, locale) : (typeof product.base_price === 'number' ? formatPrice(product.base_price, locale) : '€0')}
                   </p>
                   
                   {/* Add to Cart Button */}

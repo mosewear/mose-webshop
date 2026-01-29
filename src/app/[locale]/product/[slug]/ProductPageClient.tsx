@@ -20,6 +20,7 @@ import { trackProductView, trackAddToCart } from '@/lib/analytics'
 import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import { formatPrice } from '@/lib/format-price'
 
 const supabase = createClient()
 
@@ -866,7 +867,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         <>
                           <div className="flex items-center gap-3 mb-1">
                             <p className="text-xl md:text-2xl font-bold text-red-600">
-                              €{salePrice.toFixed(2)}
+                              {formatPrice(salePrice, locale)}
                             </p>
                             <span className="inline-flex items-center px-3 py-1 text-sm font-bold bg-red-600 text-white">
                               -{discountPercentage}% KORTING
@@ -874,10 +875,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           </div>
                           <div className="flex items-center gap-2">
                             <p className="text-base text-gray-500 line-through">
-                              €{basePrice.toFixed(2)}
+                              {formatPrice(basePrice, locale)}
                             </p>
                             <p className="text-sm text-green-600 font-semibold">
-                              Je bespaart €{(basePrice - salePrice).toFixed(2)}
+                              Je bespaart {formatPrice(basePrice - salePrice, locale)}
                             </p>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{t('inclVat')}</p>
@@ -887,7 +888,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                     return (
                       <>
-                        <p className="text-xl md:text-2xl font-bold">€{basePrice.toFixed(2)}</p>
+                        <p className="text-xl md:text-2xl font-bold">{formatPrice(basePrice, locale)}</p>
                         <p className="text-xs text-gray-500">{t('inclVat')}</p>
                       </>
                     )

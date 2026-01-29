@@ -12,6 +12,7 @@ import PresaleBadge from '@/components/PresaleBadge'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { mapLocalizedProduct, mapLocalizedCategory } from '@/lib/i18n-db'
+import { formatPrice } from '@/lib/format-price'
 
 interface Product {
   id: string
@@ -849,10 +850,10 @@ export default function ShopPageClient() {
                                 return (
                                   <div className="flex flex-col gap-1">
                                     <span className="text-base md:text-2xl font-bold text-red-600">
-                                      €{product.sale_price.toFixed(2)}
+                                      {formatPrice(product.sale_price, locale)}
                                     </span>
                                     <span className="text-xs md:text-sm text-gray-500 line-through">
-                                      €{product.base_price.toFixed(2)}
+                                      {formatPrice(product.base_price, locale)}
                                     </span>
                                   </div>
                                 )
@@ -860,7 +861,7 @@ export default function ShopPageClient() {
                               
                               return (
                                 <span className="text-base md:text-2xl font-bold text-brand-primary">
-                                  €{product.base_price.toFixed(2)}
+                                  {formatPrice(product.base_price, locale)}
                                 </span>
                               )
                             })()}

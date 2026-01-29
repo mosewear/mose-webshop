@@ -10,6 +10,7 @@ import { useState, FormEvent } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import { formatPrice } from '@/lib/format-price'
 
 interface HomePageClientProps {
   siteSettings: {
@@ -390,14 +391,14 @@ export default function HomePageClient({
                             <div className="space-y-1">
                               <div className="flex items-center justify-center gap-2">
                                 <p className="text-2xl font-bold text-red-600">
-                                  €{product.sale_price.toFixed(2)}
+                                  {formatPrice(product.sale_price, locale)}
                                 </p>
                                 <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-red-600 text-white">
                                   -{discountPercentage}%
                                 </span>
                               </div>
                               <p className="text-base text-gray-500 line-through">
-                                €{product.price.toFixed(2)}
+                                {formatPrice(product.price, locale)}
                               </p>
                             </div>
                           )
@@ -405,7 +406,7 @@ export default function HomePageClient({
 
                         return (
                           <p className="text-2xl font-bold text-brand-primary">
-                            €{typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+                            {typeof product.price === 'number' ? formatPrice(product.price, locale) : '€0'}
                           </p>
                         )
                       })()}
