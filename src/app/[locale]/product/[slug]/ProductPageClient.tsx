@@ -385,7 +385,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         name_en,
         description_en,
         product_images(*),
-        product_variants(*),
+        product_variants(
+          id,
+          product_id,
+          size,
+          color,
+          color_hex,
+          sku,
+          stock_quantity,
+          presale_stock_quantity,
+          presale_enabled,
+          presale_expected_date,
+          price_adjustment,
+          is_available,
+          display_order,
+          created_at
+        ),
         categories(name, name_en, slug, size_guide_type, size_guide_content, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en)
       `)
       .eq('slug', slug)
@@ -398,6 +413,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
 
     if (data) {
+      console.log('🔍 DEBUG Product data:', data)
+      console.log('🔍 DEBUG Product variants:', data.product_variants)
       data.product_images.sort((a: ProductImage, b: ProductImage) => a.position - b.position)
       data.product_variants.sort((a: ProductVariant, b: ProductVariant) => a.display_order - b.display_order)
       setProduct(data)
@@ -432,7 +449,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           *,
           name_en,
           product_images(*),
-          product_variants(*),
+          product_variants(
+            id,
+            product_id,
+            size,
+            color,
+            color_hex,
+            sku,
+            stock_quantity,
+            presale_stock_quantity,
+            presale_enabled,
+            presale_expected_date,
+            price_adjustment,
+            is_available,
+            display_order,
+            created_at
+          ),
           categories(name, name_en, slug)
         `)
         .eq('category_id', data.category_id)
