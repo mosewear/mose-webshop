@@ -1041,13 +1041,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           key={size}
                           onClick={() => {
                             setSelectedSize(size)
-                            const firstColorForSize = sizeVariants.find((v) => {
-                              const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
-                              return v.is_available && totalStock > 0
-                            })
-                            if (firstColorForSize) {
-                              setSelectedColor(firstColorForSize.color)
-                            }
+                            // Optie 1: Behoud kleurkeuze, laat beschikbaarheid zien
+                            // Geen automatische kleurwijziging meer
                           }}
                           disabled={!sizeAvailable}
                           className={`px-4 md:px-5 py-2 border-2 font-bold uppercase tracking-wider transition-all text-sm ${
