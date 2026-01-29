@@ -22,6 +22,7 @@ interface ProductVariant {
   presale_stock_quantity: number
   presale_enabled: boolean
   presale_expected_date: string | null
+  presale_expected_date_en: string | null
   price_adjustment: number
   is_available: boolean
   display_order: number
@@ -47,6 +48,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     presale_stock_quantity: '0',
     presale_enabled: false,
     presale_expected_date: '',
+    presale_expected_date_en: '',
     price_adjustment: '0',
     is_available: true,
   })
@@ -131,6 +133,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             presale_stock_quantity: parseInt(newVariant.presale_stock_quantity),
             presale_enabled: newVariant.presale_enabled,
             presale_expected_date: newVariant.presale_expected_date || null,
+            presale_expected_date_en: newVariant.presale_expected_date_en || null,
             price_adjustment: parseFloat(newVariant.price_adjustment),
             is_available: newVariant.is_available,
             display_order: maxOrder + 1,
@@ -149,6 +152,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         presale_stock_quantity: '0',
         presale_enabled: false,
         presale_expected_date: '',
+        presale_expected_date_en: '',
         price_adjustment: '0',
         is_available: true,
       })
@@ -206,6 +210,20 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       const { error } = await supabase
         .from('product_variants')
         .update({ presale_expected_date: date || null })
+        .eq('id', variantId)
+
+      if (error) throw error
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleUpdatePresaleDateEn = async (variantId: string, date: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ presale_expected_date_en: date || null })
         .eq('id', variantId)
 
       if (error) throw error
@@ -531,7 +549,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             {/* Pre-sale Expected Date */}
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                Pre-sale Verwachte Datum
+                Pre-sale Verwachte Datum (NL)
               </label>
               <input
                 type="text"
@@ -541,6 +559,21 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                 placeholder="bijv. Week 10 februari"
               />
               <p className="mt-1 text-xs text-gray-500">Bijv. "Week 10 februari" of "Eind maart"</p>
+            </div>
+
+            {/* Pre-sale Expected Date EN */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Pre-sale Expected Date (EN)
+              </label>
+              <input
+                type="text"
+                value={newVariant.presale_expected_date_en}
+                onChange={(e) => setNewVariant({ ...newVariant, presale_expected_date_en: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                placeholder="e.g. Week 10 February"
+              />
+              <p className="mt-1 text-xs text-gray-500">E.g. "Week 10 February" or "End of March"</p>
             </div>
           </div>
 
@@ -781,7 +814,8 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                             <span className="text-xs text-gray-600">Enabled</span>
                           </label>
                         </div>
-                        <div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-gray-500">NL:</label>
                           <input
                             type="text"
                             defaultValue={variant.presale_expected_date || ''}
@@ -791,7 +825,22 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                                 handleUpdatePresaleDate(variant.id, newValue)
                               }
                             }}
-                            placeholder="bijv. Week 10 feb"
+                            placeholder="Week 10 feb"
+                            className="w-full px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-gray-500">EN:</label>
+                          <input
+                            type="text"
+                            defaultValue={variant.presale_expected_date_en || ''}
+                            onBlur={(e) => {
+                              const newValue = e.target.value
+                              if (newValue !== (variant.presale_expected_date_en || '')) {
+                                handleUpdatePresaleDateEn(variant.id, newValue)
+                              }
+                            }}
+                            placeholder="Week 10 Feb"
                             className="w-full px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                           />
                         </div>
