@@ -431,9 +431,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         currency: 'EUR'
       })
 
-      // Auto-select first available variant
+      // Auto-select first available variant (including presale)
       if (data.product_variants.length > 0) {
-        const firstAvailable = data.product_variants.find((v: ProductVariant) => v.is_available && v.stock_quantity > 0)
+        const firstAvailable = data.product_variants.find((v: ProductVariant) => {
+          const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
+          return v.is_available && totalStock > 0
+        })
         if (firstAvailable) {
           setSelectedSize(firstAvailable.size)
           setSelectedColor(firstAvailable.color)
@@ -1076,13 +1079,19 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <div className="flex flex-wrap gap-2">
                     {availableSizes.map((size) => {
                       const sizeVariants = product.product_variants.filter((v) => v.size === size)
-                      const sizeAvailable = sizeVariants.some((v) => v.is_available && v.stock_quantity > 0)
+                      const sizeAvailable = sizeVariants.some((v) => {
+                        const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
+                        return v.is_available && totalStock > 0
+                      })
                       return (
                         <button
                           key={size}
                           onClick={() => {
                             setSelectedSize(size)
-                            const firstColorForSize = sizeVariants.find((v) => v.is_available && v.stock_quantity > 0)
+                            const firstColorForSize = sizeVariants.find((v) => {
+                              const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
+                              return v.is_available && totalStock > 0
+                            })
                             if (firstColorForSize) {
                               setSelectedColor(firstColorForSize.color)
                             }
@@ -1115,7 +1124,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       const colorVariant = product.product_variants.find(
                         (v) => v.size === selectedSize && v.color === color
                       )
-                      const colorAvailable = colorVariant && colorVariant.is_available && colorVariant.stock_quantity > 0
+                      const totalStock = colorVariant ? colorVariant.stock_quantity + (colorVariant.presale_stock_quantity || 0) : 0
+                      const colorAvailable = colorVariant && colorVariant.is_available && totalStock > 0
                       const isSelected = selectedColor === color
                       return (
                         <button
