@@ -1706,7 +1706,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           selectedVariant={selectedVariant}
           quantity={quantity}
           cartImage={displayImages.find(img => img.media_type === 'image')?.url || displayImages[0]?.url || '/placeholder.png'}
-          inStock={inStock}
+          inStock={hasAnyStock}
           onVariantRequired={handleVariantRequired}
         />
       )}
