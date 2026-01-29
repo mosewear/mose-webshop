@@ -13,6 +13,8 @@ import StickyBuyNow from '@/components/StickyBuyNow'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
+import PresaleBadge from '@/components/PresaleBadge'
+import PresaleInfoBox from '@/components/PresaleInfoBox'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -70,6 +72,9 @@ interface ProductVariant {
   color_hex: string
   sku: string
   stock_quantity: number
+  presale_stock_quantity: number
+  presale_enabled: boolean
+  presale_expected_date: string | null
   price_adjustment: number
   is_available: boolean
   display_order: number
@@ -686,6 +691,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const inStock = selectedVariant ? selectedVariant.stock_quantity > 0 : false
   const lowStock = selectedVariant && selectedVariant.stock_quantity > 0 && selectedVariant.stock_quantity <= 5
+  const isPresale = selectedVariant && selectedVariant.presale_enabled && selectedVariant.stock_quantity === 0 && selectedVariant.presale_stock_quantity > 0
+  const totalStock = selectedVariant ? selectedVariant.stock_quantity + selectedVariant.presale_stock_quantity : 0
+  const hasAnyStock = totalStock > 0
 
   return (
     <>
@@ -846,6 +854,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     )
                   })()}
                 </div>
+                
+                {/* Presale Badge & Info */}
+                {isPresale && (
+                  <>
+                    <div className="mt-3">
+                      <PresaleBadge 
+                        expectedDate={selectedVariant.presale_expected_date} 
+                        variant="large"
+                      />
+                    </div>
+                    <PresaleInfoBox 
+                      expectedDate={selectedVariant.presale_expected_date}
+                    />
+                  </>
+                )}
               </div>
 
               {/* Description - Desktop: Expandable with line-clamp */}
@@ -873,7 +896,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </div>
 
               {/* 🎯 SMART AVAILABILITY & TRUST BANNER - Desktop: Boven keuzes / Mobile: Onder keuzes */}
-              {selectedVariant && (
+              {selectedVariant && !isPresale && (
                 <div className={`hidden md:block border-l-4 p-3 md:p-4 rounded-r space-y-2.5 ${
                   inStock 
                     ? lowStock 
@@ -1051,7 +1074,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               )}
 
               {/* Back in Stock Notification (Feature 7) */}
-              {!inStock && selectedVariant && (
+              {!hasAnyStock && selectedVariant && (
                 <div className="bg-gray-50 border-2 border-gray-300 p-4 rounded">
                   <h3 className="font-bold mb-2">{t('notify.title')}</h3>
                   <p className="text-sm text-gray-600 mb-3">{t('notify.description')}</p>
@@ -1149,7 +1172,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </div>
 
               {/* 🎯 SMART AVAILABILITY & TRUST BANNER - Mobile only (na keuzes) */}
-              {selectedVariant && (
+              {selectedVariant && !isPresale && (
                 <div className={`md:hidden border-l-4 p-3 rounded-r space-y-2.5 ${
                   inStock 
                     ? lowStock 

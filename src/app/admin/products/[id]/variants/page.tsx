@@ -19,6 +19,9 @@ interface ProductVariant {
   color_hex: string | null
   sku: string | null
   stock_quantity: number
+  presale_stock_quantity: number
+  presale_enabled: boolean
+  presale_expected_date: string | null
   price_adjustment: number
   is_available: boolean
   display_order: number
@@ -41,6 +44,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     color_hex: '#000000',
     sku: '',
     stock_quantity: '0',
+    presale_stock_quantity: '0',
+    presale_enabled: false,
+    presale_expected_date: '',
     price_adjustment: '0',
     is_available: true,
   })
@@ -122,6 +128,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             color_hex: newVariant.color_hex || null,
             sku: sku,
             stock_quantity: parseInt(newVariant.stock_quantity),
+            presale_stock_quantity: parseInt(newVariant.presale_stock_quantity),
+            presale_enabled: newVariant.presale_enabled,
+            presale_expected_date: newVariant.presale_expected_date || null,
             price_adjustment: parseFloat(newVariant.price_adjustment),
             is_available: newVariant.is_available,
             display_order: maxOrder + 1,
@@ -137,6 +146,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         color_hex: '#000000',
         sku: '',
         stock_quantity: '0',
+        presale_stock_quantity: '0',
+        presale_enabled: false,
+        presale_expected_date: '',
         price_adjustment: '0',
         is_available: true,
       })
@@ -152,6 +164,34 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       const { error } = await supabase
         .from('product_variants')
         .update({ stock_quantity: newStock })
+        .eq('id', variantId)
+
+      if (error) throw error
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleUpdatePresaleStock = async (variantId: string, newStock: number) => {
+    try {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ presale_stock_quantity: newStock })
+        .eq('id', variantId)
+
+      if (error) throw error
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleTogglePresale = async (variantId: string, enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ presale_enabled: enabled })
         .eq('id', variantId)
 
       if (error) throw error
@@ -444,19 +484,63 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
               />
               <p className="mt-1 text-xs text-gray-500">Bijv. +5.00 voor XL maat</p>
             </div>
+
+            {/* Pre-sale Stock */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Pre-sale Voorraad
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={newVariant.presale_stock_quantity}
+                onChange={(e) => setNewVariant({ ...newVariant, presale_stock_quantity: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                placeholder="0"
+              />
+            </div>
+
+            {/* Pre-sale Expected Date */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Pre-sale Verwachte Datum
+              </label>
+              <input
+                type="text"
+                value={newVariant.presale_expected_date}
+                onChange={(e) => setNewVariant({ ...newVariant, presale_expected_date: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                placeholder="bijv. Week 10 februari"
+              />
+              <p className="mt-1 text-xs text-gray-500">Bijv. "Week 10 februari" of "Eind maart"</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 mb-6">
-            <input
-              type="checkbox"
-              id="is_available"
-              checked={newVariant.is_available}
-              onChange={(e) => setNewVariant({ ...newVariant, is_available: e.target.checked })}
-              className="w-5 h-5 border-2 border-gray-300"
-            />
-            <label htmlFor="is_available" className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Direct beschikbaar
-            </label>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="presale_enabled"
+                checked={newVariant.presale_enabled}
+                onChange={(e) => setNewVariant({ ...newVariant, presale_enabled: e.target.checked })}
+                className="w-5 h-5 border-2 border-gray-300"
+              />
+              <label htmlFor="presale_enabled" className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Pre-sale activeren
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="is_available"
+                checked={newVariant.is_available}
+                onChange={(e) => setNewVariant({ ...newVariant, is_available: e.target.checked })}
+                className="w-5 h-5 border-2 border-gray-300"
+              />
+              <label htmlFor="is_available" className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Direct beschikbaar
+              </label>
+            </div>
           </div>
 
           <button
@@ -506,6 +590,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Voorraad
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Pre-sale
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
@@ -602,6 +689,34 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                             : 'border-gray-300 focus:border-brand-primary'
                         }`}
                       />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Qty:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={variant.presale_stock_quantity}
+                            onChange={(e) => handleUpdatePresaleStock(variant.id, parseInt(e.target.value))}
+                            className="w-16 px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={variant.presale_enabled}
+                              onChange={(e) => handleTogglePresale(variant.id, e.target.checked)}
+                              className="w-3 h-3"
+                            />
+                            <span className="text-xs text-gray-600">Enabled</span>
+                          </label>
+                        </div>
+                        {variant.presale_expected_date && (
+                          <div className="text-xs text-gray-500">{variant.presale_expected_date}</div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button

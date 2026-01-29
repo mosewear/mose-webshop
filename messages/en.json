@@ -220,6 +220,15 @@
     "showMore": "Read more",
     "showLess": "Show less",
     "inclVat": "Incl. VAT",
+    "presale": {
+      "badge": "Pre-sale",
+      "expected": "Expected",
+      "infoTitle": "Pre-sale Product",
+      "infoDescription": "This product is on pre-sale. We expect it within {date} and will ship immediately upon arrival.",
+      "infoDescriptionNoDate": "This product is on pre-sale and will be shipped as soon as it arrives.",
+      "cartNotice": "Your cart contains pre-sale items that will be shipped when they arrive.",
+      "checkoutNotice": "Pre-sale items will be shipped when they arrive (expected {date})."
+    },
     "stock": {
       "inStock": "✓ In Stock - Tomorrow at home",
       "outOfStock": "Temporarily out of stock",

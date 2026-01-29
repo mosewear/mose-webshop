@@ -8,6 +8,7 @@ import { X, SlidersHorizontal, Search } from 'lucide-react'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import DualRangeSlider from '@/components/DualRangeSlider'
+import PresaleBadge from '@/components/PresaleBadge'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { mapLocalizedProduct, mapLocalizedCategory } from '@/lib/i18n-db'
@@ -35,6 +36,9 @@ interface Product {
   }>
   variants?: Array<{
     stock_quantity: number
+    presale_stock_quantity: number
+    presale_enabled: boolean
+    presale_expected_date?: string | null
     is_available: boolean
   }>
 }
@@ -157,7 +161,7 @@ export default function ShopPageClient() {
           description_en,
           category:categories(name, name_en, slug),
           images:product_images(url, alt_text, is_primary, media_type, color),
-          variants:product_variants(stock_quantity, is_available)
+          variants:product_variants(stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
         `)
         .order('created_at', { ascending: false })
 
@@ -757,6 +761,12 @@ export default function ShopPageClient() {
                 {filteredProducts.map(product => {
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
+                  const hasPresale = product.variants?.some(v => 
+                    v.presale_enabled && v.stock_quantity === 0 && v.presale_stock_quantity > 0
+                  ) || false
+                  const presaleExpected = hasPresale 
+                    ? product.variants?.find(v => v.presale_enabled && v.presale_expected_date)?.presale_expected_date 
+                    : null
                   
                   return (
                     <LocaleLink
@@ -776,13 +786,18 @@ export default function ShopPageClient() {
                           />
                           
                           {/* Stock Badge */}
-                          {!inStock && (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider">
+                          {hasPresale && !inStock && (
+                            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
+                              <PresaleBadge variant="compact" />
+                            </div>
+                          )}
+                          {!hasPresale && !inStock && (
+                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
                               {t('outOfStock', { ns: 'product' })}
                             </div>
                           )}
                           {inStock && totalStock < 5 && (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider">
+                            <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
                               {t('lastItems')}
                             </div>
                           )}

@@ -219,6 +219,15 @@
     "showMore": "Lees meer",
     "showLess": "Toon minder",
     "inclVat": "Incl. BTW",
+    "presale": {
+      "badge": "Pre-sale",
+      "expected": "Verwacht",
+      "infoTitle": "Pre-sale Product",
+      "infoDescription": "Dit product is in pre-sale. We verwachten deze binnen {date} en verzenden direct na binnenkomst.",
+      "infoDescriptionNoDate": "Dit product is in pre-sale en wordt verzonden zodra het binnenkomt.",
+      "cartNotice": "Je winkelwagen bevat pre-sale items die verzonden worden zodra ze binnen zijn.",
+      "checkoutNotice": "Pre-sale items worden verzonden zodra ze binnenkomen (verwacht {date})."
+    },
     "stock": {
       "inStock": "✓ Op voorraad - Morgen in huis",
       "outOfStock": "Tijdelijk uitverkocht",
