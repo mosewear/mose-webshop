@@ -213,6 +213,7 @@
     "addToCart": "Add to Cart",
     "added": "✓ Added",
     "buyNow": "Buy Now",
+    "outOfStock": "Out of stock",
     "size": "Size",
     "color": "Color",
     "selectColor": "Select color {color}",
@@ -227,7 +228,13 @@
       "infoDescription": "This product is on pre-sale. We expect it within {date} and will ship immediately upon arrival.",
       "infoDescriptionNoDate": "This product is on pre-sale and will be shipped as soon as it arrives.",
       "cartNotice": "Your cart contains pre-sale items that will be shipped when they arrive.",
-      "checkoutNotice": "Pre-sale items will be shipped when they arrive (expected {date})."
+      "checkoutNotice": "Pre-sale items will be shipped when they arrive (expected {date}).",
+      "available": "PRE-SALE AVAILABLE",
+      "expectedDelivery": "Expected delivery: {date}",
+      "itemsAvailable": "{count} items available for pre-order",
+      "reserveNow": "RESERVE NOW",
+      "payNowReceiveLater": "Pay now, receive when in stock",
+      "shippedImmediately": "Shipped immediately upon arrival"
     },
     "stock": {
       "inStock": "✓ In Stock - Tomorrow at home",

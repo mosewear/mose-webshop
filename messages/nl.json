@@ -212,6 +212,7 @@
     "addToCart": "In winkelwagen",
     "added": "✓ Toegevoegd",
     "buyNow": "Nu kopen",
+    "outOfStock": "Uitverkocht",
     "size": "Maat",
     "color": "Kleur",
     "selectColor": "Selecteer kleur {color}",
@@ -226,7 +227,13 @@
       "infoDescription": "Dit product is in pre-sale. We verwachten deze binnen {date} en verzenden direct na binnenkomst.",
       "infoDescriptionNoDate": "Dit product is in pre-sale en wordt verzonden zodra het binnenkomt.",
       "cartNotice": "Je winkelwagen bevat pre-sale items die verzonden worden zodra ze binnen zijn.",
-      "checkoutNotice": "Pre-sale items worden verzonden zodra ze binnenkomen (verwacht {date})."
+      "checkoutNotice": "Pre-sale items worden verzonden zodra ze binnenkomen (verwacht {date}).",
+      "available": "PRE-SALE BESCHIKBAAR",
+      "expectedDelivery": "Verwachte levering: {date}",
+      "itemsAvailable": "{count} stuks beschikbaar voor pre-order",
+      "reserveNow": "RESERVEER NU",
+      "payNowReceiveLater": "Betaal nu, ontvang zodra binnen",
+      "shippedImmediately": "Direct verzonden na binnenkomst"
     },
     "stock": {
       "inStock": "✓ Op voorraad - Morgen in huis",
