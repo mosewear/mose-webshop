@@ -99,8 +99,10 @@ function formatTemplateText(text: string): ReactElement[] {
 
 // Helper functie om HTML content te renderen (voor database content)
 function renderHTMLContent(html: string): ReactElement {
-  // Convert **text** to <strong>text</strong> before rendering
-  const processedHTML = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  // Convert **text** to <strong>text</strong> and \n to <br> before rendering
+  const processedHTML = html
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
+    .replace(/\n/g, '<br>') // Newlines to line breaks
   return <div dangerouslySetInnerHTML={{ __html: processedHTML }} />
 }
 
