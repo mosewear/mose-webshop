@@ -180,6 +180,9 @@
     "shipping": "Shipping",
     "shippingFree": "FREE",
     "total": "Total",
+    "totalInclusive": "Incl. VAT & shipping",
+    "freeShippingProgress": "€{amount} away from free shipping!",
+    "freeShippingProgressMobile": "€{amount} to free shipping",
     "checkout": "Go to Checkout",
     "promo": {
       "title": "Have a promo code?",

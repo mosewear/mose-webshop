@@ -497,7 +497,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-gray-600">
-                        Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)}</span> tot gratis verzending!
+                        {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2) })}
                       </p>
                       <span className="text-xs font-bold text-brand-primary">
                         {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%
@@ -603,7 +603,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
                   </div>
                   <p className="text-xs text-gray-500 text-right mt-1">
-                    Incl. BTW & verzending
+                    {t('totalInclusive')}
                   </p>
                 </div>
 
@@ -626,7 +626,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{t('total')}</div>
                       <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
                       <div className="text-xs text-gray-400">
-                        Incl. BTW & verzending
+                        {t('totalInclusive')}
                       </div>
                     </div>
                     <LocaleLink
@@ -642,7 +642,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div className="border-t border-gray-700 pt-2">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-xs text-gray-400">
-                          Nog <span className="font-bold text-white">€{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)}</span> tot gratis verzending
+                          {t('freeShippingProgressMobile', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2) })}
                         </p>
                         <span className="text-xs font-bold text-brand-primary">
                           {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%

@@ -180,6 +180,9 @@
     "shipping": "Verzending",
     "shippingFree": "GRATIS",
     "total": "Totaal",
+    "totalInclusive": "Incl. BTW & verzending",
+    "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
+    "freeShippingProgressMobile": "Nog €{amount} tot gratis verzending",
     "checkout": "Naar checkout",
     "promo": {
       "title": "Heb je een kortingscode?",
