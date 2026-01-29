@@ -276,7 +276,7 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
         .in('product_id', validIds),
       supabase
         .from('product_variants')
-        .select('product_id, size, color, stock_quantity')
+        .select('product_id, size, color, stock_quantity, presale_stock_quantity')
         .in('product_id', validIds)
     ])
 
@@ -303,8 +303,9 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
       const productVariants = variantsData?.filter(v => v.product_id === p.id) || []
       const primaryImage = productImages.find(img => img.is_primary)
       
-      // Calculate total stock from variants
+      // Calculate total stock from variants (regular + presale)
       const totalStock = productVariants.reduce((sum, variant) => sum + (variant.stock_quantity || 0), 0)
+      const totalPresaleStock = productVariants.reduce((sum, variant) => sum + (variant.presale_stock_quantity || 0), 0)
       
       return {
         id: p.id,
@@ -312,7 +313,8 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
         slug: p.slug,
         price: p.base_price,
         sale_price: p.sale_price,
-        stock_quantity: totalStock, // Calculated from variants
+        stock_quantity: totalStock, // Regular stock
+        presale_stock_quantity: totalPresaleStock, // Presale stock
         image_url: primaryImage?.url || productImages[0]?.url || '/placeholder.png',
         images: productImages,
         variants: productVariants,

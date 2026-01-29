@@ -319,17 +319,32 @@ export default function HomePageClient({
                         className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
                       />
                       
-                      {/* Badge - show if in stock */}
-                      {product.stock_quantity > 0 && (
-                        <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          {t('featured.inStock')}
-                        </div>
-                      )}
-                      {product.stock_quantity === 0 && (
-                        <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          {t('featured.outOfStock')}
-                        </div>
-                      )}
+                      {/* Badge - show stock status including presale */}
+                      {(() => {
+                        const totalStock = product.stock_quantity + (product.presale_stock_quantity || 0)
+                        const isPresale = product.stock_quantity === 0 && product.presale_stock_quantity > 0
+                        
+                        if (isPresale) {
+                          return (
+                            <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                              PRE-SALE
+                            </div>
+                          )
+                        } else if (product.stock_quantity > 0) {
+                          return (
+                            <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                              {t('featured.inStock')}
+                            </div>
+                          )
+                        } else if (totalStock === 0) {
+                          return (
+                            <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                              {t('featured.outOfStock')}
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
                       
                       {/* Wishlist Button - Hover on desktop */}
                       <button 

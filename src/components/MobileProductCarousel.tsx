@@ -13,6 +13,8 @@ interface Product {
   product_images?: { url: string }[]
   image_url?: string  // Added for transformed products
   images?: { url: string }[]  // Added for transformed products
+  stock_quantity?: number
+  presale_stock_quantity?: number
 }
 
 interface MobileProductCarouselProps {
@@ -113,6 +115,35 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                     fill
                     className="object-cover object-center"
                   />
+                  
+                  {/* Badge - show stock status including presale */}
+                  {(() => {
+                    const stockQty = product.stock_quantity || 0
+                    const presaleQty = product.presale_stock_quantity || 0
+                    const totalStock = stockQty + presaleQty
+                    const isPresale = stockQty === 0 && presaleQty > 0
+                    
+                    if (isPresale) {
+                      return (
+                        <div className="absolute top-2 left-2 bg-brand-primary text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg">
+                          PRE-SALE
+                        </div>
+                      )
+                    } else if (stockQty > 0) {
+                      return (
+                        <div className="absolute top-2 left-2 bg-brand-primary text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg">
+                          OP VOORRAAD
+                        </div>
+                      )
+                    } else if (totalStock === 0) {
+                      return (
+                        <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg">
+                          UITVERKOCHT
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
                   
                   {/* Wishlist Button - Always visible on mobile */}
                   <button 
