@@ -793,7 +793,7 @@ export default function ShopPageClient() {
                           )}
                           {!hasPresale && !inStock && (
                             <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
-                              {t('outOfStock', { ns: 'product' })}
+                              {t('outOfStock')}
                             </div>
                           )}
                           {inStock && totalStock < 5 && (

@@ -433,7 +433,8 @@
     "loading": "Laden...",
     "inCategory": "in {category}",
     "lastItems": "LAATSTE ITEMS",
-    "discount": "KORTING"
+    "discount": "KORTING",
+    "outOfStock": "UITVERKOCHT"
   },
   "errors": {
     "required": "Verplicht veld",

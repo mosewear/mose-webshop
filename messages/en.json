@@ -446,7 +446,8 @@
       "priceAsc": "Price: Low - High",
       "priceDesc": "Price: High - Low",
       "name": "Name: A - Z"
-    }
+    },
+    "outOfStock": "OUT OF STOCK"
   },
   "errors": {
     "required": "Required field",
