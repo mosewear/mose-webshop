@@ -6,6 +6,7 @@ import { Home, Package, FileText, Settings } from 'lucide-react'
 import IconSelector from '@/components/admin/IconSelector'
 import RevalidateButton from '@/components/admin/RevalidateButton'
 import LanguageTabs from '@/components/admin/LanguageTabs'
+import MediaPicker from '@/components/admin/MediaPicker'
 
 interface HomepageSettings {
   id: string
@@ -272,12 +273,15 @@ export default function HomepageSettingsPage() {
                     </div>
                     {activeLanguage === 'nl' && (
                       <div>
-                        <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hero Afbeelding URL</label>
-                        <input
-                          type="text"
-                          value={settings.hero_image_url}
-                          onChange={(e) => setSettings({ ...settings, hero_image_url: e.target.value })}
-                          className="w-full px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
+                        <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hero Afbeelding</label>
+                        <MediaPicker
+                          mode="single"
+                          currentImageUrl={settings.hero_image_url}
+                          onImageSelected={(url) => setSettings({ ...settings, hero_image_url: url })}
+                          accept="images"
+                          folder="homepage/hero"
+                          bucket="images"
+                          buttonText="Selecteer hero afbeelding"
                         />
                       </div>
                     )}
@@ -958,12 +962,15 @@ export default function HomepageSettingsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold mb-2">Story Afbeelding URL</label>
-                            <input
-                              type="text"
-                              value={settings.story_image_url}
-                              onChange={(e) => setSettings({ ...settings, story_image_url: e.target.value })}
-                              className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                            <label className="block text-sm font-bold mb-2">Story Afbeelding</label>
+                            <MediaPicker
+                              mode="single"
+                              currentImageUrl={settings.story_image_url}
+                              onImageSelected={(url) => setSettings({ ...settings, story_image_url: url })}
+                              accept="images"
+                              folder="homepage/story"
+                              bucket="images"
+                              buttonText="Selecteer story afbeelding"
                             />
                           </div>
                         </>

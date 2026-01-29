@@ -39,18 +39,69 @@ export default function MediaLibraryClient() {
   // Define buckets outside component to avoid dependency issues
   const buckets = ['product-images', 'images', 'videos'];
 
+  // Recursively get all files from a folder
+  const getAllFilesInFolder = async (bucket: string, folder: string = ''): Promise<MediaFile[]> => {
+    const files: MediaFile[] = [];
+    
+    try {
+      const { data, error} = await supabase.storage.from(bucket).list(folder, {
+        limit: 1000,
+        sortBy: { column: 'created_at', order: 'desc' },
+      });
+
+      if (error) {
+        console.error(`Error loading ${bucket}/${folder}:`, error);
+        return files;
+      }
+
+      if (!data) return files;
+
+      for (const item of data) {
+        const fullPath = folder ? `${folder}/${item.name}` : item.name;
+        
+        // If it's a file (has an id), add it
+        if (item.id) {
+          const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fullPath);
+          const isVideo = item.name.toLowerCase().match(/\.(mp4|webm|mov|avi)$/);
+          
+          files.push({
+            name: fullPath,
+            id: item.id,
+            bucket,
+            size: item.metadata?.size || 0,
+            created_at: item.created_at || new Date().toISOString(),
+            url: urlData.publicUrl,
+            type: isVideo ? 'video' : 'image',
+          });
+        }
+        // If it's a folder (no id), recursively get files from it
+        else if (!item.id) {
+          const subFiles = await getAllFilesInFolder(bucket, fullPath);
+          files.push(...subFiles);
+        }
+      }
+    } catch (error) {
+      console.error(`Error in getAllFilesInFolder ${bucket}/${folder}:`, error);
+    }
+    
+    return files;
+  };
+
   const loadFiles = useCallback(async () => {
     setLoading(true);
     try {
-      // Use API route with service role to list files
-      const bucket = selectedBucket === 'all' ? 'all' : selectedBucket;
-      const response = await fetch(`/api/media?bucket=${bucket}`);
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
+      const allFiles: MediaFile[] = [];
 
-      const allFiles: MediaFile[] = await response.json();
+      const bucketsToLoad = selectedBucket === 'all' ? buckets : [selectedBucket];
+
+      for (const bucket of bucketsToLoad) {
+        try {
+          const bucketFiles = await getAllFilesInFolder(bucket);
+          allFiles.push(...bucketFiles);
+        } catch (bucketError) {
+          console.error(`Error processing bucket ${bucket}:`, bucketError);
+        }
+      }
 
       // Filter op zoekquery
       const filtered = searchQuery

@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
-import MediaUpload from '@/components/admin/MediaUpload'
+import MediaPicker from '@/components/admin/MediaPicker'
 
 interface Product {
   id: string
@@ -111,7 +111,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
 
   const filteredImages = getFilteredImages()
 
-  const handleMediaUploaded = async (url: string, mediaType: 'image' | 'video') => {
+  const handleMediaUploaded = async (files: { url: string; type: 'image' | 'video'; color?: string }[]) => {
     try {
       // Get next position for current color filter
       const relevantImages = selectedColor === null 
@@ -121,21 +121,25 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
 
       // Check if this is the first general image (should be primary)
       const generalImages = images.filter(img => !img.color)
-      const isPrimary = selectedColor === null && generalImages.length === 0
+      
+      // Insert all files
+      const inserts = files.map((file, index) => {
+        const isPrimary = file.color === undefined && generalImages.length === 0 && index === 0
+        
+        return {
+          product_id: id,
+          url: file.url,
+          media_type: file.type,
+          alt_text: product?.name ? `${product.name}${file.color ? ` - ${file.color}` : ''}` : null,
+          position: maxPosition + 1 + index,
+          is_primary: isPrimary,
+          color: file.color || null,
+        }
+      })
 
       const { error } = await supabase
         .from('product_images')
-        .insert([
-          {
-            product_id: id,
-            url,
-            media_type: mediaType,
-            alt_text: product?.name ? `${product.name}${selectedColor ? ` - ${selectedColor}` : ''}` : null,
-            position: maxPosition + 1,
-            is_primary: isPrimary,
-            color: selectedColor, // null for general, color name for color-specific
-          },
-        ])
+        .insert(inserts)
 
       if (error) throw error
       fetchImages()
@@ -358,13 +362,19 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         </h3>
         <p className="text-sm text-gray-500 mb-4">
           {selectedColor 
-            ? `Deze media wordt alleen getoond als kleur "${selectedColor}" is geselecteerd.`
-            : 'Algemene media wordt getoond als fallback voor alle kleuren.'}
+            ? `Deze media wordt alleen getoond als kleur "${selectedColor}" is geselecteerd. Je kunt meerdere bestanden selecteren en ze automatisch koppelen aan deze kleur.`
+            : 'Algemene media wordt getoond als fallback voor alle kleuren. Je kunt meerdere bestanden tegelijk selecteren.'}
         </p>
-        <MediaUpload
-          onUploadComplete={handleMediaUploaded}
-          acceptVideo={true}
+        <MediaPicker
+          mode="multi"
+          onMultipleSelected={handleMediaUploaded}
+          accept="both"
+          showColorSelect={true}
+          availableColors={variants.map(v => v.color)}
           maxSizeMB={100}
+          folder="products"
+          bucket="product-images"
+          buttonText="Selecteer media uit library"
         />
       </div>
 

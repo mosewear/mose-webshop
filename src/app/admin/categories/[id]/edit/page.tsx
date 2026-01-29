@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import ImageUpload from '@/components/admin/ImageUpload'
+import MediaPicker from '@/components/admin/MediaPicker'
 import SizeGuideEditor from '@/components/admin/SizeGuideEditor'
 import LanguageTabs from '@/components/admin/LanguageTabs'
 
@@ -204,11 +204,14 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
               Categorie Afbeelding
             </label>
-            <ImageUpload
+            <MediaPicker
+              mode="single"
               currentImageUrl={formData.image_url}
-              onImageUploaded={(url) => setFormData({ ...formData, image_url: url })}
-              onImageRemoved={() => setFormData({ ...formData, image_url: '' })}
+              onImageSelected={(url) => setFormData({ ...formData, image_url: url })}
+              accept="images"
               folder="categories"
+              bucket="images"
+              buttonText={formData.image_url ? 'Wijzig afbeelding' : 'Selecteer afbeelding'}
             />
           </div>
           )}
