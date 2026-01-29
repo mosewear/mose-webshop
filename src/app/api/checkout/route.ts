@@ -22,14 +22,14 @@ export async function POST(request: Request) {
     )
 
     // ============================================
-    // STEP 1: VALIDATE STOCK AVAILABILITY
+    // STEP 1: VALIDATE STOCK AVAILABILITY (DUAL INVENTORY)
     // ============================================
     console.log('📦 Validating stock for', items.length, 'items...')
     
     for (const item of items) {
       const { data: variant, error: variantError } = await supabase
         .from('product_variants')
-        .select('stock_quantity, is_available')
+        .select('stock_quantity, presale_stock_quantity, presale_enabled, is_available')
         .eq('id', item.variant_id)
         .single()
 
@@ -56,20 +56,22 @@ export async function POST(request: Request) {
         )
       }
 
-      // Check if enough stock
-      if (variant.stock_quantity < item.quantity) {
-        console.error('❌ Insufficient stock:', item.product_name, 'Available:', variant.stock_quantity, 'Requested:', item.quantity)
+      // DUAL INVENTORY CHECK: Check total available stock (regular + presale)
+      const totalAvailable = variant.stock_quantity + variant.presale_stock_quantity
+      
+      if (totalAvailable < item.quantity) {
+        console.error('❌ Insufficient total stock:', item.product_name, 'Available:', totalAvailable, 'Requested:', item.quantity)
         return NextResponse.json(
           { 
             error: 'Onvoldoende voorraad',
-            details: `Sorry, ${item.product_name} (${item.size} - ${item.color}) heeft nog maar ${variant.stock_quantity} op voorraad`
+            details: `Sorry, ${item.product_name} (${item.size} - ${item.color}) heeft nog maar ${totalAvailable} op voorraad`
           },
           { status: 400 }
         )
       }
     }
 
-    console.log('✅ Stock validation passed for all items')
+    console.log('✅ Stock validation passed for all items (including presale)')
 
     // ============================================
     // STEP 2: VALIDATE PROMO CODE (SERVER-SIDE)

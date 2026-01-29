@@ -100,6 +100,7 @@ export type Database = {
           change_amount: number
           created_at: string | null
           id: string
+          inventory_type: 'regular' | 'presale'
           new_stock: number
           notes: string | null
           previous_stock: number
@@ -111,6 +112,7 @@ export type Database = {
           change_amount: number
           created_at?: string | null
           id?: string
+          inventory_type?: 'regular' | 'presale'
           new_stock: number
           notes?: string | null
           previous_stock: number
@@ -122,6 +124,7 @@ export type Database = {
           change_amount?: number
           created_at?: string | null
           id?: string
+          inventory_type?: 'regular' | 'presale'
           new_stock?: number
           notes?: string | null
           previous_stock?: number
@@ -437,6 +440,9 @@ export type Database = {
           id: string
           is_available: boolean | null
           price_adjustment: number | null
+          presale_enabled: boolean
+          presale_expected_date: string | null
+          presale_stock_quantity: number
           product_id: string
           size: string
           sku: string
@@ -450,6 +456,9 @@ export type Database = {
           id?: string
           is_available?: boolean | null
           price_adjustment?: number | null
+          presale_enabled?: boolean
+          presale_expected_date?: string | null
+          presale_stock_quantity?: number
           product_id: string
           size: string
           sku: string
@@ -463,6 +472,9 @@ export type Database = {
           id?: string
           is_available?: boolean | null
           price_adjustment?: number | null
+          presale_enabled?: boolean
+          presale_expected_date?: string | null
+          presale_stock_quantity?: number
           product_id?: string
           size?: string
           sku?: string

@@ -47,10 +47,10 @@ export async function POST(request: Request) {
     const results = []
     for (const item of orderItems) {
       try {
-        // First get current stock
+        // First get current stock (both regular and presale)
         const { data: currentVariant, error: fetchError } = await supabase
           .from('product_variants')
-          .select('stock_quantity')
+          .select('stock_quantity, presale_stock_quantity, presale_enabled')
           .eq('id', item.variant_id)
           .single()
 
@@ -65,9 +65,12 @@ export async function POST(request: Request) {
           continue
         }
 
-        // Check if enough stock
-        if (currentVariant.stock_quantity < item.quantity) {
-          console.error(`❌ Insufficient stock for ${item.product_name}`)
+        // Calculate total available stock
+        const totalAvailable = currentVariant.stock_quantity + currentVariant.presale_stock_quantity
+
+        // Check if enough total stock
+        if (totalAvailable < item.quantity) {
+          console.error(`❌ Insufficient total stock for ${item.product_name}`)
           results.push({
             variant_id: item.variant_id,
             product_name: `${item.product_name} (${item.size} - ${item.color})`,
@@ -77,15 +80,38 @@ export async function POST(request: Request) {
           continue
         }
 
-        // Calculate new stock
-        const newStock = currentVariant.stock_quantity - item.quantity
+        // DUAL INVENTORY LOGIC: Decrement regular stock first, then presale
+        let remainingToDecrement = item.quantity
+        let newRegularStock = currentVariant.stock_quantity
+        let newPresaleStock = currentVariant.presale_stock_quantity
+        let usedRegular = 0
+        let usedPresale = 0
 
-        // Update stock
+        // Step 1: Use regular stock first
+        if (currentVariant.stock_quantity > 0) {
+          const fromRegular = Math.min(remainingToDecrement, currentVariant.stock_quantity)
+          newRegularStock -= fromRegular
+          remainingToDecrement -= fromRegular
+          usedRegular = fromRegular
+        }
+
+        // Step 2: Use presale stock if needed
+        if (remainingToDecrement > 0 && currentVariant.presale_stock_quantity > 0) {
+          const fromPresale = Math.min(remainingToDecrement, currentVariant.presale_stock_quantity)
+          newPresaleStock -= fromPresale
+          remainingToDecrement -= fromPresale
+          usedPresale = fromPresale
+        }
+
+        // Update stock in database
         const { data: updatedVariant, error: updateError } = await supabase
           .from('product_variants')
-          .update({ stock_quantity: newStock })
+          .update({ 
+            stock_quantity: newRegularStock,
+            presale_stock_quantity: newPresaleStock
+          })
           .eq('id', item.variant_id)
-          .select('id, stock_quantity')
+          .select('id, stock_quantity, presale_stock_quantity')
           .single()
 
         if (updateError || !updatedVariant) {
@@ -97,12 +123,20 @@ export async function POST(request: Request) {
             error: 'Failed to update stock'
           })
         } else {
-          console.log(`✅ Stock decremented for ${item.product_name}: ${updatedVariant.stock_quantity} remaining`)
+          console.log(`✅ Stock decremented for ${item.product_name}:`, {
+            regular: `${usedRegular} used (${updatedVariant.stock_quantity} remaining)`,
+            presale: `${usedPresale} used (${updatedVariant.presale_stock_quantity} remaining)`
+          })
+          
           results.push({
             variant_id: item.variant_id,
             product_name: `${item.product_name} (${item.size} - ${item.color})`,
             success: true,
-            new_stock: updatedVariant.stock_quantity
+            new_regular_stock: updatedVariant.stock_quantity,
+            new_presale_stock: updatedVariant.presale_stock_quantity,
+            used_regular: usedRegular,
+            used_presale: usedPresale,
+            is_presale: usedPresale > 0
           })
         }
       } catch (err: any) {
