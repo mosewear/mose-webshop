@@ -413,8 +413,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
 
     if (data) {
-      console.log('🔍 DEBUG Product data:', data)
-      console.log('🔍 DEBUG Product variants:', data.product_variants)
       data.product_images.sort((a: ProductImage, b: ProductImage) => a.position - b.position)
       data.product_variants.sort((a: ProductVariant, b: ProductVariant) => a.display_order - b.display_order)
       setProduct(data)
