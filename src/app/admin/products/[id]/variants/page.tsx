@@ -215,6 +215,20 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  const handleUpdateColorHex = async (variantId: string, hex: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ color_hex: hex || null })
+        .eq('id', variantId)
+
+      if (error) throw error
+      fetchVariants()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
   const handleToggleAvailability = async (variantId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
@@ -597,6 +611,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                     Kleur
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Kleur Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     SKU
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -666,6 +683,33 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           />
                         )}
                         <span className="text-sm text-gray-900">{variant.color}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          defaultValue={variant.color_hex || '#000000'}
+                          onBlur={(e) => {
+                            const newHex = e.target.value
+                            if (newHex !== (variant.color_hex || '')) {
+                              handleUpdateColorHex(variant.id, newHex)
+                            }
+                          }}
+                          className="w-10 h-8 border-2 border-gray-300 rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          defaultValue={variant.color_hex || ''}
+                          onBlur={(e) => {
+                            const newHex = e.target.value
+                            if (newHex !== (variant.color_hex || '')) {
+                              handleUpdateColorHex(variant.id, newHex)
+                            }
+                          }}
+                          placeholder="#000000"
+                          className="w-24 px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none font-mono"
+                        />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
