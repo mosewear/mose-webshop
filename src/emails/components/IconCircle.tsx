@@ -7,6 +7,7 @@ type IconType =
   | 'x' 
   | 'shopping-cart' 
   | 'package'
+  | 'clock'
 
 interface IconCircleProps {
   icon: IconType
@@ -21,6 +22,7 @@ const iconMap: Record<IconType, string> = {
   'x': '✕',
   'shopping-cart': '🛒',
   'package': '📦',
+  'clock': '⏰',
 }
 
 const colorMap: Record<string, string> = {

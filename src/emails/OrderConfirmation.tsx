@@ -25,6 +25,8 @@ interface OrderConfirmationEmailProps {
     quantity: number
     price: number
     imageUrl?: string
+    isPresale?: boolean
+    presaleExpectedDate?: string
   }>
   shippingAddress: {
     name: string
@@ -32,6 +34,8 @@ interface OrderConfirmationEmailProps {
     city: string
     postalCode: string
   }
+  hasPresaleItems?: boolean
+  presaleExpectedDate?: string
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -45,6 +49,8 @@ export default function OrderConfirmationEmail({
   orderTotal,
   orderItems,
   shippingAddress,
+  hasPresaleItems = false,
+  presaleExpectedDate,
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
@@ -77,22 +83,45 @@ export default function OrderConfirmationEmail({
             <div style={orderBadge}>#{orderId.slice(0, 8).toUpperCase()}</div>
           </Section>
 
+          {/* Presale Warning Box (for mixed orders) */}
+          {hasPresaleItems && (
+            <Section style={presaleWarningBox}>
+              <Row>
+                <Column style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
+                  <div style={{ fontSize: '24px' }}>⚠️</div>
+                </Column>
+                <Column>
+                  <Text style={presaleWarningTitle}>{t('orderConfirmation.presaleNotice')}</Text>
+                  <Text style={presaleWarningText}>
+                    {t('orderConfirmation.presaleNoticeText', { date: presaleExpectedDate })}
+                  </Text>
+                </Column>
+              </Row>
+            </Section>
+          )}
+
           {/* Content */}
           <Section style={content}>
             {/* Order Items */}
             <Text style={sectionTitle}>{t('orderConfirmation.yourItems')}</Text>
             {orderItems.map((item, i) => (
-              <ProductItem
-                key={i}
-                name={item.name}
-                size={item.size}
-                color={item.color}
-                quantity={item.quantity}
-                price={item.price}
-                imageUrl={item.imageUrl}
-                siteUrl={siteUrl}
-                t={t}
-              />
+              <div key={i}>
+                <ProductItem
+                  name={item.name}
+                  size={item.size}
+                  color={item.color}
+                  quantity={item.quantity}
+                  price={item.price}
+                  imageUrl={item.imageUrl}
+                  siteUrl={siteUrl}
+                  t={t}
+                />
+                {item.isPresale && (
+                  <div style={presaleItemBadge}>
+                    📦 PRE-SALE {item.presaleExpectedDate ? `• ${t('orderConfirmation.expected')}: ${item.presaleExpectedDate}` : ''}
+                  </div>
+                )}
+              </div>
             ))}
 
             {/* Payment Summary */}
@@ -179,6 +208,42 @@ const orderBadge = {
   fontSize: '14px',
   fontWeight: 700,
   letterSpacing: '1.5px',
+}
+
+const presaleWarningBox = {
+  backgroundColor: '#fff3cd',
+  border: '3px solid #ffc107',
+  padding: '20px',
+  margin: '24px 20px',
+}
+
+const presaleWarningTitle = {
+  margin: '0 0 8px 0',
+  fontSize: '14px',
+  fontWeight: '700',
+  color: '#856404',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '1px',
+}
+
+const presaleWarningText = {
+  margin: '0',
+  fontSize: '14px',
+  lineHeight: '20px',
+  color: '#856404',
+}
+
+const presaleItemBadge = {
+  backgroundColor: '#f0f4e8',
+  border: '2px solid #86A35A',
+  color: '#4a5c2a',
+  padding: '8px 12px',
+  fontSize: '12px',
+  fontWeight: '700',
+  marginTop: '-12px',
+  marginBottom: '16px',
+  marginLeft: '20px',
+  marginRight: '20px',
 }
 
 const content = {

@@ -6,6 +6,7 @@
  */
 
 export { default as OrderConfirmationEmail } from './OrderConfirmation'
+export { default as PreorderConfirmationEmail } from './PreorderConfirmation'
 export { default as ShippingConfirmationEmail } from './ShippingConfirmation'
 
 // Additional exports will be added as more templates are created

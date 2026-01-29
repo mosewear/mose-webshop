@@ -24,6 +24,32 @@ export type EmailTranslationKeys = {
     shipping: string
     total: string
     totalPaid: string
+    presaleNotice: string
+    presaleNoticeText: string
+    expected: string
+  }
+  preorder: {
+    subject: string
+    title: string
+    subtitle: string
+    heroText: string
+    expectedDelivery: string
+    deliveryInfo: string
+    whatHappensNow: string
+    step1: string
+    step2: string
+    step3: string
+    step4: string
+    yourPreorder: string
+    paymentSummary: string
+    subtotal: string
+    btw: string
+    shipping: string
+    free: string
+    total: string
+    shippingAddress: string
+    questions: string
+    questionsText: string
   }
   shipping: {
     subject: string
@@ -284,6 +310,32 @@ const nl: EmailTranslationKeys = {
     shipping: 'Verzendkosten',
     total: 'Totaal',
     totalPaid: 'TOTAAL BETAALD',
+    presaleNotice: 'Let op: Pre-sale items',
+    presaleNoticeText: 'Je bestelling bevat pre-sale items die verzonden worden zodra ze binnen zijn (verwacht: {{date}}). Je ontvangt een verzendbevestiging zodra alles klaar is.',
+    expected: 'Verwacht',
+  },
+  preorder: {
+    subject: 'Pre-order bevestigd #{{orderId}} - MOSE',
+    title: 'PRE-ORDER BEVESTIGD!',
+    subtitle: 'Exclusieve Pre-sale',
+    heroText: 'Hey {{name}}, bedankt voor je pre-order! 🙌',
+    expectedDelivery: 'VERWACHTE LEVERING',
+    deliveryInfo: 'We informeren je zodra je bestelling verzonden wordt.',
+    whatHappensNow: 'Wat gebeurt er nu?',
+    step1: 'Je betaling is verwerkt ✓',
+    step2: 'We reserveren je items',
+    step3: 'Zodra binnen → direct verzonden',
+    step4: 'Track & trace in je inbox',
+    yourPreorder: 'Jouw pre-order',
+    paymentSummary: 'BETAALOVERZICHT',
+    subtotal: 'Subtotaal (excl. BTW)',
+    btw: 'BTW (21%)',
+    shipping: 'Verzendkosten',
+    free: 'Gratis',
+    total: 'Totaal',
+    shippingAddress: 'VERZENDADRES',
+    questions: 'Vragen?',
+    questionsText: 'We helpen je graag!',
   },
   shipping: {
     subject: 'Je bestelling is verzonden #{{orderId}} - MOSE',
@@ -544,6 +596,32 @@ const en: EmailTranslationKeys = {
     shipping: 'Shipping',
     total: 'Total',
     totalPaid: 'TOTAL PAID',
+    presaleNotice: 'Note: Pre-sale items',
+    presaleNoticeText: 'Your order contains pre-sale items that will be shipped when they arrive (expected: {{date}}). You will receive a shipping confirmation when everything is ready.',
+    expected: 'Expected',
+  },
+  preorder: {
+    subject: 'Pre-order confirmed #{{orderId}} - MOSE',
+    title: 'PRE-ORDER CONFIRMED!',
+    subtitle: 'Exclusive Pre-sale',
+    heroText: 'Hey {{name}}, thank you for your pre-order! 🙌',
+    expectedDelivery: 'EXPECTED DELIVERY',
+    deliveryInfo: 'We will notify you when your order ships.',
+    whatHappensNow: 'What happens now?',
+    step1: 'Your payment has been processed ✓',
+    step2: 'We reserve your items',
+    step3: 'When arrived → shipped immediately',
+    step4: 'Track & trace in your inbox',
+    yourPreorder: 'Your pre-order',
+    paymentSummary: 'PAYMENT SUMMARY',
+    subtotal: 'Subtotal (excl. VAT)',
+    btw: 'VAT (21%)',
+    shipping: 'Shipping',
+    free: 'Free',
+    total: 'Total',
+    shippingAddress: 'SHIPPING ADDRESS',
+    questions: 'Questions?',
+    questionsText: 'We are happy to help!',
   },
   shipping: {
     subject: 'Your order has been shipped #{{orderId}} - MOSE',
