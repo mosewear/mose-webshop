@@ -238,7 +238,7 @@ export async function createReturnLabelV3(
   // MOSE address (return destination)
   const moseAddress = process.env.MOSE_CONTACT_ADDRESS || 'Stavangerweg 13, 9723 JC Groningen'
   const moseEmail = process.env.MOSE_CONTACT_EMAIL || 'info@mosewear.nl'
-  const mosePhone = process.env.MOSE_CONTACT_PHONE || '+31612345678'
+  const mosePhone = process.env.MOSE_CONTACT_PHONE || '+31502111931'
 
   const [moseStreetPart, mosePostalCityPart] = moseAddress.split(',').map(s => s.trim())
   const mosePostalCodeMatch = mosePostalCityPart.match(/^(\d{4}\s*[A-Z]{2})/)

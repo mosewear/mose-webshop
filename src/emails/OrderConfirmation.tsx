@@ -54,7 +54,7 @@ export default function OrderConfirmationEmail({
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 6 12345678',
+  contactPhone = '+31 50 211 1931',
   contactAddress = 'Helperbrink 203, 9721 TC Groningen',
 }: OrderConfirmationEmailProps) {
   // Calculate totals
