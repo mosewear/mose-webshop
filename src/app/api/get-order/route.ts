@@ -67,14 +67,17 @@ export async function GET(req: NextRequest) {
 
     console.log('✅ API: Order found:', order.id)
     console.log('📊 API: Order status:', {
-      stripe_payment_status: order.stripe_payment_status,
+      payment_status: order.payment_status,
       payment_method: order.payment_method,
-      email: order.email
+      email: order.email,
+      last_email_sent_at: order.last_email_sent_at
     })
 
     // Send order confirmation email if not sent yet
     // Check if email should be sent (only once per order)
-    const shouldSendEmail = order.stripe_payment_status === 'pending' || order.stripe_payment_status === null
+    // Use payment_status (not stripe_payment_status which doesn't exist!)
+    // Also check if email was already sent via last_email_sent_at
+    const shouldSendEmail = (order.payment_status === 'pending' || !order.payment_status) && !order.last_email_sent_at
     
     if (shouldSendEmail) {
       console.log('📧 API: Attempting to send order confirmation email...')
@@ -97,7 +100,8 @@ export async function GET(req: NextRequest) {
             address: order.shipping_address.address,
             city: order.shipping_address.city,
             postalCode: order.shipping_address.postalCode,
-          }
+          },
+          locale: order.locale || 'nl', // Pass locale for multi-language emails
         })
         
         console.log('📧 API: Email result:', emailResult)
@@ -105,13 +109,16 @@ export async function GET(req: NextRequest) {
         if (emailResult.success) {
           console.log('✅ API: Order confirmation email sent successfully!')
           
-          // Mark email as sent by updating stripe_payment_status
+          // Mark email as sent by updating last_email_sent_at and last_email_type
           await supabase
             .from('orders')
-            .update({ stripe_payment_status: 'succeeded' })
+            .update({ 
+              last_email_sent_at: new Date().toISOString(),
+              last_email_type: 'order_confirmation'
+            })
             .eq('id', order.id)
             
-          console.log('✅ API: Order status updated to succeeded')
+          console.log('✅ API: Order email timestamp updated')
         } else {
           console.error('❌ API: Email send failed:', emailResult.error)
           // Don't update status if email failed
@@ -122,7 +129,9 @@ export async function GET(req: NextRequest) {
         // Don't fail the request if email fails, but log it
       }
     } else {
-      console.log('ℹ️ API: Email already sent for this order (status: ' + order.stripe_payment_status + ')')
+      console.log('ℹ️ API: Email already sent for this order')
+      console.log('   Payment status:', order.payment_status)
+      console.log('   Last email sent at:', order.last_email_sent_at)
     }
 
     return NextResponse.json({
