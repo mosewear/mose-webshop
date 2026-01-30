@@ -794,7 +794,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 {/* Out of Stock OR Presale Overlay */}
                 {!hasAnyStock && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none">
-                    <span className="text-white text-2xl md:text-4xl font-display">UITVERKOCHT</span>
+                    <span className="text-white text-2xl md:text-4xl font-display">{t('stock.outOfStock').toUpperCase()}</span>
                   </div>
                 )}
               </div>
