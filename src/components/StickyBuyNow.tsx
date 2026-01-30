@@ -243,45 +243,22 @@ export default function StickyBuyNow({
 
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Prijs sectie - prominent links - WIT op ZWART */}
-            <div className="flex-shrink-0 flex items-center gap-2">
-              {hasDiscount ? (
-                <>
-                  {/* Originele prijs doorgestreept */}
-                  <p className="text-sm md:text-base text-gray-400 line-through">
-                    {formatPrice(originalPrice * quantity, locale)}
-                  </p>
-                  {/* Nieuwe prijs - rood en bold - GEEN BADGE meer (ruimtebesparing) */}
-                  <p className="text-xl md:text-2xl font-bold text-red-500">
-                    {formatPrice(finalPrice * quantity, locale)}
-                  </p>
-                </>
-              ) : (
-                <p className="text-xl md:text-2xl font-bold text-white">
-                  {formatPrice(finalPrice * quantity, locale)}
-                </p>
-              )}
-            </div>
-
-            {/* Spacer */}
-            <div className="flex-1"></div>
-
-            {/* IN WAGEN button - WIT met zwarte tekst */}
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* IN WAGEN button - 50% width - WIT met zwarte tekst */}
             <button
               onClick={handleAddToCart}
               disabled={!inStock || isAdding || isBuying}
-              className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2 sm:px-2.5 md:px-5 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+              className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
             >
               <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="hidden min-[400px]:inline">{t('addToCart')}</span>
+              <span>{t('addToCart')}</span>
             </button>
 
-            {/* BESTEL NU button - GROEN met PULSE! */}
+            {/* BESTEL NU button - 50% width - GROEN met PULSE! */}
             <button
               onClick={handleBuyNow}
               disabled={!inStock || isAdding || isBuying}
-              className="pulse-button flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 md:px-8 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm whitespace-nowrap"
+              className="pulse-button flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
             >
               {isBuying ? (
                 <span>{t('adding')}</span>
