@@ -197,6 +197,12 @@
     "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
     "freeShippingProgressMobile": "Nog €{amount} tot gratis verzending",
     "checkout": "Naar checkout",
+    "clearConfirm": {
+      "title": "Winkelwagen legen?",
+      "message": "Weet je zeker dat je alle items wilt verwijderen?",
+      "cancel": "Annuleren",
+      "confirm": "Legen"
+    },
     "promo": {
       "title": "Heb je een kortingscode?",
       "apply": "Toepassen",

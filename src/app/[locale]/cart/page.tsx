@@ -366,16 +366,16 @@ export default function CartPage() {
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white border-4 border-black p-8 max-w-md w-full">
-            <h3 className="font-display text-3xl mb-4 uppercase">{t('title')} legen?</h3>
+            <h3 className="font-display text-3xl mb-4 uppercase">{t('clearConfirm.title')}</h3>
             <p className="text-gray-600 mb-8 text-lg">
-              Weet je zeker dat je alle items wilt verwijderen?
+              {t('clearConfirm.message')}
             </p>
             <div className="flex gap-4">
               <button
                 onClick={() => setShowClearConfirm(false)}
                 className="flex-1 py-3 border-2 border-black font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
               >
-                {t('cancel', { ns: 'common' })}
+                {t('clearConfirm.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -384,7 +384,7 @@ export default function CartPage() {
                 }}
                 className="flex-1 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
               >
-                Legen
+                {t('clearConfirm.confirm')}
               </button>
             </div>
           </div>

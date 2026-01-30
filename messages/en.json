@@ -197,6 +197,12 @@
     "freeShippingProgress": "€{amount} away from free shipping!",
     "freeShippingProgressMobile": "€{amount} to free shipping",
     "checkout": "Go to Checkout",
+    "clearConfirm": {
+      "title": "Empty shopping cart?",
+      "message": "Are you sure you want to remove all items?",
+      "cancel": "Cancel",
+      "confirm": "Empty"
+    },
     "promo": {
       "title": "Have a promo code?",
       "apply": "Apply",

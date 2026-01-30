@@ -247,13 +247,13 @@ export default function CheckoutPage() {
 
     // Check if user is already logged in and load data
     loadUserData()
+  }, [])
 
-    // Track Facebook Pixel InitiateCheckout event
-    // Note: This runs on page load, so we might not have form data yet
-    // We'll track again with userData when user proceeds to payment
-    if (items.length > 0) {
-      const total = subtotalAfterDiscount + shipping
-      
+  // Track analytics when cart values change (only once per session)
+  const [hasTrackedCheckout, setHasTrackedCheckout] = useState(false)
+  useEffect(() => {
+    // Only track once and only if we have items
+    if (!hasTrackedCheckout && items.length > 0 && total > 0) {
       trackPixelEvent('InitiateCheckout', {
         content_ids: items.map(item => item.variantId),
         value: total,
@@ -261,13 +261,15 @@ export default function CheckoutPage() {
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
       })
       
-      // Track custom analytics checkout started event
       trackCheckoutStarted({
         items_count: items.reduce((sum, item) => sum + item.quantity, 0),
         total_value: total,
       })
+      
+      setHasTrackedCheckout(true)
+      console.log('[Analytics] ✅ checkout_started', { items_count: items.reduce((sum, item) => sum + item.quantity, 0), value: total })
     }
-  }, [])
+  }, [items, total, hasTrackedCheckout])
 
   // Separate useEffect for recover parameter (runs when searchParams change)
   useEffect(() => {
