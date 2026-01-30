@@ -144,44 +144,57 @@ export default function CheckoutPage() {
   // ============================================
   useEffect(() => {
     const checkPaymentIntentExpiry = async () => {
+      // ALLEEN checken als we een bestaande order hebben die we ophalen
+      // NIET checken voor verse nieuwe orders die we zojuist hebben aangemaakt
       if (!clientSecret || !orderId) return
       
       try {
-        console.log('🔍 Checking if payment intent is expired...')
+        console.log('🔍 [Expiry Check] Checking payment intent expiry...')
         
         // Fetch order to get payment intent ID
         const { data: order } = await supabase
           .from('orders')
-          .select('stripe_payment_intent_id, checkout_started_at')
+          .select('stripe_payment_intent_id, checkout_started_at, created_at')
           .eq('id', orderId)
           .single()
         
         if (!order || !order.stripe_payment_intent_id) {
-          console.log('⚠️ No payment intent found for order')
+          console.log('⚠️ [Expiry Check] No payment intent found for order')
           return
         }
         
         // If checkout_started_at is null, skip expiry check (order just created)
         if (!order.checkout_started_at) {
-          console.log('✅ Order just created, no expiry check needed')
+          console.log('✅ [Expiry Check] Order just created (no checkout_started_at), skipping expiry check')
+          return
+        }
+        
+        // Check if order was created in the last 2 minutes - if so, it's fresh, don't check expiry
+        const orderCreatedTime = new Date(order.created_at)
+        const now = new Date()
+        const minutesSinceCreation = (now.getTime() - orderCreatedTime.getTime()) / (1000 * 60)
+        
+        if (minutesSinceCreation < 2) {
+          console.log('✅ [Expiry Check] Order created < 2 minutes ago, skipping expiry check')
           return
         }
         
         // Check if payment intent is older than 1 hour (Stripe default expiry)
         const checkoutTime = new Date(order.checkout_started_at)
-        const now = new Date()
         const hoursSinceCheckout = (now.getTime() - checkoutTime.getTime()) / (1000 * 60 * 60)
         
+        console.log(`🔍 [Expiry Check] Hours since checkout: ${hoursSinceCheckout.toFixed(2)}`)
+        
         if (hoursSinceCheckout > 1) {
-          console.log('⚠️ Payment intent expired (>1 hour old)')
+          console.log('❌ [Expiry Check] Payment intent expired (>1 hour old)')
           setClientSecret(undefined)
           setCurrentStep('details')
           toast.error(t('messages.paymentExpired'))
         } else {
-          console.log('✅ Payment intent is still valid')
+          console.log('✅ [Expiry Check] Payment intent is still valid')
         }
       } catch (error) {
-        console.error('Error checking payment intent expiry:', error)
+        console.error('❌ [Expiry Check] Error checking payment intent expiry:', error)
       }
     }
     
