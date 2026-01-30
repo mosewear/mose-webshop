@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import { PostHogProvider } from './providers'
 import { getSiteSettings } from '@/lib/settings'
+import DynamicFavicon from '@/components/DynamicFavicon'
 import "./globals.css";
 
 const anton = Anton({
@@ -25,6 +26,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
 }
+
+// Revalidate layout every 60 seconds to pick up settings changes
+export const revalidate = 60
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get settings from database (cached)
@@ -92,11 +96,15 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get settings for dynamic favicon
+  const settings = await getSiteSettings()
+  const faviconUrl = settings.favicon_url || '/favicon.ico'
+  
   return (
     <html className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
@@ -189,6 +197,9 @@ export default function RootLayout({
             },
           }}
         />
+        
+        {/* Dynamic Favicon - updates when settings change */}
+        <DynamicFavicon faviconUrl={faviconUrl} />
       </body>
     </html>
   );
