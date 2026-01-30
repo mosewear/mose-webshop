@@ -364,11 +364,13 @@ export default function SettingsPage() {
                 Favicon
               </label>
               <MediaPicker
-                value={faviconUrl}
-                onChange={(url: string) => setFaviconUrl(url)}
+                mode="single"
+                currentImageUrl={faviconUrl}
+                onImageSelected={(url: string) => setFaviconUrl(url)}
                 bucket="images"
                 folder="favicon"
-                accept="image/x-icon,image/png,image/svg+xml"
+                accept="images"
+                buttonText="Upload Favicon"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Upload een favicon (.ico, .png of .svg). Aanbevolen: 32x32px of 512x512px PNG. Huidige: <span className="font-mono">{faviconUrl}</span>
