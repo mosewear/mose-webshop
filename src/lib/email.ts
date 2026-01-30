@@ -64,18 +64,41 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
 
   try {
+    // DEBUG: Log presale detection
+    console.log('═══════════════════════════════════════════')
+    console.log('📧 EMAIL: ORDER CONFIRMATION')
+    console.log('═══════════════════════════════════════════')
+    console.log('📦 Order ID:', props.orderId)
+    console.log('📧 Customer:', props.customerEmail)
+    console.log('🛍️ Total Items:', props.orderItems.length)
+    console.log('📋 Items:')
+    props.orderItems.forEach((item, i) => {
+      console.log(`  ${i+1}. ${item.name}`)
+      console.log(`     - isPresale: ${item.isPresale}`)
+      console.log(`     - presaleExpectedDate: ${item.presaleExpectedDate}`)
+    })
+    
     // Check if this is a presale order
     const presaleItems = props.orderItems.filter(item => item.isPresale)
     const isFullPresaleOrder = presaleItems.length === props.orderItems.length && presaleItems.length > 0
     const hasPresaleItems = presaleItems.length > 0
     
+    console.log('🔍 PRESALE DETECTION:')
+    console.log('   - Presale items count:', presaleItems.length)
+    console.log('   - Total items:', props.orderItems.length)
+    console.log('   - isFullPresaleOrder:', isFullPresaleOrder)
+    console.log('   - hasPresaleItems:', hasPresaleItems)
+    
     // Get presale expected date (use the first one found)
     const presaleExpectedDate = presaleItems[0]?.presaleExpectedDate || ''
-
+    
+    console.log('   - presaleExpectedDate:', presaleExpectedDate)
+    
     let html: string
     let subject: string
 
     if (isFullPresaleOrder) {
+      console.log('✅ Using PRESALE EMAIL template')
       // 100% Presale Order → Use PreorderConfirmation template
       html = await render(
         PreorderConfirmationEmail({
@@ -92,6 +115,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         orderId: props.orderId.slice(0, 8).toUpperCase() 
       })
     } else {
+      console.log('✅ Using REGULAR EMAIL template (hasPresaleItems:', hasPresaleItems, ')')
       // Regular or Mixed Order → Use OrderConfirmation template
       html = await render(
         OrderConfirmationEmail({
@@ -109,6 +133,9 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         orderId: props.orderId.slice(0, 8).toUpperCase() 
       })
     }
+
+    console.log('📬 Email Subject:', subject)
+    console.log('═══════════════════════════════════════════')
 
     // Send via Resend
     const { data, error } = await resend.emails.send({
