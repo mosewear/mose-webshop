@@ -64,10 +64,16 @@ export async function GET(req: NextRequest) {
         
         // Send confirmation email
         try {
+          console.log('📧 [FALLBACK] Preparing to send confirmation email...')
           const shippingAddress = updatedOrder.shipping_address as any
           const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
           
-          await sendOrderConfirmationEmail({
+          console.log(`📧 [FALLBACK] Sending to: ${updatedOrder.email}`)
+          console.log(`📧 [FALLBACK] Order ID: ${updatedOrder.id}`)
+          console.log(`📧 [FALLBACK] Order total: €${updatedOrder.total}`)
+          console.log(`📧 [FALLBACK] Items count: ${updatedOrder.order_items.length}`)
+          
+          const emailResult = await sendOrderConfirmationEmail({
             customerName: shippingAddress?.name || 'Klant',
             customerEmail: updatedOrder.email,
             orderId: updatedOrder.id,
@@ -87,9 +93,17 @@ export async function GET(req: NextRequest) {
               postalCode: shippingAddress?.postalCode || '',
             },
           })
-          console.log('✅ Confirmation email sent via fallback')
-        } catch (emailError) {
-          console.error('❌ Error sending email:', emailError)
+          
+          if (emailResult.success) {
+            console.log('✅ [FALLBACK] Confirmation email sent successfully!')
+            console.log('✅ [FALLBACK] Email ID:', emailResult.data)
+          } else {
+            console.error('❌ [FALLBACK] Email send failed:', emailResult.error)
+          }
+        } catch (emailError: any) {
+          console.error('❌ [FALLBACK] Exception sending email:', emailError)
+          console.error('❌ [FALLBACK] Error details:', emailError.message)
+          console.error('❌ [FALLBACK] Error stack:', emailError.stack)
         }
       }
     }

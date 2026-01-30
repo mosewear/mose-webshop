@@ -408,10 +408,16 @@ export async function POST(req: NextRequest) {
         // Send order confirmation email
         if (updatedOrder) {
           try {
+            console.log('📧 [WEBHOOK] Preparing to send order confirmation email...')
             const shippingAddress = updatedOrder.shipping_address as any
             const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
             
-            await sendOrderConfirmationEmail({
+            console.log(`📧 [WEBHOOK] Sending to: ${updatedOrder.email}`)
+            console.log(`📧 [WEBHOOK] Order ID: ${updatedOrder.id}`)
+            console.log(`📧 [WEBHOOK] Order total: €${updatedOrder.total}`)
+            console.log(`📧 [WEBHOOK] Locale: ${updatedOrder.locale || 'nl'}`)
+            
+            const emailResult = await sendOrderConfirmationEmail({
               customerName: shippingAddress?.name || 'Klant',
               customerEmail: updatedOrder.email,
               orderId: updatedOrder.id,
@@ -432,9 +438,16 @@ export async function POST(req: NextRequest) {
               },
               locale: updatedOrder.locale || 'nl', // Pass locale for multi-language emails
             })
-            console.log('✅ Order confirmation email sent')
-          } catch (emailError) {
-            console.error('❌ Error sending confirmation email:', emailError)
+            
+            if (emailResult.success) {
+              console.log('✅ [WEBHOOK] Order confirmation email sent successfully!')
+              console.log('✅ [WEBHOOK] Email ID:', emailResult.data)
+            } else {
+              console.error('❌ [WEBHOOK] Email send failed:', emailResult.error)
+            }
+          } catch (emailError: any) {
+            console.error('❌ [WEBHOOK] Exception sending confirmation email:', emailError)
+            console.error('❌ [WEBHOOK] Error details:', emailError.message)
             // Don't fail the webhook if email fails
           }
         }
@@ -595,10 +608,16 @@ export async function POST(req: NextRequest) {
             // Send order confirmation email
             if (updatedOrder && session.customer_email) {
               try {
+                console.log('📧 [WEBHOOK LEGACY] Preparing to send order confirmation email...')
                 const shippingAddress = updatedOrder.shipping_address as any
                 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
                 
-                await sendOrderConfirmationEmail({
+                console.log(`📧 [WEBHOOK LEGACY] Sending to: ${session.customer_email}`)
+                console.log(`📧 [WEBHOOK LEGACY] Order ID: ${updatedOrder.id}`)
+                console.log(`📧 [WEBHOOK LEGACY] Order total: €${updatedOrder.total}`)
+                console.log(`📧 [WEBHOOK LEGACY] Locale: ${updatedOrder.locale || 'nl'}`)
+                
+                const emailResult = await sendOrderConfirmationEmail({
                   customerName: shippingAddress?.name || session.metadata?.customerName || 'Klant',
                   customerEmail: session.customer_email,
                   orderId: updatedOrder.id,
@@ -619,9 +638,16 @@ export async function POST(req: NextRequest) {
                   },
                   locale: updatedOrder.locale || 'nl', // Pass locale for multi-language emails
                 })
-                console.log('✅ Order confirmation email sent')
-              } catch (emailError) {
-                console.error('❌ Error sending confirmation email:', emailError)
+                
+                if (emailResult.success) {
+                  console.log('✅ [WEBHOOK LEGACY] Order confirmation email sent successfully!')
+                  console.log('✅ [WEBHOOK LEGACY] Email ID:', emailResult.data)
+                } else {
+                  console.error('❌ [WEBHOOK LEGACY] Email send failed:', emailResult.error)
+                }
+              } catch (emailError: any) {
+                console.error('❌ [WEBHOOK LEGACY] Exception sending confirmation email:', emailError)
+                console.error('❌ [WEBHOOK LEGACY] Error details:', emailError.message)
                 // Don't fail the webhook if email fails
               }
             }
