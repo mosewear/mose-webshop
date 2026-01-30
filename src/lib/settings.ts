@@ -15,6 +15,7 @@ interface SiteSettings {
   returns_auto_approve: boolean
   return_label_cost_excl_btw: number
   return_label_cost_incl_btw: number
+  favicon_url: string
 }
 
 let cachedSettings: SiteSettings | null = null
@@ -59,6 +60,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         settings.returns_auto_approve === 'true' || settings.returns_auto_approve === true || settings.returns_auto_approve === 1,
       return_label_cost_excl_btw: parseFloat(settings.return_label_cost_excl_btw) || 6.50,
       return_label_cost_incl_btw: parseFloat(settings.return_label_cost_incl_btw) || 7.87,
+      favicon_url: settings.favicon_url || '/favicon.ico',
     }
 
     return cachedSettings
@@ -81,6 +83,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       returns_auto_approve: true,
       return_label_cost_excl_btw: 6.50,
       return_label_cost_incl_btw: 7.87,
+      favicon_url: '/favicon.ico',
     }
   }
 }

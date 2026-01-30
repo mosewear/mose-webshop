@@ -365,7 +365,7 @@ export default function SettingsPage() {
               </label>
               <MediaPicker
                 value={faviconUrl}
-                onChange={(url) => setFaviconUrl(url)}
+                onChange={(url: string) => setFaviconUrl(url)}
                 bucket="images"
                 folder="favicon"
                 accept="image/x-icon,image/png,image/svg+xml"

@@ -3,7 +3,7 @@ import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import { PostHogProvider } from './providers'
-import { getSettings } from '@/lib/settings'
+import { getSiteSettings } from '@/lib/settings'
 import "./globals.css";
 
 const anton = Anton({
@@ -28,7 +28,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   // Get settings from database (cached)
-  const settings = await getSettings()
+  const settings = await getSiteSettings()
   const faviconUrl = settings.favicon_url || '/favicon.ico'
 
   return {
