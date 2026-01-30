@@ -21,7 +21,7 @@ export default function ContactPage() {
   const [settings, setSettings] = useState({
     contact_email: 'info@mosewear.nl',
     contact_phone: '+31 50 211 1931',
-    contact_address: 'Helper Brink 27a, 9722 EG Groningen',
+    contact_address: 'Stavangerweg 13, 9723 JC Groningen',
   })
 
   useEffect(() => {

@@ -12,7 +12,7 @@ export default function EmailFooter({
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
   contactPhone = '+31 50 211 1931',
-  contactAddress = 'Helperbrink 203, 9721 TC Groningen',
+  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
   locale = 'nl',
 }: EmailFooterProps) {
   const addressParts = contactAddress.split(',').map(s => s.trim())

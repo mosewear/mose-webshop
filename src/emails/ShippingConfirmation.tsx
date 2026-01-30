@@ -39,7 +39,7 @@ export default function ShippingConfirmationEmail({
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
   contactPhone = '+31 50 211 1931',
-  contactAddress = 'Helperbrink 203, 9721 TC Groningen',
+  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
 }: ShippingConfirmationEmailProps) {
   // Format delivery date
   let deliveryText = t('shipping.workingDays')

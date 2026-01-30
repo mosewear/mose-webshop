@@ -15,7 +15,7 @@ export function Footer() {
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   const [settings, setSettings] = useState({
-    contact_address: 'Helper Brink 27a, 9722 EG Groningen',
+    contact_address: 'Stavangerweg 13, 9723 JC Groningen',
     contact_phone: '+31 50 211 1931',
     contact_email: 'info@mosewear.nl',
     tax_rate: 21,

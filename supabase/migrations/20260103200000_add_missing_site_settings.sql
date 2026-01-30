@@ -9,9 +9,9 @@ SET value = '"+31 50 211 1931"', updated_at = NOW();
 
 -- Add contact address (as JSON string)
 INSERT INTO site_settings (key, value, description, updated_at)
-VALUES ('contact_address', '"Helper Brink 27a, 9722 EG Groningen"', 'Physical address', NOW())
+VALUES ('contact_address', '"Stavangerweg 13, 9723 JC Groningen"', 'Physical address', NOW())
 ON CONFLICT (key) DO UPDATE 
-SET value = '"Helper Brink 27a, 9722 EG Groningen"', updated_at = NOW();
+SET value = '"Stavangerweg 13, 9723 JC Groningen"', updated_at = NOW();
 
 -- Add return days (as JSON string)
 INSERT INTO site_settings (key, value, description, updated_at)
