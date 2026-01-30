@@ -65,17 +65,29 @@ export default function OrderConfirmationPage({
 
   async function fetchOrder() {
     try {
+      console.log('═══════════════════════════════════════════')
+      console.log('🔵 ORDER CONFIRMATION - FETCH ORDER START')
+      console.log('═══════════════════════════════════════════')
+      console.log('📋 Order ID:', orderId)
+      console.log('💳 Payment Intent ID:', paymentIntentId)
+      
       // STEP 1: If we have payment_intent, check status first (fallback mechanism)
       if (paymentIntentId) {
-        console.log('🔍 Checking payment status via fallback...')
+        console.log('🔍 [STEP 1] Checking payment status via fallback...')
         const statusResponse = await fetch(`/api/check-payment-status?payment_intent=${paymentIntentId}`)
+        console.log('📡 [STEP 1] Response status:', statusResponse.status, statusResponse.statusText)
+        
         if (statusResponse.ok) {
           const statusData = await statusResponse.json()
-          console.log('✅ Payment status checked:', statusData)
+          console.log('✅ [STEP 1] Payment status checked:', statusData)
           if (statusData.fallback_applied) {
-            console.log('🔧 Fallback applied - order updated to PAID')
+            console.log('🔧 [STEP 1] Fallback applied - order updated to PAID')
           }
+        } else {
+          console.error('❌ [STEP 1] Failed to check payment status')
         }
+      } else {
+        console.log('⏭️  [STEP 1] No payment intent ID - skipping fallback check')
       }
       
       // STEP 2: Fetch order details
@@ -83,23 +95,43 @@ export default function OrderConfirmationPage({
       if (orderId) params.append('order_id', orderId)
       if (paymentIntentId) params.append('payment_intent', paymentIntentId)
 
-      console.log('📡 Fetching order via API...')
+      console.log('📡 [STEP 2] Fetching order via API...')
+      console.log('🔗 [STEP 2] API URL:', `/api/get-order?${params.toString()}`)
       
       const response = await fetch(`/api/get-order?${params.toString()}`)
+      console.log('📡 [STEP 2] Response status:', response.status, response.statusText)
       
       if (!response.ok) {
         const errorData = await response.json()
-        console.error('❌ Error fetching order:', errorData)
+        console.error('❌ [STEP 2] Error fetching order:', errorData)
         setLoading(false)
         return
       }
 
       const data = await response.json()
-      console.log('✅ Order fetched:', data.order.id)
+      console.log('✅ [STEP 2] Order fetched successfully!')
+      console.log('📦 [STEP 2] Order ID:', data.order.id)
+      console.log('💰 [STEP 2] Order Total:', data.order.total)
+      console.log('💳 [STEP 2] Payment Status:', data.order.payment_status)
+      console.log('📧 [STEP 2] Email:', data.order.email)
+      console.log('📅 [STEP 2] Last Email Sent At:', data.order.last_email_sent_at)
+      console.log('📋 [STEP 2] Order Items Count:', data.items.length)
+      
+      // Check if API response indicates email was sent
+      if (data.email_sent) {
+        console.log('✅ [EMAIL] API confirms email was sent in this request!')
+      } else if (data.order.last_email_sent_at) {
+        console.log('✅ [EMAIL] Email was sent previously at:', data.order.last_email_sent_at)
+      } else {
+        console.log('⚠️ [EMAIL] No indication that email was sent!')
+        console.log('⚠️ [EMAIL] Check server logs for email sending attempts')
+      }
       
       setOrder(data.order)
       setOrderItems(data.items)
       setLoading(false)
+      
+      console.log('🎯 [STEP 3] Tracking analytics...')
       
       // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
       // Dual tracking: Client + Server (CAPI) with user data
@@ -132,9 +164,17 @@ export default function OrderConfirmationPage({
         })),
       })
       
-      console.log('✅ Facebook Pixel Purchase event tracked (Client + Server):', data.order.id)
+      console.log('✅ [STEP 3] Analytics tracked!')
+      console.log('═══════════════════════════════════════════')
+      console.log('✅ ORDER CONFIRMATION - FETCH ORDER COMPLETE')
+      console.log('═══════════════════════════════════════════')
     } catch (error) {
-      console.error('❌ Failed to fetch order:', error)
+      console.error('═══════════════════════════════════════════')
+      console.error('❌ ORDER CONFIRMATION - FETCH ORDER FAILED')
+      console.error('═══════════════════════════════════════════')
+      console.error('❌ Error:', error)
+      console.error('❌ Error message:', (error as Error).message)
+      console.error('❌ Error stack:', (error as Error).stack)
       setLoading(false)
     }
   }

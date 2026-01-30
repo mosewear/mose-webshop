@@ -78,8 +78,17 @@ export async function GET(req: NextRequest) {
     // Don't check payment_status - if webhook set it to 'paid' but didn't send email, fallback must send it!
     const shouldSendEmail = !order.last_email_sent_at
     
+    console.log('📧 API: Should send email?', shouldSendEmail)
+    console.log('📧 API: Reason:', shouldSendEmail ? 'last_email_sent_at is NULL' : 'email already sent previously')
+    
     if (shouldSendEmail) {
-      console.log('📧 API: Attempting to send order confirmation email...')
+      console.log('═══════════════════════════════════════════')
+      console.log('📧 API: ATTEMPTING TO SEND EMAIL')
+      console.log('═══════════════════════════════════════════')
+      console.log('📧 API: Recipient:', order.email)
+      console.log('📧 API: Order ID:', order.id)
+      console.log('📧 API: Order Total: €', order.total)
+      console.log('📧 API: Locale:', order.locale || 'nl')
       
       try {
         const emailResult = await sendOrderConfirmationEmail({
@@ -103,13 +112,14 @@ export async function GET(req: NextRequest) {
           locale: order.locale || 'nl', // Pass locale for multi-language emails
         })
         
-        console.log('📧 API: Email result:', emailResult)
+        console.log('📧 API: Email function returned:', emailResult)
         
         if (emailResult.success) {
           console.log('✅ API: Order confirmation email sent successfully!')
+          console.log('✅ API: Resend Email ID:', emailResult.data)
           
           // Mark email as sent by updating last_email_sent_at and last_email_type
-          await supabase
+          const updateResult = await supabase
             .from('orders')
             .update({ 
               last_email_sent_at: new Date().toISOString(),
@@ -117,14 +127,26 @@ export async function GET(req: NextRequest) {
             })
             .eq('id', order.id)
             
-          console.log('✅ API: Order email timestamp updated')
+          console.log('✅ API: Order email timestamp updated:', updateResult.error ? 'FAILED' : 'SUCCESS')
+          if (updateResult.error) {
+            console.error('❌ API: Failed to update timestamp:', updateResult.error)
+          }
+          console.log('═══════════════════════════════════════════')
         } else {
-          console.error('❌ API: Email send failed:', emailResult.error)
+          console.error('❌ API: Email send failed!')
+          console.error('❌ API: Error details:', emailResult.error)
+          console.error('═══════════════════════════════════════════')
           // Don't update status if email failed
         }
           
-      } catch (emailError) {
-        console.error('❌ API: Exception sending email:', emailError)
+      } catch (emailError: any) {
+        console.error('═══════════════════════════════════════════')
+        console.error('❌ API: Exception sending email!')
+        console.error('═══════════════════════════════════════════')
+        console.error('❌ API: Error:', emailError)
+        console.error('❌ API: Error message:', emailError.message)
+        console.error('❌ API: Error stack:', emailError.stack)
+        console.error('═══════════════════════════════════════════')
         // Don't fail the request if email fails, but log it
       }
     } else {
