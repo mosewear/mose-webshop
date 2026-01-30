@@ -1238,7 +1238,7 @@ export default function CheckoutPage() {
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm">
                 ✓
               </div>
-              <span className="ml-2 text-sm font-semibold text-gray-700 hidden sm:inline">Winkelwagen</span>
+              <span className="ml-2 text-sm font-semibold text-gray-700 hidden sm:inline">{t('progress.cart')}</span>
             </div>
             <div className={`w-12 h-0.5 ${currentStep === 'payment' ? 'bg-brand-primary' : 'bg-brand-primary'}`}></div>
             <div className="flex items-center">
@@ -1267,10 +1267,10 @@ export default function CheckoutPage() {
               <ShoppingBag size={18} className="text-gray-600" />
               <div className="text-left">
                 <p className="text-sm font-semibold text-gray-900">
-                  {showOrderSummary ? 'Verberg' : 'Toon'} bestelling
+                  {showOrderSummary ? tCommon('close') : locale === 'nl' ? 'Toon' : 'Show'} {locale === 'nl' ? 'bestelling' : 'order'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {items.length} {items.length === 1 ? 'product' : 'producten'}
+                  {t('items', { count: items.length, ns: 'cart' })}
                 </p>
               </div>
             </div>
@@ -1316,11 +1316,11 @@ export default function CheckoutPage() {
               {/* Price Breakdown */}
               <div className="space-y-2 border-t border-gray-200 pt-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t('subtotal', { ns: 'cart' })}</span>
+                  <span className="text-gray-600">{t('subtotal')}</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t('shipping', { ns: 'cart' })}</span>
+                  <span className="text-gray-600">{t('shipping')}</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{t('shippingFree', { ns: 'cart' })}</span>
@@ -1330,7 +1330,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between text-base border-t border-gray-200 pt-2 mt-2">
-                  <span className="font-bold">{t('total', { ns: 'cart' })}</span>
+                  <span className="font-bold">{t('total')}</span>
                   <span className="font-bold text-xl">€{total.toFixed(2)}</span>
                 </div>
               </div>
@@ -1466,7 +1466,7 @@ export default function CheckoutPage() {
                 <div>
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs">1</span>
-                    Contact
+                    {t('section.contact')}
                   </h2>
                   <input
                     type="email"
@@ -1486,11 +1486,11 @@ export default function CheckoutPage() {
                   <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs">2</span>
-                      Bezorging
+                      {t('section.delivery')}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs font-normal text-gray-600">
                       <Lock className="w-3.5 h-3.5 text-green-600" />
-                      <span className="hidden sm:inline">Veilig & versleuteld</span>
+                      <span className="hidden sm:inline">{t('section.secure')}</span>
                     </div>
                   </h2>
                   <div className="space-y-4">
@@ -1942,13 +1942,13 @@ export default function CheckoutPage() {
 
                 {/* Terms - Compact */}
                 <div className="text-xs text-gray-600 border-t-2 border-gray-200 pt-6">
-                  Door je bestelling te plaatsen ga je akkoord met onze{' '}
+                  {t('terms.text')}{' '}
                   <Link href="/algemene-voorwaarden" className="text-brand-primary underline" target="_blank">
-                    algemene voorwaarden
+                    {t('terms.terms')}
                   </Link>{' '}
-                  en{' '}
+                  {t('terms.and')}{' '}
                   <Link href="/privacy" className="text-brand-primary underline" target="_blank">
-                    privacybeleid
+                    {t('terms.privacy')}
                   </Link>
                   .
                 </div>
@@ -1959,10 +1959,10 @@ export default function CheckoutPage() {
                   disabled={loading}
                   className="w-full lg:hidden py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'BEZIG...' : (
+                  {loading ? t('submitting') : (
                     <>
-                      <span className="hidden min-[400px]:inline">NAAR BETALEN</span>
-                      <span className="min-[400px]:hidden">BETALEN</span>
+                      <span className="hidden min-[400px]:inline">{t('submit')}</span>
+                      <span className="min-[400px]:hidden">{t('progress.payment')}</span>
                     </>
                   )}
                 </button>
@@ -1972,7 +1972,7 @@ export default function CheckoutPage() {
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl md:text-4xl font-display">BETALEN</h1>
+                <h1 className="text-3xl md:text-4xl font-display">{t('progress.payment').toUpperCase()}</h1>
                 <button
                   onClick={() => setCurrentStep('details')}
                   className="text-sm text-brand-primary hover:underline flex items-center gap-1"
@@ -1980,7 +1980,7 @@ export default function CheckoutPage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Terug
+                  {tCommon('back')}
                 </button>
               </div>
 
@@ -2085,15 +2085,17 @@ export default function CheckoutPage() {
               {/* Price Breakdown - Minimal */}
               <div className="space-y-3 border-t-2 border-gray-200 pt-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t('subtotal', { ns: 'cart' })}</span>
+                  <span className="text-gray-600">{t('subtotal')}</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Waarvan BTW (21%)</span>
+                  <span className="text-gray-500">
+                    {locale === 'nl' ? 'Waarvan BTW (21%)' : 'Including VAT (21%)'}
+                  </span>
                   <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t('shipping', { ns: 'cart' })}</span>
+                  <span className="text-gray-600">{t('shipping')}</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{t('shippingFree', { ns: 'cart' })}</span>
@@ -2111,7 +2113,7 @@ export default function CheckoutPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Ticket size={16} />
-                      <span>{t('promo.title', { ns: 'cart' })}</span>
+                      <span>{t('promo.title')}</span>
                     </div>
                     <ChevronDown size={16} />
                   </button>
@@ -2120,7 +2122,7 @@ export default function CheckoutPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-sm font-semibold">
                         <Ticket size={16} />
-                        <span>{t('promo.title', { ns: 'cart' })}</span>
+                        <span>{t('promo.title')}</span>
                       </div>
                       <button
                         onClick={() => {
@@ -2150,7 +2152,7 @@ export default function CheckoutPage() {
                         disabled={!promoCode}
                         className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
-                        {t('promo.apply', { ns: 'cart' })}
+                        {t('promo.apply')}
                       </button>
                     </div>
                     {promoError && (
@@ -2177,17 +2179,19 @@ export default function CheckoutPage() {
                 
                 {subtotalAfterDiscount < freeShippingThreshold && subtotalAfterDiscount > 0 && (
                   <div className="bg-gray-100 border border-gray-300 p-2 text-xs text-gray-900 font-semibold">
-                    Nog €{(freeShippingThreshold - subtotalAfterDiscount).toFixed(2)} tot gratis verzending!
+                    {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2), ns: 'cart' })}
                   </div>
                 )}
               </div>
 
               {/* Total - Prominent */}
               <div className="flex justify-between items-center border-t-2 border-black pt-4">
-                <span className="text-lg font-bold">{t('total', { ns: 'cart' })}</span>
+                <span className="text-lg font-bold">{t('total')}</span>
                 <span className="text-2xl font-display">€{total.toFixed(2)}</span>
               </div>
-              <p className="text-xs text-gray-500 text-right mt-1">Incl. €{totalBtw.toFixed(2)} BTW</p>
+              <p className="text-xs text-gray-500 text-right mt-1">
+                {locale === 'nl' ? `Incl. €${totalBtw.toFixed(2)} BTW` : `Incl. €${totalBtw.toFixed(2)} VAT`}
+              </p>
 
               {/* Submit Button - Desktop */}
               {currentStep === 'details' && (

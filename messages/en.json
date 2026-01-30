@@ -56,6 +56,14 @@
   },
   "checkout": {
     "title": "CHECKOUT",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "promo": {
+      "title": "Have a promo code?",
+      "apply": "Apply",
+      "placeholder": "CODE"
+    },
     "mode": {
       "guest": "Guest Checkout",
       "guestShort": "Guest",

@@ -56,6 +56,14 @@
   },
   "checkout": {
     "title": "AFREKENEN",
+    "subtotal": "Subtotaal",
+    "shipping": "Verzending",
+    "total": "Totaal",
+    "promo": {
+      "title": "Heb je een kortingscode?",
+      "apply": "Toepassen",
+      "placeholder": "CODE"
+    },
     "mode": {
       "guest": "Gast Checkout",
       "guestShort": "Gast",
