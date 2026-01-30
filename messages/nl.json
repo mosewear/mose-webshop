@@ -1,4 +1,23 @@
 {
+  "payment": {
+    "chooseMethod": "Kies je betaalmethode",
+    "methods": {
+      "ideal": "Direct betalen via je bank",
+      "card": "Visa, Mastercard, Amex",
+      "klarna": "Achteraf betalen",
+      "bancontact": "Voor Belgische klanten",
+      "paypal": "Betalen met PayPal"
+    },
+    "back": "Andere betaalmethode kiezen",
+    "pay": "BETALEN",
+    "processing": "BEZIG...",
+    "secure": "Veilig betalen via Stripe",
+    "ssl": "SSL versleutelde verbinding",
+    "preparing": "Payment wordt voorbereid...",
+    "moment": "Dit duurt slechts een moment",
+    "error": "Er is een fout opgetreden",
+    "defaultName": "Klant"
+  },
   "common": {
     "shop": "Shop",
     "lookbook": "Lookbook",

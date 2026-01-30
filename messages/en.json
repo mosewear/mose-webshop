@@ -1,4 +1,23 @@
 {
+  "payment": {
+    "chooseMethod": "Choose your payment method",
+    "methods": {
+      "ideal": "Pay directly via your bank",
+      "card": "Visa, Mastercard, Amex",
+      "klarna": "Pay later",
+      "bancontact": "For Belgian customers",
+      "paypal": "Pay with PayPal"
+    },
+    "back": "Choose another payment method",
+    "pay": "PAY",
+    "processing": "PROCESSING...",
+    "secure": "Secure payment via Stripe",
+    "ssl": "SSL encrypted connection",
+    "preparing": "Payment is being prepared...",
+    "moment": "This will only take a moment",
+    "error": "An error occurred",
+    "defaultName": "Customer"
+  },
   "common": {
     "shop": "Shop",
     "lookbook": "Lookbook",

@@ -9,6 +9,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js'
 import { Landmark, CreditCard, ShoppingBag, Building2, Smartphone } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -17,55 +18,9 @@ type PaymentMethod = 'ideal' | 'card' | 'klarna' | 'bancontact' | 'paypal'
 interface PaymentMethodOption {
   id: PaymentMethod
   name: string
-  description: string
+  descriptionKey: string
   icon: React.ComponentType<{ size?: number; className?: string }>
   popular?: boolean
-}
-
-// Smart payment methods per land
-const getPaymentMethods = (country: string): PaymentMethodOption[] => {
-  const allMethods: PaymentMethodOption[] = [
-    {
-      id: 'ideal',
-      name: 'iDEAL',
-      description: 'Direct betalen via je bank',
-      icon: Landmark,
-      popular: true
-    },
-    {
-      id: 'card',
-      name: 'Credit card',
-      description: 'Visa, Mastercard, Amex',
-      icon: CreditCard
-    },
-    {
-      id: 'klarna',
-      name: 'Klarna',
-      description: 'Achteraf betalen',
-      icon: ShoppingBag
-    },
-    {
-      id: 'bancontact',
-      name: 'Bancontact',
-      description: 'Voor Belgische klanten',
-      icon: Building2
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      description: 'Betalen met PayPal',
-      icon: Smartphone
-    }
-  ]
-
-  // Filter based on country
-  if (country === 'NL') {
-    return allMethods.filter(m => ['ideal', 'card', 'klarna', 'paypal'].includes(m.id))
-  } else if (country === 'BE') {
-    return allMethods.filter(m => ['bancontact', 'card', 'klarna', 'paypal'].includes(m.id))
-  } else {
-    return allMethods.filter(m => ['card', 'paypal'].includes(m.id))
-  }
 }
 
 interface PaymentFormProps {
@@ -96,6 +51,7 @@ function PaymentForm({
   orderId,
   billingDetails
 }: PaymentFormProps) {
+  const t = useTranslations('payment')
   const stripe = useStripe()
   const elements = useElements()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -124,7 +80,7 @@ function PaymentForm({
       // Ensure name is at least 3 characters (Stripe requirement)
       const safeBillingDetails = {
         ...billingDetails,
-        name: billingDetails.name.trim().length >= 3 ? billingDetails.name.trim() : 'Klant'
+        name: billingDetails.name.trim().length >= 3 ? billingDetails.name.trim() : t('defaultName')
       }
 
       console.log('💳 [Stripe] Billing details:', safeBillingDetails)
@@ -134,14 +90,14 @@ function PaymentForm({
         confirmParams: {
           return_url: `${window.location.origin}/checkout/payment-status`,
           payment_method_data: {
-            billing_details: safeBillingDetails // Pass billing details we already collected!
+            billing_details: safeBillingDetails
           }
         },
       })
 
       if (error) {
         console.error('❌ [Stripe] Payment error:', error)
-        setErrorMessage(error.message || 'Er is een fout opgetreden')
+        setErrorMessage(error.message || t('error'))
         onError(error.message || 'Payment failed')
         setIsProcessing(false)
       } else {
@@ -150,7 +106,7 @@ function PaymentForm({
       }
     } catch (err: any) {
       console.error('💥 [Stripe] Exception:', err)
-      setErrorMessage(err.message || 'Er is een fout opgetreden')
+      setErrorMessage(err.message || t('error'))
       onError(err.message || 'Payment failed')
       setIsProcessing(false)
     }
@@ -167,7 +123,7 @@ function PaymentForm({
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Andere betaalmethode kiezen
+        {t('back')}
       </button>
 
       {/* Payment Element - Stripe handles the UI based on payment method */}
@@ -176,7 +132,7 @@ function PaymentForm({
           options={{
             layout: 'tabs',
             fields: {
-              billingDetails: 'never' // Hide all billing detail fields - we already have them!
+              billingDetails: 'never'
             }
           }}
         />
@@ -199,10 +155,10 @@ function PaymentForm({
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            BEZIG...
+            {t('processing')}
           </span>
         ) : (
-          'BETALEN'
+          t('pay')
         )}
       </button>
     </form>
@@ -241,12 +197,60 @@ export default function StripePaymentForm({
   orderId,
   billingDetails
 }: StripePaymentFormProps) {
+  const t = useTranslations('payment')
+  const locale = useLocale()
   const [mounted, setMounted] = useState(false)
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Payment methods with translation keys
+  const getPaymentMethods = (country: string): PaymentMethodOption[] => {
+    const allMethods: PaymentMethodOption[] = [
+      {
+        id: 'ideal',
+        name: 'iDEAL',
+        descriptionKey: 'methods.ideal',
+        icon: Landmark,
+        popular: true
+      },
+      {
+        id: 'card',
+        name: 'Credit card',
+        descriptionKey: 'methods.card',
+        icon: CreditCard
+      },
+      {
+        id: 'klarna',
+        name: 'Klarna',
+        descriptionKey: 'methods.klarna',
+        icon: ShoppingBag
+      },
+      {
+        id: 'bancontact',
+        name: 'Bancontact',
+        descriptionKey: 'methods.bancontact',
+        icon: Building2
+      },
+      {
+        id: 'paypal',
+        name: 'PayPal',
+        descriptionKey: 'methods.paypal',
+        icon: Smartphone
+      }
+    ]
+
+    // Filter based on country
+    if (country === 'NL') {
+      return allMethods.filter(m => ['ideal', 'card', 'klarna', 'paypal'].includes(m.id))
+    } else if (country === 'BE') {
+      return allMethods.filter(m => ['bancontact', 'card', 'klarna', 'paypal'].includes(m.id))
+    } else {
+      return allMethods.filter(m => ['card', 'paypal'].includes(m.id))
+    }
+  }
 
   const handleMethodClick = async (method: PaymentMethod) => {
     setSelectedMethod(method)
@@ -255,7 +259,6 @@ export default function StripePaymentForm({
 
   const handleBack = () => {
     setSelectedMethod(null)
-    // Note: clientSecret should be cleared in parent component
   }
 
   if (!mounted) {
@@ -274,7 +277,7 @@ export default function StripePaymentForm({
     <div className="space-y-4">
       {!selectedMethod ? (
         <>
-          <h3 className="text-lg font-bold mb-4">Kies je betaalmethode</h3>
+          <h3 className="text-lg font-bold mb-4">{t('chooseMethod')}</h3>
           
           <div className="grid gap-3">
             {paymentMethods.map((method) => {
@@ -293,7 +296,7 @@ export default function StripePaymentForm({
                     </div>
                     <div className="flex-1">
                       <div className="font-bold text-black group-hover:text-brand-primary transition-colors">{method.name}</div>
-                      <div className="text-sm text-gray-600">{method.description}</div>
+                      <div className="text-sm text-gray-600">{t(method.descriptionKey)}</div>
                     </div>
                     <svg 
                       className="w-6 h-6 text-gray-400 group-hover:text-brand-primary transition-colors flex-shrink-0" 
@@ -314,21 +317,21 @@ export default function StripePaymentForm({
               <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span>Veilig betalen via Stripe</span>
+              <span>{t('secure')}</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              <span>SSL versleutelde verbinding</span>
+              <span>{t('ssl')}</span>
             </div>
           </div>
         </>
       ) : !clientSecret || isCreatingIntent ? (
         <div className="text-center py-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black mb-3"></div>
-          <div className="text-sm text-gray-900 font-semibold">Payment wordt voorbereid...</div>
-          <div className="text-xs text-gray-600 mt-1">Dit duurt slechts een moment</div>
+          <div className="text-sm text-gray-900 font-semibold">{t('preparing')}</div>
+          <div className="text-xs text-gray-600 mt-1">{t('moment')}</div>
         </div>
       ) : (
         <Elements 
@@ -348,7 +351,7 @@ export default function StripePaymentForm({
                 borderRadius: '0px',
               },
             },
-            locale: 'nl',
+            locale: locale === 'en' ? 'en' : 'nl',
           }}
         >
           <PaymentForm 
