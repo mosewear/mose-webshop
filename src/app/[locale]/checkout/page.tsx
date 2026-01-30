@@ -943,6 +943,8 @@ export default function CheckoutPage() {
         price_at_purchase: item.price,
         subtotal: item.price * item.quantity,
         image_url: item.image,
+        is_presale: item.isPresale || false,  // PRESALE: Pass presale status
+        presale_expected_date: item.presaleExpectedDate || null,  // PRESALE: Pass expected date
       }))
 
       console.log('📦 Creating order via API...')

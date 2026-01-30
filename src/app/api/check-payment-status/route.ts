@@ -38,8 +38,10 @@ export async function GET(req: NextRequest) {
       .single()
 
     // FALLBACK: If payment succeeded but order is still pending, update it
-    if (order && paymentIntent.status === 'succeeded' && order.payment_status !== 'paid') {
+    // IMPORTANT: Also check if email was already sent to prevent duplicates!
+    if (order && paymentIntent.status === 'succeeded' && order.payment_status !== 'paid' && !order.last_email_sent_at) {
       console.log('🔧 FALLBACK: Webhook missed, manually updating order to PAID')
+      console.log('🔧 FALLBACK: Will send email (last_email_sent_at is null)')
       
       const { data: updatedOrder, error: updateError } = await supabase
         .from('orders')
@@ -85,6 +87,8 @@ export async function GET(req: NextRequest) {
               quantity: item.quantity,
               price: item.price_at_purchase,
               imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
+              isPresale: item.is_presale || false,  // PRESALE: Pass presale status
+              presaleExpectedDate: item.presale_expected_date || undefined,  // PRESALE: Expected date
             })),
             shippingAddress: {
               name: shippingAddress?.name || '',
@@ -122,6 +126,15 @@ export async function GET(req: NextRequest) {
           console.error('❌ [FALLBACK] Error stack:', emailError.stack)
         }
       }
+    } else if (order && paymentIntent.status === 'succeeded' && order.payment_status === 'paid' && order.last_email_sent_at) {
+      // Order was already updated by webhook AND email was sent
+      console.log('✅ FALLBACK: Order already paid and email already sent by webhook')
+      console.log('✅ FALLBACK: Email sent at:', order.last_email_sent_at)
+      console.log('✅ FALLBACK: Skipping duplicate email send')
+    } else if (order && paymentIntent.status === 'succeeded' && order.payment_status === 'paid' && !order.last_email_sent_at) {
+      // Order was updated but email NOT sent (webhook might have failed at email step)
+      console.log('⚠️ FALLBACK: Order is paid but NO email timestamp!')
+      console.log('⚠️ FALLBACK: This should be handled by get-order API')
     }
 
     return NextResponse.json({

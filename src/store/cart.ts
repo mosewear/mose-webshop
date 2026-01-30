@@ -13,6 +13,8 @@ export interface CartItem {
   image: string
   stock: number
   sku: string
+  isPresale?: boolean  // Is this item from presale stock?
+  presaleExpectedDate?: string  // Expected delivery date for presale items
 }
 
 interface CartStore {

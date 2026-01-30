@@ -451,6 +451,8 @@ export async function POST(req: NextRequest) {
                 quantity: item.quantity,
                 price: item.price_at_purchase,
                 imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
+                isPresale: item.is_presale || false,  // PRESALE: Pass presale status
+                presaleExpectedDate: item.presale_expected_date || undefined,  // PRESALE: Expected date
               })),
               shippingAddress: {
                 name: shippingAddress?.name || '',
@@ -671,6 +673,8 @@ export async function POST(req: NextRequest) {
                     quantity: item.quantity,
                     price: item.price_at_purchase,
                     imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
+                    isPresale: item.is_presale || false,  // PRESALE: Pass presale status
+                    presaleExpectedDate: item.presale_expected_date || undefined,  // PRESALE: Expected date
                   })),
                   shippingAddress: {
                     name: shippingAddress?.name || '',

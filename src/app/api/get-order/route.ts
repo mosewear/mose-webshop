@@ -90,6 +90,9 @@ export async function GET(req: NextRequest) {
       console.log('📧 API: Order Total: €', order.total)
       console.log('📧 API: Locale:', order.locale || 'nl')
       
+      // Get site URL for image URLs
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+      
       try {
         const emailResult = await sendOrderConfirmationEmail({
           customerName: order.shipping_address.name,
@@ -102,6 +105,9 @@ export async function GET(req: NextRequest) {
             color: item.color,
             quantity: item.quantity,
             price: item.price_at_purchase,
+            imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',  // IMAGE FIX: Absolute URL
+            isPresale: item.is_presale || false,  // PRESALE: Pass presale status
+            presaleExpectedDate: item.presale_expected_date || undefined,  // PRESALE: Expected date
           })) || [],
           shippingAddress: {
             name: order.shipping_address.name,
