@@ -23,7 +23,7 @@ export default function PresaleBadge({
     <div 
       className={`
         inline-flex items-center gap-1.5 
-        bg-[#86A35A] text-white
+        bg-brand-primary text-white
         font-bold uppercase tracking-wider
         border-2 border-black
         ${sizeClasses[variant]}
