@@ -161,6 +161,12 @@ export default function CheckoutPage() {
           return
         }
         
+        // If checkout_started_at is null, skip expiry check (order just created)
+        if (!order.checkout_started_at) {
+          console.log('✅ Order just created, no expiry check needed')
+          return
+        }
+        
         // Check if payment intent is older than 1 hour (Stripe default expiry)
         const checkoutTime = new Date(order.checkout_started_at)
         const now = new Date()
