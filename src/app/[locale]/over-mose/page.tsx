@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 
 export default function AboutPage() {
+  const t = useTranslations('about')
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
@@ -25,9 +27,9 @@ export default function AboutPage() {
       <div className="max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-6">OVER MOSE</h1>
+          <h1 className="text-5xl md:text-7xl font-display mb-6">{t('hero.title')}</h1>
           <p className="text-xl md:text-2xl text-gray-700">
-            Geen poespas. Wel karakter.
+            {t('hero.subtitle')}
           </p>
         </div>
 
@@ -45,82 +47,74 @@ export default function AboutPage() {
         {/* Story Content */}
         <div className="prose prose-lg max-w-none space-y-8">
           <div>
-            <h2 className="text-3xl font-display mb-4">ONS VERHAAL</h2>
+            <h2 className="text-3xl font-display mb-4">{t('story.title')}</h2>
             <p className="text-gray-700 leading-relaxed">
-              MOSE is geboren uit frustratie. Frustratie over fast fashion, over wegwerpkleding, 
-              over merken die grote beloftes maken maar niet nakomen. Wij geloven dat kleding 
-              gewoon goed moet zijn. Punt.
+              {t('story.paragraph1')}
             </p>
             <p className="text-gray-700 leading-relaxed">
-              Daarom maken we premium basics die lang meegaan. Kleding zonder concessies, 
-              zonder poespas. Stoer, modern, en met karakter. Gebouwd om te blijven.
+              {t('story.paragraph2')}
             </p>
           </div>
 
           <div className="bg-brand-primary/10 border-2 border-brand-primary p-8">
-            <h3 className="text-2xl font-display mb-4">LOKAAL GEMAAKT IN GRONINGEN</h3>
+            <h3 className="text-2xl font-display mb-4">{t('local.title')}</h3>
             <p className="text-gray-800 leading-relaxed">
-              Al onze producten worden lokaal gemaakt in Groningen. Niet omdat het hip is, 
-              maar omdat we precies willen weten waar onze kleding vandaan komt en hoe het 
-              gemaakt wordt. Eerlijk, transparant, en met respect voor iedereen die eraan werkt.
+              {t('local.text')}
             </p>
           </div>
 
           <div>
-            <h2 className="text-3xl font-display mb-4">ONZE WAARDEN</h2>
+            <h2 className="text-3xl font-display mb-4">{t('values.title')}</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">Premium Kwaliteit</h3>
+                <h3 className="text-xl font-bold mb-3">{t('values.quality.title')}</h3>
                 <p className="text-gray-700">
-                  Alleen de beste materialen en perfecte afwerking. 
-                  Kleding die jarenlang meegaat.
+                  {t('values.quality.text')}
                 </p>
               </div>
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">Lokaal Gemaakt</h3>
+                <h3 className="text-xl font-bold mb-3">{t('values.localMade.title')}</h3>
                 <p className="text-gray-700">
-                  100% geproduceerd in Groningen. We kennen iedereen 
-                  die aan je kleding werkt.
+                  {t('values.localMade.text')}
                 </p>
               </div>
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">Eerlijke Prijzen</h3>
+                <h3 className="text-xl font-bold mb-3">{t('values.fairPricing.title')}</h3>
                 <p className="text-gray-700">
-                  Geen opgeblazen prijzen of fake sales. Gewoon eerlijk 
-                  geprijsd voor wat je krijgt.
+                  {t('values.fairPricing.text')}
                 </p>
               </div>
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">Geen Gedoe</h3>
+                <h3 className="text-xl font-bold mb-3">{t('values.noHassle.title')}</h3>
                 <p className="text-gray-700">
-                  {settings.return_days} dagen retour, gratis verzending vanaf €{settings.free_shipping_threshold}, en 
-                  snelle klantenservice. Simpel.
+                  {t('values.noHassle.text', { 
+                    days: settings.return_days, 
+                    threshold: settings.free_shipping_threshold 
+                  })}
                 </p>
               </div>
             </div>
           </div>
 
           <div>
-            <h2 className="text-3xl font-display mb-4">WAAROM MOSE?</h2>
+            <h2 className="text-3xl font-display mb-4">{t('why.title')}</h2>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="text-brand-primary text-2xl font-bold">•</span>
                 <span className="text-gray-700">
-                  <strong>Duurzaam zonder bullshit:</strong> We maken kleding die lang meegaat. 
-                  Dat is de beste sustainability.
+                  <strong>{t('why.sustainable.title')}:</strong> {t('why.sustainable.text')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-brand-primary text-2xl font-bold">•</span>
                 <span className="text-gray-700">
-                  <strong>Stoer maar stijlvol:</strong> Basics met karakter. Voor moderne mannen 
-                  die weten wat ze willen.
+                  <strong>{t('why.stylish.title')}:</strong> {t('why.stylish.text')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-brand-primary text-2xl font-bold">•</span>
                 <span className="text-gray-700">
-                  <strong>Trots lokaal:</strong> Gemaakt in Groningen, gedragen door heel Nederland.
+                  <strong>{t('why.local.title')}:</strong> {t('why.local.text')}
                 </span>
               </li>
             </ul>
@@ -133,7 +127,7 @@ export default function AboutPage() {
             href="/shop"
             className="inline-block px-12 py-5 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-lg"
           >
-            Ontdek de collectie
+            {t('cta')}
           </Link>
         </div>
       </div>

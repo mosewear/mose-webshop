@@ -1224,5 +1224,55 @@
         "content": "Do you have questions about these terms? Contact us via {email} or call {phone}."
       }
     }
+  },
+  "about": {
+    "hero": {
+      "title": "ABOUT MOSE",
+      "subtitle": "No nonsense. Pure character."
+    },
+    "story": {
+      "title": "OUR STORY",
+      "paragraph1": "MOSE was born from frustration. Frustration about fast fashion, throwaway clothing, and brands that make big promises but don't deliver. We believe clothing should simply be good. Period.",
+      "paragraph2": "That's why we create premium basics built to last. Clothing without compromises, without nonsense. Rugged, modern, and full of character. Built to stay."
+    },
+    "local": {
+      "title": "LOCALLY MADE IN GRONINGEN",
+      "text": "All our products are locally made in Groningen. Not because it's trendy, but because we want to know exactly where our clothing comes from and how it's made. Honest, transparent, and with respect for everyone involved in the process."
+    },
+    "values": {
+      "title": "OUR VALUES",
+      "quality": {
+        "title": "Premium Quality",
+        "text": "Only the finest materials and perfect finishing. Clothing that lasts for years."
+      },
+      "localMade": {
+        "title": "Locally Made",
+        "text": "100% produced in Groningen. We know everyone who works on your clothing."
+      },
+      "fairPricing": {
+        "title": "Fair Pricing",
+        "text": "No inflated prices or fake sales. Just honest pricing for what you get."
+      },
+      "noHassle": {
+        "title": "No Hassle",
+        "text": "{days} days return policy, free shipping from €{threshold}, and fast customer service. Simple."
+      }
+    },
+    "why": {
+      "title": "WHY MOSE?",
+      "sustainable": {
+        "title": "Sustainable without the BS",
+        "text": "We make clothing that lasts. That's the best sustainability."
+      },
+      "stylish": {
+        "title": "Rugged yet stylish",
+        "text": "Basics with character. For modern men who know what they want."
+      },
+      "local": {
+        "title": "Proudly local",
+        "text": "Made in Groningen, worn throughout the Netherlands."
+      }
+    },
+    "cta": "Discover the collection"
   }
 }

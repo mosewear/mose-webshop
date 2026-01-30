@@ -1211,5 +1211,55 @@
         "content": "Heb je vragen over deze voorwaarden? Neem contact met ons op via {email} of bel {phone}."
       }
     }
+  },
+  "about": {
+    "hero": {
+      "title": "OVER MOSE",
+      "subtitle": "Geen poespas. Wel karakter."
+    },
+    "story": {
+      "title": "ONS VERHAAL",
+      "paragraph1": "MOSE is geboren uit frustratie. Frustratie over fast fashion, over wegwerpkleding, over merken die grote beloftes maken maar niet nakomen. Wij geloven dat kleding gewoon goed moet zijn. Punt.",
+      "paragraph2": "Daarom maken we premium basics die lang meegaan. Kleding zonder concessies, zonder poespas. Stoer, modern, en met karakter. Gebouwd om te blijven."
+    },
+    "local": {
+      "title": "LOKAAL GEMAAKT IN GRONINGEN",
+      "text": "Al onze producten worden lokaal gemaakt in Groningen. Niet omdat het hip is, maar omdat we precies willen weten waar onze kleding vandaan komt en hoe het gemaakt wordt. Eerlijk, transparant, en met respect voor iedereen die eraan werkt."
+    },
+    "values": {
+      "title": "ONZE WAARDEN",
+      "quality": {
+        "title": "Premium Kwaliteit",
+        "text": "Alleen de beste materialen en perfecte afwerking. Kleding die jarenlang meegaat."
+      },
+      "localMade": {
+        "title": "Lokaal Gemaakt",
+        "text": "100% geproduceerd in Groningen. We kennen iedereen die aan je kleding werkt."
+      },
+      "fairPricing": {
+        "title": "Eerlijke Prijzen",
+        "text": "Geen opgeblazen prijzen of fake sales. Gewoon eerlijk geprijsd voor wat je krijgt."
+      },
+      "noHassle": {
+        "title": "Geen Gedoe",
+        "text": "{days} dagen retour, gratis verzending vanaf €{threshold}, en snelle klantenservice. Simpel."
+      }
+    },
+    "why": {
+      "title": "WAAROM MOSE?",
+      "sustainable": {
+        "title": "Duurzaam zonder bullshit",
+        "text": "We maken kleding die lang meegaat. Dat is de beste sustainability."
+      },
+      "stylish": {
+        "title": "Stoer maar stijlvol",
+        "text": "Basics met karakter. Voor moderne mannen die weten wat ze willen."
+      },
+      "local": {
+        "title": "Trots lokaal",
+        "text": "Gemaakt in Groningen, gedragen door heel Nederland."
+      }
+    },
+    "cta": "Ontdek de collectie"
   }
 }
