@@ -217,6 +217,9 @@
     "freeShippingProgress": "€{amount} away from free shipping!",
     "freeShippingProgressMobile": "€{amount} to free shipping",
     "checkout": "Go to Checkout",
+    "mobile": {
+      "tapDetails": "Incl. VAT • Tap for details"
+    },
     "clearConfirm": {
       "title": "Empty shopping cart?",
       "message": "Are you sure you want to remove all items?",
@@ -234,7 +237,8 @@
     "trust": {
       "secure": "Secure Payment",
       "returns": "{days} days return",
-      "ssl": "SSL secured"
+      "ssl": "SSL secured",
+      "freeShipping": "Free shipping from €{amount}"
     },
     "upsell": {
       "title": "You might also like",

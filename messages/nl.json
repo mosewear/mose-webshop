@@ -217,6 +217,9 @@
     "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
     "freeShippingProgressMobile": "Nog €{amount} tot gratis verzending",
     "checkout": "Naar checkout",
+    "mobile": {
+      "tapDetails": "Incl. BTW • Tap voor details"
+    },
     "clearConfirm": {
       "title": "Winkelwagen legen?",
       "message": "Weet je zeker dat je alle items wilt verwijderen?",
@@ -234,7 +237,8 @@
     "trust": {
       "secure": "Veilig betalen",
       "returns": "{days} dagen retour",
-      "ssl": "SSL beveiligd"
+      "ssl": "SSL beveiligd",
+      "freeShipping": "Gratis verzending vanaf €{amount}"
     },
     "upsell": {
       "title": "Misschien vind je dit ook leuk",

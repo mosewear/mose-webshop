@@ -217,7 +217,7 @@ export default function CartPage() {
             {subtotal < freeShippingThreshold && (
               <div className="bg-white border-l-4 border-brand-primary px-4 py-3">
                 <p className="text-sm text-gray-600">
-                  Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotal).toFixed(2)}</span> tot gratis verzending
+                  {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotal).toFixed(2) })}
                 </p>
               </div>
             )}
@@ -231,7 +231,7 @@ export default function CartPage() {
               <span className="font-display text-4xl">€{total.toFixed(2)}</span>
             </div>
             <p className="text-sm text-gray-500 text-right uppercase tracking-wider">
-              Incl. €{totalBtw.toFixed(2)} BTW
+              {t('totalInclusive')}
             </p>
 
             {/* CTA Buttons */}
@@ -254,7 +254,7 @@ export default function CartPage() {
             <div className="pt-6 space-y-3 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <Truck size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">Gratis verzending vanaf €{freeShippingThreshold.toFixed(2)}</span>
+                <span className="uppercase tracking-wider">{t('trust.freeShipping', { amount: freeShippingThreshold.toFixed(2) })}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock size={18} className="flex-shrink-0" />
@@ -276,7 +276,7 @@ export default function CartPage() {
           >
             <div className="text-left">
               <div className="font-display text-2xl">€{total.toFixed(2)}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider">Incl. BTW • Tap voor details</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">{t('mobile.tapDetails')}</div>
             </div>
             <div className="px-6 py-3 bg-white text-black font-bold uppercase tracking-wider">
               {t('checkout')} →
@@ -321,7 +321,7 @@ export default function CartPage() {
                 {subtotal < freeShippingThreshold && (
                   <div className="bg-gray-50 border-l-4 border-brand-primary px-4 py-3">
                     <p className="text-sm text-gray-600">
-                      Nog <span className="font-bold text-black">€{(freeShippingThreshold - subtotal).toFixed(2)}</span> tot gratis verzending
+                      {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotal).toFixed(2) })}
                     </p>
                   </div>
                 )}
@@ -345,7 +345,7 @@ export default function CartPage() {
                 <div className="pt-4 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Truck size={18} className="flex-shrink-0" />
-                    <span>Gratis verzending vanaf €{freeShippingThreshold.toFixed(2)}</span>
+                    <span>{t('trust.freeShipping', { amount: freeShippingThreshold.toFixed(2) })}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock size={18} className="flex-shrink-0" />
