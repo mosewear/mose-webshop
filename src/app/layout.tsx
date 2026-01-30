@@ -3,6 +3,7 @@ import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import { PostHogProvider } from './providers'
+import { getSettings } from '@/lib/settings'
 import "./globals.css";
 
 const anton = Anton({
@@ -25,30 +26,33 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-export const metadata: Metadata = {
-  title: {
-    default: "MOSE - Kleding en accessoires voor mannen",
-    template: "%s - MOSE"
-  },
-  description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
-  keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "Groningen", "lokaal gemaakt", "Nederlands merk", "duurzame kleding", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
-  authors: [{ name: "MOSE", url: "https://mosewear.com" }],
-  creator: "MOSE",
-  publisher: "MOSE",
-  metadataBase: new URL('https://mosewear.com'),
-  alternates: {
-    canonical: '/',
-  },
-  icons: {
-    icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  // Get settings from database (cached)
+  const settings = await getSettings()
+  const faviconUrl = settings.favicon_url || '/favicon.ico'
+
+  return {
+    title: {
+      default: "MOSE - Kleding en accessoires voor mannen",
+      template: "%s - MOSE"
+    },
+    description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
+    keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "Groningen", "lokaal gemaakt", "Nederlands merk", "duurzame kleding", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
+    authors: [{ name: "MOSE", url: "https://mosewear.com" }],
+    creator: "MOSE",
+    publisher: "MOSE",
+    metadataBase: new URL('https://mosewear.com'),
+    alternates: {
+      canonical: '/',
+    },
+    icons: {
+      icon: [
+        { url: faviconUrl, sizes: 'any' },
+      ],
+      apple: [
+        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      ],
+    },
   openGraph: {
     type: "website",
     locale: "nl_NL",
@@ -85,7 +89,8 @@ export const metadata: Metadata = {
   verification: {
     // google: 'your-google-site-verification-code',
   },
-};
+  }
+}
 
 export default function RootLayout({
   children,

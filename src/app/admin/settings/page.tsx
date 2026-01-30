@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { clearSettingsCache } from '@/lib/settings'
+import MediaPicker from '@/components/admin/MediaPicker'
 
 interface SiteSetting {
   key: string
@@ -30,6 +31,7 @@ export default function SettingsPage() {
   const [taxRate, setTaxRate] = useState('21.00')
   const [shippingCost, setShippingCost] = useState('0')
   const [lowStockThreshold, setLowStockThreshold] = useState('5')
+  const [faviconUrl, setFaviconUrl] = useState('/favicon.ico')
   
   // Abandoned cart settings
   const [abandonedCartEnabled, setAbandonedCartEnabled] = useState(true)
@@ -127,6 +129,9 @@ export default function SettingsPage() {
             case 'return_label_cost_incl_btw':
               setReturnLabelCostInclBtw(String(setting.value))
               break
+            case 'favicon_url':
+              setFaviconUrl(setting.value)
+              break
           }
         })
       }
@@ -166,6 +171,7 @@ export default function SettingsPage() {
         { key: 'returns_auto_approve', value: returnsAutoApprove },
         { key: 'return_label_cost_excl_btw', value: returnLabelCostExclBtw },
         { key: 'return_label_cost_incl_btw', value: finalReturnLabelCostInclBtw },
+        { key: 'favicon_url', value: faviconUrl },
       ]
 
       for (const setting of settingsToSave) {
@@ -351,6 +357,28 @@ export default function SettingsPage() {
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 placeholder="Helper Brink 27a, 9722 EG Groningen"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                Favicon
+              </label>
+              <MediaPicker
+                value={faviconUrl}
+                onChange={(url) => setFaviconUrl(url)}
+                bucket="images"
+                folder="favicon"
+                accept="image/x-icon,image/png,image/svg+xml"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload een favicon (.ico, .png of .svg). Aanbevolen: 32x32px of 512x512px PNG. Huidige: <span className="font-mono">{faviconUrl}</span>
+              </p>
+              {faviconUrl && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={faviconUrl} alt="Current favicon" className="w-8 h-8 border border-gray-300" />
+                  <span className="text-xs text-gray-600">Preview</span>
+                </div>
+              )}
             </div>
 
             <div>
