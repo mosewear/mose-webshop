@@ -45,6 +45,7 @@ interface Product {
     slug: string
     size_guide_type?: string | null
     size_guide_content?: any | null
+    size_guide_content_en?: any | null
     default_product_details?: string | null
     default_product_details_en?: string | null
     default_materials_care?: string | null
@@ -404,7 +405,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           display_order,
           created_at
         ),
-        categories(name, name_en, slug, size_guide_type, size_guide_content, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en)
+        categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en)
       `)
       .eq('slug', slug)
       .single()
@@ -1589,7 +1590,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       {/* Hybrid Size Guide Modal: Product Override OR Category Template */}
       {showSizeGuide && (() => {
         // Priority 1: Product-specific content (override)
-        const sizeGuideContent = product.size_guide_content || product.categories.size_guide_content
+        // Select locale-specific content: EN if locale is 'en', otherwise NL
+        const sizeGuideContent = locale === 'en' 
+          ? (product.size_guide_content_en || product.categories.size_guide_content_en || product.size_guide_content || product.categories.size_guide_content)
+          : (product.size_guide_content || product.categories.size_guide_content)
         
         // If we have JSON content, use DynamicSizeGuideModal
         if (sizeGuideContent) {

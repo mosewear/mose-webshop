@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 interface TableData {
   type: 'table'
   columns: string[]
@@ -21,24 +23,25 @@ interface Props {
 }
 
 export default function DynamicSizeGuideModal({ content, onClose }: Props) {
+  const t = useTranslations('product.sizeGuide')
   // RENDER TABLE
   if (content.type === 'table') {
     return (
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
         onClick={onClose}
-        aria-label="Sluit maattabel"
+        aria-label={t('close')}
       >
         <div 
           className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[calc(95vh-100px)] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">MAATTABEL</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">{t('title')}</h2>
             <button
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
-              aria-label="Sluit maattabel"
+              aria-label={t('close')}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -51,7 +54,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
-            <span>Swipe naar links voor meer →</span>
+            <span>{t('swipeHint')}</span>
           </div>
           
           <div className="overflow-x-auto -mx-2 px-2">
@@ -81,7 +84,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
 
           {content.how_to_measure && content.how_to_measure.length > 0 && (
             <div className="mt-4 sm:mt-6 bg-gray-50 border-2 border-gray-300 p-3 sm:p-4 text-xs sm:text-sm space-y-2">
-              <h3 className="font-bold text-sm sm:text-base">Hoe meet je?</h3>
+              <h3 className="font-bold text-sm sm:text-base">{t('howToMeasure')}</h3>
               {content.how_to_measure.map((item, i) => (
                 <p key={i}>
                   <span className="font-semibold">{item.label}:</span> {item.description}
@@ -94,7 +97,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
             onClick={onClose}
             className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
           >
-            Sluiten
+            {t('closeButton')}
           </button>
         </div>
       </div>
@@ -107,18 +110,18 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
         onClick={onClose}
-        aria-label="Sluit specificaties"
+        aria-label={t('closeSpecs')}
       >
         <div 
           className="bg-white border-4 border-black p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[calc(95vh-100px)] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">SPECIFICATIES</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-display uppercase">{t('specsTitle')}</h2>
             <button
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
-              aria-label="Sluit specificaties"
+              aria-label={t('closeSpecs')}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -137,7 +140,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
 
           {content.care_instructions && content.care_instructions.length > 0 && (
             <div className="mt-6 bg-gray-50 border-2 border-gray-300 p-3 sm:p-4 text-xs sm:text-sm space-y-2">
-              <h3 className="font-bold text-sm sm:text-base">Onderhoud & Verzorging</h3>
+              <h3 className="font-bold text-sm sm:text-base">{t('careInstructions')}</h3>
               {content.care_instructions.map((item, i) => (
                 <p key={i}>
                   <span className="font-semibold">{item.label}:</span> {item.description}
@@ -150,7 +153,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
             onClick={onClose}
             className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
           >
-            Sluiten
+            {t('closeButton')}
           </button>
         </div>
       </div>
