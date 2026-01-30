@@ -612,7 +612,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       stock: selectedVariant.stock_quantity,
       // PRESALE INFO: Detect if item is from presale stock
       isPresale: selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity > 0,
-      presaleExpectedDate: selectedVariant.presale_enabled ? selectedVariant.presale_expected_date : undefined,
+      presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
     })
 
     // Track Facebook Pixel AddToCart event with user data if logged in
