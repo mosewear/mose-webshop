@@ -112,7 +112,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 
     // Send via Resend
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Orders <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Webshop <info@mosewear.com>',
       to: [props.customerEmail],
       subject,
       html,
@@ -163,7 +163,7 @@ export async function sendShippingConfirmationEmail(props: {
     )
 
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Orders <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Webshop <info@mosewear.com>',
       to: [props.customerEmail],
       subject: t('shipping.subject', { 
         orderId: props.orderId.slice(0, 8).toUpperCase() 
@@ -223,7 +223,7 @@ export async function sendOrderProcessingEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Orders <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Webshop <info@mosewear.com>',
       to: [props.customerEmail],
       subject: t('processing.subject', { 
         orderId: props.orderId.slice(0, 8).toUpperCase() 
@@ -280,7 +280,7 @@ export async function sendOrderDeliveredEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Orders <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Webshop <info@mosewear.com>',
       to: [props.customerEmail],
       subject: t('delivered.subject', { 
         orderId: props.orderId.slice(0, 8).toUpperCase() 
@@ -334,7 +334,7 @@ export async function sendOrderCancelledEmail(props: {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MOSE Orders <bestellingen@orders.mosewear.nl>',
+      from: 'MOSE Webshop <info@mosewear.com>',
       to: [props.customerEmail],
       subject: t('cancelled.subject', { 
         orderId: props.orderId.slice(0, 8).toUpperCase() 
