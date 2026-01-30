@@ -83,10 +83,10 @@ export default function PreorderConfirmationEmail({
           {/* Expected Delivery Info Box */}
           <Section style={presaleInfoBox}>
             <Row>
-              <Column style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                <div style={{ fontSize: '24px' }}>⏰</div>
+              <Column style={{ width: '40px', verticalAlign: 'middle', paddingTop: '0' }}>
+                <IconCircle icon="calendar" color="#86A35A" size={24} />
               </Column>
-              <Column>
+              <Column style={{ verticalAlign: 'middle' }}>
                 <Text style={presaleInfoTitle}>{t('preorder.expectedDelivery')}</Text>
                 <Text style={presaleInfoDate}>{presaleExpectedDate}</Text>
                 <Text style={presaleInfoText}>
@@ -102,34 +102,34 @@ export default function PreorderConfirmationEmail({
             <Text style={sectionTitle}>{t('preorder.whatHappensNow')}</Text>
             <Section style={timelineBox}>
               <Row style={timelineItem}>
-                <Column style={{ width: '30px' }}>
-                  <div style={checkmark}>✓</div>
+                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
+                  <IconCircle icon="check" color="#86A35A" size={20} />
                 </Column>
-                <Column>
+                <Column style={{ verticalAlign: 'middle' }}>
                   <Text style={timelineText}>{t('preorder.step1')}</Text>
                 </Column>
               </Row>
               <Row style={timelineItem}>
-                <Column style={{ width: '30px' }}>
+                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
                   <div style={number}>2</div>
                 </Column>
-                <Column>
+                <Column style={{ verticalAlign: 'middle' }}>
                   <Text style={timelineText}>{t('preorder.step2')}</Text>
                 </Column>
               </Row>
               <Row style={timelineItem}>
-                <Column style={{ width: '30px' }}>
+                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
                   <div style={number}>3</div>
                 </Column>
-                <Column>
+                <Column style={{ verticalAlign: 'middle' }}>
                   <Text style={timelineText}>{t('preorder.step3')}</Text>
                 </Column>
               </Row>
               <Row style={timelineItem}>
-                <Column style={{ width: '30px' }}>
+                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
                   <div style={number}>4</div>
                 </Column>
-                <Column>
+                <Column style={{ verticalAlign: 'middle' }}>
                   <Text style={timelineText}>{t('preorder.step4')}</Text>
                 </Column>
               </Row>
@@ -189,10 +189,22 @@ export default function PreorderConfirmationEmail({
               <Text style={questionsText}>
                 {t('preorder.questionsText')}
               </Text>
-              <Text style={contactInfo}>
-                📧 {contactEmail}<br />
-                📞 {contactPhone}
-              </Text>
+              <Row>
+                <Column style={{ width: '24px', verticalAlign: 'middle', paddingRight: '8px' }}>
+                  <IconCircle icon="mail" color="#2d3748" size={16} />
+                </Column>
+                <Column style={{ verticalAlign: 'middle' }}>
+                  <Text style={contactInfoText}>{contactEmail}</Text>
+                </Column>
+              </Row>
+              <Row style={{ marginTop: '8px' }}>
+                <Column style={{ width: '24px', verticalAlign: 'middle', paddingRight: '8px' }}>
+                  <IconCircle icon="phone" color="#2d3748" size={16} />
+                </Column>
+                <Column style={{ verticalAlign: 'middle' }}>
+                  <Text style={contactInfoText}>{contactPhone}</Text>
+                </Column>
+              </Row>
             </Section>
           </Section>
 
@@ -319,19 +331,7 @@ const timelineBox = {
 
 const timelineItem = {
   marginBottom: '12px',
-}
-
-const checkmark = {
-  width: '24px',
-  height: '24px',
-  borderRadius: '50%',
-  backgroundColor: '#86A35A',
-  color: '#ffffff',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '14px',
-  fontWeight: '900',
+  alignItems: 'center' as const,
 }
 
 const number = {
@@ -350,7 +350,7 @@ const number = {
 const timelineText = {
   margin: '0',
   fontSize: '14px',
-  lineHeight: '24px',
+  lineHeight: '20px',
   color: '#2d3748',
 }
 
@@ -438,11 +438,11 @@ const questionsText = {
   color: '#4a5568',
 }
 
-const contactInfo = {
+const contactInfoText = {
   margin: '0',
   fontSize: '14px',
-  lineHeight: '24px',
   color: '#2d3748',
   fontWeight: '600',
+  display: 'inline-block',
 }
 
