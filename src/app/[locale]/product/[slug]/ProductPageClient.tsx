@@ -37,6 +37,7 @@ interface Product {
   meta_title: string
   meta_description: string
   size_guide_content?: any | null
+  size_guide_content_en?: any | null
   product_images: ProductImage[]
   product_variants: ProductVariant[]
   categories: {
@@ -387,6 +388,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         *,
         name_en,
         description_en,
+        size_guide_content_en,
         product_images(*),
         product_variants(
           id,
