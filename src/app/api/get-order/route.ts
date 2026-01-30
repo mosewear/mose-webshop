@@ -74,10 +74,9 @@ export async function GET(req: NextRequest) {
     })
 
     // Send order confirmation email if not sent yet
-    // Check if email should be sent (only once per order)
-    // Use payment_status (not stripe_payment_status which doesn't exist!)
-    // Also check if email was already sent via last_email_sent_at
-    const shouldSendEmail = (order.payment_status === 'pending' || !order.payment_status) && !order.last_email_sent_at
+    // SIMPLE: If last_email_sent_at is null, email was NOT sent yet
+    // Don't check payment_status - if webhook set it to 'paid' but didn't send email, fallback must send it!
+    const shouldSendEmail = !order.last_email_sent_at
     
     if (shouldSendEmail) {
       console.log('📧 API: Attempting to send order confirmation email...')
