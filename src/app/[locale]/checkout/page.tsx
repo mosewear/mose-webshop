@@ -1654,7 +1654,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="col-span-2 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
-                            Toevoeging
+                            {t('field.addition')}
                           </label>
                           <input
                             type="text"
@@ -1735,7 +1735,7 @@ export default function CheckoutPage() {
                         <div className="grid grid-cols-3 gap-3">
                           <div className="col-span-2">
                             <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700 whitespace-nowrap">
-                              Huisnummer <span className="text-red-600 ml-0.5">*</span>
+                              {t('field.houseNumber')} <span className="text-red-600 ml-0.5">*</span>
                             </label>
                             <input
                               type="text"
@@ -1748,7 +1748,7 @@ export default function CheckoutPage() {
                               className={`w-full px-4 py-3 border-2 ${
                                 getInputBorderClass('huisnummer')
                               } focus:border-brand-primary focus:outline-none`}
-                              placeholder="27"
+                              placeholder={t('placeholder.houseNumber')}
                               autoComplete="off"
                               disabled={addressLookup.isLookingUp}
                               maxLength={5}
@@ -1759,7 +1759,7 @@ export default function CheckoutPage() {
                           </div>
                           <div>
                             <label className="block text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
-                              Toevoeging
+                              {t('field.addition')}
                             </label>
                             <input
                               type="text"
@@ -1772,7 +1772,7 @@ export default function CheckoutPage() {
                               className={`w-full px-4 py-3 border-2 ${
                                 getInputBorderClass('toevoeging')
                               } focus:border-brand-primary focus:outline-none`}
-                              placeholder="A"
+                              placeholder={t('placeholder.addition')}
                               autoComplete="off"
                               disabled={addressLookup.isLookingUp}
                               maxLength={10}
@@ -1793,12 +1793,12 @@ export default function CheckoutPage() {
                             {addressLookup.isLookingUp ? (
                               <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Adres wordt opgehaald...</span>
+                                <span>{t('lookup.loading')}</span>
                               </>
                             ) : (
                               <>
                                 <Search size={18} />
-                                <span>Adres ophalen</span>
+                                <span>{t('lookup.button')}</span>
                               </>
                             )}
                           </button>
@@ -1817,7 +1817,7 @@ export default function CheckoutPage() {
                         <div className="p-3 bg-green-50 border-2 border-green-600 text-green-900 text-sm rounded flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Check size={18} className="text-green-600" />
-                            <span>Adres opgehaald!</span>
+                            <span>{t('lookup.success')}</span>
                           </div>
                           <button
                             type="button"
@@ -1825,7 +1825,7 @@ export default function CheckoutPage() {
                             className="text-green-700 hover:text-green-900 font-semibold flex items-center gap-1 text-xs"
                           >
                             <Edit2 size={14} />
-                            Wijzig
+                            {t('lookup.edit')}
                           </button>
                         </div>
                       )}
@@ -1835,7 +1835,7 @@ export default function CheckoutPage() {
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700">
-                            Postcode <span className="text-red-600 ml-0.5">*</span>
+                            {t('field.postalCode')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
                             type="text"
@@ -1860,7 +1860,7 @@ export default function CheckoutPage() {
                     {/* Address (lees-only na lookup voor NL, altijd bewerkbaar voor andere landen) */}
                     <div className="flex flex-col">
                       <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
-                        Straat en huisnummer <span className="text-red-600 ml-0.5">*</span>
+                        {t('field.address')} <span className="text-red-600 ml-0.5">*</span>
                       </label>
                       <input
                         type="text"
@@ -1926,17 +1926,17 @@ export default function CheckoutPage() {
                     <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    <span>Veilig betalen</span>
+                    <span>{t('securePayment')}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>{returnDays} dagen retour</span>
+                    <span>{t('daysReturn', { days: returnDays })}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Lock className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span>SSL beveiligd</span>
+                    <span>{t('sslSecured')}</span>
                   </div>
                 </div>
 

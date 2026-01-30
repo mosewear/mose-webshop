@@ -152,6 +152,11 @@
     },
     "submit": "Bestelling plaatsen",
     "submitting": "Bestelling plaatsen...",
+    "securePayment": "Veilig betalen",
+    "daysReturn": "{days} dagen retour",
+    "sslSecured": "SSL beveiligd",
+    "items": "{count} {count, plural, one {Item} other {Items}}",
+    "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
     "progress": {
       "cart": "Winkelwagen",
       "details": "Gegevens",

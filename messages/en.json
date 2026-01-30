@@ -152,6 +152,11 @@
     },
     "submit": "Place Order",
     "submitting": "Placing Order...",
+    "securePayment": "Secure Payment",
+    "daysReturn": "{days} day return",
+    "sslSecured": "SSL Secured",
+    "items": "{count} {count, plural, one {Item} other {Items}}",
+    "freeShippingProgress": "€{amount} away from free shipping!",
     "progress": {
       "cart": "Shopping Cart",
       "details": "Details",
