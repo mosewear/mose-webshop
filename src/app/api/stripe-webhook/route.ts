@@ -464,6 +464,22 @@ export async function POST(req: NextRequest) {
             if (emailResult.success) {
               console.log('✅ [WEBHOOK] Order confirmation email sent successfully!')
               console.log('✅ [WEBHOOK] Email ID:', emailResult.data)
+              
+              // Update last_email_sent_at to prevent duplicate emails
+              try {
+                await supabase
+                  .from('orders')
+                  .update({ 
+                    last_email_sent_at: new Date().toISOString(),
+                    last_email_type: 'order_confirmation'
+                  })
+                  .eq('id', updatedOrder.id)
+                
+                console.log('✅ [WEBHOOK] Email timestamp updated in database')
+              } catch (updateError) {
+                console.error('❌ [WEBHOOK] Failed to update email timestamp:', updateError)
+                // Don't fail webhook if timestamp update fails
+              }
             } else {
               console.error('❌ [WEBHOOK] Email send failed:', emailResult.error)
             }
@@ -668,6 +684,22 @@ export async function POST(req: NextRequest) {
                 if (emailResult.success) {
                   console.log('✅ [WEBHOOK LEGACY] Order confirmation email sent successfully!')
                   console.log('✅ [WEBHOOK LEGACY] Email ID:', emailResult.data)
+                  
+                  // Update last_email_sent_at to prevent duplicate emails
+                  try {
+                    await supabase
+                      .from('orders')
+                      .update({ 
+                        last_email_sent_at: new Date().toISOString(),
+                        last_email_type: 'order_confirmation'
+                      })
+                      .eq('id', updatedOrder.id)
+                    
+                    console.log('✅ [WEBHOOK LEGACY] Email timestamp updated in database')
+                  } catch (updateError) {
+                    console.error('❌ [WEBHOOK LEGACY] Failed to update email timestamp:', updateError)
+                    // Don't fail webhook if timestamp update fails
+                  }
                 } else {
                   console.error('❌ [WEBHOOK LEGACY] Email send failed:', emailResult.error)
                 }

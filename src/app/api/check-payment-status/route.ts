@@ -97,6 +97,22 @@ export async function GET(req: NextRequest) {
           if (emailResult.success) {
             console.log('✅ [FALLBACK] Confirmation email sent successfully!')
             console.log('✅ [FALLBACK] Email ID:', emailResult.data)
+            
+            // Update last_email_sent_at to prevent duplicate emails
+            try {
+              await supabase
+                .from('orders')
+                .update({ 
+                  last_email_sent_at: new Date().toISOString(),
+                  last_email_type: 'order_confirmation'
+                })
+                .eq('id', updatedOrder.id)
+              
+              console.log('✅ [FALLBACK] Email timestamp updated in database')
+            } catch (updateError) {
+              console.error('❌ [FALLBACK] Failed to update email timestamp:', updateError)
+              // Don't fail if timestamp update fails
+            }
           } else {
             console.error('❌ [FALLBACK] Email send failed:', emailResult.error)
           }
