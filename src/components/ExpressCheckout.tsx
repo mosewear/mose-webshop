@@ -36,6 +36,7 @@ export default function ExpressCheckout({
   promoCode,
   userEmail,
 }: ExpressCheckoutProps) {
+  const t = useTranslations('checkout')
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const stripe = useStripe()
@@ -299,7 +300,7 @@ export default function ExpressCheckout({
       {/* Divider - subtiel */}
       <div className="flex items-center gap-3 text-xs text-gray-500">
         <div className="flex-1 h-px bg-gray-300"></div>
-        <span className="uppercase tracking-wide">of vul in</span>
+        <span className="uppercase tracking-wide">{t('orFillIn')}</span>
         <div className="flex-1 h-px bg-gray-300"></div>
       </div>
     </div>

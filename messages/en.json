@@ -91,7 +91,7 @@
       "firstName": "First Name",
       "lastName": "Last Name",
       "country": "Country",
-      "postalCode": "Postcode",
+      "postalCode": "Postal Code",
       "houseNumber": "House Number",
       "addition": "Addition",
       "address": "Street and house number",
@@ -157,6 +157,7 @@
     "sslSecured": "SSL Secured",
     "items": "{count} {count, plural, one {Item} other {Items}}",
     "freeShippingProgress": "€{amount} away from free shipping!",
+    "orFillIn": "or fill in",
     "progress": {
       "cart": "Shopping Cart",
       "details": "Details",

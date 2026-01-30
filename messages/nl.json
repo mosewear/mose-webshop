@@ -157,6 +157,7 @@
     "sslSecured": "SSL beveiligd",
     "items": "{count} {count, plural, one {Item} other {Items}}",
     "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
+    "orFillIn": "of vul in",
     "progress": {
       "cart": "Winkelwagen",
       "details": "Gegevens",
