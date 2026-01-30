@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { uploadAndVerify } from '@/lib/storage-utils';
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -125,6 +126,9 @@ export default function MediaLibraryClient() {
     if (!uploadFiles || uploadFiles.length === 0) return;
 
     setUploading(true);
+    const failedUploads: string[] = [];
+    let successCount = 0;
+
     try {
       const bucket = targetBucket || selectedBucket === 'all' ? 'images' : selectedBucket;
 
@@ -132,18 +136,33 @@ export default function MediaLibraryClient() {
         const file = uploadFiles[i];
         const fileName = `${Date.now()}-${file.name}`;
 
-        const { error } = await supabase.storage.from(bucket).upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+        console.log(`📤 [MediaLibrary] Uploading ${file.name} to ${bucket}/${fileName}`);
 
-        if (error) throw error;
+        // 🚨 NIEUWE ROBUUSTE UPLOAD MET VERIFICATIE
+        const result = await uploadAndVerify(bucket, fileName, file);
+
+        if (!result.success) {
+          console.error(`❌ [MediaLibrary] Upload failed for ${file.name}:`, result.error);
+          failedUploads.push(file.name);
+        } else {
+          console.log(`✅ [MediaLibrary] Successfully uploaded ${file.name}`);
+          successCount++;
+        }
+      }
+
+      // Show result summary
+      if (failedUploads.length > 0) {
+        alert(
+          `⚠️ Upload samenvatting:\n\n✅ ${successCount} bestand(en) succesvol\n❌ ${failedUploads.length} bestand(en) gefaald:\n${failedUploads.join('\n')}`
+        );
+      } else if (successCount > 0) {
+        alert(`✅ ${successCount} bestand(en) succesvol geüpload!`);
       }
 
       await loadFiles();
     } catch (error) {
-      console.error('Error uploading:', error);
-      alert('Fout bij uploaden');
+      console.error('❌ [MediaLibrary] Error uploading:', error);
+      alert(`Fout bij uploaden: ${error instanceof Error ? error.message : 'Onbekende fout'}`);
     } finally {
       setUploading(false);
     }

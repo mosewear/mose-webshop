@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { uploadAndVerify } from '@/lib/storage-utils';
 import {
   Image as ImageIcon,
   Upload,
@@ -171,9 +172,10 @@ export default function MediaPicker({
     if (!uploadFiles || uploadFiles.length === 0) return;
 
     setUploading(true);
-    try {
-      const uploadedUrls: { url: string; type: 'image' | 'video' }[] = [];
+    const uploadedUrls: { url: string; type: 'image' | 'video' }[] = [];
+    const failedUploads: string[] = [];
 
+    try {
       for (let i = 0; i < uploadFiles.length; i++) {
         const file = uploadFiles[i];
 
@@ -181,14 +183,24 @@ export default function MediaPicker({
         const isImage = file.type.startsWith('image/');
         const isVideo = file.type.startsWith('video/');
 
-        if (accept === 'images' && !isImage) continue;
-        if (accept === 'videos' && !isVideo) continue;
-        if (accept === 'both' && !isImage && !isVideo) continue;
+        if (accept === 'images' && !isImage) {
+          console.warn(`⚠️ Skipping ${file.name}: not an image`);
+          continue;
+        }
+        if (accept === 'videos' && !isVideo) {
+          console.warn(`⚠️ Skipping ${file.name}: not a video`);
+          continue;
+        }
+        if (accept === 'both' && !isImage && !isVideo) {
+          console.warn(`⚠️ Skipping ${file.name}: not an image or video`);
+          continue;
+        }
 
         // Validate file size
         const maxBytes = maxSizeMB * 1024 * 1024;
         if (file.size > maxBytes) {
           alert(`${file.name} is te groot (max ${maxSizeMB}MB)`);
+          failedUploads.push(file.name);
           continue;
         }
 
@@ -198,25 +210,28 @@ export default function MediaPicker({
           ? `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
           : `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-        // Upload to Supabase Storage
-        const { data, error: uploadError } = await supabase.storage
-          .from(bucket)
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+        // 🚨 NIEUWE ROBUUSTE UPLOAD MET VERIFICATIE
+        console.log(`📤 Uploading ${file.name} to ${bucket}/${fileName}`);
+        const result = await uploadAndVerify(bucket, fileName, file);
 
-        if (uploadError) throw uploadError;
+        if (!result.success) {
+          console.error(`❌ Upload failed for ${file.name}:`, result.error);
+          failedUploads.push(file.name);
+          continue;
+        }
 
-        // Get public URL
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from(bucket).getPublicUrl(data.path);
-
+        console.log(`✅ Successfully uploaded and verified ${file.name}`);
         uploadedUrls.push({
-          url: publicUrl,
+          url: result.url!,
           type: isVideo ? 'video' : 'image',
         });
+      }
+
+      // Show summary if there were failures
+      if (failedUploads.length > 0) {
+        alert(
+          `⚠️ ${failedUploads.length} bestand(en) konden niet worden geüpload:\n${failedUploads.join('\n')}\n\n${uploadedUrls.length} bestand(en) succesvol geüpload.`
+        );
       }
 
       // Handle uploaded files based on mode
@@ -235,8 +250,8 @@ export default function MediaPicker({
       // Reload files
       await loadFiles();
     } catch (error) {
-      console.error('Error uploading:', error);
-      alert('Fout bij uploaden');
+      console.error('❌ Error uploading:', error);
+      alert(`Fout bij uploaden: ${error instanceof Error ? error.message : 'Onbekende fout'}`);
     } finally {
       setUploading(false);
     }
