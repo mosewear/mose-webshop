@@ -135,7 +135,10 @@ export default async function ProductPage({
       ),
       product_variants (
         stock_quantity,
-        is_available
+        is_available,
+        presale_enabled,
+        presale_stock_quantity,
+        presale_expected_date
       ),
       categories!inner (
         name,
