@@ -79,12 +79,14 @@ export async function POST(req: NextRequest) {
 
           if (fetchError || !returnRecordBefore) {
             console.error('❌ Error fetching return before update:', fetchError)
-            // Return error maar laat niet de hele webhook falen
+            console.error('⚠️ Return not found, but acknowledging webhook to prevent disabling')
+            // IMPORTANT: Return 200 OK even on business logic errors to prevent Stripe from disabling webhook
             return NextResponse.json({ 
-              error: 'Return not found', 
+              received: true,
+              warning: 'Return not found', 
               return_id: returnId,
               payment_intent_id: paymentIntent.id 
-            }, { status: 404 })
+            }, { status: 200 })
           }
 
           // Update return status
@@ -103,22 +105,27 @@ export async function POST(req: NextRequest) {
             console.error('❌ Error updating return payment status:', returnError)
             console.error('   Return ID:', returnId)
             console.error('   Payment Intent ID:', paymentIntent.id)
-            // Return error - status update is critical
+            console.error('⚠️ Database error, but acknowledging webhook to prevent disabling')
+            // IMPORTANT: Return 200 OK even on business logic errors to prevent Stripe from disabling webhook
             return NextResponse.json({ 
-              error: 'Failed to update return status', 
+              received: true,
+              warning: 'Failed to update return status', 
               return_id: returnId,
               payment_intent_id: paymentIntent.id,
               details: returnError.message 
-            }, { status: 500 })
+            }, { status: 200 })
           }
           
           if (!returnRecord) {
             console.error('❌ Return record not returned after update')
+            console.error('⚠️ Unexpected state, but acknowledging webhook to prevent disabling')
+            // IMPORTANT: Return 200 OK even on business logic errors to prevent Stripe from disabling webhook
             return NextResponse.json({ 
-              error: 'Return not found after update', 
+              received: true,
+              warning: 'Return not found after update', 
               return_id: returnId,
               payment_intent_id: paymentIntent.id 
-            }, { status: 404 })
+            }, { status: 200 })
           }
           
           console.log('✅ Return payment status updated:', returnId)
@@ -335,10 +342,14 @@ export async function POST(req: NextRequest) {
         
         if (findError || !order) {
           console.error('❌ Webhook: Order not found for payment intent:', paymentIntent.id, findError)
+          console.error('⚠️ This might be a return payment or orphaned payment intent')
+          console.error('⚠️ Acknowledging webhook to prevent disabling')
+          // IMPORTANT: Return 200 OK - order might not exist yet or this is a different payment type
           return NextResponse.json({ 
-            error: 'Order not found',
+            received: true,
+            warning: 'Order not found',
             payment_intent_id: paymentIntent.id 
-          }, { status: 404 })
+          }, { status: 200 })
         }
         
         console.log('✅ Webhook: Order found:', order.id)
@@ -364,7 +375,18 @@ export async function POST(req: NextRequest) {
         
         if (updateError) {
           console.error('❌ Error updating order:', updateError)
-          return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
+          console.error('⚠️ Critical: Order exists but failed to update to PAID status')
+          console.error('⚠️ Order ID:', order.id)
+          console.error('⚠️ Payment Intent:', paymentIntent.id)
+          console.error('⚠️ Acknowledging webhook to prevent disabling - manual intervention may be needed')
+          // IMPORTANT: Return 200 OK even on critical errors to prevent Stripe from disabling webhook
+          // Log extensively so we can manually fix this order
+          return NextResponse.json({ 
+            received: true,
+            warning: 'Failed to update order - requires manual review',
+            order_id: order.id,
+            payment_intent_id: paymentIntent.id
+          }, { status: 200 })
         }
         
         console.log(`✅ Order ${order.id} marked as PAID (payment_status: paid, status: processing)`)
@@ -539,10 +561,14 @@ export async function POST(req: NextRequest) {
             customer_email: session.customer_email,
             metadata: session.metadata,
           })
+          console.error('⚠️ Legacy checkout session without matching order')
+          console.error('⚠️ Acknowledging webhook to prevent disabling')
+          // IMPORTANT: Return 200 OK - this might be a test session or orphaned checkout
           return NextResponse.json({ 
-            error: 'Order not found',
+            received: true,
+            warning: 'Order not found for legacy checkout session',
             session_id: session.id 
-          }, { status: 404 })
+          }, { status: 200 })
         }
         
         // Update order with payment success
@@ -849,10 +875,22 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true })
   } catch (error: any) {
-    console.error('Webhook handler error:', error)
+    console.error('❌ CRITICAL: Webhook handler unexpected error:', error)
+    console.error('❌ Error name:', error.name)
+    console.error('❌ Error message:', error.message)
+    console.error('❌ Error stack:', error.stack)
+    console.error('⚠️ Acknowledging webhook despite error to prevent Stripe from disabling it')
+    // IMPORTANT: Return 200 OK even on catastrophic errors
+    // This prevents Stripe from disabling the webhook after 5 consecutive failures
+    // We log extensively so we can debug and fix the underlying issue
     return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
+      { 
+        received: true,
+        warning: 'Webhook handler encountered an error - check logs',
+        error_name: error.name,
+        error_message: error.message
+      },
+      { status: 200 }
     )
   }
 }
