@@ -6,6 +6,8 @@ import {
   Section,
   Text,
   Link,
+  Row,
+  Column,
 } from '@react-email/components'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
@@ -89,11 +91,32 @@ export default function ShippingConfirmationEmail({
             </Section>
 
             <Text style={sectionTitle}>{t('shipping.helpfulTips')}</Text>
-            <ul style={checklist}>
-              <li style={checklistItem}>✓ {t('shipping.tip1')}</li>
-              <li style={checklistItem}>✓ {t('shipping.tip2')}</li>
-              <li style={checklistItem}>✓ {t('shipping.tip3')}</li>
-            </ul>
+            <Section style={checklist}>
+              <Row style={checklistItem}>
+                <Column style={{ width: '28px', verticalAlign: 'middle' }}>
+                  <IconCircle icon="check" color="#86A35A" size={18} />
+                </Column>
+                <Column style={{ verticalAlign: 'middle' }}>
+                  <Text style={checklistText}>{t('shipping.tip1')}</Text>
+                </Column>
+              </Row>
+              <Row style={checklistItem}>
+                <Column style={{ width: '28px', verticalAlign: 'middle' }}>
+                  <IconCircle icon="check" color="#86A35A" size={18} />
+                </Column>
+                <Column style={{ verticalAlign: 'middle' }}>
+                  <Text style={checklistText}>{t('shipping.tip2')}</Text>
+                </Column>
+              </Row>
+              <Row style={checklistItem}>
+                <Column style={{ width: '28px', verticalAlign: 'middle' }}>
+                  <IconCircle icon="check" color="#86A35A" size={18} />
+                </Column>
+                <Column style={{ verticalAlign: 'middle' }}>
+                  <Text style={checklistText}>{t('shipping.tip3')}</Text>
+                </Column>
+              </Row>
+            </Section>
           </Section>
 
           <EmailFooter 
@@ -237,15 +260,20 @@ const infoText = {
 }
 
 const checklist = {
-  listStyle: 'none',
   padding: '0',
   margin: '12px 0',
 }
 
 const checklistItem = {
-  padding: '10px 0',
+  marginBottom: '12px',
+  alignItems: 'center' as const,
+}
+
+const checklistText = {
+  margin: '0',
   fontSize: '14px',
-  lineHeight: '1.6',
+  lineHeight: '20px',
   color: '#333',
+  display: 'inline-block',
 }
 

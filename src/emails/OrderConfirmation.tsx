@@ -87,10 +87,10 @@ export default function OrderConfirmationEmail({
           {hasPresaleItems && (
             <Section style={presaleWarningBox}>
               <Row>
-                <Column style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                  <div style={{ fontSize: '24px' }}>⚠️</div>
+                <Column style={{ width: '40px', verticalAlign: 'middle', paddingTop: '0' }}>
+                  <IconCircle icon="alert-circle" color="#f59e0b" size={24} />
                 </Column>
-                <Column>
+                <Column style={{ verticalAlign: 'middle' }}>
                   <Text style={presaleWarningTitle}>{t('orderConfirmation.presaleNotice')}</Text>
                   <Text style={presaleWarningText}>
                     {t('orderConfirmation.presaleNoticeText', { date: presaleExpectedDate })}
@@ -117,9 +117,16 @@ export default function OrderConfirmationEmail({
                   t={t}
                 />
                 {item.isPresale && (
-                  <div style={presaleItemBadge}>
-                    📦 PRE-SALE {item.presaleExpectedDate ? `• ${t('orderConfirmation.expected')}: ${item.presaleExpectedDate}` : ''}
-                  </div>
+                  <Row style={presaleItemBadge}>
+                    <Column style={{ width: '24px', verticalAlign: 'middle', paddingRight: '8px' }}>
+                      <IconCircle icon="package" color="#86A35A" size={16} />
+                    </Column>
+                    <Column style={{ verticalAlign: 'middle' }}>
+                      <Text style={presaleItemText}>
+                        PRE-SALE {item.presaleExpectedDate ? `• ${t('orderConfirmation.expected')}: ${item.presaleExpectedDate}` : ''}
+                      </Text>
+                    </Column>
+                  </Row>
                 )}
               </div>
             ))}
@@ -236,14 +243,20 @@ const presaleWarningText = {
 const presaleItemBadge = {
   backgroundColor: '#f0f4e8',
   border: '2px solid #86A35A',
-  color: '#4a5c2a',
   padding: '8px 12px',
-  fontSize: '12px',
-  fontWeight: '700',
   marginTop: '-12px',
   marginBottom: '16px',
   marginLeft: '20px',
   marginRight: '20px',
+  alignItems: 'center' as const,
+}
+
+const presaleItemText = {
+  margin: '0',
+  color: '#4a5c2a',
+  fontSize: '12px',
+  fontWeight: '700',
+  display: 'inline-block',
 }
 
 const content = {
