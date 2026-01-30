@@ -36,13 +36,13 @@ export default function ExpressCheckout({
   promoCode,
   userEmail,
 }: ExpressCheckoutProps) {
-  const t = useTranslations('checkout')
+  const tCheckout = useTranslations('checkout')
+  const tErrors = useTranslations('errors')
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const stripe = useStripe()
   const router = useRouter()
   const supabase = createClient()
-  const t = useTranslations('errors')
 
   useEffect(() => {
     if (cartItems.length === 0 || !stripe) return
@@ -187,7 +187,7 @@ export default function ExpressCheckout({
             if (itemsError) {
               console.error('❌ [Express Checkout] Order items creation failed:', itemsError)
               e.complete('fail')
-              toast.error(t('generic'))
+              toast.error(tErrors('generic'))
               setIsProcessing(false)
               return
             }
@@ -300,7 +300,7 @@ export default function ExpressCheckout({
       {/* Divider - subtiel */}
       <div className="flex items-center gap-3 text-xs text-gray-500">
         <div className="flex-1 h-px bg-gray-300"></div>
-        <span className="uppercase tracking-wide">{t('orFillIn')}</span>
+        <span className="uppercase tracking-wide">{tCheckout('orFillIn')}</span>
         <div className="flex-1 h-px bg-gray-300"></div>
       </div>
     </div>
