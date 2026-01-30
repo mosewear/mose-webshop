@@ -184,31 +184,13 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
   }
 
   const handleDeleteImage = async (imageId: string, imageUrl: string) => {
-    if (!confirm('Weet je zeker dat je deze afbeelding wilt verwijderen?')) return
+    if (!confirm('Weet je zeker dat je deze afbeelding wilt ontkoppelen van dit product?\n\nDe afbeelding blijft bewaard in de Media Library.')) return
 
     try {
-      // Extract file path from URL and delete from storage
-      // URL format: https://project.supabase.co/storage/v1/object/public/bucket/path
-      if (imageUrl.includes('/storage/v1/object/public/')) {
-        const urlParts = imageUrl.split('/storage/v1/object/public/')
-        if (urlParts.length > 1) {
-          const pathParts = urlParts[1].split('/')
-          const bucket = pathParts[0]
-          const filePath = pathParts.slice(1).join('/')
-
-          // Delete from Supabase Storage
-          const { error: storageError } = await supabase.storage
-            .from(bucket)
-            .remove([filePath])
-
-          if (storageError) {
-            console.error('Error deleting from storage:', storageError)
-            // Continue anyway - database deletion is more important
-          }
-        }
-      }
-
-      // Delete from database
+      // 🔗 ONTKOPPEL - Verwijder alleen de database relatie
+      // De file blijft in Supabase Storage voor hergebruik
+      console.log(`🔗 Ontkoppelen van afbeelding ${imageId} van product ${id}`)
+      
       const { error } = await supabase
         .from('product_images')
         .delete()
@@ -216,8 +198,10 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
 
       if (error) throw error
 
+      console.log(`✅ Afbeelding ontkoppeld. File blijft in Media Library.`)
       fetchImages()
     } catch (err: any) {
+      console.error('❌ Error ontkoppelen:', err)
       alert(`Fout: ${err.message}`)
     }
   }
@@ -497,11 +481,11 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                       
                       <button
                         onClick={() => handleDeleteImage(image.id, image.url)}
-                        className="p-2 border-2 border-red-300 hover:bg-red-600 hover:border-red-600 text-red-600 hover:text-white transition-colors"
-                        title="Verwijderen"
+                        className="p-2 border-2 border-blue-300 hover:bg-blue-600 hover:border-blue-600 text-blue-600 hover:text-white transition-colors"
+                        title="Ontkoppel van product (blijft in Media Library)"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                       </button>
                     </div>
