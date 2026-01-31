@@ -152,6 +152,25 @@ export default function OrderConfirmationEmail({
               <Text style={summaryTotal}>€{orderTotal.toFixed(2)}</Text>
               <Text style={summaryTotalLabel}>{t('orderConfirmation.totalPaid')}</Text>
             </Section>
+
+            {/* Shipping Address */}
+            <Section style={addressSection}>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
+                <tr>
+                  <td style={{ width: '80px', verticalAlign: 'top', textAlign: 'center', paddingTop: '4px' }}>
+                    <IconCircle icon="package" color="#2ECC71" size={20} />
+                  </td>
+                  <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
+                    <Text style={addressTitle}>{t('orderConfirmation.shippingAddress')}</Text>
+                    <Text style={addressText}>
+                      {shippingAddress.name}<br />
+                      {shippingAddress.address}<br />
+                      {shippingAddress.postalCode} {shippingAddress.city}
+                    </Text>
+                  </td>
+                </tr>
+              </table>
+            </Section>
           </Section>
 
           {/* Footer */}
@@ -281,6 +300,29 @@ const summary = {
   color: '#fff',
   padding: '28px 24px',
   marginTop: '28px',
+}
+
+const addressSection = {
+  backgroundColor: '#f8f9fa',
+  padding: '20px 24px',
+  borderLeft: '3px solid #2ECC71',
+  marginTop: '28px',
+}
+
+const addressTitle = {
+  margin: '0 0 12px 0',
+  fontSize: '14px',
+  fontWeight: '900',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '1px',
+  color: '#000',
+}
+
+const addressText = {
+  margin: '0',
+  fontSize: '14px',
+  lineHeight: '22px',
+  color: '#4a5568',
 }
 
 const summaryLabel = {
