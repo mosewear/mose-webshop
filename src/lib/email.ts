@@ -260,7 +260,7 @@ export async function sendOrderProcessingEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('orderProcessing.subject', { 
+      subject: t('processing.subject', { 
         orderNumber: props.orderId.slice(0, 8).toUpperCase() 
       }),
       html,
@@ -321,7 +321,7 @@ export async function sendOrderDeliveredEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('orderDelivered.subject', { 
+      subject: t('delivered.subject', { 
         orderNumber: props.orderId.slice(0, 8).toUpperCase() 
       }),
       html,
@@ -378,7 +378,7 @@ export async function sendOrderCancelledEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('orderCancelled.subject', { 
+      subject: t('cancelled.subject', { 
         orderNumber: props.orderId.slice(0, 8).toUpperCase() 
       }),
       html,
@@ -510,7 +510,7 @@ export async function sendReturnLabelGeneratedEmail(props: {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnLabel.subject', { 
+      subject: t('returnLabelGenerated.subject', { 
         returnNumber: props.returnId.slice(0, 8).toUpperCase() 
       }),
       html,
@@ -962,7 +962,7 @@ export async function sendContactFormEmail(props: {
       from: 'MOSE Contact <info@mosewear.com>',
       to: [adminEmail],
       replyTo: props.email,
-      subject: t('contactForm.subject', { name: props.name }),
+      subject: t('contact.subject', { name: props.name }),
       html,
       headers: {
         'X-Entity-Ref-ID': `contact-${Date.now()}`,
