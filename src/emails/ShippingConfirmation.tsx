@@ -94,7 +94,7 @@ export default function ShippingConfirmationEmail({
             <Section style={checklist}>
               <Row style={checklistItem}>
                 <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="home" color="#2d3748" size={16} />
+                  <IconCircle icon="package" color="#2d3748" size={16} />
                 </Column>
                 <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
                   <Text style={checklistText}>{t('shipping.tip1')}</Text>
@@ -110,7 +110,7 @@ export default function ShippingConfirmationEmail({
               </Row>
               <Row style={checklistItem}>
                 <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="bell" color="#2d3748" size={16} />
+                  <IconCircle icon="clock" color="#2d3748" size={16} />
                 </Column>
                 <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
                   <Text style={checklistText}>{t('shipping.tip3')}</Text>
