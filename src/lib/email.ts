@@ -404,8 +404,6 @@ export async function sendOrderCancelledEmail(props: {
 /**
  * Send return requested email
  * Triggered when customer submits return request
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendReturnRequestedEmail(props: {
   customerEmail: string
@@ -423,27 +421,38 @@ export async function sendReturnRequestedEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('returnRequested.title')}</h1>
-        <p>${t('returnRequested.heroText', { name: props.customerName })}</p>
-        <p>Return: #${props.returnId.slice(0, 8).toUpperCase()}</p>
-        <p>${t('returnRequested.reason')}: ${props.returnReason}</p>
-        <p>${t('returnRequested.labelGeneratedText')}</p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const items = props.returnItems.map(item => ({
+    name: `${item.product_name} (${item.size} - ${item.color})`,
+    quantity: item.quantity
+  }))
+
+  const html = await render(
+    <ReturnRequestedEmail
+      orderNumber={props.orderId.slice(0, 8).toUpperCase()}
+      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
+      customerName={props.customerName}
+      items={items}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('returnRequested.subject', { 
-        returnId: props.returnId.slice(0, 8).toUpperCase() 
+        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
       }),
       html,
     })
@@ -464,8 +473,6 @@ export async function sendReturnRequestedEmail(props: {
 /**
  * Send return label generated email
  * Triggered when return label is created and ready to download
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendReturnLabelGeneratedEmail(props: {
   customerEmail: string
@@ -479,27 +486,32 @@ export async function sendReturnLabelGeneratedEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('returnLabelGenerated.title')}</h1>
-        <p>${t('returnLabelGenerated.heroText', { name: props.customerName })}</p>
-        <p>Return: #${props.returnId.slice(0, 8).toUpperCase()}</p>
-        ${props.trackingCode ? `<p>${t('returnLabelGenerated.returnTrackingCode')}: ${props.trackingCode}</p>` : ''}
-        ${props.labelUrl ? `<p><a href="${props.labelUrl}">${t('returnLabelGenerated.downloadLabel')}</a></p>` : ''}
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    <ReturnLabelGeneratedEmail
+      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
+      customerName={props.customerName}
+      returnLabelUrl={props.labelUrl || ''}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnLabelGenerated.subject', { 
-        returnId: props.returnId.slice(0, 8).toUpperCase() 
+      subject: t('returnLabel.subject', { 
+        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
       }),
       html,
       attachments: props.labelUrl ? [
@@ -526,8 +538,6 @@ export async function sendReturnLabelGeneratedEmail(props: {
 /**
  * Send return approved email
  * Triggered when return is approved and refund is initiated
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendReturnApprovedEmail(props: {
   customerEmail: string
@@ -543,27 +553,32 @@ export async function sendReturnApprovedEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('returnApproved.title')}</h1>
-        <p>${t('returnApproved.heroText', { name: props.customerName })}</p>
-        <p>Return: #${props.returnId.slice(0, 8).toUpperCase()}</p>
-        <p>${t('returnApproved.refundProcessingText')}</p>
-        <p>${t('returnApproved.refundAmount')}: €${props.refundAmount.toFixed(2)}</p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    <ReturnApprovedEmail
+      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
+      customerName={props.customerName}
+      refundAmount={props.refundAmount}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('returnApproved.subject', { 
-        returnId: props.returnId.slice(0, 8).toUpperCase() 
+        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
       }),
       html,
     })
@@ -584,8 +599,6 @@ export async function sendReturnApprovedEmail(props: {
 /**
  * Send return refunded email
  * Triggered when refund is completed
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendReturnRefundedEmail(props: {
   customerEmail: string
@@ -597,27 +610,33 @@ export async function sendReturnRefundedEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('returnRefunded.title')}</h1>
-        <p>${t('returnRefunded.heroText', { name: props.customerName })}</p>
-        <p>Return: #${props.returnId.slice(0, 8).toUpperCase()}</p>
-        <p>${t('returnRefunded.refundedAmount', { amount: props.refundAmount.toFixed(2) })}</p>
-        <p>${t('returnRefunded.whenWillISeeItText')}</p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    <ReturnRefundedEmail
+      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
+      customerName={props.customerName}
+      refundAmount={props.refundAmount}
+      refundMethod="Original Payment Method"
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('returnRefunded.subject', { 
-        returnId: props.returnId.slice(0, 8).toUpperCase() 
+        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
       }),
       html,
     })
@@ -638,8 +657,6 @@ export async function sendReturnRefundedEmail(props: {
 /**
  * Send return rejected email
  * Triggered when return request is rejected
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendReturnRejectedEmail(props: {
   customerEmail: string
@@ -653,27 +670,30 @@ export async function sendReturnRejectedEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('returnRejected.title')}</h1>
-        <p>${t('returnRejected.heroText', { name: props.customerName })}</p>
-        <p>Return: #${props.returnId.slice(0, 8).toUpperCase()}</p>
-        <p>${t('returnRejected.reasonForRejection')}: ${props.rejectionReason}</p>
-        <p>${t('returnRejected.questionsText')}</p>
-        <p>${settings.contact_email} • ${settings.contact_phone}</p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    <ReturnRejectedEmail
+      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
+      customerName={props.customerName}
+      reason={props.rejectionReason}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error} = await resend.emails.send({
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('returnRejected.subject', { 
-        returnId: props.returnId.slice(0, 8).toUpperCase() 
+        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
       }),
       html,
     })
@@ -698,8 +718,6 @@ export async function sendReturnRejectedEmail(props: {
 /**
  * Send abandoned cart email
  * Triggered when customer leaves items in cart
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendAbandonedCartEmail(props: {
   customerName: string
@@ -722,24 +740,39 @@ export async function sendAbandonedCartEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('abandonedCart.title')}</h1>
-        <p>${t('abandonedCart.heroTextPlural', { name: props.customerName, count: props.orderItems.length })}</p>
-        <p><a href="${props.checkoutUrl}">${t('abandonedCart.completeOrder')}</a></p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const items = props.orderItems.map(item => ({
+    name: item.name,
+    price: item.price,
+    imageUrl: normalizeImageUrl(item.imageUrl, siteUrl),
+    quantity: item.quantity
+  }))
+
+  const html = await render(
+    <AbandonedCartEmail
+      customerName={props.customerName}
+      items={items}
+      totalAmount={props.orderTotal}
+      cartUrl={props.checkoutUrl}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Cart <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('abandonedCart.subject', { name: props.customerName }),
+      subject: t('abandonedCart.subject'),
       html,
     })
 
@@ -884,8 +917,6 @@ export async function sendNewsletterWelcomeEmail(props: {
 /**
  * Send contact form email
  * Triggered when customer submits contact form
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendContactFormEmail(props: {
   name: string
@@ -899,6 +930,11 @@ export async function sendContactFormEmail(props: {
   const settings = await getSiteSettings()
   const adminEmail = process.env.CONTACT_EMAIL || settings.contact_email
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
   const subjectLabels: Record<string, string> = {
     order: t('contactSubjects.order'),
     product: t('contactSubjects.product'),
@@ -907,27 +943,26 @@ export async function sendContactFormEmail(props: {
   }
   const subjectLabel = subjectLabels[props.subject] || props.subject
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('contact.title')}</h1>
-        <p>${t('contact.from', { name: props.name })}</p>
-        <p><strong>${t('contact.subjectLabel')}:</strong> ${subjectLabel}</p>
-        <p><strong>${t('contact.message')}:</strong></p>
-        <p>${props.message}</p>
-        <p>${t('contact.replyText', { name: props.name })}</p>
-      </body>
-    </html>
-  `
+  const html = await render(
+    <ContactFormEmail
+      customerName={props.name}
+      customerEmail={props.email}
+      subject={subjectLabel}
+      message={props.message}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
       from: 'MOSE Contact <info@mosewear.com>',
       to: [adminEmail],
       replyTo: props.email,
-      subject: t('contact.subject', { subject: subjectLabel, name: props.name }),
+      subject: t('contactForm.subject', { name: props.name }),
       html,
       headers: {
         'X-Entity-Ref-ID': `contact-${Date.now()}`,
