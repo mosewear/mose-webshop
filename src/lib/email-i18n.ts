@@ -87,6 +87,10 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
+    orderNumber: string
+    description: string
+    ctaButton: string
+    feedback: string
     deliveredOn: string
     hopeEverythingPerfect: string
     yourOrderedItems: string
@@ -376,6 +380,10 @@ const nl: EmailTranslationKeys = {
     title: 'BEZORGD!',
     subtitle: 'Je pakket is aangekomen',
     heroText: 'Hey {{name}}, geniet van je nieuwe items!',
+    orderNumber: 'Order nummer',
+    description: 'We hopen dat alles in perfecte staat is aangekomen!',
+    ctaButton: 'BEKIJK SHOP',
+    feedback: 'Tevreden met je bestelling? Help andere klanten door een review te schrijven!',
     deliveredOn: 'Afgeleverd op {{date}}',
     hopeEverythingPerfect: 'We hopen dat alles in perfecte staat is aangekomen!',
     yourOrderedItems: 'Je bestelde items',
@@ -665,6 +673,10 @@ const en: EmailTranslationKeys = {
     title: 'DELIVERED!',
     subtitle: 'Your Package Has Arrived',
     heroText: 'Hey {{name}}, enjoy your new items!',
+    orderNumber: 'Order number',
+    description: 'We hope everything arrived in perfect condition!',
+    ctaButton: 'VIEW SHOP',
+    feedback: 'Happy with your order? Help other customers by writing a review!',
     deliveredOn: 'Delivered on {{date}}',
     hopeEverythingPerfect: 'We hope everything arrived in perfect condition!',
     yourOrderedItems: 'Your Ordered Items',

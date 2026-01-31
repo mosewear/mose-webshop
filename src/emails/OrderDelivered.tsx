@@ -41,29 +41,29 @@ export default function OrderDeliveredEmail({
           {/* Hero Section */}
           <Section style={hero}>
             <IconCircle icon="check-circle" color="#00B67A" size={38} />
-            <Text style={title}>{t('orderDelivered.title')}</Text>
+            <Text style={title}>{t('delivered.title')}</Text>
             <Text style={subtitle}>
-              {t('orderDelivered.subtitle', { name: customerName })}
+              {t('delivered.heroText', { name: customerName })}
             </Text>
           </Section>
 
           {/* Order Number */}
           <Section style={orderSection}>
-            <Text style={orderLabel}>{t('orderDelivered.orderNumber')}</Text>
+            <Text style={orderLabel}>{t('delivered.orderNumber')}</Text>
             <Text style={orderNumberStyle}>{orderNumber}</Text>
           </Section>
 
           {/* Content */}
           <Section style={content}>
             <Text style={description}>
-              {t('orderDelivered.description')}
+              {t('delivered.description')}
             </Text>
           </Section>
 
           {/* CTA */}
           <Section style={ctaSection}>
             <EmailButton href={`${siteUrl}/shop`}>
-              {t('orderDelivered.ctaButton')}
+              {t('delivered.ctaButton')}
             </EmailButton>
           </Section>
 
@@ -76,7 +76,7 @@ export default function OrderDeliveredEmail({
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
                   <Text style={infoText}>
-                    {t('orderDelivered.feedback')}
+                    {t('delivered.feedback')}
                   </Text>
                 </td>
               </tr>
