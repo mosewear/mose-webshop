@@ -932,21 +932,41 @@ export default function CheckoutPage() {
         checkout_started_at: new Date().toISOString(),
       }
 
-      const orderItems = items.map((item) => ({
-        product_id: item.productId,
-        variant_id: item.variantId,
-        product_name: item.name,
-        size: item.size,
-        color: item.color,
-        sku: `${item.productId}-${item.size}-${item.color}`,
-        quantity: item.quantity,
-        price_at_purchase: item.price,
-        subtotal: item.price * item.quantity,
-        image_url: item.image,
-        is_presale: item.isPresale || false,  // PRESALE: Pass presale status
-        presale_expected_date: item.presaleExpectedDate || null,  // PRESALE: Pass expected date
-      }))
+      console.log('═════════════════════════════════════════')
+      console.log('🛒 CHECKOUT - CREATING ORDER')
+      console.log('═════════════════════════════════════════')
+      console.log('📊 Cart Items Count:', items.length)
+      console.log('💰 Total:', total)
+      console.log('═════════════════════════════════════════')
 
+      const orderItems = items.map((item, index) => {
+        console.log(`📦 Item ${index + 1}:`, {
+          name: item.name,
+          isPresale: item.isPresale,
+          presaleExpectedDate: item.presaleExpectedDate,
+          quantity: item.quantity,
+          price: item.price
+        })
+        
+        return {
+          product_id: item.productId,
+          variant_id: item.variantId,
+          product_name: item.name,
+          size: item.size,
+          color: item.color,
+          sku: `${item.productId}-${item.size}-${item.color}`,
+          quantity: item.quantity,
+          price_at_purchase: item.price,
+          subtotal: item.price * item.quantity,
+          image_url: item.image,
+          is_presale: item.isPresale || false,  // PRESALE: Pass presale status
+          presale_expected_date: item.presaleExpectedDate || null,  // PRESALE: Pass expected date
+        }
+      })
+
+      console.log('═════════════════════════════════════════')
+      console.log('📋 ORDER ITEMS MAPPED:', JSON.stringify(orderItems, null, 2))
+      console.log('═════════════════════════════════════════')
       console.log('📦 Creating order via API...')
       
       const checkoutResponse = await fetch('/api/checkout', {

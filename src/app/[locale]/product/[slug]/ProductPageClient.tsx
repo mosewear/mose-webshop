@@ -598,7 +598,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     const firstImage = displayImages.find(img => img.media_type === 'image')
     const cartImage = firstImage?.url || displayImages[0]?.url || '/placeholder.png'
 
-    addItem({
+    const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity > 0
+    
+    console.log('═════════════════════════════════════════')
+    console.log('🛒 ADD TO CART - PRODUCT PAGE')
+    console.log('═════════════════════════════════════════')
+    console.log('📦 Product:', product.name)
+    console.log('🎨 Variant ID:', selectedVariant.id)
+    console.log('📏 Size:', selectedVariant.size)
+    console.log('🎨 Color:', selectedVariant.color)
+    console.log('💰 Final Price:', finalPrice)
+    console.log('📊 Quantity:', quantity)
+    console.log('═════════════════════════════════════════')
+    console.log('🔍 PRESALE CHECK:')
+    console.log('   - presale_enabled:', selectedVariant.presale_enabled)
+    console.log('   - stock_quantity:', selectedVariant.stock_quantity)
+    console.log('   - presale_stock_quantity:', selectedVariant.presale_stock_quantity)
+    console.log('   - presale_expected_date:', selectedVariant.presale_expected_date)
+    console.log('   - CALCULATED isPresale:', isPresaleItem)
+    console.log('═════════════════════════════════════════')
+
+    const cartItem = {
       productId: product.id,
       variantId: selectedVariant.id,
       name: product.name,
@@ -611,9 +631,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       sku: selectedVariant.sku,
       stock: selectedVariant.stock_quantity,
       // PRESALE INFO: Detect if item is from presale stock
-      isPresale: selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity > 0,
+      isPresale: isPresaleItem,
       presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
-    })
+    }
+
+    console.log('📦 CART ITEM:', JSON.stringify(cartItem, null, 2))
+    console.log('═════════════════════════════════════════')
+    
+    addItem(cartItem)
 
     // Track Facebook Pixel AddToCart event with user data if logged in
     try {
