@@ -33,8 +33,8 @@ export default function OrderProcessingEmail({
   if (typeof window !== 'undefined') {
     console.log('🔍 [OrderProcessing] Translation debug:')
     console.log('  - typeof t:', typeof t)
-    console.log('  - t("orderProcessing.title"):', t('orderProcessing.title'))
-    console.log('  - t("orderProcessing.subtitle"):', t('orderProcessing.subtitle'))
+    console.log('  - t("processing.title"):', t('processing.title'))
+    console.log('  - t("processing.subtitle"):', t('processing.subtitle'))
     console.log('  - t("common.mose"):', t('common.mose'))
   }
   
@@ -49,22 +49,22 @@ export default function OrderProcessingEmail({
           {/* Hero Section */}
           <Section style={hero}>
             <IconCircle icon="settings" color="#667eea" size={38} />
-            <Text style={title}>{t('orderProcessing.title')}</Text>
+            <Text style={title}>{t('processing.title')}</Text>
             <Text style={subtitle}>
-              {t('orderProcessing.subtitle', { name: customerName })}
+              {t('processing.subtitle', { name: customerName })}
             </Text>
           </Section>
 
           {/* Order Number */}
           <Section style={orderSection}>
-            <Text style={orderLabel}>{t('orderProcessing.orderNumber')}</Text>
+            <Text style={orderLabel}>{t('processing.orderNumber')}</Text>
             <Text style={orderNumberStyle}>{orderNumber}</Text>
           </Section>
 
           {/* Content */}
           <Section style={content}>
             <Text style={description}>
-              {t('orderProcessing.description')}
+              {t('processing.description')}
             </Text>
           </Section>
 
@@ -77,7 +77,7 @@ export default function OrderProcessingEmail({
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
                   <Text style={infoText}>
-                    {t('orderProcessing.processingInfo')}
+                    {t('processing.processingInfo')}
                   </Text>
                 </td>
               </tr>

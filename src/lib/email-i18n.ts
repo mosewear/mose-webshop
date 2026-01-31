@@ -71,6 +71,8 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
+    description: string
+    processingInfo: string
     whatHappensNow: string
     step1: string
     step2: string
@@ -358,6 +360,8 @@ const nl: EmailTranslationKeys = {
     title: 'IN BEHANDELING',
     subtitle: 'We Pakken Je Order In',
     heroText: 'Hey {{name}}, we zijn voor je aan de slag!',
+    description: 'Je bestelling wordt momenteel verwerkt en zorgvuldig ingepakt door ons team.',
+    processingInfo: 'We zijn je order aan het voorbereiden. Je ontvangt een verzendbevestiging zodra je pakket onderweg is.',
     whatHappensNow: 'Wat Gebeurt Er Nu?',
     step1: 'Je betaling is ontvangen en bevestigd',
     step2: 'We pakken je items zorgvuldig in',
@@ -645,6 +649,8 @@ const en: EmailTranslationKeys = {
     title: 'PROCESSING',
     subtitle: 'We Are Packing Your Order',
     heroText: 'Hey {{name}}, we are working on your order!',
+    description: 'Your order is currently being processed and carefully packed by our team.',
+    processingInfo: 'We are preparing your order. You will receive a shipping confirmation as soon as your package is on its way.',
     whatHappensNow: 'What Happens Now?',
     step1: 'Your payment has been received and confirmed',
     step2: 'We are carefully packing your items',
