@@ -185,12 +185,21 @@ export default function PreorderConfirmationEmail({
 
             {/* Shipping Address */}
             <Section style={addressBox}>
-              <Text style={addressTitle}>{t('preorder.shippingAddress')}</Text>
-              <Text style={addressText}>
-                {shippingAddress.name}<br />
-                {shippingAddress.address}<br />
-                {shippingAddress.postalCode} {shippingAddress.city}
-              </Text>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
+                <tr>
+                  <td style={{ width: '80px', verticalAlign: 'top', textAlign: 'center', paddingTop: '4px' }}>
+                    <IconCircle icon="package" color="#86A35A" size={20} />
+                  </td>
+                  <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
+                    <Text style={addressTitle}>{t('preorder.shippingAddress')}</Text>
+                    <Text style={addressText}>
+                      {shippingAddress.name}<br />
+                      {shippingAddress.address}<br />
+                      {shippingAddress.postalCode} {shippingAddress.city}
+                    </Text>
+                  </td>
+                </tr>
+              </table>
             </Section>
 
             {/* Questions Section */}
@@ -200,15 +209,15 @@ export default function PreorderConfirmationEmail({
                 {t('preorder.questionsText')}
               </Text>
               <Row>
-                <Column style={{ width: '24px', verticalAlign: 'middle', paddingRight: '8px' }}>
+                <Column style={{ width: '40px', verticalAlign: 'middle', paddingRight: '12px', textAlign: 'center' }}>
                   <IconCircle icon="mail" color="#2d3748" size={16} />
                 </Column>
                 <Column style={{ verticalAlign: 'middle' }}>
                   <Text style={contactInfoText}>{contactEmail}</Text>
                 </Column>
               </Row>
-              <Row style={{ marginTop: '8px' }}>
-                <Column style={{ width: '24px', verticalAlign: 'middle', paddingRight: '8px' }}>
+              <Row style={{ marginTop: '12px' }}>
+                <Column style={{ width: '40px', verticalAlign: 'middle', paddingRight: '12px', textAlign: 'center' }}>
                   <IconCircle icon="phone" color="#2d3748" size={16} />
                 </Column>
                 <Column style={{ verticalAlign: 'middle' }}>
@@ -410,26 +419,27 @@ const summaryTotal = {
 }
 
 const addressBox = {
-  backgroundColor: '#ffffff',
-  border: '2px solid #e2e8f0',
-  padding: '20px',
-  marginTop: '24px',
+  backgroundColor: '#f8f9fa',
+  padding: '20px 24px',
+  borderLeft: '3px solid #86A35A',
+  marginTop: '32px',
 }
 
 const addressTitle = {
-  margin: '0 0 12px 0',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#4a5568',
+  margin: '0 0 8px 0',
+  fontSize: '12px',
+  fontWeight: '900',
+  color: '#000000',
   textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
+  letterSpacing: '2px',
 }
 
 const addressText = {
   margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
+  fontSize: '15px',
+  lineHeight: '24px',
   color: '#2d3748',
+  fontWeight: '500',
 }
 
 const questionsBox = {
