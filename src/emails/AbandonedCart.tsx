@@ -101,7 +101,7 @@ export default function AbandonedCartEmail({
           {/* Total */}
           <Section style={totalSection}>
             <Text style={totalLabel}>{t('abandonedCart.total')}</Text>
-            <Text style={totalAmount}>€{totalAmount.toFixed(2)}</Text>
+            <Text style={totalAmountStyle}>€{totalAmount.toFixed(2)}</Text>
           </Section>
 
           {/* CTA */}
@@ -243,7 +243,7 @@ const totalLabel = {
   letterSpacing: '1px',
 }
 
-const totalAmount = {
+const totalAmountStyle = {
   margin: '0',
   fontSize: '32px',
   fontWeight: '900',
