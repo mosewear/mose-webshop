@@ -4,7 +4,10 @@ import {
   sendOrderProcessingEmail, 
   sendOrderDeliveredEmail, 
   sendOrderCancelledEmail,
-  sendShippingConfirmationEmail 
+  sendShippingConfirmationEmail,
+  sendReturnRequestedEmail,
+  sendReturnApprovedEmail,
+  sendReturnRefundedEmail
 } from '@/lib/email'
 import { logEmail } from '@/lib/email-logger'
 import { getEmailTypeForStatusChange } from '@/lib/order-utils'
@@ -106,6 +109,44 @@ export async function POST(req: NextRequest) {
           orderId: order.id,
           orderTotal: order.total,
           cancellationReason: order.internal_notes || undefined,
+        })
+        break
+
+      case 'return_requested':
+        emailSubject = `Retourverzoek ontvangen #${order.id.slice(0, 8).toUpperCase()}`
+        result = await sendReturnRequestedEmail({
+          customerEmail,
+          customerName,
+          orderNumber: order.id.slice(0, 8).toUpperCase(),
+          returnNumber: order.id.slice(0, 8).toUpperCase(),
+          items: order.order_items.map((item: any) => ({
+            name: item.product_name,
+            quantity: item.quantity,
+          })),
+        })
+        break
+
+      case 'return_approved':
+        emailSubject = `Je retour is goedgekeurd #${order.id.slice(0, 8).toUpperCase()}`
+        result = await sendReturnApprovedEmail({
+          customerEmail,
+          customerName,
+          returnNumber: order.id.slice(0, 8).toUpperCase(),
+          refundAmount: order.total,
+          items: order.order_items.map((item: any) => ({
+            name: item.product_name,
+            quantity: item.quantity,
+          })),
+        })
+        break
+
+      case 'return_refunded':
+        emailSubject = `Terugbetaling voltooid #${order.id.slice(0, 8).toUpperCase()}`
+        result = await sendReturnRefundedEmail({
+          customerEmail,
+          customerName,
+          returnNumber: order.id.slice(0, 8).toUpperCase(),
+          refundAmount: order.total,
         })
         break
 

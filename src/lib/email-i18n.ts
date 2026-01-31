@@ -134,8 +134,12 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
-    returnDetails: string
+    returnNumber: string
     orderNumber: string
+    description: string
+    itemsTitle: string
+    processingTime: string
+    returnDetails: string
     reason: string
     returnItems: string
     labelBeingGenerated: string
@@ -172,6 +176,9 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
+    returnNumber: string
+    description: string
+    processingTime: string
     refundProcessing: string
     refundProcessingText: string
     returnItems: string
@@ -190,6 +197,12 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
+    returnNumber: string
+    description: string
+    refundAmount: string
+    refundMethod: string
+    bankProcessing: string
+    ctaButton: string
     refundedAmount: string
     refundedTo: string
     refundSummary: string
@@ -437,8 +450,12 @@ const nl: EmailTranslationKeys = {
     title: 'RETOUR AANGEVRAAGD',
     subtitle: 'Je verzoek is ontvangen',
     heroText: 'Hey {{name}}, we hebben je retourverzoek ontvangen',
-    returnDetails: 'Retour details',
+    returnNumber: 'Retour nummer',
     orderNumber: 'Order nummer',
+    description: 'We hebben je retourverzoek ontvangen en gaan deze zo snel mogelijk verwerken. Je ontvangt een email zodra je retourlabel klaar is.',
+    itemsTitle: 'Geretourneerde items',
+    processingTime: 'We verwerken je retourverzoek binnen 1-2 werkdagen. Je ontvangt dan een retourlabel per email.',
+    returnDetails: 'Retour details',
     reason: 'Reden',
     returnItems: 'Retour items',
     labelBeingGenerated: 'Je retourlabel wordt nu gegenereerd',
@@ -475,6 +492,9 @@ const nl: EmailTranslationKeys = {
     title: 'JE RETOUR IS GOEDGEKEURD!',
     subtitle: 'Je kleding is beoordeeld',
     heroText: 'Hey {{name}}, we hebben je retour ontvangen en goedgekeurd',
+    returnNumber: 'Retour nummer',
+    description: 'We hebben je geretourneerde items ontvangen en goedgekeurd. Je terugbetaling wordt nu verwerkt.',
+    processingTime: 'Je terugbetaling wordt binnen 3-5 werkdagen verwerkt en teruggestort naar je originele betaalmethode.',
     refundProcessing: 'Je terugbetaling wordt verwerkt',
     refundProcessingText: 'We hebben je geretourneerde kleding ontvangen en gecontroleerd. Alles ziet er goed uit! Je terugbetaling wordt nu verwerkt en je ontvangt het geld binnen 3-5 werkdagen op je rekening.',
     returnItems: 'Retour items',
@@ -493,6 +513,12 @@ const nl: EmailTranslationKeys = {
     title: 'TERUGBETALING VOLTOOID!',
     subtitle: 'Je geld is teruggestort',
     heroText: 'Hey {{name}}, je retour is verwerkt',
+    returnNumber: 'Retour nummer',
+    description: 'Je terugbetaling is voltooid en het bedrag is teruggestort naar je originele betaalmethode.',
+    refundAmount: 'Teruggestort bedrag',
+    refundMethod: 'Teruggestort naar je originele betaalmethode',
+    bankProcessing: 'Afhankelijk van je bank kan het 3-5 werkdagen duren voordat het bedrag zichtbaar is op je rekening.',
+    ctaButton: 'VERDER SHOPPEN',
     refundedAmount: '€{{amount}} teruggestort',
     refundedTo: 'Het bedrag is teruggestort naar je originele betaalmethode',
     refundSummary: 'Terugbetaling overzicht',
@@ -738,15 +764,19 @@ const en: EmailTranslationKeys = {
   returnRequested: {
     subject: 'Return request received #{{returnId}} - MOSE',
     title: 'RETURN REQUESTED',
-    subtitle: 'Your Request Has Been Received',
+    subtitle: 'Your request has been received',
     heroText: 'Hey {{name}}, we have received your return request',
-    returnDetails: 'Return Details',
-    orderNumber: 'Order Number',
+    returnNumber: 'Return number',
+    orderNumber: 'Order number',
+    description: 'We have received your return request and will process it as soon as possible. You will receive an email as soon as your return label is ready.',
+    itemsTitle: 'Returned items',
+    processingTime: 'We will process your return request within 1-2 business days. You will then receive a return label by email.',
+    returnDetails: 'Return details',
     reason: 'Reason',
-    returnItems: 'Return Items',
-    labelBeingGenerated: 'Your Return Label Is Now Being Generated',
+    returnItems: 'Return items',
+    labelBeingGenerated: 'Your return label is now being generated',
     labelGeneratedText: 'Your payment for the return label has been successfully received! We are now generating your return label. You will receive an email as soon as the label is ready to download.',
-    nextSteps: 'Next Steps',
+    nextSteps: 'Next steps',
     step1: 'Download the return label as soon as you receive it',
     step2: 'Attach the label to your package and send it back',
     step3: 'After receipt, we will assess the clothing and you will receive a message',
@@ -776,16 +806,19 @@ const en: EmailTranslationKeys = {
   returnApproved: {
     subject: 'Your return has been approved - Refund processed #{{returnId}} - MOSE',
     title: 'YOUR RETURN IS APPROVED!',
-    subtitle: 'Your Clothing Has Been Assessed',
+    subtitle: 'Your clothing has been assessed',
     heroText: 'Hey {{name}}, we have received and approved your return',
-    refundProcessing: 'Your Refund Is Being Processed',
+    returnNumber: 'Return number',
+    description: 'We have received and approved your returned items. Your refund is now being processed.',
+    processingTime: 'Your refund will be processed within 3-5 business days and refunded to your original payment method.',
+    refundProcessing: 'Your refund is being processed',
     refundProcessingText: 'We have received and checked your returned clothing. Everything looks good! Your refund is now being processed and you will receive the money within 3-5 business days in your account.',
-    returnItems: 'Return Items',
-    refundSummary: 'Refund Summary',
+    returnItems: 'Return items',
+    refundSummary: 'Refund summary',
     refundAmount: 'To be refunded (items)',
     labelCostPaid: 'Return label costs (already paid)',
     toBeRefunded: 'TO BE REFUNDED',
-    whatHappensNow: 'What Happens Now?',
+    whatHappensNow: 'What happens now?',
     step1: 'Your refund is being processed',
     step2: 'You will receive €{{amount}} refunded to your original payment method',
     step3: 'The amount will be visible in your account within 3-5 business days',
@@ -794,14 +827,20 @@ const en: EmailTranslationKeys = {
   returnRefunded: {
     subject: 'Refund completed #{{returnId}} - MOSE',
     title: 'REFUND COMPLETED!',
-    subtitle: 'Your Money Has Been Refunded',
+    subtitle: 'Your money has been refunded',
     heroText: 'Hey {{name}}, your return has been processed',
+    returnNumber: 'Return number',
+    description: 'Your refund has been completed and the amount has been refunded to your original payment method.',
+    refundAmount: 'Refunded amount',
+    refundMethod: 'Refunded to your original payment method',
+    bankProcessing: 'Depending on your bank, it can take 3-5 business days before the amount is visible in your account.',
+    ctaButton: 'SHOP MORE',
     refundedAmount: '€{{amount}} refunded',
     refundedTo: 'The amount has been refunded to your original payment method',
-    refundSummary: 'Refund Summary',
+    refundSummary: 'Refund summary',
     refunded: 'REFUNDED',
     labelCostPaid: 'Return label costs (already paid)',
-    whenWillISeeIt: 'When Will I See The Amount?',
+    whenWillISeeIt: 'When will I see the amount?',
     whenWillISeeItText: 'The amount has been refunded to your original payment method. Depending on your bank, it can take 3-5 business days before the amount is visible in your account.',
     shopMore: 'SHOP MORE',
   },

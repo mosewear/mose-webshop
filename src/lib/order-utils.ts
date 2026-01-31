@@ -85,6 +85,22 @@ export function getEmailTypeForStatusChange(oldStatus: string, newStatus: string
     return 'cancelled'
   }
   
+  // RETURN STATUSSEN - emails voor retour flow
+  // From any status to return_requested
+  if (newStatus === 'return_requested' && oldStatus !== 'return_requested') {
+    return 'return_requested'
+  }
+  
+  // From any status to returned (approved)
+  if (newStatus === 'returned' && oldStatus !== 'returned') {
+    return 'return_approved'
+  }
+  
+  // From any status to refunded
+  if (newStatus === 'refunded' && oldStatus !== 'refunded') {
+    return 'return_refunded'
+  }
+  
   return null
 }
 
