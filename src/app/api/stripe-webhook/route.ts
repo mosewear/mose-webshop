@@ -398,26 +398,64 @@ export async function POST(req: NextRequest) {
           console.log('📦 Decrementing stock for order:', order.id)
           
           for (const item of updatedOrder.order_items) {
-            // Use direct SQL in update query
-            const { data: variant, error: stockError } = await supabase
-              .from('product_variants')
-              .select('stock_quantity')
-              .eq('id', item.variant_id)
-              .gte('stock_quantity', item.quantity)
-              .single()
-            
-            if (!stockError && variant) {
-              // Now update with calculated value
-              await supabase
+            try {
+              // Fetch variant with both regular and presale stock
+              const { data: variant, error: fetchError } = await supabase
                 .from('product_variants')
-                .update({ 
-                  stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
-                })
+                .select('id, stock_quantity, presale_enabled, presale_stock_quantity')
                 .eq('id', item.variant_id)
+                .single()
               
-              console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity - item.quantity} remaining`)
-            } else {
-              console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
+              if (fetchError || !variant) {
+                console.error(`⚠️ Could not fetch variant for ${item.product_name}:`, fetchError)
+                continue
+              }
+
+              // Determine if this was a presale purchase
+              const isPresalePurchase = item.is_presale === true
+              
+              console.log(`📦 Processing stock for ${item.product_name}:`)
+              console.log(`   - Is presale purchase: ${isPresalePurchase}`)
+              console.log(`   - Regular stock: ${variant.stock_quantity}`)
+              console.log(`   - Presale stock: ${variant.presale_stock_quantity}`)
+              console.log(`   - Quantity ordered: ${item.quantity}`)
+
+              if (isPresalePurchase) {
+                // Decrement PRESALE stock
+                const newPresaleStock = Math.max(0, (variant.presale_stock_quantity || 0) - item.quantity)
+                
+                const { error: updateError } = await supabase
+                  .from('product_variants')
+                  .update({ 
+                    presale_stock_quantity: newPresaleStock
+                  })
+                  .eq('id', item.variant_id)
+                
+                if (updateError) {
+                  console.error(`❌ Failed to decrement presale stock:`, updateError)
+                } else {
+                  console.log(`✅ Presale stock decremented for ${item.product_name}: ${newPresaleStock} remaining`)
+                }
+              } else {
+                // Decrement REGULAR stock
+                const newStock = Math.max(0, variant.stock_quantity - item.quantity)
+                
+                const { error: updateError } = await supabase
+                  .from('product_variants')
+                  .update({ 
+                    stock_quantity: newStock
+                  })
+                  .eq('id', item.variant_id)
+                
+                if (updateError) {
+                  console.error(`❌ Failed to decrement regular stock:`, updateError)
+                } else {
+                  console.log(`✅ Regular stock decremented for ${item.product_name}: ${newStock} remaining`)
+                }
+              }
+            } catch (itemError) {
+              console.error(`❌ Error processing stock for item:`, itemError)
+              // Continue with next item
             }
           }
           
