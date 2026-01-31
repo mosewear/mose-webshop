@@ -37,6 +37,7 @@ export default function AdminEmailsPage() {
   const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null)
   
   const emailTemplates: EmailTemplate[] = [
+    // ORDER EMAILS
     {
       id: 'confirmation',
       name: 'Bestelling Bevestiging',
@@ -47,10 +48,19 @@ export default function AdminEmailsPage() {
       subject: 'Bestelling bevestiging #ORDER_ID - MOSE'
     },
     {
+      id: 'preorder',
+      name: 'Pre-order Bevestiging',
+      type: 'preorder',
+      description: 'Speciale bevestiging voor presale orders. Bevat verwachte leveringsdatum, reserveringsstatus en presale timeline.',
+      icon: '📅',
+      color: 'bg-blue-100 text-blue-800 border-blue-200',
+      subject: 'Pre-order bevestiging #ORDER_ID - MOSE'
+    },
+    {
       id: 'processing',
       name: 'Order In Behandeling',
       type: 'processing',
-      description: 'Stuurt een update dat de order wordt voorbereid voor verzending. Bevat checklist van stappen en verwachte verzendtijd.',
+      description: 'Stuurt een update dat de order wordt voorbereid voor verzending. Bevat verwachte verwerkingstijd.',
       icon: '⚙️',
       color: 'bg-purple-100 text-purple-800 border-purple-200',
       subject: 'Je bestelling wordt voorbereid #ORDER_ID - MOSE'
@@ -68,7 +78,7 @@ export default function AdminEmailsPage() {
       id: 'delivered',
       name: 'Order Bezorgd',
       type: 'delivered',
-      description: 'Verzonden wanneer pakket is afgeleverd. Bevat producten, review sectie, verzorgingstips en upsell naar shop.',
+      description: 'Verzonden wanneer pakket is afgeleverd. Bevat call-to-action voor feedback en link naar shop.',
       icon: '🎉',
       color: 'bg-green-100 text-green-800 border-green-200',
       subject: 'Je pakket is bezorgd #ORDER_ID - MOSE'
@@ -77,20 +87,95 @@ export default function AdminEmailsPage() {
       id: 'cancelled',
       name: 'Order Geannuleerd',
       type: 'cancelled',
-      description: 'Verzonden bij annulering. Bevat terugbetalingsinformatie, SORRY10 discount code en link naar shop.',
+      description: 'Verzonden bij annulering. Bevat terugbetalingsinformatie en link naar shop.',
       icon: '✕',
       color: 'bg-red-100 text-red-800 border-red-200',
       subject: 'Je bestelling is geannuleerd #ORDER_ID - MOSE'
     },
+    // RETURN EMAILS
+    {
+      id: 'return_requested',
+      name: 'Retour Aangevraagd',
+      type: 'return_requested',
+      description: 'Verzonden wanneer klant retour aanvraagt. Bevat retournummer en lijst van te retourneren items.',
+      icon: '↩️',
+      color: 'bg-orange-100 text-orange-800 border-orange-200',
+      subject: 'Retour aangevraagd #RETURN_ID - MOSE'
+    },
+    {
+      id: 'return_label',
+      name: 'Retourlabel Klaar',
+      type: 'return_label',
+      description: 'Verzonden met retourlabel download link. Bevat instructies voor retourzending.',
+      icon: '🏷️',
+      color: 'bg-orange-100 text-orange-800 border-orange-200',
+      subject: 'Je retourlabel is klaar #RETURN_ID - MOSE'
+    },
+    {
+      id: 'return_approved',
+      name: 'Retour Goedgekeurd',
+      type: 'return_approved',
+      description: 'Verzonden wanneer retour is goedgekeurd. Bevat terugbetaling bedrag en verwachte verwerkingstijd.',
+      icon: '✓',
+      color: 'bg-green-100 text-green-800 border-green-200',
+      subject: 'Je retour is goedgekeurd #RETURN_ID - MOSE'
+    },
+    {
+      id: 'return_refunded',
+      name: 'Retour Terugbetaald',
+      type: 'return_refunded',
+      description: 'Verzonden wanneer terugbetaling is verwerkt. Bevat terugbetaald bedrag en betaalmethode.',
+      icon: '💰',
+      color: 'bg-green-100 text-green-800 border-green-200',
+      subject: 'Je terugbetaling is verwerkt #RETURN_ID - MOSE'
+    },
+    {
+      id: 'return_rejected',
+      name: 'Retour Afgewezen',
+      type: 'return_rejected',
+      description: 'Verzonden wanneer retour wordt afgewezen. Bevat reden en contactinformatie.',
+      icon: '⛔',
+      color: 'bg-red-100 text-red-800 border-red-200',
+      subject: 'Je retour kan niet verwerkt worden #RETURN_ID - MOSE'
+    },
+    // MARKETING EMAILS
     {
       id: 'abandoned_cart',
       name: 'Verlaten Winkelwagen',
       type: 'abandoned_cart',
-      description: 'Verzonden automatisch via cron job (elke 2 uur) wanneer klant checkout heeft gestart maar niet heeft afgerond. Bevat urgency messaging, cart items en USPs.',
+      description: 'Verzonden automatisch wanneer klant checkout heeft gestart maar niet heeft afgerond. Bevat cart items en gratis verzending info.',
       icon: '🛒',
       color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      subject: 'Je MOSE items wachten nog op je! 🛒'
-    }
+      subject: 'Je hebt iets in je winkelwagen laten staan'
+    },
+    {
+      id: 'newsletter_welcome',
+      name: 'Nieuwsbrief Welkom',
+      type: 'newsletter_welcome',
+      description: 'Verzonden bij nieuwsbrief aanmelding. Bevat welkomstbericht en wat te verwachten.',
+      icon: '📧',
+      color: 'bg-blue-100 text-blue-800 border-blue-200',
+      subject: 'Welkom bij de MOSE nieuwsbrief!'
+    },
+    {
+      id: 'back_in_stock',
+      name: 'Weer Op Voorraad',
+      type: 'back_in_stock',
+      description: 'Verzonden wanneer uitverkocht product weer beschikbaar is. Bevat product afbeelding en directe link.',
+      icon: '🔔',
+      color: 'bg-green-100 text-green-800 border-green-200',
+      subject: 'Goed nieuws! {PRODUCT} is weer op voorraad'
+    },
+    // SUPPORT EMAIL
+    {
+      id: 'contact_form',
+      name: 'Contactformulier',
+      type: 'contact_form',
+      description: 'Admin email bij contactformulier inzending. Bevat klant naam, email, onderwerp en bericht.',
+      icon: '💬',
+      color: 'bg-gray-100 text-gray-800 border-gray-200',
+      subject: 'Nieuw contactformulier bericht van {NAME}'
+    },
   ]
 
   useEffect(() => {
@@ -147,10 +232,20 @@ export default function AdminEmailsPage() {
   const getEmailTypeLabel = (type: string) => {
     const labels: { [key: string]: string } = {
       'confirmation': 'Bevestiging',
+      'preorder': 'Pre-order',
       'processing': 'In Behandeling',
       'shipped': 'Verzonden',
       'delivered': 'Bezorgd',
       'cancelled': 'Geannuleerd',
+      'return_requested': 'Retour Aangevraagd',
+      'return_label': 'Retourlabel',
+      'return_approved': 'Retour Goedgekeurd',
+      'return_refunded': 'Retour Terugbetaald',
+      'return_rejected': 'Retour Afgewezen',
+      'abandoned_cart': 'Verlaten Wagen',
+      'newsletter_welcome': 'Nieuwsbrief',
+      'back_in_stock': 'Weer Op Voorraad',
+      'contact_form': 'Contactformulier',
     }
     return labels[type] || type
   }
@@ -158,10 +253,20 @@ export default function AdminEmailsPage() {
   const getEmailTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       'confirmation': 'bg-green-100 text-green-800 border-green-200',
+      'preorder': 'bg-blue-100 text-blue-800 border-blue-200',
       'processing': 'bg-purple-100 text-purple-800 border-purple-200',
       'shipped': 'bg-orange-100 text-orange-800 border-orange-200',
       'delivered': 'bg-green-100 text-green-800 border-green-200',
       'cancelled': 'bg-red-100 text-red-800 border-red-200',
+      'return_requested': 'bg-orange-100 text-orange-800 border-orange-200',
+      'return_label': 'bg-orange-100 text-orange-800 border-orange-200',
+      'return_approved': 'bg-green-100 text-green-800 border-green-200',
+      'return_refunded': 'bg-green-100 text-green-800 border-green-200',
+      'return_rejected': 'bg-red-100 text-red-800 border-red-200',
+      'abandoned_cart': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'newsletter_welcome': 'bg-blue-100 text-blue-800 border-blue-200',
+      'back_in_stock': 'bg-green-100 text-green-800 border-green-200',
+      'contact_form': 'bg-gray-100 text-gray-800 border-gray-200',
     }
     return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200'
   }
@@ -502,18 +607,18 @@ export default function AdminEmailsPage() {
             </div>
             <div className="bg-white p-6 border-2 border-gray-200">
               <div className="text-3xl font-bold text-gray-800 mb-2">
-                5
+                6
               </div>
               <div className="text-sm text-gray-600 uppercase tracking-wide">
-                Order Lifecycle Stages
+                Order Lifecycle
               </div>
             </div>
             <div className="bg-white p-6 border-2 border-gray-200">
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                100%
+              <div className="text-3xl font-bold text-gray-800 mb-2">
+                5
               </div>
               <div className="text-sm text-gray-600 uppercase tracking-wide">
-                Responsive Design
+                Return Lifecycle
               </div>
             </div>
           </div>
@@ -620,12 +725,24 @@ export default function AdminEmailsPage() {
           <div className="mt-6 bg-gray-900 text-gray-300 p-6 border-2 border-gray-700 font-mono text-sm">
             <div className="text-gray-400 mb-2">📁 Template Bestanden:</div>
             <div className="space-y-1">
-              <div className="text-green-400">└─ src/lib/email.ts</div>
-              <div className="ml-4 text-gray-500">├─ sendOrderConfirmationEmail()</div>
-              <div className="ml-4 text-gray-500">├─ sendOrderProcessingEmail()</div>
-              <div className="ml-4 text-gray-500">├─ sendShippingConfirmationEmail()</div>
-              <div className="ml-4 text-gray-500">├─ sendOrderDeliveredEmail()</div>
-              <div className="ml-4 text-gray-500">└─ sendOrderCancelledEmail()</div>
+              <div className="text-green-400">└─ src/emails/</div>
+              <div className="ml-4 text-gray-500">├─ OrderConfirmation.tsx</div>
+              <div className="ml-4 text-gray-500">├─ PreorderConfirmation.tsx</div>
+              <div className="ml-4 text-gray-500">├─ OrderProcessing.tsx</div>
+              <div className="ml-4 text-gray-500">├─ ShippingConfirmation.tsx</div>
+              <div className="ml-4 text-gray-500">├─ OrderDelivered.tsx</div>
+              <div className="ml-4 text-gray-500">├─ OrderCancelled.tsx</div>
+              <div className="ml-4 text-gray-500">├─ ReturnRequested.tsx</div>
+              <div className="ml-4 text-gray-500">├─ ReturnLabelGenerated.tsx</div>
+              <div className="ml-4 text-gray-500">├─ ReturnApproved.tsx</div>
+              <div className="ml-4 text-gray-500">├─ ReturnRefunded.tsx</div>
+              <div className="ml-4 text-gray-500">├─ ReturnRejected.tsx</div>
+              <div className="ml-4 text-gray-500">├─ AbandonedCart.tsx</div>
+              <div className="ml-4 text-gray-500">├─ NewsletterWelcome.tsx</div>
+              <div className="ml-4 text-gray-500">├─ BackInStock.tsx</div>
+              <div className="ml-4 text-gray-500">└─ ContactForm.tsx</div>
+              <div className="text-green-400 mt-3">└─ src/lib/email.ts</div>
+              <div className="ml-4 text-gray-500">Email sending functies</div>
             </div>
           </div>
         </div>
