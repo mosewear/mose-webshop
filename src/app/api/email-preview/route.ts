@@ -182,6 +182,13 @@ export async function GET(req: NextRequest) {
     }
     
     const t = await getEmailT(locale)
+    
+    // DEBUG: Test if translation function works
+    console.log('🔍 [email-preview] Testing translation function:')
+    console.log('  - Locale:', locale)
+    console.log('  - t("orderProcessing.title"):', t('orderProcessing.title'))
+    console.log('  - t("common.mose"):', t('common.mose'))
+    
     let html: string
 
     switch (type) {
