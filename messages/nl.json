@@ -1366,5 +1366,25 @@
       }
     },
     "cta": "Ontdek de collectie"
+  },
+  "newsletterWelcome": {
+    "subject": "Welkom bij de MOSE nieuwsbrief! 🎉",
+    "title": "Welkom!",
+    "subtitle": "Je bent nu onderdeel van MOSE",
+    "heroText": "Bedankt voor het aanmelden bij onze nieuwsbrief. Je ontvangt voortaan exclusieve updates, acties en nieuwe producten rechtstreeks in je inbox.",
+    "whatToExpect": "Wat kan je verwachten?",
+    "benefit1": "Als eerste op de hoogte van nieuwe collecties en releases",
+    "benefit2": "Exclusieve kortingen en acties alleen voor subscribers",
+    "benefit3": "Tips, styling inspiratie en achter de schermen content",
+    "ctaButton": "Shop nu",
+    "emailRegistered": "Dit e-mailadres is geregistreerd"
+  },
+  "backInStock": {
+    "subject": "Goed nieuws! {productName} is weer op voorraad",
+    "title": "Weer beschikbaar!",
+    "subtitle": "Het product waar je op wachtte is weer op voorraad",
+    "description": "Je hebt je aangemeld voor een notificatie toen dit product uitverkocht was. Nu kun je hem alsnog bestellen!",
+    "ctaButton": "Bekijk product",
+    "limitedStock": "Let op: beperkte voorraad beschikbaar. Wees er snel bij!"
   }
 }

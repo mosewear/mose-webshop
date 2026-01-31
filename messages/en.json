@@ -1379,5 +1379,25 @@
       }
     },
     "cta": "Discover the collection"
+  },
+  "newsletterWelcome": {
+    "subject": "Welcome to the MOSE newsletter! 🎉",
+    "title": "Welcome!",
+    "subtitle": "You're now part of MOSE",
+    "heroText": "Thank you for subscribing to our newsletter. You'll now receive exclusive updates, promotions, and new products directly in your inbox.",
+    "whatToExpect": "What can you expect?",
+    "benefit1": "Be the first to know about new collections and releases",
+    "benefit2": "Exclusive discounts and promotions only for subscribers",
+    "benefit3": "Tips, styling inspiration, and behind-the-scenes content",
+    "ctaButton": "Shop now",
+    "emailRegistered": "This email address is registered"
+  },
+  "backInStock": {
+    "subject": "Good news! {productName} is back in stock",
+    "title": "Back in stock!",
+    "subtitle": "The product you've been waiting for is available again",
+    "description": "You signed up for a notification when this product was sold out. Now you can order it!",
+    "ctaButton": "View product",
+    "limitedStock": "Attention: limited stock available. Be quick!"
   }
 }

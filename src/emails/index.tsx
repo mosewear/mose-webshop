@@ -8,6 +8,8 @@
 export { default as OrderConfirmationEmail } from './OrderConfirmation'
 export { default as PreorderConfirmationEmail } from './PreorderConfirmation'
 export { default as ShippingConfirmationEmail } from './ShippingConfirmation'
+export { default as NewsletterWelcomeEmail } from './NewsletterWelcome'
+export { default as BackInStockEmail } from './BackInStock'
 
 // Additional exports will be added as more templates are created
 // export { default as OrderProcessingEmail } from './OrderProcessing'
@@ -20,6 +22,5 @@ export { default as ShippingConfirmationEmail } from './ShippingConfirmation'
 // export { default as ReturnRejectedEmail } from './ReturnRejected'
 // export { default as AbandonedCartEmail } from './AbandonedCart'
 // export { default as BackInStockEmail } from './BackInStock'
-// export { default as NewsletterWelcomeEmail } from './NewsletterWelcome'
 // export { default as ContactFormEmail } from './ContactForm'
 

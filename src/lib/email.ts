@@ -20,6 +20,8 @@ import {
   OrderConfirmationEmail,
   ShippingConfirmationEmail,
   PreorderConfirmationEmail,
+  NewsletterWelcomeEmail,
+  BackInStockEmail,
 } from '@/emails'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -744,8 +746,6 @@ export async function sendAbandonedCartEmail(props: {
 /**
  * Send back in stock email
  * Triggered when product is back in stock
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendBackInStockEmail(props: {
   customerEmail: string
@@ -763,20 +763,35 @@ export async function sendBackInStockEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
-  const productUrl = `${siteUrl}/product/${props.productSlug}`
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('backInStock.title')}</h1>
-        <p>${t('backInStock.heroText', { productName: props.productName })}</p>
-        <p><a href="${productUrl}">${t('backInStock.viewProduct')}</a></p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  // Normalize image URL
+  const productImage = normalizeImageUrl(props.productImageUrl, siteUrl)
+
+  // Build variant name
+  const variantName = props.variantInfo
+    ? `${props.variantInfo.size} - ${props.variantInfo.color}`
+    : undefined
+
+  const html = await render(
+    <BackInStockEmail
+      email={props.customerEmail}
+      productName={props.productName}
+      productSlug={props.productSlug}
+      variantName={variantName}
+      productImage={productImage}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
@@ -802,8 +817,6 @@ export async function sendBackInStockEmail(props: {
 /**
  * Send newsletter welcome email
  * Triggered when user subscribes to newsletter
- * 
- * NOTE: Template not yet migrated to React Email
  */
 export async function sendNewsletterWelcomeEmail(props: {
   email: string
@@ -812,17 +825,23 @@ export async function sendNewsletterWelcomeEmail(props: {
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
 
-  // TODO: Create React Email template
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <h1>${t('newsletterWelcome.title')}</h1>
-        <p>${t('newsletterWelcome.heroText')}</p>
-      </body>
-    </html>
-  `
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    <NewsletterWelcomeEmail
+      email={props.email}
+      t={t}
+      siteUrl={siteUrl}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactAddress={contactAddress}
+    />
+  )
 
   try {
     const { data, error } = await resend.emails.send({
