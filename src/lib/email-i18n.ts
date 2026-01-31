@@ -314,6 +314,7 @@ const nl: EmailTranslationKeys = {
     presaleNotice: 'Let op: Pre-sale items',
     presaleNoticeText: 'Je bestelling bevat pre-sale items die verzonden worden zodra ze binnen zijn (verwacht: {{date}}). Je ontvangt een verzendbevestiging zodra alles klaar is.',
     expected: 'Verwacht',
+    shippingAddress: 'Verzendadres',
   },
   preorder: {
     subject: 'Pre-order bevestigd #{{orderId}} - MOSE',
@@ -600,6 +601,7 @@ const en: EmailTranslationKeys = {
     presaleNotice: 'Note: Pre-sale items',
     presaleNoticeText: 'Your order contains pre-sale items that will be shipped when they arrive (expected: {{date}}). You will receive a shipping confirmation when everything is ready.',
     expected: 'Expected',
+    shippingAddress: 'Shipping address',
   },
   preorder: {
     subject: 'Pre-order confirmed #{{orderId}} - MOSE',
