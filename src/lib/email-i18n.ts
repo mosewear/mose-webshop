@@ -327,7 +327,7 @@ const nl: EmailTranslationKeys = {
     needHelp: 'Hulp nodig?',
   },
   orderConfirmation: {
-    subject: 'Bestelling bevestiging #{{orderId}} - MOSE',
+    subject: 'Bestelling bevestiging #{{orderNumber}} | MOSE',
     title: 'BEDANKT!',
     subtitle: 'Bestelling geplaatst',
     heroText: 'Hey {{name}}, we gaan voor je aan de slag',
@@ -344,7 +344,7 @@ const nl: EmailTranslationKeys = {
     shippingAddress: 'Verzendadres',
   },
   preorder: {
-    subject: 'Pre-order bevestigd #{{orderId}} - MOSE',
+    subject: 'Pre-order bevestigd #{{orderNumber}} | MOSE',
     title: 'PRE-ORDER BEVESTIGD!',
     subtitle: 'Exclusieve pre-sale',
     heroText: 'Hey {{name}}, bedankt voor je pre-order! 🙌',
@@ -367,7 +367,7 @@ const nl: EmailTranslationKeys = {
     questionsText: 'We helpen je graag!',
   },
   shipping: {
-    subject: 'Je bestelling is verzonden #{{orderId}} - MOSE',
+    subject: 'Je bestelling is verzonden #{{orderNumber}} | MOSE',
     title: 'ONDERWEG!',
     subtitle: 'Je pakket is verzonden',
     heroText: 'Hey {{name}}, je bestelling komt eraan',
@@ -383,7 +383,7 @@ const nl: EmailTranslationKeys = {
     workingDays: '2-3 werkdagen',
   },
   processing: {
-    subject: 'Je bestelling wordt voorbereid #{{orderId}} - MOSE',
+    subject: 'Je bestelling wordt voorbereid #{{orderNumber}} | MOSE',
     title: 'IN BEHANDELING',
     subtitle: 'We pakken je order in',
     heroText: 'Hey {{name}}, we zijn voor je aan de slag!',
@@ -399,7 +399,7 @@ const nl: EmailTranslationKeys = {
     orderNumber: 'Order nummer',
   },
   delivered: {
-    subject: 'Je pakket is bezorgd #{{orderId}} - MOSE',
+    subject: 'Je pakket is bezorgd #{{orderNumber}} | MOSE',
     title: 'BEZORGD!',
     subtitle: 'Je pakket is aangekomen',
     heroText: 'Hey {{name}}, geniet van je nieuwe items!',
@@ -423,7 +423,7 @@ const nl: EmailTranslationKeys = {
     viewShop: 'BEKIJK SHOP',
   },
   cancelled: {
-    subject: 'Order geannuleerd #{{orderId}} - MOSE',
+    subject: 'Order geannuleerd #{{orderNumber}} | MOSE',
     title: 'GEANNULEERD',
     subtitle: 'Order geannuleerd',
     heroText: 'Hey {{name}}, je order is geannuleerd',
@@ -446,7 +446,7 @@ const nl: EmailTranslationKeys = {
     questionsText: 'Heb je vragen over je annulering? Neem gerust contact met ons op. We helpen je graag!',
   },
   returnRequested: {
-    subject: 'Retourverzoek ontvangen #{{returnId}} - MOSE',
+    subject: 'Retourverzoek ontvangen #{{returnNumber}} | MOSE',
     title: 'RETOUR AANGEVRAAGD',
     subtitle: 'Je verzoek is ontvangen',
     heroText: 'Hey {{name}}, we hebben je retourverzoek ontvangen',
@@ -467,7 +467,7 @@ const nl: EmailTranslationKeys = {
     viewReturnStatus: 'BEKIJK RETOUR STATUS',
   },
   returnLabelGenerated: {
-    subject: 'Je retourlabel is klaar #{{returnId}} - MOSE',
+    subject: 'Je retourlabel is klaar #{{returnNumber}} | MOSE',
     title: 'RETOURLABEL BESCHIKBAAR!',
     subtitle: 'Je kunt nu retourneren',
     heroText: 'Hey {{name}}, je retourlabel is klaar',
@@ -488,7 +488,7 @@ const nl: EmailTranslationKeys = {
     importantText: 'Zorg dat je items ongedragen zijn en de labels er nog aan zitten. Na ontvangst krijg je binnen 5-7 werkdagen je geld terug.',
   },
   returnApproved: {
-    subject: 'Je retour is goedgekeurd - Terugbetaling verwerkt #{{returnId}} - MOSE',
+    subject: 'Je retour is goedgekeurd - Terugbetaling verwerkt #{{returnNumber}} | MOSE',
     title: 'JE RETOUR IS GOEDGEKEURD!',
     subtitle: 'Je kleding is beoordeeld',
     heroText: 'Hey {{name}}, we hebben je retour ontvangen en goedgekeurd',
@@ -509,7 +509,7 @@ const nl: EmailTranslationKeys = {
     viewReturnStatus: 'BEKIJK RETOUR STATUS',
   },
   returnRefunded: {
-    subject: 'Terugbetaling voltooid #{{returnId}} - MOSE',
+    subject: 'Terugbetaling voltooid #{{returnNumber}} | MOSE',
     title: 'TERUGBETALING VOLTOOID!',
     subtitle: 'Je geld is teruggestort',
     heroText: 'Hey {{name}}, je retour is verwerkt',
@@ -529,7 +529,7 @@ const nl: EmailTranslationKeys = {
     shopMore: 'VERDER SHOPPEN',
   },
   returnRejected: {
-    subject: 'Retourverzoek afgewezen #{{returnId}} - MOSE',
+    subject: 'Retourverzoek afgewezen #{{returnNumber}} | MOSE',
     title: 'RETOUR AFGEWEZEN',
     subtitle: 'Retourverzoek niet goedgekeurd',
     heroText: 'Hey {{name}}, je retourverzoek kon niet worden goedgekeurd',
@@ -563,7 +563,7 @@ const nl: EmailTranslationKeys = {
     unsubscribe: 'Klik hier',
   },
   backInStock: {
-    subject: '{{productName}} is weer op voorraad! - MOSE',
+    subject: '{{productName}} is weer op voorraad! | MOSE',
     title: 'WEER OP VOORRAAD!',
     subtitle: 'Je favoriete product',
     heroText: 'Goed nieuws! {{productName}} is weer beschikbaar',
@@ -643,7 +643,7 @@ const en: EmailTranslationKeys = {
     needHelp: 'Need help?',
   },
   orderConfirmation: {
-    subject: 'Order confirmation #{{orderId}} - MOSE',
+    subject: 'Order confirmation #{{orderNumber}} | MOSE',
     title: 'THANK YOU!',
     subtitle: 'Order Placed',
     heroText: 'Hey {{name}}, we are getting to work for you',
@@ -660,7 +660,7 @@ const en: EmailTranslationKeys = {
     shippingAddress: 'Shipping address',
   },
   preorder: {
-    subject: 'Pre-order confirmed #{{orderId}} - MOSE',
+    subject: 'Pre-order confirmed #{{orderNumber}} | MOSE',
     title: 'PRE-ORDER CONFIRMED!',
     subtitle: 'Exclusive Pre-sale',
     heroText: 'Hey {{name}}, thank you for your pre-order! 🙌',
@@ -683,7 +683,7 @@ const en: EmailTranslationKeys = {
     questionsText: 'We are happy to help!',
   },
   shipping: {
-    subject: 'Your order has been shipped #{{orderId}} - MOSE',
+    subject: 'Your order has been shipped #{{orderNumber}} | MOSE',
     title: 'ON THE WAY!',
     subtitle: 'Your Package Has Been Shipped',
     heroText: 'Hey {{name}}, your order is on its way',
@@ -699,7 +699,7 @@ const en: EmailTranslationKeys = {
     workingDays: '2-3 business days',
   },
   processing: {
-    subject: 'Your order is being prepared #{{orderId}} - MOSE',
+    subject: 'Your order is being prepared #{{orderNumber}} | MOSE',
     title: 'PROCESSING',
     subtitle: 'We Are Packing Your Order',
     heroText: 'Hey {{name}}, we are working on your order!',
@@ -715,7 +715,7 @@ const en: EmailTranslationKeys = {
     orderNumber: 'Order number',
   },
   delivered: {
-    subject: 'Your package has been delivered #{{orderId}} - MOSE',
+    subject: 'Your package has been delivered #{{orderNumber}} | MOSE',
     title: 'DELIVERED!',
     subtitle: 'Your Package Has Arrived',
     heroText: 'Hey {{name}}, enjoy your new items!',
@@ -739,7 +739,7 @@ const en: EmailTranslationKeys = {
     viewShop: 'VIEW SHOP',
   },
   cancelled: {
-    subject: 'Order cancelled #{{orderId}} - MOSE',
+    subject: 'Order cancelled #{{orderNumber}} | MOSE',
     title: 'CANCELLED',
     subtitle: 'Order cancelled',
     heroText: 'Hey {{name}}, your order has been cancelled',
@@ -762,7 +762,7 @@ const en: EmailTranslationKeys = {
     questionsText: 'Do you have questions about your cancellation? Feel free to contact us. We are happy to help!',
   },
   returnRequested: {
-    subject: 'Return request received #{{returnId}} - MOSE',
+    subject: 'Return request received #{{returnNumber}} | MOSE',
     title: 'RETURN REQUESTED',
     subtitle: 'Your request has been received',
     heroText: 'Hey {{name}}, we have received your return request',
@@ -783,7 +783,7 @@ const en: EmailTranslationKeys = {
     viewReturnStatus: 'VIEW RETURN STATUS',
   },
   returnLabelGenerated: {
-    subject: 'Your return label is ready #{{returnId}} - MOSE',
+    subject: 'Your return label is ready #{{returnNumber}} | MOSE',
     title: 'RETURN LABEL AVAILABLE!',
     subtitle: 'You can now return',
     heroText: 'Hey {{name}}, your return label is ready',
@@ -804,7 +804,7 @@ const en: EmailTranslationKeys = {
     importantText: 'Make sure your items are unworn and the tags are still attached. After receipt, you will receive your money back within 5-7 business days.',
   },
   returnApproved: {
-    subject: 'Your return has been approved - Refund processed #{{returnId}} - MOSE',
+    subject: 'Your return has been approved - Refund processed #{{returnNumber}} | MOSE',
     title: 'YOUR RETURN IS APPROVED!',
     subtitle: 'Your clothing has been assessed',
     heroText: 'Hey {{name}}, we have received and approved your return',
@@ -825,7 +825,7 @@ const en: EmailTranslationKeys = {
     viewReturnStatus: 'VIEW RETURN STATUS',
   },
   returnRefunded: {
-    subject: 'Refund completed #{{returnId}} - MOSE',
+    subject: 'Refund completed #{{returnNumber}} | MOSE',
     title: 'REFUND COMPLETED!',
     subtitle: 'Your money has been refunded',
     heroText: 'Hey {{name}}, your return has been processed',
@@ -845,7 +845,7 @@ const en: EmailTranslationKeys = {
     shopMore: 'SHOP MORE',
   },
   returnRejected: {
-    subject: 'Return request rejected #{{returnId}} - MOSE',
+    subject: 'Return request rejected #{{returnNumber}} | MOSE',
     title: 'RETURN REJECTED',
     subtitle: 'Return Request Not Approved',
     heroText: 'Hey {{name}}, your return request could not be approved',
@@ -879,7 +879,7 @@ const en: EmailTranslationKeys = {
     unsubscribe: 'Click here',
   },
   backInStock: {
-    subject: '{{productName}} is back in stock! - MOSE',
+    subject: '{{productName}} is back in stock! | MOSE',
     title: 'BACK IN STOCK!',
     subtitle: 'Your Favorite Product',
     heroText: 'Good news! {{productName}} is available again',

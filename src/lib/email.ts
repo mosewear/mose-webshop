@@ -205,7 +205,7 @@ export async function sendShippingConfirmationEmail(props: {
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('shipping.subject', { 
-        orderId: props.orderId.slice(0, 8).toUpperCase() 
+        orderNumber: props.orderId.slice(0, 8).toUpperCase() 
       }),
       html,
     })
