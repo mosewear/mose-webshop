@@ -44,6 +44,26 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const subtotalAfterDiscount = subtotal - promoDiscount
   const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
+  // Debug logging
+  useEffect(() => {
+    if (isOpen && items.length > 0) {
+      console.log('═════════════════════════════════════════')
+      console.log('🛒 CART DRAWER - ITEMS')
+      console.log('═════════════════════════════════════════')
+      items.forEach((item, index) => {
+        console.log(`Item ${index + 1}:`, {
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          total: item.price * item.quantity,
+          isPresale: item.isPresale,
+        })
+      })
+      console.log('Subtotal:', subtotal)
+      console.log('═════════════════════════════════════════')
+    }
+  }, [isOpen, items, subtotal])
+  
   // BTW berekening (21% is al inbegrepen in de prijzen)
   const vatRate = 0.21
   const subtotalExclBtw = subtotalAfterDiscount / (1 + vatRate)
