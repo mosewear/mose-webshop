@@ -43,42 +43,42 @@ export default function ReturnLabelGeneratedEmail({
           {/* Hero Section */}
           <Section style={hero}>
             <IconCircle icon="truck" color="#FF9500" size={38} />
-            <Text style={title}>{t('returnLabel.title')}</Text>
+            <Text style={title}>{t('returnLabelGenerated.title')}</Text>
             <Text style={subtitle}>
-              {t('returnLabel.subtitle', { name: customerName })}
+              {t('returnLabelGenerated.subtitle', { name: customerName })}
             </Text>
           </Section>
 
           {/* Return Number */}
           <Section style={returnSection}>
-            <Text style={returnLabel}>{t('returnLabel.returnNumber')}</Text>
+            <Text style={returnLabel}>{t('returnLabelGenerated.returnNumber')}</Text>
             <Text style={returnNumberStyle}>{returnNumber}</Text>
           </Section>
 
           {/* Content */}
           <Section style={content}>
             <Text style={description}>
-              {t('returnLabel.description')}
+              {t('returnLabelGenerated.description')}
             </Text>
           </Section>
 
           {/* CTA */}
           <Section style={ctaSection}>
             <EmailButton href={returnLabelUrl}>
-              {t('returnLabel.downloadButton')}
+              {t('returnLabelGenerated.downloadButton')}
             </EmailButton>
           </Section>
 
           {/* Instructions */}
           <Section style={instructionsBox}>
-            <Text style={instructionsTitle}>{t('returnLabel.instructionsTitle')}</Text>
+            <Text style={instructionsTitle}>{t('returnLabelGenerated.instructionsTitle')}</Text>
             <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
               <tr>
                 <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
                   <div style={stepNumber}>1</div>
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={stepText}>{t('returnLabel.step1')}</Text>
+                  <Text style={stepText}>{t('returnLabelGenerated.step1')}</Text>
                 </td>
               </tr>
             </table>
@@ -88,7 +88,7 @@ export default function ReturnLabelGeneratedEmail({
                   <div style={stepNumber}>2</div>
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={stepText}>{t('returnLabel.step2')}</Text>
+                  <Text style={stepText}>{t('returnLabelGenerated.step2')}</Text>
                 </td>
               </tr>
             </table>
@@ -98,7 +98,7 @@ export default function ReturnLabelGeneratedEmail({
                   <div style={stepNumber}>3</div>
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={stepText}>{t('returnLabel.step3')}</Text>
+                  <Text style={stepText}>{t('returnLabelGenerated.step3')}</Text>
                 </td>
               </tr>
             </table>

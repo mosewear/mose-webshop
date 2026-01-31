@@ -111,8 +111,12 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
-    orderDetails: string
+    orderNumber: string
+    description: string
     reason: string
+    refundInfo: string
+    ctaButton: string
+    orderDetails: string
     amount: string
     refund: string
     refundText: string
@@ -147,14 +151,18 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
+    returnNumber: string
+    description: string
+    instructionsTitle: string
+    step1: string
+    step2: string
+    step3: string
+    downloadButton: string
     returnTrackingCode: string
     trackReturn: string
     downloadLabel: string
     printLabel: string
     howToReturn: string
-    step1: string
-    step2: string
-    step3: string
     step4: string
     important: string
     importantText: string
@@ -272,6 +280,8 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     from: string
+    email: string
+    replyInfo: string
     contactDetails: string
     fromLabel: string
     subjectLabel: string
@@ -404,8 +414,12 @@ const nl: EmailTranslationKeys = {
     title: 'GEANNULEERD',
     subtitle: 'Order geannuleerd',
     heroText: 'Hey {{name}}, je order is geannuleerd',
-    orderDetails: 'Order details',
+    orderNumber: 'Order nummer',
+    description: 'Je order is geannuleerd. Je betaling wordt automatisch teruggestort.',
     reason: 'Reden',
+    refundInfo: 'Je betaling wordt automatisch teruggestort naar je originele betaalmethode binnen 3-5 werkdagen.',
+    ctaButton: 'BEKIJK SHOP',
+    orderDetails: 'Order details',
     amount: 'Bedrag',
     refund: 'Terugbetaling',
     refundText: 'Je betaling wordt automatisch teruggestort naar je originele betaalmethode binnen 3-5 werkdagen. Afhankelijk van je bank kan het iets langer duren voordat het bedrag zichtbaar is op je rekening.',
@@ -440,14 +454,18 @@ const nl: EmailTranslationKeys = {
     title: 'RETOURLABEL BESCHIKBAAR!',
     subtitle: 'Je kunt nu retourneren',
     heroText: 'Hey {{name}}, je retourlabel is klaar',
+    returnNumber: 'Retour nummer',
+    description: 'Je retourlabel is klaar om te downloaden. Print het label en stuur je pakket terug.',
+    instructionsTitle: 'Hoe retourneren?',
+    step1: 'Download en print het retourlabel',
+    step2: 'Pak je items in de originele verpakking',
+    step3: 'Breng je pakket naar een PostNL punt',
+    downloadButton: 'DOWNLOAD RETOURLABEL',
     returnTrackingCode: 'Retour tracking code',
     trackReturn: 'VOLG JE RETOUR',
     downloadLabel: 'DOWNLOAD RETOURLABEL',
     printLabel: 'Print dit label en plak het op je pakket',
     howToReturn: 'Hoe retourneren?',
-    step1: 'Download en print het retourlabel',
-    step2: 'Pak je items in de originele verpakking',
-    step3: 'Plak het label op je pakket',
     step4: 'Breng je pakket naar een PostNL punt',
     important: 'Let op:',
     importantText: 'Zorg dat je items ongedragen zijn en de labels er nog aan zitten. Na ontvangst krijg je binnen 5-7 werkdagen je geld terug.',
@@ -565,6 +583,8 @@ const nl: EmailTranslationKeys = {
     title: 'NIEUW BERICHT',
     subtitle: 'Contactformulier',
     from: 'Van {{name}}',
+    email: 'E-mail',
+    replyInfo: 'Je kunt direct antwoorden op deze email',
     contactDetails: 'Contactgegevens',
     fromLabel: 'Van',
     subjectLabel: 'Onderwerp',
@@ -695,18 +715,22 @@ const en: EmailTranslationKeys = {
   cancelled: {
     subject: 'Order cancelled #{{orderId}} - MOSE',
     title: 'CANCELLED',
-    subtitle: 'Order Cancelled',
+    subtitle: 'Order cancelled',
     heroText: 'Hey {{name}}, your order has been cancelled',
-    orderDetails: 'Order Details',
+    orderNumber: 'Order number',
+    description: 'Your order has been cancelled. Your payment will be refunded automatically.',
     reason: 'Reason',
+    refundInfo: 'Your payment will be automatically refunded to your original payment method within 3-5 business days.',
+    ctaButton: 'VIEW SHOP',
+    orderDetails: 'Order details',
     amount: 'Amount',
     refund: 'Refund',
     refundText: 'Your payment will be automatically refunded to your original payment method within 3-5 business days. Depending on your bank, it may take a bit longer before the amount is visible in your account.',
-    ourApologies: 'Our Apologies',
+    ourApologies: 'Our apologies',
     sorryText: 'As an apology, we offer you 10% discount on your next order:',
     discountCode: 'SORRY10',
     validUntil: 'Valid until 1 month after this email',
-    stillInterested: 'Still Interested?',
+    stillInterested: 'Still interested?',
     checkFullCollection: 'Check out our full collection and find your perfect MOSE item',
     questions: 'Questions?',
     questionsText: 'Do you have questions about your cancellation? Feel free to contact us. We are happy to help!',
@@ -731,16 +755,20 @@ const en: EmailTranslationKeys = {
   returnLabelGenerated: {
     subject: 'Your return label is ready #{{returnId}} - MOSE',
     title: 'RETURN LABEL AVAILABLE!',
-    subtitle: 'You Can Now Return',
+    subtitle: 'You can now return',
     heroText: 'Hey {{name}}, your return label is ready',
-    returnTrackingCode: 'Return Tracking Code',
+    returnNumber: 'Return number',
+    description: 'Your return label is ready to download. Print the label and send your package back.',
+    instructionsTitle: 'How to return?',
+    step1: 'Download and print the return label',
+    step2: 'Pack your items in the original packaging',
+    step3: 'Bring your package to a PostNL point',
+    downloadButton: 'DOWNLOAD RETURN LABEL',
+    returnTrackingCode: 'Return tracking code',
     trackReturn: 'TRACK YOUR RETURN',
     downloadLabel: 'DOWNLOAD RETURN LABEL',
     printLabel: 'Print this label and attach it to your package',
-    howToReturn: 'How To Return?',
-    step1: 'Download and print the return label',
-    step2: 'Pack your items in the original packaging',
-    step3: 'Attach the label to your package',
+    howToReturn: 'How to return?',
     step4: 'Bring your package to a PostNL point',
     important: 'Important:',
     importantText: 'Make sure your items are unworn and the tags are still attached. After receipt, you will receive your money back within 5-7 business days.',
@@ -856,9 +884,11 @@ const en: EmailTranslationKeys = {
   contact: {
     subject: 'Contact form: {{subject}} - {{name}}',
     title: 'NEW MESSAGE',
-    subtitle: 'Contact Form',
+    subtitle: 'Contact form',
     from: 'From {{name}}',
-    contactDetails: 'Contact Details',
+    email: 'Email',
+    replyInfo: 'You can reply directly to this email',
+    contactDetails: 'Contact details',
     fromLabel: 'From',
     subjectLabel: 'Subject',
     message: 'Message',

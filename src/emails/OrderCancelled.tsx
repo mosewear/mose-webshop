@@ -43,26 +43,26 @@ export default function OrderCancelledEmail({
           {/* Hero Section */}
           <Section style={hero}>
             <IconCircle icon="x" color="#e74c3c" size={38} />
-            <Text style={title}>{t('orderCancelled.title')}</Text>
+            <Text style={title}>{t('cancelled.title')}</Text>
             <Text style={subtitle}>
-              {t('orderCancelled.subtitle', { name: customerName })}
+              {t('cancelled.heroText', { name: customerName })}
             </Text>
           </Section>
 
           {/* Order Number */}
           <Section style={orderSection}>
-            <Text style={orderLabel}>{t('orderCancelled.orderNumber')}</Text>
+            <Text style={orderLabel}>{t('cancelled.orderNumber')}</Text>
             <Text style={orderNumberStyle}>{orderNumber}</Text>
           </Section>
 
           {/* Content */}
           <Section style={content}>
             <Text style={description}>
-              {t('orderCancelled.description')}
+              {t('cancelled.description')}
             </Text>
             {reason && (
               <Text style={reasonText}>
-                {t('orderCancelled.reason')}: {reason}
+                {t('cancelled.reason')}: {reason}
               </Text>
             )}
           </Section>
@@ -76,7 +76,7 @@ export default function OrderCancelledEmail({
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
                   <Text style={infoText}>
-                    {t('orderCancelled.refundInfo')}
+                    {t('cancelled.refundInfo')}
                   </Text>
                 </td>
               </tr>
@@ -86,7 +86,7 @@ export default function OrderCancelledEmail({
           {/* CTA */}
           <Section style={ctaSection}>
             <EmailButton href={`${siteUrl}/shop`}>
-              {t('orderCancelled.ctaButton')}
+              {t('cancelled.ctaButton')}
             </EmailButton>
           </Section>
 

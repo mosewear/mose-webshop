@@ -44,9 +44,9 @@ export default function ContactFormEmail({
           {/* Hero Section */}
           <Section style={hero}>
             <IconCircle icon="mail" color="#667eea" size={38} />
-            <Text style={title}>{t('contactForm.title')}</Text>
+            <Text style={title}>{t('contact.title')}</Text>
             <Text style={subtitle}>
-              {t('contactForm.subtitle')}
+              {t('contact.subtitle')}
             </Text>
           </Section>
 
@@ -55,7 +55,7 @@ export default function ContactFormEmail({
             <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
               <tr>
                 <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('contactForm.from')}:</Text>
+                  <Text style={labelText}>{t('contact.from')}:</Text>
                 </td>
                 <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
                   <Text style={valueText}>{customerName}</Text>
@@ -63,7 +63,7 @@ export default function ContactFormEmail({
               </tr>
               <tr>
                 <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('contactForm.email')}:</Text>
+                  <Text style={labelText}>{t('contact.email')}:</Text>
                 </td>
                 <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
                   <Text style={valueText}>{customerEmail}</Text>
@@ -71,7 +71,7 @@ export default function ContactFormEmail({
               </tr>
               <tr>
                 <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('contactForm.subject')}:</Text>
+                  <Text style={labelText}>{t('contact.subject')}:</Text>
                 </td>
                 <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
                   <Text style={valueText}>{subject}</Text>
@@ -82,7 +82,7 @@ export default function ContactFormEmail({
 
           {/* Message */}
           <Section style={messageSection}>
-            <Text style={messageTitle}>{t('contactForm.message')}:</Text>
+            <Text style={messageTitle}>{t('contact.message')}:</Text>
             <Section style={messageBox}>
               <Text style={messageText}>{message}</Text>
             </Section>
@@ -97,7 +97,7 @@ export default function ContactFormEmail({
                 </td>
                 <td style={{ verticalAlign: 'middle' }}>
                   <Text style={infoText}>
-                    {t('contactForm.replyInfo')}
+                    {t('contact.replyInfo')}
                   </Text>
                 </td>
               </tr>
