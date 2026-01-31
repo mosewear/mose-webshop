@@ -27,6 +27,7 @@ export type EmailTranslationKeys = {
     presaleNotice: string
     presaleNoticeText: string
     expected: string
+    shippingAddress: string
   }
   preorder: {
     subject: string

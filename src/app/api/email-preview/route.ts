@@ -25,40 +25,46 @@ async function getPreviewProductData() {
   try {
     const supabase = await createClient()
     
-    // Get 2 random products with images
-    const { data: products, error } = await supabase
-      .from('products')
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    
+    // Get 2 product variants with images - simpler query
+    const { data: variants, error } = await supabase
+      .from('product_variants')
       .select(`
         id,
-        name,
-        slug,
-        product_variants!inner(
+        size,
+        color,
+        price,
+        image_url,
+        products!inner(
           id,
-          size,
-          color,
-          price,
-          image_url,
-          is_available
+          name,
+          slug
         )
       `)
-      .eq('product_variants.is_available', true)
+      .eq('is_available', true)
+      .not('image_url', 'is', null)
       .limit(2)
     
-    if (error || !products || products.length === 0) {
-      console.log('⚠️ Could not fetch products for preview, using fallback')
+    if (error) {
+      console.error('⚠️ Error fetching products for preview:', error)
       return null
     }
     
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    if (!variants || variants.length === 0) {
+      console.log('⚠️ No products found for preview, using fallback')
+      return null
+    }
     
-    return products.slice(0, 2).map((product: any) => {
-      const variant = product.product_variants[0]
+    console.log(`✅ Found ${variants.length} products for preview`)
+    
+    return variants.map((variant: any) => {
       const imageUrl = variant.image_url 
         ? (variant.image_url.startsWith('http') ? variant.image_url : `${siteUrl}${variant.image_url}`)
-        : `${siteUrl}/images/placeholder-product.jpg`
+        : `${siteUrl}/logomose.png`
       
       return {
-        name: product.name,
+        name: variant.products.name,
         size: variant.size || 'M',
         color: variant.color || 'Zwart',
         quantity: 1,
