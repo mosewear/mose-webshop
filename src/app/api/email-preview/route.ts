@@ -80,7 +80,6 @@ const dummyData = {
   ],
   returnReason: 'Past niet goed',
   labelUrl: 'https://mosewear.com/downloads/return-label-example.pdf',
-  trackingCode: 'RET-TRACK-123456',
   refundAmount: 69.95,
   rejectionReason: 'Product is beschadigd geretourneerd',
   
