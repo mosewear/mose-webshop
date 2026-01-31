@@ -1,11 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { render } from '@react-email/render'
+import {
+  OrderConfirmationEmail,
+  PreorderConfirmationEmail,
+  ShippingConfirmationEmail,
+  OrderProcessingEmail,
+  OrderDeliveredEmail,
+  OrderCancelledEmail,
+  ReturnRequestedEmail,
+  ReturnLabelGeneratedEmail,
+  ReturnApprovedEmail,
+  ReturnRefundedEmail,
+  ReturnRejectedEmail,
+  AbandonedCartEmail,
+  NewsletterWelcomeEmail,
+  BackInStockEmail,
+  ContactFormEmail,
+} from '@/emails'
+import { getEmailT } from '@/lib/email-i18n'
 
 // Dummy data voor preview
-const dummyOrderData = {
+const dummyData = {
+  // Order data
   customerName: 'Jan de Vries',
   customerEmail: 'jan@example.com',
   orderId: 'abc123de-4567-89fg-hijk-lmnopqr12345',
   orderTotal: 89.95,
+  subtotal: 84.95,
+  shippingCost: 5.00,
+  tax: 15.75,
   orderItems: [
     {
       name: 'MOSE Essential Hoodie',
@@ -13,7 +36,8 @@ const dummyOrderData = {
       color: 'Zwart',
       quantity: 1,
       price: 69.95,
-      imageUrl: 'https://mose-webshop.vercel.app/placeholder-product.jpg',
+      imageUrl: 'https://mosewear.com/images/placeholder-product.jpg',
+      isPresale: false,
     },
     {
       name: 'MOSE Classic Cap',
@@ -21,7 +45,8 @@ const dummyOrderData = {
       color: 'Navy',
       quantity: 1,
       price: 19.99,
-      imageUrl: 'https://mose-webshop.vercel.app/placeholder-product.jpg',
+      imageUrl: 'https://mosewear.com/images/placeholder-product.jpg',
+      isPresale: false,
     },
   ],
   shippingAddress: {
@@ -30,426 +55,321 @@ const dummyOrderData = {
     city: 'Amsterdam',
     postalCode: '1012 JM',
   },
+  
+  // Shipping data
   trackingCode: 'TEST-TRACKING-123456',
   trackingUrl: 'https://www.dhlparcel.nl/en/private/track-trace?tt=TEST-TRACKING-123456',
   carrier: 'DHL',
-  estimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-  deliveryDate: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }),
+  estimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
+  
+  // Presale data
+  presaleExpectedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
+  
+  // Cancellation data
   cancellationReason: 'Product niet op voorraad',
+  
+  // Return data
+  returnId: 'ret-12345678-90ab-cdef-ghij-klmnopqrs123',
+  returnItems: [
+    {
+      product_name: 'MOSE Essential Hoodie',
+      size: 'L',
+      color: 'Zwart',
+      quantity: 1,
+    },
+  ],
+  returnReason: 'Past niet goed',
+  labelUrl: 'https://mosewear.com/downloads/return-label-example.pdf',
+  trackingCode: 'RET-TRACK-123456',
+  refundAmount: 69.95,
+  rejectionReason: 'Product is beschadigd geretourneerd',
+  
+  // Product data (for back in stock)
+  productName: 'MOSE Essential Hoodie',
+  productSlug: 'essential-hoodie',
+  productImageUrl: 'https://mosewear.com/images/placeholder-product.jpg',
+  variantInfo: {
+    size: 'L',
+    color: 'Zwart',
+  },
+  
+  // Contact form data
+  name: 'Jan de Vries',
+  email: 'jan@example.com',
+  subject: 'Vraag over bestelling',
+  message: 'Ik heb een vraag over mijn recente bestelling. Wanneer wordt deze verzonden?',
+  
+  // Checkout URL (for abandoned cart)
+  checkoutUrl: 'https://mosewear.com/checkout?session=abc123',
 }
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const type = searchParams.get('type') || 'confirmation'
+  const locale = searchParams.get('locale') || 'nl'
+  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = 'info@mosewear.com'
+  const contactPhone = '+31 50 211 1931'
+  const contactAddress = 'Stavangerweg 13, 9723 JC Groningen'
+  
+  try {
+    const t = await getEmailT(locale)
+    let html: string
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
-  const logoUrl = `${siteUrl}/logomose.png`
+    switch (type) {
+      case 'confirmation':
+        html = await render(
+          OrderConfirmationEmail({
+            ...dummyData,
+            hasPresaleItems: false,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
 
-  // Shared email styles
-  const EMAIL_STYLES = `
-    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff; }
-    .wrapper { max-width: 600px; margin: 0 auto; }
-    .logo-bar { padding: 24px; text-align: center; background: #000; }
-    .logo-bar img { max-width: 140px; display: block; margin: 0 auto; filter: brightness(0) invert(1); }
-    .hero { padding: 50px 20px 40px; text-align: center; background: linear-gradient(180deg, #fff 0%, #fafafa 100%); }
-    .icon-circle { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
-    .icon-success { background: #2ECC71; }
-    .icon-processing { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .icon-shipping { background: #FF9500; }
-    .icon-delivered { background: #2ECC71; }
-    .icon-cancelled { background: #e74c3c; }
-    h1 { margin: 0 0 10px; font-size: 44px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px; }
-    .hero-sub { font-size: 15px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .hero-text { font-size: 14px; color: #999; }
-    .order-badge { background: #000; color: #fff; padding: 10px 24px; display: inline-block; margin-top: 20px; font-family: monospace; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; }
-    .content { padding: 32px 20px; }
-    .section-title { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; margin-top: 28px; }
-    .info-box { background: #f8f8f8; padding: 20px; border-left: 3px solid #2ECC71; margin: 16px 0; }
-    .info-box h3 { margin-top: 0; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
-    .button { display: inline-block; background: #2ECC71; color: #fff; padding: 15px 32px; text-decoration: none; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; margin: 16px 0; font-size: 13px; }
-    .summary { background: #000; color: #fff; padding: 28px 24px; margin-top: 28px; }
-    .sum-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; }
-    .sum-grand { font-size: 28px; font-weight: 900; padding-top: 12px; text-align: center; }
-    .footer { background: #000; color: #888; padding: 28px 20px; text-align: center; font-size: 12px; }
-    .footer strong { color: #fff; }
-    .footer a { color: #2ECC71; font-weight: 600; text-decoration: none; }
-    .product { background: #f8f8f8; padding: 16px; border-left: 3px solid #2ECC71; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-    .prod-img { width: 60px; height: 80px; background: #ddd; border: 1px solid #e0e0e0; flex-shrink: 0; }
-    .prod-info { flex: 1; }
-    .prod-name { font-size: 14px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
-    .prod-meta { font-size: 12px; color: #666; }
-    .prod-price { font-size: 17px; font-weight: 900; }
-    .discount-highlight { background: #2ECC71; color: #fff; padding: 24px; border-radius: 8px; text-align: center; margin: 20px 0; }
-    .discount-code { font-size: 32px; font-weight: 900; letter-spacing: 4px; font-family: monospace; background: rgba(255,255,255,0.2); padding: 16px 28px; border-radius: 6px; display: inline-block; margin: 12px 0; }
-    .tracking-box { background: #000; color: #fff; padding: 28px 24px; border-radius: 8px; margin: 20px 0; text-align: center; }
-    .tracking-code { font-size: 24px; font-weight: 900; letter-spacing: 3px; font-family: monospace; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 4px; }
-    .carrier-badge { display: inline-block; background: #2ECC71; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-  `
+      case 'preorder':
+        html = await render(
+          PreorderConfirmationEmail({
+            ...dummyData,
+            presaleExpectedDate: dummyData.presaleExpectedDate,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
 
-  let htmlContent = ''
+      case 'shipped':
+        html = await render(
+          ShippingConfirmationEmail({
+            ...dummyData,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
 
-  // Generate email based on type
-  switch (type) {
-    case 'confirmation':
-      htmlContent = generateConfirmationEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
-      break
-    case 'processing':
-      htmlContent = generateProcessingEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
-      break
-    case 'shipped':
-      htmlContent = generateShippedEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
-      break
-    case 'delivered':
-      htmlContent = generateDeliveredEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
-      break
-    case 'cancelled':
-      htmlContent = generateCancelledEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
-      break
-    case 'abandoned_cart':
-      htmlContent = generateAbandonedCartEmail(dummyOrderData, logoUrl, EMAIL_STYLES)
-      break
-    default:
-      return NextResponse.json({ error: 'Invalid email type' }, { status: 400 })
+      case 'processing':
+        html = await render(
+          OrderProcessingEmail({
+            orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'delivered':
+        html = await render(
+          OrderDeliveredEmail({
+            orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'cancelled':
+        html = await render(
+          OrderCancelledEmail({
+            orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            reason: dummyData.cancellationReason,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'return_requested':
+        html = await render(
+          ReturnRequestedEmail({
+            orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
+            returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            items: dummyData.returnItems.map(item => ({
+              name: `${item.product_name} (${item.size} - ${item.color})`,
+              quantity: item.quantity,
+            })),
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'return_label':
+        html = await render(
+          ReturnLabelGeneratedEmail({
+            returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            returnLabelUrl: dummyData.labelUrl,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'return_approved':
+        html = await render(
+          ReturnApprovedEmail({
+            returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            refundAmount: dummyData.refundAmount,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'return_refunded':
+        html = await render(
+          ReturnRefundedEmail({
+            returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            refundAmount: dummyData.refundAmount,
+            refundMethod: 'Original Payment Method',
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'return_rejected':
+        html = await render(
+          ReturnRejectedEmail({
+            returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            reason: dummyData.rejectionReason,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'abandoned_cart':
+        html = await render(
+          AbandonedCartEmail({
+            customerName: dummyData.customerName,
+            items: dummyData.orderItems.map(item => ({
+              name: item.name,
+              price: item.price,
+              imageUrl: item.imageUrl,
+              quantity: item.quantity,
+            })),
+            totalAmount: dummyData.orderTotal,
+            cartUrl: dummyData.checkoutUrl,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'newsletter_welcome':
+        html = await render(
+          NewsletterWelcomeEmail({
+            email: dummyData.customerEmail,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'back_in_stock':
+        html = await render(
+          BackInStockEmail({
+            email: dummyData.customerEmail,
+            productName: dummyData.productName,
+            productSlug: dummyData.productSlug,
+            variantName: `${dummyData.variantInfo.size} - ${dummyData.variantInfo.color}`,
+            productImage: dummyData.productImageUrl,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'contact_form':
+        html = await render(
+          ContactFormEmail({
+            customerName: dummyData.name,
+            customerEmail: dummyData.email,
+            subject: dummyData.subject,
+            message: dummyData.message,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      default:
+        return NextResponse.json({ 
+          error: 'Invalid email type',
+          availableTypes: [
+            'confirmation', 'preorder', 'shipped', 'processing', 'delivered', 'cancelled',
+            'return_requested', 'return_label', 'return_approved', 'return_refunded', 'return_rejected',
+            'abandoned_cart', 'newsletter_welcome', 'back_in_stock', 'contact_form'
+          ]
+        }, { status: 400 })
+    }
+
+    return new NextResponse(html, {
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    })
+  } catch (error) {
+    console.error('Error generating email preview:', error)
+    return NextResponse.json({ 
+      error: 'Failed to generate email preview',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
-
-  return new NextResponse(htmlContent, {
-    headers: {
-      'Content-Type': 'text/html',
-    },
-  })
 }
-
-function generateConfirmationEmail(data: any, logoUrl: string, styles: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}</style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
-    <div class="hero">
-      <div class="icon-circle icon-success">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h1>BEDANKT!</h1>
-      <div class="hero-sub">Je Bestelling Is Bevestigd</div>
-      <div class="hero-text">Hey ${data.customerName}, we gaan direct voor je aan de slag!</div>
-      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
-    </div>
-    <div class="content">
-      <div class="section-title">Je Bestelde Items</div>
-      ${data.orderItems.map((item: any) => `
-        <div class="product">
-          <div class="prod-img"></div>
-          <div class="prod-info">
-            <div class="prod-name">${item.name}</div>
-            <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x stuks</div>
-          </div>
-          <div class="prod-price">€${(item.price * item.quantity).toFixed(2)}</div>
-        </div>
-      `).join('')}
-      
-      <div class="summary">
-        <div class="sum-line"><span>Subtotaal</span><span>€${(data.orderTotal - 0.01).toFixed(2)}</span></div>
-        <div class="sum-line"><span>Verzendkosten</span><span>€0,01</span></div>
-        <div class="sum-grand">€${data.orderTotal.toFixed(2)}</div>
-      </div>
-      
-      <div class="info-box">
-        <h3>📦 Verzendadres</h3>
-        <p style="margin: 8px 0 0 0; font-size: 14px; line-height: 1.6;">
-          ${data.shippingAddress.name}<br>
-          ${data.shippingAddress.address}<br>
-          ${data.shippingAddress.postalCode} ${data.shippingAddress.city}
-        </p>
-      </div>
-    </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-}
-
-function generateProcessingEmail(data: any, logoUrl: string, styles: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}</style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
-    <div class="hero">
-      <div class="icon-circle icon-processing">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-      </div>
-      <h1>IN BEHANDELING</h1>
-      <div class="hero-sub">We Zijn Voor Je Aan Het Werk</div>
-      <div class="hero-text">Hey ${data.customerName}, je bestelling wordt klaargemaakt!</div>
-      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
-    </div>
-    <div class="content">
-      <div class="info-box">
-        <h3>✓ Wat gebeurt er nu?</h3>
-        <p style="margin: 12px 0 0 0; font-size: 14px; line-height: 1.8;">
-          ✓ Order ontvangen<br>
-          ⏳ Items picken & pakken<br>
-          📦 Verzendlabel aanmaken<br>
-          🚚 Verzending
-        </p>
-      </div>
-    </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-}
-
-function generateShippedEmail(data: any, logoUrl: string, styles: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}</style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
-    <div class="hero">
-      <div class="icon-circle icon-shipping">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-          <rect x="1" y="3" width="15" height="13"></rect>
-          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-          <circle cx="5.5" cy="18.5" r="2.5"></circle>
-          <circle cx="18.5" cy="18.5" r="2.5"></circle>
-        </svg>
-      </div>
-      <h1>ONDERWEG!</h1>
-      <div class="hero-sub">Je Pakket Is Verzonden</div>
-      <div class="hero-text">Hey ${data.customerName}, je MOSE items zijn onderweg!</div>
-      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
-    </div>
-    <div class="content">
-      <div class="tracking-box">
-        <div class="carrier-badge">${data.carrier}</div>
-        <div style="font-size: 14px; margin-bottom: 8px;">Track je pakket:</div>
-        <div class="tracking-code">${data.trackingCode}</div>
-        <a href="${data.trackingUrl}" class="button" style="color:#fff;text-decoration:none;">TRACK PAKKET</a>
-      </div>
-    </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-}
-
-function generateDeliveredEmail(data: any, logoUrl: string, styles: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}</style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
-    <div class="hero">
-      <div class="icon-circle icon-delivered">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h1>BEZORGD!</h1>
-      <div class="hero-sub">Je Pakket Is Aangekomen</div>
-      <div class="hero-text">Hey ${data.customerName}, geniet van je nieuwe MOSE items!</div>
-      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
-    </div>
-    <div class="content">
-      <div class="info-box" style="border-left-color: #2ECC71; background: #f0f9f4; text-align: center;">
-        <h3 style="color: #2ECC71;">✓ Afgeleverd op ${data.deliveryDate}</h3>
-        <p style="margin: 8px 0 0 0;">We hopen dat alles in perfecte staat is aangekomen!</p>
-      </div>
-      <div style="text-align: center; margin: 32px 0;">
-        <div style="font-size: 48px; margin-bottom: 16px;">⭐⭐⭐⭐⭐</div>
-        <p style="font-size: 16px; margin-bottom: 20px;">Wat vind je van je bestelling?</p>
-        <a href="#" class="button" style="color:#fff;text-decoration:none;">SCHRIJF EEN REVIEW</a>
-      </div>
-    </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-}
-
-function generateCancelledEmail(data: any, logoUrl: string, styles: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}</style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
-    <div class="hero">
-      <div class="icon-circle icon-cancelled">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </div>
-      <h1>GEANNULEERD</h1>
-      <div class="hero-sub">Order Geannuleerd</div>
-      <div class="hero-text">Hey ${data.customerName}, je order is geannuleerd</div>
-      <div class="order-badge">#${data.orderId.slice(0, 8).toUpperCase()}</div>
-    </div>
-    <div class="content">
-      <div class="info-box" style="border-left-color: #e74c3c; background: #fff3f3;">
-        <h3>💰 Terugbetaling</h3>
-        <p style="margin: 8px 0 0 0;">Je betaling wordt automatisch teruggestort binnen 3-5 werkdagen.</p>
-      </div>
-      
-      <div class="discount-highlight">
-        <h3 style="margin: 0 0 12px 0; font-size: 20px;">🎁 Onze Excuses</h3>
-        <p style="margin: 0 0 16px 0;">Als excuus bieden we je 10% korting op je volgende bestelling:</p>
-        <div class="discount-code">SORRY10</div>
-        <p style="margin: 12px 0 0 0; font-size: 13px; opacity: 0.9;">Geldig tot 1 maand na deze email</p>
-      </div>
-    </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px"><a href="mailto:info@mosewear.nl">info@mosewear.nl</a> • <a href="tel:+31502111931">+31 50 211 1931</a></p>
-    </div>
-  </div>
-</body>
-</html>`
-}
-
-function generateAbandonedCartEmail(data: any, logoUrl: string, styles: string) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${styles}</style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="logo-bar"><img src="${logoUrl}" alt="MOSE"/></div>
-    <div class="hero">
-      <div class="icon-circle" style="background: #FF9500; box-shadow: 0 6px 16px rgba(255,149,0,0.25);">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-          <circle cx="9" cy="21" r="1"></circle>
-          <circle cx="20" cy="21" r="1"></circle>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-        </svg>
-      </div>
-      <h1>NIET VERGETEN?</h1>
-      <div class="hero-sub">Je Winkelwagen Wacht Op Je</div>
-      <div class="hero-text">Hey ${data.customerName}, je hebt items achtergelaten!</div>
-    </div>
-    <div class="content">
-      <p style="font-size: 15px; line-height: 1.8; color: #444; margin-bottom: 24px;">
-        We zagen dat je onlangs aan het shoppen was bij MOSE, maar je bestelling nog niet hebt afgerond. 
-        Geen zorgen - we hebben je items nog voor je gereserveerd! 🎁
-      </p>
-
-      <div class="section-title">🛍️ Jouw Items</div>
-      ${data.orderItems.map((item: any) => `
-        <div class="product" style="border-left-color: #FF9500; margin-bottom: 12px;">
-          <div class="prod-img"></div>
-          <div class="prod-info">
-            <div class="prod-name">${item.name}</div>
-            <div class="prod-meta">Maat ${item.size} • ${item.color} • ${item.quantity}x stuks</div>
-          </div>
-          <div class="prod-price">€${(item.price * item.quantity).toFixed(2)}</div>
-        </div>
-      `).join('')}
-
-      <div class="summary" style="margin: 20px 0;">
-        <div class="sum-grand">€${data.orderTotal.toFixed(2)}</div>
-        <p style="text-align: center; margin-top: 16px; font-size: 13px; color: #999;">
-          Totaalbedrag (incl. BTW)
-        </p>
-      </div>
-
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://mose-webshop.vercel.app/checkout" class="button" style="background: #FF9500; color:#fff;text-decoration:none; border-radius: 4px;">✓ MAAK BESTELLING AF</a>
-        <p style="font-size: 12px; color: #999; margin-top: 12px;">
-          Klik hier om terug te gaan naar je winkelwagen
-        </p>
-      </div>
-
-      <div style="background: #f0f9f4; padding: 20px; border-left: 3px solid #2ECC71; margin: 20px 0; font-style: italic;">
-        <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6;">
-          "Beste aankoop ooit! De kwaliteit is geweldig en het zit super comfortabel. Krijg constant complimenten!" ⭐⭐⭐⭐⭐
-        </p>
-        <p style="margin: 0; font-size: 12px; color: #666; font-weight: 600;">
-          - Lisa, Amsterdam
-        </p>
-      </div>
-
-      <div class="info-box" style="border-left-color: #FF9500;">
-        <h3 style="color: #FF9500;">✓ Waarom MOSE?</h3>
-        <p style="margin: 12px 0 0 0; font-size: 14px; line-height: 1.8;">
-          <span style="color: #FF9500; font-weight: 900;">✓</span> Gratis verzending vanaf €100<br>
-          <span style="color: #FF9500; font-weight: 900;">✓</span> 14 dagen retourrecht<br>
-          <span style="color: #FF9500; font-weight: 900;">✓</span> Duurzame & hoogwaardige materialen<br>
-          <span style="color: #FF9500; font-weight: 900;">✓</span> Snelle levering (1-2 werkdagen)
-        </p>
-      </div>
-
-      <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 16px; margin: 24px 0;">
-        <p style="margin: 0; font-size: 13px; color: #856404; font-weight: 600;">
-          ⚠️ <strong>Let op:</strong> Je items blijven nog 48 uur gereserveerd. 
-          Daarna kunnen we helaas niet garanderen dat ze nog op voorraad zijn.
-        </p>
-      </div>
-
-      <div class="info-box" style="margin-top: 28px; border-left-color: #FF9500;">
-        <h3 style="color: #FF9500;">💬 Hulp Nodig?</h3>
-        <p style="margin: 8px 0 0 0; font-size: 14px; color: #666;">
-          Twijfel je nog of heb je vragen? Ons team staat voor je klaar!<br>
-          <a href="mailto:info@mosewear.nl" style="color: #FF9500; font-weight: 600; text-decoration: none;">info@mosewear.nl</a> • 
-          <a href="tel:+31502111931" style="color: #FF9500; font-weight: 600; text-decoration: none;">+31 50 211 1931</a>
-        </p>
-      </div>
-    </div>
-    <div class="footer">
-      <p><strong>MOSE</strong> • Helper Brink 27a • 9722 EG Groningen</p>
-      <p style="margin-top:8px">
-        <a href="mailto:info@mosewear.nl" style="color: #FF9500;">info@mosewear.nl</a> • 
-        <a href="tel:+31502111931" style="color: #FF9500;">+31 50 211 1931</a>
-      </p>
-      <p style="margin-top:12px; font-size:11px; color:#555;">Je ontvangt deze email omdat je items in je winkelwagen hebt achtergelaten.</p>
-    </div>
-  </div>
-</body>
-</html>`
-}
-
