@@ -106,7 +106,7 @@ export default function PreorderConfirmationEmail({
               <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
                 <tr>
                   <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="check" color="#86A35A" size={20} />
+                    <div style={number}>1</div>
                   </td>
                   <td style={{ verticalAlign: 'middle' }}>
                     <Text style={timelineText}>{t('preorder.step1')}</Text>
