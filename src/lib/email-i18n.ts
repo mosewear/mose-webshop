@@ -1,5 +1,3 @@
-import i18n from 'i18next'
-
 // Type definitions for translations
 export type EmailTranslationKeys = {
   common: {
@@ -861,32 +859,51 @@ const en: EmailTranslationKeys = {
   },
 }
 
-// Resources object for i18next
+// Resources object (kept for potential future use)
 const resources = {
   nl: { translation: nl },
   en: { translation: en },
 }
 
-// Initialize i18next
-const initPromise = i18n.init({
-  resources,
-  lng: 'nl', // Default language
-  fallbackLng: 'nl',
-  interpolation: {
-    escapeValue: false, // React already escapes values
-  },
-})
-
 /**
  * Get translation function for a specific locale
+ * Simple, direct approach without i18next complexity
  * @param locale - Language code ('nl' or 'en')
  * @returns Translation function
  */
 export async function getEmailT(locale: string = 'nl') {
-  // Ensure i18next is initialized
-  await initPromise
-  await i18n.changeLanguage(locale)
-  return i18n.t.bind(i18n)
+  const translations = locale === 'en' ? en : nl
+  
+  // Return a simple translation function that supports nested keys
+  return (key: string, options?: Record<string, any>) => {
+    // Split key by dots to support nested keys like 'orderConfirmation.title'
+    const keys = key.split('.')
+    let value: any = translations
+    
+    // Navigate through nested object
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k]
+      } else {
+        // Key not found - return the key itself for debugging
+        console.warn(`[email-i18n] Translation key not found: ${key}`)
+        return key
+      }
+    }
+    
+    // If final value is not a string, return the key
+    if (typeof value !== 'string') {
+      console.warn(`[email-i18n] Translation value is not a string: ${key}`)
+      return key
+    }
+    
+    // Interpolate variables if provided
+    if (options) {
+      return interpolate(value, options)
+    }
+    
+    return value
+  }
 }
 
 /**
@@ -899,5 +916,6 @@ export function interpolate(text: string, vars: Record<string, string | number>)
   return text.replace(/\{\{(\w+)\}\}/g, (_, key) => String(vars[key] || ''))
 }
 
-export default i18n
+// Export translation objects for direct access if needed
+export { nl, en }
 
