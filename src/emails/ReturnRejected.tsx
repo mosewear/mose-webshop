@@ -52,7 +52,7 @@ export default function ReturnRejectedEmail({
           {/* Return Number */}
           <Section style={returnSection}>
             <Text style={returnLabel}>{t('returnRejected.returnNumber')}</Text>
-            <Text style={returnNumber}>{returnNumber}</Text>
+            <Text style={returnNumberStyle}>{returnNumber}</Text>
           </Section>
 
           {/* Content */}
@@ -156,7 +156,7 @@ const returnLabel = {
   letterSpacing: '1px',
 }
 
-const returnNumber = {
+const returnNumberStyle = {
   margin: '0',
   fontSize: '24px',
   fontWeight: '900',

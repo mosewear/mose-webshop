@@ -67,7 +67,7 @@ export default function BackInStockEmail({
                 />
               </Section>
             )}
-            <Text style={productName}>{productName}</Text>
+            <Text style={productNameStyle}>{productName}</Text>
             {variantName && (
               <Text style={variantText}>{variantName}</Text>
             )}
@@ -171,7 +171,7 @@ const productImg = {
   margin: '0 auto',
 }
 
-const productName = {
+const productNameStyle = {
   margin: '20px 0 8px 0',
   fontSize: '24px',
   fontWeight: '900',

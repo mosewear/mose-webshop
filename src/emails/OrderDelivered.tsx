@@ -50,7 +50,7 @@ export default function OrderDeliveredEmail({
           {/* Order Number */}
           <Section style={orderSection}>
             <Text style={orderLabel}>{t('orderDelivered.orderNumber')}</Text>
-            <Text style={orderNumber}>{orderNumber}</Text>
+            <Text style={orderNumberStyle}>{orderNumber}</Text>
           </Section>
 
           {/* Content */}
@@ -148,7 +148,7 @@ const orderLabel = {
   letterSpacing: '1px',
 }
 
-const orderNumber = {
+const orderNumberStyle = {
   margin: '0',
   fontSize: '24px',
   fontWeight: '900',
