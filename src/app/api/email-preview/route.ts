@@ -183,10 +183,12 @@ export async function GET(req: NextRequest) {
     
     const t = await getEmailT(locale)
     
-    // DEBUG: Test if translation function works
-    console.log('🔍 [email-preview] Testing translation function:')
+    // DEBUG: Test if translation function works (server-side logs)
+    console.log('🔍 [email-preview API] Testing translation function:')
     console.log('  - Locale:', locale)
+    console.log('  - typeof t:', typeof t)
     console.log('  - t("orderProcessing.title"):', t('orderProcessing.title'))
+    console.log('  - t("orderProcessing.subtitle"):', t('orderProcessing.subtitle', { name: 'TestName' }))
     console.log('  - t("common.mose"):', t('common.mose'))
     
     let html: string
@@ -434,7 +436,29 @@ export async function GET(req: NextRequest) {
         }, { status: 400 })
     }
 
-    return new NextResponse(html, {
+    // Add debug script to HTML for browser console logging
+    const debugScript = `
+      <script>
+        console.log('🔍 [Email Preview - Browser] Loaded preview for type: ${type}');
+        console.log('🔍 [Email Preview - Browser] Locale: ${locale}');
+        console.log('🔍 [Email Preview - Browser] Check if translation keys are visible in the page');
+        
+        // Check for visible translation keys
+        const bodyText = document.body.innerText;
+        const hasKeys = bodyText.includes('orderProcessing.') || bodyText.includes('common.') || bodyText.includes('preorder.');
+        
+        if (hasKeys) {
+          console.error('❌ Translation keys ARE visible - translations failed!');
+          console.log('Sample text from body:', bodyText.substring(0, 500));
+        } else {
+          console.log('✅ No translation keys visible - translations working!');
+        }
+      </script>
+    `;
+    
+    const htmlWithDebug = html.replace('</body>', `${debugScript}</body>`);
+
+    return new NextResponse(htmlWithDebug, {
       headers: {
         'Content-Type': 'text/html',
       },

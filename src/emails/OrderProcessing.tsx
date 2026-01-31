@@ -29,6 +29,15 @@ export default function OrderProcessingEmail({
   contactPhone = '+31 50 211 1931',
   contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
 }: OrderProcessingEmailProps) {
+  // DEBUG: Log translation function results to browser console
+  if (typeof window !== 'undefined') {
+    console.log('🔍 [OrderProcessing] Translation debug:')
+    console.log('  - typeof t:', typeof t)
+    console.log('  - t("orderProcessing.title"):', t('orderProcessing.title'))
+    console.log('  - t("orderProcessing.subtitle"):', t('orderProcessing.subtitle'))
+    console.log('  - t("common.mose"):', t('common.mose'))
+  }
+  
   return (
     <Html>
       <Head />
