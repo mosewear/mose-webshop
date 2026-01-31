@@ -26,6 +26,9 @@ interface StickyBuyNowProps {
     price_adjustment: number
     stock_quantity: number
     sku: string
+    presale_enabled?: boolean
+    presale_stock_quantity?: number
+    presale_expected_date?: string | null
   } | null | undefined
   quantity: number
   cartImage: string
@@ -112,8 +115,25 @@ export default function StickyBuyNow({
 
     setIsAdding(true)
 
+    // PRESALE: Calculate if item is presale
+    const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity && selectedVariant.presale_stock_quantity > 0
+
+    console.log('═════════════════════════════════════════')
+    console.log('🛒 STICKY BAR - ADD TO CART')
+    console.log('═════════════════════════════════════════')
+    console.log('📦 Product:', product.name)
+    console.log('🎨 Variant ID:', selectedVariant.id)
+    console.log('═════════════════════════════════════════')
+    console.log('🔍 PRESALE CHECK:')
+    console.log('   - presale_enabled:', selectedVariant.presale_enabled)
+    console.log('   - stock_quantity:', selectedVariant.stock_quantity)
+    console.log('   - presale_stock_quantity:', selectedVariant.presale_stock_quantity)
+    console.log('   - presale_expected_date:', selectedVariant.presale_expected_date)
+    console.log('   - CALCULATED isPresale:', isPresaleItem)
+    console.log('═════════════════════════════════════════')
+
     try {
-      addItem({
+      const cartItem = {
         productId: product.id,
         variantId: selectedVariant.id,
         name: product.name,
@@ -125,7 +145,14 @@ export default function StickyBuyNow({
         image: cartImage,
         sku: selectedVariant.sku,
         stock: selectedVariant.stock_quantity,
-      })
+        isPresale: isPresaleItem || false,
+        presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
+      }
+
+      console.log('📦 STICKY CART ITEM:', JSON.stringify(cartItem, null, 2))
+      console.log('═════════════════════════════════════════')
+
+      addItem(cartItem)
 
       // Track analytics
       trackAddToCart({
@@ -167,9 +194,26 @@ export default function StickyBuyNow({
 
     setIsBuying(true)
 
+    // PRESALE: Calculate if item is presale
+    const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity && selectedVariant.presale_stock_quantity > 0
+
+    console.log('═════════════════════════════════════════')
+    console.log('🚀 STICKY BAR - BUY NOW (Direct Checkout)')
+    console.log('═════════════════════════════════════════')
+    console.log('📦 Product:', product.name)
+    console.log('🎨 Variant ID:', selectedVariant.id)
+    console.log('═════════════════════════════════════════')
+    console.log('🔍 PRESALE CHECK:')
+    console.log('   - presale_enabled:', selectedVariant.presale_enabled)
+    console.log('   - stock_quantity:', selectedVariant.stock_quantity)
+    console.log('   - presale_stock_quantity:', selectedVariant.presale_stock_quantity)
+    console.log('   - presale_expected_date:', selectedVariant.presale_expected_date)
+    console.log('   - CALCULATED isPresale:', isPresaleItem)
+    console.log('═════════════════════════════════════════')
+
     try {
       // Add to cart first
-      addItem({
+      const cartItem = {
         productId: product.id,
         variantId: selectedVariant.id,
         name: product.name,
@@ -181,7 +225,14 @@ export default function StickyBuyNow({
         image: cartImage,
         sku: selectedVariant.sku,
         stock: selectedVariant.stock_quantity,
-      })
+        isPresale: isPresaleItem || false,
+        presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
+      }
+
+      console.log('📦 STICKY BUY NOW CART ITEM:', JSON.stringify(cartItem, null, 2))
+      console.log('═════════════════════════════════════════')
+
+      addItem(cartItem)
 
       // Track analytics
       trackAddToCart({
