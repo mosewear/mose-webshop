@@ -245,15 +245,15 @@ export async function sendOrderProcessingEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <OrderProcessingEmail
-      orderNumber={props.orderId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    OrderProcessingEmail({
+      orderNumber: props.orderId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -306,15 +306,15 @@ export async function sendOrderDeliveredEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <OrderDeliveredEmail
-      orderNumber={props.orderId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    OrderDeliveredEmail({
+      orderNumber: props.orderId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -362,16 +362,16 @@ export async function sendOrderCancelledEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <OrderCancelledEmail
-      orderNumber={props.orderId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      reason={props.cancellationReason}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    OrderCancelledEmail({
+      orderNumber: props.orderId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      reason: props.cancellationReason,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -434,17 +434,17 @@ export async function sendReturnRequestedEmail(props: {
   }))
 
   const html = await render(
-    <ReturnRequestedEmail
-      orderNumber={props.orderId.slice(0, 8).toUpperCase()}
-      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      items={items}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    ReturnRequestedEmail({
+      orderNumber: props.orderId.slice(0, 8).toUpperCase(),
+      returnNumber: props.returnId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      items,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -494,16 +494,16 @@ export async function sendReturnLabelGeneratedEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <ReturnLabelGeneratedEmail
-      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      returnLabelUrl={props.labelUrl || ''}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    ReturnLabelGeneratedEmail({
+      returnNumber: props.returnId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      returnLabelUrl: props.labelUrl || '',
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -561,16 +561,16 @@ export async function sendReturnApprovedEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <ReturnApprovedEmail
-      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      refundAmount={props.refundAmount}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    ReturnApprovedEmail({
+      returnNumber: props.returnId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      refundAmount: props.refundAmount,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -618,17 +618,17 @@ export async function sendReturnRefundedEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <ReturnRefundedEmail
-      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      refundAmount={props.refundAmount}
-      refundMethod="Original Payment Method"
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    ReturnRefundedEmail({
+      returnNumber: props.returnId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      refundAmount: props.refundAmount,
+      refundMethod: "Original Payment Method",
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -676,16 +676,16 @@ export async function sendReturnRejectedEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <ReturnRejectedEmail
-      returnNumber={props.returnId.slice(0, 8).toUpperCase()}
-      customerName={props.customerName}
-      reason={props.rejectionReason}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    ReturnRejectedEmail({
+      returnNumber: props.returnId.slice(0, 8).toUpperCase(),
+      customerName: props.customerName,
+      reason: props.rejectionReason,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -755,17 +755,17 @@ export async function sendAbandonedCartEmail(props: {
   }))
 
   const html = await render(
-    <AbandonedCartEmail
-      customerName={props.customerName}
-      items={items}
-      totalAmount={props.orderTotal}
-      cartUrl={props.checkoutUrl}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    AbandonedCartEmail({
+      customerName: props.customerName,
+      items,
+      totalAmount: props.orderTotal,
+      cartUrl: props.checkoutUrl,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -825,18 +825,18 @@ export async function sendBackInStockEmail(props: {
     : undefined
 
   const html = await render(
-    <BackInStockEmail
-      email={props.customerEmail}
-      productName={props.productName}
-      productSlug={props.productSlug}
-      variantName={variantName}
-      productImage={productImage}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    BackInStockEmail({
+      email: props.customerEmail,
+      productName: props.productName,
+      productSlug: props.productSlug,
+      variantName,
+      productImage,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -879,14 +879,14 @@ export async function sendNewsletterWelcomeEmail(props: {
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
   const html = await render(
-    <NewsletterWelcomeEmail
-      email={props.email}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    NewsletterWelcomeEmail({
+      email: props.email,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
@@ -944,17 +944,17 @@ export async function sendContactFormEmail(props: {
   const subjectLabel = subjectLabels[props.subject] || props.subject
 
   const html = await render(
-    <ContactFormEmail
-      customerName={props.name}
-      customerEmail={props.email}
-      subject={subjectLabel}
-      message={props.message}
-      t={t}
-      siteUrl={siteUrl}
-      contactEmail={contactEmail}
-      contactPhone={contactPhone}
-      contactAddress={contactAddress}
-    />
+    ContactFormEmail({
+      customerName: props.name,
+      customerEmail: props.email,
+      subject: subjectLabel,
+      message: props.message,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
   )
 
   try {
