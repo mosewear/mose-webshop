@@ -18,88 +18,59 @@ import {
   ContactFormEmail,
 } from '@/emails'
 import { getEmailT } from '@/lib/email-i18n'
+import { createClient } from '@/lib/supabase/server'
 
-// Dummy data voor preview
-const dummyData = {
-  // Order data
-  customerName: 'Jan de Vries',
-  customerEmail: 'jan@example.com',
-  orderId: 'abc123de-4567-89fg-hijk-lmnopqr12345',
-  orderTotal: 89.95,
-  subtotal: 84.95,
-  shippingCost: 5.00,
-  tax: 15.75,
-  orderItems: [
-    {
-      name: 'MOSE Essential Hoodie',
-      size: 'L',
-      color: 'Zwart',
-      quantity: 1,
-      price: 69.95,
-      imageUrl: 'https://mosewear.com/images/placeholder-product.jpg',
-      isPresale: false,
-    },
-    {
-      name: 'MOSE Classic Cap',
-      size: 'One Size',
-      color: 'Navy',
-      quantity: 1,
-      price: 19.99,
-      imageUrl: 'https://mosewear.com/images/placeholder-product.jpg',
-      isPresale: false,
-    },
-  ],
-  shippingAddress: {
-    name: 'Jan de Vries',
-    address: 'Damstraat 42',
-    city: 'Amsterdam',
-    postalCode: '1012 JM',
-  },
-  
-  // Shipping data
-  trackingCode: 'TEST-TRACKING-123456',
-  trackingUrl: 'https://www.dhlparcel.nl/en/private/track-trace?tt=TEST-TRACKING-123456',
-  carrier: 'DHL',
-  estimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
-  
-  // Presale data
-  presaleExpectedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
-  
-  // Cancellation data
-  cancellationReason: 'Product niet op voorraad',
-  
-  // Return data
-  returnId: 'ret-12345678-90ab-cdef-ghij-klmnopqrs123',
-  returnItems: [
-    {
-      product_name: 'MOSE Essential Hoodie',
-      size: 'L',
-      color: 'Zwart',
-      quantity: 1,
-    },
-  ],
-  returnReason: 'Past niet goed',
-  labelUrl: 'https://mosewear.com/downloads/return-label-example.pdf',
-  refundAmount: 69.95,
-  rejectionReason: 'Product is beschadigd geretourneerd',
-  
-  // Product data (for back in stock)
-  productName: 'MOSE Essential Hoodie',
-  productSlug: 'essential-hoodie',
-  productImageUrl: 'https://mosewear.com/images/placeholder-product.jpg',
-  variantInfo: {
-    size: 'L',
-    color: 'Zwart',
-  },
-  
-  // Contact form data
-  name: 'Jan de Vries',
-  email: 'jan@example.com',
-  subject: 'Vraag over bestelling',
-  message: 'Ik heb een vraag over mijn recente bestelling. Wanneer wordt deze verzonden?',
-  
-  // Checkout URL (for abandoned cart)
-  checkoutUrl: 'https://mosewear.com/checkout?session=abc123',
+// Function to get real product data for preview
+async function getPreviewProductData() {
+  try {
+    const supabase = await createClient()
+    
+    // Get 2 random products with images
+    const { data: products, error } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        slug,
+        product_variants!inner(
+          id,
+          size,
+          color,
+          price,
+          image_url,
+          is_available
+        )
+      `)
+      .eq('product_variants.is_available', true)
+      .limit(2)
+    
+    if (error || !products || products.length === 0) {
+      console.log('⚠️ Could not fetch products for preview, using fallback')
+      return null
+    }
+    
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    
+    return products.slice(0, 2).map((product: any) => {
+      const variant = product.product_variants[0]
+      const imageUrl = variant.image_url 
+        ? (variant.image_url.startsWith('http') ? variant.image_url : `${siteUrl}${variant.image_url}`)
+        : `${siteUrl}/images/placeholder-product.jpg`
+      
+      return {
+        name: product.name,
+        size: variant.size || 'M',
+        color: variant.color || 'Zwart',
+        quantity: 1,
+        price: variant.price || 69.95,
+        imageUrl,
+        isPresale: false,
+      }
+    })
+  } catch (err) {
+    console.error('Error fetching preview products:', err)
+    return null
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -113,6 +84,97 @@ export async function GET(req: NextRequest) {
   const contactAddress = 'Stavangerweg 13, 9723 JC Groningen'
   
   try {
+    // Try to get real product data
+    const realProducts = await getPreviewProductData()
+    
+    // Fallback dummy products if real data fetch fails
+    const defaultProducts = [
+      {
+        name: 'MOSE Essential Hoodie',
+        size: 'L',
+        color: 'Zwart',
+        quantity: 1,
+        price: 69.95,
+        imageUrl: `${siteUrl}/logomose.png`, // Use MOSE logo as fallback
+        isPresale: false,
+      },
+      {
+        name: 'MOSE Classic Cap',
+        size: 'One Size',
+        color: 'Navy',
+        quantity: 1,
+        price: 19.99,
+        imageUrl: `${siteUrl}/logomose.png`, // Use MOSE logo as fallback
+        isPresale: false,
+      },
+    ]
+    
+    const orderItems = realProducts || defaultProducts
+    
+    // Dummy data voor preview
+    const dummyData = {
+      // Order data
+      customerName: 'Jan de Vries',
+      customerEmail: 'jan@example.com',
+      orderId: 'abc123de-4567-89fg-hijk-lmnopqr12345',
+      orderTotal: 89.95,
+      subtotal: 84.95,
+      shippingCost: 5.00,
+      tax: 15.75,
+      orderItems,
+      shippingAddress: {
+        name: 'Jan de Vries',
+        address: 'Damstraat 42',
+        city: 'Amsterdam',
+        postalCode: '1012 JM',
+      },
+      
+      // Shipping data
+      trackingCode: 'TEST-TRACKING-123456',
+      trackingUrl: 'https://www.dhlparcel.nl/en/private/track-trace?tt=TEST-TRACKING-123456',
+      carrier: 'DHL',
+      estimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
+      
+      // Presale data
+      presaleExpectedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
+      
+      // Cancellation data
+      cancellationReason: 'Product niet op voorraad',
+      
+      // Return data
+      returnId: 'ret-12345678-90ab-cdef-ghij-klmnopqrs123',
+      returnItems: [
+        {
+          product_name: 'MOSE Essential Hoodie',
+          size: 'L',
+          color: 'Zwart',
+          quantity: 1,
+        },
+      ],
+      returnReason: 'Past niet goed',
+      labelUrl: 'https://mosewear.com/downloads/return-label-example.pdf',
+      refundAmount: 69.95,
+      rejectionReason: 'Product is beschadigd geretourneerd',
+      
+      // Product data (for back in stock)
+      productName: 'MOSE Essential Hoodie',
+      productSlug: 'essential-hoodie',
+      productImageUrl: orderItems[0]?.imageUrl || `${siteUrl}/logomose.png`,
+      variantInfo: {
+        size: 'L',
+        color: 'Zwart',
+      },
+      
+      // Contact form data
+      name: 'Jan de Vries',
+      email: 'jan@example.com',
+      subject: 'Vraag over bestelling',
+      message: 'Ik heb een vraag over mijn recente bestelling. Wanneer wordt deze verzonden?',
+      
+      // Checkout URL (for abandoned cart)
+      checkoutUrl: 'https://mosewear.com/checkout?session=abc123',
+    }
+    
     const t = await getEmailT(locale)
     let html: string
 
