@@ -1386,5 +1386,105 @@
     "description": "Je hebt je aangemeld voor een notificatie toen dit product uitverkocht was. Nu kun je hem alsnog bestellen!",
     "ctaButton": "Bekijk product",
     "limitedStock": "Let op: beperkte voorraad beschikbaar. Wees er snel bij!"
+  },
+  "orderProcessing": {
+    "subject": "Je bestelling wordt verwerkt - {orderNumber}",
+    "title": "In behandeling",
+    "subtitle": "Bedankt {name}, we zijn je bestelling aan het verwerken",
+    "orderNumber": "Bestelnummer",
+    "description": "Je bestelling is ontvangen en wordt momenteel door ons team verwerkt. Je ontvangt een nieuwe e-mail zodra je bestelling is verzonden.",
+    "processingInfo": "Verwachte verwerkingstijd: 1-2 werkdagen"
+  },
+  "orderDelivered": {
+    "subject": "Je bestelling is bezorgd! - {orderNumber}",
+    "title": "Bezorgd!",
+    "subtitle": "Je bestelling is aangekomen, {name}!",
+    "orderNumber": "Bestelnummer",
+    "description": "We hopen dat je blij bent met je aankoop. Geniet van je nieuwe MOSE producten!",
+    "ctaButton": "Blijf shoppen",
+    "feedback": "Tevreden met je bestelling? Laat een review achter!"
+  },
+  "orderCancelled": {
+    "subject": "Je bestelling is geannuleerd - {orderNumber}",
+    "title": "Geannuleerd",
+    "subtitle": "Je bestelling is geannuleerd, {name}",
+    "orderNumber": "Bestelnummer",
+    "description": "Je bestelling is succesvol geannuleerd. Als je al betaald hebt, wordt het bedrag binnen 5-10 werkdagen teruggestort.",
+    "reason": "Reden",
+    "refundInfo": "Terugbetaling wordt automatisch verwerkt naar je originele betaalmethode",
+    "ctaButton": "Terug naar shop"
+  },
+  "returnRequested": {
+    "subject": "Retour aangevraagd - {returnNumber}",
+    "title": "Retour aangevraagd",
+    "subtitle": "We hebben je retour aanvraag ontvangen, {name}",
+    "returnNumber": "Retourn ummer",
+    "orderNumber": "Bestelnummer",
+    "description": "Je retour aanvraag is ontvangen en wordt zo snel mogelijk door ons team behandeld.",
+    "itemsTitle": "Te retourneren artikelen",
+    "processingTime": "Verwachte verwerkingstijd: 1-2 werkdagen. Je ontvangt een retourlabel via e-mail."
+  },
+  "returnLabel": {
+    "subject": "Je retourlabel is klaar - {returnNumber}",
+    "title": "Retourlabel klaar",
+    "subtitle": "Download je retourlabel, {name}",
+    "returnNumber": "Retourn ummer",
+    "description": "Je retourlabel is gegenereerd en klaar om te downloaden. Volg de onderstaande instructies om je retour te voltooien.",
+    "downloadButton": "Download retourlabel",
+    "instructionsTitle": "Retour instructies",
+    "step1": "Print het retourlabel en plak het op je pakket",
+    "step2": "Breng het pakket naar een PostNL locatie",
+    "step3": "Je ontvangt een bevestiging zodra we je retour ontvangen hebben"
+  },
+  "returnApproved": {
+    "subject": "Je retour is goedgekeurd - {returnNumber}",
+    "title": "Retour goedgekeurd",
+    "subtitle": "Goed nieuws, {name}! Je retour is goedgekeurd",
+    "returnNumber": "Retourn ummer",
+    "refundAmount": "Terugbetaling",
+    "description": "We hebben je geretourneerde artikelen ontvangen en goedgekeurd. Je terugbetaling wordt nu verwerkt.",
+    "processingTime": "Het bedrag wordt binnen 5-10 werkdagen teruggestort op je rekening"
+  },
+  "returnRefunded": {
+    "subject": "Je terugbetaling is verwerkt - {returnNumber}",
+    "title": "Terugbetaald",
+    "subtitle": "Je terugbetaling is verwerkt, {name}",
+    "returnNumber": "Retourn ummer",
+    "refundAmount": "Terugbetaald bedrag",
+    "refundMethod": "Betaalmethode",
+    "description": "Je terugbetaling is succesvol verwerkt en onderweg naar je rekening.",
+    "bankProcessing": "Afhankelijk van je bank kan het 2-5 werkdagen duren voordat het bedrag zichtbaar is",
+    "ctaButton": "Terug naar shop"
+  },
+  "returnRejected": {
+    "subject": "Je retour kan helaas niet verwerkt worden - {returnNumber}",
+    "title": "Retour afgewezen",
+    "subtitle": "Helaas kunnen we je retour niet accepteren, {name}",
+    "returnNumber": "Retourn ummer",
+    "description": "Na inspectie van je geretourneerde artikelen kunnen we je retour helaas niet accepteren.",
+    "reasonTitle": "Reden",
+    "contactInfo": "Heb je vragen? Neem contact met ons op, we helpen je graag verder",
+    "ctaButton": "Neem contact op"
+  },
+  "abandonedCart": {
+    "subject": "Je hebt iets in je winkelwagen laten staan",
+    "title": "Vergeten?",
+    "subtitle": "Je winkelwagen wacht nog op je, {name}",
+    "description": "Je hebt nog artikelen in je winkelwagen staan. Maak je bestelling af voordat ze uitverkocht zijn!",
+    "quantity": "Aantal",
+    "moreItems": "+ {count} andere artikel(en)",
+    "total": "Totaal",
+    "ctaButton": "Afrekenen",
+    "freeShipping": "Gratis verzending vanaf €75!"
+  },
+  "contactForm": {
+    "subject": "Nieuw contactformulier bericht van {name}",
+    "title": "Nieuw bericht",
+    "subtitle": "Er is een nieuw contactformulier bericht ontvangen",
+    "from": "Van",
+    "email": "E-mail",
+    "subject": "Onderwerp",
+    "message": "Bericht",
+    "replyInfo": "Beantwoord dit bericht zo snel mogelijk door te reageren op het e-mailadres van de klant"
   }
 }

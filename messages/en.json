@@ -1399,5 +1399,105 @@
     "description": "You signed up for a notification when this product was sold out. Now you can order it!",
     "ctaButton": "View product",
     "limitedStock": "Attention: limited stock available. Be quick!"
+  },
+  "orderProcessing": {
+    "subject": "Your order is being processed - {orderNumber}",
+    "title": "Processing",
+    "subtitle": "Thank you {name}, we're processing your order",
+    "orderNumber": "Order number",
+    "description": "Your order has been received and is currently being processed by our team. You'll receive a new email once your order has been shipped.",
+    "processingInfo": "Expected processing time: 1-2 business days"
+  },
+  "orderDelivered": {
+    "subject": "Your order has been delivered! - {orderNumber}",
+    "title": "Delivered!",
+    "subtitle": "Your order has arrived, {name}!",
+    "orderNumber": "Order number",
+    "description": "We hope you're happy with your purchase. Enjoy your new MOSE products!",
+    "ctaButton": "Keep shopping",
+    "feedback": "Happy with your order? Leave a review!"
+  },
+  "orderCancelled": {
+    "subject": "Your order has been cancelled - {orderNumber}",
+    "title": "Cancelled",
+    "subtitle": "Your order has been cancelled, {name}",
+    "orderNumber": "Order number",
+    "description": "Your order has been successfully cancelled. If you've already paid, the amount will be refunded within 5-10 business days.",
+    "reason": "Reason",
+    "refundInfo": "Refund will be automatically processed to your original payment method",
+    "ctaButton": "Back to shop"
+  },
+  "returnRequested": {
+    "subject": "Return requested - {returnNumber}",
+    "title": "Return requested",
+    "subtitle": "We've received your return request, {name}",
+    "returnNumber": "Return number",
+    "orderNumber": "Order number",
+    "description": "Your return request has been received and will be processed by our team as soon as possible.",
+    "itemsTitle": "Items to return",
+    "processingTime": "Expected processing time: 1-2 business days. You'll receive a return label via email."
+  },
+  "returnLabel": {
+    "subject": "Your return label is ready - {returnNumber}",
+    "title": "Return label ready",
+    "subtitle": "Download your return label, {name}",
+    "returnNumber": "Return number",
+    "description": "Your return label has been generated and is ready to download. Follow the instructions below to complete your return.",
+    "downloadButton": "Download return label",
+    "instructionsTitle": "Return instructions",
+    "step1": "Print the return label and attach it to your package",
+    "step2": "Drop off the package at a PostNL location",
+    "step3": "You'll receive a confirmation once we've received your return"
+  },
+  "returnApproved": {
+    "subject": "Your return has been approved - {returnNumber}",
+    "title": "Return approved",
+    "subtitle": "Good news, {name}! Your return has been approved",
+    "returnNumber": "Return number",
+    "refundAmount": "Refund amount",
+    "description": "We've received and approved your returned items. Your refund is now being processed.",
+    "processingTime": "The amount will be refunded to your account within 5-10 business days"
+  },
+  "returnRefunded": {
+    "subject": "Your refund has been processed - {returnNumber}",
+    "title": "Refunded",
+    "subtitle": "Your refund has been processed, {name}",
+    "returnNumber": "Return number",
+    "refundAmount": "Refunded amount",
+    "refundMethod": "Payment method",
+    "description": "Your refund has been successfully processed and is on its way to your account.",
+    "bankProcessing": "Depending on your bank, it may take 2-5 business days for the amount to be visible",
+    "ctaButton": "Back to shop"
+  },
+  "returnRejected": {
+    "subject": "Your return cannot be processed - {returnNumber}",
+    "title": "Return rejected",
+    "subtitle": "Unfortunately we cannot accept your return, {name}",
+    "returnNumber": "Return number",
+    "description": "After inspecting your returned items, we unfortunately cannot accept your return.",
+    "reasonTitle": "Reason",
+    "contactInfo": "Have questions? Contact us, we're happy to help",
+    "ctaButton": "Contact us"
+  },
+  "abandonedCart": {
+    "subject": "You left something in your cart",
+    "title": "Forgotten?",
+    "subtitle": "Your cart is still waiting for you, {name}",
+    "description": "You still have items in your cart. Complete your order before they sell out!",
+    "quantity": "Quantity",
+    "moreItems": "+ {count} other item(s)",
+    "total": "Total",
+    "ctaButton": "Checkout",
+    "freeShipping": "Free shipping from €75!"
+  },
+  "contactForm": {
+    "subject": "New contact form message from {name}",
+    "title": "New message",
+    "subtitle": "A new contact form message has been received",
+    "from": "From",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Message",
+    "replyInfo": "Reply to this message as soon as possible by responding to the customer's email address"
   }
 }
