@@ -122,11 +122,14 @@ export async function POST(req: NextRequest) {
         result = await sendReturnRequestedEmail({
           customerEmail,
           customerName,
-          orderNumber: order.id.slice(0, 8).toUpperCase(),
-          returnNumber: order.id.slice(0, 8).toUpperCase(),
-          items: order.order_items.map((item: any) => ({
-            name: item.product_name,
+          returnId: order.id,
+          orderId: order.id,
+          returnReason: order.internal_notes || 'Niet gespecificeerd',
+          returnItems: order.order_items.map((item: any) => ({
+            product_name: item.product_name,
             quantity: item.quantity,
+            size: item.size || '',
+            color: item.color || '',
           })),
           locale,
         })
@@ -137,12 +140,13 @@ export async function POST(req: NextRequest) {
         result = await sendReturnApprovedEmail({
           customerEmail,
           customerName,
-          returnNumber: order.id.slice(0, 8).toUpperCase(),
-          refundAmount: order.total,
-          items: order.order_items.map((item: any) => ({
-            name: item.product_name,
+          returnId: order.id,
+          orderId: order.id,
+          returnItems: order.order_items.map((item: any) => ({
+            product_name: item.product_name,
             quantity: item.quantity,
           })),
+          refundAmount: order.total,
           locale,
         })
         break
@@ -152,7 +156,8 @@ export async function POST(req: NextRequest) {
         result = await sendReturnRefundedEmail({
           customerEmail,
           customerName,
-          returnNumber: order.id.slice(0, 8).toUpperCase(),
+          returnId: order.id,
+          orderId: order.id,
           refundAmount: order.total,
           locale,
         })
