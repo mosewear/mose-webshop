@@ -51,31 +51,41 @@ export default function IconCircle({
 }: IconCircleProps) {
   const bgColor = colorMap[color] || color
   const iconPath = iconSvgMap[icon] || iconSvgMap['check']
+  const circleSize = size + 34
 
   return (
     <Section style={container}>
-      <div style={{
-        ...iconCircle,
-        backgroundColor: bgColor,
-        width: `${size + 34}px`,
-        height: `${size + 34}px`,
-        lineHeight: `${size + 34}px`,
-        fontSize: `${size}px`,
-      }}>
-        <svg
-          width={size}
-          height={size}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-        >
-          <path d={iconPath} />
-        </svg>
-      </div>
+      <table cellPadding="0" cellSpacing="0" border={0} style={{ margin: '0 auto' }}>
+        <tr>
+          <td
+            style={{
+              ...iconCircle,
+              backgroundColor: bgColor,
+              width: `${circleSize}px`,
+              height: `${circleSize}px`,
+              textAlign: 'center',
+              verticalAlign: 'middle',
+            }}
+          >
+            <svg
+              width={size}
+              height={size}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ 
+                display: 'block',
+                margin: '0 auto',
+              }}
+            >
+              <path d={iconPath} />
+            </svg>
+          </td>
+        </tr>
+      </table>
     </Section>
   )
 }
@@ -89,9 +99,8 @@ const container = {
 const iconCircle = {
   borderRadius: '50%',
   color: '#ffffff',
-  textAlign: 'center' as const,
-  margin: '0 auto',
   boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
-  display: 'inline-block',
+  padding: '0',
+  lineHeight: '0',
 }
 
