@@ -633,6 +633,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       // PRESALE INFO: Detect if item is from presale stock
       isPresale: isPresaleItem,
       presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
+      presaleStock: selectedVariant.presale_stock_quantity,  // Pass presale stock for quantity limits
     }
 
     console.log('📦 CART ITEM:', JSON.stringify(cartItem, null, 2))

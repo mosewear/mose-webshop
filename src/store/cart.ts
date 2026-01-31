@@ -15,6 +15,7 @@ export interface CartItem {
   sku: string
   isPresale?: boolean  // Is this item from presale stock?
   presaleExpectedDate?: string  // Expected delivery date for presale items
+  presaleStock?: number  // Presale stock quantity (if isPresale is true)
 }
 
 interface CartStore {
@@ -50,9 +51,14 @@ export const useCart = create<CartStore>()(
           let newItems: CartItem[]
           
           if (existingItem) {
+            // Determine stock limit based on presale status
+            const maxStock = existingItem.isPresale 
+              ? (existingItem.presaleStock || 0) 
+              : existingItem.stock
+            
             newItems = state.items.map((i) =>
               i.variantId === item.variantId
-                ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock) }
+                ? { ...i, quantity: Math.min(i.quantity + item.quantity, maxStock) }
                 : i
             )
           } else {
@@ -83,11 +89,20 @@ export const useCart = create<CartStore>()(
       
       updateQuantity: (variantId, quantity) => {
         set((state) => {
-          const newItems = state.items.map((item) =>
-            item.variantId === variantId
-              ? { ...item, quantity: Math.max(1, Math.min(quantity, item.stock)) }
-              : item
-          )
+          const newItems = state.items.map((item) => {
+            if (item.variantId === variantId) {
+              // Determine stock limit based on presale status
+              const maxStock = item.isPresale 
+                ? (item.presaleStock || 0) 
+                : item.stock
+              
+              return {
+                ...item,
+                quantity: Math.max(1, Math.min(quantity, maxStock))
+              }
+            }
+            return item
+          })
           
           // Broadcast to other tabs
           if (cartChannel) {

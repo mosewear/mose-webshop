@@ -147,6 +147,7 @@ export default function StickyBuyNow({
         stock: selectedVariant.stock_quantity,
         isPresale: isPresaleItem || false,
         presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
+        presaleStock: selectedVariant.presale_stock_quantity,  // Pass presale stock for quantity limits
       }
 
       console.log('📦 STICKY CART ITEM:', JSON.stringify(cartItem, null, 2))
@@ -227,6 +228,7 @@ export default function StickyBuyNow({
         stock: selectedVariant.stock_quantity,
         isPresale: isPresaleItem || false,
         presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
+        presaleStock: selectedVariant.presale_stock_quantity,  // Pass presale stock for quantity limits
       }
 
       console.log('📦 STICKY BUY NOW CART ITEM:', JSON.stringify(cartItem, null, 2))
