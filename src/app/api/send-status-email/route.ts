@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     const shippingAddress = order.shipping_address as any
     const customerName = shippingAddress?.name || 'Klant'
     const customerEmail = order.email
+    const locale = order.locale || 'nl' // Get locale from order, default to 'nl'
 
     // Determine which email to send
     const emailType = getEmailTypeForStatusChange(oldStatus, newStatus)
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest) {
           estimatedShipDate: order.estimated_delivery_date
             ? new Date(order.estimated_delivery_date).toLocaleDateString('nl-NL')
             : undefined,
+          locale,
         })
         break
 
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
           estimatedDelivery: order.estimated_delivery_date
             ? new Date(order.estimated_delivery_date).toLocaleDateString('nl-NL')
             : undefined,
+          locale,
         })
         break
 
@@ -98,6 +101,7 @@ export async function POST(req: NextRequest) {
           })),
           shippingAddress: order.shipping_address,
           deliveryDate: new Date().toISOString(),
+          locale,
         })
         break
 
@@ -109,6 +113,7 @@ export async function POST(req: NextRequest) {
           orderId: order.id,
           orderTotal: order.total,
           cancellationReason: order.internal_notes || undefined,
+          locale,
         })
         break
 
@@ -123,6 +128,7 @@ export async function POST(req: NextRequest) {
             name: item.product_name,
             quantity: item.quantity,
           })),
+          locale,
         })
         break
 
@@ -137,6 +143,7 @@ export async function POST(req: NextRequest) {
             name: item.product_name,
             quantity: item.quantity,
           })),
+          locale,
         })
         break
 
@@ -147,6 +154,7 @@ export async function POST(req: NextRequest) {
           customerName,
           returnNumber: order.id.slice(0, 8).toUpperCase(),
           refundAmount: order.total,
+          locale,
         })
         break
 
