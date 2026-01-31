@@ -363,9 +363,6 @@ const number = {
   fontWeight: '700',
   margin: '0 auto',
 }
-  fontSize: '12px',
-  fontWeight: '700',
-}
 
 const timelineText = {
   margin: '0',
