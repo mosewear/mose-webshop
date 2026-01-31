@@ -231,6 +231,20 @@ export async function POST(request: Request) {
       order_id: orderData.id,
     }))
 
+    console.log('═════════════════════════════════════════')
+    console.log('📦 SERVER - ORDER ITEMS TO INSERT:')
+    console.log('═════════════════════════════════════════')
+    orderItemsWithId.forEach((item: any, index: number) => {
+      console.log(`Item ${index + 1}:`, {
+        product_name: item.product_name,
+        variant_id: item.variant_id,
+        quantity: item.quantity,
+        is_presale: item.is_presale,
+        presale_expected_date: item.presale_expected_date,
+      })
+    })
+    console.log('═════════════════════════════════════════')
+
     const { error: itemsError } = await supabase
       .from('order_items')
       .insert(orderItemsWithId)

@@ -395,7 +395,12 @@ export async function POST(req: NextRequest) {
         // DECREMENT STOCK AFTER PAYMENT SUCCESS
         // ============================================
         try {
-          console.log('📦 Decrementing stock for order:', order.id)
+          console.log('═════════════════════════════════════════')
+          console.log('📦 [WEBHOOK] STOCK DECREMENT STARTING')
+          console.log('═════════════════════════════════════════')
+          console.log('Order ID:', order.id)
+          console.log('Total items:', updatedOrder.order_items.length)
+          console.log('═════════════════════════════════════════')
           
           for (const item of updatedOrder.order_items) {
             try {
@@ -414,15 +419,18 @@ export async function POST(req: NextRequest) {
               // Determine if this was a presale purchase
               const isPresalePurchase = item.is_presale === true
               
-              console.log(`📦 Processing stock for ${item.product_name}:`)
-              console.log(`   - Is presale purchase: ${isPresalePurchase}`)
-              console.log(`   - Regular stock: ${variant.stock_quantity}`)
-              console.log(`   - Presale stock: ${variant.presale_stock_quantity}`)
+              console.log(`\n📦 Item: ${item.product_name}`)
+              console.log(`   - Order item is_presale: ${item.is_presale}`)
+              console.log(`   - Calculated isPresalePurchase: ${isPresalePurchase}`)
+              console.log(`   - Variant presale_enabled: ${variant.presale_enabled}`)
+              console.log(`   - Regular stock (before): ${variant.stock_quantity}`)
+              console.log(`   - Presale stock (before): ${variant.presale_stock_quantity}`)
               console.log(`   - Quantity ordered: ${item.quantity}`)
 
               if (isPresalePurchase) {
                 // Decrement PRESALE stock
                 const newPresaleStock = Math.max(0, (variant.presale_stock_quantity || 0) - item.quantity)
+                console.log(`   → 🔄 Decrementing PRESALE stock to: ${newPresaleStock}`)
                 
                 const { error: updateError } = await supabase
                   .from('product_variants')
@@ -432,13 +440,14 @@ export async function POST(req: NextRequest) {
                   .eq('id', item.variant_id)
                 
                 if (updateError) {
-                  console.error(`❌ Failed to decrement presale stock:`, updateError)
+                  console.error(`   → ❌ Failed to decrement presale stock:`, updateError)
                 } else {
-                  console.log(`✅ Presale stock decremented for ${item.product_name}: ${newPresaleStock} remaining`)
+                  console.log(`   → ✅ Presale stock updated! ${newPresaleStock} remaining`)
                 }
               } else {
                 // Decrement REGULAR stock
                 const newStock = Math.max(0, variant.stock_quantity - item.quantity)
+                console.log(`   → 🔄 Decrementing REGULAR stock to: ${newStock}`)
                 
                 const { error: updateError } = await supabase
                   .from('product_variants')
@@ -448,9 +457,9 @@ export async function POST(req: NextRequest) {
                   .eq('id', item.variant_id)
                 
                 if (updateError) {
-                  console.error(`❌ Failed to decrement regular stock:`, updateError)
+                  console.error(`   → ❌ Failed to decrement regular stock:`, updateError)
                 } else {
-                  console.log(`✅ Regular stock decremented for ${item.product_name}: ${newStock} remaining`)
+                  console.log(`   → ✅ Regular stock updated! ${newStock} remaining`)
                 }
               }
             } catch (itemError) {
@@ -459,7 +468,9 @@ export async function POST(req: NextRequest) {
             }
           }
           
-          console.log('✅ Stock decrement completed for all items')
+          console.log('═════════════════════════════════════════')
+          console.log('✅ [WEBHOOK] STOCK DECREMENT COMPLETED')
+          console.log('═════════════════════════════════════════')
         } catch (stockError) {
           console.error('❌ Error during stock decrement:', stockError)
           // Don't fail webhook - order is already paid, stock can be adjusted manually
@@ -468,21 +479,28 @@ export async function POST(req: NextRequest) {
         // Send order confirmation email
         if (updatedOrder) {
           try {
-            console.log('📧 [WEBHOOK] Preparing to send order confirmation email...')
+            console.log('═════════════════════════════════════════')
+            console.log('📧 [WEBHOOK] PREPARING ORDER CONFIRMATION EMAIL')
+            console.log('═════════════════════════════════════════')
             const shippingAddress = updatedOrder.shipping_address as any
             const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
             
-            console.log(`📧 [WEBHOOK] Sending to: ${updatedOrder.email}`)
-            console.log(`📧 [WEBHOOK] Order ID: ${updatedOrder.id}`)
-            console.log(`📧 [WEBHOOK] Order total: €${updatedOrder.total}`)
-            console.log(`📧 [WEBHOOK] Locale: ${updatedOrder.locale || 'nl'}`)
+            console.log(`📧 Recipient: ${updatedOrder.email}`)
+            console.log(`📧 Order ID: ${updatedOrder.id}`)
+            console.log(`📧 Order Total: €${updatedOrder.total}`)
+            console.log(`📧 Locale: ${updatedOrder.locale || 'nl'}`)
+            console.log('═════════════════════════════════════════')
+            console.log('📦 ORDER ITEMS FOR EMAIL:')
             
-            const emailResult = await sendOrderConfirmationEmail({
-              customerName: shippingAddress?.name || 'Klant',
-              customerEmail: updatedOrder.email,
-              orderId: updatedOrder.id,
-              orderTotal: updatedOrder.total,
-              orderItems: updatedOrder.order_items.map((item: any) => ({
+            const emailOrderItems = updatedOrder.order_items.map((item: any, index: number) => {
+              console.log(`   Item ${index + 1}:`, {
+                name: item.product_name,
+                quantity: item.quantity,
+                is_presale: item.is_presale,
+                presale_expected_date: item.presale_expected_date,
+              })
+              
+              return {
                 name: item.product_name,
                 size: item.size,
                 color: item.color,
@@ -491,7 +509,17 @@ export async function POST(req: NextRequest) {
                 imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
                 isPresale: item.is_presale || false,  // PRESALE: Pass presale status
                 presaleExpectedDate: item.presale_expected_date || undefined,  // PRESALE: Expected date
-              })),
+              }
+            })
+            
+            console.log('═════════════════════════════════════════')
+            
+            const emailResult = await sendOrderConfirmationEmail({
+              customerName: shippingAddress?.name || 'Klant',
+              customerEmail: updatedOrder.email,
+              orderId: updatedOrder.id,
+              orderTotal: updatedOrder.total,
+              orderItems: emailOrderItems,
               shippingAddress: {
                 name: shippingAddress?.name || '',
                 address: shippingAddress?.address || '',
