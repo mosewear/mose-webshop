@@ -866,7 +866,7 @@ const resources = {
 }
 
 // Initialize i18next
-i18n.init({
+const initPromise = i18n.init({
   resources,
   lng: 'nl', // Default language
   fallbackLng: 'nl',
@@ -881,6 +881,8 @@ i18n.init({
  * @returns Translation function
  */
 export async function getEmailT(locale: string = 'nl') {
+  // Ensure i18next is initialized
+  await initPromise
   await i18n.changeLanguage(locale)
   return i18n.t.bind(i18n)
 }
