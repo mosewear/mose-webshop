@@ -85,7 +85,6 @@ export default function ReturnApprovedEmail({
             contactEmail={contactEmail}
             contactPhone={contactPhone}
             contactAddress={contactAddress}
-            t={t}
           />
         </Container>
       </Body>

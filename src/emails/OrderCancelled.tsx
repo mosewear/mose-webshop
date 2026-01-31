@@ -96,7 +96,6 @@ export default function OrderCancelledEmail({
             contactEmail={contactEmail}
             contactPhone={contactPhone}
             contactAddress={contactAddress}
-            t={t}
           />
         </Container>
       </Body>

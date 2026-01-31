@@ -105,7 +105,6 @@ export default function BackInStockEmail({
             contactEmail={contactEmail}
             contactPhone={contactPhone}
             contactAddress={contactAddress}
-            t={t}
           />
         </Container>
       </Body>

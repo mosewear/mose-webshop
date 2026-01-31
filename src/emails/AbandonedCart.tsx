@@ -133,7 +133,6 @@ export default function AbandonedCartEmail({
             contactEmail={contactEmail}
             contactPhone={contactPhone}
             contactAddress={contactAddress}
-            t={t}
           />
         </Container>
       </Body>

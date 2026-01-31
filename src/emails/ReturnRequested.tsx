@@ -100,7 +100,6 @@ export default function ReturnRequestedEmail({
             contactEmail={contactEmail}
             contactPhone={contactPhone}
             contactAddress={contactAddress}
-            t={t}
           />
         </Container>
       </Body>

@@ -104,7 +104,6 @@ export default function NewsletterWelcomeEmail({
             contactEmail={contactEmail}
             contactPhone={contactPhone}
             contactAddress={contactAddress}
-            t={t}
           />
         </Container>
       </Body>
