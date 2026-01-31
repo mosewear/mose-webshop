@@ -93,26 +93,26 @@ export default function ShippingConfirmationEmail({
             <Text style={sectionTitle}>{t('shipping.helpfulTips')}</Text>
             <Section style={checklist}>
               <Row style={checklistItem}>
-                <Column style={{ width: '28px', verticalAlign: 'middle' }}>
-                  <IconCircle icon="check" color="#86A35A" size={18} />
+                <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
+                  <IconCircle icon="home" color="#2d3748" size={16} />
                 </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
+                <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
                   <Text style={checklistText}>{t('shipping.tip1')}</Text>
                 </Column>
               </Row>
               <Row style={checklistItem}>
-                <Column style={{ width: '28px', verticalAlign: 'middle' }}>
-                  <IconCircle icon="check" color="#86A35A" size={18} />
+                <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
+                  <IconCircle icon="mail" color="#2d3748" size={16} />
                 </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
+                <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
                   <Text style={checklistText}>{t('shipping.tip2')}</Text>
                 </Column>
               </Row>
               <Row style={checklistItem}>
-                <Column style={{ width: '28px', verticalAlign: 'middle' }}>
-                  <IconCircle icon="check" color="#86A35A" size={18} />
+                <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
+                  <IconCircle icon="bell" color="#2d3748" size={16} />
                 </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
+                <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
                   <Text style={checklistText}>{t('shipping.tip3')}</Text>
                 </Column>
               </Row>
