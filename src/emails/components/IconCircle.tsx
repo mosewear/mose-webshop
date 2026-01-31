@@ -63,6 +63,10 @@ export default function IconCircle({
               backgroundColor: bgColor,
               width: `${circleSize}px`,
               height: `${circleSize}px`,
+              minWidth: `${circleSize}px`,  // FORCE PERFECT CIRCLE
+              minHeight: `${circleSize}px`, // FORCE PERFECT CIRCLE
+              maxWidth: `${circleSize}px`,  // FORCE PERFECT CIRCLE
+              maxHeight: `${circleSize}px`, // FORCE PERFECT CIRCLE
               textAlign: 'center',
               verticalAlign: 'middle',
             }}

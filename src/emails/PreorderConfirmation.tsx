@@ -82,18 +82,20 @@ export default function PreorderConfirmationEmail({
 
           {/* Expected Delivery Info Box */}
           <Section style={presaleInfoBox}>
-            <Row>
-              <Column style={{ width: '40px', verticalAlign: 'middle', paddingTop: '0' }}>
-                <IconCircle icon="calendar" color="#86A35A" size={24} />
-              </Column>
-              <Column style={{ verticalAlign: 'middle' }}>
-                <Text style={presaleInfoTitle}>{t('preorder.expectedDelivery')}</Text>
-                <Text style={presaleInfoDate}>{presaleExpectedDate}</Text>
-                <Text style={presaleInfoText}>
-                  {t('preorder.deliveryInfo')}
-                </Text>
-              </Column>
-            </Row>
+            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
+              <tr>
+                <td style={{ width: '80px', verticalAlign: 'top', textAlign: 'center', paddingTop: '8px' }}>
+                  <IconCircle icon="calendar" color="#86A35A" size={24} />
+                </td>
+                <td style={{ verticalAlign: 'middle' }}>
+                  <Text style={presaleInfoTitle}>{t('preorder.expectedDelivery')}</Text>
+                  <Text style={presaleInfoDate}>{presaleExpectedDate}</Text>
+                  <Text style={presaleInfoText}>
+                    {t('preorder.deliveryInfo')}
+                  </Text>
+                </td>
+              </tr>
+            </table>
           </Section>
 
           {/* Content */}
@@ -101,38 +103,46 @@ export default function PreorderConfirmationEmail({
             {/* What Happens Now Section */}
             <Text style={sectionTitle}>{t('preorder.whatHappensNow')}</Text>
             <Section style={timelineBox}>
-              <Row style={timelineItem}>
-                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
-                  <IconCircle icon="check" color="#86A35A" size={20} />
-                </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
-                  <Text style={timelineText}>{t('preorder.step1')}</Text>
-                </Column>
-              </Row>
-              <Row style={timelineItem}>
-                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
-                  <div style={number}>2</div>
-                </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
-                  <Text style={timelineText}>{t('preorder.step2')}</Text>
-                </Column>
-              </Row>
-              <Row style={timelineItem}>
-                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
-                  <div style={number}>3</div>
-                </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
-                  <Text style={timelineText}>{t('preorder.step3')}</Text>
-                </Column>
-              </Row>
-              <Row style={timelineItem}>
-                <Column style={{ width: '30px', verticalAlign: 'middle' }}>
-                  <div style={number}>4</div>
-                </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
-                  <Text style={timelineText}>{t('preorder.step4')}</Text>
-                </Column>
-              </Row>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
+                <tr>
+                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <IconCircle icon="check" color="#86A35A" size={20} />
+                  </td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <Text style={timelineText}>{t('preorder.step1')}</Text>
+                  </td>
+                </tr>
+              </table>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
+                <tr>
+                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={number}>2</div>
+                  </td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <Text style={timelineText}>{t('preorder.step2')}</Text>
+                  </td>
+                </tr>
+              </table>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
+                <tr>
+                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={number}>3</div>
+                  </td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <Text style={timelineText}>{t('preorder.step3')}</Text>
+                  </td>
+                </tr>
+              </table>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
+                <tr>
+                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={number}>4</div>
+                  </td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <Text style={timelineText}>{t('preorder.step4')}</Text>
+                  </td>
+                </tr>
+              </table>
             </Section>
 
             {/* Order Items */}
@@ -280,7 +290,9 @@ const presaleInfoBox = {
   backgroundColor: '#f0f4e8',
   border: '3px solid #86A35A',
   padding: '24px',
-  margin: '24px 24px',
+  margin: '24px 0',  // NO HORIZONTAL MARGIN
+  width: '100%',     // FULL WIDTH
+  boxSizing: 'border-box' as const,
 }
 
 const presaleInfoTitle = {
@@ -337,12 +349,20 @@ const timelineItem = {
 const number = {
   width: '24px',
   height: '24px',
+  minWidth: '24px',      // FORCE PERFECT CIRCLE
+  minHeight: '24px',     // FORCE PERFECT CIRCLE
+  maxWidth: '24px',      // FORCE PERFECT CIRCLE
+  maxHeight: '24px',     // FORCE PERFECT CIRCLE
   borderRadius: '50%',
   border: '2px solid #cbd5e0',
   color: '#4a5568',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  display: 'inline-block',  // Change from flex to inline-block for emails
+  textAlign: 'center' as const,
+  lineHeight: '20px',    // Center text vertically (24px - 4px border)
+  fontSize: '12px',
+  fontWeight: '700',
+  margin: '0 auto',
+}
   fontSize: '12px',
   fontWeight: '700',
 }

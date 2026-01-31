@@ -86,17 +86,19 @@ export default function OrderConfirmationEmail({
           {/* Presale Warning Box (for mixed orders) */}
           {hasPresaleItems && (
             <Section style={presaleWarningBox}>
-              <Row>
-                <Column style={{ width: '40px', verticalAlign: 'middle', paddingTop: '0' }}>
-                  <IconCircle icon="alert-circle" color="#f59e0b" size={24} />
-                </Column>
-                <Column style={{ verticalAlign: 'middle' }}>
-                  <Text style={presaleWarningTitle}>{t('orderConfirmation.presaleNotice')}</Text>
-                  <Text style={presaleWarningText}>
-                    {t('orderConfirmation.presaleNoticeText', { date: presaleExpectedDate })}
-                  </Text>
-                </Column>
-              </Row>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
+                <tr>
+                  <td style={{ width: '80px', verticalAlign: 'top', textAlign: 'center', paddingTop: '8px' }}>
+                    <IconCircle icon="alert-circle" color="#f59e0b" size={24} />
+                  </td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <Text style={presaleWarningTitle}>{t('orderConfirmation.presaleNotice')}</Text>
+                    <Text style={presaleWarningText}>
+                      {t('orderConfirmation.presaleNoticeText', { date: presaleExpectedDate })}
+                    </Text>
+                  </td>
+                </tr>
+              </table>
             </Section>
           )}
 
@@ -220,8 +222,10 @@ const orderBadge = {
 const presaleWarningBox = {
   backgroundColor: '#fff3cd',
   border: '3px solid #ffc107',
-  padding: '20px',
-  margin: '24px 20px',
+  padding: '24px',
+  margin: '24px 0',  // NO HORIZONTAL MARGIN
+  width: '100%',     // FULL WIDTH
+  boxSizing: 'border-box' as const,
 }
 
 const presaleWarningTitle = {
