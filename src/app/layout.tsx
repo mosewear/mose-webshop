@@ -4,7 +4,6 @@ import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import { PostHogProvider } from './providers'
 import { getSiteSettings } from '@/lib/settings'
-import DynamicFavicon from '@/components/DynamicFavicon'
 import "./globals.css";
 
 const anton = Anton({
@@ -30,10 +29,17 @@ export const viewport: Viewport = {
 // Revalidate layout every 60 seconds to pick up settings changes
 export const revalidate = 60
 
+// Force dynamic rendering to ensure favicon updates are picked up
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(): Promise<Metadata> {
-  // Get settings from database (cached)
+  // Get settings from database
   const settings = await getSiteSettings()
   const faviconUrl = settings.favicon_url || '/favicon.ico'
+  
+  // Use settings updated_at timestamp for cache busting (more stable than Date.now())
+  const cacheParam = settings.updated_at ? new Date(settings.updated_at).getTime() : Date.now()
+  const faviconWithCache = `${faviconUrl}?v=${cacheParam}`
 
   return {
     title: {
@@ -51,8 +57,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: faviconUrl, sizes: 'any' },
+        { url: faviconWithCache, sizes: 'any' },
+        { url: faviconWithCache, sizes: '16x16', type: 'image/x-icon' },
+        { url: faviconWithCache, sizes: '32x32', type: 'image/x-icon' },
       ],
+      shortcut: faviconWithCache,
       apple: [
         { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],
@@ -101,10 +110,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get settings for dynamic favicon
-  const settings = await getSiteSettings()
-  const faviconUrl = settings.favicon_url || '/favicon.ico'
-  
   return (
     <html className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
@@ -197,9 +202,6 @@ export default async function RootLayout({
             },
           }}
         />
-        
-        {/* Dynamic Favicon - updates when settings change */}
-        <DynamicFavicon faviconUrl={faviconUrl} />
       </body>
     </html>
   );

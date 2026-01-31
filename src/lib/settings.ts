@@ -15,7 +15,8 @@ interface SiteSettings {
   returns_auto_approve: boolean
   return_label_cost_excl_btw: number
   return_label_cost_incl_btw: number
-  favicon_url: string
+  favicon_url?: string
+  updated_at?: string
 }
 
 let cachedSettings: SiteSettings | null = null
@@ -31,9 +32,17 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   try {
     const { data, error } = await supabase
       .from('site_settings')
-      .select('key, value')
+      .select('key, value, updated_at')
 
     if (error) throw error
+
+    // Get the most recent updated_at timestamp
+    let latestUpdate = ''
+    if (data && data.length > 0) {
+      latestUpdate = data.reduce((latest, current) => {
+        return current.updated_at > latest ? current.updated_at : latest
+      }, data[0].updated_at)
+    }
 
     // Convert array to object
     const settings: any = {}
@@ -61,6 +70,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_label_cost_excl_btw: parseFloat(settings.return_label_cost_excl_btw) || 6.50,
       return_label_cost_incl_btw: parseFloat(settings.return_label_cost_incl_btw) || 7.87,
       favicon_url: settings.favicon_url || '/favicon.ico',
+      updated_at: latestUpdate,
     }
 
     return cachedSettings
@@ -84,6 +94,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_label_cost_excl_btw: 6.50,
       return_label_cost_incl_btw: 7.87,
       favicon_url: '/favicon.ico',
+      updated_at: undefined,
     }
   }
 }
