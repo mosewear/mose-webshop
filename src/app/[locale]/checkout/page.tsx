@@ -124,6 +124,19 @@ export default function CheckoutPage() {
     }
   }, [])
 
+  const subtotal = getTotal()
+  const subtotalAfterDiscount = subtotal - promoDiscount
+  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
+  
+  // BTW berekening (21% is al inbegrepen in de prijzen)
+  const subtotalExclBtw = subtotalAfterDiscount / 1.21
+  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
+  const shippingExclBtw = shipping / 1.21
+  const shippingBtw = shipping - shippingExclBtw
+  const totalBtw = btwAmount + shippingBtw
+  
+  const total = subtotalAfterDiscount + shipping
+
   // Auto-revalidate promo code whenever cart total changes
   useEffect(() => {
     const clearPromo = () => {
@@ -203,19 +216,6 @@ export default function CheckoutPage() {
     // Revalidate on mount and when subtotal/items change
     revalidatePromo()
   }, [subtotal, items.length]) // Revalidate when subtotal or item count changes
-
-  const subtotal = getTotal()
-  const subtotalAfterDiscount = subtotal - promoDiscount
-  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
-  
-  // BTW berekening (21% is al inbegrepen in de prijzen)
-  const subtotalExclBtw = subtotalAfterDiscount / 1.21
-  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
-  const shippingExclBtw = shipping / 1.21
-  const shippingBtw = shipping - shippingExclBtw
-  const totalBtw = btwAmount + shippingBtw
-  
-  const total = subtotalAfterDiscount + shipping
 
   useEffect(() => {
     // Check for cancelled payment
