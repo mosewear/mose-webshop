@@ -153,7 +153,6 @@ export default function ShopPageClient() {
 
   const fetchProducts = async () => {
     try {
-      console.log('🔵 [SHOP DEBUG] ========== FETCH PRODUCTS START ==========')
       setLoading(true)
       const { data, error } = await supabase
         .from('products')
@@ -168,8 +167,6 @@ export default function ShopPageClient() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      console.log(`✅ [SHOP DEBUG] Fetched ${data?.length || 0} products from database`)
-      console.log('📦 [SHOP DEBUG] Products:', data?.map(p => ({ id: p.id, name: p.name, slug: p.slug })))
       setProducts(data || [])
       
       // Calculate min/max prices from products
@@ -177,36 +174,23 @@ export default function ShopPageClient() {
         const prices = data.map(p => p.sale_price || p.base_price)
         const min = Math.floor(Math.min(...prices) / 10) * 10 // Round down to nearest 10
         const max = Math.ceil(Math.max(...prices) / 10) * 10 // Round up to nearest 10
-        console.log(`💰 [SHOP DEBUG] Price range: €${min} - €${max}`)
         setMinPrice(min)
         setMaxPrice(max)
         setPriceRange([min, max])
       }
     } catch (err) {
-      console.error('❌ [SHOP DEBUG] Error fetching products:', err)
+      console.error('Error fetching products:', err)
     } finally {
       setLoading(false)
-      console.log('🔵 [SHOP DEBUG] ========== FETCH PRODUCTS END ==========')
     }
   }
 
   const getFilteredAndSortedProducts = () => {
-    console.log('🟡 [SHOP DEBUG] ========== FILTER & SORT START ==========')
-    console.log('📊 [SHOP DEBUG] Total products before filter:', products.length)
-    console.log('🔍 [SHOP DEBUG] Filters:', {
-      category: selectedCategory,
-      search: searchQuery,
-      priceRange,
-      inStockOnly: showInStockOnly,
-      sortBy
-    })
-    
     let filtered = [...products]
 
     // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(p => p.category?.slug === selectedCategory)
-      console.log(`📁 [SHOP DEBUG] After category filter (${selectedCategory}): ${filtered.length} products`)
     }
 
     // Filter by search
@@ -214,7 +198,6 @@ export default function ShopPageClient() {
       filtered = filtered.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      console.log(`🔎 [SHOP DEBUG] After search filter ("${searchQuery}"): ${filtered.length} products`)
     }
 
     // Filter by price range
@@ -224,7 +207,6 @@ export default function ShopPageClient() {
         const price = p.sale_price || p.base_price
         return price >= priceRange[0] && price <= priceRange[1]
       })
-      console.log(`💵 [SHOP DEBUG] After price filter (€${priceRange[0]}-€${priceRange[1]}): ${filtered.length} products`)
     }
 
     // Filter by stock availability
@@ -233,7 +215,6 @@ export default function ShopPageClient() {
         const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
         return totalStock > 0
       })
-      console.log(`📦 [SHOP DEBUG] After stock filter: ${filtered.length} products`)
     }
 
     // Sort
@@ -251,17 +232,11 @@ export default function ShopPageClient() {
       default:
         filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }
-    console.log(`🔤 [SHOP DEBUG] After sort (${sortBy}): ${filtered.length} products`)
-    console.log('📦 [SHOP DEBUG] Final products:', filtered.map(p => ({ id: p.id, name: p.name })))
-    console.log('🟡 [SHOP DEBUG] ========== FILTER & SORT END ==========')
 
     return filtered
   }
 
   const filteredProducts = getFilteredAndSortedProducts()
-  console.log('🟢 [SHOP DEBUG] ========== RENDER ==========')
-  console.log('🎨 [SHOP DEBUG] Rendering', filteredProducts.length, 'products')
-  console.log('🔄 [SHOP DEBUG] Loading state:', loading)
 
   const getTotalStock = (product: Product) => {
     return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
@@ -751,7 +726,7 @@ export default function ShopPageClient() {
             {/* Loading State */}
             {loading && (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
+                {[1, 2, 3, 4].map(i => (
                   <div key={i} className="bg-gray-100 aspect-[3/4] animate-pulse" />
                 ))}
               </div>
