@@ -57,6 +57,7 @@ export default function ShopPageClient() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [showRecentlyViewed, setShowRecentlyViewed] = useState(false)
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -317,6 +318,11 @@ export default function ShopPageClient() {
       })
       
       console.log(`📸 [SHIFT DEBUG] ${loadedCount}/${images.length} images already loaded`)
+      
+      // Delay RecentlyViewed until images are loaded AND a bit more time for stability
+      setTimeout(() => {
+        setShowRecentlyViewed(true)
+      }, 1000)
     }
   }, [loading, filteredProducts.length])
 
@@ -970,10 +976,12 @@ export default function ShopPageClient() {
           </main>
         </div>
 
-        {/* Recently Viewed Products - Reserve space to prevent layout shift */}
-        <div style={{ minHeight: '300px' }}>
-          <RecentlyViewed />
-        </div>
+        {/* Recently Viewed Products - Delayed to prevent layout shift */}
+        {showRecentlyViewed && (
+          <div style={{ minHeight: '300px' }}>
+            <RecentlyViewed />
+          </div>
+        )}
       </div>
     </div>
   )
