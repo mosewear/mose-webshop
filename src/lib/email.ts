@@ -445,7 +445,7 @@ export async function sendReturnRequestedEmail(props: {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
-
+  
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'

@@ -392,6 +392,22 @@ export async function POST(req: NextRequest) {
         console.log(`✅ Order ${order.id} marked as PAID (payment_status: paid, status: processing)`)
         
         // ============================================
+        // UPDATE CUSTOMER STATS AFTER SUCCESSFUL PAYMENT
+        // ============================================
+        console.log('📊 Updating customer stats for:', order.email)
+        try {
+          await supabase.rpc('update_customer_stats', {
+            p_email: order.email,
+            p_order_total: updatedOrder.total,
+            p_order_date: updatedOrder.created_at
+          })
+          console.log('✅ Customer stats updated')
+        } catch (statsError) {
+          console.error('⚠️ Failed to update customer stats:', statsError)
+          // Don't fail the webhook, just log the error
+        }
+        
+        // ============================================
         // DECREMENT STOCK AFTER PAYMENT SUCCESS
         // ============================================
         try {
@@ -685,6 +701,22 @@ export async function POST(req: NextRequest) {
             console.error('❌ Error updating order:', error)
           } else {
             console.log(`✅ Order ${orderId} marked as PAID (payment_status: paid, status: processing)`)
+            
+            // ============================================
+            // UPDATE CUSTOMER STATS AFTER SUCCESSFUL PAYMENT
+            // ============================================
+            console.log('📊 Updating customer stats for:', updatedOrder.email)
+            try {
+              await supabase.rpc('update_customer_stats', {
+                p_email: updatedOrder.email,
+                p_order_total: updatedOrder.total,
+                p_order_date: updatedOrder.created_at
+              })
+              console.log('✅ Customer stats updated')
+            } catch (statsError) {
+              console.error('⚠️ Failed to update customer stats:', statsError)
+              // Don't fail the webhook, just log the error
+            }
             
             // ============================================
             // DECREMENT STOCK AFTER PAYMENT SUCCESS

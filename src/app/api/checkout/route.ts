@@ -201,6 +201,33 @@ export async function POST(request: Request) {
     
     console.log('✅ No duplicate orders found')
 
+    // ============================================
+    // STEP 4: UPSERT CUSTOMER PROFILE
+    // ============================================
+    console.log('👤 Upserting customer profile for:', order.email)
+    
+    // Extract name from shipping address
+    const shippingName = order.shipping_address?.name || ''
+    const nameParts = shippingName.trim().split(' ')
+    const firstName = nameParts[0] || null
+    const lastName = nameParts.slice(1).join(' ') || null
+    const phone = order.shipping_address?.phone || null
+    
+    const { data: profileId, error: profileError } = await supabase
+      .rpc('upsert_customer_profile', {
+        p_email: order.email,
+        p_first_name: firstName,
+        p_last_name: lastName,
+        p_phone: phone
+      })
+    
+    if (profileError) {
+      console.error('⚠️ Customer profile upsert failed:', profileError)
+      // Don't fail the order, just log the error
+    } else {
+      console.log('✅ Customer profile upserted:', profileId)
+    }
+
     // Insert order
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
@@ -266,6 +293,21 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ SERVER: Order items created')
+
+    // ============================================
+    // STEP 5: UPDATE CUSTOMER STATS (will be updated again after payment)
+    // ============================================
+    // Note: This will be called again by webhook after successful payment
+    // to ensure accurate paid order counts
+    if (order.payment_status === 'paid') {
+      console.log('💰 Updating customer stats for:', order.email)
+      await supabase.rpc('update_customer_stats', {
+        p_email: order.email,
+        p_order_total: order.total,
+        p_order_date: orderData.created_at
+      })
+      console.log('✅ Customer stats updated')
+    }
 
     return NextResponse.json({ order: orderData })
   } catch (error: any) {

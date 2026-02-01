@@ -9,9 +9,13 @@ interface Customer {
   first_name: string | null
   last_name: string | null
   email: string | null
+  phone: string | null
   avatar_url: string | null
   created_at: string
   updated_at: string
+  total_orders: number
+  total_spent: number
+  last_order_at: string | null
 }
 
 export default function CustomersPage() {
@@ -48,15 +52,18 @@ export default function CustomersPage() {
     }
 
     // Create CSV content
-    const headers = ['Email', 'Voornaam', 'Achternaam', 'Aangemaakt', 'Bijgewerkt']
+    const headers = ['Email', 'Voornaam', 'Achternaam', 'Telefoon', 'Orders', 'Totaal Uitgegeven', 'Aangemaakt', 'Laatste Order']
     const csvRows = [
       headers.join(','),
       ...customers.map(customer => [
         customer.email || '',
         customer.first_name || '',
         customer.last_name || '',
+        customer.phone || '',
+        customer.total_orders || '0',
+        customer.total_spent ? `€${customer.total_spent.toFixed(2)}` : '€0.00',
         new Date(customer.created_at).toLocaleDateString('nl-NL'),
-        new Date(customer.updated_at).toLocaleDateString('nl-NL'),
+        customer.last_order_at ? new Date(customer.last_order_at).toLocaleDateString('nl-NL') : 'Nooit',
       ].map(val => `"${val}"`).join(','))
     ]
 
@@ -112,9 +119,9 @@ export default function CustomersPage() {
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">
-            {customers.filter(c => c.first_name && c.last_name).length}
+            {customers.filter(c => c.total_orders > 0).length}
           </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Met Profiel</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Met Orders</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2">
@@ -148,11 +155,17 @@ export default function CustomersPage() {
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Email
                   </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
+                    Telefoon
+                  </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
+                    Orders
+                  </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden xl:table-cell">
+                    Uitgegeven
+                  </th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                     Aangemaakt
-                  </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
-                    Laatst Actief
                   </th>
                   <th className="px-4 md:px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Acties
@@ -192,11 +205,17 @@ export default function CustomersPage() {
                         {customer.email || 'Geen email'}
                       </div>
                     </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                      {customer.phone || '-'}
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                      <span className="font-bold text-brand-primary">{customer.total_orders || 0}</span>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden xl:table-cell">
+                      <span className="font-bold text-green-600">€{(customer.total_spent || 0).toFixed(2)}</span>
+                    </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                       {new Date(customer.created_at).toLocaleDateString('nl-NL')}
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                      {new Date(customer.updated_at).toLocaleDateString('nl-NL')}
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
