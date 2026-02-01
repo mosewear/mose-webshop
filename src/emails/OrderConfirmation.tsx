@@ -65,10 +65,9 @@ export default function OrderConfirmationEmail({
   contactPhone = '+31 50 211 1931',
   contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
 }: OrderConfirmationEmailProps) {
-  // Calculate totals
-  const totalExclBtw = orderTotal / 1.21
-  const btw = orderTotal - totalExclBtw
+  // Calculate BTW correctly (over subtotal BEFORE discount, not total AFTER discount)
   const subtotalExclBtw = subtotal / 1.21
+  const btw = subtotal - subtotalExclBtw
 
   return (
     <Html>
