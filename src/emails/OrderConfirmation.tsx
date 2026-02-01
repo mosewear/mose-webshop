@@ -157,7 +157,7 @@ export default function OrderConfirmationEmail({
                   <Column style={discountLabel}>
                     🎟️ {t('orderConfirmation.discount')} ({promoCode})
                   </Column>
-                  <Column style={discountAmount}>-€{discountAmount.toFixed(2)}</Column>
+                  <Column style={discountAmountStyle}>-€{discountAmount.toFixed(2)}</Column>
                 </Row>
               )}
               <Hr style={summaryDivider} />
@@ -369,7 +369,7 @@ const discountLabel = {
   fontWeight: 600,
 }
 
-const discountAmount = {
+const discountAmountStyle = {
   textAlign: 'right' as const,
   color: '#00A676',
   fontWeight: 600,
