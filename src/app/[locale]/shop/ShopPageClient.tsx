@@ -168,20 +168,30 @@ export default function ShopPageClient() {
 
       if (error) throw error
       
-      // Calculate min/max prices from products FIRST
-      let calculatedMin = 0
-      let calculatedMax = 500
+      // Calculate min/max prices from products
       if (data && data.length > 0) {
         const prices = data.map(p => p.sale_price || p.base_price)
-        calculatedMin = Math.floor(Math.min(...prices) / 10) * 10
-        calculatedMax = Math.ceil(Math.max(...prices) / 10) * 10
+        const calculatedMin = Math.floor(Math.min(...prices) / 10) * 10
+        const calculatedMax = Math.ceil(Math.max(...prices) / 10) * 10
+        
+        // Update products first
+        setProducts(data)
+        
+        // Only update price range if it's different (prevent re-render)
+        setMinPrice(prev => prev === calculatedMin ? prev : calculatedMin)
+        setMaxPrice(prev => prev === calculatedMax ? prev : calculatedMax)
+        
+        // CRITICAL: Only update if currently at default [0, 500]
+        // This prevents the re-render that causes layout shift
+        setPriceRange(prev => {
+          if (prev[0] === 0 && prev[1] === 500) {
+            return [calculatedMin, calculatedMax]
+          }
+          return prev
+        })
+      } else {
+        setProducts(data || [])
       }
-      
-      // Batch all state updates together to prevent multiple re-renders
-      setProducts(data || [])
-      setMinPrice(calculatedMin)
-      setMaxPrice(calculatedMax)
-      setPriceRange([calculatedMin, calculatedMax])
     } catch (err) {
       console.error('Error fetching products:', err)
     } finally {
@@ -902,7 +912,7 @@ export default function ShopPageClient() {
                         opacity: 1
                       }}
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col min-h-[380px] md:min-h-[500px]">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
@@ -967,11 +977,11 @@ export default function ShopPageClient() {
                         </div>
 
                         {/* Product Info - Smaller padding on mobile */}
-                        <div className="p-2 md:p-4 flex flex-col flex-grow min-h-[100px] md:min-h-[130px]">
-                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[2rem] md:min-h-[2.5rem]">
+                        <div className="p-2 md:p-4 flex flex-col flex-grow">
+                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
                             {getProductName(product)}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto min-h-[2.5rem] md:min-h-[3rem]">
+                          <div className="flex items-center justify-between mt-auto">
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
                               
