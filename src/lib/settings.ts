@@ -22,19 +22,28 @@ interface SiteSettings {
 let cachedSettings: SiteSettings | null = null
 
 export async function getSiteSettings(): Promise<SiteSettings> {
+  console.log('🎯 [SETTINGS] getSiteSettings called')
+  
   // Return cached settings if available
   if (cachedSettings) {
+    console.log('🎯 [SETTINGS] Returning cached settings')
     return cachedSettings
   }
 
   const supabase = createClient()
 
   try {
+    console.log('🎯 [SETTINGS] Fetching from database...')
     const { data, error } = await supabase
       .from('site_settings')
       .select('key, value, updated_at')
 
-    if (error) throw error
+    if (error) {
+      console.error('❌ [SETTINGS] Database error:', error)
+      throw error
+    }
+
+    console.log('🎯 [SETTINGS] Raw database response:', data)
 
     // Get the most recent updated_at timestamp
     let latestUpdate = ''
@@ -51,6 +60,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         settings[setting.key] = setting.value
       })
     }
+
+    console.log('🎯 [SETTINGS] Converted settings object:', settings)
+    console.log('🎯 [SETTINGS] favicon_url from DB:', settings.favicon_url)
 
     // Set defaults for missing values
     cachedSettings = {
@@ -73,9 +85,11 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       updated_at: latestUpdate,
     }
 
+    console.log('🎯 [SETTINGS] Final cached settings:', cachedSettings)
+
     return cachedSettings
   } catch (error) {
-    console.error('Error fetching site settings:', error)
+    console.error('❌ [SETTINGS] Error fetching site settings:', error)
     
     // Return defaults on error
     return {
