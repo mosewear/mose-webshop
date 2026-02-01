@@ -238,6 +238,70 @@ export default function ShopPageClient() {
 
   const filteredProducts = getFilteredAndSortedProducts()
 
+  // 🔍 DEBUG: Track layout shifts
+  useEffect(() => {
+    console.log('🎨 [LAYOUT DEBUG] ========== COMPONENT MOUNT ==========')
+    console.log('⏰ [LAYOUT DEBUG] Timestamp:', new Date().toISOString())
+    
+    // Track font loading
+    if (typeof document !== 'undefined' && document.fonts) {
+      console.log('📝 [LAYOUT DEBUG] Font loading status:', document.fonts.status)
+      document.fonts.ready.then(() => {
+        console.log('✅ [LAYOUT DEBUG] All fonts loaded at:', new Date().toISOString())
+      })
+    }
+
+    // Track CSS loading
+    if (typeof document !== 'undefined') {
+      const styleSheets = Array.from(document.styleSheets)
+      console.log('🎨 [LAYOUT DEBUG] Stylesheets loaded:', styleSheets.length)
+      
+      // Check for Tailwind classes
+      const hasGrid = document.querySelector('.grid')
+      const hasGap = document.querySelector('[class*="gap-"]')
+      console.log('🎨 [LAYOUT DEBUG] Grid classes present:', { hasGrid: !!hasGrid, hasGap: !!hasGap })
+    }
+
+    // Track layout shifts with PerformanceObserver
+    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
+            console.log('⚠️ [LAYOUT DEBUG] Layout shift detected!', {
+              value: (entry as any).value,
+              time: entry.startTime,
+              sources: (entry as any).sources?.map((s: any) => ({
+                node: s.node?.className || s.node?.tagName,
+                previousRect: s.previousRect,
+                currentRect: s.currentRect
+              }))
+            })
+          }
+        }
+      })
+      observer.observe({ entryTypes: ['layout-shift'] })
+      
+      return () => observer.disconnect()
+    }
+  }, [])
+
+  // 🔍 DEBUG: Track products state changes
+  useEffect(() => {
+    console.log('📦 [LAYOUT DEBUG] Products state changed:', {
+      count: products.length,
+      loading,
+      timestamp: new Date().toISOString()
+    })
+  }, [products, loading])
+
+  // 🔍 DEBUG: Track filtered products
+  useEffect(() => {
+    console.log('🔍 [LAYOUT DEBUG] Filtered products:', {
+      count: filteredProducts.length,
+      timestamp: new Date().toISOString()
+    })
+  }, [filteredProducts.length])
+
   const getTotalStock = (product: Product) => {
     return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
   }
@@ -759,7 +823,13 @@ export default function ShopPageClient() {
             {/* Products Grid */}
             {!loading && filteredProducts.length > 0 && (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {filteredProducts.map(product => {
+                {filteredProducts.map((product, index) => {
+                  console.log(`🎨 [LAYOUT DEBUG] Rendering product ${index + 1}/${filteredProducts.length}:`, {
+                    id: product.id,
+                    name: product.name,
+                    timestamp: new Date().toISOString()
+                  })
+                  
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
                   const hasPresale = product.variants?.some(v => 
