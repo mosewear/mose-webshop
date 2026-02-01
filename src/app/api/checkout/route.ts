@@ -111,10 +111,10 @@ export async function POST(request: Request) {
       }
       
       // Check if promo code is expired
-      if (promoCode.valid_until) {
-        const expiryDate = new Date(promoCode.valid_until)
+      if (promoCode.expires_at) {
+        const expiryDate = new Date(promoCode.expires_at)
         if (expiryDate < new Date()) {
-          console.error('❌ Promo code expired:', order.promo_code, 'Expired at:', promoCode.valid_until)
+          console.error('❌ Promo code expired:', order.promo_code, 'Expired at:', promoCode.expires_at)
           return NextResponse.json(
             { 
               error: 'Kortingscode verlopen',
@@ -126,19 +126,19 @@ export async function POST(request: Request) {
       }
       
       // Check if promo code has minimum order value
-      if (promoCode.minimum_order_value && order.subtotal < promoCode.minimum_order_value) {
-        console.error('❌ Order total below minimum:', order.subtotal, 'Required:', promoCode.minimum_order_value)
+      if (promoCode.min_order_value && order.subtotal < promoCode.min_order_value) {
+        console.error('❌ Order total below minimum:', order.subtotal, 'Required:', promoCode.min_order_value)
         return NextResponse.json(
           { 
             error: 'Minimaal bedrag niet bereikt',
-            details: `Deze kortingscode vereist een minimaal bestelbedrag van €${promoCode.minimum_order_value.toFixed(2)}`
+            details: `Deze kortingscode vereist een minimaal bestelbedrag van €${promoCode.min_order_value.toFixed(2)}`
           },
           { status: 400 }
         )
       }
       
       // Check usage limit
-      if (promoCode.max_uses && promoCode.times_used >= promoCode.max_uses) {
+      if (promoCode.usage_limit && promoCode.usage_count >= promoCode.usage_limit) {
         console.error('❌ Promo code usage limit reached:', order.promo_code)
         return NextResponse.json(
           { 
@@ -152,10 +152,6 @@ export async function POST(request: Request) {
       // Calculate discount (SERVER-SIDE - trusted source)
       if (promoCode.discount_type === 'percentage') {
         validatedDiscount = (order.subtotal * promoCode.discount_value) / 100
-        // Cap at max_discount_amount if set
-        if (promoCode.max_discount_amount) {
-          validatedDiscount = Math.min(validatedDiscount, promoCode.max_discount_amount)
-        }
       } else if (promoCode.discount_type === 'fixed') {
         validatedDiscount = promoCode.discount_value
       }
@@ -164,11 +160,6 @@ export async function POST(request: Request) {
       validatedDiscount = Math.min(validatedDiscount, order.subtotal)
       
       console.log('✅ Promo code validated:', order.promo_code, 'Discount:', validatedDiscount)
-      
-      // Increment usage count (using RPC for atomic increment)
-      await supabase.rpc('increment_promo_usage', { 
-        promo_code_value: order.promo_code.toUpperCase() 
-      })
     }
     
     // Override client-provided discount with server-validated discount
@@ -224,6 +215,19 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ SERVER: Order created:', orderData)
+
+    // Track promo code usage (if applicable)
+    if (order.promo_code && validatedDiscount > 0) {
+      console.log('🎟️ Tracking promo code usage:', order.promo_code)
+      await supabase.rpc('track_promo_usage', {
+        promo_code_value: order.promo_code.toUpperCase(),
+        order_id_value: orderData.id,
+        discount_amount_value: validatedDiscount,
+        order_total_value: order.total,
+        user_id_value: null // We don't have authenticated users yet
+      })
+      console.log('✅ Promo code usage tracked')
+    }
 
     // Insert order items
     const orderItemsWithId = items.map((item: any) => ({
