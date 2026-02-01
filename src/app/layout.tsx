@@ -35,11 +35,11 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata(): Promise<Metadata> {
   // Get settings from database
   const settings = await getSiteSettings()
-  const faviconUrl = settings.favicon_url || '/favicon.ico'
   
-  // Use settings updated_at timestamp for cache busting (more stable than Date.now())
+  // Use dynamic favicon API route that handles caching properly
+  // This ensures favicon updates are reflected immediately
   const cacheParam = settings.updated_at ? new Date(settings.updated_at).getTime() : Date.now()
-  const faviconWithCache = `${faviconUrl}?v=${cacheParam}`
+  const faviconUrl = `/api/favicon?v=${cacheParam}`
 
   return {
     title: {
@@ -57,11 +57,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: faviconWithCache, sizes: 'any' },
-        { url: faviconWithCache, sizes: '16x16', type: 'image/x-icon' },
-        { url: faviconWithCache, sizes: '32x32', type: 'image/x-icon' },
+        { url: faviconUrl, sizes: 'any' },
+        { url: faviconUrl, sizes: '16x16', type: 'image/x-icon' },
+        { url: faviconUrl, sizes: '32x32', type: 'image/x-icon' },
       ],
-      shortcut: faviconWithCache,
+      shortcut: faviconUrl,
       apple: [
         { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],
