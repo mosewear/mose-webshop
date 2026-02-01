@@ -773,7 +773,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </div>
                           </div>
                         </div>
-                        <span className="font-bold text-brand-primary">-€{promoDiscount.toFixed(2)}</span>
+                        <span className="font-bold text-black">-€{promoDiscount.toFixed(2)}</span>
                       </div>
                       <div className="h-px bg-gray-300"></div>
                     </>
@@ -881,15 +881,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             {promoType === 'percentage' ? `${promoValue}% korting` : 'Korting'} • 
                             <button
                               onClick={handleRemovePromo}
-                              className="text-red-600 hover:text-red-800 font-semibold ml-1"
+                              className="text-gray-700 hover:text-black font-semibold ml-1 underline"
                             >
-                              {t('promo.removeCode')}
+                              {t('promo.remove')}
                             </button>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-red-600">
+                        <div className="font-bold text-black">
                           -€{promoDiscount.toFixed(2)}
                         </div>
                       </div>
