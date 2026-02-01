@@ -9,9 +9,14 @@ interface Customer {
   first_name: string | null
   last_name: string | null
   email: string | null
+  phone: string | null
   avatar_url: string | null
   created_at: string
   updated_at: string
+  user_id: string | null
+  last_order_at: string | null
+  total_orders: number
+  total_spent: number
 }
 
 interface Order {
@@ -155,11 +160,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </Link>
-        <div className="flex-1">
+        <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">
-            {customer.first_name && customer.last_name
-              ? `${customer.first_name} ${customer.last_name}`
-              : 'Klant Details'}
+            {customer.first_name || customer.last_name
+              ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+              : customer.email?.split('@')[0] || 'Klant Details'}
           </h1>
           <p className="text-sm md:text-base text-gray-600">{customer.email}</p>
         </div>
@@ -192,9 +197,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
               )}
               <h3 className="text-xl font-bold mb-1">
-                {customer.first_name && customer.last_name
-                  ? `${customer.first_name} ${customer.last_name}`
-                  : 'Geen naam'}
+                {customer.first_name || customer.last_name
+                  ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+                  : customer.email?.split('@')[0] || 'Geen naam'}
               </h3>
               <p className="text-gray-600 text-sm">{customer.email}</p>
             </div>
@@ -208,9 +213,40 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   {customer.id.slice(0, 12)}...
                 </code>
               </div>
+              
+              {customer.phone && (
+                <div>
+                  <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                    Telefoon
+                  </div>
+                  <a href={`tel:${customer.phone}`} className="text-sm text-brand-primary hover:underline">
+                    {customer.phone}
+                  </a>
+                </div>
+              )}
+              
               <div>
                 <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
-                  Aangemaakt
+                  Account Type
+                </div>
+                <div className="text-sm flex items-center gap-2">
+                  {customer.user_id ? (
+                    <>
+                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span className="text-green-700 font-semibold">Geregistreerd Account</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="inline-block w-2 h-2 bg-gray-400 rounded-full"></span>
+                      <span className="text-gray-600">Guest Checkout</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                  Klant Sinds
                 </div>
                 <div className="text-sm">
                   {new Date(customer.created_at).toLocaleDateString('nl-NL', {
@@ -220,18 +256,21 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   })}
                 </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
-                  Laatst Actief
+              
+              {customer.last_order_at && (
+                <div>
+                  <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                    Laatste Order
+                  </div>
+                  <div className="text-sm">
+                    {new Date(customer.last_order_at).toLocaleDateString('nl-NL', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </div>
                 </div>
-                <div className="text-sm">
-                  {new Date(customer.updated_at).toLocaleDateString('nl-NL', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -241,16 +280,22 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Totaal Orders</span>
-                <span className="text-xl font-bold text-brand-primary">{orders.length}</span>
+                <span className="text-xl font-bold text-brand-primary">
+                  {customer.total_orders || orders.length}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Totaal Uitgegeven</span>
-                <span className="text-xl font-bold text-green-600">€{totalSpent.toFixed(2)}</span>
+                <span className="text-xl font-bold text-green-600">
+                  €{(customer.total_spent || totalSpent).toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Gemiddelde Order</span>
                 <span className="text-xl font-bold text-gray-800">
-                  €{orders.length > 0 ? (totalSpent / orders.length).toFixed(2) : '0.00'}
+                  €{(customer.total_orders || orders.length) > 0 
+                    ? ((customer.total_spent || totalSpent) / (customer.total_orders || orders.length)).toFixed(2) 
+                    : '0.00'}
                 </span>
               </div>
             </div>

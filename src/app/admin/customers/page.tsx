@@ -192,9 +192,9 @@ export default function CustomersPage() {
                         </div>
                         <div>
                           <div className="text-sm font-bold text-gray-900">
-                            {customer.first_name && customer.last_name
-                              ? `${customer.first_name} ${customer.last_name}`
-                              : 'Geen naam'}
+                            {customer.first_name || customer.last_name
+                              ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+                              : customer.email?.split('@')[0] || 'Geen naam'}
                           </div>
                           <div className="text-xs text-gray-500">ID: {customer.id.slice(0, 8)}</div>
                         </div>
