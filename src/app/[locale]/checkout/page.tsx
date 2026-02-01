@@ -110,20 +110,99 @@ export default function CheckoutPage() {
   const [promoType, setPromoType] = useState<'percentage' | 'fixed'>('fixed')
   const [promoValue, setPromoValue] = useState(0)
 
-  // Load promo from localStorage on mount
+  // Load promo from localStorage and revalidate on mount
   useEffect(() => {
     const savedPromo = localStorage.getItem('mose_promo_code')
-    const savedDiscount = localStorage.getItem('mose_promo_discount')
     const savedType = localStorage.getItem('mose_promo_type')
     const savedValue = localStorage.getItem('mose_promo_value')
     
-    if (savedPromo && savedDiscount) {
+    if (savedPromo && savedType && savedValue) {
       setPromoCode(savedPromo)
-      setPromoDiscount(parseFloat(savedDiscount))
-      setPromoType(savedType as 'percentage' | 'fixed' || 'fixed')
-      setPromoValue(parseFloat(savedValue || '0'))
+      setPromoType(savedType as 'percentage' | 'fixed')
+      setPromoValue(parseFloat(savedValue))
+      // Don't set discount here - will be revalidated below
     }
   }, [])
+
+  // Auto-revalidate promo code whenever cart total changes
+  useEffect(() => {
+    const clearPromo = () => {
+      setPromoCode('')
+      setPromoDiscount(0)
+      setPromoError('')
+      setPromoType('fixed')
+      setPromoValue(0)
+      
+      // Clear from localStorage
+      localStorage.removeItem('mose_promo_code')
+      localStorage.removeItem('mose_promo_discount')
+      localStorage.removeItem('mose_promo_type')
+      localStorage.removeItem('mose_promo_value')
+    }
+    
+    const revalidatePromo = async () => {
+      const savedPromo = localStorage.getItem('mose_promo_code')
+      
+      // If no promo code saved, clear everything
+      if (!savedPromo) {
+        clearPromo()
+        return
+      }
+
+      // If cart is empty, clear promo
+      if (items.length === 0 || subtotal === 0) {
+        clearPromo()
+        return
+      }
+
+      // Revalidate promo code against current cart total
+      try {
+        const response = await fetch('/api/validate-promo-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: savedPromo,
+            orderTotal: subtotal,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.valid) {
+          // Update discount based on NEW cart total
+          setPromoCode(data.code)
+          setPromoDiscount(data.discountAmount)
+          setPromoType(data.discountType)
+          setPromoValue(data.discountValue)
+          
+          // Update localStorage with NEW discount amount
+          localStorage.setItem('mose_promo_discount', data.discountAmount.toString())
+          localStorage.setItem('mose_promo_type', data.discountType)
+          localStorage.setItem('mose_promo_value', data.discountValue.toString())
+        } else {
+          // Promo no longer valid - clear it
+          clearPromo()
+        }
+      } catch (error) {
+        console.error('Error revalidating promo code:', error)
+        // On error, keep the promo but recalculate locally
+        const savedType = localStorage.getItem('mose_promo_type') as 'percentage' | 'fixed'
+        const savedValue = parseFloat(localStorage.getItem('mose_promo_value') || '0')
+        
+        let newDiscount = 0
+        if (savedType === 'percentage') {
+          newDiscount = (subtotal * savedValue) / 100
+        } else if (savedType === 'fixed') {
+          newDiscount = Math.min(savedValue, subtotal)
+        }
+        
+        setPromoDiscount(newDiscount)
+      }
+    }
+
+    // Revalidate on mount and when subtotal/items change
+    revalidatePromo()
+  }, [subtotal, items.length]) // Revalidate when subtotal or item count changes
 
   const subtotal = getTotal()
   const subtotalAfterDiscount = subtotal - promoDiscount
