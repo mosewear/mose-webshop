@@ -173,3 +173,4 @@ COMMENT ON COLUMN profiles.total_spent IS 'Cached sum of paid order totals. Upda
 COMMENT ON FUNCTION public.upsert_customer_profile IS 'Creates or updates a customer profile during checkout. Returns profile ID.';
 COMMENT ON FUNCTION public.update_customer_stats IS 'Updates cached order statistics for a customer profile.';
 
+

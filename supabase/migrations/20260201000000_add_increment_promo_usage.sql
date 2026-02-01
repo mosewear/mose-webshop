@@ -63,3 +63,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 COMMENT ON FUNCTION increment_promo_usage IS 'Atomically increments promo code usage count';
 COMMENT ON FUNCTION track_promo_usage IS 'Increments usage count AND logs detailed usage in promo_code_usage table';
 
+

@@ -73,3 +73,4 @@ Als je errors ziet, laat het me weten en stuur de error message. Dan fix ik het!
 
 **Klaar om te runnen? Ga naar de SQL Editor en voer het uit! 🎯**
 
+

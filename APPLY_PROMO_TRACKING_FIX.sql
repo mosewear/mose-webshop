@@ -86,3 +86,4 @@ COMMENT ON FUNCTION track_promo_usage IS 'Increments usage count AND logs detail
 -- SELECT increment_promo_usage('PRESALE30');
 -- SELECT code, usage_count FROM promo_codes WHERE code = 'PRESALE30';
 
+
