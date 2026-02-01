@@ -234,6 +234,9 @@
       "codeInvalid": "Code invalid",
       "validationFailed": "Could not validate code"
     },
+    "placeholder": {
+      "promoCode": "CODE"
+    },
     "trust": {
       "secure": "Secure Payment",
       "returns": "{days} days return",

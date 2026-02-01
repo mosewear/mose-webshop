@@ -234,6 +234,9 @@
       "codeInvalid": "Code ongeldig",
       "validationFailed": "Kon code niet valideren"
     },
+    "placeholder": {
+      "promoCode": "CODE"
+    },
     "trust": {
       "secure": "Veilig betalen",
       "returns": "{days} dagen retour",
