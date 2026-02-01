@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, memo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -185,7 +185,8 @@ export default function ShopPageClient() {
     }
   }
 
-  const getFilteredAndSortedProducts = () => {
+  // Memoize filtered and sorted products to prevent re-sorts
+  const filteredProducts = useMemo(() => {
     let filtered = [...products]
 
     // Filter by category
@@ -217,26 +218,36 @@ export default function ShopPageClient() {
       })
     }
 
-    // Sort
+    // Sort - STABLE SORT with fallback to ID
     switch (sortBy) {
       case 'price-asc':
-        filtered.sort((a, b) => a.base_price - b.base_price)
+        filtered.sort((a, b) => {
+          const priceDiff = a.base_price - b.base_price
+          return priceDiff !== 0 ? priceDiff : a.id.localeCompare(b.id)
+        })
         break
       case 'price-desc':
-        filtered.sort((a, b) => b.base_price - a.base_price)
+        filtered.sort((a, b) => {
+          const priceDiff = b.base_price - a.base_price
+          return priceDiff !== 0 ? priceDiff : a.id.localeCompare(b.id)
+        })
         break
       case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name))
+        filtered.sort((a, b) => {
+          const nameDiff = a.name.localeCompare(b.name)
+          return nameDiff !== 0 ? nameDiff : a.id.localeCompare(b.id)
+        })
         break
       case 'newest':
       default:
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        filtered.sort((a, b) => {
+          const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          return timeDiff !== 0 ? timeDiff : a.id.localeCompare(b.id)
+        })
     }
 
     return filtered
-  }
-
-  const filteredProducts = getFilteredAndSortedProducts()
+  }, [products, selectedCategory, searchQuery, priceRange, minPrice, maxPrice, showInStockOnly, sortBy])
 
   // 🔍 DEEP DEBUG: Track what causes layout shifts
   useEffect(() => {
@@ -959,8 +970,10 @@ export default function ShopPageClient() {
           </main>
         </div>
 
-        {/* Recently Viewed Products */}
-        <RecentlyViewed />
+        {/* Recently Viewed Products - Reserve space to prevent layout shift */}
+        <div style={{ minHeight: '300px' }}>
+          <RecentlyViewed />
+        </div>
       </div>
     </div>
   )
