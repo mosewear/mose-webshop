@@ -18,6 +18,8 @@ interface PreorderConfirmationEmailProps {
   customerName: string
   orderId: string
   orderTotal: number
+  subtotal: number
+  shippingCost: number
   orderItems: Array<{
     name: string
     size: string
@@ -47,6 +49,8 @@ export default function PreorderConfirmationEmail({
   customerName,
   orderId,
   orderTotal,
+  subtotal,
+  shippingCost,
   orderItems,
   shippingAddress,
   presaleExpectedDate,
@@ -59,8 +63,6 @@ export default function PreorderConfirmationEmail({
   contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
 }: PreorderConfirmationEmailProps) {
   // Calculate totals
-  const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = orderTotal - subtotal
   const totalExclBtw = orderTotal / 1.21
   const btw = orderTotal - totalExclBtw
   const subtotalExclBtw = subtotal / 1.21
@@ -178,7 +180,7 @@ export default function PreorderConfirmationEmail({
               </Row>
               <Row style={summaryRow}>
                 <Column><Text style={summaryText}>{t('preorder.shipping')}</Text></Column>
-                <Column align="right"><Text style={summaryText}>{shipping === 0 ? t('preorder.free') : `€${shipping.toFixed(2)}`}</Text></Column>
+                <Column align="right"><Text style={summaryText}>{shippingCost === 0 ? t('preorder.free') : `€${shippingCost.toFixed(2)}`}</Text></Column>
               </Row>
               {promoCode && discountAmount > 0 && (
                 <Row style={summaryRow}>

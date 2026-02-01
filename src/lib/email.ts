@@ -46,6 +46,8 @@ interface OrderEmailProps {
   customerEmail: string
   orderId: string
   orderTotal: number
+  subtotal: number
+  shippingCost: number
   orderItems: {
     name: string
     size: string

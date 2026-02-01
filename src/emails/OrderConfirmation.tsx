@@ -18,6 +18,8 @@ interface OrderConfirmationEmailProps {
   customerName: string
   orderId: string
   orderTotal: number
+  subtotal: number
+  shippingCost: number
   orderItems: Array<{
     name: string
     size: string
@@ -49,6 +51,8 @@ export default function OrderConfirmationEmail({
   customerName,
   orderId,
   orderTotal,
+  subtotal,
+  shippingCost,
   orderItems,
   shippingAddress,
   hasPresaleItems = false,
@@ -62,8 +66,6 @@ export default function OrderConfirmationEmail({
   contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
 }: OrderConfirmationEmailProps) {
   // Calculate totals
-  const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = orderTotal - subtotal
   const totalExclBtw = orderTotal / 1.21
   const btw = orderTotal - totalExclBtw
   const subtotalExclBtw = subtotal / 1.21
@@ -150,7 +152,7 @@ export default function OrderConfirmationEmail({
               </Row>
               <Row style={summaryLine}>
                 <Column>{t('orderConfirmation.shipping')}</Column>
-                <Column style={summaryAmount}>€{shipping.toFixed(2)}</Column>
+                <Column style={summaryAmount}>€{shippingCost.toFixed(2)}</Column>
               </Row>
               {promoCode && discountAmount > 0 && (
                 <Row style={summaryLine}>

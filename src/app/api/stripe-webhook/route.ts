@@ -519,6 +519,8 @@ export async function POST(req: NextRequest) {
               customerEmail: updatedOrder.email,
               orderId: updatedOrder.id,
               orderTotal: updatedOrder.total,
+              subtotal: updatedOrder.subtotal,
+              shippingCost: updatedOrder.shipping_cost,
               orderItems: emailOrderItems,
               shippingAddress: {
                 name: shippingAddress?.name || '',
@@ -734,6 +736,8 @@ export async function POST(req: NextRequest) {
                   customerEmail: session.customer_email,
                   orderId: updatedOrder.id,
                   orderTotal: updatedOrder.total,
+                  subtotal: updatedOrder.subtotal,
+                  shippingCost: updatedOrder.shipping_cost,
                   orderItems: updatedOrder.order_items.map((item: any) => ({
                     name: item.product_name,
                     size: item.size,
