@@ -291,7 +291,8 @@
       "comingSoon": "Binnenkort",
       "reserveNow": "RESERVEER NU",
       "payNowReceiveLater": "Betaal nu, ontvang zodra binnen",
-      "shippedImmediately": "Direct verzonden na binnenkomst"
+      "shippedImmediately": "Direct verzonden na binnenkomst",
+      "limitedEdition": "Beperkte oplage"
     },
     "stock": {
       "inStock": "✓ Op voorraad - Morgen in huis",

@@ -938,7 +938,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2">
-                    <strong>{t('presale.expected', { ns: 'product' })}:</strong> {(locale === 'en' ? selectedVariant.presale_expected_date_en : selectedVariant.presale_expected_date) || t('presale.comingSoon', { ns: 'product' })} • <strong>{selectedVariant.presale_stock_quantity}</strong> {selectedVariant.presale_stock_quantity === 1 ? t('presale.itemAvailable', { ns: 'product' }) : t('presale.itemsAvailableShort', { ns: 'product' })}
+                    <strong>{t('presale.expected', { ns: 'product' })}:</strong> {(locale === 'en' ? selectedVariant.presale_expected_date_en : selectedVariant.presale_expected_date) || t('presale.comingSoon', { ns: 'product' })} • {t('presale.limitedEdition', { ns: 'product' })}
                   </p>
                   <p className="text-xs text-gray-600">
                     ✓ {t('presale.payNowReceiveLater', { ns: 'product' })}  •  ✓ {t('presale.shippedImmediately', { ns: 'product' })}

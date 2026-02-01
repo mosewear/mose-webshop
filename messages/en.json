@@ -292,7 +292,8 @@
       "comingSoon": "Coming soon",
       "reserveNow": "RESERVE NOW",
       "payNowReceiveLater": "Pay now, receive when in stock",
-      "shippedImmediately": "Shipped immediately upon arrival"
+      "shippedImmediately": "Shipped immediately upon arrival",
+      "limitedEdition": "Limited edition"
     },
     "stock": {
       "inStock": "✓ In Stock - Tomorrow at home",
