@@ -55,6 +55,13 @@ export default function OrderConfirmationPage({
     // Clear cart on successful order confirmation
     clearCart()
     
+    // Clear promo code from localStorage (VOORSTEL 1: Auto-clear after successful order)
+    console.log('🎟️ Clearing promo code from localStorage after successful order')
+    localStorage.removeItem('mose_promo_code')
+    localStorage.removeItem('mose_promo_discount')
+    localStorage.removeItem('mose_promo_type')
+    localStorage.removeItem('mose_promo_value')
+    
     if (orderId || paymentIntentId) {
       fetchOrder()
     } else {
