@@ -167,17 +167,21 @@ export default function ShopPageClient() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setProducts(data || [])
       
-      // Calculate min/max prices from products
+      // Calculate min/max prices from products FIRST
+      let calculatedMin = 0
+      let calculatedMax = 500
       if (data && data.length > 0) {
         const prices = data.map(p => p.sale_price || p.base_price)
-        const min = Math.floor(Math.min(...prices) / 10) * 10 // Round down to nearest 10
-        const max = Math.ceil(Math.max(...prices) / 10) * 10 // Round up to nearest 10
-        setMinPrice(min)
-        setMaxPrice(max)
-        setPriceRange([min, max])
+        calculatedMin = Math.floor(Math.min(...prices) / 10) * 10
+        calculatedMax = Math.ceil(Math.max(...prices) / 10) * 10
       }
+      
+      // Batch all state updates together to prevent multiple re-renders
+      setProducts(data || [])
+      setMinPrice(calculatedMin)
+      setMaxPrice(calculatedMax)
+      setPriceRange([calculatedMin, calculatedMax])
     } catch (err) {
       console.error('Error fetching products:', err)
     } finally {
