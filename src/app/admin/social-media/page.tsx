@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Download, Instagram, Facebook } from 'lucide-react'
 
-type TemplateStyle = 'minimalist' | 'dark-elegant' | 'bold-statement' | 'lifestyle-grid' | 'coming-soon'
+type TemplateStyle = 'style-1' | 'style-2' | 'style-3' | 'style-4' | 'style-5'
 type PostType = 'instagram' | 'story'
 
 interface PostContent {
@@ -16,7 +16,7 @@ interface PostContent {
 }
 
 export default function SocialMediaPage() {
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>('minimalist')
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>('style-1')
   const [postType, setPostType] = useState<PostType>('instagram')
   const [content, setContent] = useState<PostContent>({
     mainText: 'COMING SOON',
@@ -24,53 +24,53 @@ export default function SocialMediaPage() {
     productImage: '',
     backgroundColor: '#000000',
     textColor: '#FFFFFF',
-    accentColor: '#D4AF37',
+    accentColor: '#00A676',
   })
 
   const templates: Record<TemplateStyle, { name: string; description: string; defaultColors: Pick<PostContent, 'backgroundColor' | 'textColor' | 'accentColor'> }> = {
-    minimalist: {
-      name: 'Minimalist product',
-      description: 'Clean wit met product + MOSE logo',
+    'style-1': {
+      name: 'Style 1 - Classic',
+      description: 'Zwarte achtergrond met MOSE groene accenten',
+      defaultColors: {
+        backgroundColor: '#000000',
+        textColor: '#FFFFFF',
+        accentColor: '#00A676',
+      },
+    },
+    'style-2': {
+      name: 'Style 2 - Clean',
+      description: 'Witte achtergrond met groene accenten',
       defaultColors: {
         backgroundColor: '#FFFFFF',
         textColor: '#000000',
+        accentColor: '#00A676',
+      },
+    },
+    'style-3': {
+      name: 'Style 3 - Bold',
+      description: 'Groen als hoofdkleur',
+      defaultColors: {
+        backgroundColor: '#00A676',
+        textColor: '#FFFFFF',
         accentColor: '#000000',
       },
     },
-    'dark-elegant': {
-      name: 'Dark elegant',
-      description: 'Zwarte achtergrond, gouden accenten',
-      defaultColors: {
-        backgroundColor: '#000000',
-        textColor: '#FFFFFF',
-        accentColor: '#D4AF37',
-      },
-    },
-    'bold-statement': {
-      name: 'Bold statement',
-      description: 'Grote tekst, moderne typography',
-      defaultColors: {
-        backgroundColor: '#1A1A1A',
-        textColor: '#FFFFFF',
-        accentColor: '#FF6B35',
-      },
-    },
-    'lifestyle-grid': {
-      name: 'Lifestyle grid',
-      description: 'Product + lifestyle foto combinatie',
+    'style-4': {
+      name: 'Style 4 - Minimal',
+      description: 'Grijs met subtiele accenten',
       defaultColors: {
         backgroundColor: '#F5F5F5',
         textColor: '#1A1A1A',
-        accentColor: '#2C5F2D',
+        accentColor: '#00A676',
       },
     },
-    'coming-soon': {
-      name: 'Coming soon',
-      description: 'Teaser template voor nieuwe producten',
+    'style-5': {
+      name: 'Style 5 - Dark green',
+      description: 'Donkergroen met witte tekst',
       defaultColors: {
-        backgroundColor: '#000000',
+        backgroundColor: '#004D3D',
         textColor: '#FFFFFF',
-        accentColor: '#D4AF37',
+        accentColor: '#00A676',
       },
     },
   }
@@ -84,23 +84,19 @@ export default function SocialMediaPage() {
   }
 
   const handleDownload = () => {
-    const canvas = document.getElementById('social-preview') as HTMLDivElement
-    if (!canvas) return
-
-    // Use html2canvas or similar library in production
-    // For now, we'll use a simple approach
-    alert('Screenshot functie - implementeer html2canvas voor productie gebruik')
+    alert('💡 TIP: Gebruik Cmd+Shift+4 (Mac) of Snipping Tool (Windows) om een screenshot te maken van de preview voor perfecte kwaliteit!')
   }
 
-  // Dimensions based on post type
+  // Instagram: 1080x1080, maar grid toont als 4:5 portrait (1080x1350)
+  // Dus de linker en rechter 135px worden NIET getoond in grid
   const dimensions = postType === 'instagram' 
     ? { width: 1080, height: 1080 } 
     : { width: 1080, height: 1920 }
 
-  // Safe zone for Instagram grid (portrait mode)
+  // Safe zone voor Instagram: links en rechts 135px worden afgesneden in portrait grid view
   const safeZone = postType === 'instagram'
-    ? { top: 135, bottom: 135 } // Instagram toont portrait (4:5 crop in grid)
-    : { top: 0, bottom: 0 }
+    ? { left: 135, right: 135 } // Instagram toont 4:5 portrait crop in grid
+    : { left: 0, right: 0 }
 
   return (
     <div className="space-y-6">
@@ -146,7 +142,7 @@ export default function SocialMediaPage() {
 
           {/* Template Selection */}
           <div className="bg-white p-6 border-2 border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Template style</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">MOSE template style</h3>
             <div className="space-y-2">
               {(Object.keys(templates) as TemplateStyle[]).map((template) => (
                 <button
@@ -252,7 +248,7 @@ export default function SocialMediaPage() {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Accentkleur
+                  Accentkleur (MOSE groen aanbevolen)
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -278,7 +274,7 @@ export default function SocialMediaPage() {
             className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-brand-primary text-white font-bold border-2 border-brand-primary hover:bg-black hover:border-black transition-all"
           >
             <Download className="w-5 h-5" />
-            Download als afbeelding
+            Screenshot instructies
           </button>
         </div>
 
@@ -291,7 +287,7 @@ export default function SocialMediaPage() {
                 {dimensions.width} × {dimensions.height}px
                 {postType === 'instagram' && (
                   <span className="ml-2 text-orange-600 font-bold">
-                    (Portrait safe zone: {safeZone.top}px top/bottom)
+                    (Safe zone: {safeZone.left}px links/rechts)
                   </span>
                 )}
               </div>
@@ -310,62 +306,58 @@ export default function SocialMediaPage() {
                 }}
                 className="shadow-2xl"
               >
-                {/* Safe Zone Indicators (Instagram only) */}
+                {/* Safe Zone Indicators (Instagram only) - LINKS EN RECHTS! */}
                 {postType === 'instagram' && (
                   <>
                     <div
                       style={{
                         position: 'absolute',
                         top: 0,
+                        bottom: 0,
                         left: 0,
-                        right: 0,
-                        height: `${(safeZone.top / dimensions.height) * 100}%`,
-                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                        borderBottom: '2px dashed red',
+                        width: `${(safeZone.left / dimensions.width) * 100}%`,
+                        backgroundColor: 'rgba(255, 0, 0, 0.15)',
+                        borderRight: '2px dashed red',
                         zIndex: 1000,
                       }}
                     />
                     <div
                       style={{
                         position: 'absolute',
+                        top: 0,
                         bottom: 0,
-                        left: 0,
                         right: 0,
-                        height: `${(safeZone.bottom / dimensions.height) * 100}%`,
-                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                        borderTop: '2px dashed red',
+                        width: `${(safeZone.right / dimensions.width) * 100}%`,
+                        backgroundColor: 'rgba(255, 0, 0, 0.15)',
+                        borderLeft: '2px dashed red',
                         zIndex: 1000,
                       }}
                     />
                   </>
                 )}
 
-                {/* Template Rendering */}
-                {selectedTemplate === 'minimalist' && (
-                  <MinimalistTemplate content={content} postType={postType} />
-                )}
-                {selectedTemplate === 'dark-elegant' && (
-                  <DarkElegantTemplate content={content} postType={postType} />
-                )}
-                {selectedTemplate === 'bold-statement' && (
-                  <BoldStatementTemplate content={content} postType={postType} />
-                )}
-                {selectedTemplate === 'lifestyle-grid' && (
-                  <LifestyleGridTemplate content={content} postType={postType} />
-                )}
-                {selectedTemplate === 'coming-soon' && (
-                  <ComingSoonTemplate content={content} postType={postType} />
-                )}
+                {/* Template Rendering - All use unified MOSE styling */}
+                <UnifiedMoseTemplate 
+                  content={content} 
+                  postType={postType} 
+                  variant={selectedTemplate}
+                />
               </div>
             </div>
 
             {/* Instructions */}
             <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 text-sm">
-              <p className="font-bold text-blue-900 mb-2">💡 Tip voor Instagram:</p>
-              <p className="text-blue-800">
-                De rode zones bovenaan en onderaan worden afgesneden in de Instagram grid (portrait weergave).
-                Plaats belangrijke content zoals logo en tekst in de groene zone!
+              <p className="font-bold text-blue-900 mb-2">💡 Tip voor Instagram grid:</p>
+              <p className="text-blue-800 mb-2">
+                De rode zones links en rechts worden afgesneden in de Instagram grid weergave (portrait 4:5).
+                Plaats belangrijke content zoals logo en tekst in het midden (groene zone)!
               </p>
+              <p className="text-blue-900 font-bold mt-3 mb-1">📸 Screenshot maken:</p>
+              <ul className="text-blue-800 list-disc list-inside space-y-1">
+                <li><strong>Mac:</strong> Cmd + Shift + 4, selecteer het preview vierkant</li>
+                <li><strong>Windows:</strong> Gebruik Snipping Tool of Win + Shift + S</li>
+                <li>Voor beste kwaliteit: screenshot alleen het preview vierkant (niet de hele pagina)</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -374,208 +366,150 @@ export default function SocialMediaPage() {
   )
 }
 
-// Template Components
-function MinimalistTemplate({ content, postType }: { content: PostContent; postType: PostType }) {
+// Unified MOSE Template - Alle 5 varianten gebruiken dezelfde design language
+function UnifiedMoseTemplate({ 
+  content, 
+  postType, 
+  variant 
+}: { 
+  content: PostContent
+  postType: PostType
+  variant: TemplateStyle 
+}) {
+  const isStory = postType === 'story'
+  const isDarkBg = ['#000000', '#000', '#004D3D'].includes(content.backgroundColor) || 
+                   parseInt(content.backgroundColor.replace('#', ''), 16) < 0x808080
+
+  // Consistent layout structure voor alle varianten
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px' }}>
-      {/* Logo Top */}
-      <div style={{ position: 'absolute', top: postType === 'instagram' ? '200px' : '80px', left: '50%', transform: 'translateX(-50%)' }}>
+    <div style={{ 
+      width: '100%', 
+      height: '100%', 
+      position: 'relative', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: isStory ? '80px 40px' : '60px 40px',
+      fontFamily: 'Montserrat, Arial, sans-serif',
+    }}>
+      {/* Logo - Altijd bovenaan, gecentreerd */}
+      <div style={{ 
+        position: 'absolute', 
+        top: isStory ? '80px' : '60px', 
+        left: '50%', 
+        transform: 'translateX(-50%)',
+        zIndex: 10,
+      }}>
         <img
           src="/logomose.png"
           alt="MOSE"
-          style={{ height: '40px', width: 'auto', filter: content.backgroundColor === '#FFFFFF' ? 'none' : 'brightness(0) invert(1)', opacity: 0.9 }}
+          style={{ 
+            height: isStory ? '45px' : '40px',
+            width: 'auto', 
+            filter: isDarkBg ? 'brightness(0) invert(1)' : 'none',
+            opacity: 0.95,
+          }}
         />
       </div>
 
-      {/* Product Image */}
+      {/* Product Image - Als aanwezig */}
       {content.productImage && (
-        <img
-          src={content.productImage}
-          alt="Product"
-          style={{ maxWidth: '60%', maxHeight: '50%', objectFit: 'contain', marginBottom: '40px' }}
-        />
+        <div style={{ 
+          marginBottom: isStory ? '50px' : '40px',
+          maxWidth: isStory ? '60%' : '55%',
+          maxHeight: isStory ? '40%' : '35%',
+        }}>
+          <img
+            src={content.productImage}
+            alt="Product"
+            style={{ 
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: variant === 'style-3' ? 'brightness(1.1)' : 'none',
+            }}
+          />
+        </div>
       )}
 
-      {/* Main Text */}
-      <h1 style={{ fontSize: postType === 'story' ? '48px' : '64px', fontWeight: 900, color: content.textColor, textAlign: 'center', marginBottom: '20px', fontFamily: 'Arial, sans-serif', letterSpacing: '2px' }}>
+      {/* Main Text - Anton font (MOSE display font) */}
+      <h1 style={{ 
+        fontSize: isStory ? '56px' : '64px',
+        fontWeight: 400,
+        color: content.textColor,
+        textAlign: 'center',
+        marginBottom: isStory ? '24px' : '20px',
+        fontFamily: 'Anton, Arial Black, sans-serif',
+        letterSpacing: '3px',
+        textTransform: 'uppercase',
+        lineHeight: '1.1',
+        zIndex: 5,
+      }}>
         {content.mainText}
       </h1>
 
-      {/* Sub Text */}
-      <p style={{ fontSize: postType === 'story' ? '18px' : '24px', color: content.accentColor, textAlign: 'center', fontFamily: 'Arial, sans-serif', letterSpacing: '4px', fontWeight: 600 }}>
+      {/* Accent Line - MOSE signature element */}
+      <div style={{ 
+        width: '80px',
+        height: '3px',
+        backgroundColor: content.accentColor,
+        marginBottom: isStory ? '24px' : '20px',
+        zIndex: 5,
+      }} />
+
+      {/* Sub Text - Montserrat (MOSE body font) */}
+      <p style={{ 
+        fontSize: isStory ? '18px' : '20px',
+        color: content.textColor,
+        textAlign: 'center',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        letterSpacing: '5px',
+        fontWeight: 600,
+        opacity: 0.9,
+        textTransform: 'uppercase',
+        zIndex: 5,
+      }}>
         {content.subText}
       </p>
-    </div>
-  )
-}
 
-function DarkElegantTemplate({ content, postType }: { content: PostContent; postType: PostType }) {
-  return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', background: `linear-gradient(135deg, ${content.backgroundColor} 0%, #1a1a1a 100%)` }}>
-      {/* Decorative Border */}
-      <div style={{ position: 'absolute', top: '40px', left: '40px', right: '40px', bottom: '40px', border: `3px solid ${content.accentColor}`, opacity: 0.3 }} />
-
-      {/* Logo */}
-      <div style={{ position: 'absolute', top: postType === 'instagram' ? '180px' : '100px', left: '50%', transform: 'translateX(-50%)' }}>
-        <img
-          src="/logomose.png"
-          alt="MOSE"
-          style={{ height: '50px', width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.95 }}
-        />
-      </div>
-
-      {/* Product Image with Gold Frame */}
-      {content.productImage && (
-        <div style={{ border: `4px solid ${content.accentColor}`, padding: '20px', backgroundColor: 'rgba(0,0,0,0.5)', marginBottom: '40px' }}>
-          <img
-            src={content.productImage}
-            alt="Product"
-            style={{ width: '300px', height: '300px', objectFit: 'cover' }}
-          />
-        </div>
+      {/* Variant-specific decorative elements */}
+      {variant === 'style-1' && (
+        <>
+          <div style={{ position: 'absolute', top: '40px', left: '40px', width: '30px', height: '30px', border: `2px solid ${content.accentColor}`, opacity: 0.3 }} />
+          <div style={{ position: 'absolute', bottom: '40px', right: '40px', width: '30px', height: '30px', border: `2px solid ${content.accentColor}`, opacity: 0.3 }} />
+        </>
       )}
 
-      {/* Main Text */}
-      <h1 style={{ fontSize: postType === 'story' ? '42px' : '56px', fontWeight: 900, color: content.accentColor, textAlign: 'center', marginBottom: '16px', fontFamily: 'Georgia, serif', letterSpacing: '3px', textTransform: 'uppercase' }}>
-        {content.mainText}
-      </h1>
-
-      {/* Divider */}
-      <div style={{ width: '100px', height: '2px', backgroundColor: content.accentColor, marginBottom: '16px' }} />
-
-      {/* Sub Text */}
-      <p style={{ fontSize: postType === 'story' ? '16px' : '20px', color: content.textColor, textAlign: 'center', fontFamily: 'Arial, sans-serif', letterSpacing: '6px', fontWeight: 300, opacity: 0.9 }}>
-        {content.subText}
-      </p>
-    </div>
-  )
-}
-
-function BoldStatementTemplate({ content, postType }: { content: PostContent; postType: PostType }) {
-  return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-      {/* Logo Small Corner */}
-      <div style={{ position: 'absolute', top: postType === 'instagram' ? '160px' : '40px', right: '40px' }}>
-        <img
-          src="/logomose.png"
-          alt="MOSE"
-          style={{ height: '30px', width: 'auto', filter: content.backgroundColor === '#FFFFFF' ? 'none' : 'brightness(0) invert(1)', opacity: 0.7 }}
-        />
-      </div>
-
-      {/* Main Text - HUGE */}
-      <h1 style={{ fontSize: postType === 'story' ? '64px' : '96px', fontWeight: 900, color: content.textColor, textAlign: 'center', lineHeight: '1', fontFamily: 'Arial Black, sans-serif', letterSpacing: '-2px', marginBottom: '30px', textTransform: 'uppercase' }}>
-        {content.mainText.split(' ').map((word, i) => (
-          <span key={i} style={{ display: 'block', color: i % 2 === 0 ? content.textColor : content.accentColor }}>
-            {word}
-          </span>
-        ))}
-      </h1>
-
-      {/* Product Image (if provided) */}
-      {content.productImage && (
-        <div style={{ position: 'absolute', bottom: '100px', left: '50%', transform: 'translateX(-50%)', width: '200px', height: '200px', borderRadius: '50%', overflow: 'hidden', border: `6px solid ${content.accentColor}` }}>
-          <img
-            src={content.productImage}
-            alt="Product"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
+      {variant === 'style-2' && (
+        <div style={{ position: 'absolute', inset: '30px', border: `1px solid ${content.textColor}`, opacity: 0.1, pointerEvents: 'none' }} />
       )}
 
-      {/* Sub Text */}
-      <p style={{ fontSize: postType === 'story' ? '18px' : '24px', color: content.textColor, textAlign: 'center', fontFamily: 'Arial, sans-serif', letterSpacing: '8px', fontWeight: 700, opacity: 0.8, position: 'absolute', bottom: '40px' }}>
-        {content.subText}
-      </p>
-    </div>
-  )
-}
+      {variant === 'style-3' && (
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: `linear-gradient(135deg, ${content.backgroundColor} 0%, rgba(0,0,0,0.3) 100%)`,
+          zIndex: 1,
+        }} />
+      )}
 
-function LifestyleGridTemplate({ content, postType }: { content: PostContent; postType: PostType }) {
-  return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'grid', gridTemplateColumns: postType === 'story' ? '1fr' : '1fr 1fr', gap: '0' }}>
-      {/* Left/Top Side - Content */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', backgroundColor: content.backgroundColor }}>
-        {/* Logo */}
-        <img
-          src="/logomose.png"
-          alt="MOSE"
-          style={{ height: '40px', width: 'auto', filter: content.backgroundColor === '#FFFFFF' || content.backgroundColor === '#F5F5F5' ? 'none' : 'brightness(0) invert(1)', marginBottom: '30px', opacity: 0.9 }}
-        />
+      {variant === 'style-4' && (
+        <>
+          <div style={{ position: 'absolute', top: '30px', left: '30px', right: '30px', height: '1px', backgroundColor: content.accentColor, opacity: 0.2 }} />
+          <div style={{ position: 'absolute', bottom: '30px', left: '30px', right: '30px', height: '1px', backgroundColor: content.accentColor, opacity: 0.2 }} />
+        </>
+      )}
 
-        {/* Main Text */}
-        <h1 style={{ fontSize: postType === 'story' ? '36px' : '42px', fontWeight: 900, color: content.textColor, textAlign: 'center', marginBottom: '16px', fontFamily: 'Arial, sans-serif', letterSpacing: '1px', lineHeight: '1.2' }}>
-          {content.mainText}
-        </h1>
-
-        {/* Sub Text */}
-        <p style={{ fontSize: postType === 'story' ? '14px' : '16px', color: content.accentColor, textAlign: 'center', fontFamily: 'Arial, sans-serif', letterSpacing: '3px', fontWeight: 600 }}>
-          {content.subText}
-        </p>
-      </div>
-
-      {/* Right/Bottom Side - Product Image */}
-      {content.productImage ? (
-        <div style={{ position: 'relative', overflow: 'hidden' }}>
-          <img
-            src={content.productImage}
-            alt="Product"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
-      ) : (
-        <div style={{ backgroundColor: content.accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: content.backgroundColor, fontSize: '14px', fontFamily: 'Arial, sans-serif', opacity: 0.5 }}>
-            Voeg product afbeelding toe
-          </p>
-        </div>
+      {variant === 'style-5' && (
+        <div style={{ 
+          position: 'absolute', 
+          inset: '25px', 
+          border: `2px solid ${content.accentColor}`, 
+          opacity: 0.2,
+          pointerEvents: 'none',
+        }} />
       )}
     </div>
   )
 }
-
-function ComingSoonTemplate({ content, postType }: { content: PostContent; postType: PostType }) {
-  return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      {/* Product Image Background */}
-      {content.productImage && (
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.3, filter: 'blur(8px)' }}>
-          <img
-            src={content.productImage}
-            alt="Product"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
-      )}
-
-      {/* Dark Overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${content.backgroundColor} 0%, rgba(0,0,0,0.8) 100%)` }} />
-
-      {/* Logo */}
-      <div style={{ position: 'relative', zIndex: 10, marginBottom: '60px' }}>
-        <img
-          src="/logomose.png"
-          alt="MOSE"
-          style={{ height: postType === 'story' ? '50px' : '60px', width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.95 }}
-        />
-      </div>
-
-      {/* Main Text */}
-      <h1 style={{ position: 'relative', zIndex: 10, fontSize: postType === 'story' ? '52px' : '72px', fontWeight: 900, color: content.textColor, textAlign: 'center', marginBottom: '30px', fontFamily: 'Arial, sans-serif', letterSpacing: '4px', textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-        {content.mainText}
-      </h1>
-
-      {/* Sub Text with Border */}
-      <div style={{ position: 'relative', zIndex: 10, border: `3px solid ${content.accentColor}`, padding: '16px 40px', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-        <p style={{ fontSize: postType === 'story' ? '18px' : '24px', color: content.accentColor, textAlign: 'center', fontFamily: 'Arial, sans-serif', letterSpacing: '6px', fontWeight: 700 }}>
-          {content.subText}
-        </p>
-      </div>
-
-      {/* Decorative Elements */}
-      <div style={{ position: 'absolute', top: postType === 'instagram' ? '160px' : '60px', left: '60px', width: '40px', height: '40px', border: `2px solid ${content.accentColor}`, opacity: 0.4 }} />
-      <div style={{ position: 'absolute', bottom: '60px', right: '60px', width: '40px', height: '40px', border: `2px solid ${content.accentColor}`, opacity: 0.4 }} />
-    </div>
-  )
-}
-
