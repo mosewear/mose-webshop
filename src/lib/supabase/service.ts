@@ -15,11 +15,13 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { Database } from './types'
 
 /**
  * Create a Supabase client with service role privileges
  * Bypasses RLS policies - use with caution!
+ * 
+ * Note: We don't use Database types here because service role
+ * operations often involve tables that may not be in the generated types yet.
  */
 export function createServiceClient() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -30,7 +32,7 @@ export function createServiceClient() {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
   }
 
-  return createClient<Database>(
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
