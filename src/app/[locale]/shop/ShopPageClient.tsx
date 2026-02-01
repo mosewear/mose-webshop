@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, memo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -829,8 +829,14 @@ export default function ShopPageClient() {
 
             {/* Products Grid */}
             {!loading && filteredProducts.length > 0 && (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {filteredProducts.map((product, index) => {
+              <div 
+                className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" 
+                style={{ 
+                  contain: 'layout style paint',
+                  willChange: 'contents'
+                }}
+              >
+                {filteredProducts.map((product) => {
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
                   const hasPresale = product.variants?.some(v => 
@@ -845,7 +851,12 @@ export default function ShopPageClient() {
                       key={product.id}
                       href={`/product/${product.slug}`}
                       className="group block h-full"
-                      style={{ contain: 'layout' }}
+                      style={{ 
+                        contain: 'layout style paint',
+                        transform: 'translateZ(0)',
+                        backfaceVisibility: 'hidden' as const,
+                        perspective: 1000
+                      }}
                     >
                       <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col min-h-[380px] md:min-h-[500px]">
                         {/* Image - Larger on mobile */}
