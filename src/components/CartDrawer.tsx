@@ -56,6 +56,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
   }, [])
 
+  const subtotal = getTotal()
+  const subtotalAfterDiscount = subtotal - promoDiscount
+  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
+  
+  // BTW berekening (21% is al inbegrepen in de prijzen)
+  const vatRate = 0.21
+  const subtotalExclBtw = subtotalAfterDiscount / (1 + vatRate)
+  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
+  const totalBtw = btwAmount + (shipping / (1 + vatRate) * vatRate)
+  
+  const total = subtotalAfterDiscount + shipping
+
   // Auto-revalidate promo code whenever cart total changes
   useEffect(() => {
     const clearPromo = () => {
@@ -138,10 +150,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
   }, [subtotal, items.length, isOpen]) // Revalidate when subtotal or item count changes
 
-  const subtotal = getTotal()
-  const subtotalAfterDiscount = subtotal - promoDiscount
-  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
-  
   // Debug logging
   useEffect(() => {
     if (isOpen && items.length > 0) {
@@ -161,14 +169,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       console.log('═════════════════════════════════════════')
     }
   }, [isOpen, items, subtotal])
-  
-  // BTW berekening (21% is al inbegrepen in de prijzen)
-  const vatRate = 0.21
-  const subtotalExclBtw = subtotalAfterDiscount / (1 + vatRate)
-  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
-  const totalBtw = btwAmount + (shipping / (1 + vatRate) * vatRate)
-  
-  const total = subtotalAfterDiscount + shipping
 
   useEffect(() => {
     getSiteSettings().then((settings) => {
