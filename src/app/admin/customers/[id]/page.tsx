@@ -25,6 +25,14 @@ interface Order {
   total: number
   created_at: string
   payment_status: string
+  shipping_address?: {
+    name: string
+    address: string
+    city: string
+    postalCode: string
+    country: string
+    phone: string
+  }
 }
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,7 +78,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
-          .select('id, status, total, created_at, payment_status')
+          .select('id, status, total, created_at, payment_status, shipping_address')
           .or(orQuery)
           .order('created_at', { ascending: false })
 
@@ -207,11 +215,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <div className="space-y-3 border-t-2 border-gray-200 pt-4">
               <div>
                 <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
-                  Customer ID
+                  Email
                 </div>
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  {customer.id.slice(0, 12)}...
-                </code>
+                <a 
+                  href={`mailto:${customer.email}`} 
+                  className="text-sm text-brand-primary hover:underline break-all"
+                >
+                  {customer.email}
+                </a>
               </div>
               
               {customer.phone && (
@@ -224,6 +235,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </a>
                 </div>
               )}
+              
+              <div>
+                <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
+                  Customer ID
+                </div>
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded block break-all">
+                  {customer.id}
+                </code>
+              </div>
+              
+              <div className="border-t-2 border-gray-200 pt-3 mt-3"></div>
               
               <div>
                 <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">
@@ -273,6 +295,42 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               )}
             </div>
           </div>
+
+          {/* Address Card - Show latest shipping address */}
+          {orders.length > 0 && orders[0].shipping_address && (
+            <div className="bg-white border-2 border-gray-200 p-6">
+              <h3 className="text-lg font-bold mb-4">Verzendadres</h3>
+              <div className="space-y-2 text-sm">
+                <div className="font-semibold text-gray-900">
+                  {orders[0].shipping_address.name}
+                </div>
+                <div className="text-gray-700">
+                  {orders[0].shipping_address.address}
+                </div>
+                <div className="text-gray-700">
+                  {orders[0].shipping_address.postalCode} {orders[0].shipping_address.city}
+                </div>
+                <div className="text-gray-700">
+                  {orders[0].shipping_address.country === 'NL' ? 'Nederland' : orders[0].shipping_address.country}
+                </div>
+                {orders[0].shipping_address.phone && (
+                  <div className="pt-2 mt-2 border-t border-gray-200">
+                    <a 
+                      href={`tel:${orders[0].shipping_address.phone}`} 
+                      className="text-brand-primary hover:underline font-medium"
+                    >
+                      📞 {orders[0].shipping_address.phone}
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-xs text-gray-500">
+                  Laatste order: {new Date(orders[0].created_at).toLocaleDateString('nl-NL')}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Stats Card */}
           <div className="bg-white border-2 border-gray-200 p-6">
