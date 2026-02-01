@@ -27,6 +27,8 @@ export async function GET() {
       customerEmail: testEmail,
       orderId: testOrderId,
       orderTotal: 89.99,
+      subtotal: 79.99,
+      shippingCost: 5.00,
       orderItems: [
         {
           name: 'MOSE Classic Hoodie Zwart',
@@ -42,7 +44,10 @@ export async function GET() {
         address: '1 Oostersingel',
         city: 'Groningen',
         postalCode: '9713EW'
-      }
+      },
+      promoCode: 'TEST10',
+      discountAmount: 10.00,
+      locale: 'nl'
     })
     results.push({ email: 'Order Confirmation', success: result1.success })
 
