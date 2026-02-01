@@ -16,6 +16,7 @@ import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import { getSiteSettings } from './settings'
 import { getEmailT } from './email-i18n'
+import { logEmail } from './email-logger'
 import { 
   OrderConfirmationEmail,
   ShippingConfirmationEmail,
@@ -159,8 +160,26 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
 
     if (error) {
       console.error('❌ Error sending order confirmation email:', error)
+      // Log failed email
+      await logEmail({
+        orderId: props.orderId,
+        emailType: isFullPresaleOrder ? 'preorder_confirmation' : 'order_confirmation',
+        recipientEmail: props.customerEmail,
+        subject,
+        status: 'failed',
+        errorMessage: error.message || 'Unknown error',
+      })
       return { success: false, error }
     }
+
+    // Log successful email
+    await logEmail({
+      orderId: props.orderId,
+      emailType: isFullPresaleOrder ? 'preorder_confirmation' : 'order_confirmation',
+      recipientEmail: props.customerEmail,
+      subject,
+      status: 'sent',
+    })
 
     console.log(`✅ ${isFullPresaleOrder ? 'Preorder' : 'Order'} confirmation email sent:`, data)
     return { success: true, data }

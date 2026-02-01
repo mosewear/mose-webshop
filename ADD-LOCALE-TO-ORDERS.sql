@@ -18,3 +18,4 @@ CREATE INDEX IF NOT EXISTS orders_locale_idx ON orders(locale);
 -- Success message
 SELECT 'Locale column added to orders table successfully!' as status;
 
+

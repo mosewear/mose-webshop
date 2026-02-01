@@ -68,3 +68,4 @@ COMMENT ON COLUMN newsletter_subscribers.source IS 'Where the subscriber signed 
 COMMENT ON COLUMN newsletter_subscribers.metadata IS 'Additional data like preferences, tags, etc.';
 
 
+
