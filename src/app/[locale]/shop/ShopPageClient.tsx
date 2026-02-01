@@ -57,7 +57,6 @@ export default function ShopPageClient() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const [showRecentlyViewed, setShowRecentlyViewed] = useState(false)
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -318,11 +317,6 @@ export default function ShopPageClient() {
       })
       
       console.log(`📸 [SHIFT DEBUG] ${loadedCount}/${images.length} images already loaded`)
-      
-      // Delay RecentlyViewed until images are loaded AND a bit more time for stability
-      setTimeout(() => {
-        setShowRecentlyViewed(true)
-      }, 1000)
     }
   }, [loading, filteredProducts.length])
 
@@ -850,10 +844,10 @@ export default function ShopPageClient() {
                 className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" 
                 style={{ 
                   contain: 'layout style paint',
-                  willChange: 'contents'
+                  contentVisibility: 'auto'
                 }}
               >
-                {filteredProducts.map((product) => {
+                {filteredProducts.map((product, index) => {
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
                   const hasPresale = product.variants?.some(v => 
@@ -862,6 +856,9 @@ export default function ShopPageClient() {
                   const presaleExpected = hasPresale 
                     ? product.variants?.find(v => v.presale_enabled && v.presale_expected_date)?.presale_expected_date 
                     : null
+                  
+                  // Priority load first 6 images to prevent layout shift
+                  const isPriority = index < 6
                   
                   return (
                     <LocaleLink
@@ -872,7 +869,9 @@ export default function ShopPageClient() {
                         contain: 'layout style paint',
                         transform: 'translateZ(0)',
                         backfaceVisibility: 'hidden' as const,
-                        perspective: 1000
+                        perspective: 1000,
+                        visibility: 'visible',
+                        opacity: 1
                       }}
                     >
                       <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col min-h-[380px] md:min-h-[500px]">
@@ -884,6 +883,8 @@ export default function ShopPageClient() {
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover object-center"
+                            priority={isPriority}
+                            loading={isPriority ? 'eager' : 'lazy'}
                           />
                           
                           {/* Stock Badge */}
@@ -976,12 +977,10 @@ export default function ShopPageClient() {
           </main>
         </div>
 
-        {/* Recently Viewed Products - Delayed to prevent layout shift */}
-        {showRecentlyViewed && (
-          <div style={{ minHeight: '300px' }}>
-            <RecentlyViewed />
-          </div>
-        )}
+        {/* Recently Viewed Products - Reserve space to prevent layout shift */}
+        <div style={{ minHeight: '300px' }}>
+          <RecentlyViewed />
+        </div>
       </div>
     </div>
   )
