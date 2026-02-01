@@ -125,7 +125,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
         })
       )
       subject = t('preorder.subject', { 
-        orderId: props.orderId.slice(0, 8).toUpperCase() 
+        orderNumber: props.orderId.slice(0, 8).toUpperCase() 
       })
     } else {
       console.log('✅ Using REGULAR EMAIL template (hasPresaleItems:', hasPresaleItems, ')')
