@@ -135,6 +135,10 @@ export async function GET(req: NextRequest) {
         postalCode: '1012 JM',
       },
       
+      // Promo code data (for testing discount display)
+      promoCode: 'PRESALE30',
+      discountAmount: 25.50,
+      
       // Shipping data
       trackingCode: 'TEST-TRACKING-123456',
       trackingUrl: 'https://www.dhlparcel.nl/en/private/track-trace?tt=TEST-TRACKING-123456',
