@@ -99,6 +99,8 @@ export async function GET(req: NextRequest) {
           customerEmail: order.email,
           orderId: order.id,
           orderTotal: order.total,
+          subtotal: order.subtotal,
+          shippingCost: order.shipping_cost,
           orderItems: items?.map((item: any) => ({
             name: item.product_name,
             size: item.size,
@@ -115,6 +117,8 @@ export async function GET(req: NextRequest) {
             city: order.shipping_address.city,
             postalCode: order.shipping_address.postalCode,
           },
+          promoCode: order.promo_code || undefined,
+          discountAmount: order.discount_amount || 0,
           locale: order.locale || 'nl', // Pass locale for multi-language emails
         })
         
