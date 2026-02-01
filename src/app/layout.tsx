@@ -33,13 +33,21 @@ export const revalidate = 60
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
+  console.log('🎯 [LAYOUT] generateMetadata called')
+  
   // Get settings from database
   const settings = await getSiteSettings()
+  console.log('🎯 [LAYOUT] Settings loaded:', {
+    favicon_url: settings.favicon_url,
+    updated_at: settings.updated_at,
+    has_favicon: !!settings.favicon_url
+  })
   
   // Use dynamic favicon API route that handles caching properly
   // This ensures favicon updates are reflected immediately
   const cacheParam = settings.updated_at ? new Date(settings.updated_at).getTime() : Date.now()
   const faviconUrl = `/api/favicon?v=${cacheParam}`
+  console.log('🎯 [LAYOUT] Generated favicon URL:', faviconUrl)
 
   return {
     title: {
