@@ -811,6 +811,92 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
               {/* Mobile Fixed Bottom Bar */}
               <div className="md:hidden bg-white border-t-2 border-black">
+                {/* Promo Code Section - Mobile */}
+                <div className="p-3 border-b border-gray-200">
+                  {!promoCodeExpanded && promoDiscount === 0 ? (
+                    <button
+                      onClick={() => setPromoCodeExpanded(true)}
+                      className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Ticket size={16} />
+                        <span>{t('promo.title')}</span>
+                      </div>
+                      <ChevronDown size={16} />
+                    </button>
+                  ) : promoDiscount === 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Ticket size={16} />
+                          <span>{t('promo.title')}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPromoCodeExpanded(false)
+                            setPromoError('')
+                            setPromoCode('')
+                          }}
+                          className="p-1 hover:bg-gray-200 transition-colors"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value.toUpperCase())
+                            setPromoError('')
+                          }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                          placeholder={t('placeholder.promoCode', { ns: 'checkout' })}
+                          className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                        />
+                        <button
+                          onClick={handleApplyPromo}
+                          disabled={!promoCode}
+                          className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          {t('promo.apply')}
+                        </button>
+                      </div>
+                      {promoError && (
+                        <p className="text-xs text-red-600 font-semibold">{promoError}</p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {/* Applied Promo Display - Mobile */}
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between items-center py-1 px-2 bg-brand-primary/5 border-l-2 border-brand-primary">
+                      <div className="flex items-center gap-2">
+                        <Ticket size={16} className="text-brand-primary" />
+                        <div>
+                          <div className="font-semibold text-brand-primary uppercase tracking-wide text-sm">
+                            {promoCode}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {promoType === 'percentage' ? `${promoValue}% korting` : 'Korting'} • 
+                            <button
+                              onClick={handleRemovePromo}
+                              className="text-red-600 hover:text-red-800 font-semibold ml-1"
+                            >
+                              {t('promo.removeCode')}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-red-600">
+                          -€{promoDiscount.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Total & Checkout - Mobile */}
                 <div className="p-4 bg-black text-white">
                   <div className="flex items-center justify-between mb-3">
