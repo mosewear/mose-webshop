@@ -238,6 +238,77 @@ export default function ShopPageClient() {
 
   const filteredProducts = getFilteredAndSortedProducts()
 
+  // 🔍 DEEP DEBUG: Track what causes layout shifts
+  useEffect(() => {
+    console.log('🚨 [SHIFT DEBUG] ========== MOUNT ==========')
+    
+    // Track layout shifts with FULL details
+    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
+            const sources = (entry as any).sources || []
+            console.log('🚨 [SHIFT DEBUG] LAYOUT SHIFT!', {
+              value: (entry as any).value,
+              time: entry.startTime,
+              sourceCount: sources.length,
+              sources: sources.map((s: any) => ({
+                className: s.node?.className,
+                tagName: s.node?.tagName,
+                id: s.node?.id,
+                textContent: s.node?.textContent?.substring(0, 50),
+                previousRect: {
+                  x: s.previousRect?.x,
+                  y: s.previousRect?.y,
+                  width: s.previousRect?.width,
+                  height: s.previousRect?.height
+                },
+                currentRect: {
+                  x: s.currentRect?.x,
+                  y: s.currentRect?.y,
+                  width: s.currentRect?.width,
+                  height: s.currentRect?.height
+                },
+                movement: {
+                  deltaX: (s.currentRect?.x || 0) - (s.previousRect?.x || 0),
+                  deltaY: (s.currentRect?.y || 0) - (s.previousRect?.y || 0),
+                  deltaHeight: (s.currentRect?.height || 0) - (s.previousRect?.height || 0)
+                }
+              }))
+            })
+          }
+        }
+      })
+      observer.observe({ entryTypes: ['layout-shift'] })
+      
+      return () => observer.disconnect()
+    }
+  }, [])
+
+  // Track when images load
+  useEffect(() => {
+    if (!loading && filteredProducts.length > 0) {
+      console.log('📸 [SHIFT DEBUG] Products rendered, waiting for images...')
+      
+      const images = document.querySelectorAll('img[src*="supabase"]')
+      console.log(`📸 [SHIFT DEBUG] Found ${images.length} product images`)
+      
+      let loadedCount = 0
+      images.forEach((img, index) => {
+        if ((img as HTMLImageElement).complete) {
+          loadedCount++
+        } else {
+          img.addEventListener('load', () => {
+            loadedCount++
+            console.log(`📸 [SHIFT DEBUG] Image ${loadedCount}/${images.length} loaded`)
+          }, { once: true })
+        }
+      })
+      
+      console.log(`📸 [SHIFT DEBUG] ${loadedCount}/${images.length} images already loaded`)
+    }
+  }, [loading, filteredProducts.length])
+
   const getTotalStock = (product: Product) => {
     return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
   }
