@@ -776,7 +776,7 @@ export default function ShopPageClient() {
                       className="group block h-full"
                       style={{ contain: 'layout' }}
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col min-h-[450px]">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col min-h-[380px] md:min-h-[500px]">
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
@@ -839,11 +839,11 @@ export default function ShopPageClient() {
                         </div>
 
                         {/* Product Info - Smaller padding on mobile */}
-                        <div className="p-2 md:p-4 flex flex-col flex-grow min-h-[120px]">
-                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[2.5rem]">
+                        <div className="p-2 md:p-4 flex flex-col flex-grow min-h-[100px] md:min-h-[130px]">
+                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[2rem] md:min-h-[2.5rem]">
                             {getProductName(product)}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto min-h-[3rem]">
+                          <div className="flex items-center justify-between mt-auto min-h-[2.5rem] md:min-h-[3rem]">
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
                               
