@@ -1,7 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 /**
  * Log email sent to database for audit trail
+ * 
+ * Uses service role client to bypass RLS policies.
+ * This is safe because:
+ * - Function is only called server-side
+ * - Used for system logging (emails sent by the application)
+ * - No user input is directly inserted (all params are controlled by our code)
+ * 
  * NOTE: This is a server-only function
  */
 export async function logEmail(params: {
@@ -14,7 +21,8 @@ export async function logEmail(params: {
   metadata?: any
 }) {
   try {
-    const supabase = await createClient()
+    // Use service client to bypass RLS (server-side only, safe for system logging)
+    const supabase = createServiceClient()
     
     const { error } = await supabase
       .from('order_emails')
@@ -29,11 +37,20 @@ export async function logEmail(params: {
       })
     
     if (error) {
-      console.error('Error logging email:', error)
+      console.error('❌ Error logging email to database:', error)
+      console.error('   Order ID:', params.orderId)
+      console.error('   Email Type:', params.emailType)
+      console.error('   Recipient:', params.recipientEmail)
+    } else {
+      console.log('✅ Email logged to database:', {
+        orderId: params.orderId,
+        emailType: params.emailType,
+        status: params.status || 'sent'
+      })
     }
     
     // Also update order's last email info
-    await supabase
+    const { error: updateError } = await supabase
       .from('orders')
       .update({
         last_email_sent_at: new Date().toISOString(),
@@ -41,8 +58,12 @@ export async function logEmail(params: {
       })
       .eq('id', params.orderId)
     
+    if (updateError) {
+      console.error('❌ Error updating order last_email info:', updateError)
+    }
+    
   } catch (error) {
-    console.error('Error in logEmail:', error)
+    console.error('❌ Error in logEmail:', error)
   }
 }
 
