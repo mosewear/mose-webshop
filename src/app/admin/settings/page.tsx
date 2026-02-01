@@ -289,78 +289,78 @@ export default function SettingsPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-3xl font-display font-bold mb-2">Instellingen</h1>
-        <p className="text-gray-600 text-sm md:text-base">Beheer website instellingen en admin gebruikers</p>
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold mb-2">Instellingen</h1>
+        <p className="text-gray-600 text-xs sm:text-sm md:text-base">Beheer website instellingen en admin gebruikers</p>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded mb-4 text-sm">
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* General Settings */}
-        <div className="bg-white border-2 border-gray-200 p-6">
-          <h2 className="text-2xl font-bold mb-6">Algemene Instellingen</h2>
+        <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Algemene Instellingen</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Website Naam
               </label>
               <input
                 type="text"
                 value={siteName}
                 onChange={(e) => setSiteName(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Contact Email
               </label>
               <input
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Contact Telefoon
               </label>
               <input
                 type="tel"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 placeholder="+31 50 211 1931"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Contact Adres
               </label>
               <input
                 type="text"
                 value={contactAddress}
                 onChange={(e) => setContactAddress(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 placeholder="Helper Brink 27a, 9722 EG Groningen"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Favicon
               </label>
               <MediaPicker
@@ -372,19 +372,19 @@ export default function SettingsPage() {
                 accept="images"
                 buttonText="Upload Favicon"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Upload een favicon (.ico, .png of .svg). Aanbevolen: 32x32px of 512x512px PNG. Huidige: <span className="font-mono">{faviconUrl}</span>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                Upload een favicon (.ico, .png of .svg). Aanbevolen: 32x32px of 512x512px PNG. Huidige: <span className="font-mono break-all">{faviconUrl}</span>
               </p>
               {faviconUrl && (
                 <div className="mt-2 flex items-center gap-2">
-                  <img src={faviconUrl} alt="Current favicon" className="w-8 h-8 border border-gray-300" />
-                  <span className="text-xs text-gray-600">Preview</span>
+                  <img src={faviconUrl} alt="Current favicon" className="w-6 h-6 sm:w-8 sm:h-8 border border-gray-300" />
+                  <span className="text-[10px] sm:text-xs text-gray-600">Preview</span>
                 </div>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Gratis Verzending Boven (€)
               </label>
               <input
@@ -392,15 +392,15 @@ export default function SettingsPage() {
                 step="0.01"
                 value={freeShipping}
                 onChange={(e) => setFreeShipping(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                 Gebruikt overal op de site (homepage, product pagina's, cart, checkout, emails, etc.)
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Retourbeleid (dagen)
               </label>
               <input
@@ -409,22 +409,22 @@ export default function SettingsPage() {
                 max="365"
                 value={returnDays}
                 onChange={(e) => setReturnDays(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                 Aantal dagen bedenktijd. Gebruikt overal op de site (homepage, product pagina's, cart, verzending pagina, etc.)
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <input
                 type="checkbox"
                 id="maintenance_mode"
                 checked={maintenanceMode}
                 onChange={(e) => setMaintenanceMode(e.target.checked)}
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
               />
-              <label htmlFor="maintenance_mode" className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+              <label htmlFor="maintenance_mode" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide">
                 Onderhoudsmodus
               </label>
             </div>
@@ -432,7 +432,7 @@ export default function SettingsPage() {
             <button
               onClick={handleSaveSettings}
               disabled={saving}
-              className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+              className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-4 sm:mt-6"
             >
               {saving ? 'Opslaan...' : 'Instellingen Opslaan'}
             </button>
@@ -440,18 +440,18 @@ export default function SettingsPage() {
         </div>
 
         {/* Store Settings */}
-        <div className="bg-white border-2 border-gray-200 p-6">
-          <h2 className="text-2xl font-bold mb-6">Winkel Instellingen</h2>
+        <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Winkel Instellingen</h2>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Valuta
               </label>
               <select 
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               >
                 <option value="EUR">EUR (€)</option>
                 <option value="USD">USD ($)</option>
@@ -459,7 +459,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 BTW Percentage (%)
               </label>
               <input
@@ -467,12 +467,12 @@ export default function SettingsPage() {
                 step="0.01"
                 value={taxRate}
                 onChange={(e) => setTaxRate(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Standaard Verzendkosten (€)
               </label>
               <input
@@ -480,43 +480,43 @@ export default function SettingsPage() {
                 step="0.01"
                 value={shippingCost}
                 onChange={(e) => setShippingCost(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Low Stock Waarschuwing (aantal)
               </label>
               <input
                 type="number"
                 value={lowStockThreshold}
                 onChange={(e) => setLowStockThreshold(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Returns Settings */}
-        <div className="bg-white border-2 border-gray-200 p-6">
-          <h2 className="text-2xl font-bold mb-6">Retour Instellingen</h2>
+        <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Retour Instellingen</h2>
           
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <input
                 type="checkbox"
                 id="returns_auto_approve"
                 checked={returnsAutoApprove}
                 onChange={(e) => setReturnsAutoApprove(e.target.checked)}
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
               />
-              <label htmlFor="returns_auto_approve" className="text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+              <label htmlFor="returns_auto_approve" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
                 Automatisch Retouren Goedkeuren
               </label>
             </div>
 
-            <div className="bg-blue-50 border-l-3 border-blue-400 p-4 text-sm text-blue-900">
+            <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
               <p className="font-bold mb-1">ℹ️ Hoe werkt het?</p>
               <p className="mb-2">
                 <strong>Ingeschakeld:</strong> Retouraanvragen worden direct goedgekeurd en de klant kan meteen 
@@ -528,7 +528,7 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <div className="bg-green-50 border-l-3 border-green-400 p-4 text-sm text-green-900">
+            <div className="bg-green-50 border-l-3 border-green-400 p-3 sm:p-4 text-xs sm:text-sm text-green-900">
               <p className="font-bold mb-1">✅ Aanbevolen</p>
               <p>
                 Voor de beste klantervaring raden we aan om auto-goedkeuring aan te laten staan. 
@@ -536,12 +536,12 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <div className="border-t border-gray-200 pt-6 mt-6">
-              <h3 className="text-lg font-bold mb-4">Retourlabel Kosten</h3>
+            <div className="border-t border-gray-200 pt-4 sm:pt-6 mt-4 sm:mt-6">
+              <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Retourlabel Kosten</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                     Kosten Retourlabel (excl. BTW)
                   </label>
                   <input
@@ -559,16 +559,16 @@ export default function SettingsPage() {
                         setReturnLabelCostInclBtw(inclValue)
                       }
                     }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                     placeholder="6.50"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                     Kosten voor retourlabel exclusief BTW. De prijs inclusief BTW wordt automatisch berekend op basis van het BTW percentage ({taxRate}%).
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                     Kosten Retourlabel (incl. BTW)
                   </label>
                   <input
@@ -586,16 +586,16 @@ export default function SettingsPage() {
                         setReturnLabelCostExclBtw(exclValue)
                       }
                     }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors bg-gray-50"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors bg-gray-50"
                     placeholder="7.87"
                     readOnly={false}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                     Kosten voor retourlabel inclusief BTW. Je kunt dit handmatig aanpassen, of automatisch laten berekenen via het veld hierboven.
                   </p>
                 </div>
 
-                <div className="bg-blue-50 border-l-3 border-blue-400 p-4 text-sm text-blue-900">
+                <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
                   <p className="font-bold mb-1">ℹ️ Waar wordt dit gebruikt?</p>
                   <p className="mb-2">
                     Deze kosten worden gebruikt wanneer klanten een retour aanvragen en betalen voor hun retourlabel.
@@ -614,26 +614,26 @@ export default function SettingsPage() {
         </div>
 
         {/* Abandoned Cart Email Settings */}
-        <div className="bg-white border-2 border-gray-200 p-6">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
             🛒 Abandoned Cart Emails
           </h2>
           
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <input
                 type="checkbox"
                 id="abandoned_cart_enabled"
                 checked={abandonedCartEnabled}
                 onChange={(e) => setAbandonedCartEnabled(e.target.checked)}
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
               />
-              <label htmlFor="abandoned_cart_enabled" className="text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+              <label htmlFor="abandoned_cart_enabled" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
                 Abandoned Cart Emails Inschakelen
               </label>
             </div>
 
-            <div className="bg-blue-50 border-l-3 border-blue-400 p-4 text-sm text-blue-900">
+            <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
               <p className="font-bold mb-1">ℹ️ Hoe werkt het?</p>
               <p>
                 Wanneer een klant checkout start maar niet betaalt, wordt na het ingestelde aantal uren automatisch 
@@ -643,7 +643,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Aantal Uren Wachten (voor email)
               </label>
               <input
@@ -653,26 +653,26 @@ export default function SettingsPage() {
                 value={abandonedCartHours}
                 onChange={(e) => setAbandonedCartHours(e.target.value)}
                 disabled={!abandonedCartEnabled}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                 Standaard: 24 uur. Min: 1 uur, Max: 168 uur (7 dagen)
               </p>
             </div>
 
-            <div className="bg-yellow-50 border-l-3 border-yellow-400 p-4 text-sm text-yellow-900">
+            <div className="bg-yellow-50 border-l-3 border-yellow-400 p-3 sm:p-4 text-xs sm:text-sm text-yellow-900">
               <p className="font-bold mb-1">⚠️ Let op!</p>
               <p>
                 Deze emails worden automatisch verstuurd via een cron job. Zorg dat de cron job is ingesteld op Vercel 
-                om de <code className="bg-yellow-100 px-1 font-mono">/api/abandoned-cart-cron</code> endpoint aan te roepen.
+                om de <code className="bg-yellow-100 px-1 font-mono text-[10px] sm:text-xs">/api/abandoned-cart-cron</code> endpoint aan te roepen.
               </p>
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-gray-600">
-                  Emails worden verzonden vanaf <code className="font-mono font-bold">bestellingen@orders.mosewear.nl</code>
+            <div className="pt-3 sm:pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0"></div>
+                <span className="text-gray-600 break-all">
+                  Emails worden verzonden vanaf <code className="font-mono font-bold text-[10px] sm:text-xs">bestellingen@orders.mosewear.nl</code>
                 </span>
               </div>
             </div>
@@ -681,23 +681,23 @@ export default function SettingsPage() {
       </div>
 
       {/* Admin Users Section */}
-      <div className="bg-white border-2 border-gray-200 p-6 mt-6">
-        <h2 className="text-2xl font-bold mb-6">Admin Gebruikers</h2>
+      <div className="bg-white border-2 border-gray-200 p-4 sm:p-6 mt-4 sm:mt-6">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Admin Gebruikers</h2>
         
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="min-w-full divide-y-2 divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell">
                   Naam
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                   Aangemaakt
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Acties
                 </th>
               </tr>
@@ -705,25 +705,25 @@ export default function SettingsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {adminUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={4} className="px-3 sm:px-6 py-3 sm:py-4 text-center text-gray-500 text-xs sm:text-sm">
                     Geen admin gebruikers gevonden
                   </td>
                 </tr>
               ) : (
                 adminUsers.map((admin) => (
                   <tr key={admin.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 break-all">
                       {admin.email || 'Geen email'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm hidden sm:table-cell">
                       {admin.first_name && admin.last_name 
                         ? `${admin.first_name} ${admin.last_name}` 
                         : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden md:table-cell">
                       {new Date(admin.created_at).toLocaleDateString('nl-NL')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                       <button
                         onClick={() => handleRemoveAdmin(admin.id, admin.email)}
                         className="text-red-600 hover:text-red-900"
@@ -738,36 +738,36 @@ export default function SettingsPage() {
           </table>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           {!showAddAdmin ? (
             <button
               onClick={() => setShowAddAdmin(true)}
-              className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+              className="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base uppercase tracking-wider transition-colors"
             >
               + Nieuwe Admin Toevoegen
             </button>
           ) : (
-            <div className="border-2 border-gray-200 p-4 space-y-4">
+            <div className="border-2 border-gray-200 p-3 sm:p-4 space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
                   Email van bestaande gebruiker
                 </label>
                 <input
                   type="email"
                   value={newAdminEmail}
                   onChange={(e) => setNewAdminEmail(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                   placeholder="gebruiker@voorbeeld.nl"
                 />
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-2">
                   De gebruiker moet eerst inloggen op de website voordat je hem/haar admin kunt maken.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={handleAddAdmin}
                   disabled={addingAdmin}
-                  className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base uppercase tracking-wider transition-colors disabled:opacity-50"
                 >
                   {addingAdmin ? 'Toevoegen...' : 'Admin Toevoegen'}
                 </button>
@@ -776,7 +776,7 @@ export default function SettingsPage() {
                     setShowAddAdmin(false)
                     setNewAdminEmail('')
                   }}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+                  className="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base uppercase tracking-wider transition-colors"
                 >
                   Annuleren
                 </button>
@@ -787,25 +787,25 @@ export default function SettingsPage() {
       </div>
 
       {/* System Info */}
-      <div className="bg-white border-2 border-gray-200 p-6 mt-6">
-        <h2 className="text-2xl font-bold mb-6">Systeem Informatie</h2>
+      <div className="bg-white border-2 border-gray-200 p-4 sm:p-6 mt-4 sm:mt-6">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Systeem Informatie</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <div className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Platform</div>
-            <div className="text-lg">Next.js 15 + Supabase</div>
+            <div className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Platform</div>
+            <div className="text-base sm:text-lg">Next.js 15 + Supabase</div>
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Hosting</div>
-            <div className="text-lg">Vercel</div>
+            <div className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Hosting</div>
+            <div className="text-base sm:text-lg">Vercel</div>
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Database</div>
-            <div className="text-lg">PostgreSQL (Supabase)</div>
+            <div className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Database</div>
+            <div className="text-base sm:text-lg">PostgreSQL (Supabase)</div>
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Storage</div>
-            <div className="text-lg">Supabase Storage</div>
+            <div className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Storage</div>
+            <div className="text-base sm:text-lg">Supabase Storage</div>
           </div>
         </div>
       </div>

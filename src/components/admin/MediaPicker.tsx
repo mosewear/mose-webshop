@@ -347,18 +347,18 @@ export default function MediaPicker({
       {/* Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-0 sm:p-4"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-none sm:rounded-lg w-full h-full sm:max-w-6xl sm:w-full sm:max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b-2 border-gray-200">
-              <div>
-                <h2 className="text-2xl font-bold">Media Selecteren</h2>
-                <p className="text-sm text-gray-600 mt-1">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b-2 border-gray-200">
+              <div className="flex-1 min-w-0 pr-4">
+                <h2 className="text-lg sm:text-2xl font-bold truncate">Media Selecteren</h2>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 hidden sm:block">
                   {mode === 'single'
                     ? 'Kies een afbeelding uit je media library of upload een nieuwe'
                     : 'Selecteer meerdere bestanden uit je media library'}
@@ -366,27 +366,27 @@ export default function MediaPicker({
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b-2 border-gray-200 px-6">
+            <div className="flex border-b-2 border-gray-200 px-4 sm:px-6">
               <button
                 onClick={() => setActiveTab('library')}
-                className={`px-6 py-3 font-bold uppercase tracking-wide transition-colors border-b-2 -mb-0.5 ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors border-b-2 -mb-0.5 ${
                   activeTab === 'library'
                     ? 'border-black text-black'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Media Library
+                Library
               </button>
               <button
                 onClick={() => setActiveTab('upload')}
-                className={`px-6 py-3 font-bold uppercase tracking-wide transition-colors border-b-2 -mb-0.5 ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold uppercase tracking-wide transition-colors border-b-2 -mb-0.5 ${
                   activeTab === 'upload'
                     ? 'border-black text-black'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -397,30 +397,30 @@ export default function MediaPicker({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-auto p-6">
+            <div className="flex-1 overflow-auto p-4 sm:p-6">
               {activeTab === 'library' ? (
                 <>
                   {/* Filters */}
-                  <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
                     {/* Search */}
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                       <input
                         type="text"
                         placeholder="Zoek bestanden..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                       />
                     </div>
 
                     {/* Bucket Filter */}
                     <div className="relative">
-                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
                       <select
                         value={selectedBucket}
                         onChange={(e) => setSelectedBucket(e.target.value)}
-                        className="pl-10 pr-8 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent appearance-none bg-white"
+                        className="w-full sm:w-auto pl-9 sm:pl-10 pr-8 py-2 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent appearance-none bg-white"
                       >
                         <option value="all">Alle buckets</option>
                         {buckets.map((b) => (
@@ -434,14 +434,14 @@ export default function MediaPicker({
 
                   {/* Color Select (Multi-select mode) */}
                   {mode === 'multi' && showColorSelect && availableColors.length > 0 && (
-                    <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                      <label className="block text-sm font-bold mb-2">
+                    <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                      <label className="block text-xs sm:text-sm font-bold mb-2">
                         Koppel aan kleur (optioneel):
                       </label>
                       <select
                         value={selectedColor}
                         onChange={(e) => setSelectedColor(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                       >
                         <option value="">Algemeen (alle kleuren)</option>
                         {availableColors.map((color) => (
@@ -457,18 +457,18 @@ export default function MediaPicker({
                   {loading ? (
                     <div className="text-center py-12">
                       <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                      <p className="mt-4 text-gray-600">Bestanden laden...</p>
+                      <p className="mt-4 text-gray-600 text-sm">Bestanden laden...</p>
                     </div>
                   ) : files.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-gray-200">
-                      <ImageIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                      <p className="text-gray-600 mb-2">Geen bestanden gevonden</p>
-                      <p className="text-sm text-gray-500">
+                      <ImageIcon className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-600 mb-2 text-sm sm:text-base">Geen bestanden gevonden</p>
+                      <p className="text-xs sm:text-sm text-gray-500">
                         {searchQuery ? 'Probeer een andere zoekterm' : 'Upload je eerste bestand'}
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4">
                       {files.map((file) => (
                         <div
                           key={file.id}
@@ -481,16 +481,16 @@ export default function MediaPicker({
                         >
                           {/* Checkbox (Multi-select) */}
                           {mode === 'multi' && (
-                            <div className="absolute top-2 right-2 z-10">
+                            <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-10">
                               <div
-                                className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                                className={`w-5 h-5 sm:w-6 sm:h-6 rounded border-2 flex items-center justify-center transition-colors ${
                                   selectedFiles.has(file.id)
                                     ? 'bg-black border-black'
                                     : 'bg-white border-gray-300 group-hover:border-black'
                                 }`}
                               >
                                 {selectedFiles.has(file.id) && (
-                                  <Check className="w-4 h-4 text-white" />
+                                  <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                                 )}
                               </div>
                             </div>
@@ -506,17 +506,17 @@ export default function MediaPicker({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <Film className="w-12 h-12 text-gray-400" />
+                                <Film className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400" />
                               </div>
                             )}
                           </div>
 
                           {/* File Info */}
-                          <div className="p-2">
-                            <p className="text-xs text-gray-900 truncate" title={file.name}>
+                          <div className="p-1.5 sm:p-2">
+                            <p className="text-[10px] sm:text-xs text-gray-900 truncate" title={file.name}>
                               {file.name.split('/').pop()}
                             </p>
-                            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500">{formatFileSize(file.size)}</p>
                           </div>
                         </div>
                       ))}
@@ -530,19 +530,19 @@ export default function MediaPicker({
                   onDragLeave={handleDrag}
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-6 sm:p-12 text-center transition-colors ${
                     dragActive ? 'border-black bg-gray-50' : 'border-gray-300'
                   }`}
                 >
-                  <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-bold mb-2">
+                  <Upload className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-base sm:text-lg font-bold mb-2">
                     {uploading ? 'Uploaden...' : 'Sleep bestanden hierheen'}
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-xs sm:text-base text-gray-600 mb-4">
                     of klik op de knop hieronder om bestanden te selecteren
                   </p>
 
-                  <label className="inline-block px-6 py-3 bg-black text-white font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors cursor-pointer">
+                  <label className="inline-block px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-black text-white font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors cursor-pointer">
                     Selecteer bestanden
                     <input
                       type="file"
@@ -560,7 +560,7 @@ export default function MediaPicker({
                     />
                   </label>
 
-                  <p className="text-sm text-gray-500 mt-4">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-4">
                     Max {maxSizeMB}MB per bestand •{' '}
                     {accept === 'images'
                       ? 'Alleen afbeeldingen'
@@ -574,15 +574,15 @@ export default function MediaPicker({
 
             {/* Footer (Multi-select mode) */}
             {mode === 'multi' && activeTab === 'library' && selectedFiles.size > 0 && (
-              <div className="border-t-2 border-gray-200 p-6 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
+              <div className="border-t-2 border-gray-200 p-4 sm:p-6 bg-gray-50">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     {selectedFiles.size} {selectedFiles.size === 1 ? 'bestand' : 'bestanden'}{' '}
                     geselecteerd
                   </p>
                   <button
                     onClick={handleAddSelected}
-                    className="px-6 py-3 bg-black text-white font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+                    className="px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-black text-white font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
                   >
                     Toevoegen
                   </button>

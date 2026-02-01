@@ -177,7 +177,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       {/* Mobile Menu Button - Fixed bottom bar */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="lg:hidden fixed bottom-4 right-4 z-50 w-14 h-14 bg-brand-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="lg:hidden fixed bottom-4 right-4 z-[70] w-14 h-14 bg-brand-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
       >
         {mobileMenuOpen ? (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +193,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-[45]"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -202,7 +202,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       <aside className={`
         fixed lg:relative
         inset-y-0 left-0
-        z-40
+        z-[50]
         w-64 bg-black text-white 
         flex flex-col border-r-2 border-brand-primary
         transform transition-transform duration-300 ease-in-out
