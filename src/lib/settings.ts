@@ -20,14 +20,23 @@ interface SiteSettings {
 }
 
 let cachedSettings: SiteSettings | null = null
+let cacheTimestamp: number = 0
+const CACHE_TTL = 60000 // 60 seconds
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   console.log('🎯 [SETTINGS] getSiteSettings called')
   
-  // Return cached settings if available
-  if (cachedSettings) {
-    console.log('🎯 [SETTINGS] Returning cached settings')
+  const now = Date.now()
+  const cacheAge = now - cacheTimestamp
+  
+  // Return cached settings if available AND not expired
+  if (cachedSettings && cacheAge < CACHE_TTL) {
+    console.log(`🎯 [SETTINGS] Returning cached settings (age: ${Math.round(cacheAge / 1000)}s)`)
     return cachedSettings
+  }
+  
+  if (cachedSettings) {
+    console.log(`🎯 [SETTINGS] Cache expired (age: ${Math.round(cacheAge / 1000)}s), fetching fresh data`)
   }
 
   const supabase = createClient()
@@ -86,6 +95,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     }
 
     console.log('🎯 [SETTINGS] Final cached settings:', cachedSettings)
+    
+    // Update cache timestamp
+    cacheTimestamp = Date.now()
 
     return cachedSettings
   } catch (error) {
@@ -115,7 +127,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
 // Clear cache when settings are updated
 export function clearSettingsCache() {
+  console.log('🎯 [SETTINGS] Cache cleared!')
   cachedSettings = null
+  cacheTimestamp = 0
 }
 
 
