@@ -1017,7 +1017,7 @@ export default function CheckoutPage() {
         email: form.email.trim(),
         status: 'pending',
         total: total,
-        subtotal: subtotalAfterDiscount, // After discount
+        subtotal: subtotal, // BEFORE discount - this is what subtotal should be!
         shipping_cost: shipping,
         tax_amount: 0,
         promo_code: promoCode || null,
@@ -1156,6 +1156,11 @@ export default function CheckoutPage() {
             country: form.country,
           },
           paymentMethod: paymentMethod,
+          // Include promo code for server-side validation
+          promoCode: promoCode || null,
+          promoDiscount: promoDiscount,
+          // Send expected total for validation
+          expectedTotal: total,
         }),
       })
 

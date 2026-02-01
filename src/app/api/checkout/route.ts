@@ -164,8 +164,10 @@ export async function POST(request: Request) {
     
     // Override client-provided discount with server-validated discount
     order.discount_amount = validatedDiscount
-    order.subtotal = order.subtotal - validatedDiscount
-    order.total = order.subtotal + order.shipping_cost
+    // Calculate total: (subtotal - discount) + shipping
+    // IMPORTANT: Keep order.subtotal as the original subtotal (before discount)
+    const subtotalAfterDiscount = order.subtotal - validatedDiscount
+    order.total = subtotalAfterDiscount + order.shipping_cost
 
     // ============================================
     // STEP 3: CHECK FOR DUPLICATE ORDERS (Idempotency)
