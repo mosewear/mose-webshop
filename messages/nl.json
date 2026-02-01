@@ -81,7 +81,10 @@
     "promo": {
       "title": "Heb je een kortingscode?",
       "apply": "Toepassen",
-      "placeholder": "CODE"
+      "placeholder": "CODE",
+      "applied": "toegepast",
+      "remove": "Code verwijderen",
+      "discountLabel": "Korting"
     },
     "mode": {
       "guest": "Gast Checkout",

@@ -81,7 +81,10 @@
     "promo": {
       "title": "Have a promo code?",
       "apply": "Apply",
-      "placeholder": "CODE"
+      "placeholder": "CODE",
+      "applied": "applied",
+      "remove": "Remove code",
+      "discountLabel": "Discount"
     },
     "mode": {
       "guest": "Guest Checkout",
