@@ -238,70 +238,6 @@ export default function ShopPageClient() {
 
   const filteredProducts = getFilteredAndSortedProducts()
 
-  // 🔍 DEBUG: Track layout shifts
-  useEffect(() => {
-    console.log('🎨 [LAYOUT DEBUG] ========== COMPONENT MOUNT ==========')
-    console.log('⏰ [LAYOUT DEBUG] Timestamp:', new Date().toISOString())
-    
-    // Track font loading
-    if (typeof document !== 'undefined' && document.fonts) {
-      console.log('📝 [LAYOUT DEBUG] Font loading status:', document.fonts.status)
-      document.fonts.ready.then(() => {
-        console.log('✅ [LAYOUT DEBUG] All fonts loaded at:', new Date().toISOString())
-      })
-    }
-
-    // Track CSS loading
-    if (typeof document !== 'undefined') {
-      const styleSheets = Array.from(document.styleSheets)
-      console.log('🎨 [LAYOUT DEBUG] Stylesheets loaded:', styleSheets.length)
-      
-      // Check for Tailwind classes
-      const hasGrid = document.querySelector('.grid')
-      const hasGap = document.querySelector('[class*="gap-"]')
-      console.log('🎨 [LAYOUT DEBUG] Grid classes present:', { hasGrid: !!hasGrid, hasGap: !!hasGap })
-    }
-
-    // Track layout shifts with PerformanceObserver
-    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
-            console.log('⚠️ [LAYOUT DEBUG] Layout shift detected!', {
-              value: (entry as any).value,
-              time: entry.startTime,
-              sources: (entry as any).sources?.map((s: any) => ({
-                node: s.node?.className || s.node?.tagName,
-                previousRect: s.previousRect,
-                currentRect: s.currentRect
-              }))
-            })
-          }
-        }
-      })
-      observer.observe({ entryTypes: ['layout-shift'] })
-      
-      return () => observer.disconnect()
-    }
-  }, [])
-
-  // 🔍 DEBUG: Track products state changes
-  useEffect(() => {
-    console.log('📦 [LAYOUT DEBUG] Products state changed:', {
-      count: products.length,
-      loading,
-      timestamp: new Date().toISOString()
-    })
-  }, [products, loading])
-
-  // 🔍 DEBUG: Track filtered products
-  useEffect(() => {
-    console.log('🔍 [LAYOUT DEBUG] Filtered products:', {
-      count: filteredProducts.length,
-      timestamp: new Date().toISOString()
-    })
-  }, [filteredProducts.length])
-
   const getTotalStock = (product: Product) => {
     return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
   }
@@ -824,12 +760,6 @@ export default function ShopPageClient() {
             {!loading && filteredProducts.length > 0 && (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {filteredProducts.map((product, index) => {
-                  console.log(`🎨 [LAYOUT DEBUG] Rendering product ${index + 1}/${filteredProducts.length}:`, {
-                    id: product.id,
-                    name: product.name,
-                    timestamp: new Date().toISOString()
-                  })
-                  
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
                   const hasPresale = product.variants?.some(v => 
@@ -844,8 +774,9 @@ export default function ShopPageClient() {
                       key={product.id}
                       href={`/product/${product.slug}`}
                       className="group block h-full"
+                      style={{ contain: 'layout' }}
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col min-h-[450px]">
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
@@ -908,11 +839,11 @@ export default function ShopPageClient() {
                         </div>
 
                         {/* Product Info - Smaller padding on mobile */}
-                        <div className="p-2 md:p-4 flex flex-col flex-grow">
-                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[2.5rem] md:min-h-[3.5rem]">
+                        <div className="p-2 md:p-4 flex flex-col flex-grow min-h-[120px]">
+                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2 min-h-[2.5rem]">
                             {getProductName(product)}
                           </h3>
-                          <div className="flex items-center justify-between mt-auto">
+                          <div className="flex items-center justify-between mt-auto min-h-[3rem]">
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
                               
