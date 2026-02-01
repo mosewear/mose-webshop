@@ -1155,6 +1155,7 @@
       "subtotal": "Subtotaal",
       "vat": "Waarvan BTW (21%)",
       "shipping": "Verzending",
+      "discount": "Korting",
       "free": "GRATIS",
       "total": "Totaal",
       "inclVat": "Incl. €{amount} BTW"

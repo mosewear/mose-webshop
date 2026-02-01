@@ -17,6 +17,8 @@ interface Order {
   subtotal: number
   shipping_cost: number
   total: number
+  discount_amount?: number
+  promo_code?: string
   status: string
   payment_status: string
   created_at: string
@@ -323,6 +325,12 @@ export default function OrderConfirmationPage({
                   )}
                 </span>
               </div>
+              {order.promo_code && order.discount_amount && order.discount_amount > 0 && (
+                <div className="flex justify-between text-lg text-brand-primary">
+                  <span>🎟️ {t('summary.discount')} ({order.promo_code})</span>
+                  <span className="font-semibold">-€{order.discount_amount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="border-t-2 border-white pt-4 flex justify-between items-center text-2xl md:text-3xl">
                 <span className="font-display">{t('summary.total')}</span>
                 <span className="font-display">€{order.total.toFixed(2)}</span>

@@ -1168,6 +1168,7 @@
       "subtotal": "Subtotal",
       "vat": "Including VAT (21%)",
       "shipping": "Shipping",
+      "discount": "Discount",
       "free": "FREE",
       "total": "Total",
       "inclVat": "Incl. €{amount} VAT"
