@@ -36,9 +36,26 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [promoCode, setPromoCode] = useState('')
   const [promoError, setPromoError] = useState('')
   const [promoDiscount, setPromoDiscount] = useState(0)
+  const [promoType, setPromoType] = useState<'percentage' | 'fixed'>('fixed')
+  const [promoValue, setPromoValue] = useState(0)
   const [upsellProducts, setUpsellProducts] = useState<any[]>([])
   const [addingProduct, setAddingProduct] = useState<string | null>(null)
   const [selectedUpsellSizes, setSelectedUpsellSizes] = useState<Record<string, string>>({})
+
+  // Load promo from localStorage on mount
+  useEffect(() => {
+    const savedPromo = localStorage.getItem('mose_promo_code')
+    const savedDiscount = localStorage.getItem('mose_promo_discount')
+    const savedType = localStorage.getItem('mose_promo_type')
+    const savedValue = localStorage.getItem('mose_promo_value')
+    
+    if (savedPromo && savedDiscount) {
+      setPromoCode(savedPromo)
+      setPromoDiscount(parseFloat(savedDiscount))
+      setPromoType(savedType as 'percentage' | 'fixed' || 'fixed')
+      setPromoValue(parseFloat(savedValue || '0'))
+    }
+  }, [])
 
   const subtotal = getTotal()
   const subtotalAfterDiscount = subtotal - promoDiscount
@@ -171,7 +188,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
       if (data.valid) {
         setPromoDiscount(data.discountAmount)
+        setPromoType(data.discountType)
+        setPromoValue(data.discountValue)
         setPromoCodeExpanded(false)
+        
+        // Save to localStorage
+        localStorage.setItem('mose_promo_code', promoCode.toUpperCase())
+        localStorage.setItem('mose_promo_discount', data.discountAmount.toString())
+        localStorage.setItem('mose_promo_type', data.discountType)
+        localStorage.setItem('mose_promo_value', data.discountValue.toString())
       } else {
         setPromoError(data.error || t('promo.error'))
         setPromoDiscount(0)
@@ -187,6 +212,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     setPromoCode('')
     setPromoDiscount(0)
     setPromoError('')
+    setPromoType('fixed')
+    setPromoValue(0)
+    
+    // Clear from localStorage
+    localStorage.removeItem('mose_promo_code')
+    localStorage.removeItem('mose_promo_discount')
+    localStorage.removeItem('mose_promo_type')
+    localStorage.removeItem('mose_promo_value')
   }
 
   // Handle quick add from upsell
@@ -600,31 +633,63 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <p className="text-xs text-red-600 font-semibold">{promoError}</p>
                       )}
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between py-2 text-sm bg-brand-primary/10 px-2">
-                      <div className="flex items-center gap-2 text-brand-primary font-semibold">
-                        <Ticket size={16} />
-                        <span>{promoCode}</span>
-                      </div>
-                      <button
-                        onClick={handleRemovePromo}
-                        className="text-xs text-gray-600 hover:text-black font-semibold uppercase"
-                      >
-                        {t('remove', { ns: 'common' })}
-                      </button>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
 
-                {/* Minimal Total - PROMINENT */}
-                <div className="border-t-2 border-black pt-3">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-display text-xl uppercase tracking-wide">{t('total')}</span>
-                    <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
+                {/* Totals Section - VOORSTEL 1 DESIGN */}
+                <div className="border-t-2 border-black pt-3 space-y-2">
+                  {/* Subtotal */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold uppercase tracking-wide">SUBTOTAAL</span>
+                    <span className="font-bold">€{subtotal.toFixed(2)}</span>
                   </div>
-                  <p className="text-xs text-gray-500 text-right mt-1">
-                    {t('totalInclusive')}
-                  </p>
+
+                  {/* Promo Discount - VOORSTEL 1: Clean & Transparent */}
+                  {promoDiscount > 0 && (
+                    <>
+                      <div className="h-px bg-gray-300"></div>
+                      <div className="flex justify-between items-center py-1 px-2 bg-brand-primary/5 border-l-2 border-brand-primary">
+                        <div className="flex items-center gap-2">
+                          <Ticket size={16} className="text-brand-primary" />
+                          <div>
+                            <div className="font-semibold text-brand-primary uppercase tracking-wide text-sm">
+                              {promoCode}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {promoType === 'percentage' ? `${promoValue}% korting` : 'Korting'} • 
+                              <button
+                                onClick={handleRemovePromo}
+                                className="ml-1 text-gray-500 hover:text-black font-semibold underline"
+                              >
+                                {t('promo.remove')}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="font-bold text-brand-primary">-€{promoDiscount.toFixed(2)}</span>
+                      </div>
+                      <div className="h-px bg-gray-300"></div>
+                    </>
+                  )}
+
+                  {/* Shipping */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold uppercase tracking-wide">VERZENDING</span>
+                    <span className="font-bold text-brand-primary">
+                      {shipping === 0 ? 'GRATIS' : `€${shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+
+                  {/* Total */}
+                  <div className="border-t-2 border-black pt-2">
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-display text-xl uppercase tracking-wide">TOTAAL</span>
+                      <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 text-right mt-1">
+                      {t('totalInclusive')}
+                    </p>
+                  </div>
                 </div>
 
                 {/* CTA Button - GREEN! */}

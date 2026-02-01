@@ -232,7 +232,10 @@
       "error": "Invalid promo code",
       "success": "Promo code applied!",
       "codeInvalid": "Code invalid",
-      "validationFailed": "Could not validate code"
+      "validationFailed": "Could not validate code",
+      "applied": "applied",
+      "remove": "Remove code",
+      "discountLabel": "Discount"
     },
     "placeholder": {
       "promoCode": "CODE"

@@ -232,7 +232,10 @@
       "error": "Ongeldige kortingscode",
       "success": "Kortingscode toegepast!",
       "codeInvalid": "Code ongeldig",
-      "validationFailed": "Kon code niet valideren"
+      "validationFailed": "Kon code niet valideren",
+      "applied": "toegepast",
+      "remove": "Code verwijderen",
+      "discountLabel": "Korting"
     },
     "placeholder": {
       "promoCode": "CODE"
