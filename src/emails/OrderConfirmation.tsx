@@ -36,6 +36,8 @@ interface OrderConfirmationEmailProps {
   }
   hasPresaleItems?: boolean
   presaleExpectedDate?: string
+  promoCode?: string
+  discountAmount?: number
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -51,6 +53,8 @@ export default function OrderConfirmationEmail({
   shippingAddress,
   hasPresaleItems = false,
   presaleExpectedDate,
+  promoCode,
+  discountAmount = 0,
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
@@ -148,6 +152,14 @@ export default function OrderConfirmationEmail({
                 <Column>{t('orderConfirmation.shipping')}</Column>
                 <Column style={summaryAmount}>€{shipping.toFixed(2)}</Column>
               </Row>
+              {promoCode && discountAmount > 0 && (
+                <Row style={summaryLine}>
+                  <Column style={discountLabel}>
+                    🎟️ {t('orderConfirmation.discount')} ({promoCode})
+                  </Column>
+                  <Column style={discountAmount}>-€{discountAmount.toFixed(2)}</Column>
+                </Row>
+              )}
               <Hr style={summaryDivider} />
               <Text style={summaryTotal}>€{orderTotal.toFixed(2)}</Text>
               <Text style={summaryTotalLabel}>{t('orderConfirmation.totalPaid')}</Text>
@@ -350,6 +362,17 @@ const summaryVat = {
   fontSize: '13px',
   color: '#999',
   textAlign: 'right' as const,
+}
+
+const discountLabel = {
+  color: '#00A676',
+  fontWeight: 600,
+}
+
+const discountAmount = {
+  textAlign: 'right' as const,
+  color: '#00A676',
+  fontWeight: 600,
 }
 
 const summaryDivider = {

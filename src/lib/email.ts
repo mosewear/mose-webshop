@@ -62,6 +62,8 @@ interface OrderEmailProps {
     city: string
     postalCode: string
   }
+  promoCode?: string
+  discountAmount?: number
   locale?: string
 }
 

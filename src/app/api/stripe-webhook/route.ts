@@ -526,6 +526,8 @@ export async function POST(req: NextRequest) {
                 city: shippingAddress?.city || '',
                 postalCode: shippingAddress?.postalCode || '',
               },
+              promoCode: updatedOrder.promo_code || undefined,
+              discountAmount: updatedOrder.discount_amount || 0,
               locale: updatedOrder.locale || 'nl', // Pass locale for multi-language emails
             })
             
@@ -748,6 +750,8 @@ export async function POST(req: NextRequest) {
                     city: shippingAddress?.city || '',
                     postalCode: shippingAddress?.postalCode || '',
                   },
+                  promoCode: updatedOrder.promo_code || undefined,
+                  discountAmount: updatedOrder.discount_amount || 0,
                   locale: updatedOrder.locale || 'nl', // Pass locale for multi-language emails
                 })
                 

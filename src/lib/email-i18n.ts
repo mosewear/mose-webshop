@@ -20,6 +20,7 @@ export type EmailTranslationKeys = {
     subtotal: string
     vat: string
     shipping: string
+    discount: string
     total: string
     totalPaid: string
     presaleNotice: string
@@ -44,6 +45,7 @@ export type EmailTranslationKeys = {
     subtotal: string
     btw: string
     shipping: string
+    discount: string
     free: string
     total: string
     shippingAddress: string
@@ -336,6 +338,7 @@ const nl: EmailTranslationKeys = {
     subtotal: 'Subtotaal (excl. BTW)',
     vat: 'BTW (21%)',
     shipping: 'Verzendkosten',
+    discount: 'Korting',
     total: 'Totaal',
     totalPaid: 'TOTAAL BETAALD',
     presaleNotice: 'Let op: Pre-sale items',
@@ -360,6 +363,7 @@ const nl: EmailTranslationKeys = {
     subtotal: 'Subtotaal (excl. BTW)',
     btw: 'BTW (21%)',
     shipping: 'Verzendkosten',
+    discount: 'Korting',
     free: 'Gratis',
     total: 'Totaal',
     shippingAddress: 'VERZENDADRES',
@@ -652,6 +656,7 @@ const en: EmailTranslationKeys = {
     subtotal: 'Subtotal (excl. VAT)',
     vat: 'VAT (21%)',
     shipping: 'Shipping',
+    discount: 'Discount',
     total: 'Total',
     totalPaid: 'TOTAL PAID',
     presaleNotice: 'Note: Pre-sale items',
@@ -676,6 +681,7 @@ const en: EmailTranslationKeys = {
     subtotal: 'Subtotal (excl. VAT)',
     btw: 'VAT (21%)',
     shipping: 'Shipping',
+    discount: 'Discount',
     free: 'Free',
     total: 'Total',
     shippingAddress: 'SHIPPING ADDRESS',

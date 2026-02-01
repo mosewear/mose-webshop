@@ -34,6 +34,8 @@ interface PreorderConfirmationEmailProps {
     postalCode: string
   }
   presaleExpectedDate: string
+  promoCode?: string
+  discountAmount?: number
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -48,6 +50,8 @@ export default function PreorderConfirmationEmail({
   orderItems,
   shippingAddress,
   presaleExpectedDate,
+  promoCode,
+  discountAmount = 0,
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
@@ -176,6 +180,12 @@ export default function PreorderConfirmationEmail({
                 <Column><Text style={summaryText}>{t('preorder.shipping')}</Text></Column>
                 <Column align="right"><Text style={summaryText}>{shipping === 0 ? t('preorder.free') : `€${shipping.toFixed(2)}`}</Text></Column>
               </Row>
+              {promoCode && discountAmount > 0 && (
+                <Row style={summaryRow}>
+                  <Column><Text style={discountText}>🎟️ {t('preorder.discount')} ({promoCode})</Text></Column>
+                  <Column align="right"><Text style={discountText}>-€{discountAmount.toFixed(2)}</Text></Column>
+                </Row>
+              )}
               <Hr style={summaryDivider} />
               <Row style={summaryRow}>
                 <Column><Text style={summaryTotal}>{t('preorder.total')}</Text></Column>
@@ -404,6 +414,13 @@ const summaryText = {
   margin: '0',
   fontSize: '14px',
   color: '#4a5568',
+}
+
+const discountText = {
+  margin: '0',
+  fontSize: '14px',
+  fontWeight: '700',
+  color: '#00A676',
 }
 
 const summaryDivider = {
