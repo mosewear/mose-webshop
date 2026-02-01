@@ -80,6 +80,8 @@ export async function GET(req: NextRequest) {
             customerEmail: updatedOrder.email,
             orderId: updatedOrder.id,
             orderTotal: updatedOrder.total,
+            subtotal: updatedOrder.subtotal,
+            shippingCost: updatedOrder.shipping_cost,
             orderItems: updatedOrder.order_items.map((item: any) => ({
               name: item.product_name,
               size: item.size,
@@ -96,6 +98,9 @@ export async function GET(req: NextRequest) {
               city: shippingAddress?.city || '',
               postalCode: shippingAddress?.postalCode || '',
             },
+            promoCode: updatedOrder.promo_code || undefined,
+            discountAmount: updatedOrder.discount_amount || 0,
+            locale: updatedOrder.locale || 'nl',
           })
           
           if (emailResult.success) {
