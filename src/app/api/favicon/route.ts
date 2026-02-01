@@ -13,7 +13,10 @@ import { getSiteSettings } from '@/lib/settings'
  * - This route forces proper cache control headers
  */
 export async function GET(request: NextRequest) {
-  console.log('🎯 [FAVICON API] Request received')
+  const timestamp = new Date().toISOString()
+  console.log(`🎯 [FAVICON API] ========== REQUEST START ${timestamp} ==========`)
+  console.log('🎯 [FAVICON API] Request URL:', request.url)
+  console.log('🎯 [FAVICON API] Request headers:', Object.fromEntries(request.headers))
   
   try {
     // Get favicon URL from settings
