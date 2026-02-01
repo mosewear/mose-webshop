@@ -296,6 +296,30 @@ export default function ShopPageClient() {
     }
   }, [])
 
+  // Track state changes
+  useEffect(() => {
+    console.log('📦 [SHIFT DEBUG] Products state:', {
+      count: products.length,
+      loading,
+      timestamp: performance.now()
+    })
+  }, [products, loading])
+
+  useEffect(() => {
+    console.log('🔍 [SHIFT DEBUG] FilteredProducts changed:', {
+      count: filteredProducts.length,
+      timestamp: performance.now()
+    })
+  }, [filteredProducts])
+
+  useEffect(() => {
+    console.log('🎯 [SHIFT DEBUG] Selected category changed:', selectedCategory)
+  }, [selectedCategory])
+
+  useEffect(() => {
+    console.log('💰 [SHIFT DEBUG] Price range changed:', priceRange)
+  }, [priceRange])
+
   // Track when images load
   useEffect(() => {
     if (!loading && filteredProducts.length > 0) {
@@ -311,7 +335,7 @@ export default function ShopPageClient() {
         } else {
           img.addEventListener('load', () => {
             loadedCount++
-            console.log(`📸 [SHIFT DEBUG] Image ${loadedCount}/${images.length} loaded`)
+            console.log(`📸 [SHIFT DEBUG] Image ${loadedCount}/${images.length} loaded at ${performance.now()}ms`)
           }, { once: true })
         }
       })
