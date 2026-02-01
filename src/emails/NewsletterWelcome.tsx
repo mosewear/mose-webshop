@@ -48,7 +48,7 @@ export default function NewsletterWelcomeEmail({
           {/* Content */}
           <Section style={content}>
             <Text style={welcomeText}>
-              {t('newsletterWelcome.whatToExpect')}
+              {t('newsletterWelcome.whatYouGet')}
             </Text>
 
             {/* Benefits List */}
@@ -59,7 +59,8 @@ export default function NewsletterWelcomeEmail({
                     <IconCircle icon="package" color="#00B67A" size={20} />
                   </td>
                   <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={benefitText}>{t('newsletterWelcome.benefit1')}</Text>
+                    <Text style={benefitTitle}>{t('newsletterWelcome.benefit1Title')}</Text>
+                    <Text style={benefitText}>{t('newsletterWelcome.benefit1Text')}</Text>
                   </td>
                 </tr>
               </table>
@@ -69,7 +70,8 @@ export default function NewsletterWelcomeEmail({
                     <IconCircle icon="alert-circle" color="#00B67A" size={20} />
                   </td>
                   <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={benefitText}>{t('newsletterWelcome.benefit2')}</Text>
+                    <Text style={benefitTitle}>{t('newsletterWelcome.benefit2Title')}</Text>
+                    <Text style={benefitText}>{t('newsletterWelcome.benefit2Text')}</Text>
                   </td>
                 </tr>
               </table>
@@ -79,7 +81,8 @@ export default function NewsletterWelcomeEmail({
                     <IconCircle icon="shopping-cart" color="#00B67A" size={20} />
                   </td>
                   <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={benefitText}>{t('newsletterWelcome.benefit3')}</Text>
+                    <Text style={benefitTitle}>{t('newsletterWelcome.benefit3Title')}</Text>
+                    <Text style={benefitText}>{t('newsletterWelcome.benefit3Text')}</Text>
                   </td>
                 </tr>
               </table>
@@ -88,13 +91,13 @@ export default function NewsletterWelcomeEmail({
             {/* CTA Button */}
             <Section style={ctaSection}>
               <a href={`${siteUrl}/shop`} style={button}>
-                {t('newsletterWelcome.ctaButton')}
+                {t('newsletterWelcome.discoverCollection')}
               </a>
             </Section>
 
             {/* Email Address */}
             <Text style={emailInfo}>
-              {t('newsletterWelcome.emailRegistered')}: <strong>{email}</strong>
+              {t('newsletterWelcome.receivedBecause')}
             </Text>
           </Section>
 
@@ -177,11 +180,19 @@ const benefitsList = {
   border: '2px solid #e2e8f0',
 }
 
-const benefitText = {
-  margin: '0',
-  fontSize: '14px',
+const benefitTitle = {
+  margin: '0 0 4px 0',
+  fontSize: '15px',
   lineHeight: '20px',
   color: '#2d3748',
+  fontWeight: '700',
+}
+
+const benefitText = {
+  margin: '0',
+  fontSize: '13px',
+  lineHeight: '18px',
+  color: '#4a5568',
 }
 
 const ctaSection = {
