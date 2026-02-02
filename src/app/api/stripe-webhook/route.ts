@@ -5,6 +5,7 @@ import { sendOrderConfirmationEmail } from '@/lib/email'
 import { createReturnLabelSimple } from '@/lib/sendcloud-return-simple'
 import { sendReturnLabelGeneratedEmail } from '@/lib/email'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
+import { sendOrderNotificationToAdmins } from '@/lib/push-notifications'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -390,6 +391,23 @@ export async function POST(req: NextRequest) {
         }
         
         console.log(`✅ Order ${order.id} marked as PAID (payment_status: paid, status: processing)`)
+        
+        // ============================================
+        // 🔔 SEND PUSH NOTIFICATION TO ADMINS (KaChing!)
+        // ============================================
+        try {
+          const shippingAddress = updatedOrder.shipping_address as any
+          await sendOrderNotificationToAdmins({
+            orderId: updatedOrder.id,
+            orderTotal: updatedOrder.total,
+            customerName: shippingAddress?.name || 'Klant',
+            itemCount: updatedOrder.order_items.length
+          })
+          console.log('✅ Push notification sent to admins (KaChing!)')
+        } catch (pushError) {
+          console.error('⚠️ Failed to send push notification:', pushError)
+          // Don't fail webhook if push fails
+        }
         
         // ============================================
         // UPDATE CUSTOMER STATS AFTER SUCCESSFUL PAYMENT

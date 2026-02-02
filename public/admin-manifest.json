@@ -1,0 +1,47 @@
+{
+  "name": "MOSE Admin",
+  "short_name": "MOSE Admin",
+  "description": "MOSE Webshop Admin Panel - Beheer orders, producten en klanten",
+  "start_url": "/admin",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1DBF73",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "1080x1080",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open admin dashboard",
+      "url": "/admin",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "description": "View orders",
+      "url": "/admin/orders",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    }
+  ]
+}
+
