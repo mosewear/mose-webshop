@@ -1066,11 +1066,11 @@
       },
       {
         "question": "Wat zijn de verzendkosten en levertijd?",
-        "answer": "Verzending binnen Nederland en België is gratis vanaf €{freeShipping}. Daaronder betaal je €{shippingCost}. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via PostNL."
+        "answer": "Verzending binnen Nederland en België is gratis vanaf €{freeShipping}. Daaronder betaal je €{shippingCost}. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via DHL."
       },
       {
         "question": "Kan ik mijn bestelling retourneren?",
-        "answer": "Ja! Je hebt {returnDays} dagen bedenktijd vanaf ontvangst. Retourneren is gratis en eenvoudig. De artikelen moeten ongedragen zijn met labels er nog aan. Vul het retourformulier in je pakket in en stuur het terug. Je krijgt binnen 5 werkdagen je geld terug."
+        "answer": "Ja! Je hebt {returnDays} dagen bedenktijd vanaf ontvangst. De artikelen moeten ongedragen zijn met labels er nog aan. Je kunt eenvoudig een retour aanmelden via je klantportaal. De retourkosten worden verrekend met je terugbetaling. Je krijgt binnen 5 werkdagen je geld terug."
       },
       {
         "question": "Hoe verzorg ik mijn MOSE kleding?",
@@ -1306,7 +1306,8 @@
         "items": [
           "Je hebt {days} dagen bedenktijd vanaf ontvangst",
           "Producten moeten ongedragen en in originele staat zijn",
-          "Retourneren is gratis binnen Nederland en België",
+          "Retourzendingen binnen Nederland en België mogelijk",
+          "Retourkosten worden verrekend met je terugbetaling",
           "Retourzendingen worden binnen 5 werkdagen verwerkt"
         ]
       },
@@ -1444,7 +1445,7 @@
     "downloadButton": "Download retourlabel",
     "instructionsTitle": "Retour instructies",
     "step1": "Print het retourlabel en plak het op je pakket",
-    "step2": "Breng het pakket naar een PostNL locatie",
+    "step2": "Breng het pakket naar een DHL locatie",
     "step3": "Je ontvangt een bevestiging zodra we je retour ontvangen hebben"
   },
   "returnApproved": {
