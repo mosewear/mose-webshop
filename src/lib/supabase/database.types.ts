@@ -35,6 +35,83 @@ export type Database = {
         }
         Relationships: []
       }
+      announcement_banner: {
+        Row: {
+          id: string
+          enabled: boolean
+          rotation_interval: number
+          dismissable: boolean
+          dismiss_cookie_days: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          enabled?: boolean
+          rotation_interval?: number
+          dismissable?: boolean
+          dismiss_cookie_days?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          enabled?: boolean
+          rotation_interval?: number
+          dismissable?: boolean
+          dismiss_cookie_days?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      announcement_messages: {
+        Row: {
+          id: string
+          banner_id: string
+          text: string
+          link_url: string | null
+          cta_text: string | null
+          icon: string | null
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          banner_id: string
+          text: string
+          link_url?: string | null
+          cta_text?: string | null
+          icon?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          banner_id?: string
+          text?: string
+          link_url?: string | null
+          cta_text?: string | null
+          icon?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_messages_banner_id_fkey"
+            columns: ["banner_id"]
+            isOneToOne: false
+            referencedRelation: "announcement_banner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null

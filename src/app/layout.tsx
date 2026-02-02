@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import { PostHogProvider } from './providers'
 import { getSiteSettings } from '@/lib/settings'
+import AnnouncementBanner from '@/components/AnnouncementBanner'
 import "./globals.css";
 
 const anton = Anton({
@@ -170,6 +171,7 @@ export default async function RootLayout({
       </head>
       <body className="antialiased font-sans">
         <PostHogProvider>
+          <AnnouncementBanner />
           {children}
         </PostHogProvider>
         <Toaster 
