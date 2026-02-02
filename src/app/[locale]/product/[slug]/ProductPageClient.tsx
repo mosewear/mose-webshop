@@ -1685,31 +1685,31 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <tbody className="text-xs sm:text-sm">
                     <tr className="border-b-2 border-black">
                       <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">S</td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">100-104</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">88-96</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">68-70</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">44-46</td>
                     </tr>
                     <tr className="border-b-2 border-black bg-gray-50">
                       <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">M</td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">104-108</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">96-104</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">70-72</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">46-48</td>
                     </tr>
                     <tr className="border-b-2 border-black">
                       <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">L</td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">108-112</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">104-112</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">72-74</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">48-50</td>
                     </tr>
                     <tr className="border-b-2 border-black bg-gray-50">
                       <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XL</td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">112-116</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">112-120</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">74-76</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">50-52</td>
                     </tr>
                     <tr>
                       <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold">XXL</td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3">116-120</td>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3">120-128</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">76-78</td>
                       <td className="px-3 sm:px-4 py-2 sm:py-3">52-54</td>
                     </tr>

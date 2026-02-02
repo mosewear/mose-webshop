@@ -43,7 +43,13 @@ export default function SizeGuideEditor({ initialContent, sizeGuideType, onChang
       return {
         type: 'table',
         columns: ['Maat', 'Borst (cm)', 'Lengte (cm)', 'Schouders (cm)'],
-        rows: [['S', '', '', '']],
+        rows: [
+          ['S', '88-96', '68-70', '44-46'],
+          ['M', '96-104', '70-72', '46-48'],
+          ['L', '104-112', '72-74', '48-50'],
+          ['XL', '112-120', '74-76', '50-52'],
+          ['XXL', '120-128', '76-78', '52-54']
+        ],
         how_to_measure: []
       }
     }
