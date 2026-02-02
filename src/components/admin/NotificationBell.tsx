@@ -9,6 +9,7 @@ export default function NotificationBell() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   
   const supabase = createClient()
@@ -89,6 +90,9 @@ export default function NotificationBell() {
         }
         
         console.log('[Admin PWA] Service worker ready')
+        
+        // Store registration in state for later use
+        setSwRegistration(registration)
         
         // Try to get existing subscription with timeout
         try {
@@ -171,15 +175,24 @@ export default function NotificationBell() {
   const subscribeToPush = async () => {
     console.log('[NotificationBell] ========== SUBSCRIBE TO PUSH ==========')
     try {
-      console.log('[NotificationBell] Waiting for service worker with 5s timeout...')
+      let registration: ServiceWorkerRegistration
       
-      // Add timeout to service worker ready
-      const registrationPromise = navigator.serviceWorker.ready
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Service worker timeout after 5 seconds')), 5000)
-      )
+      // Use stored registration if available, otherwise wait for ready
+      if (swRegistration) {
+        console.log('[NotificationBell] Using stored service worker registration')
+        registration = swRegistration
+      } else {
+        console.log('[NotificationBell] No stored registration, waiting for service worker with 5s timeout...')
+        
+        // Fallback: Add timeout to service worker ready
+        const registrationPromise = navigator.serviceWorker.ready
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Service worker timeout after 5 seconds')), 5000)
+        )
+        
+        registration = await Promise.race([registrationPromise, timeoutPromise]) as ServiceWorkerRegistration
+      }
       
-      const registration = await Promise.race([registrationPromise, timeoutPromise]) as ServiceWorkerRegistration
       console.log('[NotificationBell] ✅ Service worker ready:', registration.scope)
       
       console.log('[NotificationBell] Fetching VAPID public key...')
@@ -276,20 +289,29 @@ export default function NotificationBell() {
     
     setIsLoading(true)
     try {
-      // Try to get service worker with timeout
+      // Try to get service worker
       let browserSubscription = null
       
       if ('serviceWorker' in navigator) {
-        console.log('[NotificationBell] Getting service worker registration with 2s timeout...')
-        
         try {
-          // Add timeout to service worker ready
-          const registrationPromise = navigator.serviceWorker.ready
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Service worker timeout')), 2000)
-          )
+          let registration: ServiceWorkerRegistration | undefined
           
-          const registration = await Promise.race([registrationPromise, timeoutPromise]) as ServiceWorkerRegistration
+          // Use stored registration if available
+          if (swRegistration) {
+            console.log('[NotificationBell] Using stored service worker registration')
+            registration = swRegistration
+          } else {
+            console.log('[NotificationBell] No stored registration, getting with 2s timeout...')
+            
+            // Fallback with timeout
+            const registrationPromise = navigator.serviceWorker.ready
+            const timeoutPromise = new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Service worker timeout')), 2000)
+            )
+            
+            registration = await Promise.race([registrationPromise, timeoutPromise]) as ServiceWorkerRegistration
+          }
+          
           console.log('[NotificationBell] Service worker ready')
           
           browserSubscription = await registration.pushManager.getSubscription()
