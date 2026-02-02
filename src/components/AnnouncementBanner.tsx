@@ -52,28 +52,42 @@ export default function AnnouncementBanner() {
     const fetchBanner = async () => {
       try {
         // Fetch config
-        const { data: configData } = await supabase
+        const { data: configData, error: configError } = await supabase
           .from('announcement_banner')
           .select('*')
           .single()
 
-        if (configData && configData.enabled) {
-          setConfig(configData)
+        console.log('🎯 [BANNER] Config fetched:', configData, configError)
 
-          // Fetch active messages
-          const { data: messagesData } = await supabase
-            .from('announcement_messages')
-            .select('*')
-            .eq('banner_id', configData.id)
-            .eq('is_active', true)
-            .order('sort_order', { ascending: true })
+        if (configData) {
+          console.log('🎯 [BANNER] Config enabled:', configData.enabled)
+          
+          if (configData.enabled) {
+            setConfig(configData)
 
-          if (messagesData && messagesData.length > 0) {
-            setMessages(messagesData)
+            // Fetch active messages
+            const { data: messagesData, error: messagesError } = await supabase
+              .from('announcement_messages')
+              .select('*')
+              .eq('banner_id', configData.id)
+              .eq('is_active', true)
+              .order('sort_order', { ascending: true })
+
+            console.log('🎯 [BANNER] Active messages fetched:', messagesData?.length || 0, messagesError)
+
+            if (messagesData && messagesData.length > 0) {
+              setMessages(messagesData)
+            } else {
+              console.log('🎯 [BANNER] No active messages found')
+            }
+          } else {
+            console.log('🎯 [BANNER] Banner is disabled')
           }
+        } else {
+          console.log('🎯 [BANNER] No banner config found')
         }
       } catch (error) {
-        console.error('Error fetching announcement banner:', error)
+        console.error('🎯 [BANNER] Error fetching announcement banner:', error)
       }
     }
 
@@ -115,8 +129,15 @@ export default function AnnouncementBanner() {
 
   // Don't render if dismissed, not enabled, or no messages
   if (isDismissed || !config?.enabled || messages.length === 0) {
+    console.log('🎯 [BANNER] Not rendering:', { 
+      isDismissed, 
+      configEnabled: config?.enabled, 
+      messagesCount: messages.length 
+    })
     return null
   }
+
+  console.log('🎯 [BANNER] Rendering banner with message:', messages[currentIndex]?.text)
 
   const currentMessage = messages[currentIndex]
 

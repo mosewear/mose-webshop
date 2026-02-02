@@ -67,6 +67,31 @@ export default function AnnouncementBannerAdmin() {
     }
   }
 
+  const handleToggleBanner = async (enabled: boolean) => {
+    if (!config) return
+
+    // Optimistic update
+    setConfig({ ...config, enabled })
+
+    try {
+      const { error } = await supabase
+        .from('announcement_banner')
+        .update({
+          enabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', config.id)
+
+      if (error) throw error
+      console.log('✅ Banner toggle saved:', enabled)
+    } catch (error: any) {
+      console.error('Error toggling banner:', error)
+      alert(`Fout bij opslaan: ${error.message}`)
+      // Revert on error
+      setConfig({ ...config, enabled: !enabled })
+    }
+  }
+
   const handleSaveConfig = async () => {
     if (!config) return
 
@@ -210,7 +235,7 @@ export default function AnnouncementBannerAdmin() {
             <input
               type="checkbox"
               checked={config.enabled}
-              onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
+              onChange={(e) => handleToggleBanner(e.target.checked)}
               className="w-4 h-4"
             />
             <span className="text-sm font-bold uppercase">
