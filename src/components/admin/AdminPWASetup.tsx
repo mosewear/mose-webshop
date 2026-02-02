@@ -87,9 +87,10 @@ export default function AdminPWASetup() {
       const { publicKey } = await response.json()
       
       // Subscribe to push notifications
+      const applicationServerKey = urlBase64ToUint8Array(publicKey)
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
+        applicationServerKey: applicationServerKey as BufferSource
       })
       
       setSubscription(sub)
@@ -173,8 +174,7 @@ export default function AdminPWASetup() {
       icon: '/favicon.ico',
       badge: '/favicon-32x32.png',
       tag: 'test-order',
-      requireInteraction: true,
-      vibrate: [200, 100, 200]
+      requireInteraction: true
     })
   }
 
