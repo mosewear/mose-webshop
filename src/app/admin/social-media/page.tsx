@@ -18,6 +18,7 @@ interface PostContent {
 export default function SocialMediaPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateStyle>('style-1')
   const [postType, setPostType] = useState<PostType>('instagram')
+  const [showSafeZones, setShowSafeZones] = useState(true)
   const [content, setContent] = useState<PostContent>({
     mainText: 'COMING SOON',
     subText: 'MOSEWEAR.COM',
@@ -328,13 +329,36 @@ export default function SocialMediaPage() {
           <div className="bg-white p-6 border-2 border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Preview</h3>
-              <div className="text-sm text-gray-500">
-                {dimensions.width} × {dimensions.height}px
+              <div className="flex items-center gap-4">
                 {postType === 'instagram' && (
-                  <span className="ml-2 text-orange-600 font-bold">
-                    (Safe zone: {safeZone.left}px links/rechts)
-                  </span>
+                  <button
+                    onClick={() => setShowSafeZones(!showSafeZones)}
+                    className={`flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wide border-2 transition-all ${
+                      showSafeZones
+                        ? 'bg-orange-500 border-orange-500 text-white hover:bg-orange-600'
+                        : 'border-gray-300 text-gray-700 hover:border-orange-500'
+                    }`}
+                    title="Toggle safe zone indicators"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {showSafeZones ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      )}
+                    </svg>
+                    <span className="hidden md:inline">{showSafeZones ? 'Verberg' : 'Toon'} Safe Zones</span>
+                    <span className="md:hidden">{showSafeZones ? 'Verberg' : 'Toon'}</span>
+                  </button>
                 )}
+                <div className="text-sm text-gray-500">
+                  {dimensions.width} × {dimensions.height}px
+                  {postType === 'instagram' && showSafeZones && (
+                    <span className="ml-2 text-orange-600 font-bold">
+                      (Safe zone: {safeZone.left}px links/rechts)
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -352,7 +376,7 @@ export default function SocialMediaPage() {
                 className="shadow-2xl"
               >
                 {/* Safe Zone Indicators (Instagram only) - LINKS EN RECHTS! */}
-                {postType === 'instagram' && (
+                {postType === 'instagram' && showSafeZones && (
                   <>
                     <div
                       style={{
@@ -391,19 +415,33 @@ export default function SocialMediaPage() {
             </div>
 
             {/* Instructions */}
-            <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 text-sm">
-              <p className="font-bold text-blue-900 mb-2">💡 Tip voor Instagram grid:</p>
-              <p className="text-blue-800 mb-2">
-                De rode zones links en rechts worden afgesneden in de Instagram grid weergave (portrait 4:5).
-                Plaats belangrijke content zoals logo en tekst in het midden (groene zone)!
-              </p>
-              <p className="text-blue-900 font-bold mt-3 mb-1">📸 Screenshot maken:</p>
-              <ul className="text-blue-800 list-disc list-inside space-y-1">
-                <li><strong>Mac:</strong> Cmd + Shift + 4, selecteer het preview vierkant</li>
-                <li><strong>Windows:</strong> Gebruik Snipping Tool of Win + Shift + S</li>
-                <li>Voor beste kwaliteit: screenshot alleen het preview vierkant (niet de hele pagina)</li>
-              </ul>
-            </div>
+            {showSafeZones && postType === 'instagram' && (
+              <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 text-sm">
+                <p className="font-bold text-blue-900 mb-2">💡 Tip voor Instagram grid:</p>
+                <p className="text-blue-800 mb-2">
+                  De rode zones links en rechts worden afgesneden in de Instagram grid weergave (portrait 4:5).
+                  Plaats belangrijke content zoals logo en tekst in het midden (groene zone)!
+                </p>
+                <p className="text-blue-900 font-bold mt-3 mb-1">📸 Screenshot maken:</p>
+                <ul className="text-blue-800 list-disc list-inside space-y-1">
+                  <li><strong>Mac:</strong> Cmd + Shift + 4, selecteer het preview vierkant</li>
+                  <li><strong>Windows:</strong> Gebruik Snipping Tool of Win + Shift + S</li>
+                  <li>Voor beste kwaliteit: screenshot alleen het preview vierkant (niet de hele pagina)</li>
+                </ul>
+                <p className="text-blue-900 font-bold mt-3">
+                  💡 <strong>Tip:</strong> Klik op "Verberg Safe Zones" voor een schone screenshot zonder rode guides!
+                </p>
+              </div>
+            )}
+            
+            {!showSafeZones && postType === 'instagram' && (
+              <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 text-sm">
+                <p className="font-bold text-green-900 mb-2">📸 Ready voor screenshot!</p>
+                <p className="text-green-800">
+                  Safe zones zijn verborgen. Maak nu je screenshot voor een perfect schone Instagram post!
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
