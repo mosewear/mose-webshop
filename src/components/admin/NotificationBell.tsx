@@ -48,10 +48,29 @@ export default function NotificationBell() {
         )
         console.log('[Admin PWA] Service Worker registered:', registration.scope)
         
+        // Check if there's an existing subscription in the browser
         const existing = await registration.pushManager.getSubscription()
         if (existing) {
-          setSubscription(existing)
-          setNotificationsEnabled(true)
+          console.log('[Admin PWA] Found existing subscription in browser')
+          
+          // Verify it still exists in the database
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const response = await fetch(`/api/admin/push/check-subscription?userId=${user.id}`)
+            const data = await response.json()
+            
+            if (data.exists) {
+              console.log('[Admin PWA] Subscription verified in database')
+              setSubscription(existing)
+              setNotificationsEnabled(true)
+            } else {
+              console.log('[Admin PWA] Subscription not in database, removing from browser')
+              // Remove orphaned subscription from browser
+              await existing.unsubscribe()
+              setSubscription(null)
+              setNotificationsEnabled(false)
+            }
+          }
         }
       } catch (error) {
         console.error('[Admin PWA] Service Worker registration failed:', error)
