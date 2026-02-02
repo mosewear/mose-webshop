@@ -103,7 +103,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-700 text-white focus:border-brand-primary focus:outline-none transition-colors"
-              placeholder="info@mosewear.nl"
+              placeholder="admin@example.com"
             />
           </div>
 
