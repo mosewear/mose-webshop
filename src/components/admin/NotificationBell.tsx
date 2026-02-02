@@ -132,14 +132,25 @@ export default function NotificationBell() {
   const subscribeToPush = async () => {
     console.log('[NotificationBell] ========== SUBSCRIBE TO PUSH ==========')
     try {
-      console.log('[NotificationBell] Waiting for service worker...')
-      const registration = await navigator.serviceWorker.ready
+      console.log('[NotificationBell] Waiting for service worker with 5s timeout...')
+      
+      // Add timeout to service worker ready
+      const registrationPromise = navigator.serviceWorker.ready
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Service worker timeout after 5 seconds')), 5000)
+      )
+      
+      const registration = await Promise.race([registrationPromise, timeoutPromise]) as ServiceWorkerRegistration
       console.log('[NotificationBell] ✅ Service worker ready:', registration.scope)
       
       console.log('[NotificationBell] Fetching VAPID public key...')
       const response = await fetch('/api/admin/push/vapid-public-key')
       const { publicKey } = await response.json()
       console.log('[NotificationBell] ✅ VAPID key received:', publicKey?.substring(0, 20) + '...')
+      
+      if (!publicKey) {
+        throw new Error('No VAPID public key received from server')
+      }
       
       console.log('[NotificationBell] Converting VAPID key...')
       const applicationServerKey = urlBase64ToUint8Array(publicKey)
@@ -205,7 +216,18 @@ export default function NotificationBell() {
     } catch (error) {
       console.error('[NotificationBell] ❌ Error subscribing to push:', error)
       console.error('[NotificationBell] Error details:', error instanceof Error ? error.stack : error)
-      alert('Fout bij instellen van push notifications: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      
+      // Reset state on error
+      setSubscription(null)
+      setNotificationsEnabled(false)
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      if (errorMessage.includes('timeout')) {
+        alert('Service Worker reageert niet. Probeer de pagina te refreshen en opnieuw.')
+      } else {
+        alert('Fout bij instellen van push notifications: ' + errorMessage)
+      }
     }
   }
 
