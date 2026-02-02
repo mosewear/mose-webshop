@@ -12,6 +12,8 @@ interface VariantWithProduct {
   color_hex: string | null
   sku: string | null
   stock_quantity: number
+  presale_enabled: boolean
+  presale_stock_quantity: number | null
   price_adjustment: number
   is_available: boolean
   product: {
@@ -88,27 +90,46 @@ export default function InventoryPage() {
     }
   }
 
-  const handleUpdateStock = async (variantId: string, newStock: number) => {
+  const handleUpdateStock = async (variantId: string, newStock: number, isPresale: boolean = false) => {
     try {
+      const updateField = isPresale ? 'presale_stock_quantity' : 'stock_quantity'
       const { error } = await supabase
         .from('product_variants')
-        .update({ stock_quantity: newStock })
+        .update({ [updateField]: newStock })
         .eq('id', variantId)
 
       if (error) throw error
 
       // Log inventory mutation
+      const oldStock = isPresale 
+        ? (variants.find(v => v.id === variantId)?.presale_stock_quantity || 0)
+        : (variants.find(v => v.id === variantId)?.stock_quantity || 0)
+
       await supabase.from('inventory_logs').insert([
         {
           variant_id: variantId,
           user_id: (await supabase.auth.getUser()).data.user?.id || null,
-          change_amount: newStock - (variants.find(v => v.id === variantId)?.stock_quantity || 0),
+          change_amount: newStock - oldStock,
           new_stock_quantity: newStock,
           reason: 'manual_update',
-          notes: 'Updated via admin panel',
+          notes: `Updated ${isPresale ? 'presale' : 'regular'} stock via admin panel`,
         },
       ])
 
+      fetchInventory()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleTogglePresale = async (variantId: string, enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({ presale_enabled: enabled })
+        .eq('id', variantId)
+
+      if (error) throw error
       fetchInventory()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -131,8 +152,10 @@ export default function InventoryPage() {
   const filteredVariants = getFilteredVariants()
 
   const getTotalStock = () => variants.reduce((sum, v) => sum + v.stock_quantity, 0)
+  const getTotalPresaleStock = () => variants.reduce((sum, v) => sum + (v.presale_stock_quantity || 0), 0)
   const getLowStockCount = () => variants.filter(v => v.stock_quantity > 0 && v.stock_quantity < 5).length
   const getOutOfStockCount = () => variants.filter(v => v.stock_quantity === 0).length
+  const getPresaleCount = () => variants.filter(v => v.presale_enabled).length
 
   if (loading) {
     return (
@@ -160,10 +183,14 @@ export default function InventoryPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{getTotalStock()}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totale Voorraad</div>
+        </div>
+        <div className="bg-white p-4 md:p-6 border-2 border-purple-200 bg-purple-50">
+          <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">{getTotalPresaleStock()}</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Presale Voorraad</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
@@ -280,13 +307,16 @@ export default function InventoryPage() {
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Variant
                   </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                     SKU
                   </th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Voorraad
+                    Reguliere Voorraad
                   </th>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-purple-700 uppercase tracking-wider">
+                    Presale
+                  </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                     Status
                   </th>
                   <th className="px-4 md:px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -317,7 +347,7 @@ export default function InventoryPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                       {variant.sku ? (
                         <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                           {variant.sku}
@@ -331,7 +361,7 @@ export default function InventoryPage() {
                         type="number"
                         min="0"
                         value={variant.stock_quantity}
-                        onChange={(e) => handleUpdateStock(variant.id, parseInt(e.target.value) || 0)}
+                        onChange={(e) => handleUpdateStock(variant.id, parseInt(e.target.value) || 0, false)}
                         className={`w-20 px-3 py-2 border-2 focus:outline-none transition-colors text-sm ${
                           variant.stock_quantity === 0
                             ? 'border-red-300 focus:border-red-500 bg-red-50 font-bold text-red-700'
@@ -341,20 +371,60 @@ export default function InventoryPage() {
                         }`}
                       />
                     </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      {variant.stock_quantity === 0 ? (
-                        <span className="px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 border-2 border-red-200">
-                          UITVERKOCHT
-                        </span>
-                      ) : variant.stock_quantity < 5 ? (
-                        <span className="px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-700 border-2 border-orange-200">
-                          LAAG
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 border-2 border-green-200">
-                          OP VOORRAAD
-                        </span>
-                      )}
+                    <td className="px-4 md:px-6 py-4">
+                      <div className="space-y-2">
+                        {/* Presale Toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={variant.presale_enabled}
+                            onChange={(e) => handleTogglePresale(variant.id, e.target.checked)}
+                            className="w-4 h-4 text-purple-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                          />
+                          <span className="text-xs font-semibold text-purple-700">
+                            {variant.presale_enabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </label>
+                        
+                        {/* Presale Stock Input */}
+                        {variant.presale_enabled && (
+                          <input
+                            type="number"
+                            min="0"
+                            value={variant.presale_stock_quantity || 0}
+                            onChange={(e) => handleUpdateStock(variant.id, parseInt(e.target.value) || 0, true)}
+                            className="w-20 px-3 py-2 border-2 border-purple-300 focus:border-purple-500 focus:outline-none transition-colors text-sm bg-purple-50 font-bold text-purple-700"
+                            placeholder="Qty"
+                          />
+                        )}
+                        
+                        {!variant.presale_enabled && (
+                          <span className="text-xs text-gray-400">-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                      <div className="space-y-1">
+                        {variant.stock_quantity === 0 ? (
+                          <span className="block px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 border-2 border-red-200 text-center">
+                            UITVERKOCHT
+                          </span>
+                        ) : variant.stock_quantity < 5 ? (
+                          <span className="block px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-700 border-2 border-orange-200 text-center">
+                            LAAG
+                          </span>
+                        ) : (
+                          <span className="block px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 border-2 border-green-200 text-center">
+                            OP VOORRAAD
+                          </span>
+                        )}
+                        
+                        {variant.presale_enabled && (
+                          <span className="block px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-700 border-2 border-purple-200 text-center">
+                            PRESALE
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
