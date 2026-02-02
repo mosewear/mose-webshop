@@ -158,7 +158,7 @@ export default function AnnouncementBannerAdmin() {
           text: 'NIEUW BERICHT',
           link_url: null,
           cta_text: null,
-          icon: '🎉',
+          icon: null,
           is_active: false,
           sort_order: messages.length
         })
@@ -262,12 +262,13 @@ export default function AnnouncementBannerAdmin() {
               </label>
               <input
                 type="number"
-                min="1"
+                min="5"
                 max="60"
                 value={config.rotation_interval}
-                onChange={(e) => setConfig({ ...config, rotation_interval: parseInt(e.target.value) || 5 })}
+                onChange={(e) => setConfig({ ...config, rotation_interval: parseInt(e.target.value) || 8 })}
                 className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
               />
+              <p className="text-xs text-gray-500 mt-1">Aanbevolen: 8-10 seconden</p>
             </div>
             <div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -389,20 +390,21 @@ export default function AnnouncementBannerAdmin() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                          Icon (emoji)
+                          Icon (optioneel)
                         </label>
                         <input
                           type="text"
                           value={message.icon || ''}
                           onChange={(e) => {
                             const updated = [...messages]
-                            updated[index].icon = e.target.value
+                            updated[index].icon = e.target.value || null
                             setMessages(updated)
                           }}
                           className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                          placeholder="🎉"
-                          maxLength={2}
+                          placeholder="Laat leeg"
+                          maxLength={50}
                         />
+                        <p className="text-xs text-gray-500 mt-1">Emoji's worden niet getoond in banner</p>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
@@ -417,7 +419,7 @@ export default function AnnouncementBannerAdmin() {
                             setMessages(updated)
                           }}
                           className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                          placeholder="/shop"
+                          placeholder="/nl/shop"
                         />
                       </div>
                       <div>

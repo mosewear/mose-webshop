@@ -158,25 +158,25 @@ export default function AnnouncementBanner() {
 
   const BannerContent = (
     <div
-      className="relative z-[100] bg-brand-primary text-white"
+      className="relative z-30 bg-brand-primary text-white"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="max-w-7xl mx-auto px-4 py-3 md:py-3.5">
-        <div className="flex items-center justify-between gap-4">
-          {/* Navigation - Left */}
+      <div className="max-w-7xl mx-auto px-4 py-2.5 md:py-3">
+        <div className="flex items-center justify-center gap-3 md:gap-4">
+          {/* Navigation - Left (desktop only) */}
           {messages.length > 1 && (
             <button
               onClick={handlePrev}
-              className="flex-shrink-0 p-1 hover:bg-white/10 transition-colors rounded hidden md:block"
+              className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded hidden lg:flex items-center justify-center"
               aria-label="Previous message"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
           )}
 
-          {/* Message Content */}
-          <div className="flex-1 overflow-hidden">
+          {/* Message Content - Centered */}
+          <div className="flex-1 overflow-hidden max-w-4xl">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={currentMessage.id}
@@ -189,17 +189,10 @@ export default function AnnouncementBanner() {
                   x: { type: 'spring', stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 }
                 }}
-                className="flex items-center justify-center gap-2 md:gap-3"
+                className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center"
               >
-                {/* Icon */}
-                {currentMessage.icon && (
-                  <span className="text-lg md:text-xl flex-shrink-0" aria-hidden="true">
-                    {currentMessage.icon}
-                  </span>
-                )}
-
                 {/* Text */}
-                <span className="text-xs md:text-sm font-bold uppercase tracking-wide text-center">
+                <span className="text-sm md:text-base font-bold uppercase tracking-wide">
                   {currentMessage.text}
                 </span>
 
@@ -207,10 +200,9 @@ export default function AnnouncementBanner() {
                 {currentMessage.link_url && currentMessage.cta_text && (
                   <Link
                     href={currentMessage.link_url}
-                    className="flex-shrink-0 text-xs md:text-sm font-bold uppercase tracking-wide hover:underline flex items-center gap-1 ml-2"
+                    className="flex-shrink-0 text-sm md:text-base font-bold uppercase tracking-wide hover:underline underline-offset-4 transition-all flex items-center gap-1.5"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="hidden sm:inline">|</span>
                     {currentMessage.cta_text}
                     <span aria-hidden="true">→</span>
                   </Link>
@@ -220,10 +212,10 @@ export default function AnnouncementBanner() {
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            {/* Progress Dots */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Progress Dots (desktop only) */}
             {messages.length > 1 && (
-              <div className="hidden md:flex items-center gap-1.5">
+              <div className="hidden lg:flex items-center gap-2">
                 {messages.map((_, index) => (
                   <button
                     key={index}
@@ -231,10 +223,10 @@ export default function AnnouncementBanner() {
                       setDirection(index > currentIndex ? 1 : -1)
                       setCurrentIndex(index)
                     }}
-                    className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    className={`h-2 rounded-full transition-all ${
                       index === currentIndex
-                        ? 'bg-white w-4'
-                        : 'bg-white/40 hover:bg-white/60'
+                        ? 'bg-white w-6'
+                        : 'bg-white/40 hover:bg-white/60 w-2'
                     }`}
                     aria-label={`Go to message ${index + 1}`}
                   />
@@ -242,11 +234,11 @@ export default function AnnouncementBanner() {
               </div>
             )}
 
-            {/* Navigation - Right */}
+            {/* Navigation - Right (desktop only) */}
             {messages.length > 1 && (
               <button
                 onClick={handleNext}
-                className="flex-shrink-0 p-1 hover:bg-white/10 transition-colors rounded hidden md:block"
+                className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded hidden lg:flex items-center justify-center"
                 aria-label="Next message"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -257,10 +249,10 @@ export default function AnnouncementBanner() {
             {config.dismissable && (
               <button
                 onClick={handleDismiss}
-                className="flex-shrink-0 p-1 hover:bg-white/10 transition-colors rounded"
+                className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded"
                 aria-label="Dismiss banner"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             )}
           </div>

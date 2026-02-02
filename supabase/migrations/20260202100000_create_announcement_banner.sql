@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS announcement_banner (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   enabled BOOLEAN DEFAULT true,
-  rotation_interval INT DEFAULT 5, -- seconds
+  rotation_interval INT DEFAULT 8, -- seconds
   dismissable BOOLEAN DEFAULT true,
   dismiss_cookie_days INT DEFAULT 7,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -75,15 +75,15 @@ CREATE POLICY "Admins can manage messages"
 
 -- Insert default banner configuration
 INSERT INTO announcement_banner (id, enabled, rotation_interval, dismissable, dismiss_cookie_days)
-VALUES ('00000000-0000-0000-0000-000000000001', false, 5, true, 7)
+VALUES ('00000000-0000-0000-0000-000000000001', false, 8, true, 7)
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert example messages
 INSERT INTO announcement_messages (banner_id, text, link_url, cta_text, icon, is_active, sort_order)
 VALUES 
-  ('00000000-0000-0000-0000-000000000001', 'GRATIS VERZENDING BOVEN €150', '/verzending-info', 'SHOP NU', '🎉', false, 1),
-  ('00000000-0000-0000-0000-000000000001', 'NIEUWE COLLECTIE LIVE', '/shop', 'BEKIJK ALLES', '⚡', false, 2),
-  ('00000000-0000-0000-0000-000000000001', '30 DAGEN RETOURRECHT', '/returns', 'MEER INFO', '📦', false, 3)
+  ('00000000-0000-0000-0000-000000000001', 'GRATIS VERZENDING BOVEN €150', '/nl/verzending', 'SHOP NU', null, false, 1),
+  ('00000000-0000-0000-0000-000000000001', 'NIEUWE COLLECTIE LIVE', '/nl/shop', 'BEKIJK ALLES', null, false, 2),
+  ('00000000-0000-0000-0000-000000000001', '30 DAGEN RETOURRECHT', '/nl/returns', 'MEER INFO', null, false, 3)
 ON CONFLICT DO NOTHING;
 
 COMMENT ON TABLE announcement_banner IS 
