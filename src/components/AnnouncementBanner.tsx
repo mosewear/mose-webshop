@@ -1,10 +1,5 @@
-'use client'
-
-import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
+import AnnouncementBannerClient from './AnnouncementBannerClient'
 
 interface AnnouncementMessage {
   id: string
@@ -13,263 +8,66 @@ interface AnnouncementMessage {
   cta_text: string | null
   icon: string | null
   sort_order: number
+  is_active: boolean
 }
 
 interface BannerConfig {
+  id: string
   enabled: boolean
   rotation_interval: number
   dismissable: boolean
   dismiss_cookie_days: number
 }
 
-const DISMISS_COOKIE_NAME = 'mose_banner_dismissed'
+export default async function AnnouncementBanner() {
+  const supabase = await createClient()
 
-export default function AnnouncementBanner() {
-  const [config, setConfig] = useState<BannerConfig | null>(null)
-  const [messages, setMessages] = useState<AnnouncementMessage[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isDismissed, setIsDismissed] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [direction, setDirection] = useState(0) // 1 = forward, -1 = backward
-  
-  const supabase = createClient()
+  try {
+    // Fetch banner config
+    const { data: configData } = await supabase
+      .from('announcement_banner')
+      .select('*')
+      .single()
 
-  // Check if banner is dismissed
-  useEffect(() => {
-    const dismissed = localStorage.getItem(DISMISS_COOKIE_NAME)
-    if (dismissed) {
-      const dismissedUntil = new Date(dismissed)
-      if (dismissedUntil > new Date()) {
-        setIsDismissed(true)
-      } else {
-        localStorage.removeItem(DISMISS_COOKIE_NAME)
-      }
-    }
-  }, [])
-
-  // Fetch banner config and messages
-  useEffect(() => {
-    const fetchBanner = async () => {
-      try {
-        // Fetch config
-        const { data: configData, error: configError } = await supabase
-          .from('announcement_banner')
-          .select('*')
-          .single()
-
-        console.log('🎯 [BANNER] Config fetched:', configData, configError)
-
-        if (configData) {
-          console.log('🎯 [BANNER] Config enabled:', configData.enabled)
-          
-          if (configData.enabled) {
-            setConfig(configData)
-
-            // Fetch active messages
-            const { data: messagesData, error: messagesError } = await supabase
-              .from('announcement_messages')
-              .select('*')
-              .eq('banner_id', configData.id)
-              .eq('is_active', true)
-              .order('sort_order', { ascending: true })
-
-            console.log('🎯 [BANNER] Active messages fetched:', messagesData?.length || 0, messagesError)
-
-            if (messagesData && messagesData.length > 0) {
-              setMessages(messagesData)
-            } else {
-              console.log('🎯 [BANNER] No active messages found')
-            }
-          } else {
-            console.log('🎯 [BANNER] Banner is disabled')
-          }
-        } else {
-          console.log('🎯 [BANNER] No banner config found')
-        }
-      } catch (error) {
-        console.error('🎯 [BANNER] Error fetching announcement banner:', error)
-      }
+    // If banner is disabled or doesn't exist, render nothing (no layout shift!)
+    if (!configData || !configData.enabled) {
+      return null
     }
 
-    fetchBanner()
-  }, [])
+    // Fetch active messages
+    const { data: messagesData } = await supabase
+      .from('announcement_messages')
+      .select('*')
+      .eq('banner_id', configData.id)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
 
-  // Auto-rotate messages
-  useEffect(() => {
-    if (!config || messages.length <= 1 || isPaused || isDismissed) return
+    // If no active messages, render nothing
+    if (!messagesData || messagesData.length === 0) {
+      return null
+    }
 
-    const interval = setInterval(() => {
-      setDirection(1)
-      setCurrentIndex((prev) => (prev + 1) % messages.length)
-    }, config.rotation_interval * 1000)
-
-    return () => clearInterval(interval)
-  }, [config, messages.length, isPaused, isDismissed])
-
-  const handleNext = useCallback(() => {
-    setDirection(1)
-    setCurrentIndex((prev) => (prev + 1) % messages.length)
-  }, [messages.length])
-
-  const handlePrev = useCallback(() => {
-    setDirection(-1)
-    setCurrentIndex((prev) => (prev - 1 + messages.length) % messages.length)
-  }, [messages.length])
-
-  const handleDismiss = useCallback(() => {
-    if (!config) return
-    
-    setIsDismissed(true)
-    
-    // Set cookie expiry
-    const expiryDate = new Date()
-    expiryDate.setDate(expiryDate.getDate() + config.dismiss_cookie_days)
-    localStorage.setItem(DISMISS_COOKIE_NAME, expiryDate.toISOString())
-  }, [config])
-
-  // Don't render if dismissed, not enabled, or no messages
-  if (isDismissed || !config?.enabled || messages.length === 0) {
-    console.log('🎯 [BANNER] Not rendering:', { 
-      isDismissed, 
-      configEnabled: config?.enabled, 
-      messagesCount: messages.length 
-    })
+    // Pass data to client component for interactivity
+    return (
+      <AnnouncementBannerClient
+        config={{
+          enabled: configData.enabled,
+          rotation_interval: configData.rotation_interval,
+          dismissable: configData.dismissable,
+          dismiss_cookie_days: configData.dismiss_cookie_days
+        }}
+        messages={messagesData.map(msg => ({
+          id: msg.id,
+          text: msg.text,
+          link_url: msg.link_url,
+          cta_text: msg.cta_text,
+          icon: msg.icon,
+          sort_order: msg.sort_order
+        }))}
+      />
+    )
+  } catch (error) {
+    console.error('Error fetching announcement banner:', error)
     return null
   }
-
-  console.log('🎯 [BANNER] Rendering banner with message:', messages[currentIndex]?.text)
-
-  const currentMessage = messages[currentIndex]
-
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
-      opacity: 0
-    }),
-    center: {
-      x: 0,
-      opacity: 1
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 100 : -100,
-      opacity: 0
-    })
-  }
-
-  const BannerContent = (
-    <div
-      className="relative z-30 bg-brand-primary text-white"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div className="max-w-7xl mx-auto px-4 py-2.5 md:py-3">
-        <div className="flex items-center justify-center gap-3 md:gap-4">
-          {/* Navigation - Left (desktop only) */}
-          {messages.length > 1 && (
-            <button
-              onClick={handlePrev}
-              className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded hidden lg:flex items-center justify-center"
-              aria-label="Previous message"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
-
-          {/* Message Content - Centered */}
-          <div className="flex-1 overflow-hidden max-w-4xl">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.div
-                key={currentMessage.id}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: 'spring', stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 }
-                }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center"
-              >
-                {/* Text */}
-                <span className="text-sm md:text-base font-bold uppercase tracking-wide">
-                  {currentMessage.text}
-                </span>
-
-                {/* CTA Link */}
-                {currentMessage.link_url && currentMessage.cta_text && (
-                  <Link
-                    href={currentMessage.link_url}
-                    className="flex-shrink-0 text-sm md:text-base font-bold uppercase tracking-wide hover:underline underline-offset-4 transition-all flex items-center gap-1.5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {currentMessage.cta_text}
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Right Controls */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Progress Dots (desktop only) */}
-            {messages.length > 1 && (
-              <div className="hidden lg:flex items-center gap-2">
-                {messages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setDirection(index > currentIndex ? 1 : -1)
-                      setCurrentIndex(index)
-                    }}
-                    className={`h-2 rounded-full transition-all ${
-                      index === currentIndex
-                        ? 'bg-white w-6'
-                        : 'bg-white/40 hover:bg-white/60 w-2'
-                    }`}
-                    aria-label={`Go to message ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Navigation - Right (desktop only) */}
-            {messages.length > 1 && (
-              <button
-                onClick={handleNext}
-                className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded hidden lg:flex items-center justify-center"
-                aria-label="Next message"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Dismiss Button */}
-            {config.dismissable && (
-              <button
-                onClick={handleDismiss}
-                className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded"
-                aria-label="Dismiss banner"
-              >
-                <X className="w-4 h-4 md:w-5 md:h-5" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  // If message has link and no CTA, make entire banner clickable
-  if (currentMessage.link_url && !currentMessage.cta_text) {
-    return (
-      <Link href={currentMessage.link_url} className="block">
-        {BannerContent}
-      </Link>
-    )
-  }
-
-  return BannerContent
 }
-

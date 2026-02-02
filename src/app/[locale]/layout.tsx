@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import MainContentWrapper from '@/components/layout/MainContentWrapper'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 
 export function generateStaticParams() {
@@ -95,7 +96,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <AnnouncementBanner />
       <Header />
-      <main>{children}</main>
+      <MainContentWrapper>{children}</MainContentWrapper>
       <Footer />
     </NextIntlClientProvider>
   )

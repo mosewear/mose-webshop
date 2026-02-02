@@ -48,7 +48,8 @@ export function Header() {
     <>
       {/* Desktop Header */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md py-4 transition-shadow duration-300"
+        className="fixed left-0 right-0 z-40 bg-white shadow-md py-4 transition-shadow duration-300"
+        style={{ top: 'var(--announcement-banner-height, 0px)' }}
       >
         {/* Scroll Progress Indicator */}
         <div 
