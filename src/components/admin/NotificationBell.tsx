@@ -42,55 +42,53 @@ export default function NotificationBell() {
   const registerServiceWorker = async () => {
     if ('serviceWorker' in navigator) {
       try {
-        // First, unregister any existing service workers to start fresh
+        // Check if there's already a working service worker
         const existingRegistrations = await navigator.serviceWorker.getRegistrations()
-        for (const registration of existingRegistrations) {
-          if (registration.scope.includes('/admin')) {
-            console.log('[Admin PWA] Unregistering old service worker:', registration.scope)
-            await registration.unregister()
-          }
-        }
+        const adminReg = existingRegistrations.find(reg => reg.scope.includes('/admin'))
         
-        // Register fresh service worker
-        const registration = await navigator.serviceWorker.register(
-          '/admin-sw.js',
-          { scope: '/admin/' }
-        )
-        console.log('[Admin PWA] Service Worker registered:', registration.scope)
+        let registration: ServiceWorkerRegistration
         
-        // Force update to latest version
-        await registration.update()
-        console.log('[Admin PWA] Service Worker update triggered')
-        
-        // Wait for SW to activate with timeout
-        const waitForActivation = new Promise<ServiceWorkerRegistration>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Activation timeout')), 3000)
+        if (adminReg && (adminReg.active || adminReg.waiting)) {
+          // Use existing working service worker
+          console.log('[Admin PWA] Using existing service worker:', adminReg.scope)
+          registration = adminReg
           
-          if (registration.active) {
-            clearTimeout(timeout)
-            resolve(registration)
-          } else {
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'activated') {
-                    clearTimeout(timeout)
-                    resolve(registration)
-                  }
-                })
+          // Try to update it in the background
+          registration.update().catch(err => 
+            console.warn('[Admin PWA] Could not update SW:', err)
+          )
+        } else {
+          // No working SW found, clean up and register new one
+          console.log('[Admin PWA] No working service worker found, registering new one')
+          
+          if (adminReg) {
+            console.log('[Admin PWA] Unregistering broken service worker')
+            await adminReg.unregister()
+          }
+          
+          registration = await navigator.serviceWorker.register(
+            '/admin-sw.js',
+            { scope: '/admin/' }
+          )
+          console.log('[Admin PWA] Service Worker registered:', registration.scope)
+          
+          // Wait for new SW to activate
+          if (!registration.active) {
+            console.log('[Admin PWA] Waiting for service worker to activate...')
+            await new Promise<void>((resolve) => {
+              const checkActive = () => {
+                if (registration.active) {
+                  resolve()
+                } else {
+                  setTimeout(checkActive, 100)
+                }
               }
+              checkActive()
             })
           }
-        })
-        
-        try {
-          await waitForActivation
-          console.log('[Admin PWA] Service Worker activated')
-        } catch (activationError) {
-          console.warn('[Admin PWA] Could not wait for activation:', activationError)
-          // Continue anyway
         }
+        
+        console.log('[Admin PWA] Service worker ready')
         
         // Try to get existing subscription with timeout
         try {
@@ -117,14 +115,12 @@ export default function NotificationBell() {
                   setNotificationsEnabled(true)
                 } else {
                   console.log('[Admin PWA] Subscription not in database, removing from browser')
-                  // Remove orphaned subscription from browser
                   await existing.unsubscribe()
                   setSubscription(null)
                   setNotificationsEnabled(false)
                 }
               } catch (apiError) {
                 console.error('[Admin PWA] Error checking subscription in database:', apiError)
-                // If database check fails, assume disabled for safety
                 setSubscription(null)
                 setNotificationsEnabled(false)
               }
@@ -136,7 +132,6 @@ export default function NotificationBell() {
           }
         } catch (subError) {
           console.warn('[Admin PWA] Could not get subscription (timeout or error):', subError)
-          // If we can't check subscription, assume disabled for safety
           setSubscription(null)
           setNotificationsEnabled(false)
         }
