@@ -129,8 +129,8 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="max-w-7xl mx-auto px-4 py-2.5 md:py-3">
-        <div className="flex items-center justify-center gap-3 md:gap-4">
+      <div className="max-w-7xl mx-auto px-3 py-2 md:px-4 md:py-3">
+        <div className="flex items-center justify-center gap-2 md:gap-4">
           {/* Navigation - Left (desktop only) */}
           {messages.length > 1 && (
             <button
@@ -142,7 +142,7 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
             </button>
           )}
 
-          {/* Message Content - Centered */}
+          {/* Message Content - Centered, Single Line on Mobile */}
           <div className="flex-1 overflow-hidden max-w-4xl">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
@@ -156,18 +156,18 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
                   x: { type: 'spring', stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 }
                 }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center"
+                className="flex flex-row items-center justify-center gap-2 text-center whitespace-nowrap"
               >
-                {/* Text */}
-                <span className="text-sm md:text-base font-bold uppercase tracking-wide">
+                {/* Text - Single line, smaller on mobile */}
+                <span className="text-xs md:text-sm lg:text-base font-bold uppercase tracking-wide truncate">
                   {currentMessage.text}
                 </span>
 
-                {/* CTA Link */}
+                {/* CTA Link - Inline on all screens */}
                 {currentMessage.link_url && currentMessage.cta_text && (
                   <Link
                     href={currentMessage.link_url}
-                    className="flex-shrink-0 text-sm md:text-base font-bold uppercase tracking-wide hover:underline underline-offset-4 transition-all flex items-center gap-1.5"
+                    className="flex-shrink-0 text-xs md:text-sm lg:text-base font-bold uppercase tracking-wide hover:underline underline-offset-4 transition-all flex items-center gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {currentMessage.cta_text}
@@ -179,7 +179,7 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             {/* Progress Dots (desktop only) */}
             {messages.length > 1 && (
               <div className="hidden lg:flex items-center gap-2">
@@ -212,14 +212,14 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
               </button>
             )}
 
-            {/* Dismiss Button */}
+            {/* Dismiss Button - Smaller padding on mobile */}
             {config.dismissable && (
               <button
                 onClick={handleDismiss}
-                className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded"
+                className="flex-shrink-0 p-1 md:p-1.5 hover:bg-white/10 transition-colors rounded"
                 aria-label="Dismiss banner"
               >
-                <X className="w-4 h-4 md:w-5 md:h-5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>

@@ -1,41 +1,35 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 export default function MainContentWrapper({ children }: { children: React.ReactNode }) {
-  const [headerHeight, setHeaderHeight] = useState(0)
-
   useEffect(() => {
-    const calculatePadding = () => {
-      // Get the actual header element height
+    const updateHeaderHeight = () => {
       const header = document.querySelector('header')
       if (header) {
         const height = header.offsetHeight
-        setHeaderHeight(height)
+        document.documentElement.style.setProperty('--header-total-height', `${height}px`)
       }
     }
 
-    // Calculate on mount and resize
-    calculatePadding()
-    window.addEventListener('resize', calculatePadding)
-
-    // Also recalculate when banner appears/disappears
-    const observer = new MutationObserver(calculatePadding)
+    // Update on mount, resize, and when banner changes
+    updateHeaderHeight()
+    window.addEventListener('resize', updateHeaderHeight)
+    
+    const observer = new MutationObserver(updateHeaderHeight)
     observer.observe(document.documentElement, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style']
     })
 
     return () => {
-      window.removeEventListener('resize', calculatePadding)
+      window.removeEventListener('resize', updateHeaderHeight)
       observer.disconnect()
     }
   }, [])
 
-  return (
-    <main style={{ paddingTop: `${headerHeight}px` }}>
-      {children}
-    </main>
-  )
+  return <main>{children}</main>
 }
 
