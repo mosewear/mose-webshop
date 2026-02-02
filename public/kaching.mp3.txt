@@ -1,8 +1,0 @@
-# KaChing Sound File
-# Download a free "cash register" or "ka-ching" sound from:
-# - https://freesound.org/search/?q=cash+register
-# - https://mixkit.co/free-sound-effects/cash-register/
-# 
-# Save as: /Users/rickschlimback/Desktop/mose-webshop/public/kaching.mp3
-# 
-# Recommended: Short (1-2 sec), clear "ka-ching" or cash register sound
