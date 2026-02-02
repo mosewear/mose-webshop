@@ -51,6 +51,7 @@ export default function CheckoutPage() {
   const t = useTranslations('checkout')
   const tCommon = useTranslations('common')
   const tErrors = useTranslations('errors')
+  const tCart = useTranslations('cart')
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1514,7 +1515,7 @@ export default function CheckoutPage() {
                   <span className="font-semibold uppercase tracking-wide">VERZENDING</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
-                      <span className="text-brand-primary font-bold">{t('shippingFree', { ns: 'cart' })}</span>
+                      <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
                       `€${shipping.toFixed(2)}`
                     )}
@@ -2322,7 +2323,7 @@ export default function CheckoutPage() {
                   <span className="font-semibold uppercase tracking-wide">VERZENDING</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
-                      <span className="text-brand-primary font-bold">{t('shippingFree', { ns: 'cart' })}</span>
+                      <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
                       `€${shipping.toFixed(2)}`
                     )}
