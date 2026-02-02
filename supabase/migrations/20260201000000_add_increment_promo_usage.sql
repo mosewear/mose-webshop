@@ -64,3 +64,4 @@ COMMENT ON FUNCTION increment_promo_usage IS 'Atomically increments promo code u
 COMMENT ON FUNCTION track_promo_usage IS 'Increments usage count AND logs detailed usage in promo_code_usage table';
 
 
+

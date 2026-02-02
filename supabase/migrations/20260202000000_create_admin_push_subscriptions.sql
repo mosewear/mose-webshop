@@ -54,3 +54,4 @@ COMMENT ON COLUMN admin_push_subscriptions.subscription IS
 COMMENT ON COLUMN admin_push_subscriptions.endpoint IS 
   'Push service endpoint URL for quick lookups and duplicate detection';
 
+

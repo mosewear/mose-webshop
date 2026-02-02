@@ -70,3 +70,4 @@ COMMENT ON COLUMN newsletter_subscribers.metadata IS 'Additional data like prefe
 
 
 
+

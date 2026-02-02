@@ -24,3 +24,4 @@ SET link_url = '/nl/returns', updated_at = NOW()
 WHERE banner_id = '00000000-0000-0000-0000-000000000001' 
 AND text = '30 DAGEN RETOURRECHT';
 
+

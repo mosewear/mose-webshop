@@ -85,44 +85,82 @@ export default function NotificationBell() {
   }
 
   const subscribeToPush = async () => {
+    console.log('[NotificationBell] ========== SUBSCRIBE TO PUSH ==========')
     try {
+      console.log('[NotificationBell] Waiting for service worker...')
       const registration = await navigator.serviceWorker.ready
+      console.log('[NotificationBell] ✅ Service worker ready:', registration.scope)
       
+      console.log('[NotificationBell] Fetching VAPID public key...')
       const response = await fetch('/api/admin/push/vapid-public-key')
       const { publicKey } = await response.json()
+      console.log('[NotificationBell] ✅ VAPID key received:', publicKey?.substring(0, 20) + '...')
       
+      console.log('[NotificationBell] Converting VAPID key...')
       const applicationServerKey = urlBase64ToUint8Array(publicKey)
+      console.log('[NotificationBell] ✅ VAPID key converted')
+      
+      console.log('[NotificationBell] Subscribing to push manager...')
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey as BufferSource
+      })
+      console.log('[NotificationBell] ✅ Push subscription created:', {
+        endpoint: sub.endpoint,
+        expirationTime: sub.expirationTime
       })
       
       setSubscription(sub)
       setNotificationsEnabled(true)
       
-      const { data: { user } } = await supabase.auth.getUser()
+      console.log('[NotificationBell] Getting current user...')
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log('[NotificationBell] User:', { 
+        userId: user?.id, 
+        email: user?.email,
+        error: userError 
+      })
       
       if (user) {
-        await fetch('/api/admin/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subscription: sub.toJSON(),
-            userId: user.id
-          })
+        const subscriptionData = {
+          subscription: sub.toJSON(),
+          userId: user.id
+        }
+        console.log('[NotificationBell] Sending subscription to API:', {
+          userId: user.id,
+          endpoint: sub.endpoint
         })
         
-        console.log('[Admin PWA] Push subscription saved to database')
+        const apiResponse = await fetch('/api/admin/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscriptionData)
+        })
+        
+        console.log('[NotificationBell] API response status:', apiResponse.status)
+        const apiData = await apiResponse.json()
+        console.log('[NotificationBell] API response data:', apiData)
+        
+        if (!apiResponse.ok) {
+          console.error('[NotificationBell] ❌ API error:', apiData)
+          throw new Error(apiData.error || 'Failed to save subscription')
+        }
+        
+        console.log('[NotificationBell] ✅ Push subscription saved to database!')
         playKaChing()
         new Notification('MOSE Admin', {
           body: 'KaChing notifications zijn actief! 💰',
           icon: '/favicon.ico',
           badge: '/favicon-32x32.png'
         })
+      } else {
+        console.error('[NotificationBell] ❌ No user found!')
+        throw new Error('User not authenticated')
       }
     } catch (error) {
-      console.error('[Admin PWA] Error subscribing to push:', error)
-      alert('Fout bij instellen van push notifications')
+      console.error('[NotificationBell] ❌ Error subscribing to push:', error)
+      console.error('[NotificationBell] Error details:', error instanceof Error ? error.stack : error)
+      alert('Fout bij instellen van push notifications: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -303,4 +341,5 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   }
   return outputArray
 }
+
 

@@ -174,3 +174,4 @@ COMMENT ON FUNCTION public.upsert_customer_profile IS 'Creates or updates a cust
 COMMENT ON FUNCTION public.update_customer_stats IS 'Updates cached order statistics for a customer profile.';
 
 
+

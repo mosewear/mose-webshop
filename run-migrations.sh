@@ -32,3 +32,4 @@ echo "7. Upload the green M favicon"
 echo "8. Hard refresh browser (Cmd+Shift+R)"
 echo ""
 
+

@@ -18,3 +18,4 @@ ON CONFLICT (key) DO NOTHING;
 -- Add comment for clarity
 COMMENT ON TABLE site_settings IS 'Site-wide configuration settings. Values are stored as JSONB for flexibility. Use upsert to update settings via admin panel.';
 
+
