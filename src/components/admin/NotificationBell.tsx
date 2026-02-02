@@ -187,17 +187,25 @@ export default function NotificationBell() {
     console.log('[NotificationBell] ========== UNSUBSCRIBE ==========')
     console.log('[NotificationBell] Current subscription:', subscription)
     
-    if (!subscription) {
-      console.warn('[NotificationBell] No subscription found, trying to unsubscribe anyway')
-    }
-    
     setIsLoading(true)
     try {
-      // Try to unsubscribe from push manager if subscription exists
-      if (subscription) {
+      // Check for any subscription in the push manager (might be different from state)
+      const registration = await navigator.serviceWorker.ready
+      const browserSubscription = await registration.pushManager.getSubscription()
+      
+      console.log('[NotificationBell] Browser subscription:', browserSubscription)
+      
+      // Unsubscribe from browser if any subscription exists
+      if (browserSubscription) {
         console.log('[NotificationBell] Unsubscribing from push manager...')
-        await subscription.unsubscribe()
+        await browserSubscription.unsubscribe()
         console.log('[NotificationBell] ✅ Unsubscribed from push manager')
+      } else if (subscription) {
+        console.log('[NotificationBell] Unsubscribing from state subscription...')
+        await subscription.unsubscribe()
+        console.log('[NotificationBell] ✅ Unsubscribed from state subscription')
+      } else {
+        console.log('[NotificationBell] No subscription in browser or state')
       }
       
       // Always remove from database
@@ -225,7 +233,7 @@ export default function NotificationBell() {
       // Update UI state
       setSubscription(null)
       setNotificationsEnabled(false)
-      console.log('[NotificationBell] ✅ Successfully unsubscribed')
+      console.log('[NotificationBell] ✅ Successfully unsubscribed - state cleared')
       alert('Notifications uitgeschakeld!')
     } catch (error) {
       console.error('[NotificationBell] ❌ Error unsubscribing:', error)
