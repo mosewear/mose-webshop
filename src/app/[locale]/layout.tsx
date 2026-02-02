@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import AnnouncementBanner from '@/components/AnnouncementBanner'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -92,6 +93,7 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
+      <AnnouncementBanner />
       <Header />
       <main>{children}</main>
       <Footer />
