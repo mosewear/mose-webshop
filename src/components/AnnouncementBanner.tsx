@@ -29,9 +29,14 @@ export default async function AnnouncementBanner() {
       .select('*')
       .single()
 
-    // If banner is disabled or doesn't exist, render nothing (no layout shift!)
-    if (!configData || !configData.enabled) {
-      return null
+    // If config doesn't exist, render empty client (manages CSS var)
+    if (!configData) {
+      return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
+    }
+
+    // If banner is disabled, render empty client (manages CSS var)
+    if (!configData.enabled) {
+      return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
     }
 
     // Fetch active messages
@@ -42,14 +47,15 @@ export default async function AnnouncementBanner() {
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
-    // If no active messages, render nothing
+    // If no active messages, render empty client (manages CSS var)
     if (!messagesData || messagesData.length === 0) {
-      return null
+      return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
     }
 
     // Pass data to client component for interactivity
     return (
       <AnnouncementBannerClient
+        enabled={true}
         config={{
           enabled: configData.enabled,
           rotation_interval: configData.rotation_interval,
@@ -68,6 +74,6 @@ export default async function AnnouncementBanner() {
     )
   } catch (error) {
     console.error('Error fetching announcement banner:', error)
-    return null
+    return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
   }
 }

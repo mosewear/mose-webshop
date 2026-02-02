@@ -22,19 +22,36 @@ interface BannerConfig {
 }
 
 interface AnnouncementBannerClientProps {
-  config: BannerConfig
+  enabled: boolean
+  config: BannerConfig | null
   messages: AnnouncementMessage[]
 }
 
 const DISMISS_COOKIE_NAME = 'mose_banner_dismissed'
 
-export default function AnnouncementBannerClient({ config, messages }: AnnouncementBannerClientProps) {
+export default function AnnouncementBannerClient({ enabled, config, messages }: AnnouncementBannerClientProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDismissed, setIsDismissed] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [direction, setDirection] = useState(0)
 
-  // Check if banner is dismissed
+  // Manage CSS variable based on banner state
+  useEffect(() => {
+    // If banner is disabled (from admin) or dismissed (by user) → reset CSS var
+    if (!enabled || isDismissed) {
+      document.documentElement.style.setProperty('--announcement-banner-height', '0px')
+    }
+    // If enabled → CSS already has correct value (40px/48px), do nothing
+    
+    return () => {
+      // Cleanup: reset on unmount if was disabled/dismissed
+      if (!enabled || isDismissed) {
+        document.documentElement.style.setProperty('--announcement-banner-height', '0px')
+      }
+    }
+  }, [enabled, isDismissed])
+
+  // Check if banner is dismissed by user
   useEffect(() => {
     const dismissed = localStorage.getItem(DISMISS_COOKIE_NAME)
     if (dismissed) {
@@ -47,23 +64,9 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
     }
   }, [])
 
-  // Reset CSS var when banner is dismissed
-  useEffect(() => {
-    if (isDismissed) {
-      document.documentElement.style.setProperty('--announcement-banner-height', '0px')
-    }
-    
-    return () => {
-      // Reset on unmount
-      if (isDismissed) {
-        document.documentElement.style.setProperty('--announcement-banner-height', '0px')
-      }
-    }
-  }, [isDismissed])
-
   // Auto-rotate messages
   useEffect(() => {
-    if (messages.length <= 1 || isPaused || isDismissed) return
+    if (!enabled || !config || messages.length <= 1 || isPaused || isDismissed) return
 
     const interval = setInterval(() => {
       setDirection(1)
@@ -71,7 +74,7 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
     }, config.rotation_interval * 1000)
 
     return () => clearInterval(interval)
-  }, [config.rotation_interval, messages.length, isPaused, isDismissed])
+  }, [enabled, config, messages.length, isPaused, isDismissed])
 
   const handleNext = useCallback(() => {
     setDirection(1)
@@ -84,14 +87,17 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
   }, [messages.length])
 
   const handleDismiss = useCallback(() => {
+    if (!config) return
+    
     setIsDismissed(true)
     
     const expiryDate = new Date()
     expiryDate.setDate(expiryDate.getDate() + config.dismiss_cookie_days)
     localStorage.setItem(DISMISS_COOKIE_NAME, expiryDate.toISOString())
-  }, [config.dismiss_cookie_days])
+  }, [config])
 
-  if (isDismissed || messages.length === 0) {
+  // Don't render UI if disabled (from admin), dismissed (by user), or no messages
+  if (!enabled || isDismissed || messages.length === 0 || !config) {
     return null
   }
 
