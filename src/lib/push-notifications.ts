@@ -49,7 +49,7 @@ export async function sendOrderNotificationToAdmins(payload: OrderNotificationPa
 
     // Prepare notification payload
     const notificationPayload = {
-      title: '🛒 KaChing! Nieuwe Order!',
+      title: '🛒 KaChing! Nieuwe order!',
       body: `€${payload.orderTotal.toFixed(2)} - ${payload.customerName}\n${payload.itemCount} ${payload.itemCount === 1 ? 'item' : 'items'}`,
       icon: '/favicon.ico',
       badge: '/favicon-32x32.png',

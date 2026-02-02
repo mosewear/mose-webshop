@@ -1,6 +1,6 @@
 {
-  "name": "MOSE Admin",
-  "short_name": "MOSE Admin",
+  "name": "mosewear.com",
+  "short_name": "mosewear.com",
   "description": "MOSE Webshop Admin Panel - Beheer orders, producten en klanten",
   "start_url": "/admin",
   "scope": "/admin/",
