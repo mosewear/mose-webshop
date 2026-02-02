@@ -10,6 +10,7 @@ export default function FAQAccordion() {
     free_shipping_threshold: 100,
     return_days: 14,
     shipping_cost: 4.95,
+    return_label_cost_incl_btw: 7.87,
   })
   const t = useTranslations('faq')
 
@@ -19,6 +20,7 @@ export default function FAQAccordion() {
         free_shipping_threshold: s.free_shipping_threshold,
         return_days: s.return_days,
         shipping_cost: s.shipping_cost || 4.95,
+        return_label_cost_incl_btw: s.return_label_cost_incl_btw || 7.87,
       })
     })
   }, [])
@@ -36,6 +38,7 @@ export default function FAQAccordion() {
       .replace('{freeShipping}', settings.free_shipping_threshold.toString())
       .replace('{returnDays}', settings.return_days.toString())
       .replace('{shippingCost}', settings.shipping_cost.toFixed(2))
+      .replace('{returnCost}', settings.return_label_cost_incl_btw.toFixed(2))
   }
 
   return (

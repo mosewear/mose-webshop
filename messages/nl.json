@@ -1070,7 +1070,7 @@
       },
       {
         "question": "Kan ik mijn bestelling retourneren?",
-        "answer": "Ja! Je hebt {returnDays} dagen bedenktijd vanaf ontvangst. De artikelen moeten ongedragen zijn met labels er nog aan. Je kunt eenvoudig een retour aanmelden via je klantportaal. De retourkosten worden verrekend met je terugbetaling. Je krijgt binnen 5 werkdagen je geld terug."
+        "answer": "Ja! Je hebt {returnDays} dagen bedenktijd vanaf ontvangst. De artikelen moeten ongedragen zijn met labels er nog aan. Je kunt eenvoudig een retour aanmelden via je klantportaal. De retourkosten bedragen €{returnCost} en worden verrekend met je terugbetaling. Je krijgt binnen 5 werkdagen je geld terug."
       },
       {
         "question": "Hoe verzorg ik mijn MOSE kleding?",

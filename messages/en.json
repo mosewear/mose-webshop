@@ -1083,7 +1083,7 @@
       },
       {
         "question": "Can I return my order?",
-        "answer": "Yes! You have {returnDays} days to return from receipt. Items must be unworn with tags still attached. You can easily request a return via your customer portal. Return costs will be deducted from your refund. You'll receive your refund within 5 business days."
+        "answer": "Yes! You have {returnDays} days to return from receipt. Items must be unworn with tags still attached. You can easily request a return via your customer portal. Return costs are €{returnCost} and will be deducted from your refund. You'll receive your refund within 5 business days."
       },
       {
         "question": "How do I care for my MOSE clothing?",
