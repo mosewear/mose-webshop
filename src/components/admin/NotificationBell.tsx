@@ -165,30 +165,56 @@ export default function NotificationBell() {
   }
 
   const unsubscribe = async () => {
-    if (subscription) {
-      setIsLoading(true)
-      try {
+    console.log('[NotificationBell] ========== UNSUBSCRIBE ==========')
+    console.log('[NotificationBell] Current subscription:', subscription)
+    
+    if (!subscription) {
+      console.warn('[NotificationBell] No subscription found, trying to unsubscribe anyway')
+    }
+    
+    setIsLoading(true)
+    try {
+      // Try to unsubscribe from push manager if subscription exists
+      if (subscription) {
+        console.log('[NotificationBell] Unsubscribing from push manager...')
         await subscription.unsubscribe()
-        
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          await fetch('/api/admin/push/unsubscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id })
-          })
-        }
-        
-        setSubscription(null)
-        setNotificationsEnabled(false)
-        console.log('[Admin PWA] Unsubscribed from push notifications')
-        alert('Notifications uitgeschakeld')
-      } catch (error) {
-        console.error('[Admin PWA] Error unsubscribing:', error)
-      } finally {
-        setIsLoading(false)
-        setShowDropdown(false)
+        console.log('[NotificationBell] ✅ Unsubscribed from push manager')
       }
+      
+      // Always remove from database
+      console.log('[NotificationBell] Getting user...')
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log('[NotificationBell] User:', { userId: user?.id, error: userError })
+      
+      if (user) {
+        console.log('[NotificationBell] Removing subscription from database...')
+        const response = await fetch('/api/admin/push/unsubscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id })
+        })
+        
+        console.log('[NotificationBell] Unsubscribe API response:', response.status)
+        const data = await response.json()
+        console.log('[NotificationBell] Unsubscribe API data:', data)
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to unsubscribe')
+        }
+      }
+      
+      // Update UI state
+      setSubscription(null)
+      setNotificationsEnabled(false)
+      console.log('[NotificationBell] ✅ Successfully unsubscribed')
+      alert('Notifications uitgeschakeld!')
+    } catch (error) {
+      console.error('[NotificationBell] ❌ Error unsubscribing:', error)
+      console.error('[NotificationBell] Error details:', error instanceof Error ? error.stack : error)
+      alert('Fout bij uitschakelen: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setIsLoading(false)
+      setShowDropdown(false)
     }
   }
 
