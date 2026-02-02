@@ -20,8 +20,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --announcement-banner-height: 0px;
+  /* Fixed heights - banner heeft py-2 mobile, py-3 desktop + single line content */
+  --announcement-banner-height: 40px; /* Mobile: py-2 (16px) + content (24px) */
   --header-total-height: 0px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --announcement-banner-height: 48px; /* Desktop: py-3 (24px) + content (24px) */
+  }
 }
 
 body {
@@ -30,15 +37,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Prevent layout shift - reserve space for fixed elements */
+/* Banner min-height matches CSS var for consistency */
 #announcement-banner {
-  min-height: 40px; /* Mobile minimum height */
-}
-
-@media (min-width: 768px) {
-  #announcement-banner {
-    min-height: 48px; /* Desktop minimum height */
-  }
+  min-height: var(--announcement-banner-height);
 }
 
 /* Voorkom auto-zoom op mobiel bij input focus door minimale font-size van 16px */

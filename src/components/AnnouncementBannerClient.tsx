@@ -33,30 +33,6 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
   const [isDismissed, setIsDismissed] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [direction, setDirection] = useState(0)
-  const [bannerHeight, setBannerHeight] = useState(0)
-
-  // Measure banner height and set CSS variable
-  useEffect(() => {
-    const measureHeight = () => {
-      const banner = document.getElementById('announcement-banner')
-      if (banner) {
-        const height = banner.offsetHeight
-        setBannerHeight(height)
-        document.documentElement.style.setProperty('--announcement-banner-height', `${height}px`)
-      } else {
-        // Banner is hidden/dismissed - reset
-        document.documentElement.style.setProperty('--announcement-banner-height', '0px')
-      }
-    }
-
-    measureHeight()
-    window.addEventListener('resize', measureHeight)
-    
-    return () => {
-      window.removeEventListener('resize', measureHeight)
-      document.documentElement.style.setProperty('--announcement-banner-height', '0px')
-    }
-  }, [isDismissed])
 
   // Check if banner is dismissed
   useEffect(() => {
@@ -70,6 +46,20 @@ export default function AnnouncementBannerClient({ config, messages }: Announcem
       }
     }
   }, [])
+
+  // Reset CSS var when banner is dismissed
+  useEffect(() => {
+    if (isDismissed) {
+      document.documentElement.style.setProperty('--announcement-banner-height', '0px')
+    }
+    
+    return () => {
+      // Reset on unmount
+      if (isDismissed) {
+        document.documentElement.style.setProperty('--announcement-banner-height', '0px')
+      }
+    }
+  }, [isDismissed])
 
   // Auto-rotate messages
   useEffect(() => {
