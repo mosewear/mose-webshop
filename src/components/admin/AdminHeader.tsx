@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import NotificationBell from './NotificationBell'
 
 interface AdminHeaderProps {
   adminUser: {
@@ -29,6 +30,9 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Notification Bell */}
+        <NotificationBell />
+
         {/* View Site Link */}
         <a
           href="/"

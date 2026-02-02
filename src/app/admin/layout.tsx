@@ -2,7 +2,6 @@ import { requireAdmin } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader from '@/components/admin/AdminHeader'
-import AdminPWASetup from '@/components/admin/AdminPWASetup'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -44,9 +43,6 @@ export default async function AdminLayout({
           {children}
         </main>
       </div>
-      
-      {/* PWA Setup (KaChing notifications) */}
-      <AdminPWASetup />
     </div>
   )
 }
