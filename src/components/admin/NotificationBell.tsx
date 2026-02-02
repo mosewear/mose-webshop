@@ -190,9 +190,17 @@ export default function NotificationBell() {
     setIsLoading(true)
     try {
       // Check for any subscription in the push manager (might be different from state)
-      const registration = await navigator.serviceWorker.ready
-      const browserSubscription = await registration.pushManager.getSubscription()
+      console.log('[NotificationBell] Getting service worker registration...')
       
+      if (!('serviceWorker' in navigator)) {
+        console.log('[NotificationBell] Service worker not supported')
+        throw new Error('Service worker not supported')
+      }
+      
+      const registration = await navigator.serviceWorker.ready
+      console.log('[NotificationBell] Service worker ready')
+      
+      const browserSubscription = await registration.pushManager.getSubscription()
       console.log('[NotificationBell] Browser subscription:', browserSubscription)
       
       // Unsubscribe from browser if any subscription exists
@@ -205,7 +213,7 @@ export default function NotificationBell() {
         await subscription.unsubscribe()
         console.log('[NotificationBell] ✅ Unsubscribed from state subscription')
       } else {
-        console.log('[NotificationBell] No subscription in browser or state')
+        console.log('[NotificationBell] No subscription in browser or state - just cleaning up database')
       }
       
       // Always remove from database
@@ -222,12 +230,17 @@ export default function NotificationBell() {
         })
         
         console.log('[NotificationBell] Unsubscribe API response:', response.status)
-        const data = await response.json()
-        console.log('[NotificationBell] Unsubscribe API data:', data)
         
         if (!response.ok) {
+          const data = await response.json()
+          console.error('[NotificationBell] API error:', data)
           throw new Error(data.error || 'Failed to unsubscribe')
         }
+        
+        const data = await response.json()
+        console.log('[NotificationBell] Unsubscribe API data:', data)
+      } else {
+        console.warn('[NotificationBell] No user found, skipping database cleanup')
       }
       
       // Update UI state
@@ -238,10 +251,16 @@ export default function NotificationBell() {
     } catch (error) {
       console.error('[NotificationBell] ❌ Error unsubscribing:', error)
       console.error('[NotificationBell] Error details:', error instanceof Error ? error.stack : error)
-      alert('Fout bij uitschakelen: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      
+      // Force clear the UI state even on error
+      setSubscription(null)
+      setNotificationsEnabled(false)
+      
+      alert('Notifications uitgeschakeld (met waarschuwing: ' + (error instanceof Error ? error.message : 'Unknown error') + ')')
     } finally {
       setIsLoading(false)
       setShowDropdown(false)
+      console.log('[NotificationBell] Unsubscribe complete - loading set to false')
     }
   }
 
