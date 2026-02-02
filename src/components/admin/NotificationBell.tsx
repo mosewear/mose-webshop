@@ -48,32 +48,58 @@ export default function NotificationBell() {
         )
         console.log('[Admin PWA] Service Worker registered:', registration.scope)
         
-        // Check if there's an existing subscription in the browser
-        const existing = await registration.pushManager.getSubscription()
-        if (existing) {
-          console.log('[Admin PWA] Found existing subscription in browser')
+        // Try to get existing subscription with timeout
+        try {
+          const getSubscriptionPromise = registration.pushManager.getSubscription()
+          const timeoutPromise = new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('Get subscription timeout')), 2000)
+          )
           
-          // Verify it still exists in the database
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            const response = await fetch(`/api/admin/push/check-subscription?userId=${user.id}`)
-            const data = await response.json()
+          const existing = await Promise.race([getSubscriptionPromise, timeoutPromise])
+          
+          if (existing) {
+            console.log('[Admin PWA] Found existing subscription in browser')
             
-            if (data.exists) {
-              console.log('[Admin PWA] Subscription verified in database')
-              setSubscription(existing)
-              setNotificationsEnabled(true)
-            } else {
-              console.log('[Admin PWA] Subscription not in database, removing from browser')
-              // Remove orphaned subscription from browser
-              await existing.unsubscribe()
-              setSubscription(null)
-              setNotificationsEnabled(false)
+            // Verify it still exists in the database
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+              try {
+                const response = await fetch(`/api/admin/push/check-subscription?userId=${user.id}`)
+                const data = await response.json()
+                
+                if (data.exists) {
+                  console.log('[Admin PWA] Subscription verified in database')
+                  setSubscription(existing)
+                  setNotificationsEnabled(true)
+                } else {
+                  console.log('[Admin PWA] Subscription not in database, removing from browser')
+                  // Remove orphaned subscription from browser
+                  await existing.unsubscribe()
+                  setSubscription(null)
+                  setNotificationsEnabled(false)
+                }
+              } catch (apiError) {
+                console.error('[Admin PWA] Error checking subscription in database:', apiError)
+                // If database check fails, assume disabled for safety
+                setSubscription(null)
+                setNotificationsEnabled(false)
+              }
             }
+          } else {
+            console.log('[Admin PWA] No existing subscription found')
+            setSubscription(null)
+            setNotificationsEnabled(false)
           }
+        } catch (subError) {
+          console.warn('[Admin PWA] Could not get subscription (timeout or error):', subError)
+          // If we can't check subscription, assume disabled for safety
+          setSubscription(null)
+          setNotificationsEnabled(false)
         }
       } catch (error) {
         console.error('[Admin PWA] Service Worker registration failed:', error)
+        setSubscription(null)
+        setNotificationsEnabled(false)
       }
     }
   }
