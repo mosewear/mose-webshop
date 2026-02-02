@@ -189,31 +189,50 @@ export default function NotificationBell() {
     
     setIsLoading(true)
     try {
-      // Check for any subscription in the push manager (might be different from state)
-      console.log('[NotificationBell] Getting service worker registration...')
+      // Try to get service worker with timeout
+      let browserSubscription = null
       
-      if (!('serviceWorker' in navigator)) {
-        console.log('[NotificationBell] Service worker not supported')
-        throw new Error('Service worker not supported')
+      if ('serviceWorker' in navigator) {
+        console.log('[NotificationBell] Getting service worker registration with 2s timeout...')
+        
+        try {
+          // Add timeout to service worker ready
+          const registrationPromise = navigator.serviceWorker.ready
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Service worker timeout')), 2000)
+          )
+          
+          const registration = await Promise.race([registrationPromise, timeoutPromise]) as ServiceWorkerRegistration
+          console.log('[NotificationBell] Service worker ready')
+          
+          browserSubscription = await registration.pushManager.getSubscription()
+          console.log('[NotificationBell] Browser subscription:', browserSubscription)
+          
+          // Unsubscribe from browser if any subscription exists
+          if (browserSubscription) {
+            console.log('[NotificationBell] Unsubscribing from push manager...')
+            await browserSubscription.unsubscribe()
+            console.log('[NotificationBell] ✅ Unsubscribed from push manager')
+          }
+        } catch (swError) {
+          console.warn('[NotificationBell] Service worker error (continuing anyway):', swError)
+          // Continue with unsubscribe even if SW fails
+        }
       }
       
-      const registration = await navigator.serviceWorker.ready
-      console.log('[NotificationBell] Service worker ready')
-      
-      const browserSubscription = await registration.pushManager.getSubscription()
-      console.log('[NotificationBell] Browser subscription:', browserSubscription)
-      
-      // Unsubscribe from browser if any subscription exists
-      if (browserSubscription) {
-        console.log('[NotificationBell] Unsubscribing from push manager...')
-        await browserSubscription.unsubscribe()
-        console.log('[NotificationBell] ✅ Unsubscribed from push manager')
-      } else if (subscription) {
+      // Try state subscription if browser subscription wasn't found
+      if (!browserSubscription && subscription) {
         console.log('[NotificationBell] Unsubscribing from state subscription...')
-        await subscription.unsubscribe()
-        console.log('[NotificationBell] ✅ Unsubscribed from state subscription')
-      } else {
-        console.log('[NotificationBell] No subscription in browser or state - just cleaning up database')
+        try {
+          await subscription.unsubscribe()
+          console.log('[NotificationBell] ✅ Unsubscribed from state subscription')
+        } catch (subError) {
+          console.warn('[NotificationBell] State subscription error (continuing anyway):', subError)
+        }
+      }
+      
+      if (!browserSubscription && !subscription) {
+        console.log('[NotificationBell] No subscription found - just cleaning up database')
       }
       
       // Always remove from database
@@ -234,11 +253,12 @@ export default function NotificationBell() {
         if (!response.ok) {
           const data = await response.json()
           console.error('[NotificationBell] API error:', data)
-          throw new Error(data.error || 'Failed to unsubscribe')
+          // Don't throw - we still want to clear UI
+          console.log('[NotificationBell] Continuing despite API error...')
+        } else {
+          const data = await response.json()
+          console.log('[NotificationBell] Unsubscribe API data:', data)
         }
-        
-        const data = await response.json()
-        console.log('[NotificationBell] Unsubscribe API data:', data)
       } else {
         console.warn('[NotificationBell] No user found, skipping database cleanup')
       }
@@ -256,7 +276,7 @@ export default function NotificationBell() {
       setSubscription(null)
       setNotificationsEnabled(false)
       
-      alert('Notifications uitgeschakeld (met waarschuwing: ' + (error instanceof Error ? error.message : 'Unknown error') + ')')
+      alert('Notifications uitgeschakeld!')
     } finally {
       setIsLoading(false)
       setShowDropdown(false)
