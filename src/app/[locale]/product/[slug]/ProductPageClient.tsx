@@ -987,7 +987,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-sm font-bold text-gray-900">
-                              {t('lowStock', { count: selectedVariant.stock_quantity })}
+                              {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
                             </p>
                           </div>
                         </>
@@ -1265,7 +1265,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-sm font-bold text-gray-900">
-                              {t('lowStock', { count: selectedVariant.stock_quantity })}
+                              {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
                             </p>
                           </div>
                         </>
