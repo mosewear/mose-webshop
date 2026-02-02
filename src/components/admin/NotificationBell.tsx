@@ -42,11 +42,55 @@ export default function NotificationBell() {
   const registerServiceWorker = async () => {
     if ('serviceWorker' in navigator) {
       try {
+        // First, unregister any existing service workers to start fresh
+        const existingRegistrations = await navigator.serviceWorker.getRegistrations()
+        for (const registration of existingRegistrations) {
+          if (registration.scope.includes('/admin')) {
+            console.log('[Admin PWA] Unregistering old service worker:', registration.scope)
+            await registration.unregister()
+          }
+        }
+        
+        // Register fresh service worker
         const registration = await navigator.serviceWorker.register(
           '/admin-sw.js',
           { scope: '/admin/' }
         )
         console.log('[Admin PWA] Service Worker registered:', registration.scope)
+        
+        // Force update to latest version
+        await registration.update()
+        console.log('[Admin PWA] Service Worker update triggered')
+        
+        // Wait for SW to activate with timeout
+        const waitForActivation = new Promise<ServiceWorkerRegistration>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Activation timeout')), 3000)
+          
+          if (registration.active) {
+            clearTimeout(timeout)
+            resolve(registration)
+          } else {
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'activated') {
+                    clearTimeout(timeout)
+                    resolve(registration)
+                  }
+                })
+              }
+            })
+          }
+        })
+        
+        try {
+          await waitForActivation
+          console.log('[Admin PWA] Service Worker activated')
+        } catch (activationError) {
+          console.warn('[Admin PWA] Could not wait for activation:', activationError)
+          // Continue anyway
+        }
         
         // Try to get existing subscription with timeout
         try {
