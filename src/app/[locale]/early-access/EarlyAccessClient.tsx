@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Lock, Gift, Truck, Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 
@@ -209,7 +210,7 @@ export default function EarlyAccessClient() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full px-4">
                   <input
                     type="email"
                     value={email}
@@ -217,12 +218,12 @@ export default function EarlyAccessClient() {
                     placeholder={t('form.placeholder')}
                     required
                     disabled={isSubmitting}
-                    className="flex-1 px-6 py-4 bg-white text-black font-semibold text-base focus:outline-none focus:ring-2 focus:ring-brand-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto sm:min-w-[280px] px-6 py-4 bg-white text-black font-semibold text-base focus:outline-none focus:ring-2 focus:ring-brand-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-8 py-4 bg-brand-primary hover:bg-brand-primary-hover text-black font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="w-full sm:w-auto px-8 py-4 bg-brand-primary hover:bg-brand-primary-hover text-black font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {isSubmitting ? t('form.submitting') : t('form.button')}
                   </button>
@@ -248,22 +249,30 @@ export default function EarlyAccessClient() {
           {/* Benefits */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 max-w-3xl mx-auto">
             <div className="text-center">
-              <div className="text-3xl mb-2">🔒</div>
+              <div className="flex justify-center mb-3">
+                <Lock className="w-8 h-8 text-brand-primary" />
+              </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.earlyAccess.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.earlyAccess.desc')}</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl mb-2">🎁</div>
+              <div className="flex justify-center mb-3">
+                <Gift className="w-8 h-8 text-brand-primary" />
+              </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.gift.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.gift.desc')}</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl mb-2">📦</div>
+              <div className="flex justify-center mb-3">
+                <Truck className="w-8 h-8 text-brand-primary" />
+              </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.shipping.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.shipping.desc')}</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl mb-2">💌</div>
+              <div className="flex justify-center mb-3">
+                <Mail className="w-8 h-8 text-brand-primary" />
+              </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.updates.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.updates.desc')}</p>
             </div>
