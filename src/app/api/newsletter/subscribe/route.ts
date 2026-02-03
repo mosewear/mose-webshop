@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendNewsletterWelcomeEmail } from '@/lib/email'
+import { sendNewsletterWelcomeEmail, sendInsiderWelcomeEmail } from '@/lib/email'
 
 // Rate limiting map (in-memory, resets on server restart)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -111,11 +111,19 @@ export async function POST(req: NextRequest) {
 
         // Send welcome email
         try {
-          await sendNewsletterWelcomeEmail({ 
-            email: email.toLowerCase(), 
-            source,
-            locale // Pass locale for multi-language emails
-          })
+          // Send insider email for early_access signups
+          if (source === 'early_access' || source === 'early_access_landing') {
+            await sendInsiderWelcomeEmail({ 
+              email: email.toLowerCase(), 
+              locale
+            })
+          } else {
+            await sendNewsletterWelcomeEmail({ 
+              email: email.toLowerCase(), 
+              source,
+              locale
+            })
+          }
         } catch (emailError) {
           console.error('Error sending welcome email:', emailError)
           // Don't fail the subscription if email fails
@@ -149,11 +157,19 @@ export async function POST(req: NextRequest) {
 
     // Send welcome email (async, don't wait)
     try {
-      await sendNewsletterWelcomeEmail({ 
-        email: email.toLowerCase(), 
-        source,
-        locale // Pass locale for multi-language emails
-      })
+      // Send insider email for early_access signups
+      if (source === 'early_access' || source === 'early_access_landing') {
+        await sendInsiderWelcomeEmail({ 
+          email: email.toLowerCase(), 
+          locale
+        })
+      } else {
+        await sendNewsletterWelcomeEmail({ 
+          email: email.toLowerCase(), 
+          source,
+          locale
+        })
+      }
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError)
       // Don't fail the subscription if email fails

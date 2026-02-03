@@ -26,12 +26,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email type' }, { status: 400 })
     }
 
-    // Fetch all active subscribers from early_access source
+    // Fetch all active subscribers from early_access sources
     const { data: subscribers, error: fetchError } = await supabase
       .from('newsletter_subscribers')
       .select('email, locale')
       .eq('status', 'active')
-      .eq('source', 'early_access')
+      .in('source', ['early_access', 'early_access_landing'])
 
     if (fetchError) {
       console.error('Error fetching subscribers:', fetchError)
