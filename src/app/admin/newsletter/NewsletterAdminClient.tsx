@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye } from 'lucide-react'
+import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Subscriber {
@@ -27,13 +27,15 @@ interface Props {
 }
 
 export default function NewsletterAdminClient({ initialSubscribers, initialStats }: Props) {
-  const [subscribers] = useState<Subscriber[]>(initialSubscribers)
+  const [subscribers, setSubscribers] = useState<Subscriber[]>(initialSubscribers)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unsubscribed'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest')
   const [exporting, setExporting] = useState(false)
   const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails'>('subscribers')
   const [sendingEmail, setSendingEmail] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletingAll, setDeletingAll] = useState(false)
 
   // Filtered and sorted subscribers
   const filteredSubscribers = useMemo(() => {
@@ -125,6 +127,79 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     }
   }
 
+  const handleDeleteSubscriber = async (subscriberId: string, email: string) => {
+    if (!confirm(`Weet je zeker dat je ${email} wilt verwijderen?`)) {
+      return
+    }
+
+    setDeletingId(subscriberId)
+    toast.loading('Subscriber wordt verwijderd...')
+
+    try {
+      const response = await fetch('/api/newsletter/delete-subscriber', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriberId })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete subscriber')
+      }
+
+      // Update local state
+      setSubscribers(prev => prev.filter(sub => sub.id !== subscriberId))
+
+      toast.dismiss()
+      toast.success('Subscriber verwijderd!')
+    } catch (error: any) {
+      console.error('Delete subscriber error:', error)
+      toast.dismiss()
+      toast.error(error.message || 'Kon subscriber niet verwijderen')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    if (!confirm(`⚠️ WAARSCHUWING: Dit verwijdert ALLE ${subscribers.length} subscribers!\n\nWeet je dit ABSOLUUT ZEKER?`)) {
+      return
+    }
+
+    // Double confirmation
+    if (!confirm('Laatste kans! Dit kan NIET ongedaan gemaakt worden.\n\nAlle subscribers verwijderen?')) {
+      return
+    }
+
+    setDeletingAll(true)
+    toast.loading('Alle subscribers worden verwijderd...')
+
+    try {
+      const response = await fetch('/api/newsletter/delete-all', {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete all subscribers')
+      }
+
+      // Update local state
+      setSubscribers([])
+
+      toast.dismiss()
+      toast.success(`${data.deleted} subscribers verwijderd!`)
+    } catch (error: any) {
+      console.error('Delete all subscribers error:', error)
+      toast.dismiss()
+      toast.error(error.message || 'Kon subscribers niet verwijderen')
+    } finally {
+      setDeletingAll(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('nl-NL', {
@@ -145,14 +220,24 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
           <p className="text-gray-600">Beheer subscribers en verzend insider emails</p>
         </div>
         {activeTab === 'subscribers' && (
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="flex items-center gap-2 px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            <Download className="w-5 h-5" />
-            Export CSV
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={handleDeleteAll}
+              disabled={deletingAll || subscribers.length === 0}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              Verwijder Alles
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <Download className="w-5 h-5" />
+              Export CSV
+            </button>
+          </div>
         )}
       </div>
 
@@ -294,12 +379,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                   <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Bron</th>
                   <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Taal</th>
                   <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Ingeschreven</th>
+                  <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Acties</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSubscribers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                       Geen subscribers gevonden
                     </td>
                   </tr>
@@ -326,6 +412,16 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                       <td className="px-4 py-3 text-gray-600 capitalize">{sub.source}</td>
                       <td className="px-4 py-3 text-gray-600 uppercase">{sub.locale || 'nl'}</td>
                       <td className="px-4 py-3 text-gray-600">{formatDate(sub.subscribed_at)}</td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
+                          disabled={deletingId === sub.id}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Verwijder subscriber"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -363,6 +459,14 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                     <span>•</span>
                     <span>{formatDate(sub.subscribed_at)}</span>
                   </div>
+                  <button
+                    onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
+                    disabled={deletingId === sub.id}
+                    className="mt-3 w-full flex items-center justify-center gap-2 p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Verwijder</span>
+                  </button>
                 </div>
               ))
             )}
