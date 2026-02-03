@@ -12,7 +12,7 @@ import IconCircle from './components/IconCircle'
 
 interface InsiderWelcomeEmailProps {
   email: string
-  insiderNumber: number
+  insiderNumber?: number
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -41,7 +41,7 @@ export default function InsiderWelcomeEmail({
           <Section style={hero}>
             <IconCircle icon="check-circle" color="#00B67A" size={38} />
             <Text style={title}>{t('insiderWelcome.title')}</Text>
-            <Text style={subtitle}>{t('insiderWelcome.subtitle', { number: insiderNumber })}</Text>
+            <Text style={subtitle}>{t('insiderWelcome.subtitle')}</Text>
           </Section>
 
           {/* Content */}
