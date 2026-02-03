@@ -12,7 +12,6 @@ import IconCircle from './components/IconCircle'
 
 interface InsiderWelcomeEmailProps {
   email: string
-  insiderNumber?: number
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -22,7 +21,6 @@ interface InsiderWelcomeEmailProps {
 
 export default function InsiderWelcomeEmail({
   email,
-  insiderNumber,
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
