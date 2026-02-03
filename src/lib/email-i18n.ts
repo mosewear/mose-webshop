@@ -222,6 +222,11 @@ export type EmailTranslationKeys = {
     reasonForRejection: string
     questions: string
     questionsText: string
+    returnNumber: string
+    description: string
+    reasonTitle: string
+    contactInfo: string
+    ctaButton: string
   }
   abandonedCart: {
     subject: string
@@ -247,6 +252,11 @@ export type EmailTranslationKeys = {
     needHelpText: string
     unsubscribeText: string
     unsubscribe: string
+    quantity: string
+    total: string
+    ctaButton: string
+    moreItems: string
+    freeShipping: string
   }
   backInStock: {
     subject: string
@@ -618,6 +628,11 @@ const nl: EmailTranslationKeys = {
     reasonForRejection: 'Reden van afwijzing',
     questions: 'Vragen?',
     questionsText: 'Heb je vragen over deze afwijzing? Neem gerust contact met ons op. We helpen je graag verder!',
+    returnNumber: 'Retourn human',
+    description: 'Je retourverzoek is helaas afgewezen',
+    reasonTitle: 'Reden voor afwijzing',
+    contactInfo: 'Neem contact met ons op als je vragen hebt',
+    ctaButton: 'VERDER SHOPPEN',
   },
   abandonedCart: {
     subject: '{{name}}, je MOSE items wachten nog op je!',
@@ -643,6 +658,11 @@ const nl: EmailTranslationKeys = {
     needHelpText: 'Twijfel je nog of heb je vragen? Ons team staat voor je klaar!',
     unsubscribeText: 'Deze email is verzonden omdat je items in je winkelwagen hebt achtergelaten. Wil je geen herinneringen meer ontvangen?',
     unsubscribe: 'Klik hier',
+    quantity: 'Aantal',
+    total: 'Totaal',
+    ctaButton: 'MAAK BESTELLING AF',
+    moreItems: '+ {{count}} meer items',
+    freeShipping: 'Gratis verzending vanaf €150',
   },
   backInStock: {
     subject: '{{productName}} is weer op voorraad! | MOSE',
@@ -1014,6 +1034,11 @@ const en: EmailTranslationKeys = {
     reasonForRejection: 'Reason For Rejection',
     questions: 'Questions?',
     questionsText: 'Do you have questions about this rejection? Feel free to contact us. We are happy to help!',
+    returnNumber: 'Return number',
+    description: 'Your return request has unfortunately been rejected',
+    reasonTitle: 'Reason for rejection',
+    contactInfo: 'Contact us if you have any questions',
+    ctaButton: 'SHOP MORE',
   },
   abandonedCart: {
     subject: '{{name}}, your MOSE items are still waiting for you!',
@@ -1039,6 +1064,11 @@ const en: EmailTranslationKeys = {
     needHelpText: 'Still doubting or have questions? Our team is here for you!',
     unsubscribeText: 'This email was sent because you left items in your cart. Do you not want to receive reminders anymore?',
     unsubscribe: 'Click here',
+    quantity: 'Quantity',
+    total: 'Total',
+    ctaButton: 'COMPLETE ORDER',
+    moreItems: '+ {{count}} more items',
+    freeShipping: 'Free shipping from €150',
   },
   backInStock: {
     subject: '{{productName}} is back in stock! | MOSE',
