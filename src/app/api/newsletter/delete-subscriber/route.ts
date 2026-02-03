@@ -8,7 +8,10 @@ export async function DELETE(req: NextRequest) {
     // Check if user is admin
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
+    console.log('[Delete Subscriber] Auth check:', { user: user?.id, authError })
+    
     if (authError || !user) {
+      console.log('[Delete Subscriber] No user found or auth error')
       return NextResponse.json(
         { success: false, error: 'Niet geautoriseerd' },
         { status: 401 }
@@ -16,15 +19,26 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'admin') {
+    console.log('[Delete Subscriber] Profile check:', { profile, profileError })
+
+    if (profileError) {
+      console.log('[Delete Subscriber] Profile error:', profileError)
       return NextResponse.json(
-        { success: false, error: 'Niet geautoriseerd' },
+        { success: false, error: 'Profiel niet gevonden' },
+        { status: 403 }
+      )
+    }
+
+    if (profile?.role !== 'admin') {
+      console.log('[Delete Subscriber] User is not admin, role:', profile?.role)
+      return NextResponse.json(
+        { success: false, error: `Niet geautoriseerd (role: ${profile?.role})` },
         { status: 403 }
       )
     }
@@ -39,6 +53,8 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
+    console.log('[Delete Subscriber] Admin verified, deleting:', subscriberId)
+
     // Delete subscriber
     const { error: deleteError } = await supabase
       .from('newsletter_subscribers')
@@ -46,19 +62,21 @@ export async function DELETE(req: NextRequest) {
       .eq('id', subscriberId)
 
     if (deleteError) {
-      console.error('Error deleting subscriber:', deleteError)
+      console.error('[Delete Subscriber] Delete error:', deleteError)
       return NextResponse.json(
         { success: false, error: 'Kan subscriber niet verwijderen' },
         { status: 500 }
       )
     }
 
+    console.log('[Delete Subscriber] Success!')
+
     return NextResponse.json({
       success: true,
       message: 'Subscriber verwijderd'
     })
   } catch (error) {
-    console.error('Delete subscriber error:', error)
+    console.error('[Delete Subscriber] Catch error:', error)
     return NextResponse.json(
       { success: false, error: 'Er ging iets mis' },
       { status: 500 }
