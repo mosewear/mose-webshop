@@ -20,3 +20,9 @@ export { default as ReturnRefundedEmail } from './ReturnRefunded'
 export { default as ReturnRejectedEmail } from './ReturnRejected'
 export { default as AbandonedCartEmail } from './AbandonedCart'
 export { default as ContactFormEmail } from './ContactForm'
+
+// Insider Email Sequence
+export { default as InsiderWelcomeEmail } from './InsiderWelcome'
+export { default as InsiderCommunityEmail } from './InsiderCommunity'
+export { default as InsiderBehindScenesEmail } from './InsiderBehindScenes'
+export { default as InsiderLaunchWeekEmail } from './InsiderLaunchWeek'

@@ -33,6 +33,10 @@ import {
   ReturnRejectedEmail,
   AbandonedCartEmail,
   ContactFormEmail,
+  InsiderWelcomeEmail,
+  InsiderCommunityEmail,
+  InsiderBehindScenesEmail,
+  InsiderLaunchWeekEmail,
 } from '@/emails'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -1034,3 +1038,215 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   
   return `${siteUrl}/${url}`
 }
+
+// =====================================================
+// INSIDER EMAIL SEQUENCE
+// =====================================================
+
+/**
+ * Send insider welcome email (Email 1)
+ * Triggered immediately after early access signup
+ */
+export async function sendInsiderWelcomeEmail(props: {
+  email: string
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    InsiderWelcomeEmail({
+      email: props.email,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Insider Club <info@mosewear.com>',
+      to: [props.email],
+      subject: t('insiderWelcome.title'),
+      html,
+    })
+
+    if (error) {
+      console.error('❌ Error sending insider welcome email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Insider welcome email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Error sending insider welcome email:', error)
+    return { success: false, error }
+  }
+}
+
+/**
+ * Send insider community email (Email 2)
+ * Triggered 3 days after signup
+ */
+export async function sendInsiderCommunityEmail(props: {
+  email: string
+  subscriberCount: number
+  daysUntilLaunch: number
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    InsiderCommunityEmail({
+      email: props.email,
+      subscriberCount: props.subscriberCount,
+      daysUntilLaunch: props.daysUntilLaunch,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Insider Club <info@mosewear.com>',
+      to: [props.email],
+      subject: t('insiderCommunity.title'),
+      html,
+    })
+
+    if (error) {
+      console.error('❌ Error sending insider community email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Insider community email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Error sending insider community email:', error)
+    return { success: false, error }
+  }
+}
+
+/**
+ * Send insider behind scenes email (Email 3)
+ * Triggered 1 week after signup
+ */
+export async function sendInsiderBehindScenesEmail(props: {
+  email: string
+  storyContent: string
+  daysUntilLaunch: number
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    InsiderBehindScenesEmail({
+      email: props.email,
+      storyContent: props.storyContent,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Insider Club <info@mosewear.com>',
+      to: [props.email],
+      subject: t('insiderBehindScenes.title'),
+      html,
+    })
+
+    if (error) {
+      console.error('❌ Error sending insider behind scenes email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Insider behind scenes email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Error sending insider behind scenes email:', error)
+    return { success: false, error }
+  }
+}
+
+/**
+ * Send insider launch week email (Email 4)
+ * Triggered 3 days before launch
+ */
+export async function sendInsiderLaunchWeekEmail(props: {
+  email: string
+  daysUntilLaunch: number
+  limitedItems: string[]
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    InsiderLaunchWeekEmail({
+      email: props.email,
+      daysUntilLaunch: props.daysUntilLaunch,
+      limitedItems: props.limitedItems,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Insider Club <info@mosewear.com>',
+      to: [props.email],
+      subject: t('insiderLaunchWeek.title', { days: props.daysUntilLaunch }),
+      html,
+    })
+
+    if (error) {
+      console.error('❌ Error sending insider launch week email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ Insider launch week email sent:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Error sending insider launch week email:', error)
+    return { success: false, error }
+  }
+}
+

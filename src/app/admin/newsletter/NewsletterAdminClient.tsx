@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Users, TrendingUp, UserX, Download, Search, Mail } from 'lucide-react'
+import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Subscriber {
@@ -11,6 +11,7 @@ interface Subscriber {
   source: string
   subscribed_at: string
   unsubscribed_at: string | null
+  locale?: string
 }
 
 interface Stats {
@@ -31,6 +32,8 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unsubscribed'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest')
   const [exporting, setExporting] = useState(false)
+  const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails'>('subscribers')
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null)
 
   // Filtered and sorted subscribers
   const filteredSubscribers = useMemo(() => {
@@ -94,6 +97,34 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     }
   }
 
+  const handleSendInsiderEmail = async (emailType: string) => {
+    setSendingEmail(emailType)
+    toast.loading(`${emailType} wordt verstuurd...`)
+
+    try {
+      const response = await fetch('/api/newsletter/send-insider-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailType })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send emails')
+      }
+
+      toast.dismiss()
+      toast.success(`${data.sent} emails succesvol verstuurd!`)
+    } catch (error: any) {
+      console.error('Send email error:', error)
+      toast.dismiss()
+      toast.error(error.message || 'Kon emails niet versturen')
+    } finally {
+      setSendingEmail(null)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('nl-NL', {
@@ -109,198 +140,357 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">
-            Nieuwsbrief Subscribers
+            Nieuwsbrief Beheer
           </h1>
-          <p className="text-gray-600">Beheer je email subscribers en export data</p>
+          <p className="text-gray-600">Beheer subscribers en verzend insider emails</p>
         </div>
+        {activeTab === 'subscribers' && (
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            <Download className="w-5 h-5" />
+            Export CSV
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b-2 border-black">
         <button
-          onClick={handleExport}
-          disabled={exporting}
-          className="flex items-center gap-2 px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          onClick={() => setActiveTab('subscribers')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors ${
+            activeTab === 'subscribers'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
         >
-          <Download className="w-5 h-5" />
-          Export CSV
+          <Users className="w-5 h-5 inline-block mr-2" />
+          Subscribers
+        </button>
+        <button
+          onClick={() => setActiveTab('insider-emails')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors ${
+            activeTab === 'insider-emails'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
+        >
+          <Mail className="w-5 h-5 inline-block mr-2" />
+          Insider Emails
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-        {/* Total Active */}
-        <div className="bg-white border-2 border-black p-4 md:p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <Users className="w-5 h-5 md:w-6 md:h-6 text-brand-primary" />
-            <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
-              Actieve Subscribers
-            </span>
-          </div>
-          <div className="text-3xl md:text-4xl font-display font-bold">
-            {initialStats.total.toLocaleString('nl-NL')}
-          </div>
-        </div>
+      {/* Content - Subscribers Tab */}
+      {activeTab === 'subscribers' && (
+        <>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* Total Active */}
+            <div className="bg-white border-2 border-black p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-brand-primary" />
+                <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
+                  Actieve Subscribers
+                </span>
+              </div>
+              <div className="text-3xl md:text-4xl font-display font-bold">
+                {initialStats.total.toLocaleString('nl-NL')}
+              </div>
+            </div>
 
-        {/* This Month */}
-        <div className="bg-white border-2 border-black p-4 md:p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
-            <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
-              Deze Maand
-            </span>
-          </div>
-          <div className="text-3xl md:text-4xl font-display font-bold text-green-600">
-            +{initialStats.thisMonth}
-          </div>
-        </div>
+            {/* This Month */}
+            <div className="bg-white border-2 border-black p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+                <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
+                  Deze Maand
+                </span>
+              </div>
+              <div className="text-3xl md:text-4xl font-display font-bold text-green-600">
+                +{initialStats.thisMonth}
+              </div>
+            </div>
 
-        {/* Unsubscribed */}
-        <div className="bg-white border-2 border-black p-4 md:p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <UserX className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
-            <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
-              Uitgeschreven
-            </span>
-          </div>
-          <div className="text-3xl md:text-4xl font-display font-bold text-red-600">
-            {initialStats.unsubscribed}
-          </div>
-        </div>
+            {/* Unsubscribed */}
+            <div className="bg-white border-2 border-black p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <UserX className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
+                <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
+                  Uitgeschreven
+                </span>
+              </div>
+              <div className="text-3xl md:text-4xl font-display font-bold text-red-600">
+                {initialStats.unsubscribed}
+              </div>
+            </div>
 
-        {/* Unsub Rate */}
-        <div className="bg-white border-2 border-black p-4 md:p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <Mail className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
-            <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
-              Uitschrijf Rate
-            </span>
-          </div>
-          <div className="text-3xl md:text-4xl font-display font-bold">
-            {initialStats.unsubRate}%
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white border-2 border-black p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Zoek op email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-black focus:outline-none focus:ring-2 focus:ring-brand-primary"
-            />
+            {/* Unsub Rate */}
+            <div className="bg-white border-2 border-black p-4 md:p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <Mail className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
+                <span className="text-xs md:text-sm uppercase tracking-wider text-gray-600 font-semibold">
+                  Uitschrijf Rate
+                </span>
+              </div>
+              <div className="text-3xl md:text-4xl font-display font-bold">
+                {initialStats.unsubRate}%
+              </div>
+            </div>
           </div>
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-4 py-3 border-2 border-black bg-white md:w-48 font-semibold"
-          >
-            <option value="all">Alle statussen</option>
-            <option value="active">Actief</option>
-            <option value="unsubscribed">Uitgeschreven</option>
-          </select>
+          {/* Filters */}
+          <div className="bg-white border-2 border-black p-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Zoek op email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-black focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                />
+              </div>
 
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-4 py-3 border-2 border-black bg-white md:w-48 font-semibold"
-          >
-            <option value="newest">Nieuwste eerst</option>
-            <option value="oldest">Oudste eerst</option>
-            <option value="email">Email A-Z</option>
-          </select>
-        </div>
-      </div>
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-4 py-3 border-2 border-black bg-white md:w-48 font-semibold"
+              >
+                <option value="all">Alle statussen</option>
+                <option value="active">Actief</option>
+                <option value="unsubscribed">Uitgeschreven</option>
+              </select>
 
-      {/* Results count */}
-      <div className="mb-4 text-sm text-gray-600">
-        {filteredSubscribers.length} {filteredSubscribers.length === 1 ? 'resultaat' : 'resultaten'}
-      </div>
+              {/* Sort */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-4 py-3 border-2 border-black bg-white md:w-48 font-semibold"
+              >
+                <option value="newest">Nieuwste eerst</option>
+                <option value="oldest">Oudste eerst</option>
+                <option value="email">Email A-Z</option>
+              </select>
+            </div>
+          </div>
 
-      {/* Subscribers List - Desktop Table */}
-      <div className="hidden md:block bg-white border-2 border-black overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-black text-white">
-            <tr>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Email</th>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Status</th>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Bron</th>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Ingeschreven</th>
-            </tr>
-          </thead>
-          <tbody>
+          {/* Results count */}
+          <div className="mb-4 text-sm text-gray-600">
+            {filteredSubscribers.length} {filteredSubscribers.length === 1 ? 'resultaat' : 'resultaten'}
+          </div>
+
+          {/* Subscribers List - Desktop Table */}
+          <div className="hidden md:block bg-white border-2 border-black overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-black text-white">
+                <tr>
+                  <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Email</th>
+                  <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Status</th>
+                  <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Bron</th>
+                  <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Taal</th>
+                  <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Ingeschreven</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSubscribers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      Geen subscribers gevonden
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSubscribers.map((sub, index) => (
+                    <tr 
+                      key={sub.id}
+                      className={`border-b-2 border-gray-200 hover:bg-gray-50 transition-colors ${
+                        index % 2 === 1 ? 'bg-gray-50/50' : ''
+                      }`}
+                    >
+                      <td className="px-4 py-3 font-medium">{sub.email}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                            sub.status === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {sub.status === 'active' ? 'Actief' : 'Uitgeschreven'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 capitalize">{sub.source}</td>
+                      <td className="px-4 py-3 text-gray-600 uppercase">{sub.locale || 'nl'}</td>
+                      <td className="px-4 py-3 text-gray-600">{formatDate(sub.subscribed_at)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Subscribers List - Mobile Cards */}
+          <div className="md:hidden space-y-3">
             {filteredSubscribers.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                  Geen subscribers gevonden
-                </td>
-              </tr>
+              <div className="bg-white border-2 border-black p-8 text-center text-gray-500">
+                Geen subscribers gevonden
+              </div>
             ) : (
-              filteredSubscribers.map((sub, index) => (
-                <tr 
-                  key={sub.id}
-                  className={`border-b-2 border-gray-200 hover:bg-gray-50 transition-colors ${
-                    index % 2 === 1 ? 'bg-gray-50/50' : ''
-                  }`}
-                >
-                  <td className="px-4 py-3 font-medium">{sub.email}</td>
-                  <td className="px-4 py-3">
+              filteredSubscribers.map((sub) => (
+                <div key={sub.id} className="bg-white border-2 border-black p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="font-semibold text-sm break-all pr-2 flex-1">
+                      {sub.email}
+                    </div>
                     <span
-                      className={`inline-flex items-center px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                      className={`inline-flex items-center px-2 py-1 text-xs font-bold uppercase tracking-wider whitespace-nowrap ${
                         sub.status === 'active'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {sub.status === 'active' ? 'Actief' : 'Uitgeschreven'}
+                      {sub.status === 'active' ? 'Actief' : 'Uit'}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 capitalize">{sub.source}</td>
-                  <td className="px-4 py-3 text-gray-600">{formatDate(sub.subscribed_at)}</td>
-                </tr>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="capitalize">{sub.source}</span>
+                    <span>•</span>
+                    <span className="uppercase">{sub.locale || 'nl'}</span>
+                    <span>•</span>
+                    <span>{formatDate(sub.subscribed_at)}</span>
+                  </div>
+                </div>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Subscribers List - Mobile Cards */}
-      <div className="md:hidden space-y-3">
-        {filteredSubscribers.length === 0 ? (
-          <div className="bg-white border-2 border-black p-8 text-center text-gray-500">
-            Geen subscribers gevonden
           </div>
-        ) : (
-          filteredSubscribers.map((sub) => (
-            <div key={sub.id} className="bg-white border-2 border-black p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="font-semibold text-sm break-all pr-2 flex-1">
-                  {sub.email}
-                </div>
-                <span
-                  className={`inline-flex items-center px-2 py-1 text-xs font-bold uppercase tracking-wider whitespace-nowrap ${
-                    sub.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {sub.status === 'active' ? 'Actief' : 'Uit'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-600">
-                <span className="capitalize">{sub.source}</span>
-                <span>•</span>
-                <span>{formatDate(sub.subscribed_at)}</span>
+        </>
+      )}
+
+      {/* Content - Insider Emails Tab */}
+      {activeTab === 'insider-emails' && (
+        <div className="space-y-6">
+          {/* Info Box */}
+          <div className="bg-blue-50 border-2 border-blue-200 p-6">
+            <h3 className="font-bold text-lg mb-2">Insider Email Sequence</h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Verzend automatisch gegenereerde emails naar alle actieve nieuwsbrief subscribers die zich hebben ingeschreven via de Early Access pagina. 
+              Emails worden verstuurd in de juiste taal (NL/EN) op basis van de subscriber's locale.
+            </p>
+            <div className="flex items-start gap-2 text-sm text-gray-700">
+              <Calendar className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <strong>Aanbevolen timing:</strong> Email 1 (direct), Email 2 (+3 dagen), Email 3 (+7 dagen), Email 4 (-3 dagen voor launch)
               </div>
             </div>
-          ))
-        )}
-      </div>
+          </div>
+
+          {/* Email Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Email 1: Welcome */}
+            <div className="bg-white border-2 border-black p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Email 1: Welkom</h3>
+                  <p className="text-sm text-gray-600">Direct na inschrijving</p>
+                </div>
+                <Eye className="w-5 h-5 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-700 mb-4">
+                Welkom bij de insiders + uitleg van wat dat betekent
+              </p>
+              <button
+                onClick={() => handleSendInsiderEmail('welcome')}
+                disabled={sendingEmail !== null}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+                {sendingEmail === 'welcome' ? 'Bezig...' : 'Verstuur Email 1'}
+              </button>
+            </div>
+
+            {/* Email 2: Community */}
+            <div className="bg-white border-2 border-black p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Email 2: Community</h3>
+                  <p className="text-sm text-gray-600">+3 dagen na inschrijving</p>
+                </div>
+                <Eye className="w-5 h-5 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-700 mb-4">
+                Community cijfers + testimonials van andere insiders
+              </p>
+              <button
+                onClick={() => handleSendInsiderEmail('community')}
+                disabled={sendingEmail !== null}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+                {sendingEmail === 'community' ? 'Bezig...' : 'Verstuur Email 2'}
+              </button>
+            </div>
+
+            {/* Email 3: Behind Scenes */}
+            <div className="bg-white border-2 border-black p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Email 3: Behind the Scenes</h3>
+                  <p className="text-sm text-gray-600">+7 dagen na inschrijving</p>
+                </div>
+                <Eye className="w-5 h-5 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-700 mb-4">
+                Productie proces + waarom limited edition
+              </p>
+              <button
+                onClick={() => handleSendInsiderEmail('behind-scenes')}
+                disabled={sendingEmail !== null}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+                {sendingEmail === 'behind-scenes' ? 'Bezig...' : 'Verstuur Email 3'}
+              </button>
+            </div>
+
+            {/* Email 4: Launch Week */}
+            <div className="bg-white border-2 border-black p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Email 4: Launch Week</h3>
+                  <p className="text-sm text-gray-600">3 dagen voor launch (Feb 27)</p>
+                </div>
+                <Eye className="w-5 h-5 text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-700 mb-4">
+                Countdown + reminder vroege toegang + limited stock items
+              </p>
+              <button
+                onClick={() => handleSendInsiderEmail('launch-week')}
+                disabled={sendingEmail !== null}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+                {sendingEmail === 'launch-week' ? 'Bezig...' : 'Verstuur Email 4'}
+              </button>
+            </div>
+          </div>
+
+          {/* Warning Box */}
+          <div className="bg-yellow-50 border-2 border-yellow-200 p-6">
+            <h4 className="font-bold mb-2">⚠️ Let op</h4>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <li>Emails worden verstuurd naar ALLE actieve subscribers uit de "early_access" bron</li>
+              <li>Elke email wordt verstuurd in de juiste taal (NL of EN) op basis van subscriber locale</li>
+              <li>Test eerst met jezelf of een test account voordat je naar iedereen verstuurt</li>
+              <li>Emails kunnen niet worden teruggehaald na verzenden</li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
