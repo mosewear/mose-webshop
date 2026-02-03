@@ -1,11 +1,12 @@
-import { getTranslations, unstable_setRequestLocale } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import EarlyAccessClient from './EarlyAccessClient'
 
 type Props = {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params: { locale } }: Props) {
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'earlyAccess.meta' })
   
   return {
@@ -19,8 +20,8 @@ export async function generateMetadata({ params: { locale } }: Props) {
   }
 }
 
-export default function EarlyAccessPage({ params: { locale } }: Props) {
-  unstable_setRequestLocale(locale)
+export default async function EarlyAccessPage({ params }: Props) {
+  const { locale } = await params
   
   return <EarlyAccessClient />
 }
