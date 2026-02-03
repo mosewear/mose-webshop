@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
             subscribed_at: new Date().toISOString(),
             unsubscribed_at: null,
             source,
+            locale, // Update locale preference
           })
           .eq('id', existing.id)
 
@@ -134,6 +135,7 @@ export async function POST(req: NextRequest) {
         email: email.toLowerCase(),
         status: 'active',
         source,
+        locale, // Store language preference
         subscribed_at: new Date().toISOString(),
       })
 

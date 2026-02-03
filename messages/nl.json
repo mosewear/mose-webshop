@@ -1498,5 +1498,52 @@
     "subject": "Onderwerp",
     "message": "Bericht",
     "replyInfo": "Beantwoord dit bericht zo snel mogelijk door te reageren op het e-mailadres van de klant"
+  },
+  "earlyAccess": {
+    "meta": {
+      "title": "Vroege Toegang - MOSE",
+      "description": "Schrijf je in voor exclusieve vroege toegang tot de MOSE lancering. Shop 24 uur voor iedereen anders."
+    },
+    "hero": {
+      "preTitle": "Iets bijzonders komt eraan...",
+      "title": "WEES ER EERSTE BIJ",
+      "subtitle": "Shop 24 uur voor iedereen anders. Exclusieve toegang tot onze lancering + eerste keuze bij limited edition drops.",
+      "countdown": {
+        "title": "Lancering over:",
+        "days": "dagen",
+        "hours": "uur",
+        "minutes": "min",
+        "seconds": "sec"
+      }
+    },
+    "form": {
+      "placeholder": "jouw@email.com",
+      "button": "Krijg vroege toegang",
+      "submitting": "Bezig...",
+      "success": "Welkom insider! Check je inbox.",
+      "error": "Er ging iets mis. Probeer het opnieuw."
+    },
+    "benefits": {
+      "earlyAccess": {
+        "title": "24u Vroege Toegang",
+        "desc": "Shop voordat het uitverkocht is"
+      },
+      "gift": {
+        "title": "Mystery Launch Gift",
+        "desc": "Verrassing in je eerste bestelling"
+      },
+      "shipping": {
+        "title": "Gratis Verzending",
+        "desc": "Op je eerste bestelling"
+      },
+      "updates": {
+        "title": "Insider Updates",
+        "desc": "Behind-the-scenes content"
+      }
+    },
+    "social": {
+      "count": "Sluit je aan bij {count}+ insiders die al op de lijst staan"
+    },
+    "trust": "Geen spam. Alleen drops. De 30% presale korting? Die krijgt iedereen. Vroege toegang niet."
   }
 }

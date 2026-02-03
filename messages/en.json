@@ -1510,5 +1510,52 @@
     "subject": "Subject",
     "message": "Message",
     "replyInfo": "Reply to this message as soon as possible by responding to the customer's email address"
+  },
+  "earlyAccess": {
+    "meta": {
+      "title": "Early Access - MOSE",
+      "description": "Sign up for exclusive early access to the MOSE launch. Shop 24 hours before everyone else."
+    },
+    "hero": {
+      "preTitle": "Something special is coming...",
+      "title": "BE THE FIRST TO KNOW",
+      "subtitle": "Shop 24 hours before everyone else. Exclusive access to our launch + first dibs on limited edition drops.",
+      "countdown": {
+        "title": "Launch in:",
+        "days": "days",
+        "hours": "hours",
+        "minutes": "min",
+        "seconds": "sec"
+      }
+    },
+    "form": {
+      "placeholder": "your@email.com",
+      "button": "Get early access",
+      "submitting": "Submitting...",
+      "success": "Welcome insider! Check your inbox.",
+      "error": "Something went wrong. Please try again."
+    },
+    "benefits": {
+      "earlyAccess": {
+        "title": "24h Early Access",
+        "desc": "Shop before it's sold out"
+      },
+      "gift": {
+        "title": "Mystery Launch Gift",
+        "desc": "Surprise in your first order"
+      },
+      "shipping": {
+        "title": "Free Shipping",
+        "desc": "On your first order"
+      },
+      "updates": {
+        "title": "Insider Updates",
+        "desc": "Behind-the-scenes content"
+      }
+    },
+    "social": {
+      "count": "Join {count}+ insiders already on the list"
+    },
+    "trust": "No spam. Just drops. The 30% presale discount? Everyone gets that. Early access? Not everyone."
   }
 }
