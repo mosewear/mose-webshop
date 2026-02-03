@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, Gift, Truck, Mail } from 'lucide-react'
+import { Zap, Gift, Truck, Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 
@@ -251,7 +251,7 @@ export default function EarlyAccessClient() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="flex justify-center mb-3">
-                <Lock className="w-8 h-8 text-brand-primary" />
+                <Zap className="w-8 h-8 text-brand-primary" />
               </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.earlyAccess.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.earlyAccess.desc')}</p>

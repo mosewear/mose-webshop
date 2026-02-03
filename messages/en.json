@@ -1537,8 +1537,8 @@
     },
     "benefits": {
       "earlyAccess": {
-        "title": "24h Early Access",
-        "desc": "Shop before it's sold out"
+        "title": "First dibs on drops",
+        "desc": "Be the first to see new releases"
       },
       "gift": {
         "title": "Mystery Launch Gift",
@@ -1556,7 +1556,7 @@
     "social": {
       "count": "Join {count}+ insiders already on the list"
     },
-    "trust": "No spam. Just drops. The 30% presale discount? Everyone gets that. Early access? Not everyone."
+    "trust": "No spam. Just drops. Presale is for everyone. These perks aren't."
   },
   "insiderWelcome": {
     "title": "WELCOME TO THE INSIDERS",

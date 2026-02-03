@@ -1525,8 +1525,8 @@
     },
     "benefits": {
       "earlyAccess": {
-        "title": "24u vroege toegang",
-        "desc": "Shop voordat het uitverkocht is"
+        "title": "First dibs op drops",
+        "desc": "Wees de eerste die nieuwe releases ziet"
       },
       "gift": {
         "title": "Mystery launch gift",
@@ -1544,7 +1544,7 @@
     "social": {
       "count": "Sluit je aan bij {count}+ insiders die al op de lijst staan"
     },
-    "trust": "Geen spam. Alleen drops. De 30% presale korting? Die krijgt iedereen. Vroege toegang niet."
+    "trust": "Geen spam. Alleen drops. Presale is voor iedereen. Deze perks niet."
   },
   "insiderWelcome": {
     "title": "WELKOM BIJ DE INSIDERS",
