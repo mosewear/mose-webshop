@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -57,7 +57,7 @@ export async function DELETE(req: NextRequest) {
     console.log('[Delete Subscriber] Admin verified, deleting:', subscriberId)
 
     // Use service role client to bypass RLS
-    const supabaseAdmin = createServerClient(
+    const supabaseAdmin = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
