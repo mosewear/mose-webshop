@@ -18,10 +18,10 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    // Check if user is admin
+    // Check if user is admin via is_admin column
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role')
+      .select('is_admin')
       .eq('id', user.id)
       .single()
 
@@ -35,10 +35,10 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    if (profile?.role !== 'admin') {
-      console.log('[Delete Subscriber] User is not admin, role:', profile?.role)
+    if (!profile?.is_admin) {
+      console.log('[Delete Subscriber] User is not admin, is_admin:', profile?.is_admin)
       return NextResponse.json(
-        { success: false, error: `Niet geautoriseerd (role: ${profile?.role})` },
+        { success: false, error: 'Niet geautoriseerd (geen admin rechten)' },
         { status: 403 }
       )
     }
