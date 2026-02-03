@@ -91,7 +91,7 @@ export default function EarlyAccessClient() {
   // Track page view
   useEffect(() => {
     trackPixelEvent('ViewContent', {
-      content_name: `Newsletter Landing ${locale.toUpperCase()}`,
+      content_name: `Early Access Landing ${locale.toUpperCase()}`,
       content_category: 'Newsletter'
     })
   }, [locale])
@@ -101,8 +101,11 @@ export default function EarlyAccessClient() {
     setError('')
     setIsSubmitting(true)
 
-    // Track form initiation
-    trackPixelEvent('InitiateCheckout')
+    // Track lead generation (signup start)
+    trackPixelEvent('Lead', {
+      content_name: 'Early Access Signup Start',
+      content_category: 'Newsletter'
+    })
 
     try {
       const response = await fetch('/api/newsletter/subscribe', {
@@ -121,11 +124,12 @@ export default function EarlyAccessClient() {
         throw new Error(data.error || 'Something went wrong')
       }
 
-      // Track successful registration
-      trackPixelEvent('CompleteRegistration', {
-        content_name: `Newsletter ${locale.toUpperCase()}`,
+      // Track successful newsletter subscription
+      trackPixelEvent('Subscribe', {
+        content_name: 'Early Access Newsletter',
         currency: 'EUR',
-        value: 4.95 // Free shipping value
+        value: 4.95, // Free shipping value
+        predicted_ltv: 150 // Average customer lifetime value
       })
 
       setSubmitted(true)

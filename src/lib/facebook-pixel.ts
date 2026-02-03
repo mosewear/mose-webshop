@@ -11,6 +11,8 @@ type PixelEvent =
   | 'Purchase'
   | 'Search'
   | 'CompleteRegistration'
+  | 'Lead'
+  | 'Subscribe'
 
 interface PixelParams {
   content_ids?: string[]
@@ -22,6 +24,7 @@ interface PixelParams {
   num_items?: number
   search_string?: string
   transaction_id?: string
+  predicted_ltv?: number
 }
 
 interface UserData {
@@ -133,6 +136,7 @@ export function trackPixelEvent(
     if (params?.num_items) eventParams.num_items = params.num_items
     if (params?.search_string) eventParams.search_string = params.search_string
     if (params?.transaction_id) eventParams.transaction_id = params.transaction_id
+    if (params?.predicted_ltv) eventParams.predicted_ltv = params.predicted_ltv
     
     // Add event_id for deduplication
     eventParams.eventID = eventId
