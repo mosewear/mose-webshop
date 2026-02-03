@@ -10,6 +10,7 @@ type PixelEvent =
   | 'AddPaymentInfo'
   | 'Purchase'
   | 'Search'
+  | 'CompleteRegistration'
 
 interface PixelParams {
   content_ids?: string[]
