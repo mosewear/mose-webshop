@@ -1505,9 +1505,9 @@
       "description": "Meld je aan voor exclusive vroege toegang tot de MOSE launch. Shop 24 uur eerder dan de rest."
     },
     "hero": {
-      "preTitle": "Iets bijzonders komt eraan...",
-      "title": "WEES ER EERSTE BIJ",
-      "subtitle": "Shop 24 uur eerder dan de rest. Exclusive toegang tot onze launch + first dibs op limited edition drops.",
+      "preTitle": "Er komt iets bijzonders aan...",
+      "title": "WEES ER ALS EERSTE BIJ",
+      "subtitle": "Shop 24 uur eerder dan de rest. Exclusieve toegang tot onze launch + first dibs op limited edition drops.",
       "countdown": {
         "title": "Lancering over:",
         "days": "dagen",
@@ -1525,19 +1525,19 @@
     },
     "benefits": {
       "earlyAccess": {
-        "title": "24u Vroege Toegang",
+        "title": "24u vroege toegang",
         "desc": "Shop voordat het uitverkocht is"
       },
       "gift": {
-        "title": "Mystery Launch Gift",
+        "title": "Mystery launch gift",
         "desc": "Verrassing in je eerste order"
       },
       "shipping": {
-        "title": "Gratis Verzending",
+        "title": "Gratis verzending",
         "desc": "Op je eerste order"
       },
       "updates": {
-        "title": "Insider Updates",
+        "title": "Insider updates",
         "desc": "Behind-the-scenes content"
       }
     },
