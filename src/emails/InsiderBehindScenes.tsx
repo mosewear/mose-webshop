@@ -39,7 +39,7 @@ export default function InsiderBehindScenesEmail({
 
           {/* Hero Section */}
           <Section style={hero}>
-            <IconCircle icon="eye" color="#00B67A" size={38} />
+            <IconCircle icon="settings" color="#00B67A" size={38} />
             <Text style={title}>{t('insiderBehindScenes.title')}</Text>
             <Text style={subtitle}>{t('insiderBehindScenes.subtitle')}</Text>
           </Section>

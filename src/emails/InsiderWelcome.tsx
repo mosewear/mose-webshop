@@ -58,7 +58,7 @@ export default function InsiderWelcomeEmail({
               <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '20px' }}>
                 <tr>
                   <td style={{ width: '60px', verticalAlign: 'top', textAlign: 'center', paddingTop: '4px' }}>
-                    <IconCircle icon="gift" color="#00B67A" size={20} />
+                    <IconCircle icon="package" color="#00B67A" size={20} />
                   </td>
                   <td style={{ verticalAlign: 'top' }}>
                     <Text style={benefitTitle}>{t('insiderWelcome.perk1Title')}</Text>
@@ -97,7 +97,7 @@ export default function InsiderWelcomeEmail({
               <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '20px' }}>
                 <tr>
                   <td style={{ width: '60px', verticalAlign: 'top', textAlign: 'center', paddingTop: '4px' }}>
-                    <IconCircle icon="eye" color="#00B67A" size={20} />
+                    <IconCircle icon="mail" color="#00B67A" size={20} />
                   </td>
                   <td style={{ verticalAlign: 'top' }}>
                     <Text style={benefitTitle}>{t('insiderWelcome.perk4Title')}</Text>
@@ -110,7 +110,7 @@ export default function InsiderWelcomeEmail({
               <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
                 <tr>
                   <td style={{ width: '60px', verticalAlign: 'top', textAlign: 'center', paddingTop: '4px' }}>
-                    <IconCircle icon="lock" color="#00B67A" size={20} />
+                    <IconCircle icon="alert-circle" color="#00B67A" size={20} />
                   </td>
                   <td style={{ verticalAlign: 'top' }}>
                     <Text style={benefitTitle}>{t('insiderWelcome.perk5Title')}</Text>
