@@ -290,6 +290,84 @@ export type EmailTranslationKeys = {
     receivedBecause: string
     unsubscribe: string
   }
+  insiderWelcome: {
+    title: string
+    subtitle: string
+    intro: string
+    perksTitle: string
+    perk1Title: string
+    perk1Text: string
+    perk2Title: string
+    perk2Text: string
+    perk3Title: string
+    perk3Text: string
+    perk4Title: string
+    perk4Text: string
+    perk5Title: string
+    perk5Text: string
+    whatNowTitle: string
+    shopNow: string
+    presaleCode: string
+    followUs: string
+    onInstagram: string
+    footerNote: string
+    ps: string
+  }
+  insiderCommunity: {
+    title: string
+    subtitle: string
+    intro: string
+    numbers: string
+    stat1: string
+    stat2: string
+    stat3: string
+    communityTitle: string
+    testimonial1: string
+    testimonial2: string
+    testimonial3: string
+    joinTitle: string
+    joinText: string
+    socialInsta: string
+    socialFb: string
+    closing: string
+    ps: string
+  }
+  insiderBehindScenes: {
+    title: string
+    subtitle: string
+    intro: string
+    processTitle: string
+    process1: string
+    process2: string
+    process3: string
+    limitedTitle: string
+    limitedText: string
+    closing: string
+    followCTA: string
+    followSubtext: string
+    ps: string
+  }
+  insiderLaunchWeek: {
+    title: string
+    subtitle: string
+    intro: string
+    whatThisMeansTitle: string
+    info1: string
+    info2: string
+    info3: string
+    perksRemainTitle: string
+    perk1: string
+    perk2: string
+    perk3: string
+    statusTitle: string
+    statusAlready: string
+    statusNotYet: string
+    limitedStockTitle: string
+    shopNow: string
+    presaleCode: string
+    closing: string
+    ps: string
+  }
   contact: {
     subject: string
     title: string
@@ -608,6 +686,84 @@ const nl: EmailTranslationKeys = {
     receivedBecause: 'Je ontving deze email omdat je je hebt ingeschreven voor de MOSE nieuwsbrief.',
     unsubscribe: 'Uitschrijven',
   },
+  insiderWelcome: {
+    title: 'WELKOM BIJ DE INSIDERS',
+    subtitle: 'Je bent binnen. Hier is wat dat betekent.',
+    intro: 'Bedankt dat je deel uitmaakt van de inner circle. Je bent nu officieel een MOSE insider — een van de eersten die weet wanneer nieuwe drops lanceren, voordat het uitverkocht is.',
+    perksTitle: 'Wat je krijgt als insider:',
+    perk1Title: 'Mystery launch gift',
+    perk1Text: 'Verrassing in je eerste order',
+    perk2Title: 'Gratis verzending',
+    perk2Text: 'Op je eerste order',
+    perk3Title: 'First dibs op drops',
+    perk3Text: 'Check als eerste nieuwe releases',
+    perk4Title: 'Behind-the-scenes updates',
+    perk4Text: 'Exclusieve content voor insiders',
+    perk5Title: 'Insider-only releases',
+    perk5Text: 'Speciale drops alleen voor jou',
+    whatNowTitle: 'Wat nu?',
+    shopNow: 'Shop nu',
+    presaleCode: 'Code PRESALE30 voor 30% korting',
+    followUs: 'Volg ons op Instagram',
+    onInstagram: 'voor behind-the-scenes content',
+    footerNote: 'Iedereen kan nu al shoppen met PRESALE30. Maar first dibs op drops? Dat is alleen voor insiders.',
+    ps: 'P.S. Houd je inbox in de gaten. We sturen je meer insider content voor de launch.',
+  },
+  insiderCommunity: {
+    title: 'JE BENT NIET DE ENIGE',
+    subtitle: 'Een blik achter de schermen van onze community',
+    intro: 'Er zijn nu honderden insiders die op de launch wachten. Niet zomaar klanten — mensen die snappen waar MOSE voor staat.',
+    numbers: 'De cijfers:',
+    stat1: '{{count}}+ insiders op de lijst',
+    stat2: 'Meest populair: Hoodies (al 40% van voorraad gereserveerd)',
+    stat3: 'Top 3 landen: Nederland, België, Duitsland',
+    communityTitle: 'Wat de community zegt:',
+    testimonial1: '"Eindelijk een Nederlands merk dat geen bullshit verkoopt. Just clean, solid basics."',
+    testimonial2: '"Die hoodies zien er insane uit. Kan niet wachten tot 2 maart."',
+    testimonial3: '"Love dat ze lokaal produceren. Dat maakt het verschil."',
+    joinTitle: 'Word deel van de community',
+    joinText: 'Volg ons op Instagram en Facebook voor daily updates, drops en insider content:',
+    socialInsta: 'Instagram: @mosewearcom',
+    socialFb: 'Facebook: @mosewearcom',
+    closing: 'We bouwen dit samen. Tot de launch.',
+    ps: 'P.S. Nog {{days}} dagen tot lancering. Ben je er klaar voor?',
+  },
+  insiderBehindScenes: {
+    title: 'HOE WE DIT MAKEN',
+    subtitle: 'Een kijkje in het proces',
+    intro: 'Je vroeg erom. Hier is wat er gebeurt achter de schermen van MOSE — van idee tot product.',
+    processTitle: 'Het proces:',
+    process1: 'Lokaal ontworpen in Groningen. Alles start hier.',
+    process2: 'Gemaakt met premium materialen. Geen goedkope troep.',
+    process3: 'Limited runs. Als het op is, is het op.',
+    limitedTitle: 'Waarom limited edition?',
+    limitedText: 'We maken geen massa-productie. Elke drop is gelimiteerd. Dat betekent uniek, exclusief en niet voor iedereen. Vroege toegang zorgt ervoor dat jij niet misloopt.',
+    closing: 'Dit is wat je steunt als je bij MOSE koopt. Geen corporate bullshit. Just honest design, lokaal gemaakt.',
+    followCTA: 'Volg het proces',
+    followSubtext: '@mosewearcom voor real-time updates',
+    ps: 'P.S. Launch is over {{days}} dagen. Je hebt vroege toegang. Gebruik het.',
+  },
+  insiderLaunchWeek: {
+    title: 'LANCERING OVER {{days}} DAGEN',
+    subtitle: 'Dit is het. {{days}} dagen tot launch.',
+    intro: '2 maart. Dat is over {{days}} dagen. Voor jou als insider betekent dat 24 uur vroege toegang voordat de rest kan shoppen.',
+    whatThisMeansTitle: 'Wat dit betekent:',
+    info1: 'Jij kunt al vanaf 1 maart 00:00 uur shoppen',
+    info2: 'De rest van de wereld wacht tot 2 maart',
+    info3: 'Limited items verdwijnen snel — vroege toegang is key',
+    perksRemainTitle: 'Je insider perks blijven:',
+    perk1: '24u vroege toegang (1 maart om 00:00)',
+    perk2: 'Mystery launch gift in je eerste order',
+    perk3: 'Gratis verzending op je eerste order',
+    statusTitle: 'Check je status:',
+    statusAlready: '✓ Als je al hebt geshopt met PRESALE30: je ontvangt je mystery gift + gratis verzending automatisch',
+    statusNotYet: '✓ Als je nog niet hebt geshopt: wacht tot 1 maart 00:00 voor vroege toegang',
+    limitedStockTitle: 'Items met beperkte voorraad:',
+    shopNow: 'Shop nu',
+    presaleCode: 'Code PRESALE30 voor 30% korting',
+    closing: 'Dit is het moment. {{days}} dagen. Ben je klaar?',
+    ps: 'P.S. Laatste reminder: 1 maart om 00:00 gaan de deuren open voor insiders. Stel je alarm.',
+  },
   contact: {
     subject: 'Contactformulier: {{subject}} - {{name}}',
     title: 'NIEUW BERICHT',
@@ -925,6 +1081,84 @@ const en: EmailTranslationKeys = {
     madeInGroningenText: 'Locally made. Quality that lasts. No nonsense, just character.',
     receivedBecause: 'You received this email because you subscribed to the MOSE newsletter.',
     unsubscribe: 'Unsubscribe',
+  },
+  insiderWelcome: {
+    title: 'WELCOME TO THE INSIDERS',
+    subtitle: 'You\'re in. Here\'s what that means.',
+    intro: 'Thanks for being part of the inner circle. You\'re now officially a MOSE insider — one of the first to know when new drops launch, before they sell out.',
+    perksTitle: 'What you get as an insider:',
+    perk1Title: 'Mystery launch gift',
+    perk1Text: 'Surprise in your first order',
+    perk2Title: 'Free shipping',
+    perk2Text: 'On your first order',
+    perk3Title: 'First dibs on drops',
+    perk3Text: 'Check out new releases first',
+    perk4Title: 'Behind-the-scenes updates',
+    perk4Text: 'Exclusive content for insiders',
+    perk5Title: 'Insider-only releases',
+    perk5Text: 'Special drops just for you',
+    whatNowTitle: 'What now?',
+    shopNow: 'Shop now',
+    presaleCode: 'Code PRESALE30 for 30% off',
+    followUs: 'Follow us on Instagram',
+    onInstagram: 'for behind-the-scenes content',
+    footerNote: 'Everyone can already shop with PRESALE30. But first dibs on drops? That\'s insiders only.',
+    ps: 'P.S. Keep an eye on your inbox. We\'ll send you more insider content before launch.',
+  },
+  insiderCommunity: {
+    title: 'YOU\'RE NOT ALONE',
+    subtitle: 'A behind-the-scenes look at our community',
+    intro: 'There are now hundreds of insiders waiting for the launch. Not just customers — people who get what MOSE stands for.',
+    numbers: 'The numbers:',
+    stat1: '{{count}}+ insiders on the list',
+    stat2: 'Most popular: Hoodies (already 40% of stock reserved)',
+    stat3: 'Top 3 countries: Netherlands, Belgium, Germany',
+    communityTitle: 'What the community says:',
+    testimonial1: '"Finally a Dutch brand that doesn\'t sell bullshit. Just clean, solid basics."',
+    testimonial2: '"Those hoodies look insane. Can\'t wait for March 2nd."',
+    testimonial3: '"Love that they produce locally. That makes the difference."',
+    joinTitle: 'Join the community',
+    joinText: 'Follow us on Instagram and Facebook for daily updates, drops and insider content:',
+    socialInsta: 'Instagram: @mosewearcom',
+    socialFb: 'Facebook: @mosewearcom',
+    closing: 'We\'re building this together. See you at launch.',
+    ps: 'P.S. {{days}} days until launch. Are you ready?',
+  },
+  insiderBehindScenes: {
+    title: 'HOW WE MAKE THIS',
+    subtitle: 'A look into the process',
+    intro: 'You asked for it. Here\'s what happens behind the scenes at MOSE — from idea to product.',
+    processTitle: 'The process:',
+    process1: 'Locally designed in Groningen. Everything starts here.',
+    process2: 'Made with premium materials. No cheap stuff.',
+    process3: 'Limited runs. When it\'s gone, it\'s gone.',
+    limitedTitle: 'Why limited edition?',
+    limitedText: 'We don\'t do mass production. Every drop is limited. That means unique, exclusive and not for everyone. Early access makes sure you don\'t miss out.',
+    closing: 'This is what you support when you buy at MOSE. No corporate bullshit. Just honest design, locally made.',
+    followCTA: 'Follow the process',
+    followSubtext: '@mosewearcom for real-time updates',
+    ps: 'P.S. Launch is in {{days}} days. You have early access. Use it.',
+  },
+  insiderLaunchWeek: {
+    title: 'LAUNCH IN {{days}} DAYS',
+    subtitle: 'This is it. {{days}} days until launch.',
+    intro: 'March 2nd. That\'s {{days}} days away. For you as an insider, that means 24 hours early access before everyone else can shop.',
+    whatThisMeansTitle: 'What this means:',
+    info1: 'You can shop from March 1st 00:00',
+    info2: 'The rest of the world waits until March 2nd',
+    info3: 'Limited items sell out fast — early access is key',
+    perksRemainTitle: 'Your insider perks remain:',
+    perk1: '24h early access (March 1st at 00:00)',
+    perk2: 'Mystery launch gift in your first order',
+    perk3: 'Free shipping on your first order',
+    statusTitle: 'Check your status:',
+    statusAlready: '✓ If you already shopped with PRESALE30: you\'ll receive your mystery gift + free shipping automatically',
+    statusNotYet: '✓ If you haven\'t shopped yet: wait until March 1st 00:00 for early access',
+    limitedStockTitle: 'Items with limited stock:',
+    shopNow: 'Shop now',
+    presaleCode: 'Code PRESALE30 for 30% off',
+    closing: 'This is the moment. {{days}} days. Are you ready?',
+    ps: 'P.S. Final reminder: March 1st at 00:00 the doors open for insiders. Set your alarm.',
   },
   contact: {
     subject: 'Contact form: {{subject}} - {{name}}',
