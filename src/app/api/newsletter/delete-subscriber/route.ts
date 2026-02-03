@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -55,10 +56,22 @@ export async function DELETE(req: NextRequest) {
 
     console.log('[Delete Subscriber] Admin verified, deleting:', subscriberId)
 
-    // Delete subscriber
-    const { error: deleteError } = await supabase
+    // Use service role client to bypass RLS
+    const supabaseAdmin = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
+      }
+    )
+
+    // Delete subscriber using service role
+    const { error: deleteError, count } = await supabaseAdmin
       .from('newsletter_subscribers')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('id', subscriberId)
 
     if (deleteError) {
@@ -69,7 +82,7 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    console.log('[Delete Subscriber] Success!')
+    console.log('[Delete Subscriber] Success! Deleted count:', count)
 
     return NextResponse.json({
       success: true,

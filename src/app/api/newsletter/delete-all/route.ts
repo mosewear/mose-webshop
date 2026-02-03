@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -45,18 +46,47 @@ export async function DELETE(req: NextRequest) {
 
     console.log('[Delete All] Admin verified, deleting all subscribers...')
 
-    // Get count first
-    const { count } = await supabase
+    // Get all subscriber IDs first
+    const { data: allSubscribers, error: fetchError } = await supabase
       .from('newsletter_subscribers')
-      .select('*', { count: 'exact', head: true })
+      .select('id')
 
-    console.log('[Delete All] Count:', count)
+    if (fetchError) {
+      console.error('[Delete All] Fetch error:', fetchError)
+      return NextResponse.json(
+        { success: false, error: 'Kan subscribers niet ophalen' },
+        { status: 500 }
+      )
+    }
 
-    // Delete all subscribers
-    const { error: deleteError } = await supabase
+    const count = allSubscribers?.length || 0
+    console.log('[Delete All] Found subscribers:', count)
+
+    if (count === 0) {
+      return NextResponse.json({
+        success: true,
+        message: '0 subscribers verwijderd',
+        deleted: 0
+      })
+    }
+
+    // Use service role client to bypass RLS
+    const supabaseAdmin = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
+      }
+    )
+
+    // Delete all subscribers using service role
+    const { error: deleteError, count: deletedCount } = await supabaseAdmin
       .from('newsletter_subscribers')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all rows
+      .delete({ count: 'exact' })
+      .not('id', 'is', null)
 
     if (deleteError) {
       console.error('[Delete All] Delete error:', deleteError)
@@ -66,12 +96,12 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    console.log('[Delete All] Success! Deleted:', count)
+    console.log('[Delete All] Success! Deleted:', deletedCount)
 
     return NextResponse.json({
       success: true,
-      message: `${count || 0} subscribers verwijderd`,
-      deleted: count || 0
+      message: `${deletedCount || count} subscribers verwijderd`,
+      deleted: deletedCount || count
     })
   } catch (error) {
     console.error('[Delete All] Catch error:', error)
