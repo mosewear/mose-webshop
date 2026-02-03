@@ -1513,13 +1513,13 @@
   },
   "earlyAccess": {
     "meta": {
-      "title": "Early Access - MOSE",
-      "description": "Sign up for exclusive early access to the MOSE launch. Shop 24 hours before everyone else."
+      "title": "Early Access | MOSE",
+      "description": "Sign up for early access to the MOSE launch and exclusive drops."
     },
     "hero": {
       "preTitle": "Something special is coming...",
       "title": "BE THE FIRST TO KNOW",
-      "subtitle": "Shop 24 hours before everyone else. Exclusive access to our launch + first dibs on limited edition drops.",
+      "subtitle": "Be the first to see new releases. Exclusive access to our launch + first dibs on limited edition drops.",
       "countdown": {
         "title": "Launch in:",
         "days": "days",
