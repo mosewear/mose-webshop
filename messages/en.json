@@ -1530,7 +1530,7 @@
     },
     "form": {
       "placeholder": "your@email.com",
-      "button": "Get early access",
+      "button": "Claim your spot",
       "submitting": "Submitting...",
       "success": "Welcome insider! Check your inbox.",
       "error": "Something went wrong. Please try again."
