@@ -5,19 +5,14 @@ import {
   Container,
   Section,
   Text,
-  Img,
 } from '@react-email/components'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
 
 interface InsiderCommunityEmailProps {
   email: string
-  products: {
-    name: string
-    description: string
-    imageUrl: string
-    productUrl: string
-  }[]
+  subscriberCount: number
+  daysUntilLaunch: number
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -27,7 +22,8 @@ interface InsiderCommunityEmailProps {
 
 export default function InsiderCommunityEmail({
   email,
-  products,
+  subscriberCount,
+  daysUntilLaunch,
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
@@ -54,48 +50,69 @@ export default function InsiderCommunityEmail({
               {t('insiderCommunity.intro')}
             </Text>
 
-            {/* Products List */}
-            {products.map((product, index) => (
-              <Section key={index} style={productSection}>
-                <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-                  <tr>
-                    <td style={{ width: '120px', verticalAlign: 'top', paddingRight: '16px' }}>
-                      <a href={product.productUrl}>
-                        <Img 
-                          src={product.imageUrl}
-                          alt={product.name}
-                          width={120}
-                          height={120}
-                          style={productImage}
-                        />
-                      </a>
-                    </td>
-                    <td style={{ verticalAlign: 'top' }}>
-                      <Text style={productNumber}>{index + 1}.</Text>
-                      <Text style={productName}>{product.name}</Text>
-                      <Text style={productDescription}>{product.description}</Text>
-                      <a href={product.productUrl} style={productLink}>
-                        {t('insiderCommunity.viewItem')}
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-              </Section>
-            ))}
-
-            {/* Insider Tip */}
-            <Section style={tipSection}>
-              <Text style={tipTitle}>{t('insiderCommunity.tipTitle')}</Text>
-              <Text style={tipText}>{t('insiderCommunity.tipText')}</Text>
+            {/* Stats Section */}
+            <Text style={sectionTitle}>{t('insiderCommunity.numbers')}</Text>
+            
+            <Section style={statsBox}>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
+                <tr>
+                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
+                    <Text style={bulletPoint}>•</Text>
+                  </td>
+                  <td style={{ verticalAlign: 'top' }}>
+                    <Text style={statText}>{t('insiderCommunity.stat1', { count: subscriberCount })}</Text>
+                  </td>
+                </tr>
+              </table>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
+                <tr>
+                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
+                    <Text style={bulletPoint}>•</Text>
+                  </td>
+                  <td style={{ verticalAlign: 'top' }}>
+                    <Text style={statText}>{t('insiderCommunity.stat2')}</Text>
+                  </td>
+                </tr>
+              </table>
+              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
+                <tr>
+                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
+                    <Text style={bulletPoint}>•</Text>
+                  </td>
+                  <td style={{ verticalAlign: 'top' }}>
+                    <Text style={statText}>{t('insiderCommunity.stat3')}</Text>
+                  </td>
+                </tr>
+              </table>
             </Section>
 
-            {/* CTA */}
-            <Section style={ctaSection}>
-              <a href={`${siteUrl}/shop`} style={button}>
-                {t('insiderCommunity.shopNow')}
-              </a>
-              <Text style={ctaSubtext}>{t('insiderCommunity.presaleCode')}</Text>
+            {/* Testimonials */}
+            <Text style={sectionTitle}>{t('insiderCommunity.communityTitle')}</Text>
+            
+            <Section style={testimonialsBox}>
+              <Text style={testimonialText}>{t('insiderCommunity.testimonial1')}</Text>
+              <Text style={testimonialText}>{t('insiderCommunity.testimonial2')}</Text>
+              <Text style={testimonialText}>{t('insiderCommunity.testimonial3')}</Text>
             </Section>
+
+            {/* Join Community */}
+            <Text style={sectionTitle}>{t('insiderCommunity.joinTitle')}</Text>
+            
+            <Section style={socialBox}>
+              <Text style={socialText}>{t('insiderCommunity.joinText')}</Text>
+              <Text style={socialHandle}>{t('insiderCommunity.socialInsta')}</Text>
+              <Text style={socialHandle}>{t('insiderCommunity.socialFb')}</Text>
+            </Section>
+
+            {/* Closing */}
+            <Text style={closingText}>
+              {t('insiderCommunity.closing')}
+            </Text>
+
+            {/* PS */}
+            <Text style={psText}>
+              {t('insiderCommunity.ps', { days: daysUntilLaunch })}
+            </Text>
           </Section>
 
           {/* Footer */}
@@ -133,7 +150,7 @@ const hero = {
 }
 
 const title = {
-  margin: '0',
+  margin: '20px 0 0 0',
   fontSize: '24px',
   fontWeight: '900',
   lineHeight: '1.2',
@@ -155,105 +172,94 @@ const content = {
 }
 
 const introText = {
-  margin: '0 0 32px 0',
+  margin: '0 0 24px 0',
   fontSize: '15px',
   lineHeight: '22px',
   color: '#2d3748',
 }
 
-const productSection = {
-  margin: '0 0 24px 0',
+const sectionTitle = {
+  margin: '32px 0 16px 0',
+  fontSize: '18px',
+  fontWeight: '700',
+  color: '#000000',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '1px',
+}
+
+const statsBox = {
+  margin: '16px 0 24px 0',
   padding: '20px',
   backgroundColor: '#f7fafc',
   border: '2px solid #e2e8f0',
 }
 
-const productImage = {
-  width: '120px',
-  height: '120px',
-  objectFit: 'cover' as const,
-  border: '2px solid #000000',
-}
-
-const productNumber = {
-  margin: '0 0 4px 0',
-  fontSize: '14px',
-  color: '#00B67A',
-  fontWeight: '700',
-}
-
-const productName = {
-  margin: '0 0 8px 0',
-  fontSize: '17px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-}
-
-const productDescription = {
-  margin: '0 0 12px 0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#4a5568',
-}
-
-const productLink = {
-  display: 'inline-block',
-  fontSize: '14px',
-  color: '#00B67A',
-  fontWeight: '700',
-  textDecoration: 'none',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-}
-
-const tipSection = {
-  margin: '32px 0',
-  padding: '20px',
-  backgroundColor: '#00B67A',
-  border: '3px solid #000000',
-}
-
-const tipTitle = {
-  margin: '0 0 8px 0',
-  fontSize: '16px',
-  fontWeight: '900',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const tipText = {
+const bulletPoint = {
   margin: '0',
+  fontSize: '20px',
+  fontWeight: '700',
+  color: '#00B67A',
+  lineHeight: '1',
+}
+
+const statText = {
+  margin: '0',
+  fontSize: '15px',
+  lineHeight: '22px',
+  color: '#2d3748',
+  fontWeight: '600',
+}
+
+const testimonialsBox = {
+  margin: '16px 0 24px 0',
+  padding: '20px',
+  backgroundColor: '#fff5e6',
+  border: '2px solid #ffa726',
+}
+
+const testimonialText = {
+  margin: '0 0 16px 0',
   fontSize: '14px',
   lineHeight: '20px',
-  color: '#000000',
+  color: '#2d3748',
+  fontStyle: 'italic' as const,
+  paddingLeft: '16px',
+  borderLeft: '3px solid #00B67A',
 }
 
-const ctaSection = {
-  margin: '32px 0',
+const socialBox = {
+  margin: '16px 0 24px 0',
+  padding: '20px',
+  backgroundColor: '#f0fdf4',
+  border: '2px solid #00B67A',
   textAlign: 'center' as const,
 }
 
-const button = {
-  display: 'inline-block',
-  padding: '16px 48px',
-  backgroundColor: '#00B67A',
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: '700',
-  textDecoration: 'none',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  border: '3px solid #000000',
-  boxShadow: '4px 4px 0 #000000',
+const socialText = {
+  margin: '0 0 12px 0',
+  fontSize: '15px',
+  lineHeight: '22px',
+  color: '#2d3748',
 }
 
-const ctaSubtext = {
-  margin: '12px 0 0 0',
+const socialHandle = {
+  margin: '8px 0',
   fontSize: '14px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
+  fontWeight: '700',
+  color: '#00B67A',
 }
 
+const closingText = {
+  margin: '24px 0',
+  fontSize: '15px',
+  lineHeight: '22px',
+  color: '#2d3748',
+}
+
+const psText = {
+  margin: '16px 0 0 0',
+  fontSize: '13px',
+  lineHeight: '18px',
+  color: '#718096',
+  fontStyle: 'italic' as const,
+}
