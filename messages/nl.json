@@ -1529,8 +1529,8 @@
         "desc": "Wees de eerste die nieuwe releases ziet"
       },
       "gift": {
-        "title": "Mystery launch gift",
-        "desc": "Verrassing in je eerste order"
+        "title": "Gemaakt in Groningen",
+        "desc": "Lokaal ontworpen en gemaakt"
       },
       "shipping": {
         "title": "Gratis verzending",
@@ -1551,8 +1551,8 @@
     "subtitle": "Je bent binnen. Hier is wat dat betekent.",
     "intro": "Bedankt dat je deel uitmaakt van de inner circle. Je bent nu officieel een MOSE insider — een van de eersten die weet wanneer nieuwe drops lanceren, voordat het uitverkocht is.",
     "perksTitle": "Wat je krijgt als insider:",
-    "perk1Title": "Mystery launch gift",
-    "perk1Text": "Verrassing in je eerste order",
+    "perk1Title": "Gemaakt in Groningen",
+    "perk1Text": "Lokaal ontworpen en gemaakt",
     "perk2Title": "Gratis verzending",
     "perk2Text": "Op je eerste order",
     "perk3Title": "First dibs op drops",
@@ -1613,10 +1613,10 @@
     "info3": "Limited items verdwijnen snel — vroege toegang is key",
     "perksRemainTitle": "Je insider perks blijven:",
     "perk1": "24u vroege toegang (1 maart om 00:00)",
-    "perk2": "Mystery launch gift in je eerste order",
+    "perk2": "Gemaakt in Groningen",
     "perk3": "Gratis verzending op je eerste order",
     "statusTitle": "Check je status:",
-    "statusAlready": "✓ Als je al hebt geshopt met PRESALE30: je ontvangt je mystery gift + gratis verzending automatisch",
+    "statusAlready": "✓ Als je al hebt geshopt met PRESALE30: je ontvangt gratis verzending automatisch",
     "statusNotYet": "✓ Als je nog niet hebt geshopt: wacht tot 1 maart 00:00 voor vroege toegang",
     "limitedStockTitle": "Items met beperkte voorraad:",
     "shopNow": "Shop nu",

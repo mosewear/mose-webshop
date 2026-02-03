@@ -1541,8 +1541,8 @@
         "desc": "Be the first to see new releases"
       },
       "gift": {
-        "title": "Mystery Launch Gift",
-        "desc": "Surprise in your first order"
+        "title": "Made in Groningen",
+        "desc": "Locally designed and made"
       },
       "shipping": {
         "title": "Free Shipping",
@@ -1563,8 +1563,8 @@
     "subtitle": "You're in. Here's what that means.",
     "intro": "Thanks for being part of the inner circle. You're now officially a MOSE insider — one of the first to know when new drops launch, before they sell out.",
     "perksTitle": "What you get as an insider:",
-    "perk1Title": "Mystery launch gift",
-    "perk1Text": "Surprise in your first order",
+    "perk1Title": "Made in Groningen",
+    "perk1Text": "Locally designed and made",
     "perk2Title": "Free shipping",
     "perk2Text": "On your first order",
     "perk3Title": "First dibs on drops",
@@ -1625,10 +1625,10 @@
     "info3": "Limited items disappear fast — early access is key",
     "perksRemainTitle": "Your insider perks remain:",
     "perk1": "24h early access (March 1st at 00:00)",
-    "perk2": "Mystery launch gift in your first order",
+    "perk2": "Made in Groningen",
     "perk3": "Free shipping on your first order",
     "statusTitle": "Check your status:",
-    "statusAlready": "✓ If you already shopped with PRESALE30: you'll receive your mystery gift + free shipping automatically",
+    "statusAlready": "✓ If you already shopped with PRESALE30: you'll receive free shipping automatically",
     "statusNotYet": "✓ If you haven't shopped yet: wait until March 1st at 00:00 for early access",
     "limitedStockTitle": "Items with limited stock:",
     "shopNow": "Shop now",
