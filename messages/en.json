@@ -287,8 +287,9 @@
       "available": "PRE-SALE AVAILABLE",
       "expectedDelivery": "Expected delivery: {date}",
       "itemsAvailable": "{count} items available for pre-order",
-      "itemAvailable": "item available",
-      "itemsAvailableShort": "items available",
+    "itemAvailable": "item available",
+    "itemsAvailableShort": "items available",
+    "previewNotice": "Preview images - product shoots coming soon (March 2nd)"
       "comingSoon": "Coming soon",
       "reserveNow": "RESERVE NOW",
       "payNowReceiveLater": "Pay now, receive when in stock",

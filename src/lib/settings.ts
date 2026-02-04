@@ -16,6 +16,7 @@ interface SiteSettings {
   return_label_cost_excl_btw: number
   return_label_cost_incl_btw: number
   favicon_url?: string
+  show_preview_images_notice?: boolean
   updated_at?: string
 }
 
@@ -91,6 +92,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_label_cost_excl_btw: parseFloat(settings.return_label_cost_excl_btw) || 6.50,
       return_label_cost_incl_btw: parseFloat(settings.return_label_cost_incl_btw) || 7.87,
       favicon_url: settings.favicon_url || '/favicon.ico',
+      show_preview_images_notice: settings.show_preview_images_notice === 'true' || settings.show_preview_images_notice === true,
       updated_at: latestUpdate,
     }
 
@@ -120,6 +122,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_label_cost_excl_btw: 6.50,
       return_label_cost_incl_btw: 7.87,
       favicon_url: '/favicon.ico',
+      show_preview_images_notice: false,
       updated_at: undefined,
     }
   }

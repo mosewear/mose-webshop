@@ -312,6 +312,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     free_shipping_threshold: 100,
     return_days: 14,
     shipping_cost: 6.95,
+    show_preview_images_notice: false,
   })
 
   const addItem = useCart((state) => state.addItem)
@@ -331,6 +332,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         free_shipping_threshold: siteSettings.free_shipping_threshold,
         return_days: siteSettings.return_days,
         shipping_cost: siteSettings.shipping_cost,
+        show_preview_images_notice: siteSettings.show_preview_images_notice || false,
       })
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -863,6 +865,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </button>
                     )
                   ))}
+                </div>
+              )}
+
+              {/* Preview Images Notice - Only show if setting is enabled */}
+              {settings?.show_preview_images_notice && (
+                <div className="bg-gray-50 border-l-4 border-gray-400 p-3 md:p-4 flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <AlertCircle className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs md:text-sm text-gray-700">
+                      {t('presale.previewNotice')}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -1447,6 +1463,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <p><span className="font-semibold">{locale === 'en' ? 'Perfect fit:' : 'Perfect fit:'}</span> {locale === 'en' ? 'Designed for comfort and style' : 'Ontworpen voor comfort en stijl'}</p>
                             <p><span className="font-semibold">{locale === 'en' ? 'Locally made:' : 'Lokaal gemaakt:'}</span> {locale === 'en' ? 'Produced with love in Groningen' : 'Met liefde geproduceerd in Groningen'}</p>
                           </>
+                        )}
+                        
+                        {/* Preview Images Notice - Only show if setting is enabled */}
+                        {settings?.show_preview_images_notice && (
+                          <div className="mt-4 pt-4 border-t border-gray-300">
+                            <div className="flex items-start gap-2 text-xs text-gray-600">
+                              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                              <p>{t('presale.previewNotice')}</p>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
