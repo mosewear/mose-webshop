@@ -315,18 +315,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     show_preview_images_notice: false,
   })
 
-  // Touch/Swipe state for mobile image gallery
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const [touchEnd, setTouchEnd] = useState<number | null>(null)
-  const [isSwiping, setIsSwiping] = useState(false)
-  const [swipeOffset, setSwipeOffset] = useState(0)
-  const [touchStartY, setTouchStartY] = useState<number | null>(null)
-  const [swipeDirection, setSwipeDirection] = useState<'horizontal' | 'vertical' | null>(null)
-
-  // Minimum swipe distance (in px) to trigger image change
-  const minSwipeDistance = 50
-  // Direction detection threshold (in px)
-  const directionThreshold = 10
+  // Ref for scroll container (CSS scroll-snap)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
@@ -373,104 +363,35 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
   }, [product, isInWishlist])
 
-  // Mobile swipe handlers with direction lock
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientX)
-    setTouchStartY(e.targetTouches[0].clientY)
-    setSwipeDirection(null) // Reset direction
-    setIsSwiping(true)
-  }
+  // Sync dots with scroll position (CSS scroll-snap)
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
 
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart || touchStartY === null) return
-    
-    const currentTouch = e.targetTouches[0].clientX
-    const currentTouchY = e.targetTouches[0].clientY
-    
-    setTouchEnd(currentTouch)
-    
-    // Detect swipe direction if not yet determined
-    if (swipeDirection === null) {
-      const deltaX = Math.abs(currentTouch - touchStart)
-      const deltaY = Math.abs(currentTouchY - touchStartY)
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft
+      const imageWidth = container.clientWidth
+      const newIndex = Math.round(scrollLeft / imageWidth)
       
-      // Only determine direction after threshold movement
-      if (deltaX > directionThreshold || deltaY > directionThreshold) {
-        if (deltaX > deltaY) {
-          // Horizontal swipe detected
-          setSwipeDirection('horizontal')
-        } else {
-          // Vertical scroll detected
-          setSwipeDirection('vertical')
-        }
+      if (newIndex !== selectedImage && newIndex >= 0 && newIndex < displayImages.length) {
+        setSelectedImage(newIndex)
       }
     }
-    
-    // If vertical scroll, don't apply swipe offset
-    if (swipeDirection === 'vertical') {
-      return
-    }
-    
-    // If horizontal swipe, prevent scroll and apply swipe
-    if (swipeDirection === 'horizontal') {
-      e.preventDefault() // Block vertical scroll
-    }
-    
-    const diff = touchStart - currentTouch
-    
-    // Apply resistance at boundaries
-    let offset = -diff
-    
-    // If at first image and swiping right, add resistance
-    if (selectedImage === 0 && offset > 0) {
-      offset = offset * 0.3
-    }
-    
-    // If at last image and swiping left, add resistance
-    if (selectedImage === displayImages.length - 1 && offset < 0) {
-      offset = offset * 0.3
-    }
-    
-    setSwipeOffset(offset)
-  }
 
-  const onTouchEnd = () => {
-    // If it was a vertical scroll, don't change image
-    if (swipeDirection === 'vertical') {
-      setIsSwiping(false)
-      setSwipeOffset(0)
-      setTouchStart(null)
-      setTouchStartY(null)
-      setTouchEnd(null)
-      setSwipeDirection(null)
-      return
-    }
-    
-    if (!touchStart || !touchEnd) {
-      setIsSwiping(false)
-      setSwipeOffset(0)
-      setSwipeDirection(null)
-      return
-    }
-    
-    const distance = touchStart - touchEnd
-    const isLeftSwipe = distance > minSwipeDistance
-    const isRightSwipe = distance < -minSwipeDistance
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [displayImages.length, selectedImage])
 
-    if (isLeftSwipe && selectedImage < displayImages.length - 1) {
-      setSelectedImage(selectedImage + 1)
-    } else if (isRightSwipe && selectedImage > 0) {
-      setSelectedImage(selectedImage - 1)
-    }
+  // Programmatic scroll when thumbnail clicked
+  const scrollToImage = (index: number) => {
+    const container = scrollContainerRef.current
+    if (!container) return
 
-    // Reset swipe state
-    setIsSwiping(false)
-    setSwipeOffset(0)
-    setTouchStart(null)
-    setTouchStartY(null)
-    setTouchEnd(null)
-    setSwipeDirection(null)
+    const imageWidth = container.clientWidth
+    container.scrollTo({
+      left: index * imageWidth,
+      behavior: 'smooth'
+    })
   }
 
   // Size guide modal: body scroll lock & ESC key
@@ -908,30 +829,31 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
             {/* LEFT: Image Gallery (55% width) */}
             <div className="space-y-4">
-              {/* Main Media Display - Image or Video with Live Swipe (Mobile only) */}
-              <div className="relative overflow-hidden">
+              {/* Main Media Display - Native CSS Scroll-Snap Gallery */}
+              <div className="relative">
+                {/* Scroll Container with CSS Scroll-Snap */}
                 <div
-                  onTouchStart={onTouchStart}
-                  onTouchMove={onTouchMove}
-                  onTouchEnd={onTouchEnd}
-                  onClick={() => !isSwiping && displayImages[selectedImage]?.media_type === 'image' && setShowLightbox(true)}
-                  className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group touch-pan-y select-none"
+                  ref={scrollContainerRef}
+                  className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide md:overflow-hidden group"
                   style={{
-                    cursor: isSwiping ? 'grabbing' : (displayImages[selectedImage]?.media_type === 'image' ? 'zoom-in' : 'default')
+                    scrollBehavior: 'smooth',
+                    WebkitOverflowScrolling: 'touch',
                   }}
                 >
-                  {/* Image Container - Swipes horizontally on mobile */}
-                  <div 
-                    className="flex h-full transition-transform duration-300 ease-out md:transition-none"
-                    style={{
-                      transform: `translateX(calc(-${selectedImage * 100}% + ${swipeOffset}px))`,
-                      transitionDuration: isSwiping ? '0ms' : '300ms'
-                    }}
-                  >
+                  {/* Images Container */}
+                  <div className="flex h-full md:block md:relative">
                     {displayImages.map((media, index) => (
                       <div
                         key={media.id}
-                        className="relative w-full h-full flex-shrink-0"
+                        className="relative w-full h-full flex-shrink-0 snap-start snap-always md:absolute md:inset-0 md:opacity-0 md:pointer-events-none"
+                        style={{
+                          // Desktop: only show selected image
+                          ...(typeof window !== 'undefined' && window.innerWidth >= 768 ? {
+                            opacity: index === selectedImage ? 1 : 0,
+                            pointerEvents: index === selectedImage ? 'auto' : 'none',
+                            transition: 'opacity 300ms ease-out'
+                          } : {})
+                        }}
                       >
                         {media.media_type === 'video' ? (
                           <MainVideo 
@@ -939,14 +861,19 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             posterUrl={media.video_thumbnail_url}
                           />
                         ) : (
-                          <Image
-                            src={media.url || '/placeholder.png'}
-                            alt={media.alt_text || product.name}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className="object-contain object-center"
-                            priority={index === 0}
-                          />
+                          <div
+                            onClick={() => index === selectedImage && setShowLightbox(true)}
+                            className={`relative w-full h-full ${index === selectedImage ? 'cursor-zoom-in' : ''}`}
+                          >
+                            <Image
+                              src={media.url || '/placeholder.png'}
+                              alt={media.alt_text || product.name}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              className="object-contain object-center"
+                              priority={index === 0}
+                            />
+                          </div>
                         )}
                       </div>
                     ))}
@@ -954,7 +881,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                   {/* Zoom hint - only for images, desktop only */}
                   {displayImages[selectedImage]?.media_type === 'image' && (
-                    <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity hidden md:block pointer-events-none">
+                    <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity hidden md:block pointer-events-none z-10">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                       </svg>
@@ -996,12 +923,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         videoUrl={media.url}
                         posterUrl={media.video_thumbnail_url}
                         isSelected={selectedImage === index}
-                        onClick={() => setSelectedImage(index)}
+                        onClick={() => scrollToImage(index)}
                       />
                     ) : (
                       <button
                         key={media.id}
-                        onClick={() => setSelectedImage(index)}
+                        onClick={() => scrollToImage(index)}
                         className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
                           selectedImage === index
                             ? 'border-brand-primary scale-95'
