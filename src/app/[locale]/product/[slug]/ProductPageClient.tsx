@@ -583,16 +583,25 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   
   const displayImages = getDisplayImages()
 
-  // Programmatic scroll when thumbnail clicked
+  // Responsive image navigation: scroll on mobile, state on desktop
   const scrollToImage = (index: number) => {
     const container = scrollContainerRef.current
     if (!container) return
 
-    const imageWidth = container.clientWidth
-    container.scrollTo({
-      left: index * imageWidth,
-      behavior: 'smooth'
-    })
+    // Check viewport: mobile uses scroll-snap, desktop uses state
+    const isMobile = window.innerWidth < 768
+    
+    if (isMobile) {
+      // Mobile: Scroll to image (triggers scroll event → updates state)
+      const imageWidth = container.clientWidth
+      container.scrollTo({
+        left: index * imageWidth,
+        behavior: 'smooth'
+      })
+    } else {
+      // Desktop: Direct state update (instant feedback, no scroll)
+      setSelectedImage(index)
+    }
   }
 
   // Sync dots with scroll position (CSS scroll-snap)
