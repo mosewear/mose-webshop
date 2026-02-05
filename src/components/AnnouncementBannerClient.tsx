@@ -126,7 +126,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
       onMouseLeave={() => setIsPaused(false)}
     >
       <div className="max-w-7xl mx-auto px-3 py-2 md:px-4 md:py-3">
-        <div className="flex items-center justify-center gap-2 md:gap-4">
+        <div className="flex items-center justify-center gap-2 md:gap-4 min-h-[24px]">
           {/* Navigation - Left (desktop only) */}
           {messages.length > 1 && (
             <button
@@ -139,7 +139,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
           )}
 
           {/* Message Content - Centered, Single Line on Mobile */}
-          <div className="flex-1 overflow-hidden max-w-4xl">
+          <div className="flex-1 overflow-hidden max-w-4xl flex items-center justify-center">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={currentMessage.id}
@@ -155,7 +155,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
                 className="flex flex-row items-center justify-center gap-2 text-center whitespace-nowrap"
               >
                 {/* Text - Single line, smaller on mobile */}
-                <span className="text-xs md:text-sm lg:text-base font-bold uppercase tracking-wide truncate">
+                <span className="text-xs md:text-sm lg:text-base font-bold uppercase tracking-wide truncate leading-tight">
                   {currentMessage.text}
                 </span>
 
