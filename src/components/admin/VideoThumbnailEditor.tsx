@@ -283,6 +283,7 @@ export default function VideoThumbnailEditor({
                     <video
                       ref={videoRef}
                       src={videoUrl}
+                      crossOrigin="anonymous"
                       preload="metadata"
                       className="w-full h-full object-contain"
                       muted
