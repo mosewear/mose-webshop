@@ -315,6 +315,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     show_preview_images_notice: false,
   })
 
+  // Touch/Swipe state for mobile image gallery
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [isSwiping, setIsSwiping] = useState(false)
+
+  // Minimum swipe distance (in px) to trigger image change
+  const minSwipeDistance = 50
+
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
@@ -359,6 +367,40 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       })
     }
   }, [product, isInWishlist])
+
+  // Mobile swipe handlers
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+    setIsSwiping(true)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      setIsSwiping(false)
+      return
+    }
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe && selectedImage < displayImages.length - 1) {
+      setSelectedImage(selectedImage + 1)
+    }
+    
+    if (isRightSwipe && selectedImage > 0) {
+      setSelectedImage(selectedImage - 1)
+    }
+
+    setIsSwiping(false)
+    setTouchStart(null)
+    setTouchEnd(null)
+  }
 
   // Size guide modal: body scroll lock & ESC key
   useEffect(() => {
@@ -795,40 +837,61 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
             {/* LEFT: Image Gallery (55% width) */}
             <div className="space-y-4">
-              {/* Main Media Display - Image or Video */}
-              <div
-                onClick={() => displayImages[selectedImage]?.media_type === 'image' && setShowLightbox(true)}
-                className={`relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group ${
-                  displayImages[selectedImage]?.media_type === 'image' ? 'cursor-zoom-in' : ''
-                }`}
-              >
-                {displayImages[selectedImage]?.media_type === 'video' ? (
-                  <MainVideo 
-                    videoUrl={displayImages[selectedImage]?.url}
-                    posterUrl={displayImages[selectedImage]?.video_thumbnail_url}
-                  />
-                ) : (
-                  <>
-                    <Image
-                      src={displayImages[selectedImage]?.url || '/placeholder.png'}
-                      alt={displayImages[selectedImage]?.alt_text || product.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-contain object-center"
-                      priority
+              {/* Main Media Display - Image or Video with Swipe (Mobile only) */}
+              <div className="relative">
+                <div
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                  onClick={() => displayImages[selectedImage]?.media_type === 'image' && setShowLightbox(true)}
+                  className={`relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden group ${
+                    displayImages[selectedImage]?.media_type === 'image' ? 'cursor-zoom-in' : ''
+                  } ${isSwiping ? 'cursor-grabbing' : 'md:cursor-default'} touch-pan-y`}
+                >
+                  {displayImages[selectedImage]?.media_type === 'video' ? (
+                    <MainVideo 
+                      videoUrl={displayImages[selectedImage]?.url}
+                      posterUrl={displayImages[selectedImage]?.video_thumbnail_url}
                     />
-                    {/* Zoom hint - only for images */}
-                    <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                      </svg>
+                  ) : (
+                    <>
+                      <Image
+                        src={displayImages[selectedImage]?.url || '/placeholder.png'}
+                        alt={displayImages[selectedImage]?.alt_text || product.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-contain object-center transition-transform duration-300"
+                        priority
+                      />
+                      {/* Zoom hint - only for images, desktop only */}
+                      <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                        </svg>
+                      </div>
+                    </>
+                  )}
+                  {/* Out of Stock OR Presale Overlay */}
+                  {!hasAnyStock && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none">
+                      <span className="text-white text-2xl md:text-4xl font-display">{t('stock.outOfStock').toUpperCase()}</span>
                     </div>
-                  </>
-                )}
-                {/* Out of Stock OR Presale Overlay */}
-                {!hasAnyStock && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none">
-                    <span className="text-white text-2xl md:text-4xl font-display">{t('stock.outOfStock').toUpperCase()}</span>
+                  )}
+                </div>
+
+                {/* Dots Indicator - Mobile only, only if multiple images */}
+                {displayImages.length > 1 && (
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none">
+                    {displayImages.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                          index === selectedImage
+                            ? 'bg-brand-primary w-6'
+                            : 'bg-gray-400'
+                        }`}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
