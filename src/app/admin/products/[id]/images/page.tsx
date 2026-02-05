@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import MediaPicker from '@/components/admin/MediaPicker'
+import VideoThumbnailEditor from '@/components/admin/VideoThumbnailEditor'
 
 interface Product {
   id: string
@@ -39,6 +40,11 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedColor, setSelectedColor] = useState<string | null>(null) // null = algemene afbeeldingen
+  const [editingThumbnail, setEditingThumbnail] = useState<{
+    imageId: string
+    videoUrl: string
+    currentThumbnailUrl?: string | null
+  } | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -134,17 +140,105 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           position: maxPosition + 1 + index,
           is_primary: isPrimary,
           color: file.color || null,
+          // Auto-generate thumbnail for videos will happen client-side after insert
+          video_thumbnail_url: null,
         }
       })
 
-      const { error } = await supabase
+      const { data: insertedImages, error } = await supabase
         .from('product_images')
         .insert(inserts)
+        .select()
 
       if (error) throw error
+
+      // Auto-generate thumbnails for videos
+      if (insertedImages) {
+        for (const img of insertedImages) {
+          if (img.media_type === 'video') {
+            // Generate thumbnail in background
+            generateVideoThumbnail(img.id, img.url)
+          }
+        }
+      }
+
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const generateVideoThumbnail = async (imageId: string, videoUrl: string) => {
+    try {
+      // Create video element
+      const video = document.createElement('video')
+      video.src = videoUrl
+      video.crossOrigin = 'anonymous'
+      video.preload = 'metadata'
+      video.muted = true
+
+      // Wait for video to load
+      await new Promise((resolve, reject) => {
+        video.onloadeddata = resolve
+        video.onerror = reject
+      })
+
+      // Seek to first frame
+      video.currentTime = 0
+
+      // Wait for seek to complete
+      await new Promise((resolve) => {
+        video.onseeked = resolve
+      })
+
+      // Create canvas and capture frame
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      
+      if (!ctx) throw new Error('Failed to get canvas context')
+      
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (b) => {
+            if (b) resolve(b)
+            else reject(new Error('Failed to create blob'))
+          },
+          'image/jpeg',
+          0.85
+        )
+      })
+
+      // Upload thumbnail
+      const fileName = `video-thumbnails/${imageId}-auto-${Date.now()}.jpg`
+      const file = new File([blob], fileName, { type: 'image/jpeg' })
+      
+      const { uploadAndVerify } = await import('@/lib/storage-utils')
+      const result = await uploadAndVerify('product-images', fileName, file)
+
+      if (!result.success || !result.url) {
+        throw new Error(result.error || 'Upload failed')
+      }
+
+      // Update database
+      const { error: updateError } = await supabase
+        .from('product_images')
+        .update({ video_thumbnail_url: result.url })
+        .eq('id', imageId)
+
+      if (updateError) throw updateError
+
+      console.log(`✅ Auto-generated thumbnail for video ${imageId}`)
+      
+      // Refresh images to show new thumbnail
+      fetchImages()
+    } catch (error: any) {
+      console.error(`❌ Failed to auto-generate thumbnail for video ${imageId}:`, error)
+      // Don't show alert - this is a background operation
     }
   }
 
@@ -387,12 +481,36 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                 {/* Media Preview */}
                 <div className="relative aspect-square bg-gray-100">
                   {image.media_type === 'video' ? (
-                    <video
-                      src={image.url}
-                      controls
-                      className="w-full h-full object-contain bg-black"
-                      preload="metadata"
-                    />
+                    <>
+                      {/* Show thumbnail if available, otherwise show video */}
+                      {image.video_thumbnail_url ? (
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={image.video_thumbnail_url}
+                            alt="Video thumbnail"
+                            fill
+                            className="object-cover"
+                          />
+                          {/* Play icon overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <svg
+                              className="w-16 h-16 text-white/90"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      ) : (
+                        <video
+                          src={image.url}
+                          controls
+                          className="w-full h-full object-contain bg-black"
+                          preload="metadata"
+                        />
+                      )}
+                    </>
                   ) : (
                     <Image
                       src={image.url}
@@ -404,9 +522,24 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                   
                   {/* Media Type Badge */}
                   {image.media_type === 'video' && (
-                    <div className="absolute top-2 left-2 bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase flex items-center gap-1">
-                      🎬 VIDEO
-                    </div>
+                    <>
+                      <div className="absolute top-2 left-2 bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase flex items-center gap-1">
+                        🎬 VIDEO
+                      </div>
+                      
+                      {/* Edit Thumbnail Button */}
+                      <button
+                        onClick={() => setEditingThumbnail({
+                          imageId: image.id,
+                          videoUrl: image.url,
+                          currentThumbnailUrl: image.video_thumbnail_url,
+                        })}
+                        className="absolute top-12 left-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs font-bold uppercase flex items-center gap-1 transition-colors"
+                        title="Bewerk video thumbnail"
+                      >
+                        🎨 Thumbnail
+                      </button>
+                    </>
                   )}
                   
                   {/* Primary Badge */}
@@ -496,6 +629,20 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           </div>
         )}
       </div>
+
+      {/* Video Thumbnail Editor Modal */}
+      {editingThumbnail && (
+        <VideoThumbnailEditor
+          imageId={editingThumbnail.imageId}
+          videoUrl={editingThumbnail.videoUrl}
+          currentThumbnailUrl={editingThumbnail.currentThumbnailUrl}
+          onClose={() => setEditingThumbnail(null)}
+          onSaved={() => {
+            fetchImages()
+            setEditingThumbnail(null)
+          }}
+        />
+      )}
     </div>
   )
 }
