@@ -320,9 +320,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [isSwiping, setIsSwiping] = useState(false)
   const [swipeOffset, setSwipeOffset] = useState(0)
+  const [touchStartY, setTouchStartY] = useState<number | null>(null)
+  const [swipeDirection, setSwipeDirection] = useState<'horizontal' | 'vertical' | null>(null)
 
   // Minimum swipe distance (in px) to trigger image change
   const minSwipeDistance = 50
+  // Direction detection threshold (in px)
+  const directionThreshold = 10
 
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
@@ -369,20 +373,51 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
   }, [product, isInWishlist])
 
-  // Mobile swipe handlers with live preview
+  // Mobile swipe handlers with direction lock
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
+    setTouchStartY(e.targetTouches[0].clientY)
+    setSwipeDirection(null) // Reset direction
     setIsSwiping(true)
   }
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart) return
+    if (!touchStart || touchStartY === null) return
     
     const currentTouch = e.targetTouches[0].clientX
-    const diff = touchStart - currentTouch
+    const currentTouchY = e.targetTouches[0].clientY
     
     setTouchEnd(currentTouch)
+    
+    // Detect swipe direction if not yet determined
+    if (swipeDirection === null) {
+      const deltaX = Math.abs(currentTouch - touchStart)
+      const deltaY = Math.abs(currentTouchY - touchStartY)
+      
+      // Only determine direction after threshold movement
+      if (deltaX > directionThreshold || deltaY > directionThreshold) {
+        if (deltaX > deltaY) {
+          // Horizontal swipe detected
+          setSwipeDirection('horizontal')
+        } else {
+          // Vertical scroll detected
+          setSwipeDirection('vertical')
+        }
+      }
+    }
+    
+    // If vertical scroll, don't apply swipe offset
+    if (swipeDirection === 'vertical') {
+      return
+    }
+    
+    // If horizontal swipe, prevent scroll and apply swipe
+    if (swipeDirection === 'horizontal') {
+      e.preventDefault() // Block vertical scroll
+    }
+    
+    const diff = touchStart - currentTouch
     
     // Apply resistance at boundaries
     let offset = -diff
@@ -401,9 +436,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   }
 
   const onTouchEnd = () => {
+    // If it was a vertical scroll, don't change image
+    if (swipeDirection === 'vertical') {
+      setIsSwiping(false)
+      setSwipeOffset(0)
+      setTouchStart(null)
+      setTouchStartY(null)
+      setTouchEnd(null)
+      setSwipeDirection(null)
+      return
+    }
+    
     if (!touchStart || !touchEnd) {
       setIsSwiping(false)
       setSwipeOffset(0)
+      setSwipeDirection(null)
       return
     }
     
@@ -421,7 +468,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     setIsSwiping(false)
     setSwipeOffset(0)
     setTouchStart(null)
+    setTouchStartY(null)
     setTouchEnd(null)
+    setSwipeDirection(null)
   }
 
   // Size guide modal: body scroll lock & ESC key
