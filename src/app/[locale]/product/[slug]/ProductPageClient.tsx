@@ -329,6 +329,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   useEffect(() => {
     loadWishlist()
     loadSettings()
+    
+    // Auto-select color from URL parameter (from shop color dot clicks)
+    const searchParams = new URLSearchParams(window.location.search)
+    const colorParam = searchParams.get('color')
+    if (colorParam) {
+      setSelectedColor(colorParam)
+    }
   }, [])
 
   const loadSettings = async () => {
