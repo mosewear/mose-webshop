@@ -209,7 +209,7 @@ function MainVideo({
         playsInline
         muted
         loop
-        className="w-full h-full object-contain bg-black"
+        className="w-full h-full object-contain bg-gray-100"
         poster={posterUrl || undefined}
         preload="metadata"
       />
