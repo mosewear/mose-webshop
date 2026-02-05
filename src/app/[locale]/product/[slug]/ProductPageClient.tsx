@@ -363,37 +363,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
   }, [product, isInWishlist])
 
-  // Sync dots with scroll position (CSS scroll-snap)
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft
-      const imageWidth = container.clientWidth
-      const newIndex = Math.round(scrollLeft / imageWidth)
-      
-      if (newIndex !== selectedImage && newIndex >= 0 && newIndex < displayImages.length) {
-        setSelectedImage(newIndex)
-      }
-    }
-
-    container.addEventListener('scroll', handleScroll, { passive: true })
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [displayImages.length, selectedImage])
-
-  // Programmatic scroll when thumbnail clicked
-  const scrollToImage = (index: number) => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const imageWidth = container.clientWidth
-    container.scrollTo({
-      left: index * imageWidth,
-      behavior: 'smooth'
-    })
-  }
-
   // Size guide modal: body scroll lock & ESC key
   useEffect(() => {
     if (showSizeGuide) {
@@ -610,6 +579,37 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   }
   
   const displayImages = getDisplayImages()
+
+  // Programmatic scroll when thumbnail clicked
+  const scrollToImage = (index: number) => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const imageWidth = container.clientWidth
+    container.scrollTo({
+      left: index * imageWidth,
+      behavior: 'smooth'
+    })
+  }
+
+  // Sync dots with scroll position (CSS scroll-snap)
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft
+      const imageWidth = container.clientWidth
+      const newIndex = Math.round(scrollLeft / imageWidth)
+      
+      if (newIndex !== selectedImage && newIndex >= 0 && newIndex < displayImages.length) {
+        setSelectedImage(newIndex)
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [displayImages.length, selectedImage])
 
   const handleVariantRequired = () => {
     // Scroll to variant selector
