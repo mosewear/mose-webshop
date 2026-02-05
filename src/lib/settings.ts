@@ -17,6 +17,7 @@ interface SiteSettings {
   return_label_cost_incl_btw: number
   favicon_url?: string
   show_preview_images_notice?: boolean
+  show_category_labels?: boolean
   updated_at?: string
 }
 
@@ -93,6 +94,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_label_cost_incl_btw: parseFloat(settings.return_label_cost_incl_btw) || 7.87,
       favicon_url: settings.favicon_url || '/favicon.ico',
       show_preview_images_notice: settings.show_preview_images_notice === 'true' || settings.show_preview_images_notice === true,
+      show_category_labels: settings.show_category_labels === 'true' || settings.show_category_labels === true,
       updated_at: latestUpdate,
     }
 
@@ -123,6 +125,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       return_label_cost_incl_btw: 7.87,
       favicon_url: '/favicon.ico',
       show_preview_images_notice: false,
+      show_category_labels: false,
       updated_at: undefined,
     }
   }

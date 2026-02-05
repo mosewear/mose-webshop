@@ -13,7 +13,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { mapLocalizedProduct, mapLocalizedCategory } from '@/lib/i18n-db'
 import { formatPrice } from '@/lib/format-price'
-import { useRouter } from '@/i18n/routing'
+import { getSiteSettings } from '@/lib/settings'
 
 interface Product {
   id: string
@@ -54,204 +54,13 @@ interface Category {
   slug: string
 }
 
-// Product Card Component - for hover state management
-function ProductCard({ 
-  product, 
-  index,
-  locale,
-  getProductName,
-  getCategoryName,
-  isInStock,
-  getTotalStock,
-  getPrimaryImage,
-  t
-}: {
-  product: Product
-  index: number
-  locale: string
-  getProductName: (p: Product) => string
-  getCategoryName: (c: Category | { name: string; name_en?: string }) => string
-  isInStock: (p: Product) => boolean
-  getTotalStock: (p: Product) => number
-  getPrimaryImage: (p: Product) => string
-  t: (key: string) => string
-}) {
-  const router = useRouter()
-  const [hoveredColor, setHoveredColor] = useState<string | null>(null)
-  
-  const inStock = isInStock(product)
-  const totalStock = getTotalStock(product)
-  const hasPresale = product.variants?.some(v => 
-    v.presale_enabled && v.stock_quantity === 0 && v.presale_stock_quantity > 0
-  ) || false
-  const presaleExpected = hasPresale 
-    ? product.variants?.find(v => v.presale_enabled && v.presale_expected_date)?.presale_expected_date 
-    : null
-  
-  const isPriority = index < 6
-  
-  // Get unique colors
-  const uniqueColors = Array.from(
-    new Set(
-      product.variants
-        ?.map(v => v.color)
-        .filter(Boolean) as string[]
-    )
-  )
-  
-  // Get current display image (based on hover or primary)
-  const currentImage = hoveredColor 
-    ? product.images?.find(img => img.color === hoveredColor)?.url || getPrimaryImage(product)
-    : getPrimaryImage(product)
-  
-  // Handle color dot click (desktop only)
-  const handleColorClick = (e: React.MouseEvent, color: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    router.push(`/product/${product.slug}?color=${encodeURIComponent(color)}`)
-  }
-  
-  return (
-    <LocaleLink
-      href={`/product/${product.slug}`}
-      className="group block h-full"
-      style={{ 
-        contain: 'layout style paint',
-        transform: 'translateZ(0)',
-        backfaceVisibility: 'hidden' as const,
-        perspective: 1000,
-        visibility: 'visible',
-        opacity: 1
-      }}
-    >
-      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
-        {/* Image - Larger on mobile */}
-        <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
-          <Image
-            src={currentImage}
-            alt={getProductName(product)}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover object-center transition-opacity duration-300"
-            priority={isPriority}
-            loading={isPriority ? 'eager' : 'lazy'}
-          />
-          
-          {/* Stock Badge */}
-          {hasPresale && !inStock && (
-            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 z-10">
-              <PresaleBadge variant="compact" />
-            </div>
-          )}
-          {!hasPresale && !inStock && (
-            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
-              {t('outOfStock')}
-            </div>
-          )}
-          {inStock && totalStock < 5 && (
-            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
-              {t('lastItems')}
-            </div>
-          )}
-
-          {/* Discount Badge */}
-          {(() => {
-            const hasDiscount = product.sale_price && product.sale_price < product.base_price
-            if (!hasDiscount || !product.sale_price) return null
-            
-            const discountPercentage = Math.round(
-              ((product.base_price - product.sale_price) / product.base_price) * 100
-            )
-            
-            return (
-              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} left-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:left-4 bg-brand-primary text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider`}>
-                -{discountPercentage}% {t('discount')}
-              </div>
-            )
-          })()}
-
-          {/* Category Badge - Hidden on mobile */}
-          {product.category && (
-            <div className="hidden md:block absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
-              {product.category && getCategoryName(product.category)}
-            </div>
-          )}
-
-          {/* Wishlist Button - Hidden on mobile, shown on hover on desktop */}
-          <button className="hidden md:flex absolute bottom-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
-
-          {/* Gradient Overlay on Hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
-
-        {/* Product Info - Smaller padding on mobile */}
-        <div className="p-2 md:p-4 flex flex-col flex-grow">
-          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
-            {getProductName(product)}
-          </h3>
-          
-          {/* Color Dots - MOSE Style with Desktop Hover + Click */}
-          {uniqueColors.length > 1 && (
-            <div className="flex items-center gap-1.5 mb-2">
-              {uniqueColors.map(color => {
-                const variant = product.variants?.find(v => v.color === color)
-                const colorHex = variant?.color_hex || '#000000'
-                
-                return (
-                  <div
-                    key={color}
-                    className="w-3 h-3 md:w-4 md:h-4 border-2 border-black md:cursor-pointer md:hover:scale-125 md:hover:border-brand-primary transition-all"
-                    style={{ backgroundColor: colorHex }}
-                    title={color}
-                    onMouseEnter={() => setHoveredColor(color)}
-                    onMouseLeave={() => setHoveredColor(null)}
-                    onClick={(e) => handleColorClick(e, color)}
-                  />
-                )
-              })}
-            </div>
-          )}
-          
-          <div className="flex items-center justify-between mt-auto">
-            {(() => {
-              const hasDiscount = product.sale_price && product.sale_price < product.base_price
-              
-              if (hasDiscount && product.sale_price) {
-                return (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-base md:text-2xl font-bold text-red-600">
-                      {formatPrice(product.sale_price, locale)}
-                    </span>
-                    <span className="text-xs md:text-sm text-gray-500 line-through">
-                      {formatPrice(product.base_price, locale)}
-                    </span>
-                  </div>
-                )
-              }
-              
-              return (
-                <span className="text-base md:text-2xl font-bold text-brand-primary">
-                  {formatPrice(product.base_price, locale)}
-                </span>
-              )
-            })()}
-          </div>
-        </div>
-      </div>
-    </LocaleLink>
-  )
-}
-
 export default function ShopPageClient() {
   const t = useTranslations('shop')
   const locale = useLocale()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [showCategoryLabels, setShowCategoryLabels] = useState(true) // Default to true
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -298,6 +107,7 @@ export default function ShopPageClient() {
   useEffect(() => {
     fetchCategories()
     fetchProducts()
+    loadSettings()
   }, [])
 
   // Set page title based on selected category
@@ -344,6 +154,16 @@ export default function ShopPageClient() {
       .order('name')
     
     if (data) setCategories(data)
+  }
+
+  const loadSettings = async () => {
+    try {
+      const settings = await getSiteSettings()
+      setShowCategoryLabels(settings.show_category_labels ?? true) // Default to true if not set
+    } catch (error) {
+      console.error('Error loading settings:', error)
+      setShowCategoryLabels(true) // Fallback to true on error
+    }
   }
 
   const fetchProducts = async () => {
@@ -1080,20 +900,166 @@ export default function ShopPageClient() {
                   contentVisibility: 'auto'
                 }}
               >
-                {filteredProducts.map((product, index) => (
-                  <ProductCard 
-                    key={product.id}
-                    product={product}
-                    index={index}
-                    locale={locale}
-                    getProductName={getProductName}
-                    getCategoryName={getCategoryName}
-                    isInStock={isInStock}
-                    getTotalStock={getTotalStock}
-                    getPrimaryImage={getPrimaryImage}
-                    t={t}
-                  />
-                ))}
+                {filteredProducts.map((product, index) => {
+                  const inStock = isInStock(product)
+                  const totalStock = getTotalStock(product)
+                  const hasPresale = product.variants?.some(v => 
+                    v.presale_enabled && v.stock_quantity === 0 && v.presale_stock_quantity > 0
+                  ) || false
+                  const presaleExpected = hasPresale 
+                    ? product.variants?.find(v => v.presale_enabled && v.presale_expected_date)?.presale_expected_date 
+                    : null
+                  
+                  // Priority load first 6 images to prevent layout shift
+                  const isPriority = index < 6
+                  
+                  return (
+                    <LocaleLink
+                      key={product.id}
+                      href={`/product/${product.slug}`}
+                      className="group block h-full"
+                      style={{ 
+                        contain: 'layout style paint',
+                        transform: 'translateZ(0)',
+                        backfaceVisibility: 'hidden' as const,
+                        perspective: 1000,
+                        visibility: 'visible',
+                        opacity: 1
+                      }}
+                    >
+                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
+                        {/* Image - Larger on mobile */}
+                        <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
+                          <Image
+                            src={getPrimaryImage(product)}
+                            alt={getProductName(product)}
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            className="object-cover object-center"
+                            priority={isPriority}
+                            loading={isPriority ? 'eager' : 'lazy'}
+                          />
+                          
+                          {/* Stock Badge */}
+                          {hasPresale && !inStock && (
+                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 z-10">
+                              <PresaleBadge variant="compact" />
+                            </div>
+                          )}
+                          {!hasPresale && !inStock && (
+                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
+                              {t('outOfStock')}
+                            </div>
+                          )}
+                          {inStock && totalStock < 5 && (
+                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
+                              {t('lastItems')}
+                            </div>
+                          )}
+
+                          {/* Discount Badge */}
+                          {(() => {
+                            const hasDiscount = product.sale_price && product.sale_price < product.base_price
+                            if (!hasDiscount || !product.sale_price) return null
+                            
+                            const discountPercentage = Math.round(
+                              ((product.base_price - product.sale_price) / product.base_price) * 100
+                            )
+                            
+                            return (
+                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} left-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:left-4 bg-brand-primary text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider`}>
+                                -{discountPercentage}% {t('discount')}
+                              </div>
+                            )
+                          })()}
+
+                          {/* Category Badge - Hidden on mobile, conditional based on settings */}
+                          {showCategoryLabels && product.category && (
+                            <div className="hidden md:block absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
+                              {product.category && getCategoryName(product.category)}
+                            </div>
+                          )}
+
+                          {/* Wishlist Button - Hidden on mobile, shown on hover on desktop */}
+                          <button className="hidden md:flex absolute bottom-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          </button>
+
+                          {/* Gradient Overlay on Hover */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+
+                        {/* Product Info - Smaller padding on mobile */}
+                        <div className="p-2 md:p-4 flex flex-col flex-grow">
+                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
+                            {getProductName(product)}
+                          </h3>
+                          
+                          {/* Color Dots - MOSE Style */}
+                          {(() => {
+                            // Get unique colors from variants
+                            const uniqueColors = Array.from(
+                              new Set(
+                                product.variants
+                                  ?.map(v => v.color)
+                                  .filter(Boolean) as string[]
+                              )
+                            )
+                            
+                            if (uniqueColors.length > 1) {
+                              return (
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  {uniqueColors.map(color => {
+                                    // Find variant with this color to get hex code
+                                    const variant = product.variants?.find(v => v.color === color)
+                                    const colorHex = variant?.color_hex || '#000000'
+                                    
+                                    return (
+                                      <div
+                                        key={color}
+                                        className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
+                                        style={{ backgroundColor: colorHex }}
+                                        title={color}
+                                      />
+                                    )
+                                  })}
+                                </div>
+                              )
+                            }
+                            return null
+                          })()}
+                          
+                          <div className="flex items-center justify-between mt-auto">
+                            {(() => {
+                              const hasDiscount = product.sale_price && product.sale_price < product.base_price
+                              
+                              if (hasDiscount && product.sale_price) {
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-base md:text-2xl font-bold text-red-600">
+                                      {formatPrice(product.sale_price, locale)}
+                                    </span>
+                                    <span className="text-xs md:text-sm text-gray-500 line-through">
+                                      {formatPrice(product.base_price, locale)}
+                                    </span>
+                                  </div>
+                                )
+                              }
+                              
+                              return (
+                                <span className="text-base md:text-2xl font-bold text-brand-primary">
+                                  {formatPrice(product.base_price, locale)}
+                                </span>
+                              )
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </LocaleLink>
+                  )
+                })}
               </div>
             )}
           </main>

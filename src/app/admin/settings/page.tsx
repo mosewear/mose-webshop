@@ -45,6 +45,9 @@ export default function SettingsPage() {
   // Preview images notice
   const [showPreviewImagesNotice, setShowPreviewImagesNotice] = useState(false)
 
+  // Category labels
+  const [showCategoryLabels, setShowCategoryLabels] = useState(false)
+
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
   const [showAddAdmin, setShowAddAdmin] = useState(false)
@@ -138,6 +141,9 @@ export default function SettingsPage() {
             case 'show_preview_images_notice':
               setShowPreviewImagesNotice(setting.value === 'true' || setting.value === true)
               break
+            case 'show_category_labels':
+              setShowCategoryLabels(setting.value === 'true' || setting.value === true)
+              break
           }
         })
       }
@@ -179,6 +185,7 @@ export default function SettingsPage() {
         { key: 'return_label_cost_incl_btw', value: finalReturnLabelCostInclBtw },
         { key: 'favicon_url', value: faviconUrl },
         { key: 'show_preview_images_notice', value: showPreviewImagesNotice },
+        { key: 'show_category_labels', value: showCategoryLabels },
       ]
 
       for (const setting of settingsToSave) {
@@ -501,6 +508,38 @@ export default function SettingsPage() {
                 onChange={(e) => setLowStockThreshold(e.target.value)}
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
+            </div>
+
+            <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4">
+                <input
+                  type="checkbox"
+                  id="show_category_labels"
+                  checked={showCategoryLabels}
+                  onChange={(e) => setShowCategoryLabels(e.target.checked)}
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                />
+                <label htmlFor="show_category_labels" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                  Toon Categorie Labels in Shop
+                </label>
+              </div>
+              <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
+                <p className="font-bold mb-1">ℹ️ Wat doet dit?</p>
+                <p className="mb-2">
+                  Wanneer ingeschakeld wordt op productcards in de shop rechtsboven een klein label getoond 
+                  met de productcategorie (SWEATERS, HOODIES, T-SHIRTS, etc.).
+                </p>
+                <p className="mb-2">
+                  <strong>Waar verschijnt dit?</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Rechtsboven op productcards (desktop only)</li>
+                  <li>Wit label met zwarte border (MOSE style)</li>
+                </ul>
+                <p className="mt-2">
+                  <strong>💡 Tip:</strong> Handig voor klanten om snel het producttype te zien, maar kan ook visuele rust verstoren. Test wat het beste werkt!
+                </p>
+              </div>
             </div>
 
             <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
