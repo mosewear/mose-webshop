@@ -35,19 +35,9 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata(): Promise<Metadata> {
   console.log('🎯 [LAYOUT] generateMetadata called')
   
-  // Get settings from database
-  const settings = await getSiteSettings()
-  console.log('🎯 [LAYOUT] Settings loaded:', {
-    favicon_url: settings.favicon_url,
-    updated_at: settings.updated_at,
-    has_favicon: !!settings.favicon_url
-  })
-  
-  // Use dynamic favicon API route that handles caching properly
-  // This ensures favicon updates are reflected immediately
-  const cacheParam = settings.updated_at ? new Date(settings.updated_at).getTime() : Date.now()
-  const faviconUrl = `/api/favicon?v=${cacheParam}`
-  console.log('🎯 [LAYOUT] Generated favicon URL:', faviconUrl)
+  // Use static favicon files from /public folder
+  // This ensures consistent branding with the new MOSE logo
+  const timestamp = Date.now()
 
   return {
     title: {
@@ -65,13 +55,13 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: faviconUrl, sizes: 'any' },
-        { url: faviconUrl, sizes: '16x16', type: 'image/x-icon' },
-        { url: faviconUrl, sizes: '32x32', type: 'image/x-icon' },
+        { url: `/favicon.ico?v=${timestamp}`, sizes: 'any' },
+        { url: `/favicon-16x16.png?v=${timestamp}`, sizes: '16x16', type: 'image/png' },
+        { url: `/favicon-32x32.png?v=${timestamp}`, sizes: '32x32', type: 'image/png' },
       ],
-      shortcut: faviconUrl,
+      shortcut: `/favicon.ico?v=${timestamp}`,
       apple: [
-        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+        { url: `/apple-touch-icon.png?v=${timestamp}`, sizes: '180x180', type: 'image/png' },
       ],
     },
   openGraph: {
