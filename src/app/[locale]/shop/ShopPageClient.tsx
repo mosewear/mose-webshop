@@ -36,6 +36,8 @@ interface Product {
     color?: string | null
   }>
   variants?: Array<{
+    color?: string
+    color_hex?: string
     stock_quantity: number
     presale_stock_quantity: number
     presale_enabled: boolean
@@ -162,7 +164,7 @@ export default function ShopPageClient() {
           description_en,
           category:categories(name, name_en, slug),
           images:product_images(url, alt_text, is_primary, media_type, color),
-          variants:product_variants(stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
+          variants:product_variants(color, color_hex, stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
         `)
         .order('created_at', { ascending: false })
 
@@ -981,6 +983,41 @@ export default function ShopPageClient() {
                           <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
                             {getProductName(product)}
                           </h3>
+                          
+                          {/* Color Dots - MOSE Style */}
+                          {(() => {
+                            // Get unique colors from variants
+                            const uniqueColors = Array.from(
+                              new Set(
+                                product.variants
+                                  ?.map(v => v.color)
+                                  .filter(Boolean) as string[]
+                              )
+                            )
+                            
+                            if (uniqueColors.length > 1) {
+                              return (
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  {uniqueColors.map(color => {
+                                    // Find variant with this color to get hex code
+                                    const variant = product.variants?.find(v => v.color === color)
+                                    const colorHex = variant?.color_hex || '#000000'
+                                    
+                                    return (
+                                      <div
+                                        key={color}
+                                        className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
+                                        style={{ backgroundColor: colorHex }}
+                                        title={color}
+                                      />
+                                    )
+                                  })}
+                                </div>
+                              )
+                            }
+                            return null
+                          })()}
+                          
                           <div className="flex items-center justify-between mt-auto">
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
