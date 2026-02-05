@@ -248,8 +248,9 @@ function VideoThumbnail({
           : 'border-gray-300 hover:border-black'
       }`}
     >
-      {/* Static poster image OR generic video placeholder */}
+      {/* Video first frame as thumbnail OR saved poster image */}
       {posterUrl ? (
+        // Use saved poster/thumbnail if available
         <Image
           src={posterUrl}
           alt="Video thumbnail"
@@ -257,12 +258,14 @@ function VideoThumbnail({
           className="object-cover object-center"
         />
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
-          <div className="text-center">
-            <Video className="w-12 h-12 text-white/80 mx-auto mb-1.5" />
-            <span className="text-white/60 text-[10px] font-bold tracking-wider">VIDEO</span>
-          </div>
-        </div>
+        // Use first frame of video as thumbnail
+        <video
+          src={videoUrl}
+          preload="metadata"
+          className="w-full h-full object-cover object-center"
+          playsInline
+          muted
+        />
       )}
       {/* Play icon overlay - always visible */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
