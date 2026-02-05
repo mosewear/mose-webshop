@@ -18,7 +18,7 @@ export default function EarlyAccessClient() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-  const [subscriberCount, setSubscriberCount] = useState(633)
+  const [subscriberCount, setSubscriberCount] = useState(0)
   const [countdown, setCountdown] = useState({
     days: 0,
     hours: 0,
@@ -59,9 +59,8 @@ export default function EarlyAccessClient() {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'active')
       
-      if (count) {
-        // Start counting from 633 minimum
-        setSubscriberCount(Math.max(count, 633))
+      if (count !== null) {
+        setSubscriberCount(count)
       }
     }
 
