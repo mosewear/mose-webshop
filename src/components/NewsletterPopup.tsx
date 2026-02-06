@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
-import { useLocale } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { createClient } from '@/lib/supabase/client'
 
