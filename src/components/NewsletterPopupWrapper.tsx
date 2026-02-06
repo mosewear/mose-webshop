@@ -35,7 +35,7 @@ export default function NewsletterPopupWrapper() {
           popup_scroll_percentage: 50,
           popup_frequency_days: 7,
           popup_show_on_pages: ['home', 'shop', 'product'],
-          popup_discount_percentage: 30
+          popup_discount_percentage: 10
         })
       } finally {
         setLoading(false)

@@ -40,7 +40,7 @@ export async function GET() {
       popup_show_on_pages: Array.isArray(settings.popup_show_on_pages) 
         ? settings.popup_show_on_pages 
         : (settings.popup_show_on_pages ? JSON.parse(settings.popup_show_on_pages) : ['home', 'shop', 'product']),
-      popup_discount_percentage: parseInt(settings.popup_discount_percentage) || 30
+      popup_discount_percentage: parseInt(settings.popup_discount_percentage) || 10
     })
   } catch (error) {
     console.error('Error in popup settings API:', error)
@@ -53,7 +53,7 @@ export async function GET() {
       popup_scroll_percentage: 50,
       popup_frequency_days: 7,
       popup_show_on_pages: ['home', 'shop', 'product'],
-      popup_discount_percentage: 30
+      popup_discount_percentage: 10
     })
   }
 }

@@ -44,7 +44,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [popupScrollPercentage, setPopupScrollPercentage] = useState(50)
   const [popupFrequencyDays, setPopupFrequencyDays] = useState(7)
   const [popupShowOnPages, setPopupShowOnPages] = useState<string[]>(['home', 'shop', 'product'])
-  const [popupDiscountPercentage, setPopupDiscountPercentage] = useState(30)
+  const [popupDiscountPercentage, setPopupDiscountPercentage] = useState(10)
   const [savingPopupSettings, setSavingPopupSettings] = useState(false)
 
   // Filtered and sorted subscribers
