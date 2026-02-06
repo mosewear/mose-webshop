@@ -18,6 +18,13 @@ interface SiteSettings {
   favicon_url?: string
   show_preview_images_notice?: boolean
   show_category_labels?: boolean
+  popup_enabled?: boolean
+  popup_trigger?: 'exit_intent' | 'timer' | 'hybrid' | 'scroll'
+  popup_delay_seconds?: number
+  popup_scroll_percentage?: number
+  popup_frequency_days?: number
+  popup_show_on_pages?: string[]
+  popup_discount_percentage?: number
   updated_at?: string
 }
 

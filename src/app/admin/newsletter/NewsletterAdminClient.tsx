@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2 } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Subscriber {
@@ -32,10 +32,20 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unsubscribed'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest')
   const [exporting, setExporting] = useState(false)
-  const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails'>('subscribers')
+  const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails' | 'popup-settings'>('subscribers')
   const [sendingEmail, setSendingEmail] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingAll, setDeletingAll] = useState(false)
+
+  // Popup settings state
+  const [popupEnabled, setPopupEnabled] = useState(false)
+  const [popupTrigger, setPopupTrigger] = useState<'exit_intent' | 'timer' | 'hybrid' | 'scroll'>('hybrid')
+  const [popupDelaySeconds, setPopupDelaySeconds] = useState(20)
+  const [popupScrollPercentage, setPopupScrollPercentage] = useState(50)
+  const [popupFrequencyDays, setPopupFrequencyDays] = useState(7)
+  const [popupShowOnPages, setPopupShowOnPages] = useState<string[]>(['home', 'shop', 'product'])
+  const [popupDiscountPercentage, setPopupDiscountPercentage] = useState(30)
+  const [savingPopupSettings, setSavingPopupSettings] = useState(false)
 
   // Filtered and sorted subscribers
   const filteredSubscribers = useMemo(() => {
@@ -200,6 +210,75 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     }
   }
 
+  // Load popup settings
+  useEffect(() => {
+    const loadPopupSettings = async () => {
+      try {
+        const response = await fetch('/api/newsletter/popup-settings')
+        if (!response.ok) throw new Error('Failed to load popup settings')
+        
+        const data = await response.json()
+        setPopupEnabled(data.popup_enabled)
+        setPopupTrigger(data.popup_trigger)
+        setPopupDelaySeconds(data.popup_delay_seconds)
+        setPopupScrollPercentage(data.popup_scroll_percentage)
+        setPopupFrequencyDays(data.popup_frequency_days)
+        setPopupShowOnPages(data.popup_show_on_pages)
+        setPopupDiscountPercentage(data.popup_discount_percentage)
+      } catch (error) {
+        console.error('Error loading popup settings:', error)
+      }
+    }
+
+    loadPopupSettings()
+  }, [])
+
+  // Save popup settings
+  const handleSavePopupSettings = async () => {
+    setSavingPopupSettings(true)
+    toast.loading('Popup instellingen opslaan...')
+
+    try {
+      const response = await fetch('/api/newsletter/save-popup-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          popup_enabled: popupEnabled,
+          popup_trigger: popupTrigger,
+          popup_delay_seconds: popupDelaySeconds,
+          popup_scroll_percentage: popupScrollPercentage,
+          popup_frequency_days: popupFrequencyDays,
+          popup_show_on_pages: popupShowOnPages,
+          popup_discount_percentage: popupDiscountPercentage
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save popup settings')
+      }
+
+      toast.dismiss()
+      toast.success('Popup instellingen opgeslagen!')
+    } catch (error: any) {
+      console.error('Save popup settings error:', error)
+      toast.dismiss()
+      toast.error(error.message || 'Kon popup instellingen niet opslaan')
+    } finally {
+      setSavingPopupSettings(false)
+    }
+  }
+
+  // Toggle page selection
+  const togglePage = (page: string) => {
+    setPopupShowOnPages(prev => 
+      prev.includes(page) 
+        ? prev.filter(p => p !== page)
+        : [...prev, page]
+    )
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('nl-NL', {
@@ -242,10 +321,10 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b-2 border-black">
+      <div className="flex gap-2 mb-6 border-b-2 border-black overflow-x-auto">
         <button
           onClick={() => setActiveTab('subscribers')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors ${
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
             activeTab === 'subscribers'
               ? 'bg-black text-white'
               : 'bg-white text-black hover:bg-gray-100'
@@ -256,7 +335,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
         </button>
         <button
           onClick={() => setActiveTab('insider-emails')}
-          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors ${
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
             activeTab === 'insider-emails'
               ? 'bg-black text-white'
               : 'bg-white text-black hover:bg-gray-100'
@@ -264,6 +343,17 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
         >
           <Mail className="w-5 h-5 inline-block mr-2" />
           Insider Emails
+        </button>
+        <button
+          onClick={() => setActiveTab('popup-settings')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
+            activeTab === 'popup-settings'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
+        >
+          <Settings className="w-5 h-5 inline-block mr-2" />
+          Popup Instellingen
         </button>
       </div>
 
@@ -591,6 +681,208 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               <li>Elke email wordt verstuurd in de juiste taal (NL of EN) op basis van subscriber locale</li>
               <li>Test eerst met jezelf of een test account voordat je naar iedereen verstuurt</li>
               <li>Emails kunnen niet worden teruggehaald na verzenden</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Content - Popup Settings Tab */}
+      {activeTab === 'popup-settings' && (
+        <div className="space-y-6">
+          {/* Enable/Disable Toggle */}
+          <div className="bg-white border-2 border-black p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg mb-1">Newsletter Popup</h3>
+                <p className="text-sm text-gray-600">
+                  {popupEnabled ? 'Popup is actief' : 'Popup is uitgeschakeld'}
+                </p>
+              </div>
+              <button
+                onClick={() => setPopupEnabled(!popupEnabled)}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors border-2 border-black ${
+                  popupEnabled ? 'bg-brand-primary' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform border-2 border-black ${
+                    popupEnabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Settings Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Trigger Type */}
+            <div className="bg-white border-2 border-black p-6">
+              <label className="block font-bold mb-2">Trigger Type</label>
+              <select
+                value={popupTrigger}
+                onChange={(e) => setPopupTrigger(e.target.value as any)}
+                disabled={!popupEnabled}
+                className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed font-semibold"
+              >
+                <option value="exit_intent">Exit Intent (alleen bij verlaten)</option>
+                <option value="timer">Timer (na X seconden)</option>
+                <option value="hybrid">Hybrid (exit + timer fallback)</option>
+                <option value="scroll">Scroll (na X% scroll)</option>
+              </select>
+              <p className="text-xs text-gray-600 mt-2">
+                {popupTrigger === 'exit_intent' && '✅ Beste conversie, 0% bounce'}
+                {popupTrigger === 'timer' && '⚠️ Kan irritant zijn, test timing goed'}
+                {popupTrigger === 'hybrid' && '🏆 Aanbevolen: beste van beide'}
+                {popupTrigger === 'scroll' && '✅ Natuurlijk, engagement-based'}
+              </p>
+            </div>
+
+            {/* Delay Seconds */}
+            <div className="bg-white border-2 border-black p-6">
+              <label className="block font-bold mb-2">
+                Timer Delay (seconden)
+              </label>
+              <input
+                type="number"
+                min="5"
+                max="120"
+                value={popupDelaySeconds}
+                onChange={(e) => setPopupDelaySeconds(parseInt(e.target.value))}
+                disabled={!popupEnabled || (popupTrigger !== 'timer' && popupTrigger !== 'hybrid')}
+                className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed font-semibold"
+              />
+              <p className="text-xs text-gray-600 mt-2">
+                Aanbevolen: 15-20 sec (niet te snel, niet te langzaam)
+              </p>
+            </div>
+
+            {/* Scroll Percentage */}
+            <div className="bg-white border-2 border-black p-6">
+              <label className="block font-bold mb-2">
+                Scroll Percentage (%)
+              </label>
+              <input
+                type="number"
+                min="10"
+                max="90"
+                value={popupScrollPercentage}
+                onChange={(e) => setPopupScrollPercentage(parseInt(e.target.value))}
+                disabled={!popupEnabled || (popupTrigger !== 'scroll' && popupTrigger !== 'hybrid')}
+                className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed font-semibold"
+              />
+              <p className="text-xs text-gray-600 mt-2">
+                Aanbevolen: 40-60% (gebruiker is engaged)
+              </p>
+            </div>
+
+            {/* Frequency Days */}
+            <div className="bg-white border-2 border-black p-6">
+              <label className="block font-bold mb-2">
+                Frequentie (dagen)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={popupFrequencyDays}
+                onChange={(e) => setPopupFrequencyDays(parseInt(e.target.value))}
+                disabled={!popupEnabled}
+                className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed font-semibold"
+              />
+              <p className="text-xs text-gray-600 mt-2">
+                Hoe vaak mag popup getoond worden per gebruiker? (max 1x per X dagen)
+              </p>
+            </div>
+
+            {/* Discount Percentage */}
+            <div className="bg-white border-2 border-black p-6">
+              <label className="block font-bold mb-2">
+                Korting Percentage (%)
+              </label>
+              <input
+                type="number"
+                min="5"
+                max="50"
+                step="5"
+                value={popupDiscountPercentage}
+                onChange={(e) => setPopupDiscountPercentage(parseInt(e.target.value))}
+                disabled={!popupEnabled}
+                className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed font-semibold"
+              />
+              <p className="text-xs text-gray-600 mt-2">
+                Huidige popup: "{popupDiscountPercentage}% korting op je eerste bestelling"
+              </p>
+            </div>
+          </div>
+
+          {/* Show On Pages */}
+          <div className="bg-white border-2 border-black p-6">
+            <label className="block font-bold mb-3">
+              <Globe className="w-5 h-5 inline-block mr-2" />
+              Toon popup op deze pagina's
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {['home', 'shop', 'product', 'early-access'].map(page => (
+                <button
+                  key={page}
+                  onClick={() => togglePage(page)}
+                  disabled={!popupEnabled}
+                  className={`px-4 py-3 font-semibold uppercase text-sm border-2 border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    popupShowOnPages.includes(page)
+                      ? 'bg-brand-primary text-white'
+                      : 'bg-white text-black hover:bg-gray-100'
+                  }`}
+                >
+                  {page === 'home' && 'Homepage'}
+                  {page === 'shop' && 'Shop'}
+                  {page === 'product' && 'Product'}
+                  {page === 'early-access' && 'Early Access'}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-600 mt-3">
+              💡 Tip: Niet tonen op Early Access (is al een nieuwsbrief pagina)
+            </p>
+          </div>
+
+          {/* Preview Info */}
+          <div className="bg-blue-50 border-2 border-blue-200 p-6">
+            <h4 className="font-bold mb-2 flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Popup Preview
+            </h4>
+            <p className="text-sm text-gray-700 mb-3">
+              De popup heeft het volgende design (brutalist MOSE style):
+            </p>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <li>Zwart logo + groene accent lijn</li>
+              <li>"WORDT MOSE INSIDER" headline (uppercase, bold)</li>
+              <li>"{popupDiscountPercentage}% korting op je eerste bestelling"</li>
+              <li>"+ early access tot nieuwe drops"</li>
+              <li>Social proof: "{633}+ insiders gingen je voor"</li>
+              <li>Email input veld (centered, border-2 border-black)</li>
+              <li>Groene CTA button: "CLAIM {popupDiscountPercentage}% KORTING"</li>
+              <li>Humor dismiss link: "Nee, ik betaal €X meer"</li>
+            </ul>
+          </div>
+
+          {/* Save Button */}
+          <button
+            onClick={handleSavePopupSettings}
+            disabled={savingPopupSettings}
+            className="w-full px-6 py-4 bg-brand-primary hover:bg-brand-primary-hover text-white font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+          >
+            {savingPopupSettings ? 'OPSLAAN...' : 'POPUP INSTELLINGEN OPSLAAN'}
+          </button>
+
+          {/* Warning */}
+          <div className="bg-yellow-50 border-2 border-yellow-200 p-6">
+            <h4 className="font-bold mb-2">⚠️ Let op</h4>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <li>Changes zijn direct live na opslaan</li>
+              <li>Test de popup altijd in incognito mode</li>
+              <li>Popup wordt max 1x per {popupFrequencyDays} dagen getoond per gebruiker</li>
+              <li>Gebruikers die al ingeschreven zijn zien de popup niet meer</li>
             </ul>
           </div>
         </div>
