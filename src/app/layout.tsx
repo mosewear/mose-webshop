@@ -4,7 +4,6 @@ import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
 import { PostHogProvider } from './providers'
 import { getSiteSettings } from '@/lib/settings'
-import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 import "./globals.css";
 
 const anton = Anton({
@@ -162,7 +161,6 @@ export default async function RootLayout({
       <body className="antialiased font-sans">
         <PostHogProvider>
           {children}
-          <NewsletterPopupWrapper />
         </PostHogProvider>
         <Toaster 
           position="top-center"

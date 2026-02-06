@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import MainContentWrapper from '@/components/layout/MainContentWrapper'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
+import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -98,6 +99,7 @@ export default async function LocaleLayout({
       <Header />
       <MainContentWrapper>{children}</MainContentWrapper>
       <Footer />
+      <NewsletterPopupWrapper />
     </NextIntlClientProvider>
   )
 }
