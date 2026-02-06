@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
-import { useTranslations, useLocale } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { createClient } from '@/lib/supabase/client'
 
@@ -206,7 +206,7 @@ export default function NewsletterPopup({
       }, 3000)
     } catch (err: any) {
       console.error('Newsletter subscription error:', err)
-      setError(err.message || 'Er ging iets mis. Probeer het opnieuw.')
+      setError(err.message || t('error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -256,31 +256,31 @@ export default function NewsletterPopup({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-2">GELUKT!</h3>
+                <h3 className="text-2xl font-bold mb-2">{t('successHeadline')}</h3>
                 <p className="text-gray-700">
-                  Check je inbox voor je {discountPercentage}% kortingscode
+                  {t('successMessage', { discount: discountPercentage })}
                 </p>
               </div>
             ) : (
               <>
                 {/* Headline */}
                 <h3 className="text-2xl md:text-3xl font-bold mb-3 uppercase leading-tight">
-                  WORDT MOSE INSIDER
+                  {t('headline')}
                 </h3>
                 <div className="h-1 w-20 bg-brand-primary mx-auto mb-4" />
 
                 {/* Offer */}
                 <p className="text-lg md:text-xl font-bold mb-2">
-                  {discountPercentage}% korting op je eerste bestelling
+                  {t('offer', { discount: discountPercentage })}
                 </p>
                 <p className="text-sm text-gray-600 mb-6">
-                  + early access tot nieuwe drops
+                  {t('earlyAccess')}
                 </p>
 
                 {/* Social proof */}
                 <div className="bg-gray-100 border-2 border-black p-3 mb-6">
                   <p className="text-sm font-bold">
-                    {subscriberCount}+ insiders gingen je voor
+                    {t('socialProof', { count: subscriberCount })}
                   </p>
                 </div>
 
@@ -290,7 +290,7 @@ export default function NewsletterPopup({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="je@email.nl"
+                    placeholder={t('emailPlaceholder')}
                     required
                     disabled={isSubmitting}
                     className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed text-center font-medium"
@@ -305,7 +305,7 @@ export default function NewsletterPopup({
                     disabled={isSubmitting}
                     className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 border-4 border-black uppercase tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                   >
-                    {isSubmitting ? 'EVEN GEDULD...' : `CLAIM ${discountPercentage}% KORTING`}
+                    {isSubmitting ? t('ctaSubmitting') : t('ctaButton', { discount: discountPercentage })}
                   </button>
                 </form>
 
@@ -314,7 +314,7 @@ export default function NewsletterPopup({
                   onClick={handleDismiss}
                   className="mt-6 text-sm text-gray-600 hover:text-black transition-colors underline"
                 >
-                  Nee, ik betaal €{Math.round((100 * 100) / (100 - discountPercentage) - 100)} meer
+                  {t('dismissLink', { amount: Math.round((100 * 100) / (100 - discountPercentage) - 100) })}
                 </button>
               </>
             )}

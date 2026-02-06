@@ -1636,5 +1636,18 @@
     "presaleCode": "Code PRESALE30 for 30% off",
     "closing": "This is the moment. {days} days. Are you ready?",
     "ps": "P.S. Last reminder: March 1st at 00:00 doors open for insiders. Set your alarm."
+  },
+  "newsletterPopup": {
+    "headline": "BECOME A MOSE INSIDER",
+    "offer": "{discount}% off your first order",
+    "earlyAccess": "+ early access to new drops",
+    "socialProof": "{count}+ insiders beat you to it",
+    "emailPlaceholder": "you@email.com",
+    "ctaButton": "CLAIM {discount}% OFF",
+    "ctaSubmitting": "PLEASE WAIT...",
+    "dismissLink": "No, I'll pay €{amount} more",
+    "successHeadline": "SUCCESS!",
+    "successMessage": "Check your inbox for your {discount}% discount code",
+    "error": "Something went wrong. Please try again."
   }
 }

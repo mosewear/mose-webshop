@@ -1624,5 +1624,18 @@
     "presaleCode": "Code PRESALE30 voor 30% korting",
     "closing": "Dit is het moment. {days} dagen. Ben je klaar?",
     "ps": "P.S. Laatste reminder: 1 maart om 00:00 gaan de deuren open voor insiders. Stel je alarm."
+  },
+  "newsletterPopup": {
+    "headline": "WORDT MOSE INSIDER",
+    "offer": "{discount}% korting op je eerste bestelling",
+    "earlyAccess": "+ early access tot nieuwe drops",
+    "socialProof": "{count}+ insiders gingen je voor",
+    "emailPlaceholder": "je@email.nl",
+    "ctaButton": "CLAIM {discount}% KORTING",
+    "ctaSubmitting": "EVEN GEDULD...",
+    "dismissLink": "Nee, ik betaal €{amount} meer",
+    "successHeadline": "GELUKT!",
+    "successMessage": "Check je inbox voor je {discount}% kortingscode",
+    "error": "Er ging iets mis. Probeer het opnieuw."
   }
 }
