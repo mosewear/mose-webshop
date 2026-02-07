@@ -219,7 +219,7 @@
     "totalInclusive": "Incl. VAT & shipping",
     "freeShippingProgress": "€{amount} away from free shipping!",
     "freeShippingProgressMobile": "€{amount} to free shipping",
-    "checkout": "Go to Checkout",
+    "checkout": "Checkout",
     "mobile": {
       "tapDetails": "Incl. VAT • Tap for details"
     },
