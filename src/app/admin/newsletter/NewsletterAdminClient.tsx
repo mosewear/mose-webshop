@@ -47,6 +47,18 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [popupDiscountPercentage, setPopupDiscountPercentage] = useState(10)
   const [savingPopupSettings, setSavingPopupSettings] = useState(false)
 
+  // Email preview modal state
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
+  const [previewEmailType, setPreviewEmailType] = useState<'welcome' | 'community' | 'behind-scenes' | 'launch-week' | null>(null)
+  const [previewLocale, setPreviewLocale] = useState<'nl' | 'en'>('nl')
+
+  // Open email preview
+  const handleOpenPreview = (type: 'welcome' | 'community' | 'behind-scenes' | 'launch-week', locale: 'nl' | 'en' = 'nl') => {
+    setPreviewEmailType(type)
+    setPreviewLocale(locale)
+    setPreviewModalOpen(true)
+  }
+
   // Filtered and sorted subscribers
   const filteredSubscribers = useMemo(() => {
     let filtered = subscribers
@@ -591,7 +603,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                   <h3 className="font-bold text-lg mb-1">Email 1: Welkom</h3>
                   <p className="text-sm text-gray-600">Direct na inschrijving</p>
                 </div>
-                <Eye className="w-5 h-5 text-gray-400" />
+                <button
+                  onClick={() => handleOpenPreview('welcome')}
+                  className="p-2 hover:bg-gray-100 transition-colors rounded"
+                  title="Bekijk email preview"
+                >
+                  <Eye className="w-5 h-5 text-gray-600 hover:text-brand-primary transition-colors" />
+                </button>
               </div>
               <p className="text-sm text-gray-700 mb-4">
                 Welkom bij de insiders + uitleg van wat dat betekent
@@ -613,7 +631,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                   <h3 className="font-bold text-lg mb-1">Email 2: Community</h3>
                   <p className="text-sm text-gray-600">+3 dagen na inschrijving</p>
                 </div>
-                <Eye className="w-5 h-5 text-gray-400" />
+                <button
+                  onClick={() => handleOpenPreview('community')}
+                  className="p-2 hover:bg-gray-100 transition-colors rounded"
+                  title="Bekijk email preview"
+                >
+                  <Eye className="w-5 h-5 text-gray-600 hover:text-brand-primary transition-colors" />
+                </button>
               </div>
               <p className="text-sm text-gray-700 mb-4">
                 Community cijfers + testimonials van andere insiders
@@ -635,7 +659,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                   <h3 className="font-bold text-lg mb-1">Email 3: Behind the Scenes</h3>
                   <p className="text-sm text-gray-600">+7 dagen na inschrijving</p>
                 </div>
-                <Eye className="w-5 h-5 text-gray-400" />
+                <button
+                  onClick={() => handleOpenPreview('behind-scenes')}
+                  className="p-2 hover:bg-gray-100 transition-colors rounded"
+                  title="Bekijk email preview"
+                >
+                  <Eye className="w-5 h-5 text-gray-600 hover:text-brand-primary transition-colors" />
+                </button>
               </div>
               <p className="text-sm text-gray-700 mb-4">
                 Productie proces + waarom limited edition
@@ -657,7 +687,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                   <h3 className="font-bold text-lg mb-1">Email 4: Launch Week</h3>
                   <p className="text-sm text-gray-600">3 dagen voor launch (Feb 27)</p>
                 </div>
-                <Eye className="w-5 h-5 text-gray-400" />
+                <button
+                  onClick={() => handleOpenPreview('launch-week')}
+                  className="p-2 hover:bg-gray-100 transition-colors rounded"
+                  title="Bekijk email preview"
+                >
+                  <Eye className="w-5 h-5 text-gray-600 hover:text-brand-primary transition-colors" />
+                </button>
               </div>
               <p className="text-sm text-gray-700 mb-4">
                 Countdown + reminder vroege toegang + limited stock items
@@ -884,6 +920,74 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               <li>Popup wordt max 1x per {popupFrequencyDays} dagen getoond per gebruiker</li>
               <li>Gebruikers die al ingeschreven zijn zien de popup niet meer</li>
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Email Preview Modal */}
+      {previewModalOpen && previewEmailType && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={() => setPreviewModalOpen(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-4xl h-[90vh] flex flex-col border-4 border-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black bg-gray-50">
+              <div>
+                <h2 className="font-display text-xl uppercase tracking-wide">Email Preview</h2>
+                <p className="text-sm text-gray-600">
+                  {previewEmailType === 'welcome' && 'Email 1: Welkom'}
+                  {previewEmailType === 'community' && 'Email 2: Community'}
+                  {previewEmailType === 'behind-scenes' && 'Email 3: Behind the Scenes'}
+                  {previewEmailType === 'launch-week' && 'Email 4: Launch Week'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Locale Toggle */}
+                <div className="flex gap-1 border-2 border-black">
+                  <button
+                    onClick={() => setPreviewLocale('nl')}
+                    className={`px-3 py-1 text-sm font-bold uppercase transition-colors ${
+                      previewLocale === 'nl' 
+                        ? 'bg-brand-primary text-black' 
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    NL
+                  </button>
+                  <button
+                    onClick={() => setPreviewLocale('en')}
+                    className={`px-3 py-1 text-sm font-bold uppercase transition-colors ${
+                      previewLocale === 'en' 
+                        ? 'bg-brand-primary text-black' 
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
+                {/* Close Button */}
+                <button
+                  onClick={() => setPreviewModalOpen(false)}
+                  className="px-4 py-2 bg-black text-white font-bold uppercase text-sm hover:bg-gray-800 transition-colors"
+                >
+                  Sluiten
+                </button>
+              </div>
+            </div>
+
+            {/* iFrame Preview */}
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                key={`${previewEmailType}-${previewLocale}`}
+                src={`/api/admin/email-preview?type=${previewEmailType}&locale=${previewLocale}`}
+                className="w-full h-full border-0"
+                title="Email Preview"
+              />
+            </div>
           </div>
         </div>
       )}
