@@ -176,7 +176,7 @@ export default function NewsletterPopup({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          source: 'newsletter_popup',
+          source: 'early_access_landing',
           locale
         })
       })
