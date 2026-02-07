@@ -79,13 +79,25 @@ export default function NewsletterPopup({
   // Get subscriber count
   useEffect(() => {
     const fetchCount = async () => {
-      const { count } = await supabase
-        .from('newsletter_subscribers')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active')
-      
-      if (count !== null) {
-        setSubscriberCount(633 + count)
+      try {
+        console.log('🔢 [Popup] Fetching subscriber count...')
+        const { count, error } = await supabase
+          .from('newsletter_subscribers')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active')
+        
+        if (error) {
+          console.error('🔢 [Popup] Error fetching count:', error)
+          return
+        }
+        
+        if (count !== null) {
+          const total = 633 + count
+          console.log('🔢 [Popup] Subscriber count:', { base: 633, active: count, total })
+          setSubscriberCount(total)
+        }
+      } catch (err) {
+        console.error('🔢 [Popup] Fetch error:', err)
       }
     }
 
