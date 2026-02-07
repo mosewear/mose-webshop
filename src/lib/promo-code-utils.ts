@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 /**
  * Generate unique newsletter welcome promo code
@@ -13,7 +13,7 @@ export async function generateNewsletterPromoCode(
   locale: string = 'nl'
 ): Promise<{ code: string; expiresAt: Date } | null> {
   try {
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient() // Use service role to bypass RLS
 
     // 1. Check if subscriber already has an active code
     const { data: existingCode, error: checkError } = await supabase
@@ -106,7 +106,7 @@ export async function trackPromoCodeUsage(
   userId?: string
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient() // Use service role to bypass RLS
 
     // Get the promo code
     const { data: code, error: codeError } = await supabase
