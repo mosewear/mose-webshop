@@ -426,7 +426,7 @@ export default function ShopPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
       {/* Hero Section - Minimal Banner with Image */}
       <section className="relative h-48 md:h-80 overflow-hidden border-b-4 border-brand-primary">
         {/* Background Image */}
