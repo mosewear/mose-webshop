@@ -81,7 +81,7 @@ export function Footer() {
                 <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </a>
               <a 
-                href="https://www.tiktok.com/@mosewearcom" 
+                href="https://www.tiktok.com/@mosewear" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-10 h-10 border-2 border-white flex items-center justify-center hover:bg-brand-primary hover:border-brand-primary transition-all duration-300 group"
