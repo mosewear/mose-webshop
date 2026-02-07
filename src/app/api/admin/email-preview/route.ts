@@ -115,6 +115,7 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            storyContent: 'Sample behind-the-scenes story content for preview',
           })
         )
         break
