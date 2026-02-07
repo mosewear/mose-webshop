@@ -41,13 +41,29 @@ export default function PromoCodesPage() {
   const fetchPromoCodes = async () => {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .order('created_at', { ascending: false })
+      
+      // Get current session for auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.error('No session found')
+        setLoading(false)
+        return
+      }
 
-      if (error) throw error
-      setPromoCodes(data || [])
+      // Fetch from API route (uses Service Role to bypass RLS)
+      const response = await fetch('/api/admin/promo-codes', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch promo codes')
+      }
+
+      setPromoCodes(result.data || [])
     } catch (error) {
       console.error('Error fetching promo codes:', error)
     } finally {
