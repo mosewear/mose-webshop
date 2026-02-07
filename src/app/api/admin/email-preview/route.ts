@@ -100,6 +100,8 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            subscriberCount: 500,
+            daysUntilLaunch: 10,
           })
         )
         break
