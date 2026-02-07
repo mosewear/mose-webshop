@@ -80,21 +80,20 @@ export default function NewsletterPopup({
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        console.log('🔢 [Popup] Fetching subscriber count...')
-        const { count, error } = await supabase
-          .from('newsletter_subscribers')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active')
+        console.log('🔢 [Popup] Fetching subscriber count from API...')
+        const response = await fetch('/api/newsletter/subscriber-count')
         
-        if (error) {
-          console.error('🔢 [Popup] Error fetching count:', error)
+        if (!response.ok) {
+          console.error('🔢 [Popup] API error:', response.status)
           return
         }
         
-        if (count !== null) {
-          const total = 633 + count
-          console.log('🔢 [Popup] Subscriber count:', { base: 633, active: count, total })
-          setSubscriberCount(total)
+        const data = await response.json()
+        console.log('🔢 [Popup] API response:', data)
+        
+        if (data.success && data.total) {
+          setSubscriberCount(data.total)
+          console.log('🔢 [Popup] Updated count to:', data.total)
         }
       } catch (err) {
         console.error('🔢 [Popup] Fetch error:', err)
@@ -102,7 +101,7 @@ export default function NewsletterPopup({
     }
 
     fetchCount()
-  }, [supabase])
+  }, [])
 
   // Timer trigger
   useEffect(() => {
