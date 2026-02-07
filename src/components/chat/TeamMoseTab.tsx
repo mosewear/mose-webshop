@@ -45,7 +45,7 @@ export default function TeamMoseTab() {
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block w-full py-3 px-4 bg-brand-primary border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
+          className="block w-full py-3 px-4 bg-brand-primary border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide"
         >
           Open WhatsApp
         </a>
