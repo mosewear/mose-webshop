@@ -1,5 +1,7 @@
 'use client'
 
+import { Zap, Users } from 'lucide-react'
+
 interface ChatTabsProps {
   activeTab: 'ai' | 'team'
   onTabChange: (tab: 'ai' | 'team') => void
@@ -10,23 +12,25 @@ export default function ChatTabs({ activeTab, onTabChange }: ChatTabsProps) {
     <div className="flex-shrink-0 flex border-b-4 border-black bg-white">
       <button
         onClick={() => onTabChange('ai')}
-        className={`flex-1 py-3 px-4 font-display text-sm uppercase tracking-wide transition-colors border-r-2 border-black ${
+        className={`flex-1 py-3 px-4 font-display text-sm uppercase tracking-wide transition-colors border-r-2 border-black flex items-center justify-center gap-2 ${
           activeTab === 'ai'
-            ? 'bg-brand-primary text-black font-bold'
+            ? 'bg-brand-primary text-white font-bold'
             : 'bg-white text-gray-700 hover:bg-gray-100'
         }`}
       >
-        ⚡ Direct antwoord
+        <Zap className={`w-4 h-4 ${activeTab === 'ai' ? 'text-white' : 'text-gray-700'}`} strokeWidth={2.5} />
+        <span>Direct antwoord</span>
       </button>
       <button
         onClick={() => onTabChange('team')}
-        className={`flex-1 py-3 px-4 font-display text-sm uppercase tracking-wide transition-colors ${
+        className={`flex-1 py-3 px-4 font-display text-sm uppercase tracking-wide transition-colors flex items-center justify-center gap-2 ${
           activeTab === 'team'
-            ? 'bg-brand-primary text-black font-bold'
+            ? 'bg-brand-primary text-white font-bold'
             : 'bg-white text-gray-700 hover:bg-gray-100'
         }`}
       >
-        👤 Team MOSE
+        <Users className={`w-4 h-4 ${activeTab === 'team' ? 'text-white' : 'text-gray-700'}`} strokeWidth={2.5} />
+        <span>Team MOSE</span>
       </button>
     </div>
   )

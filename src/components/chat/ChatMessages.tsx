@@ -26,14 +26,14 @@ export default function ChatMessages({ messages, isLoading }: ChatMessagesProps)
           <div
             className={`max-w-[85%] md:max-w-[75%] p-3 border-2 border-black ${
               message.role === 'user'
-                ? 'bg-white ml-auto'
-                : 'bg-brand-primary'
+                ? 'bg-white text-black ml-auto'
+                : 'bg-brand-primary text-white'
             }`}
           >
             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
               {message.content}
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-gray-600' : 'text-white/80'}`}>
               {message.timestamp.toLocaleTimeString('nl-NL', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -47,9 +47,9 @@ export default function ChatMessages({ messages, isLoading }: ChatMessagesProps)
         <div className="flex justify-start">
           <div className="bg-brand-primary border-2 border-black p-3">
             <div className="flex gap-1">
-              <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
         </div>

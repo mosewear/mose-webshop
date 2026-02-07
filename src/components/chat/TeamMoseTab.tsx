@@ -33,7 +33,7 @@ export default function TeamMoseTab() {
       <div className="bg-white border-4 border-black p-6 space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-brand-primary border-2 border-black flex items-center justify-center">
-            <MessageCircle className="w-6 h-6" />
+            <MessageCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
             <h4 className="font-display text-lg uppercase tracking-wide">WhatsApp</h4>
@@ -45,13 +45,13 @@ export default function TeamMoseTab() {
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block w-full py-3 px-4 bg-brand-primary border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide"
+          className="block w-full py-3 px-4 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide font-bold"
         >
           Open WhatsApp
         </a>
 
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4" strokeWidth={2} />
           <span>Online: ma-vr 10:00-18:00</span>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function TeamMoseTab() {
       <div className="bg-white border-4 border-black p-6 space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gray-100 border-2 border-black flex items-center justify-center">
-            <Mail className="w-6 h-6" />
+            <Mail className="w-6 h-6 text-gray-700" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
             <h4 className="font-display text-lg uppercase tracking-wide">Email</h4>
@@ -70,13 +70,13 @@ export default function TeamMoseTab() {
 
         <a
           href={`mailto:${contactEmail}`}
-          className="block w-full py-3 px-4 bg-gray-100 border-2 border-black hover:bg-gray-200 transition-colors text-center font-display uppercase tracking-wide"
+          className="block w-full py-3 px-4 bg-gray-100 text-black border-2 border-black hover:bg-gray-200 transition-colors text-center font-display uppercase tracking-wide font-bold"
         >
           Stuur email
         </a>
 
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4" strokeWidth={2} />
           <span>Response binnen 24 uur</span>
         </div>
       </div>
