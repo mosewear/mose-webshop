@@ -254,53 +254,51 @@ const emailInfo = {
 
 // Promo Code Styles (NEW!)
 const promoSection = {
-  margin: '32px 0 24px 0',
-  padding: '32px 24px',
+  margin: '24px 0',
+  padding: '24px',
   backgroundColor: '#B4FF39',
-  border: '4px solid #000000',
-  boxShadow: '8px 8px 0 #000000',
+  border: '2px solid #000000',
   textAlign: 'center' as const,
 }
 
 const promoTitle = {
-  margin: '0 0 20px 0',
-  fontSize: '20px',
-  fontWeight: '900',
+  margin: '0 0 16px 0',
+  fontSize: '16px',
+  fontWeight: '700',
   color: '#000000',
   textTransform: 'uppercase' as const,
-  letterSpacing: '2px',
+  letterSpacing: '1.5px',
 }
 
 const promoCodeBox = {
-  padding: '20px 32px',
+  padding: '16px 24px',
   backgroundColor: '#ffffff',
-  border: '3px solid #000000',
+  border: '2px solid #000000',
   display: 'inline-block',
-  margin: '0 auto 20px',
-  boxShadow: '4px 4px 0 #000000',
+  margin: '0 auto 16px',
 }
 
 const promoCodeText = {
   margin: '0',
-  fontSize: '32px',
-  fontWeight: '900',
+  fontSize: '24px',
+  fontWeight: '700',
   color: '#000000',
-  letterSpacing: '3px',
+  letterSpacing: '2px',
   fontFamily: 'Courier New, monospace',
 }
 
 const promoSubtext = {
   margin: '0',
-  fontSize: '16px',
-  fontWeight: '700',
+  fontSize: '14px',
+  fontWeight: '600',
   color: '#000000',
-  lineHeight: '24px',
+  lineHeight: '20px',
 }
 
 const promoExpiryStyle = {
-  margin: '12px 0 0 0',
-  fontSize: '14px',
-  color: '#2d3748',
-  fontWeight: '600',
+  margin: '8px 0 0 0',
+  fontSize: '13px',
+  color: '#4a5568',
+  fontWeight: '500',
 }
 
