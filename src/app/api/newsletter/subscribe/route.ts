@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { sendNewsletterWelcomeEmail, sendInsiderWelcomeEmail } from '@/lib/email'
 import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient() // Use service role to bypass RLS
 
     // Check if email already exists
     const { data: existing, error: checkError } = await supabase
