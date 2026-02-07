@@ -1146,62 +1146,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
-              {/* Size Selector with Size Guide */}
-              {availableSizes.length > 0 && (
-                <div data-variant-section>
-                  <div className="flex items-center justify-between mb-2 md:mb-3">
-                    <label className="block text-xs md:text-sm font-bold uppercase tracking-wider">
-                      {t('size')}: {selectedSize}
-                    </label>
-                    {/* Dynamic Size Guide Button - only show if not 'none' */}
-                    {product.categories.size_guide_type !== 'none' && (
-                      <button
-                        onClick={() => setShowSizeGuide(true)}
-                        className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        {product.categories.size_guide_type === 'watch' ? t('sizeGuide.specs') : 
-                         product.categories.size_guide_type === 'accessory' ? t('sizeGuide.info') :
-                         product.categories.size_guide_type === 'shoes' ? t('sizeGuide.shoes') :
-                         product.categories.size_guide_type === 'jewelry' ? t('sizeGuide.jewelry') :
-                         t('sizeGuide.default')}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {availableSizes.map((size) => {
-                      const sizeVariants = product.product_variants.filter((v) => v.size === size)
-                      const sizeAvailable = sizeVariants.some((v) => {
-                        const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
-                        return v.is_available && totalStock > 0
-                      })
-                      return (
-                        <button
-                          key={size}
-                          onClick={() => {
-                            setSelectedSize(size)
-                            // Optie 1: Behoud kleurkeuze, laat beschikbaarheid zien
-                            // Geen automatische kleurwijziging meer
-                          }}
-                          disabled={!sizeAvailable}
-                          className={`px-4 md:px-5 py-2 border-2 font-bold uppercase tracking-wider transition-all text-sm ${
-                            selectedSize === size
-                              ? 'border-brand-primary bg-brand-primary text-white'
-                              : sizeAvailable
-                              ? 'border-black hover:bg-black hover:text-white'
-                              : 'border-gray-300 text-gray-400 cursor-not-allowed line-through'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Color Selector - Enhanced (Minimal) */}
               {availableColors.length > 0 && (
                 <div>
@@ -1251,6 +1195,62 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                               <span className="text-red-600 text-2xl font-bold">✕</span>
                             </div>
                           )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Size Selector with Size Guide */}
+              {availableSizes.length > 0 && (
+                <div data-variant-section>
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                    <label className="block text-xs md:text-sm font-bold uppercase tracking-wider">
+                      {t('size')}: {selectedSize}
+                    </label>
+                    {/* Dynamic Size Guide Button - only show if not 'none' */}
+                    {product.categories.size_guide_type !== 'none' && (
+                      <button
+                        onClick={() => setShowSizeGuide(true)}
+                        className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        {product.categories.size_guide_type === 'watch' ? t('sizeGuide.specs') : 
+                         product.categories.size_guide_type === 'accessory' ? t('sizeGuide.info') :
+                         product.categories.size_guide_type === 'shoes' ? t('sizeGuide.shoes') :
+                         product.categories.size_guide_type === 'jewelry' ? t('sizeGuide.jewelry') :
+                         t('sizeGuide.default')}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {availableSizes.map((size) => {
+                      const sizeVariants = product.product_variants.filter((v) => v.size === size)
+                      const sizeAvailable = sizeVariants.some((v) => {
+                        const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
+                        return v.is_available && totalStock > 0
+                      })
+                      return (
+                        <button
+                          key={size}
+                          onClick={() => {
+                            setSelectedSize(size)
+                            // Optie 1: Behoud kleurkeuze, laat beschikbaarheid zien
+                            // Geen automatische kleurwijziging meer
+                          }}
+                          disabled={!sizeAvailable}
+                          className={`px-4 md:px-5 py-2 border-2 font-bold uppercase tracking-wider transition-all text-sm ${
+                            selectedSize === size
+                              ? 'border-brand-primary bg-brand-primary text-white'
+                              : sizeAvailable
+                              ? 'border-black hover:bg-black hover:text-white'
+                              : 'border-gray-300 text-gray-400 cursor-not-allowed line-through'
+                          }`}
+                        >
+                          {size}
                         </button>
                       )
                     })}
