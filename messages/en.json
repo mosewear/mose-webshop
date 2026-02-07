@@ -1649,5 +1649,12 @@
     "successHeadline": "SUCCESS!",
     "successMessage": "Check your inbox for your {discount}% discount code",
     "error": "Something went wrong. Please try again."
+  },
+  "cookieConsent": {
+    "title": "Cookies & Privacy",
+    "description": "We use cookies to improve your experience and optimize our marketing. You can choose which cookies to accept.",
+    "privacyLink": "Read our privacy policy",
+    "acceptAll": "Accept all cookies",
+    "necessaryOnly": "Necessary only"
   }
 }

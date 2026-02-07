@@ -1637,5 +1637,12 @@
     "successHeadline": "GELUKT!",
     "successMessage": "Check je inbox voor je {discount}% kortingscode",
     "error": "Er ging iets mis. Probeer het opnieuw."
+  },
+  "cookieConsent": {
+    "title": "Cookies & Privacy",
+    "description": "We gebruiken cookies om je ervaring te verbeteren en om onze marketing te optimaliseren. Je kunt kiezen welke cookies je accepteert.",
+    "privacyLink": "Lees ons privacybeleid",
+    "acceptAll": "Accepteer alle cookies",
+    "necessaryOnly": "Alleen noodzakelijke"
   }
 }

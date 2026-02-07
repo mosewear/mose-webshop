@@ -129,22 +129,37 @@ export default async function RootLayout({
             `,
           }}
         />
-        {/* Facebook Pixel */}
+        {/* Facebook Pixel - Only load after consent */}
         <Script
           id="facebook-pixel"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1447430483627328');
-              fbq('track', 'PageView');
+              // Wait for cookie consent before initializing
+              function initFacebookPixel() {
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', '1447430483627328');
+                fbq('track', 'PageView');
+                console.log('🎯 Facebook Pixel initialized');
+              }
+              
+              // Check if consent already given
+              if (typeof window !== 'undefined') {
+                const consent = localStorage.getItem('mose_cookie_consent');
+                if (consent === 'all') {
+                  initFacebookPixel();
+                } else {
+                  // Listen for consent event
+                  window.addEventListener('mose-tracking-enabled', initFacebookPixel);
+                }
+              }
             `,
           }}
         />

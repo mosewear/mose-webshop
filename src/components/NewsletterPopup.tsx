@@ -39,11 +39,15 @@ export default function NewsletterPopup({
   const [hasTriggeredTimer, setHasTriggeredTimer] = useState(false)
   const [hasTriggeredScroll, setHasTriggeredScroll] = useState(false)
   const [hasTriggeredExit, setHasTriggeredExit] = useState(false)
+  const [isDismissedThisSession, setIsDismissedThisSession] = useState(false)
 
   // Check if popup should be shown (cookie check)
   const shouldShowPopup = useCallback((): boolean => {
     if (!enabled) return false
     if (typeof window === 'undefined') return false
+    
+    // Check if dismissed in this session
+    if (isDismissedThisSession) return false
 
     // Check cookie
     const lastShown = localStorage.getItem('mose_newsletter_popup_shown')
@@ -74,7 +78,7 @@ export default function NewsletterPopup({
     }
 
     return true
-  }, [enabled, frequencyDays, showOnPages])
+  }, [enabled, frequencyDays, showOnPages, isDismissedThisSession])
 
   // Get subscriber count
   useEffect(() => {
@@ -108,6 +112,7 @@ export default function NewsletterPopup({
     if (!shouldShowPopup()) return
     if (trigger !== 'timer' && trigger !== 'hybrid') return
     if (hasTriggeredTimer) return
+    if (isDismissedThisSession) return
 
     const timer = setTimeout(() => {
       setIsVisible(true)
@@ -116,13 +121,14 @@ export default function NewsletterPopup({
     }, delaySeconds * 1000)
 
     return () => clearTimeout(timer)
-  }, [trigger, delaySeconds, shouldShowPopup, hasTriggeredTimer])
+  }, [trigger, delaySeconds, shouldShowPopup, hasTriggeredTimer, isDismissedThisSession])
 
   // Scroll trigger
   useEffect(() => {
     if (!shouldShowPopup()) return
     if (trigger !== 'scroll' && trigger !== 'hybrid') return
     if (hasTriggeredScroll) return
+    if (isDismissedThisSession) return
 
     const handleScroll = () => {
       const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
@@ -136,13 +142,14 @@ export default function NewsletterPopup({
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [trigger, scrollPercentage, shouldShowPopup, hasTriggeredScroll])
+  }, [trigger, scrollPercentage, shouldShowPopup, hasTriggeredScroll, isDismissedThisSession])
 
   // Exit intent trigger
   useEffect(() => {
     if (!shouldShowPopup()) return
     if (trigger !== 'exit_intent' && trigger !== 'hybrid') return
     if (hasTriggeredExit) return
+    if (isDismissedThisSession) return
 
     const handleMouseLeave = (e: MouseEvent) => {
       // Only trigger if mouse leaves from top of viewport
@@ -155,7 +162,7 @@ export default function NewsletterPopup({
 
     document.addEventListener('mouseleave', handleMouseLeave)
     return () => document.removeEventListener('mouseleave', handleMouseLeave)
-  }, [trigger, shouldShowPopup, hasTriggeredExit])
+  }, [trigger, shouldShowPopup, hasTriggeredExit, isDismissedThisSession])
 
   // Track popup view
   const trackPopupView = () => {
@@ -169,6 +176,7 @@ export default function NewsletterPopup({
   // Handle dismiss
   const handleDismiss = () => {
     setIsVisible(false)
+    setIsDismissedThisSession(true) // Block all triggers for this session
     trackPixelEvent('Lead', {
       content_name: 'Newsletter Popup Dismissed',
       content_category: 'Newsletter'
