@@ -56,16 +56,43 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Rate limiting
-    const rateLimitKey = getRateLimitKey(req)
-    if (!checkRateLimit(rateLimitKey)) {
-      return NextResponse.json(
-        { success: false, error: 'Te veel aanvragen. Probeer het over 10 minuten opnieuw.' },
-        { status: 429 }
-      )
+    const supabase = createServiceRoleClient() // Use service role to bypass RLS
+
+    // Check if user is admin (bypass rate limit for admins)
+    let isAdmin = false
+    try {
+      const authHeader = req.headers.get('authorization')
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+        
+        if (!authError && user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
+          
+          isAdmin = profile?.is_admin || false
+        }
+      }
+    } catch (error) {
+      console.log('Admin check failed (non-blocking):', error)
+      // Continue - if check fails, treat as non-admin
     }
 
-    const supabase = createServiceRoleClient() // Use service role to bypass RLS
+    // Rate limiting (skip for admins)
+    if (!isAdmin) {
+      const rateLimitKey = getRateLimitKey(req)
+      if (!checkRateLimit(rateLimitKey)) {
+        return NextResponse.json(
+          { success: false, error: 'Te veel aanvragen. Probeer het over 10 minuten opnieuw.' },
+          { status: 429 }
+        )
+      }
+    } else {
+      console.log('✅ Admin detected - rate limit bypassed')
+    }
 
     // Check if email already exists
     const { data: existing, error: checkError } = await supabase
