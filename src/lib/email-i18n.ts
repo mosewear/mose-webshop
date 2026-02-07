@@ -304,6 +304,10 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     intro: string
+    promoTitle: string
+    promoSubtext: string
+    promoExpiry: string
+    usePromoCode: string
     perksTitle: string
     perk1Title: string
     perk1Text: string
@@ -710,6 +714,10 @@ const nl: EmailTranslationKeys = {
     title: 'WELKOM BIJ DE INSIDERS',
     subtitle: 'Je bent binnen. Hier is wat dat betekent.',
     intro: 'Bedankt dat je deel uitmaakt van de inner circle. Je bent nu officieel een MOSE insider. Je behoort tot de eersten die weten wanneer nieuwe drops lanceren, voordat het uitverkocht is.',
+    promoTitle: 'JE 10% KORTINGSCODE',
+    promoSubtext: 'Gebruik deze code bij je eerste bestelling voor {{discount}} korting',
+    promoExpiry: 'Geldig tot {{date}}',
+    usePromoCode: 'Vul je code in bij checkout',
     perksTitle: 'Wat je krijgt als insider:',
     perk1Title: 'Gemaakt in Groningen',
     perk1Text: 'Lokaal ontworpen en gemaakt',
@@ -1116,6 +1124,10 @@ const en: EmailTranslationKeys = {
     title: 'WELCOME TO THE INSIDERS',
     subtitle: 'You\'re in. Here\'s what that means.',
     intro: 'Thanks for being part of the inner circle. You\'re now officially a MOSE insider. You\'re one of the first to know when new drops launch, before they sell out.',
+    promoTitle: 'YOUR 10% DISCOUNT CODE',
+    promoSubtext: 'Use this code on your first order for {{discount}} off',
+    promoExpiry: 'Valid until {{date}}',
+    usePromoCode: 'Enter your code at checkout',
     perksTitle: 'What you get as an insider:',
     perk1Title: 'Made in Groningen',
     perk1Text: 'Locally designed and made',
