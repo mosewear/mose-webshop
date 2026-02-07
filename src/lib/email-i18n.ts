@@ -282,6 +282,10 @@ export type EmailTranslationKeys = {
     title: string
     subtitle: string
     heroText: string
+    promoTitle: string
+    promoSubtext: string
+    promoExpiry: string
+    usePromoCode: string
     whatYouGet: string
     benefit1Title: string
     benefit1Text: string
@@ -692,6 +696,10 @@ const nl: EmailTranslationKeys = {
     title: 'WELKOM BIJ DE PACK!',
     subtitle: 'Je bent ingeschreven',
     heroText: 'Je ontvangt nu als eerste updates over drops, restocks en het atelier',
+    promoTitle: 'JE 10% KORTINGSCODE',
+    promoSubtext: 'Gebruik deze code bij je eerste bestelling voor {{discount}} korting',
+    promoExpiry: 'Geldig tot {{date}}',
+    usePromoCode: 'Vul je code in bij checkout',
     whatYouGet: 'Wat krijg je van ons?',
     benefit1Title: 'Nieuwe drops',
     benefit1Text: 'Als eerste weten wanneer nieuwe items live gaan',
@@ -1102,6 +1110,10 @@ const en: EmailTranslationKeys = {
     title: 'WELCOME TO THE PACK!',
     subtitle: 'You Are Subscribed',
     heroText: 'You will now be the first to receive updates about drops, restocks and the atelier',
+    promoTitle: 'YOUR 10% DISCOUNT CODE',
+    promoSubtext: 'Use this code on your first order for {{discount}} off',
+    promoExpiry: 'Valid until {{date}}',
+    usePromoCode: 'Enter your code at checkout',
     whatYouGet: 'What You Get From Us?',
     benefit1Title: 'New drops',
     benefit1Text: 'Be the first to know when new items go live',
