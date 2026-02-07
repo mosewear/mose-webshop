@@ -1065,8 +1065,8 @@ export default function ShopPageClient() {
           </main>
         </div>
 
-        {/* Recently Viewed Products - Reserve space to prevent layout shift */}
-        <div style={{ minHeight: '300px' }}>
+        {/* Recently Viewed Products */}
+        <div>
           <RecentlyViewed />
         </div>
       </div>
