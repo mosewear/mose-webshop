@@ -12,8 +12,8 @@ export default function PresaleInfoBox({
   description 
 }: PresaleInfoBoxProps) {
   const defaultDescription = expectedDate
-    ? `Dit product is in pre-sale. We verwachten deze binnen ${expectedDate} en verzenden direct na binnenkomst.`
-    : 'Dit product is in pre-sale en wordt verzonden zodra het binnenkomt.'
+    ? `Dit product is in presale. We verwachten deze binnen ${expectedDate} en verzenden direct na binnenkomst.`
+    : 'Dit product is in presale en wordt verzonden zodra het binnenkomt.'
 
   return (
     <div className="bg-[#86A35A]/10 border-2 border-[#86A35A] p-4 my-4">
@@ -23,7 +23,7 @@ export default function PresaleInfoBox({
         </div>
         <div className="flex-1">
           <h4 className="font-bold text-black uppercase tracking-wide mb-2 text-sm">
-            Pre-sale Product
+            Presale Product
           </h4>
           <p className="text-sm text-gray-800 leading-relaxed mb-3">
             {description || defaultDescription}

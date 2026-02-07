@@ -31,7 +31,7 @@ export default function PresaleBadge({
       `}
     >
       <Clock className="w-3 h-3" />
-      <span>Pre-sale</span>
+      <span>Presale</span>
       {expectedDate && variant !== 'compact' && (
         <span className="font-normal opacity-90">• {expectedDate}</span>
       )}
