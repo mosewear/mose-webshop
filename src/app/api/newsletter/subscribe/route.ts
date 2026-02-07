@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendNewsletterWelcomeEmail, sendInsiderWelcomeEmail } from '@/lib/email'
+import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
 
 // Rate limiting map (in-memory, resets on server restart)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -111,17 +112,34 @@ export async function POST(req: NextRequest) {
 
         // Send welcome email
         try {
+          // Generate promo code for resubscriber
+          let promoCode: { code: string; expiresAt: Date } | null = null
+          try {
+            promoCode = await generateNewsletterPromoCode(
+              existing.id,
+              email.toLowerCase(),
+              locale
+            )
+          } catch (codeError) {
+            console.error('Error generating promo code for resubscriber:', codeError)
+            // Continue anyway - email can still be sent
+          }
+
           // Send insider email for early_access signups
           if (source === 'early_access' || source === 'early_access_landing') {
             await sendInsiderWelcomeEmail({ 
               email: email.toLowerCase(), 
-              locale
+              locale,
+              promoCode: promoCode?.code,
+              promoExpiry: promoCode?.expiresAt
             })
           } else {
             await sendNewsletterWelcomeEmail({ 
               email: email.toLowerCase(), 
               source,
-              locale
+              locale,
+              promoCode: promoCode?.code,
+              promoExpiry: promoCode?.expiresAt
             })
           }
         } catch (emailError) {
@@ -137,7 +155,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert new subscriber
-    const { error: insertError } = await supabase
+    const { data: newSubscriber, error: insertError } = await supabase
       .from('newsletter_subscribers')
       .insert({
         email: email.toLowerCase(),
@@ -146,6 +164,8 @@ export async function POST(req: NextRequest) {
         locale, // Store language preference
         subscribed_at: new Date().toISOString(),
       })
+      .select('id')
+      .single()
 
     if (insertError) {
       console.error('Error inserting subscriber:', insertError)
@@ -155,19 +175,38 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Generate promo code for new subscriber
+    let promoCode: { code: string; expiresAt: Date } | null = null
+    if (newSubscriber) {
+      try {
+        promoCode = await generateNewsletterPromoCode(
+          newSubscriber.id,
+          email.toLowerCase(),
+          locale
+        )
+      } catch (codeError) {
+        console.error('Error generating promo code:', codeError)
+        // Continue anyway - email can still be sent
+      }
+    }
+
     // Send welcome email (async, don't wait)
     try {
       // Send insider email for early_access signups
       if (source === 'early_access' || source === 'early_access_landing') {
         await sendInsiderWelcomeEmail({ 
           email: email.toLowerCase(), 
-          locale
+          locale,
+          promoCode: promoCode?.code,
+          promoExpiry: promoCode?.expiresAt
         })
       } else {
         await sendNewsletterWelcomeEmail({ 
           email: email.toLowerCase(), 
           source,
-          locale
+          locale,
+          promoCode: promoCode?.code,
+          promoExpiry: promoCode?.expiresAt
         })
       }
     } catch (emailError) {

@@ -17,6 +17,8 @@ interface InsiderWelcomeEmailProps {
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
+  promoCode?: string
+  promoExpiry?: Date
 }
 
 export default function InsiderWelcomeEmail({
@@ -26,7 +28,17 @@ export default function InsiderWelcomeEmail({
   contactEmail = 'info@mosewear.com',
   contactPhone = '+31 50 211 1931',
   contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  promoCode,
+  promoExpiry,
 }: InsiderWelcomeEmailProps) {
+  // Format expiry date
+  const expiryText = promoExpiry 
+    ? new Intl.DateTimeFormat('nl-NL', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      }).format(promoExpiry)
+    : null
   return (
     <Html>
       <Head />
@@ -121,12 +133,35 @@ export default function InsiderWelcomeEmail({
             {/* What Now Section */}
             <Text style={sectionTitle}>{t('insiderWelcome.whatNowTitle')}</Text>
 
+            {/* Promo Code Section (NEW!) */}
+            {promoCode && (
+              <Section style={promoSection}>
+                <Text style={promoTitle}>{t('insiderWelcome.promoTitle')}</Text>
+                <div style={promoCodeBox}>
+                  <Text style={promoCodeText}>{promoCode}</Text>
+                </div>
+                <Text style={promoSubtext}>
+                  {t('insiderWelcome.promoSubtext', { discount: '10%' })}
+                </Text>
+                {expiryText && (
+                  <Text style={promoExpiry}>
+                    {t('insiderWelcome.promoExpiry', { date: expiryText })}
+                  </Text>
+                )}
+              </Section>
+            )}
+
             {/* CTA Button - Shop Now */}
             <Section style={ctaSection}>
               <a href={`${siteUrl}/shop`} style={button}>
                 {t('insiderWelcome.shopNow')}
               </a>
-              <Text style={ctaSubtext}>{t('insiderWelcome.presaleCode')}</Text>
+              <Text style={ctaSubtext}>
+                {promoCode 
+                  ? t('insiderWelcome.usePromoCode') 
+                  : t('insiderWelcome.presaleCode')
+                }
+              </Text>
             </Section>
 
             {/* Social CTA */}
@@ -305,5 +340,57 @@ const psText = {
   lineHeight: '18px',
   color: '#718096',
   fontStyle: 'italic' as const,
+}
+
+// Promo Code Styles (NEW!)
+const promoSection = {
+  margin: '32px 0 24px 0',
+  padding: '32px 24px',
+  backgroundColor: '#B4FF39',
+  border: '4px solid #000000',
+  boxShadow: '8px 8px 0 #000000',
+  textAlign: 'center' as const,
+}
+
+const promoTitle = {
+  margin: '0 0 20px 0',
+  fontSize: '20px',
+  fontWeight: '900',
+  color: '#000000',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '2px',
+}
+
+const promoCodeBox = {
+  padding: '20px 32px',
+  backgroundColor: '#ffffff',
+  border: '3px solid #000000',
+  display: 'inline-block',
+  margin: '0 auto 20px',
+  boxShadow: '4px 4px 0 #000000',
+}
+
+const promoCodeText = {
+  margin: '0',
+  fontSize: '32px',
+  fontWeight: '900',
+  color: '#000000',
+  letterSpacing: '3px',
+  fontFamily: 'Courier New, monospace',
+}
+
+const promoSubtext = {
+  margin: '0',
+  fontSize: '16px',
+  fontWeight: '700',
+  color: '#000000',
+  lineHeight: '24px',
+}
+
+const promoExpiry = {
+  margin: '12px 0 0 0',
+  fontSize: '14px',
+  color: '#2d3748',
+  fontWeight: '600',
 }
 

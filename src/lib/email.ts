@@ -895,6 +895,8 @@ export async function sendNewsletterWelcomeEmail(props: {
   email: string
   source?: string
   locale?: string
+  promoCode?: string
+  promoExpiry?: Date
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
@@ -913,6 +915,8 @@ export async function sendNewsletterWelcomeEmail(props: {
       contactEmail,
       contactPhone,
       contactAddress,
+      promoCode: props.promoCode,
+      promoExpiry: props.promoExpiry,
     })
   )
 
@@ -1050,6 +1054,8 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
 export async function sendInsiderWelcomeEmail(props: {
   email: string
   locale?: string
+  promoCode?: string
+  promoExpiry?: Date
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
@@ -1068,6 +1074,8 @@ export async function sendInsiderWelcomeEmail(props: {
       contactEmail,
       contactPhone,
       contactAddress,
+      promoCode: props.promoCode,
+      promoExpiry: props.promoExpiry,
     })
   )
 
