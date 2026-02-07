@@ -30,7 +30,7 @@ export default function TeamMoseTab() {
       </div>
 
       {/* WhatsApp */}
-      <div className="bg-white border-4 border-black p-6 space-y-3">
+      <div className="bg-white border-2 border-black p-6 space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-brand-primary border-2 border-black flex items-center justify-center">
             <MessageCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
@@ -45,7 +45,7 @@ export default function TeamMoseTab() {
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block w-full py-3 px-4 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide font-bold"
+          className="block w-full py-3 px-4 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide"
         >
           Open WhatsApp
         </a>
@@ -57,7 +57,7 @@ export default function TeamMoseTab() {
       </div>
 
       {/* Email */}
-      <div className="bg-white border-4 border-black p-6 space-y-3">
+      <div className="bg-white border-2 border-black p-6 space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gray-100 border-2 border-black flex items-center justify-center">
             <Mail className="w-6 h-6 text-gray-700" strokeWidth={2.5} />
@@ -70,7 +70,7 @@ export default function TeamMoseTab() {
 
         <a
           href={`mailto:${contactEmail}`}
-          className="block w-full py-3 px-4 bg-gray-100 text-black border-2 border-black hover:bg-gray-200 transition-colors text-center font-display uppercase tracking-wide font-bold"
+          className="block w-full py-3 px-4 bg-gray-100 text-black border-2 border-black hover:bg-gray-200 transition-colors text-center font-display uppercase tracking-wide"
         >
           Stuur email
         </a>

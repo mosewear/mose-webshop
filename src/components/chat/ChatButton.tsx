@@ -34,7 +34,7 @@ export default function ChatButton() {
         {!shouldHideButton && (
           <button
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-[9997] w-16 h-16 bg-brand-primary border-4 border-black hover:bg-brand-primary-hover transition-colors flex items-center justify-center group"
+            className="fixed bottom-6 right-6 z-[9997] w-16 h-16 bg-brand-primary border-2 border-black hover:bg-brand-primary-hover transition-colors flex items-center justify-center group"
             aria-label="Open chat"
           >
             <MessageCircle className="w-7 h-7 text-white" strokeWidth={2.5} />

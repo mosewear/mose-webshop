@@ -216,7 +216,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         className="fixed inset-0 z-[9998] bg-white flex flex-col md:hidden"
       >
         {/* Header */}
-        <div className="flex-shrink-0 border-b-4 border-black px-4 py-4 flex items-center justify-between bg-white">
+        <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-brand-primary border-2 border-black" />
             <h2 className="font-display text-xl uppercase tracking-wide">MOSE SUPPORT</h2>
@@ -252,10 +252,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="hidden md:flex fixed bottom-24 right-6 z-[9998] w-[400px] h-[600px] max-h-[80vh] bg-white border-4 border-black flex-col"
+        className="hidden md:flex fixed bottom-24 right-6 z-[9998] w-[400px] h-[600px] max-h-[80vh] bg-white border-2 border-black flex-col"
       >
         {/* Header */}
-        <div className="flex-shrink-0 border-b-4 border-black px-4 py-3 flex items-center justify-between bg-white">
+        <div className="flex-shrink-0 border-b-2 border-black px-4 py-3 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-brand-primary border-2 border-black" />
             <h2 className="font-display text-lg uppercase tracking-wide">MOSE SUPPORT</h2>
