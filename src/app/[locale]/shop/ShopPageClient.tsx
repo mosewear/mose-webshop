@@ -472,7 +472,7 @@ export default function ShopPageClient() {
             />
 
             {/* Drawer */}
-            <div className="lg:hidden fixed top-20 bottom-0 right-0 w-[90%] max-w-sm bg-white z-50 border-l-4 border-black flex flex-col animate-slideInRight">
+            <div className="lg:hidden fixed top-0 bottom-0 right-0 w-[90%] max-w-sm bg-white z-50 border-l-4 border-black flex flex-col animate-slideInRight">
               {/* Header - Fixed */}
               <div className="flex-shrink-0 flex items-center justify-between p-6 border-b-2 border-black bg-white">
                 <h2 className="font-display text-xl uppercase tracking-wide">{t('filters.title')} & {t('sort.title')}</h2>

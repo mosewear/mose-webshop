@@ -1,15 +1,10 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai'
-import OpenAI from 'openai'
+import { streamText } from 'ai'
+import { openai } from '@ai-sdk/openai'
 import { createClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
 
 // Runtime config for streaming
 export const runtime = 'edge'
-
-// Initialize OpenAI (will use OPENAI_API_KEY env variable)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-})
 
 // System prompt for MOSE AI assistant
 const MOSE_SYSTEM_PROMPT = `Je bent de AI-assistent van MOSE, een Nederlands streetwear merk dat premium basics maakt in Groningen.
@@ -120,38 +115,6 @@ async function calculateShipping(cartTotal: number) {
   }
 }
 
-// Available functions for AI to call
-const functions = [
-  {
-    name: 'get_product_details',
-    description: 'Haal gedetailleerde productinformatie op uit de database, inclusief materiaal, fit, maten, kleuren, voorraad en maattabel',
-    parameters: {
-      type: 'object',
-      properties: {
-        product_slug: {
-          type: 'string',
-          description: 'De slug van het product (bijv. "hoodie-black")',
-        },
-      },
-      required: ['product_slug'],
-    },
-  },
-  {
-    name: 'calculate_shipping',
-    description: 'Bereken verzendkosten op basis van winkelwagen totaal',
-    parameters: {
-      type: 'object',
-      properties: {
-        cart_total: {
-          type: 'number',
-          description: 'Het totaalbedrag in de winkelwagen in euros',
-        },
-      },
-      required: ['cart_total'],
-    },
-  },
-]
-
 export async function POST(req: Request) {
   try {
     const { messages, context } = await req.json()
@@ -184,36 +147,50 @@ export async function POST(req: Request) {
       contextPrompt += `\n\nTAAL: ${context.locale === 'nl' ? 'Nederlands' : 'Engels'}`
     }
 
-    // Call OpenAI with streaming
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      stream: true,
-      messages: [
-        { role: 'system', content: contextPrompt },
-        ...messages,
-      ],
-      functions,
-      function_call: 'auto',
-      temperature: 0.7,
-      max_tokens: 500,
-    })
-
-    // Handle function calls
-    const stream = OpenAIStream(response, {
-      async experimental_onFunctionCall({ name, arguments: args }) {
-        if (name === 'get_product_details') {
-          const result = await getProductDetails(args.product_slug)
-          return result
-        }
-        
-        if (name === 'calculate_shipping') {
-          const result = await calculateShipping(args.cart_total)
-          return result
-        }
+    // Call OpenAI with streaming (Vercel AI SDK v4+)
+    const result = streamText({
+      model: openai('gpt-4o'),
+      system: contextPrompt,
+      messages,
+      tools: {
+        get_product_details: {
+          description: 'Haal gedetailleerde productinformatie op uit de database, inclusief materiaal, fit, maten, kleuren, voorraad en maattabel',
+          parameters: {
+            type: 'object',
+            properties: {
+              product_slug: {
+                type: 'string',
+                description: 'De slug van het product (bijv. "hoodie-black")',
+              },
+            },
+            required: ['product_slug'],
+          },
+          execute: async ({ product_slug }: { product_slug: string }) => {
+            return await getProductDetails(product_slug)
+          },
+        },
+        calculate_shipping: {
+          description: 'Bereken verzendkosten op basis van winkelwagen totaal',
+          parameters: {
+            type: 'object',
+            properties: {
+              cart_total: {
+                type: 'number',
+                description: 'Het totaalbedrag in de winkelwagen in euros',
+              },
+            },
+            required: ['cart_total'],
+          },
+          execute: async ({ cart_total }: { cart_total: number }) => {
+            return await calculateShipping(cart_total)
+          },
+        },
       },
+      temperature: 0.7,
+      maxTokens: 500,
     })
 
-    return new StreamingTextResponse(stream)
+    return result.toDataStreamResponse()
   } catch (error: any) {
     console.error('[AI Chat Error]:', error)
     return new Response(
