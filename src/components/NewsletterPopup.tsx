@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { X } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -241,11 +242,15 @@ export default function NewsletterPopup({
           {/* Content */}
           <div className="text-center">
             {/* Logo */}
-            <div className="mb-6">
-              <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight uppercase">
-                MOSE
-              </h2>
-              <div className="h-1 w-32 bg-black mx-auto mt-2" />
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/logomose.png"
+                alt="MOSE"
+                width={120}
+                height={40}
+                className="h-10 w-auto"
+                priority
+              />
             </div>
 
             {submitted ? (
@@ -314,7 +319,7 @@ export default function NewsletterPopup({
                   onClick={handleDismiss}
                   className="mt-6 text-sm text-gray-600 hover:text-black transition-colors underline"
                 >
-                  {t('dismissLink', { amount: Math.round((100 * 100) / (100 - discountPercentage) - 100) })}
+                  {t('dismissLink')}
                 </button>
               </>
             )}

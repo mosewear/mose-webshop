@@ -1645,7 +1645,7 @@
     "emailPlaceholder": "you@email.com",
     "ctaButton": "CLAIM {discount}% OFF",
     "ctaSubmitting": "PLEASE WAIT...",
-    "dismissLink": "No, I'll pay €{amount} more",
+    "dismissLink": "No thanks, I'll pay full price",
     "successHeadline": "SUCCESS!",
     "successMessage": "Check your inbox for your {discount}% discount code",
     "error": "Something went wrong. Please try again."

@@ -1633,7 +1633,7 @@
     "emailPlaceholder": "je@email.nl",
     "ctaButton": "CLAIM {discount}% KORTING",
     "ctaSubmitting": "EVEN GEDULD...",
-    "dismissLink": "Nee, ik betaal €{amount} meer",
+    "dismissLink": "Nee bedankt, ik betaal gewoon de volle prijs",
     "successHeadline": "GELUKT!",
     "successMessage": "Check je inbox voor je {discount}% kortingscode",
     "error": "Er ging iets mis. Probeer het opnieuw."
