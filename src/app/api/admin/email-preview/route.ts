@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { render } from '@react-email/components'
 import { getEmailT } from '@/lib/email-i18n'
 import { getSiteSettings } from '@/lib/settings'
@@ -12,27 +13,21 @@ import InsiderLaunchWeekEmail from '@/emails/InsiderLaunchWeek'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createServiceRoleClient()
-
+    // Use regular server client for auth check (respects cookies/session)
+    const authClient = await createClient()
+    
     // Check if user is admin
-    const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
+    const { data: { user } } = await authClient.auth.getUser()
+
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Niet geautoriseerd' },
+        { success: false, error: 'Niet geautoriseerd - geen sessie' },
         { status: 401 }
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Niet geautoriseerd' },
-        { status: 401 }
-      )
-    }
-
+    // Use Service Role client for admin check (bypasses RLS)
+    const supabase = createServiceRoleClient()
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_admin')
@@ -41,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     if (!profile?.is_admin) {
       return NextResponse.json(
-        { success: false, error: 'Niet geautoriseerd' },
+        { success: false, error: 'Niet geautoriseerd - geen admin' },
         { status: 403 }
       )
     }
