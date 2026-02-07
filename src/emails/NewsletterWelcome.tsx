@@ -111,7 +111,7 @@ export default function NewsletterWelcomeEmail({
                   {t('newsletterWelcome.promoSubtext', { discount: '10%' })}
                 </Text>
                 {expiryText && (
-                  <Text style={promoExpiry}>
+                  <Text style={promoExpiryStyle}>
                     {t('newsletterWelcome.promoExpiry', { date: expiryText })}
                   </Text>
                 )}
@@ -297,7 +297,7 @@ const promoSubtext = {
   lineHeight: '24px',
 }
 
-const promoExpiry = {
+const promoExpiryStyle = {
   margin: '12px 0 0 0',
   fontSize: '14px',
   color: '#2d3748',

@@ -144,7 +144,7 @@ export default function InsiderWelcomeEmail({
                   {t('insiderWelcome.promoSubtext', { discount: '10%' })}
                 </Text>
                 {expiryText && (
-                  <Text style={promoExpiry}>
+                  <Text style={promoExpiryStyle}>
                     {t('insiderWelcome.promoExpiry', { date: expiryText })}
                   </Text>
                 )}
@@ -387,7 +387,7 @@ const promoSubtext = {
   lineHeight: '24px',
 }
 
-const promoExpiry = {
+const promoExpiryStyle = {
   margin: '12px 0 0 0',
   fontSize: '14px',
   color: '#2d3748',
