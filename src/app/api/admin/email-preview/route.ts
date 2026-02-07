@@ -129,7 +129,8 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
-            launchDate: 'Feb 27',
+            daysUntilLaunch: 3,
+            limitedItems: ['Hoodie Classic Black', 'T-Shirt Essential White', 'Cap MOSE Logo'],
           })
         )
         break
