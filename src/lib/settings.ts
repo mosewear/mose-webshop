@@ -25,6 +25,7 @@ interface SiteSettings {
   popup_frequency_days?: number
   popup_show_on_pages?: string[]
   popup_discount_percentage?: number
+  ai_chat_enabled?: boolean
   updated_at?: string
 }
 
@@ -102,6 +103,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       favicon_url: settings.favicon_url || '/favicon.ico',
       show_preview_images_notice: settings.show_preview_images_notice === 'true' || settings.show_preview_images_notice === true,
       show_category_labels: settings.show_category_labels === 'true' || settings.show_category_labels === true,
+      ai_chat_enabled: settings.ai_chat_enabled === 'true' || settings.ai_chat_enabled === true || settings.ai_chat_enabled === undefined, // Default true
       updated_at: latestUpdate,
     }
 
@@ -133,6 +135,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       favicon_url: '/favicon.ico',
       show_preview_images_notice: false,
       show_category_labels: false,
+      ai_chat_enabled: true, // Default enabled
       updated_at: undefined,
     }
   }

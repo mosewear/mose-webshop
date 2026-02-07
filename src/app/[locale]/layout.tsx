@@ -8,6 +8,7 @@ import MainContentWrapper from '@/components/layout/MainContentWrapper'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
+import ChatButtonWrapper from '@/components/ChatButtonWrapper'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -102,6 +103,7 @@ export default async function LocaleLayout({
       <Footer />
       <NewsletterPopupWrapper />
       <CookieConsent />
+      <ChatButtonWrapper />
     </NextIntlClientProvider>
   )
 }

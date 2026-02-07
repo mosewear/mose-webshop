@@ -48,6 +48,9 @@ export default function SettingsPage() {
   // Category labels
   const [showCategoryLabels, setShowCategoryLabels] = useState(false)
 
+  // AI Chat
+  const [aiChatEnabled, setAiChatEnabled] = useState(true)
+
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
   const [showAddAdmin, setShowAddAdmin] = useState(false)
@@ -144,6 +147,9 @@ export default function SettingsPage() {
             case 'show_category_labels':
               setShowCategoryLabels(setting.value === 'true' || setting.value === true)
               break
+            case 'ai_chat_enabled':
+              setAiChatEnabled(setting.value === 'true' || setting.value === true)
+              break
           }
         })
       }
@@ -186,6 +192,7 @@ export default function SettingsPage() {
         { key: 'favicon_url', value: faviconUrl },
         { key: 'show_preview_images_notice', value: showPreviewImagesNotice },
         { key: 'show_category_labels', value: showCategoryLabels },
+        { key: 'ai_chat_enabled', value: aiChatEnabled },
       ]
 
       for (const setting of settingsToSave) {
@@ -521,6 +528,20 @@ export default function SettingsPage() {
                 />
                 <label htmlFor="show_category_labels" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
                   Toon Categorie Labels in Shop
+                </label>
+              </div>
+
+              {/* AI Chat Toggle */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="ai_chat_enabled"
+                  checked={aiChatEnabled}
+                  onChange={(e) => setAiChatEnabled(e.target.checked)}
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                />
+                <label htmlFor="ai_chat_enabled" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                  AI Chat Support Inschakelen
                 </label>
               </div>
               <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
