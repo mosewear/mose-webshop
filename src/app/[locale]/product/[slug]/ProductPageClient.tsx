@@ -1372,7 +1372,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {addedToCart ? t('added') : hasAnyStock ? t('addToCart') : t('outOfStock')}
                 </button>
                 
-                {/* Wishlist button - secondary - MOSE Brutalist */}
+                {/* Wishlist button - secondary - MOSE Brutalist - Hidden on mobile */}
                 <button
                   onClick={async () => {
                     if (!product) return
@@ -1386,7 +1386,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       toast.success(t('wishlist.added'))
                     }
                   }}
-                  className={`w-12 md:w-auto md:p-4 p-3 border-2 border-black transition-all flex items-center justify-center ${
+                  className={`hidden md:flex md:w-auto md:p-4 border-2 border-black transition-all items-center justify-center ${
                     isWishlisted
                       ? 'bg-red-500 text-white hover:bg-red-600'
                       : 'bg-white text-black hover:bg-brand-primary hover:text-white'

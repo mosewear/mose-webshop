@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getSiteSettings } from '@/lib/settings'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 export default function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -13,6 +13,7 @@ export default function FAQAccordion() {
     return_label_cost_incl_btw: 7.87,
   })
   const t = useTranslations('faq')
+  const locale = useLocale()
 
   useEffect(() => {
     getSiteSettings().then((s) => {
