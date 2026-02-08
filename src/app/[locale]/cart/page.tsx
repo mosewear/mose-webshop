@@ -198,7 +198,7 @@ export default function CartPage() {
                 <span className="font-semibold">€{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-base">
-                <span className="text-gray-500 uppercase tracking-wider">BTW 21%</span>
+                <span className="text-gray-500 uppercase tracking-wider">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
                 <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
