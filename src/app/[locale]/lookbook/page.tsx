@@ -104,7 +104,7 @@ export default function LookbookPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="text-center py-12 md:py-16 px-4">
+      <div className="text-center pt-20 md:pt-24 pb-12 md:pb-16 px-4">
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-display tracking-tight mb-4">
           {getText(settings.header_title, settings.header_title_en)}
         </h1>
