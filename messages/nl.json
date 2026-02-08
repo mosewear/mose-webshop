@@ -1003,6 +1003,8 @@
       "noProductsDesc": "Selecteer producten in de admin homepage settings.",
       "inStock": "Op voorraad",
       "outOfStock": "Uitverkocht",
+      "presale": "Pre-sale",
+      "addToCart": "In winkelmand",
       "quickView": "Quick View"
     },
     "categories": {

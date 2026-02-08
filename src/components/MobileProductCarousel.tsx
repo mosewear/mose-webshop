@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatPrice } from '@/lib/format-price'
 
 interface Product {
@@ -28,6 +28,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
   const carouselRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const locale = useLocale()
+  const t = useTranslations('homepage')
 
   // Fallback products (matching new Product interface)
   const fallbackProducts: Product[] = [
@@ -130,19 +131,19 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                     if (isPresale) {
                       return (
                         <div className="absolute top-2 left-2 bg-brand-primary text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          PRE-SALE
+                          {t('featured.presale')}
                         </div>
                       )
                     } else if (stockQty > 0) {
                       return (
                         <div className="absolute top-2 left-2 bg-brand-primary text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          OP VOORRAAD
+                          {t('featured.inStock')}
                         </div>
                       )
                     } else if (totalStock === 0) {
                       return (
                         <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-lg">
-                          UITVERKOCHT
+                          {t('featured.outOfStock')}
                         </div>
                       )
                     }
@@ -208,7 +209,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                       e.preventDefault()
                     }}
                   >
-                    In Winkelmand
+                    {t('featured.addToCart')}
                   </button>
                 </div>
               </div>

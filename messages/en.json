@@ -1016,6 +1016,8 @@
       "noProductsDesc": "Select products in the admin homepage settings.",
       "inStock": "In stock",
       "outOfStock": "Out of stock",
+      "presale": "Pre-sale",
+      "addToCart": "Add to cart",
       "quickView": "Quick View"
     },
     "categories": {
