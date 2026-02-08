@@ -970,10 +970,8 @@ export default function ShopPageClient() {
                             )
                             
                             return (
-                              <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black text-white px-1.5 py-0.5 md:px-3 md:py-1 text-[9px] md:text-[11px] font-bold uppercase tracking-wider border-2 border-black">
-                                {/* Mobile: alleen -30%, Desktop: -30% korting */}
-                                <span className="md:hidden">-{discountPercentage}%</span>
-                                <span className="hidden md:inline">-{discountPercentage}% {t('discount')}</span>
+                              <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black text-white px-1.5 py-0.5 md:px-2 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider border-2 border-black">
+                                -{discountPercentage}%
                               </div>
                             )
                           })()}
