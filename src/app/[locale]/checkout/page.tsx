@@ -110,6 +110,41 @@ export default function CheckoutPage() {
   const [promoDiscount, setPromoDiscount] = useState(0)
   const [promoType, setPromoType] = useState<'percentage' | 'fixed'>('fixed')
   const [promoValue, setPromoValue] = useState(0)
+  
+  // Newsletter subscription state
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true) // Default checked
+  const [newsletterSubscribing, setNewsletterSubscribing] = useState(false)
+
+  // Subscribe to newsletter (async, non-blocking)
+  const subscribeToNewsletter = async (email: string) => {
+    if (!newsletterOptIn || newsletterSubscribing) return
+    
+    setNewsletterSubscribing(true)
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.toLowerCase(),
+          source: 'checkout',
+          locale: locale
+        })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        console.log('✅ Newsletter subscription successful')
+      } else {
+        // Silently fail - don't interrupt checkout flow
+        console.log('⚠️ Newsletter subscription failed:', data.error)
+      }
+    } catch (error) {
+      // Silently fail - don't interrupt checkout flow
+      console.error('Newsletter subscription error:', error)
+    } finally {
+      setNewsletterSubscribing(false)
+    }
+  }
 
   // Load promo from localStorage and revalidate on mount
   useEffect(() => {
@@ -1099,6 +1134,11 @@ export default function CheckoutPage() {
       console.log('✅ Order created via API:', order)
       setOrderId(order.id)
 
+      // Subscribe to newsletter if opted in (async, non-blocking)
+      if (newsletterOptIn) {
+        subscribeToNewsletter(form.email.trim())
+      }
+
       // Go to payment step - Payment Intent will be created when user selects method
       setCurrentStep('payment')
       
@@ -1674,6 +1714,19 @@ export default function CheckoutPage() {
                     autoComplete="email"
                   />
                   {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
+                  
+                  {/* Newsletter Opt-in - Subtle & Compact */}
+                  <label className="flex items-start gap-2.5 mt-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={newsletterOptIn}
+                      onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 border-2 border-gray-400 rounded text-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 cursor-pointer"
+                    />
+                    <span className="text-xs text-gray-600 leading-relaxed group-hover:text-gray-900 transition-colors">
+                      {t('newsletter.optIn')}
+                    </span>
+                  </label>
                 </div>
 
                 {/* Delivery - Compact */}

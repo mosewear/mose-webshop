@@ -196,6 +196,11 @@
       "errorOccurred": "Er is een fout opgetreden",
       "paymentCancelled": "Je vorige betaling is geannuleerd",
       "paymentCancelledDesc": "Geen zorgen, je gegevens zijn bewaard. Kies opnieuw je betaalmethode om je bestelling af te ronden."
+    },
+    "newsletter": {
+      "optIn": "Houd me op de hoogte van nieuwe drops & exclusieve aanbiedingen (10% korting)",
+      "subscribed": "Je bent ingeschreven! Check je inbox.",
+      "error": "Kon niet inschrijven. Probeer het opnieuw."
     }
   },
   "cart": {

@@ -196,6 +196,11 @@
       "errorOccurred": "An error occurred",
       "paymentCancelled": "Your previous payment was cancelled",
       "paymentCancelledDesc": "No worries, your details are saved. Choose your payment method again to complete your order."
+    },
+    "newsletter": {
+      "optIn": "Keep me updated about new drops & exclusive offers (10% discount)",
+      "subscribed": "You're subscribed! Check your inbox.",
+      "error": "Could not subscribe. Please try again."
     }
   },
   "cart": {
