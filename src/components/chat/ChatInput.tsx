@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, KeyboardEvent } from 'react'
+import { useState, useEffect, useRef, KeyboardEvent } from 'react'
 import { Send } from 'lucide-react'
 
 interface ChatInputProps {
@@ -10,6 +10,16 @@ interface ChatInputProps {
 
 export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [message, setMessage] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Autofocus input when component mounts
+  useEffect(() => {
+    // Small delay to ensure smooth animation
+    const timer = setTimeout(() => {
+      inputRef.current?.focus()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleSend = () => {
     if (message.trim() && !disabled) {
@@ -29,6 +39,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
     <div className="flex-shrink-0 border-t-4 border-black p-4 bg-white">
       <div className="flex gap-2">
         <input
+          ref={inputRef}
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
