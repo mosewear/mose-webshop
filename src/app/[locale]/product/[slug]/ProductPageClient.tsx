@@ -1006,10 +1006,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       return (
                         <>
                           <div className="flex items-center gap-3 mb-1">
-                            <p className="text-xl md:text-2xl font-bold text-red-600">
+                            <p className="text-xl md:text-2xl font-bold text-brand-primary">
                               {formatPrice(salePrice, locale)}
                             </p>
-                            <span className="inline-flex items-center px-3 py-1 text-sm font-bold bg-red-600 text-white">
+                            <span className="inline-flex items-center px-3 py-1 text-sm font-bold bg-black text-white border-2 border-black">
                               -{discountPercentage}% KORTING
                             </span>
                           </div>
@@ -1017,7 +1017,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <p className="text-base text-gray-500 line-through">
                               {formatPrice(basePrice, locale)}
                             </p>
-                            <p className="text-sm text-green-600 font-semibold">
+                            <p className="text-sm text-brand-primary font-semibold">
                               Je bespaart {formatPrice(basePrice - salePrice, locale)}
                             </p>
                           </div>
@@ -1675,7 +1675,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             if (hasDiscount && relProd.sale_price) {
                               return (
                                 <div className="flex items-center gap-2">
-                                  <p className="text-lg font-bold text-red-600">€{relProd.sale_price.toFixed(2)}</p>
+                                  <p className="text-lg font-bold text-brand-primary">€{relProd.sale_price.toFixed(2)}</p>
                                   <p className="text-sm text-gray-500 line-through">€{relProd.base_price.toFixed(2)}</p>
                                 </div>
                               )

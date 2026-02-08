@@ -970,7 +970,7 @@ export default function ShopPageClient() {
                             )
                             
                             return (
-                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} left-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:left-4 bg-brand-primary text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider`}>
+                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} right-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:right-4 bg-black text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black`}>
                                 -{discountPercentage}% {t('discount')}
                               </div>
                             )
@@ -1041,7 +1041,7 @@ export default function ShopPageClient() {
                               if (hasDiscount && product.sale_price) {
                                 return (
                                   <div className="flex flex-col gap-1">
-                                    <span className="text-base md:text-2xl font-bold text-red-600">
+                                    <span className="text-base md:text-2xl font-bold text-brand-primary">
                                       {formatPrice(product.sale_price, locale)}
                                     </span>
                                     <span className="text-xs md:text-sm text-gray-500 line-through">
