@@ -35,7 +35,7 @@ export default function ChatButton() {
         className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
           isOpen 
             ? 'bg-black border-brand-primary hidden md:flex' 
-            : 'bg-brand-primary chat-button-pulse hover:bg-black hover:border-brand-primary'
+            : 'bg-brand-primary chat-button-pulse md:hover:bg-black md:hover:border-brand-primary'
         }`}
         aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
         animate={{ 
@@ -66,7 +66,7 @@ export default function ChatButton() {
               exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2 }}
             >
-              <MessageCircle className="w-7 h-7 md:w-9 md:h-9 text-white group-hover:text-brand-primary transition-colors" strokeWidth={2.5} />
+              <MessageCircle className="w-7 h-7 md:w-9 md:h-9 text-white md:group-hover:text-brand-primary transition-colors" strokeWidth={2.5} />
             </motion.div>
           )}
         </AnimatePresence>
