@@ -1,6 +1,7 @@
 'use client'
 
 import { Zap, Users } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface ChatTabsProps {
   activeTab: 'ai' | 'team'
@@ -8,6 +9,8 @@ interface ChatTabsProps {
 }
 
 export default function ChatTabs({ activeTab, onTabChange }: ChatTabsProps) {
+  const t = useTranslations('chat.tabs')
+  
   return (
     <div className="flex-shrink-0 flex border-b-2 border-black bg-white">
       <button
@@ -19,7 +22,7 @@ export default function ChatTabs({ activeTab, onTabChange }: ChatTabsProps) {
         }`}
       >
         <Zap className={`w-4 h-4 ${activeTab === 'ai' ? 'text-white' : 'text-gray-700'}`} strokeWidth={2.5} />
-        <span>Direct antwoord</span>
+        <span>{t('direct')}</span>
       </button>
       <div className="w-px bg-black" />
       <button
@@ -31,7 +34,7 @@ export default function ChatTabs({ activeTab, onTabChange }: ChatTabsProps) {
         }`}
       >
         <Users className={`w-4 h-4 ${activeTab === 'team' ? 'text-white' : 'text-gray-700'}`} strokeWidth={2.5} />
-        <span>Team MOSE</span>
+        <span>{t('team')}</span>
       </button>
     </div>
   )

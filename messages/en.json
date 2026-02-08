@@ -1667,5 +1667,20 @@
     "privacyLink": "Read our privacy policy",
     "acceptAll": "Accept all cookies",
     "necessaryOnly": "Necessary only"
+  },
+  "chat": {
+    "title": "MOSE SUPPORT",
+    "greeting": "Hi! 👋 How can I help you?",
+    "aiOffline": "🤖 Our AI assistant is currently offline\n\nWe are working on setting up our smart chatbot! Until then, our team is happy to help you personally.\n\n→ Click on \"TEAM MOSE\" for direct help",
+    "tabs": {
+      "direct": "Direct answer",
+      "team": "Team MOSE"
+    },
+    "input": {
+      "placeholder": "Type your question...",
+      "send": "Send",
+      "sendAria": "Send message"
+    },
+    "close": "Close chat"
   }
 }

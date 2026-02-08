@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import ChatTabs from './ChatTabs'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
@@ -22,12 +22,13 @@ export interface Message {
 }
 
 export default function ChatWindow({ onClose }: ChatWindowProps) {
+  const t = useTranslations('chat')
   const [activeTab, setActiveTab] = useState<'ai' | 'team'>('ai')
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hoi! 👋 Waar kan ik je mee helpen?',
+      content: t('greeting'),
       timestamp: new Date(),
     },
   ])
@@ -154,7 +155,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         {
           id: Date.now().toString(),
           role: 'assistant',
-          content: '🤖 Onze AI assistent is momenteel offline\n\nWe zijn druk bezig met het opzetten van onze slimme chatbot! Tot die tijd helpt ons team je graag persoonlijk verder.\n\n→ Klik op "TEAM MOSE" voor directe hulp',
+          content: t('aiOffline'),
           timestamp: new Date(),
         },
       ])
@@ -229,12 +230,12 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-brand-primary border-2 border-black" />
-            <h2 className="font-display text-xl uppercase tracking-wide">MOSE SUPPORT</h2>
+            <h2 className="font-display text-xl uppercase tracking-wide">{t('title')}</h2>
           </div>
           <button
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center border-2 border-black hover:bg-gray-100 transition-colors"
-            aria-label="Sluit chat"
+            aria-label={t('close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -268,12 +269,12 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-3 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-brand-primary border-2 border-black" />
-            <h2 className="font-display text-lg uppercase tracking-wide">MOSE SUPPORT</h2>
+            <h2 className="font-display text-lg uppercase tracking-wide">{t('title')}</h2>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center border-2 border-black hover:bg-gray-100 transition-colors"
-            aria-label="Sluit chat"
+            aria-label={t('close')}
           >
             <X className="w-4 h-4" />
           </button>

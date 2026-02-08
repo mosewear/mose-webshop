@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, KeyboardEvent } from 'react'
 import { Send } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -9,6 +10,7 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+  const t = useTranslations('chat.input')
   const [message, setMessage] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -45,17 +47,17 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           disabled={disabled}
-          placeholder="Typ je vraag..."
+          placeholder={t('placeholder')}
           className="flex-1 px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
         <button
           onClick={handleSend}
           disabled={disabled || !message.trim()}
           className="px-6 py-3 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-display uppercase text-sm tracking-wide"
-          aria-label="Verstuur bericht"
+          aria-label={t('sendAria')}
         >
           <Send className="w-4 h-4" strokeWidth={2.5} />
-          <span className="hidden md:inline">Verstuur</span>
+          <span className="hidden md:inline">{t('send')}</span>
         </button>
       </div>
     </div>

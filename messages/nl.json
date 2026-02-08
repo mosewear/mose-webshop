@@ -1655,5 +1655,20 @@
     "privacyLink": "Lees ons privacybeleid",
     "acceptAll": "Accepteer alle cookies",
     "necessaryOnly": "Alleen noodzakelijke"
+  },
+  "chat": {
+    "title": "MOSE SUPPORT",
+    "greeting": "Hoi! 👋 Waar kan ik je mee helpen?",
+    "aiOffline": "🤖 Onze AI assistent is momenteel offline\n\nWe zijn druk bezig met het opzetten van onze slimme chatbot! Tot die tijd helpt ons team je graag persoonlijk verder.\n\n→ Klik op \"TEAM MOSE\" voor directe hulp",
+    "tabs": {
+      "direct": "Direct antwoord",
+      "team": "Team MOSE"
+    },
+    "input": {
+      "placeholder": "Typ je vraag...",
+      "send": "Verstuur",
+      "sendAria": "Verstuur bericht"
+    },
+    "close": "Sluit chat"
   }
 }
