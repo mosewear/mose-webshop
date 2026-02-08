@@ -40,11 +40,11 @@ WANNEER DOORVERWIJZEN NAAR TEAM MOSE:
 - Klachten of problemen
 
 VERZENDING & RETOUR INFO:
-- Verzendkosten: €6.95
+- Verzendkosten: €6,95
 - Gratis verzending vanaf: €150
 - Levertijd: 1-3 werkdagen (Nederland)
 - Retourbeleid: 30 dagen
-- Retourkosten: €6.95
+- Retourkosten: €6,95 (excl. BTW)
 
 CONTACT INFO (voor doorverwijzing):
 - WhatsApp: +31 50 211 1931 (ma-vr 10-18u)

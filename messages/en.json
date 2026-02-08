@@ -419,7 +419,7 @@
       "info": "{days} days hassle-free returns",
       "label": "Returns",
       "cost": "Return costs",
-      "costValue": "Free returns"
+      "costValue": "€6.95 (excl. VAT)"
     },
     "warranty": {
       "info": "2 year manufacturer warranty on all products"
@@ -493,7 +493,7 @@
     "info": "{days} days return period",
     "label": "Returns",
     "cost": "Return costs",
-    "costValue": "Free returns"
+    "costValue": "€6.95 (excl. VAT)"
   },
   "shop": {
     "title": "Shop",

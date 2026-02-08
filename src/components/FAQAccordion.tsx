@@ -32,13 +32,20 @@ export default function FAQAccordion() {
   // Get FAQ items from translations
   const faqItems = t.raw('items') as Array<{ question: string; answer: string }>
   
-  // Replace dynamic values in answers
+  // Replace dynamic values in answers with locale-aware formatting
   const getAnswer = (answer: string) => {
+    // Format prices based on locale (NL uses comma, EN uses period)
+    const formatPrice = (price: number) => {
+      return locale === 'nl' 
+        ? price.toFixed(2).replace('.', ',') 
+        : price.toFixed(2)
+    }
+
     return answer
       .replace('{freeShipping}', settings.free_shipping_threshold.toString())
       .replace('{returnDays}', settings.return_days.toString())
-      .replace('{shippingCost}', settings.shipping_cost.toFixed(2))
-      .replace('{returnCost}', settings.return_label_cost_incl_btw.toFixed(2))
+      .replace('{shippingCost}', formatPrice(settings.shipping_cost))
+      .replace('{returnCost}', formatPrice(settings.return_label_cost_incl_btw))
   }
 
   return (

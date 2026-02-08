@@ -148,13 +148,13 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     } catch (error) {
       console.error('[Chat Error]:', error)
       
-      // Add error message
+      // Add friendly error message (AI not yet configured)
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: 'assistant',
-          content: 'Sorry, er ging iets mis. Probeer het opnieuw of schakel over naar Team MOSE voor directe hulp.',
+          content: '🤖 Onze AI assistent is momenteel offline\n\nWe zijn druk bezig met het opzetten van onze slimme chatbot! Tot die tijd helpt ons team je graag persoonlijk verder.\n\n→ Klik op "TEAM MOSE" voor directe hulp',
           timestamp: new Date(),
         },
       ])

@@ -418,7 +418,7 @@
       "info": "{days} dagen retour zonder gedoe",
       "label": "Retour",
       "cost": "Retourkosten",
-      "costValue": "Gratis retourneren"
+      "costValue": "€6,95 (excl. BTW)"
     },
     "warranty": {
       "info": "2 jaar fabrieksgarantie op alle producten"
@@ -492,7 +492,7 @@
     "info": "{days} dagen bedenktijd",
     "label": "Retour",
     "cost": "Retourkosten",
-    "costValue": "Gratis retourneren"
+    "costValue": "€6,95 (excl. BTW)"
   },
   "shop": {
     "title": "Shop",
