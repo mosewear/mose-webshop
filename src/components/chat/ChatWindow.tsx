@@ -206,6 +206,16 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
   return (
     <>
+      {/* Overlay - Desktop only */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="hidden md:block fixed inset-0 bg-black/30 z-[9997]"
+        onClick={onClose}
+      />
+
       {/* Mobile: Fullscreen */}
       <motion.div
         id="chat-window"
