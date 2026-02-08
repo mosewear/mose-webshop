@@ -83,18 +83,53 @@ export default function TeamMoseTab() {
         </div>
       </div>
 
-      {/* Info */}
-      <div className="text-center text-sm text-gray-600 pt-4 border-t-2 border-gray-200">
-        <p>
+      {/* Info - Checklist Style */}
+      <div className="border-t-4 border-black pt-4 bg-gray-50 -mx-6 -mb-6 px-6 pb-6">
+        <p className="text-center text-xs uppercase tracking-wider font-bold text-gray-900 mb-4">
           {t('help.intro')}
         </p>
-        <ul className="mt-2 space-y-1 text-left max-w-xs mx-auto">
-          <li>• {t('help.damaged')}</li>
-          <li>• {t('help.returns')}</li>
-          <li>• {t('help.custom')}</li>
-          <li>• {t('help.tracking')}</li>
-          <li>• {t('help.other')}</li>
-        </ul>
+        <div className="space-y-2 max-w-xs mx-auto">
+          <div className="flex items-center gap-3 bg-white border-2 border-black p-2">
+            <div className="w-5 h-5 border-2 border-black bg-brand-primary flex-shrink-0 flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold uppercase">{t('help.damaged')}</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white border-2 border-black p-2">
+            <div className="w-5 h-5 border-2 border-black bg-brand-primary flex-shrink-0 flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold uppercase">{t('help.returns')}</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white border-2 border-black p-2">
+            <div className="w-5 h-5 border-2 border-black bg-brand-primary flex-shrink-0 flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold uppercase">{t('help.custom')}</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white border-2 border-black p-2">
+            <div className="w-5 h-5 border-2 border-black bg-brand-primary flex-shrink-0 flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold uppercase">{t('help.tracking')}</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white border-2 border-black p-2">
+            <div className="w-5 h-5 border-2 border-black bg-brand-primary flex-shrink-0 flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold uppercase">{t('help.other')}</span>
+          </div>
+        </div>
       </div>
     </div>
   )
