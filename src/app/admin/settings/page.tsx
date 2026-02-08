@@ -530,20 +530,6 @@ export default function SettingsPage() {
                   Toon Categorie Labels in Shop
                 </label>
               </div>
-
-              {/* AI Chat Toggle */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="ai_chat_enabled"
-                  checked={aiChatEnabled}
-                  onChange={(e) => setAiChatEnabled(e.target.checked)}
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                />
-                <label htmlFor="ai_chat_enabled" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
-                  AI Chat Support Inschakelen
-                </label>
-              </div>
               <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
                 <p className="font-bold mb-1">ℹ️ Wat doet dit?</p>
                 <p className="mb-2">
@@ -560,6 +546,20 @@ export default function SettingsPage() {
                 <p className="mt-2">
                   <strong>💡 Tip:</strong> Handig voor klanten om snel het producttype te zien, maar kan ook visuele rust verstoren. Test wat het beste werkt!
                 </p>
+              </div>
+
+              {/* AI Chat Toggle */}
+              <div className="flex items-center gap-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="ai_chat_enabled"
+                  checked={aiChatEnabled}
+                  onChange={(e) => setAiChatEnabled(e.target.checked)}
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                />
+                <label htmlFor="ai_chat_enabled" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                  AI Chat Support Inschakelen
+                </label>
               </div>
             </div>
 
