@@ -390,10 +390,10 @@ export default function HomePageClient({
                           return (
                             <div className="space-y-1">
                               <div className="flex items-center justify-center gap-2">
-                                <p className="text-2xl font-bold text-red-600">
+                                <p className="text-2xl font-bold text-brand-primary">
                                   {formatPrice(product.sale_price, locale)}
                                 </p>
-                                <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-red-600 text-white">
+                                <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-black text-white border-2 border-black">
                                   -{discountPercentage}%
                                 </span>
                               </div>
