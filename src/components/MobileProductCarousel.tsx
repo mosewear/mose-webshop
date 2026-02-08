@@ -12,6 +12,7 @@ interface Product {
   slug: string
   base_price?: number
   price?: number  // Added for transformed products
+  sale_price?: number  // Discount price
   product_images?: { url: string }[]
   image_url?: string  // Added for transformed products
   images?: { url: string }[]  // Added for transformed products
@@ -166,9 +167,39 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                   <h3 className="font-bold text-base mb-2 uppercase tracking-wide">
                     {product.name}
                   </h3>
-                  <p className="text-2xl font-bold text-brand-primary mb-3">
-                    {typeof product.price === 'number' ? formatPrice(product.price, locale) : (typeof product.base_price === 'number' ? formatPrice(product.base_price, locale) : '€0')}
-                  </p>
+                  
+                  {/* Price with discount logic */}
+                  {(() => {
+                    const regularPrice = product.price || product.base_price || 0
+                    const hasDiscount = product.sale_price && product.sale_price < regularPrice
+                    const discountPercentage = hasDiscount && product.sale_price
+                      ? Math.round(((regularPrice - product.sale_price) / regularPrice) * 100) 
+                      : 0
+
+                    if (hasDiscount && product.sale_price) {
+                      return (
+                        <div className="space-y-1 mb-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <p className="text-2xl font-bold text-brand-primary">
+                              {formatPrice(product.sale_price, locale)}
+                            </p>
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-bold bg-black text-white border-2 border-black">
+                              -{discountPercentage}%
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500 line-through">
+                            {formatPrice(regularPrice, locale)}
+                          </p>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <p className="text-2xl font-bold text-brand-primary mb-3">
+                        {formatPrice(regularPrice, locale)}
+                      </p>
+                    )
+                  })()}
                   
                   {/* Add to Cart Button */}
                   <button 
