@@ -688,6 +688,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     console.log('═════════════════════════════════════════')
     
     addItem(cartItem)
+    
+    // Reset quantity to 1 after successful add
+    setQuantity(1)
 
     // Track Facebook Pixel AddToCart event with user data if logged in
     try {
@@ -1166,6 +1169,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           onClick={() => {
                             setSelectedColor(color)
                             setSelectedImage(0) // Reset to first image when color changes
+                            setQuantity(1) // Reset quantity when changing color
                           }}
                           disabled={!colorAvailable}
                           className={`relative border-2 transition-all ${
@@ -1238,6 +1242,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           key={size}
                           onClick={() => {
                             setSelectedSize(size)
+                            setQuantity(1) // Reset quantity when changing size
                             // Optie 1: Behoud kleurkeuze, laat beschikbaarheid zien
                             // Geen automatische kleurwijziging meer
                           }}
@@ -1316,6 +1321,42 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* Add to Cart Buttons - Mobile & Desktop */}
               <div className="flex gap-2 md:gap-3">
+                {/* QUANTITY SELECTOR - Brutalist Stepper (MOSE Style) */}
+                <div className="flex border-2 border-black">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1 || !hasAnyStock || !selectedVariant}
+                    className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                      quantity <= 1 || !hasAnyStock || !selectedVariant
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-black text-white hover:bg-gray-800'
+                    }`}
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <div className="w-10 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
+                    {quantity}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const maxQty = selectedVariant?.presale_enabled 
+                        ? selectedVariant.presale_stock_quantity 
+                        : selectedVariant?.stock_quantity || 10
+                      setQuantity(Math.min(maxQty, quantity + 1))
+                    }}
+                    disabled={!hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)}
+                    className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                      !hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-black text-white hover:bg-gray-800'
+                    }`}
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+
                 {/* IN WINKELWAGEN button - primary action */}
                 <button
                   onClick={handleAddToCart}
@@ -1859,6 +1900,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           product={product}
           selectedVariant={selectedVariant}
           quantity={quantity}
+          setQuantity={setQuantity}
           cartImage={displayImages.find(img => img.media_type === 'image')?.url || displayImages[0]?.url || '/placeholder.png'}
           inStock={hasAnyStock}
           onVariantRequired={handleVariantRequired}

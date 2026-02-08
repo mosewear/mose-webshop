@@ -31,6 +31,7 @@ interface StickyBuyNowProps {
     presale_expected_date?: string | null
   } | null | undefined
   quantity: number
+  setQuantity: (qty: number) => void
   cartImage: string
   inStock: boolean
   onVariantRequired: () => void
@@ -40,6 +41,7 @@ export default function StickyBuyNow({
   product,
   selectedVariant,
   quantity,
+  setQuantity,
   cartImage,
   inStock,
   onVariantRequired,
@@ -296,22 +298,58 @@ export default function StickyBuyNow({
 
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3 md:gap-4">
-            {/* IN WAGEN button - 50% width - WIT met zwarte tekst */}
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* QUANTITY SELECTOR - Brutalist Stepper (COMPACT voor Sticky Bar) */}
+            <div className="flex border-2 border-white">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1 || !inStock}
+                className={`w-9 h-11 md:w-10 md:h-12 flex items-center justify-center font-bold text-lg transition-colors ${
+                  quantity <= 1 || !inStock
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-white text-black hover:bg-gray-200'
+                }`}
+                aria-label="Decrease quantity"
+              >
+                −
+              </button>
+              <div className="w-9 h-11 md:w-10 md:h-12 flex items-center justify-center border-x-2 border-white bg-black text-white font-bold text-sm md:text-base">
+                {quantity}
+              </div>
+              <button
+                onClick={() => {
+                  const maxQty = selectedVariant?.presale_enabled 
+                    ? selectedVariant.presale_stock_quantity || 10
+                    : selectedVariant?.stock_quantity || 10
+                  setQuantity(Math.min(maxQty, quantity + 1))
+                }}
+                disabled={!inStock || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity || 10 : selectedVariant?.stock_quantity || 10)}
+                className={`w-9 h-11 md:w-10 md:h-12 flex items-center justify-center font-bold text-lg transition-colors ${
+                  !inStock || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity || 10 : selectedVariant?.stock_quantity || 10)
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-white text-black hover:bg-gray-200'
+                }`}
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+
+            {/* IN WAGEN button - WIT met zwarte tekst */}
             <button
               onClick={handleAddToCart}
               disabled={!inStock || isAdding || isBuying}
-              className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
+              className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-3 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
             >
               <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
               <span>{t('addToCart')}</span>
             </button>
 
-            {/* BESTEL NU button - 50% width - GROEN met PULSE! */}
+            {/* BESTEL NU button - GROEN met PULSE! */}
             <button
               onClick={handleBuyNow}
               disabled={!inStock || isAdding || isBuying}
-              className="pulse-button flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
+              className="pulse-button flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-3 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
             >
               {isBuying ? (
                 <span>{t('adding')}</span>
