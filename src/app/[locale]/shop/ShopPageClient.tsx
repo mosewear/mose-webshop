@@ -970,7 +970,7 @@ export default function ShopPageClient() {
                             )
                             
                             return (
-                              <div className={`absolute ${!inStock || (inStock && totalStock < 5) ? 'top-14' : 'top-2'} right-2 md:${!inStock || (inStock && totalStock < 5) ? 'top-16' : 'top-4'} md:right-4 bg-black text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black`}>
+                              <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
                                 -{discountPercentage}% {t('discount')}
                               </div>
                             )
