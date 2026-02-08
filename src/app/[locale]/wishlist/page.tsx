@@ -156,7 +156,7 @@ export default function WishlistPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 md:py-12 min-h-[60vh]">
+      <div className="container mx-auto px-4 pt-24 pb-8 md:pt-32 md:pb-12 min-h-[60vh]">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
           <div className="flex flex-col items-center justify-center py-16 md:py-24">
@@ -170,7 +170,7 @@ export default function WishlistPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 md:py-12 min-h-[60vh]">
+      <div className="container mx-auto px-4 pt-24 pb-8 md:pt-32 md:pb-12 min-h-[60vh]">
         <div className="max-w-6xl mx-auto">
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
           
@@ -196,7 +196,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
+    <div className="container mx-auto px-4 pt-24 pb-8 md:pt-32 md:pb-12">
       <div className="max-w-7xl mx-auto">
         {/* Header - MOSE Style */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 gap-3">
