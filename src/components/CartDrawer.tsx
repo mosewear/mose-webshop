@@ -133,6 +133,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           body: JSON.stringify({
             code: savedPromo,
             orderTotal: subtotal,
+            items: items, // ✅ NEW: Send items for no-stacking discount check
           }),
         })
 
@@ -288,6 +289,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         body: JSON.stringify({
           code: promoCode.toUpperCase(),
           orderTotal: subtotal,
+          items: items, // ✅ NEW: Send items for no-stacking discount check
         }),
       })
 

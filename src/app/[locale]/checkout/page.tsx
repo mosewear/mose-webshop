@@ -177,6 +177,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             code: savedPromo,
             orderTotal: subtotal,
+            items: items, // ✅ NEW: Send items for no-stacking discount check
           }),
         })
 
