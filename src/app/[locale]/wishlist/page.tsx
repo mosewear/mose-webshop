@@ -28,6 +28,17 @@ interface Product {
   }>
 }
 
+// Helper function to format text with **bold** markers
+function formatBoldText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
 export default function WishlistPage() {
   const { items, loadWishlist, removeFromWishlist, isLoading } = useWishlist()
   const { addItem } = useCart()
@@ -224,7 +235,7 @@ export default function WishlistPage() {
                       alt={product.product_images[0].alt_text || displayName}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-contain group-hover:scale-105 transition-transform duration-500"
                       unoptimized
                     />
                   ) : (
@@ -242,7 +253,7 @@ export default function WishlistPage() {
                     </h3>
                   </LocaleLink>
                   <p className="text-gray-600 text-xs md:text-sm mb-4 line-clamp-2">
-                    {displayDescription}
+                    {formatBoldText(displayDescription)}
                   </p>
 
                   {/* Price Display */}
