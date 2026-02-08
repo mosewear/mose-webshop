@@ -1011,7 +1011,7 @@ export default function CheckoutPage() {
 
     console.log('✅ Form validation passed')
     setLoading(true)
-    setIsSubmitting(true) // Lock submissions
+    setIsSubmitting(true) // Lock submissions ONLY after validation passes
 
     try {
       // Step 1: Create order via server-side API
@@ -2169,7 +2169,10 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl md:text-4xl font-display">{t('progress.payment').toUpperCase()}</h1>
                 <button
-                  onClick={() => setCurrentStep('details')}
+                  onClick={() => {
+                    setCurrentStep('details')
+                    setIsSubmitting(false) // Reset submission lock when going back
+                  }}
                   className="text-sm text-brand-primary hover:underline flex items-center gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
