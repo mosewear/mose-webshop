@@ -41,7 +41,7 @@ export default function ChatButton() {
             className="fixed bottom-6 right-6 z-[9997] w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand-primary border-4 border-black hover:bg-black hover:border-brand-primary transition-all duration-300 flex items-center justify-center group chat-button-pulse"
             aria-label="Open chat"
           >
-            <MessageCircle className="w-7 h-7 md:w-9 md:h-9 text-black group-hover:text-brand-primary transition-colors" strokeWidth={2.5} />
+            <MessageCircle className="w-7 h-7 md:w-9 md:h-9 text-white group-hover:text-brand-primary transition-colors" strokeWidth={2.5} />
           </motion.button>
         )}
       </AnimatePresence>
