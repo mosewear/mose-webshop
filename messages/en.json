@@ -1365,19 +1365,19 @@
     "values": {
       "title": "OUR VALUES",
       "quality": {
-        "title": "Premium Quality",
+        "title": "Premium quality",
         "text": "Only the finest materials and perfect finishing. Clothing that lasts for years."
       },
       "localMade": {
-        "title": "Locally Made",
+        "title": "Locally made",
         "text": "100% produced in Groningen. We know everyone who works on your clothing."
       },
       "fairPricing": {
-        "title": "Fair Pricing",
+        "title": "Fair pricing",
         "text": "No inflated prices or fake sales. Just honest pricing for what you get."
       },
       "noHassle": {
-        "title": "No Hassle",
+        "title": "No hassle",
         "text": "{days} days return policy, free shipping from €{threshold}, and fast customer service. Simple."
       }
     },

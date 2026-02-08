@@ -1353,19 +1353,19 @@
     "values": {
       "title": "ONZE WAARDEN",
       "quality": {
-        "title": "Premium Kwaliteit",
+        "title": "Premium kwaliteit",
         "text": "Alleen de beste materialen en perfecte afwerking. Kleding die jarenlang meegaat."
       },
       "localMade": {
-        "title": "Lokaal Gemaakt",
+        "title": "Lokaal gemaakt",
         "text": "100% geproduceerd in Groningen. We kennen iedereen die aan je kleding werkt."
       },
       "fairPricing": {
-        "title": "Eerlijke Prijzen",
+        "title": "Eerlijke prijzen",
         "text": "Geen opgeblazen prijzen of fake sales. Gewoon eerlijk geprijsd voor wat je krijgt."
       },
       "noHassle": {
-        "title": "Geen Gedoe",
+        "title": "Geen gedoe",
         "text": "{days} dagen retour, gratis verzending vanaf €{threshold}, en snelle klantenservice. Simpel."
       }
     },
