@@ -325,10 +325,8 @@ export type EmailTranslationKeys = {
     perk5Text: string
     whatNowTitle: string
     shopNow: string
-    presaleCode: string
     followUs: string
     onInstagram: string
-    footerNote: string
     ps: string
   }
   insiderCommunity: {
@@ -378,11 +376,9 @@ export type EmailTranslationKeys = {
     perk2: string
     perk3: string
     statusTitle: string
-    statusAlready: string
     statusNotYet: string
     limitedStockTitle: string
     shopNow: string
-    presaleCode: string
     closing: string
     ps: string
   }
@@ -739,10 +735,8 @@ const nl: EmailTranslationKeys = {
     perk5Text: 'Speciale drops alleen voor jou',
     whatNowTitle: 'Wat nu?',
     shopNow: 'Shop nu',
-    presaleCode: 'Code PRESALE30 voor 30% korting',
     followUs: 'Volg ons op Instagram',
     onInstagram: 'voor behind-the-scenes content',
-    footerNote: 'Iedereen kan nu al shoppen met PRESALE30. Maar first dibs op drops? Dat is alleen voor insiders.',
     ps: 'P.S. Houd je inbox in de gaten. We sturen je meer insider content voor de launch.',
   },
   insiderCommunity: {
@@ -792,11 +786,9 @@ const nl: EmailTranslationKeys = {
     perk2: 'Gemaakt in Groningen',
     perk3: 'Gratis verzending op je eerste order',
     statusTitle: 'Check je status:',
-    statusAlready: '✓ Als je al hebt geshopt met PRESALE30: je ontvangt gratis verzending automatisch',
     statusNotYet: '✓ Als je nog niet hebt geshopt: wacht tot 1 maart 00:00 voor vroege toegang',
     limitedStockTitle: 'Items met beperkte voorraad:',
     shopNow: 'Shop nu',
-    presaleCode: 'Code PRESALE30 voor 30% korting',
     closing: 'Dit is het moment. {{days}} dagen. Ben je klaar?',
     ps: 'P.S. Laatste reminder: 1 maart om 00:00 gaan de deuren open voor insiders. Stel je alarm.',
   },
@@ -1153,10 +1145,8 @@ const en: EmailTranslationKeys = {
     perk5Text: 'Special drops just for you',
     whatNowTitle: 'What now?',
     shopNow: 'Shop now',
-    presaleCode: 'Code PRESALE30 for 30% off',
     followUs: 'Follow us on Instagram',
     onInstagram: 'for behind-the-scenes content',
-    footerNote: 'Everyone can already shop with PRESALE30. But first dibs on drops? That\'s insiders only.',
     ps: 'P.S. Keep an eye on your inbox. We\'ll send you more insider content before launch.',
   },
   insiderCommunity: {
@@ -1206,11 +1196,9 @@ const en: EmailTranslationKeys = {
     perk2: 'Made in Groningen',
     perk3: 'Free shipping on your first order',
     statusTitle: 'Check your status:',
-    statusAlready: '✓ If you already shopped with PRESALE30: you\'ll receive free shipping automatically',
     statusNotYet: '✓ If you haven\'t shopped yet: wait until March 1st 00:00 for early access',
     limitedStockTitle: 'Items with limited stock:',
     shopNow: 'Shop now',
-    presaleCode: 'Code PRESALE30 for 30% off',
     closing: 'This is the moment. {{days}} days. Are you ready?',
     ps: 'P.S. Final reminder: March 1st at 00:00 the doors open for insiders. Set your alarm.',
   },

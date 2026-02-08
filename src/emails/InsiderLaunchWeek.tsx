@@ -145,7 +145,6 @@ export default function InsiderLaunchWeekEmail({
               <a href={`${siteUrl}/shop`} style={button}>
                 {t('insiderLaunchWeek.shopNow')}
               </a>
-              <Text style={ctaSubtext}>{t('insiderLaunchWeek.presaleCode')}</Text>
             </Section>
 
             {/* Closing */}

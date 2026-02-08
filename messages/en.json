@@ -1583,10 +1583,8 @@
     "promoExpiry": "Valid until {date}",
     "usePromoCode": "Enter your code at checkout",
     "shopNow": "Shop now",
-    "presaleCode": "Code PRESALE30 for 30% off",
     "followUs": "Follow us on Instagram",
     "onInstagram": "for behind-the-scenes content",
-    "footerNote": "Everyone can already shop with PRESALE30. But first dibs on drops? That's insiders only.",
     "ps": "P.S. Keep an eye on your inbox. We'll send you more insider content before launch."
   },
   "insiderCommunity": {
@@ -1636,11 +1634,9 @@
     "perk2": "Made in Groningen",
     "perk3": "Free shipping on your first order",
     "statusTitle": "Check your status:",
-    "statusAlready": "✓ If you already shopped with PRESALE30: you'll receive free shipping automatically",
     "statusNotYet": "✓ If you haven't shopped yet: wait until March 1st at 00:00 for early access",
     "limitedStockTitle": "Items with limited stock:",
     "shopNow": "Shop now",
-    "presaleCode": "Code PRESALE30 for 30% off",
     "closing": "This is the moment. {days} days. Are you ready?",
     "ps": "P.S. Last reminder: March 1st at 00:00 doors open for insiders. Set your alarm."
   },

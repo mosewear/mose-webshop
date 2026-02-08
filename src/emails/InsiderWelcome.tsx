@@ -156,12 +156,11 @@ export default function InsiderWelcomeEmail({
               <a href={`${siteUrl}/shop`} style={button}>
                 {t('insiderWelcome.shopNow')}
               </a>
-              <Text style={ctaSubtext}>
-                {promoCode 
-                  ? t('insiderWelcome.usePromoCode') 
-                  : t('insiderWelcome.presaleCode')
-                }
-              </Text>
+              {promoCode && (
+                <Text style={ctaSubtext}>
+                  {t('insiderWelcome.usePromoCode')}
+                </Text>
+              )}
             </Section>
 
             {/* Social CTA */}

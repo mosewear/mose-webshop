@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     console.log('✅ Stock validation passed for all items (including presale)')
 
     // ============================================
-    // STEP 2: VALIDATE PROMO CODE (SERVER-SIDE)
+    // STEP 2: VALIDATE PROMO CODE (SERVER-SIDE) + NO STACKING DISCOUNTS
     // ============================================
     let validatedDiscount = 0
     
@@ -125,13 +125,62 @@ export async function POST(request: Request) {
         }
       }
       
-      // Check if promo code has minimum order value
-      if (promoCode.min_order_value && order.subtotal < promoCode.min_order_value) {
-        console.error('❌ Order total below minimum:', order.subtotal, 'Required:', promoCode.min_order_value)
+      // ============================================
+      // NO-STACKING DISCOUNT LOGIC
+      // ============================================
+      console.log('🔍 Checking for existing discounts on items...')
+      
+      // Calculate subtotal of items WITHOUT discount (eligible for promo code)
+      let subtotalEligibleForPromo = 0
+      let subtotalWithExistingDiscount = 0
+      
+      for (const item of items) {
+        // Fetch product to check if it has a sale_price
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('base_price, sale_price')
+          .eq('id', item.product_id)
+          .single()
+        
+        if (productError || !product) {
+          console.error('❌ Product not found:', item.product_id)
+          continue
+        }
+        
+        const hasDiscount = product.sale_price && product.sale_price < product.base_price
+        const itemTotal = item.quantity * item.unit_price
+        
+        if (hasDiscount) {
+          subtotalWithExistingDiscount += itemTotal
+          console.log(`  ❌ Item "${item.product_name}" already has discount (${product.base_price} → ${product.sale_price}) - NOT eligible for promo`)
+        } else {
+          subtotalEligibleForPromo += itemTotal
+          console.log(`  ✅ Item "${item.product_name}" has no discount - eligible for promo`)
+        }
+      }
+      
+      console.log('📊 Subtotal eligible for promo:', subtotalEligibleForPromo)
+      console.log('📊 Subtotal with existing discount:', subtotalWithExistingDiscount)
+      
+      // If ALL items already have discount, promo code cannot be applied
+      if (subtotalEligibleForPromo === 0) {
+        console.error('❌ All items already have discount - promo code cannot be applied')
+        return NextResponse.json(
+          { 
+            error: 'Korting op korting niet mogelijk',
+            details: 'Deze kortingscode kan niet worden toegepast omdat alle items in je winkelwagen al korting hebben. Kortingscodes werken alleen op producten zonder bestaande korting.'
+          },
+          { status: 400 }
+        )
+      }
+      
+      // Check if promo code has minimum order value (only count eligible items)
+      if (promoCode.min_order_value && subtotalEligibleForPromo < promoCode.min_order_value) {
+        console.error('❌ Eligible items total below minimum:', subtotalEligibleForPromo, 'Required:', promoCode.min_order_value)
         return NextResponse.json(
           { 
             error: 'Minimaal bedrag niet bereikt',
-            details: `Deze kortingscode vereist een minimaal bestelbedrag van €${promoCode.min_order_value.toFixed(2)}`
+            details: `Deze kortingscode vereist een minimaal bestelbedrag van €${promoCode.min_order_value.toFixed(2)} aan producten zonder bestaande korting. Je hebt momenteel €${subtotalEligibleForPromo.toFixed(2)} aan items zonder korting.`
           },
           { status: 400 }
         )
@@ -149,17 +198,18 @@ export async function POST(request: Request) {
         )
       }
       
-      // Calculate discount (SERVER-SIDE - trusted source)
+      // Calculate discount ONLY on eligible items (SERVER-SIDE - trusted source)
       if (promoCode.discount_type === 'percentage') {
-        validatedDiscount = (order.subtotal * promoCode.discount_value) / 100
+        validatedDiscount = (subtotalEligibleForPromo * promoCode.discount_value) / 100
       } else if (promoCode.discount_type === 'fixed') {
-        validatedDiscount = promoCode.discount_value
+        validatedDiscount = Math.min(promoCode.discount_value, subtotalEligibleForPromo)
       }
       
-      // Ensure discount doesn't exceed subtotal
-      validatedDiscount = Math.min(validatedDiscount, order.subtotal)
+      // Ensure discount doesn't exceed eligible subtotal
+      validatedDiscount = Math.min(validatedDiscount, subtotalEligibleForPromo)
       
-      console.log('✅ Promo code validated:', order.promo_code, 'Discount:', validatedDiscount)
+      console.log('✅ Promo code validated:', order.promo_code)
+      console.log('✅ Discount calculated:', validatedDiscount, '(only on items without existing discount)')
     }
     
     // Override client-provided discount with server-validated discount
