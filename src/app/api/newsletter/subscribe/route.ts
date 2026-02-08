@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient, createClient } from '@/lib/supabase/server'
 import { sendNewsletterWelcomeEmail, sendInsiderWelcomeEmail } from '@/lib/email'
 import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
 
@@ -59,21 +59,23 @@ export async function POST(req: NextRequest) {
     const supabase = createServiceRoleClient() // Use service role to bypass RLS
 
     // Check if user is admin (bypass rate limit for admins)
+    // Use session cookie instead of Authorization header
     let isAdmin = false
     try {
-      const authHeader = req.headers.get('authorization')
-      if (authHeader) {
-        const token = authHeader.replace('Bearer ', '')
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      const authClient = await createClient() // This reads from cookies automatically
+      const { data: { user }, error: authError } = await authClient.auth.getUser()
+      
+      if (!authError && user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
         
-        if (!authError && user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single()
-          
-          isAdmin = profile?.is_admin || false
+        isAdmin = profile?.is_admin || false
+        
+        if (isAdmin) {
+          console.log('✅ Admin detected via session cookie - rate limit bypassed for:', user.email)
         }
       }
     } catch (error) {
