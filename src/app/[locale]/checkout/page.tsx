@@ -1479,7 +1479,7 @@ export default function CheckoutPage() {
               <div className="space-y-2 border-t border-gray-200 pt-3">
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
-                  <span className="font-semibold uppercase tracking-wide">SUBTOTAAL</span>
+                  <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
                 
@@ -1513,7 +1513,7 @@ export default function CheckoutPage() {
                 
                 {/* Shipping */}
                 <div className="flex justify-between text-sm">
-                  <span className="font-semibold uppercase tracking-wide">VERZENDING</span>
+                  <span className="font-semibold uppercase tracking-wide">{tCart('shipping')}</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
@@ -1807,7 +1807,7 @@ export default function CheckoutPage() {
                             ) : null}
                           </div>
                         </div>
-                        <div className="col-span-2 flex flex-col">
+                        <div className="col-span-3 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                             {t('field.houseNumber')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
@@ -1847,7 +1847,7 @@ export default function CheckoutPage() {
                             {errors.huisnummer && <p className="text-red-600 text-xs">{errors.huisnummer}</p>}
                           </div>
                         </div>
-                        <div className="col-span-2 flex flex-col">
+                        <div className="col-span-1 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                             {t('field.addition')}
                           </label>
@@ -2281,7 +2281,7 @@ export default function CheckoutPage() {
               <div className="space-y-3 border-t-2 border-gray-200 pt-4">
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
-                  <span className="font-semibold uppercase tracking-wide">SUBTOTAAL</span>
+                  <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
@@ -2321,7 +2321,7 @@ export default function CheckoutPage() {
                 
                 {/* Shipping */}
                 <div className="flex justify-between text-sm">
-                  <span className="font-semibold uppercase tracking-wide">VERZENDING</span>
+                  <span className="font-semibold uppercase tracking-wide">{tCart('shipping')}</span>
                   <span className="font-semibold">
                     {shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>

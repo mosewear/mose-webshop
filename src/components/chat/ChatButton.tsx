@@ -8,6 +8,7 @@ import ChatWindow from './ChatWindow'
 export default function ChatButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
 
   // Listen for filter drawer state (detect by checking if element exists)
   useEffect(() => {
@@ -24,29 +25,45 @@ export default function ChatButton() {
     return () => observer.disconnect()
   }, [])
 
-  // Hide if filter drawer is open or chat is open
-  const shouldHideButton = isFilterDrawerOpen || isOpen
+  // Listen for cart drawer state
+  useEffect(() => {
+    const checkCartDrawer = () => {
+      const cartDrawer = document.querySelector('[data-cart-drawer]')
+      setIsCartDrawerOpen(!!cartDrawer)
+    }
+
+    // Check on mount and when DOM changes
+    checkCartDrawer()
+    const observer = new MutationObserver(checkCartDrawer)
+    observer.observe(document.body, { childList: true, subtree: true })
+
+    return () => observer.disconnect()
+  }, [])
+
+  // Hide if filter drawer, cart drawer is open or chat is open
+  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isOpen
 
   return (
     <>
       {/* Floating Chat Button - Rond + Pulserend + Icon Animatie */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
-          isOpen 
-            ? 'bg-black border-brand-primary hidden md:flex' 
-            : 'bg-brand-primary chat-button-pulse md:hover:bg-black md:hover:border-brand-primary'
-        }`}
-        aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
-        animate={{ 
-          scale: isOpen ? 1 : 1,
-          rotate: isOpen ? 90 : 0 
-        }}
-        transition={{ 
-          duration: 0.3,
-          ease: 'easeInOut'
-        }}
-      >
+      {!shouldHideButton && (
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
+            isOpen 
+              ? 'bg-black border-brand-primary hidden md:flex' 
+              : 'bg-brand-primary chat-button-pulse md:hover:bg-black md:hover:border-brand-primary'
+          }`}
+          aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
+          animate={{ 
+            scale: isOpen ? 1 : 1,
+            rotate: isOpen ? 90 : 0 
+          }}
+          transition={{ 
+            duration: 0.3,
+            ease: 'easeInOut'
+          }}
+        >
         <AnimatePresence mode="wait" initial={false}>
           {isOpen ? (
             <motion.div
@@ -71,6 +88,7 @@ export default function ChatButton() {
           )}
         </AnimatePresence>
       </motion.button>
+      )}
 
       {/* Chat Window */}
       <AnimatePresence>

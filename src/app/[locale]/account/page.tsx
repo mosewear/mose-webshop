@@ -510,7 +510,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
+    <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">

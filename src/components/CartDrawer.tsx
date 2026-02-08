@@ -391,6 +391,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
       {/* Drawer */}
       <div
+        data-cart-drawer
         className="fixed inset-y-0 right-0 w-full md:w-[520px] bg-white border-l-4 border-black z-50 flex flex-col animate-slideInRight"
         role="dialog"
         aria-modal="true"
@@ -749,7 +750,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="border-t-2 border-black pt-3 space-y-2">
                   {/* Subtotal */}
                   <div className="flex justify-between items-center text-sm">
-                    <span className="font-semibold uppercase tracking-wide">SUBTOTAAL</span>
+                    <span className="font-semibold uppercase tracking-wide">{t('subtotal')}</span>
                     <span className="font-bold">€{subtotal.toFixed(2)}</span>
                   </div>
 
@@ -783,16 +784,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                   {/* Shipping */}
                   <div className="flex justify-between items-center text-sm">
-                    <span className="font-semibold uppercase tracking-wide">VERZENDING</span>
+                    <span className="font-semibold uppercase tracking-wide">{t('shipping')}</span>
                     <span className="font-bold text-brand-primary">
-                      {shipping === 0 ? 'GRATIS' : `€${shipping.toFixed(2)}`}
+                      {shipping === 0 ? t('shippingFree') : `€${shipping.toFixed(2)}`}
                     </span>
                   </div>
 
                   {/* Total */}
                   <div className="border-t-2 border-black pt-2">
                     <div className="flex justify-between items-baseline">
-                      <span className="font-display text-xl uppercase tracking-wide">TOTAAL</span>
+                      <span className="font-display text-xl uppercase tracking-wide">{t('total')}</span>
                       <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
                     </div>
                     <p className="text-xs text-gray-500 text-right mt-1">
