@@ -34,7 +34,7 @@ export default function ChatButton() {
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
           isOpen 
-            ? 'bg-black border-brand-primary' 
+            ? 'bg-black border-brand-primary hidden md:flex' 
             : 'bg-brand-primary chat-button-pulse hover:bg-black hover:border-brand-primary'
         }`}
         aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
