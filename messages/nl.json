@@ -1669,6 +1669,30 @@
       "send": "Verstuur",
       "sendAria": "Verstuur bericht"
     },
-    "close": "Sluit chat"
+    "close": "Sluit chat",
+    "teamMose": {
+      "title": "Praat met Team MOSE",
+      "subtitle": "Voor persoonlijke hulp, complexe vragen of gewoon een praatje",
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Snelste manier om contact op te nemen",
+        "button": "Open WhatsApp",
+        "hours": "Online: ma-vr 10:00-18:00"
+      },
+      "email": {
+        "title": "Email",
+        "description": "Voor minder urgente vragen",
+        "button": "Stuur email",
+        "response": "Response binnen 24 uur"
+      },
+      "help": {
+        "intro": "Het Team MOSE team helpt je graag met:",
+        "damaged": "Beschadigde of verkeerde orders",
+        "returns": "Complexe retour situaties",
+        "custom": "Custom requests",
+        "tracking": "Order status & tracking",
+        "other": "Andere vragen"
+      }
+    }
   }
 }

@@ -1681,6 +1681,30 @@
       "send": "Send",
       "sendAria": "Send message"
     },
-    "close": "Close chat"
+    "close": "Close chat",
+    "teamMose": {
+      "title": "Talk to Team MOSE",
+      "subtitle": "For personal help, complex questions or just a chat",
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Fastest way to get in touch",
+        "button": "Open WhatsApp",
+        "hours": "Online: Mon-Fri 10:00-18:00"
+      },
+      "email": {
+        "title": "Email",
+        "description": "For less urgent questions",
+        "button": "Send email",
+        "response": "Response within 24 hours"
+      },
+      "help": {
+        "intro": "The Team MOSE team is happy to help you with:",
+        "damaged": "Damaged or wrong orders",
+        "returns": "Complex return situations",
+        "custom": "Custom requests",
+        "tracking": "Order status & tracking",
+        "other": "Other questions"
+      }
+    }
   }
 }

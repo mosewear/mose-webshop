@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { MessageCircle, Mail, Clock } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
+import { useTranslations } from 'next-intl'
 
 export default function TeamMoseTab() {
+  const t = useTranslations('chat.teamMose')
   const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
   const [contactEmail, setContactEmail] = useState('info@mosewear.com')
 
@@ -22,10 +24,10 @@ export default function TeamMoseTab() {
       {/* Header */}
       <div className="text-center">
         <h3 className="font-display text-2xl uppercase tracking-wide mb-2">
-          Praat met Team MOSE
+          {t('title')}
         </h3>
         <p className="text-gray-600">
-          Voor persoonlijke hulp, complexe vragen of gewoon een praatje
+          {t('subtitle')}
         </p>
       </div>
 
@@ -36,8 +38,8 @@ export default function TeamMoseTab() {
             <MessageCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
-            <h4 className="font-display text-lg uppercase tracking-wide">WhatsApp</h4>
-            <p className="text-sm text-gray-600">Snelste manier om contact op te nemen</p>
+            <h4 className="font-display text-lg uppercase tracking-wide">{t('whatsapp.title')}</h4>
+            <p className="text-sm text-gray-600">{t('whatsapp.description')}</p>
           </div>
         </div>
 
@@ -47,12 +49,12 @@ export default function TeamMoseTab() {
           rel="noopener noreferrer"
           className="block w-full py-3 px-4 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover transition-colors text-center font-display uppercase tracking-wide"
         >
-          Open WhatsApp
+          {t('whatsapp.button')}
         </a>
 
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Clock className="w-4 h-4" strokeWidth={2} />
-          <span>Online: ma-vr 10:00-18:00</span>
+          <span>{t('whatsapp.hours')}</span>
         </div>
       </div>
 
@@ -63,8 +65,8 @@ export default function TeamMoseTab() {
             <Mail className="w-6 h-6 text-gray-700" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
-            <h4 className="font-display text-lg uppercase tracking-wide">Email</h4>
-            <p className="text-sm text-gray-600">Voor minder urgente vragen</p>
+            <h4 className="font-display text-lg uppercase tracking-wide">{t('email.title')}</h4>
+            <p className="text-sm text-gray-600">{t('email.description')}</p>
           </div>
         </div>
 
@@ -72,26 +74,26 @@ export default function TeamMoseTab() {
           href={`mailto:${contactEmail}`}
           className="block w-full py-3 px-4 bg-gray-100 text-black border-2 border-black hover:bg-gray-200 transition-colors text-center font-display uppercase tracking-wide"
         >
-          Stuur email
+          {t('email.button')}
         </a>
 
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Clock className="w-4 h-4" strokeWidth={2} />
-          <span>Response binnen 24 uur</span>
+          <span>{t('email.response')}</span>
         </div>
       </div>
 
       {/* Info */}
       <div className="text-center text-sm text-gray-600 pt-4 border-t-2 border-gray-200">
         <p>
-          Het Team MOSE team helpt je graag met:
+          {t('help.intro')}
         </p>
         <ul className="mt-2 space-y-1 text-left max-w-xs mx-auto">
-          <li>• Beschadigde of verkeerde orders</li>
-          <li>• Complexe retour situaties</li>
-          <li>• Custom requests</li>
-          <li>• Order status & tracking</li>
-          <li>• Andere vragen</li>
+          <li>• {t('help.damaged')}</li>
+          <li>• {t('help.returns')}</li>
+          <li>• {t('help.custom')}</li>
+          <li>• {t('help.tracking')}</li>
+          <li>• {t('help.other')}</li>
         </ul>
       </div>
     </div>
