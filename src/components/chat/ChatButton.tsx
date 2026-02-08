@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import ChatWindow from './ChatWindow'
 
@@ -29,22 +29,48 @@ export default function ChatButton() {
 
   return (
     <>
-      {/* Floating Chat Button - Rond + Pulserend */}
-      <AnimatePresence>
-        {!shouldHideButton && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-[9997] w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand-primary border-4 border-black hover:bg-black hover:border-brand-primary transition-all duration-300 flex items-center justify-center group chat-button-pulse"
-            aria-label="Open chat"
-          >
-            <MessageCircle className="w-7 h-7 md:w-9 md:h-9 text-white group-hover:text-brand-primary transition-colors" strokeWidth={2.5} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Floating Chat Button - Rond + Pulserend + Icon Animatie */}
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
+          isOpen 
+            ? 'bg-black border-brand-primary' 
+            : 'bg-brand-primary chat-button-pulse hover:bg-black hover:border-brand-primary'
+        }`}
+        aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
+        animate={{ 
+          scale: isOpen ? 1 : 1,
+          rotate: isOpen ? 90 : 0 
+        }}
+        transition={{ 
+          duration: 0.3,
+          ease: 'easeInOut'
+        }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {isOpen ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <X className="w-7 h-7 md:w-9 md:h-9 text-brand-primary" strokeWidth={3} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="chat"
+              initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MessageCircle className="w-7 h-7 md:w-9 md:h-9 text-white group-hover:text-brand-primary transition-colors" strokeWidth={2.5} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
 
       {/* Chat Window */}
       <AnimatePresence>
