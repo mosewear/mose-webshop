@@ -307,7 +307,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [addedToCart, setAddedToCart] = useState(false)
   const [showLightbox, setShowLightbox] = useState(false)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
-  const [activeTab, setActiveTab] = useState<'description' | 'trust' | 'details' | 'materials' | 'shipping'>('details')
+  const [activeTab, setActiveTab] = useState<'description' | 'trust' | 'details' | 'materials' | 'shipping'>('description')
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
