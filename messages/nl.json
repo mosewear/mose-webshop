@@ -685,6 +685,8 @@
     "addToCart": "Toevoegen",
     "remove": "Verwijderen uit wishlist",
     "removeTitle": "Verwijderen uit wishlist",
+    "added": "Toegevoegd aan wishlist!",
+    "removed": "Verwijderd uit wishlist",
     "noImage": "Geen afbeelding",
     "outOfStock": "Dit product is helaas uitverkocht",
     "addedToCart": "Toegevoegd aan winkelwagen!"

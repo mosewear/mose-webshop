@@ -698,6 +698,8 @@
     "addToCart": "Add to cart",
     "remove": "Remove from wishlist",
     "removeTitle": "Remove from wishlist",
+    "added": "Added to wishlist!",
+    "removed": "Removed from wishlist",
     "noImage": "No image",
     "outOfStock": "This product is unfortunately out of stock",
     "addedToCart": "Added to cart!"

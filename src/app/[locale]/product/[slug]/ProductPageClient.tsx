@@ -1372,24 +1372,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {addedToCart ? t('added') : hasAnyStock ? t('addToCart') : t('outOfStock')}
                 </button>
                 
-                {/* Wishlist button - secondary */}
+                {/* Wishlist button - secondary - MOSE Brutalist */}
                 <button
                   onClick={async () => {
                     if (!product) return
                     if (isWishlisted) {
                       await removeFromWishlist(product.id)
                       setIsWishlisted(false)
+                      toast.success(t('wishlist.removed'))
                     } else {
                       await addToWishlist(product.id)
                       setIsWishlisted(true)
+                      toast.success(t('wishlist.added'))
                     }
                   }}
-                  className={`w-12 md:w-auto md:p-4 p-3 border-2 transition-all flex items-center justify-center ${
+                  className={`w-12 md:w-auto md:p-4 p-3 border-2 border-black transition-all flex items-center justify-center ${
                     isWishlisted
-                      ? 'bg-red-50 border-red-500 text-red-600'
-                      : 'border-gray-300 hover:border-brand-primary'
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-white text-black hover:bg-brand-primary hover:text-white'
                   }`}
                   title={isWishlisted ? t('wishlist.remove') : t('wishlist.add')}
+                  aria-label={isWishlisted ? t('wishlist.remove') : t('wishlist.add')}
                 >
                   <svg className="w-5 h-5 md:w-6 md:h-6" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
