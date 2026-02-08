@@ -597,19 +597,22 @@ export default function ShopPageClient() {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {selectedCategory !== 'all' && (
-                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
-                          <span className="text-sm font-semibold">
-                            {getCategoryName(categories.find(c => c.slug === selectedCategory)!)}
-                          </span>
-                          <button
-                            onClick={() => setSelectedCategory('all')}
-                            className="text-gray-600 hover:text-black"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
+                      {selectedCategory !== 'all' && (() => {
+                        const category = categories.find(c => c.slug === selectedCategory)
+                        return category ? (
+                          <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
+                            <span className="text-sm font-semibold">
+                              {getCategoryName(category)}
+                            </span>
+                            <button
+                              onClick={() => setSelectedCategory('all')}
+                              className="text-gray-600 hover:text-black"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : null
+                      })()}
                       {searchQuery && (
                         <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
                           <span className="text-sm font-semibold">"{searchQuery}"</span>
@@ -793,19 +796,22 @@ export default function ShopPageClient() {
                     </button>
                   </div>
                   <div className="space-y-2">
-                    {selectedCategory !== 'all' && (
-                      <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
-                        <span className="text-sm font-semibold">
-                          {getCategoryName(categories.find(c => c.slug === selectedCategory)!)}
-                        </span>
-                        <button
-                          onClick={() => setSelectedCategory('all')}
-                          className="text-gray-600 hover:text-black"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
+                    {selectedCategory !== 'all' && (() => {
+                      const category = categories.find(c => c.slug === selectedCategory)
+                      return category ? (
+                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
+                          <span className="text-sm font-semibold">
+                            {getCategoryName(category)}
+                          </span>
+                          <button
+                            onClick={() => setSelectedCategory('all')}
+                            className="text-gray-600 hover:text-black"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : null
+                    })()}
                     {searchQuery && (
                       <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
                         <span className="text-sm font-semibold">"{searchQuery}"</span>
@@ -853,11 +859,14 @@ export default function ShopPageClient() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b-2 border-gray-200">
               <h2 className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
                 {t('results', { count: filteredProducts.length })}
-                {selectedCategory !== 'all' && (
-                  <span className="text-brand-primary ml-2">
-                    {t('inCategory', { category: getCategoryName(categories.find(c => c.slug === selectedCategory)!) || '' })}
-                  </span>
-                )}
+                {selectedCategory !== 'all' && (() => {
+                  const category = categories.find(c => c.slug === selectedCategory)
+                  return category ? (
+                    <span className="text-brand-primary ml-2">
+                      {t('inCategory', { category: getCategoryName(category) })}
+                    </span>
+                  ) : null
+                })()}
               </h2>
             </div>
 
