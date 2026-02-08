@@ -40,8 +40,9 @@ export default function ChatButton() {
     return () => observer.disconnect()
   }, [])
 
-  // Hide if filter drawer, cart drawer is open or chat is open
-  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isOpen
+  // Hide button on mobile when chat is open, but always show on desktop
+  // Also hide when filter or cart drawer is open
+  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen
 
   return (
     <>
@@ -51,7 +52,7 @@ export default function ChatButton() {
           onClick={() => setIsOpen(!isOpen)}
           className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
             isOpen 
-              ? 'bg-black border-brand-primary hidden md:flex' 
+              ? 'hidden md:flex bg-black border-brand-primary' 
               : 'bg-brand-primary chat-button-pulse md:hover:bg-black md:hover:border-brand-primary'
           }`}
           aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
