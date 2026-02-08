@@ -193,7 +193,9 @@
       "orderCannotRestore": "This order cannot be restored",
       "loginFailed": "Login failed. Please check your details.",
       "paymentFailed": "Payment failed",
-      "errorOccurred": "An error occurred"
+      "errorOccurred": "An error occurred",
+      "paymentCancelled": "Your previous payment was cancelled",
+      "paymentCancelledDesc": "No worries, your details are saved. Choose your payment method again to complete your order."
     }
   },
   "cart": {

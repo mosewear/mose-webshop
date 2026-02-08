@@ -193,7 +193,9 @@
       "orderCannotRestore": "Deze bestelling kan niet worden hersteld",
       "loginFailed": "Inloggen mislukt. Controleer je gegevens.",
       "paymentFailed": "Betaling mislukt",
-      "errorOccurred": "Er is een fout opgetreden"
+      "errorOccurred": "Er is een fout opgetreden",
+      "paymentCancelled": "Je vorige betaling is geannuleerd",
+      "paymentCancelledDesc": "Geen zorgen, je gegevens zijn bewaard. Kies opnieuw je betaalmethode om je bestelling af te ronden."
     }
   },
   "cart": {
