@@ -600,7 +600,7 @@ export default function ShopPageClient() {
                       {selectedCategory !== 'all' && (
                         <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
                           <span className="text-sm font-semibold">
-                            {categories.find(c => c.slug === selectedCategory)?.name}
+                            {getCategoryName(categories.find(c => c.slug === selectedCategory)!)}
                           </span>
                           <button
                             onClick={() => setSelectedCategory('all')}
@@ -735,7 +735,7 @@ export default function ShopPageClient() {
                             : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
                         }`}
                       >
-                        {category.name} ({count})
+                        {getCategoryName(category)} ({count})
                       </button>
                     )
                   })}
@@ -796,7 +796,7 @@ export default function ShopPageClient() {
                     {selectedCategory !== 'all' && (
                       <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
                         <span className="text-sm font-semibold">
-                          {categories.find(c => c.slug === selectedCategory)?.name}
+                          {getCategoryName(categories.find(c => c.slug === selectedCategory)!)}
                         </span>
                         <button
                           onClick={() => setSelectedCategory('all')}
@@ -855,7 +855,7 @@ export default function ShopPageClient() {
                 {t('results', { count: filteredProducts.length })}
                 {selectedCategory !== 'all' && (
                   <span className="text-brand-primary ml-2">
-                    {t('inCategory', { category: categories.find(c => c.slug === selectedCategory)?.name || '' })}
+                    {t('inCategory', { category: getCategoryName(categories.find(c => c.slug === selectedCategory)!) || '' })}
                   </span>
                 )}
               </h2>
