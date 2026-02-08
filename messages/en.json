@@ -388,7 +388,9 @@
     },
     "wishlist": {
       "add": "Add to wishlist",
-      "remove": "Remove from wishlist"
+      "remove": "Remove from wishlist",
+      "added": "Added to wishlist!",
+      "removed": "Removed from wishlist"
     },
     "tabs": {
       "description": "Product description",

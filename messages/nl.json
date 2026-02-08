@@ -387,7 +387,9 @@
     },
     "wishlist": {
       "add": "Toevoegen aan wishlist",
-      "remove": "Verwijderen uit wishlist"
+      "remove": "Verwijderen uit wishlist",
+      "added": "Toegevoegd aan wishlist!",
+      "removed": "Verwijderd uit wishlist"
     },
     "tabs": {
       "description": "Product beschrijving",
