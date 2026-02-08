@@ -819,7 +819,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   return (
     <>
-      <div className="min-h-screen pt-6 md:pt-8 px-4 pb-24 md:pb-16">
+      <div className="min-h-screen pt-32 md:pt-36 px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <div className="mb-6 md:mb-8 text-sm">
