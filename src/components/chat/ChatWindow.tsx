@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
@@ -9,6 +9,18 @@ import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
 import TeamMoseTab from './TeamMoseTab'
 import { usePathname } from 'next/navigation'
+
+// Get session ID (reuse analytics session ID if available)
+function getSessionId(): string {
+  if (typeof window === 'undefined') return ''
+  
+  let sessionId = sessionStorage.getItem('analytics_session_id')
+  if (!sessionId) {
+    sessionId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    sessionStorage.setItem('analytics_session_id', sessionId)
+  }
+  return sessionId
+}
 
 interface ChatWindowProps {
   onClose: () => void
@@ -35,6 +47,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   const [isLoading, setIsLoading] = useState(false)
   const locale = useLocale()
   const pathname = usePathname()
+  const conversationIdRef = useRef<string | null>(null)
+  const sessionIdRef = useRef<string>(getSessionId())
 
   // Get context for AI
   const getContext = () => {
@@ -70,6 +84,35 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     return context
   }
 
+  // Save message to database
+  const saveMessage = async (role: 'user' | 'assistant', content: string, metadata?: any) => {
+    try {
+      const response = await fetch('/api/chat/save-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: conversationIdRef.current,
+          sessionId: sessionIdRef.current,
+          role,
+          content,
+          metadata: metadata || {},
+          pageUrl: typeof window !== 'undefined' ? window.location.href : null,
+          deviceType: /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'mobile' : 'desktop',
+          userAgent: typeof window !== 'undefined' ? navigator.userAgent : null,
+          locale,
+        }),
+      })
+
+      const data = await response.json()
+      if (data.success && data.conversation_id) {
+        conversationIdRef.current = data.conversation_id
+      }
+    } catch (error) {
+      console.error('Error saving message:', error)
+      // Don't fail chat if saving fails
+    }
+  }
+
   // Handle sending message
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return
@@ -83,6 +126,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
 
     setMessages((prev) => [...prev, userMessage])
+    
+    // Save user message to database
+    await saveMessage('user', content.trim())
+    
     setIsLoading(true)
 
     try {
@@ -144,6 +191,11 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
               )
             }
           }
+        }
+        
+        // Save AI response to database after streaming is complete
+        if (aiContent.trim()) {
+          await saveMessage('assistant', aiContent.trim())
         }
       }
     } catch (error) {
