@@ -49,6 +49,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   const pathname = usePathname()
   const conversationIdRef = useRef<string | null>(null)
   const sessionIdRef = useRef<string>(getSessionId())
+  const greetingSavedRef = useRef<boolean>(false)
 
   // Get context for AI
   const getContext = () => {
@@ -215,6 +216,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       setIsLoading(false)
     }
   }
+
+  // Save greeting message when chat opens
+  useEffect(() => {
+    if (!greetingSavedRef.current) {
+      greetingSavedRef.current = true
+      saveMessage('assistant', t('greeting'))
+    }
+  }, [])
 
   // Disable body scroll when chat is open (mobile)
   useEffect(() => {
