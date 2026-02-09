@@ -52,22 +52,10 @@ export default function TrustpilotWidget({ variant = 'footer', className = '' }:
   }
 
   // Different layouts for footer vs product page
+  // Note: Trustpilot script is already loaded in main layout for domain verification
   if (variant === 'product') {
     return (
-      <>
-        <Script
-          id="trustpilot-script"
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
-                a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
-                f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
-                tp('register', 'AAbEsaY7hRnD5xEZ');
-            `,
-          }}
-        />
-        <div className={`${className}`}>
+      <div className={`${className}`}>
           <a
             href="https://www.trustpilot.com/review/mosewear.com"
             target="_blank"
@@ -78,26 +66,13 @@ export default function TrustpilotWidget({ variant = 'footer', className = '' }:
             <span className="uppercase tracking-wider">{t('rated')}</span>
           </a>
         </div>
-      </>
     )
   }
 
   // Footer variant
+  // Note: Trustpilot script is already loaded in main layout for domain verification
   return (
-    <>
-      <Script
-        id="trustpilot-script-footer"
-        strategy="lazyOnload"
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
-              a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
-              f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
-              tp('register', 'AAbEsaY7hRnD5xEZ');
-          `,
-        }}
-      />
-      <div className={`${className}`}>
+    <div className={`${className}`}>
         <a
           href="https://www.trustpilot.com/review/mosewear.com"
           target="_blank"
