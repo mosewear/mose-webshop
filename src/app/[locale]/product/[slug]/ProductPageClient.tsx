@@ -322,6 +322,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   // Ref for scroll container (CSS scroll-snap)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
+  // Refs for accordion tab content (for smooth scrolling on mobile)
+  const descriptionTabRef = useRef<HTMLDivElement>(null)
+  const trustTabRef = useRef<HTMLDivElement>(null)
+  const detailsTabRef = useRef<HTMLDivElement>(null)
+  const materialsTabRef = useRef<HTMLDivElement>(null)
+  const shippingTabRef = useRef<HTMLDivElement>(null)
+
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
@@ -1504,7 +1511,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'description' && (
-                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50">
+                      <div ref={descriptionTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50">
                         <div className={`text-gray-700 leading-relaxed text-sm ${mobileDescriptionExpanded ? '' : 'line-clamp-6'}`}>
                           {formatBoldText(getLocalizedDescription(product))}
                         </div>
@@ -1546,7 +1553,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'trust' && (
-                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-3">
+                      <div ref={trustTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-3">
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
@@ -1580,7 +1587,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'details' && (
-                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
+                      <div ref={detailsTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {product.categories?.default_product_details || product.categories?.default_product_details_en ? (
                           renderHTMLContent(
                             locale === 'en' && product.categories?.default_product_details_en 
@@ -1625,7 +1632,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'materials' && (
-                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
+                      <div ref={materialsTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
                           renderHTMLContent(
                             locale === 'en' && product.categories?.default_materials_care_en 
@@ -1661,7 +1668,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'shipping' && (
-                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
+                      <div ref={shippingTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</p>
                         <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
