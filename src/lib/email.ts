@@ -33,6 +33,7 @@ import {
   ReturnRejectedEmail,
   AbandonedCartEmail,
   ContactFormEmail,
+  NewReviewNotificationEmail,
   InsiderWelcomeEmail,
   InsiderCommunityEmail,
   InsiderBehindScenesEmail,
@@ -944,6 +945,74 @@ export async function sendNewsletterWelcomeEmail(props: {
 // =====================================================
 // SUPPORT EMAILS
 // =====================================================
+
+/**
+ * Send new review notification email to admin
+ * Triggered when customer submits a product review
+ */
+export async function sendNewReviewNotificationEmail(props: {
+  reviewerName: string
+  reviewerEmail: string
+  productName: string
+  productSlug: string
+  rating: number
+  title?: string
+  comment?: string
+  reviewId: string
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+  const adminEmail = process.env.CONTACT_EMAIL || settings.contact_email
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const html = await render(
+    NewReviewNotificationEmail({
+      reviewerName: props.reviewerName,
+      reviewerEmail: props.reviewerEmail,
+      productName: props.productName,
+      productSlug: props.productSlug,
+      rating: props.rating,
+      title: props.title,
+      comment: props.comment,
+      reviewId: props.reviewId,
+      t,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MOSE Reviews <info@mosewear.com>',
+      to: [adminEmail],
+      replyTo: props.reviewerEmail,
+      subject: t('newReview.subject'),
+      html,
+      headers: {
+        'X-Entity-Ref-ID': `review-${props.reviewId}`,
+      },
+    })
+
+    if (error) {
+      console.error('❌ Error sending new review notification email:', error)
+      return { success: false, error }
+    }
+
+    console.log('✅ New review notification email sent:', data)
+    return { success: true, data }
+  } catch (error: any) {
+    console.error('❌ Error sending new review notification email:', error)
+    return { success: false, error: error?.message || 'Unknown error' }
+  }
+}
 
 /**
  * Send contact form email

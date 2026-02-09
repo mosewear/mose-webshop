@@ -94,7 +94,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
 
-      const { error } = await supabase
+      const { data: insertedReview, error } = await supabase
         .from('product_reviews')
         .insert([
           {
@@ -108,8 +108,29 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             is_approved: false, // Admin moet goedkeuren
           },
         ])
+        .select()
+        .single()
 
       if (error) throw error
+
+      // Send notification email to admin
+      if (insertedReview) {
+        try {
+          await fetch('/api/reviews/notify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              reviewId: insertedReview.id,
+              productId: productId,
+            }),
+          })
+        } catch (emailError) {
+          // Log error but don't fail the review submission
+          console.error('Error sending review notification email:', emailError)
+        }
+      }
 
       alert('✅ Bedankt voor je review! Je review wordt binnen 24 uur goedgekeurd.')
       setShowForm(false)

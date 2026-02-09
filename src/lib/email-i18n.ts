@@ -402,6 +402,19 @@ export type EmailTranslationKeys = {
     return: string
     other: string
   }
+  newReview: {
+    subject: string
+    title: string
+    subtitle: string
+    product: string
+    reviewer: string
+    email: string
+    rating: string
+    reviewTitle: string
+    reviewComment: string
+    approveButton: string
+    info: string
+  }
   footer: {
     receivedBecause: string
     unsubscribe: string
@@ -812,6 +825,19 @@ const nl: EmailTranslationKeys = {
     return: 'Retour of ruil',
     other: 'Iets anders',
   },
+  newReview: {
+    subject: 'Nieuwe review wacht op goedkeuring',
+    title: 'NIEUWE REVIEW',
+    subtitle: 'Er is een nieuwe review ingediend die op goedkeuring wacht',
+    product: 'Product',
+    reviewer: 'Reviewer',
+    email: 'E-mail',
+    rating: 'Beoordeling',
+    reviewTitle: 'Titel',
+    reviewComment: 'Review',
+    approveButton: 'Bekijk en goedkeur review',
+    info: 'Deze review is automatisch opgeslagen en wacht op jouw goedkeuring voordat deze live gaat op de website.',
+  },
   footer: {
     receivedBecause: 'Je ontving deze email omdat',
     unsubscribe: 'Uitschrijven',
@@ -1221,6 +1247,19 @@ const en: EmailTranslationKeys = {
     product: 'Question about product',
     return: 'Return or exchange',
     other: 'Something else',
+  },
+  newReview: {
+    subject: 'New review awaiting approval',
+    title: 'NEW REVIEW',
+    subtitle: 'A new review has been submitted and is awaiting your approval',
+    product: 'Product',
+    reviewer: 'Reviewer',
+    email: 'Email',
+    rating: 'Rating',
+    reviewTitle: 'Title',
+    reviewComment: 'Review',
+    approveButton: 'View and approve review',
+    info: 'This review has been automatically saved and is awaiting your approval before going live on the website.',
   },
   footer: {
     receivedBecause: 'You received this email because',
