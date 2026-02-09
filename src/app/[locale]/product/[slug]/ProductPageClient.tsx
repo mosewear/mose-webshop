@@ -652,7 +652,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     if (!activeTab) return
 
     // Map of tab names to their refs
-    const tabRefs: Record<string, React.RefObject<HTMLDivElement>> = {
+    const tabRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
       description: descriptionTabRef,
       trust: trustTabRef,
       details: detailsTabRef,
