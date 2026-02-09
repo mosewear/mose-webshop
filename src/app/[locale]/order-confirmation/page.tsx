@@ -141,7 +141,8 @@ export default function OrderConfirmationPage({
       setLoading(false)
       
       // Trigger Trustpilot review invitation
-      if (typeof window !== 'undefined' && (window as any).tp) {
+      // Trustpilot requires the invitation to be sent after DOMContentLoaded
+      const sendTrustpilotInvitation = () => {
         const recipientName = data.order.shipping_address?.name || 
                              `${data.order.shipping_address?.firstName || ''} ${data.order.shipping_address?.lastName || ''}`.trim() ||
                              'Customer'
@@ -153,32 +154,40 @@ export default function OrderConfirmationPage({
           source: 'InvitationScript'
         }
         
-        console.log('📧 [TRUSTPILOT] Sending review invitation:', trustpilot_invitation)
-        ;(window as any).tp('createInvitation', trustpilot_invitation)
-      } else {
-        console.warn('⚠️ [TRUSTPILOT] Trustpilot script not loaded yet, invitation will be sent when script loads')
-        // Fallback: wait for Trustpilot script to load
+        console.log('📧 [TRUSTPILOT] Preparing invitation:', trustpilot_invitation)
+        
+        // Wait for Trustpilot script to be fully loaded
         const checkTrustpilot = setInterval(() => {
-          if (typeof window !== 'undefined' && (window as any).tp) {
+          if (typeof window !== 'undefined' && (window as any).tp && typeof (window as any).tp === 'function') {
             clearInterval(checkTrustpilot)
-            const recipientName = data.order.shipping_address?.name || 
-                                 `${data.order.shipping_address?.firstName || ''} ${data.order.shipping_address?.lastName || ''}`.trim() ||
-                                 'Customer'
             
-            const trustpilot_invitation = {
-              recipientEmail: data.order.email,
-              recipientName: recipientName,
-              referenceId: data.order.id,
-              source: 'InvitationScript'
+            try {
+              console.log('✅ [TRUSTPILOT] Script loaded, sending invitation...')
+              ;(window as any).tp('createInvitation', trustpilot_invitation)
+              console.log('✅ [TRUSTPILOT] Invitation sent successfully!')
+            } catch (error) {
+              console.error('❌ [TRUSTPILOT] Error sending invitation:', error)
             }
-            
-            console.log('📧 [TRUSTPILOT] Sending review invitation (delayed):', trustpilot_invitation)
-            ;(window as any).tp('createInvitation', trustpilot_invitation)
           }
         }, 100)
         
-        // Stop checking after 5 seconds
-        setTimeout(() => clearInterval(checkTrustpilot), 5000)
+        // Stop checking after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkTrustpilot)
+          if (typeof window !== 'undefined' && !(window as any).tp) {
+            console.warn('⚠️ [TRUSTPILOT] Script not loaded after 10 seconds, invitation may not be sent')
+          }
+        }, 10000)
+      }
+      
+      // Wait for DOM to be ready (as Trustpilot recommends)
+      if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', sendTrustpilotInvitation)
+        } else {
+          // DOM already loaded
+          sendTrustpilotInvitation()
+        }
       }
       
       console.log('🎯 [STEP 3] Tracking analytics...')
