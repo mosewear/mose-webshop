@@ -1295,30 +1295,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
-              {/* Quantity Selector */}
-              {inStock && (
-                <div>
-                  <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">{t('quantity')}</label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 border-2 border-black font-bold text-xl hover:bg-black hover:text-white transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="text-lg md:text-xl font-bold w-10 text-center">{quantity}</span>
-                    <button
-                      onClick={() =>
-                        setQuantity(Math.min(selectedVariant?.stock_quantity || 1, quantity + 1))
-                      }
-                      className="w-10 h-10 border-2 border-black font-bold text-xl hover:bg-black hover:text-white transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Add to Cart Buttons - Mobile & Desktop */}
               <div className="flex gap-2 md:gap-3">
                 {/* QUANTITY SELECTOR - Brutalist Stepper (MOSE Style) */}
