@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, MessageCircle, Calendar, Globe, Monitor, Smartphone } from 'lucide-react'
 import Link from 'next/link'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 interface ChatConversation {
   id: string
@@ -30,16 +31,138 @@ export default function ChatAdminPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [messagesLoading, setMessagesLoading] = useState(false)
+  const [realtimeStatus, setRealtimeStatus] = useState<'connected' | 'disconnected'>('disconnected')
   const supabase = createClient()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const channelsRef = useRef<RealtimeChannel[]>([])
 
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // Fetch initial conversations
   useEffect(() => {
     fetchConversations()
   }, [])
 
+  // Fetch messages when conversation is selected
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation)
     }
+  }, [selectedConversation])
+
+  // Setup Realtime subscriptions
+  useEffect(() => {
+    let messagesChannel: RealtimeChannel | null = null
+    let conversationsChannel: RealtimeChannel | null = null
+
+    // Subscribe to new messages
+    messagesChannel = supabase
+      .channel('chat_messages_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        (payload) => {
+          const newMessage = payload.new as ChatMessage
+          
+          // If this message belongs to the currently selected conversation, add it
+          if (selectedConversation && newMessage.conversation_id === selectedConversation) {
+            setMessages((prev) => {
+              // Check if message already exists (avoid duplicates)
+              if (prev.some((m) => m.id === newMessage.id)) {
+                return prev
+              }
+              return [...prev, newMessage]
+            })
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setRealtimeStatus('connected')
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          setRealtimeStatus('disconnected')
+        }
+      })
+
+    // Subscribe to new conversations and updates
+    conversationsChannel = supabase
+      .channel('chat_conversations_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_conversations',
+        },
+        (payload) => {
+          const newConversation = payload.new as ChatConversation
+          setConversations((prev) => {
+            // Check if conversation already exists (avoid duplicates)
+            if (prev.some((c) => c.id === newConversation.id)) {
+              return prev
+            }
+            // Add new conversation at the top
+            return [newConversation, ...prev]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_conversations',
+        },
+        (payload) => {
+          const updatedConversation = payload.new as ChatConversation
+          setConversations((prev) => {
+            // Update existing conversation
+            const index = prev.findIndex((c) => c.id === updatedConversation.id)
+            if (index !== -1) {
+              const updated = [...prev]
+              updated[index] = updatedConversation
+              // Move updated conversation to top (most recent)
+              const [moved] = updated.splice(index, 1)
+              return [moved, ...updated]
+            }
+            return prev
+          })
+          
+          // If this is the selected conversation, refresh messages to get latest count
+          if (selectedConversation === updatedConversation.id) {
+            // Only refresh if we're not currently loading
+            if (!messagesLoading) {
+              fetchMessages(updatedConversation.id)
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    channelsRef.current = [messagesChannel, conversationsChannel]
+
+    // Cleanup subscriptions on unmount or when dependencies change
+    return () => {
+      if (messagesChannel) {
+        supabase.removeChannel(messagesChannel)
+      }
+      if (conversationsChannel) {
+        supabase.removeChannel(conversationsChannel)
+      }
+      channelsRef.current = []
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation])
 
   const fetchConversations = async () => {
@@ -84,6 +207,113 @@ export default function ChatAdminPage() {
     }
   }
 
+  // Realtime subscription setup - separate effect to avoid dependency issues
+  useEffect(() => {
+    let messagesChannel: RealtimeChannel | null = null
+    let conversationsChannel: RealtimeChannel | null = null
+
+    // Subscribe to new messages
+    messagesChannel = supabase
+      .channel('chat_messages_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        (payload) => {
+          const newMessage = payload.new as ChatMessage
+          
+          // If this message belongs to the currently selected conversation, add it
+          if (selectedConversation && newMessage.conversation_id === selectedConversation) {
+            setMessages((prev) => {
+              // Check if message already exists (avoid duplicates)
+              if (prev.some((m) => m.id === newMessage.id)) {
+                return prev
+              }
+              return [...prev, newMessage]
+            })
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setRealtimeStatus('connected')
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          setRealtimeStatus('disconnected')
+        }
+      })
+
+    // Subscribe to new conversations and updates
+    conversationsChannel = supabase
+      .channel('chat_conversations_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_conversations',
+        },
+        (payload) => {
+          const newConversation = payload.new as ChatConversation
+          setConversations((prev) => {
+            // Check if conversation already exists (avoid duplicates)
+            if (prev.some((c) => c.id === newConversation.id)) {
+              return prev
+            }
+            // Add new conversation at the top
+            return [newConversation, ...prev]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_conversations',
+        },
+        (payload) => {
+          const updatedConversation = payload.new as ChatConversation
+          setConversations((prev) => {
+            // Update existing conversation
+            const index = prev.findIndex((c) => c.id === updatedConversation.id)
+            if (index !== -1) {
+              const updated = [...prev]
+              updated[index] = updatedConversation
+              // Move updated conversation to top (most recent)
+              const [moved] = updated.splice(index, 1)
+              return [moved, ...updated]
+            }
+            return prev
+          })
+          
+          // If this is the selected conversation, refresh messages to get latest count
+          if (selectedConversation === updatedConversation.id) {
+            // Only refresh if we're not currently loading
+            if (!messagesLoading) {
+              fetchMessages(updatedConversation.id)
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    channelsRef.current = [messagesChannel, conversationsChannel]
+
+    // Cleanup subscriptions on unmount or when dependencies change
+    return () => {
+      if (messagesChannel) {
+        supabase.removeChannel(messagesChannel)
+      }
+      if (conversationsChannel) {
+        supabase.removeChannel(conversationsChannel)
+      }
+      channelsRef.current = []
+    }
+  }, [selectedConversation, supabase])
+
   const selectedConv = conversations.find(c => c.id === selectedConversation)
 
   if (loading) {
@@ -109,12 +339,21 @@ export default function ChatAdminPage() {
             >
               <ArrowLeft size={20} />
             </Link>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold flex items-center gap-2 md:gap-3">
                 <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-brand-primary" />
                 Chat Gesprekken
               </h1>
               <p className="text-xs md:text-sm text-gray-600 mt-1">Bekijk alle chat gesprekken met klanten</p>
+            </div>
+            {/* Realtime Status Indicator */}
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${
+                realtimeStatus === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+              }`} />
+              <span className="text-xs text-gray-600 hidden md:inline">
+                {realtimeStatus === 'connected' ? 'Live' : 'Offline'}
+              </span>
             </div>
           </div>
         </div>
@@ -252,6 +491,8 @@ export default function ChatAdminPage() {
                         <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
                       </div>
                     ))}
+                    {/* Scroll anchor for auto-scroll */}
+                    <div ref={messagesEndRef} />
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm text-center py-8">
