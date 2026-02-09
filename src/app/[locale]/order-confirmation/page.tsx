@@ -140,6 +140,47 @@ export default function OrderConfirmationPage({
       setOrderItems(data.items)
       setLoading(false)
       
+      // Trigger Trustpilot review invitation
+      if (typeof window !== 'undefined' && (window as any).tp) {
+        const recipientName = data.order.shipping_address?.name || 
+                             `${data.order.shipping_address?.firstName || ''} ${data.order.shipping_address?.lastName || ''}`.trim() ||
+                             'Customer'
+        
+        const trustpilot_invitation = {
+          recipientEmail: data.order.email,
+          recipientName: recipientName,
+          referenceId: data.order.id,
+          source: 'InvitationScript'
+        }
+        
+        console.log('📧 [TRUSTPILOT] Sending review invitation:', trustpilot_invitation)
+        ;(window as any).tp('createInvitation', trustpilot_invitation)
+      } else {
+        console.warn('⚠️ [TRUSTPILOT] Trustpilot script not loaded yet, invitation will be sent when script loads')
+        // Fallback: wait for Trustpilot script to load
+        const checkTrustpilot = setInterval(() => {
+          if (typeof window !== 'undefined' && (window as any).tp) {
+            clearInterval(checkTrustpilot)
+            const recipientName = data.order.shipping_address?.name || 
+                                 `${data.order.shipping_address?.firstName || ''} ${data.order.shipping_address?.lastName || ''}`.trim() ||
+                                 'Customer'
+            
+            const trustpilot_invitation = {
+              recipientEmail: data.order.email,
+              recipientName: recipientName,
+              referenceId: data.order.id,
+              source: 'InvitationScript'
+            }
+            
+            console.log('📧 [TRUSTPILOT] Sending review invitation (delayed):', trustpilot_invitation)
+            ;(window as any).tp('createInvitation', trustpilot_invitation)
+          }
+        }, 100)
+        
+        // Stop checking after 5 seconds
+        setTimeout(() => clearInterval(checkTrustpilot), 5000)
+      }
+      
       console.log('🎯 [STEP 3] Tracking analytics...')
       
       // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
