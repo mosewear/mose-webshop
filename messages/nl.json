@@ -68,7 +68,10 @@
       "cart": "Winkelwagen",
       "privacy": "Privacy",
       "terms": "Algemene Voorwaarden"
-    },
+    }
+  },
+  "trustpilot": {
+    "rated": "Beoordeeld op Trustpilot",
     "copyright": "© {year} MOSE. Alle rechten voorbehouden.",
     "prices": "Alle prijzen incl. {rate}% BTW",
     "made": "Gemaakt met ❤️ in Groningen"

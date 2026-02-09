@@ -8,6 +8,7 @@ import { SiTiktok } from 'react-icons/si'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import TrustpilotWidget from '@/components/TrustpilotWidget'
 
 export function Footer() {
   const t = useTranslations('footer')
@@ -68,6 +69,10 @@ export function Footer() {
                   {settings.contact_email}
                 </a>
               </p>
+            </div>
+            {/* Trustpilot Widget */}
+            <div className="mb-4">
+              <TrustpilotWidget variant="footer" />
             </div>
             {/* Social Media Icons */}
             <div className="flex gap-4">

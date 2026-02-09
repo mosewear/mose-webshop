@@ -10,6 +10,7 @@ import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
 import StickyBuyNow from '@/components/StickyBuyNow'
+import TrustpilotWidget from '@/components/TrustpilotWidget'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
@@ -1042,14 +1043,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
             {/* RIGHT: Product Info (45% width, sticky) */}
             <div className="space-y-4 md:sticky md:top-24 md:self-start">
-              {/* Title & Category */}
+              {/* Title & Trustpilot */}
               <div>
-                <Link
-                  href={`/shop?category=${product.categories.slug}`}
-                  className="text-xs md:text-sm uppercase tracking-wider text-brand-primary hover:underline mb-1 md:mb-2 block"
-                >
-                  {product.categories.name}
-                </Link>
+                {/* Trustpilot Widget (replaces category) */}
+                <div className="mb-1 md:mb-2">
+                  <TrustpilotWidget variant="product" />
+                </div>
                 <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3 transition-all duration-300">
                   {product && getLocalizedName(product)}
                   {selectedVariant && selectedColor && (

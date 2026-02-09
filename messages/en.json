@@ -73,6 +73,9 @@
     "prices": "All prices incl. {rate}% VAT",
     "made": "Made with ❤️ in Groningen"
   },
+  "trustpilot": {
+    "rated": "Rated on Trustpilot"
+  },
   "checkout": {
     "title": "CHECKOUT",
     "subtotal": "Subtotal",
