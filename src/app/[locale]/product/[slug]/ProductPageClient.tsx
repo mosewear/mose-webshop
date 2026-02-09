@@ -311,6 +311,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifySubmitted, setNotifySubmitted] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [mobileDescriptionExpanded, setMobileDescriptionExpanded] = useState(false)
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
@@ -1504,9 +1505,26 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'description' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50">
-                        <div className="text-gray-700 leading-relaxed text-sm">
+                        <div className={`text-gray-700 leading-relaxed text-sm ${mobileDescriptionExpanded ? '' : 'line-clamp-6'}`}>
                           {formatBoldText(getLocalizedDescription(product))}
                         </div>
+                        {/* Show "lees meer" button if description is long enough */}
+                        {getLocalizedDescription(product) && getLocalizedDescription(product).length > 300 && (
+                          <button
+                            onClick={() => setMobileDescriptionExpanded(!mobileDescriptionExpanded)}
+                            className="text-xs text-brand-primary hover:underline font-semibold mt-3 inline-flex items-center gap-1"
+                          >
+                            {mobileDescriptionExpanded ? t('showLess') : t('showMore')}
+                            <svg
+                              className={`w-3 h-3 transition-transform ${mobileDescriptionExpanded ? 'rotate-180' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
