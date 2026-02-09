@@ -169,19 +169,14 @@ export default function ChatAdminPage() {
   const fetchConversations = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('chat_conversations')
-        .select('*')
-        .order('last_message_at', { ascending: false })
-        .limit(100)
-
-      if (error) {
-        console.error('Error fetching conversations:', error)
-      } else {
-        setConversations(data || [])
+      const response = await fetch('/api/admin/chat/conversations')
+      if (!response.ok) {
+        throw new Error('Failed to fetch conversations')
       }
+      const { conversations } = await response.json()
+      setConversations(conversations || [])
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching conversations:', error)
     } finally {
       setLoading(false)
     }
@@ -190,19 +185,14 @@ export default function ChatAdminPage() {
   const fetchMessages = async (conversationId: string) => {
     setMessagesLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true })
-
-      if (error) {
-        console.error('Error fetching messages:', error)
-      } else {
-        setMessages(data || [])
+      const response = await fetch(`/api/admin/chat/messages?conversation_id=${conversationId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages')
       }
+      const { messages } = await response.json()
+      setMessages(messages || [])
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching messages:', error)
     } finally {
       setMessagesLoading(false)
     }

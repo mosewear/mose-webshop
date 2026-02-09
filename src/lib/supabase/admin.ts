@@ -71,16 +71,16 @@ export const createAdminClient = async () => {
 export type AdminRole = 'admin' | 'manager' | 'viewer'
 
 export async function requireAdmin(allowedRoles: AdminRole[] = ['admin', 'manager']) {
-  const { user, adminUser, isAdmin } = await createAdminClient()
+  const { user, adminUser, isAdmin, supabase } = await createAdminClient()
 
   if (!user || !adminUser) {
-    return { authorized: false, user: null, adminUser: null }
+    return { authorized: false, user: null, adminUser: null, supabase: null }
   }
 
   if (!allowedRoles.includes(adminUser.role as AdminRole)) {
-    return { authorized: false, user, adminUser }
+    return { authorized: false, user, adminUser, supabase }
   }
 
-  return { authorized: true, user, adminUser }
+  return { authorized: true, user, adminUser, supabase }
 }
 
