@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProductPerformance {
@@ -409,6 +409,52 @@ export default function BehaviorAnalyticsPage() {
             <p className="text-gray-500 text-sm">Nog geen product performance data. Start met shoppen om data te verzamelen!</p>
           )}
         </div>
+
+        {/* Chat Statistics */}
+        {chatStats && (
+          <div className="bg-white border-2 border-gray-200 p-6">
+            <h2 className="text-xl md:text-2xl font-display font-bold mb-4 flex items-center gap-2">
+              <MessageCircle className="w-6 h-6 text-brand-primary" />
+              Chat Statistieken
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 border-2 border-gray-200 p-4">
+                <h3 className="font-bold text-sm text-gray-600 mb-3 uppercase tracking-wider">Chat Geopend</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Vandaag:</span>
+                    <span className="font-bold text-lg">{chatStats.opens_today}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Laatste 7 dagen:</span>
+                    <span className="font-bold text-lg">{chatStats.opens_7d}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Laatste 30 dagen:</span>
+                    <span className="font-bold text-lg">{chatStats.opens_30d}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 border-2 border-gray-200 p-4">
+                <h3 className="font-bold text-sm text-gray-600 mb-3 uppercase tracking-wider">Chat Gesloten</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Vandaag:</span>
+                    <span className="font-bold text-lg">{chatStats.closes_today}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Laatste 7 dagen:</span>
+                    <span className="font-bold text-lg">{chatStats.closes_7d}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Laatste 30 dagen:</span>
+                    <span className="font-bold text-lg">{chatStats.closes_30d}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Recent Events Live Feed */}
         <div className="bg-white border-2 border-gray-200 p-6">
