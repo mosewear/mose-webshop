@@ -30,12 +30,22 @@ interface RecentEvent {
   device_type: string | null
 }
 
+interface ChatStats {
+  opens_today: number
+  opens_7d: number
+  opens_30d: number
+  closes_today: number
+  closes_7d: number
+  closes_30d: number
+}
+
 export default function BehaviorAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
   const [productPerformance, setProductPerformance] = useState<ProductPerformance[]>([])
   const [conversionFunnel, setConversionFunnel] = useState<FunnelStep[]>([])
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([])
+  const [chatStats, setChatStats] = useState<ChatStats | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -84,6 +94,67 @@ export default function BehaviorAnalyticsPage() {
       } else {
         setRecentEvents(events || [])
       }
+      
+      // 4. Get chat statistics
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const todayStart = today.toISOString()
+      const now = new Date().toISOString()
+      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      
+      // Chat opens
+      const { count: opensToday } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_name', 'chat_opened')
+        .gte('created_at', todayStart)
+        .lte('created_at', now)
+      
+      const { count: opens7d } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_name', 'chat_opened')
+        .gte('created_at', sevenDaysAgo)
+        .lte('created_at', now)
+      
+      const { count: opens30d } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_name', 'chat_opened')
+        .gte('created_at', thirtyDaysAgo)
+        .lte('created_at', now)
+      
+      // Chat closes
+      const { count: closesToday } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_name', 'chat_closed')
+        .gte('created_at', todayStart)
+        .lte('created_at', now)
+      
+      const { count: closes7d } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_name', 'chat_closed')
+        .gte('created_at', sevenDaysAgo)
+        .lte('created_at', now)
+      
+      const { count: closes30d } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_name', 'chat_closed')
+        .gte('created_at', thirtyDaysAgo)
+        .lte('created_at', now)
+      
+      setChatStats({
+        opens_today: opensToday || 0,
+        opens_7d: opens7d || 0,
+        opens_30d: opens30d || 0,
+        closes_today: closesToday || 0,
+        closes_7d: closes7d || 0,
+        closes_30d: closes30d || 0,
+      })
       
     } catch (error) {
       console.error('Error fetching behavior analytics:', error)
