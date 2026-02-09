@@ -313,20 +313,69 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [mobileDescriptionExpanded, setMobileDescriptionExpanded] = useState(false)
 
-  // Handle tab change while preserving scroll position
+  // Handle tab change with smart scroll positioning
   const handleTabChange = (newTab: 'description' | 'trust' | 'details' | 'materials' | 'shipping' | '') => {
-    // Save current scroll position
-    const scrollY = window.scrollY
-    
+    // If closing a tab, just close it
+    if (!newTab) {
+      setActiveTab('' as any)
+      return
+    }
+
+    // Get the button element that was clicked
+    const buttonMap: Record<string, string> = {
+      description: '[data-tab="description"]',
+      trust: '[data-tab="trust"]',
+      details: '[data-tab="details"]',
+      materials: '[data-tab="materials"]',
+      shipping: '[data-tab="shipping"]',
+    }
+
+    const buttonSelector = buttonMap[newTab]
+    const buttonElement = buttonSelector ? document.querySelector(buttonSelector) as HTMLElement : null
+
+    // Save current scroll position and button position before state change
+    const currentScrollY = window.scrollY
+    const buttonRect = buttonElement?.getBoundingClientRect()
+    const buttonTopRelative = buttonRect ? buttonRect.top : null // Position relative to viewport
+
     // Update tab state
     setActiveTab(newTab as any)
-    
-    // Restore scroll position after a brief delay to allow DOM to update
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY)
-      })
-    })
+
+    // After DOM updates, scroll to keep the opened accordion button in view
+    // Use setTimeout to ensure all DOM updates (collapsing/expanding) are complete
+    setTimeout(() => {
+      if (buttonElement) {
+        const newButtonRect = buttonElement.getBoundingClientRect()
+        const newButtonTop = newButtonRect.top + window.scrollY
+        
+        // Check if button is currently visible in viewport
+        const isButtonVisible = newButtonRect.top >= 0 && newButtonRect.bottom <= window.innerHeight
+        
+        // If button is not fully visible, scroll it into view
+        if (!isButtonVisible) {
+          // Scroll to button with offset from top for better UX
+          const offset = 20 // 20px breathing room from top
+          const targetScroll = newButtonTop - offset
+          
+          window.scrollTo({
+            top: Math.max(0, targetScroll),
+            behavior: 'smooth'
+          })
+        } else {
+          // Button is visible, but we need to compensate for content collapsing above
+          // Calculate how much content collapsed above the button
+          const scrollAdjustment = (buttonTopRelative || 0) - newButtonRect.top
+          
+          // Only adjust if there's a significant change (more than 10px)
+          if (Math.abs(scrollAdjustment) > 10) {
+            window.scrollTo({
+              top: currentScrollY + scrollAdjustment,
+              behavior: 'smooth'
+            })
+          }
+        }
+      }
+    }, 100) // Small delay to ensure DOM has fully updated
   }
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
@@ -1548,6 +1597,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Trust Badges Tab - Mobile only */}
                   <div className="md:hidden border-2 border-black">
                     <button
+                      data-tab="trust"
                       onClick={() => handleTabChange(activeTab === 'trust' ? '' : 'trust')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
@@ -1582,6 +1632,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Details Tab */}
                   <div className="border-2 border-black">
                     <button
+                      data-tab="details"
                       onClick={() => handleTabChange(activeTab === 'details' ? '' : 'details')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
@@ -1627,6 +1678,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Materials Tab */}
                   <div className="border-2 border-black">
                     <button
+                      data-tab="materials"
                       onClick={() => handleTabChange(activeTab === 'materials' ? '' : 'materials')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
@@ -1663,6 +1715,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Shipping Tab - Desktop only (mobile has it in Trust tab) */}
                   <div className="hidden md:block border-2 border-black">
                     <button
+                      data-tab="shipping"
                       onClick={() => handleTabChange(activeTab === 'shipping' ? '' : 'shipping')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
