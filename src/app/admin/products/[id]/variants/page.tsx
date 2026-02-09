@@ -841,7 +841,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Voorraad
                   </th>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden xl:table-cell">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Pre-sale
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -965,7 +965,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         }`}
                       />
                     </td>
-                    <td className="px-3 md:px-6 py-4 hidden xl:table-cell">
+                    <td className="px-3 md:px-6 py-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Qty:</span>
