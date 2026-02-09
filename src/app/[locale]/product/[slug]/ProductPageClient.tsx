@@ -647,6 +647,31 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     toast.error('Selecteer eerst een maat en kleur')
   }
 
+  // Scroll to accordion tab content when opened (mobile only)
+  useEffect(() => {
+    if (!activeTab) return
+
+    // Map of tab names to their refs
+    const tabRefs: Record<string, React.RefObject<HTMLDivElement>> = {
+      description: descriptionTabRef,
+      trust: trustTabRef,
+      details: detailsTabRef,
+      materials: materialsTabRef,
+      shipping: shippingTabRef,
+    }
+
+    const ref = tabRefs[activeTab]
+    if (ref?.current) {
+      // Small delay to ensure content is rendered
+      setTimeout(() => {
+        ref.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest', // Only scroll if content is not visible
+        })
+      }, 150)
+    }
+  }, [activeTab])
+
   const handleAddToCart = async () => {
     if (!product || !selectedVariant) return
 
