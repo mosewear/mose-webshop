@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { MessageCircle, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import ChatWindow from './ChatWindow'
+import { trackEvent } from '@/lib/analytics'
 
 export default function ChatButton() {
   const [isOpen, setIsOpen] = useState(false)
@@ -49,7 +50,31 @@ export default function ChatButton() {
       {/* Floating Chat Button - Rond + Pulserend + Icon Animatie */}
       {!shouldHideButton && (
         <motion.button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            const wasOpen = isOpen
+            setIsOpen(!isOpen)
+            
+            // Track chat click
+            if (!wasOpen) {
+              // Chat opened
+              trackEvent({
+                event_name: 'chat_opened',
+                properties: {
+                  source: 'chat_button',
+                  page_url: window.location.href,
+                },
+              })
+            } else {
+              // Chat closed
+              trackEvent({
+                event_name: 'chat_closed',
+                properties: {
+                  source: 'chat_button',
+                  page_url: window.location.href,
+                },
+              })
+            }
+          }}
           className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
             isOpen 
               ? 'hidden md:flex bg-black border-brand-primary' 
