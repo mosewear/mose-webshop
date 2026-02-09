@@ -170,13 +170,19 @@ export default function ChatAdminPage() {
     setLoading(true)
     try {
       const response = await fetch('/api/admin/chat/conversations')
+      const data = await response.json()
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch conversations')
+        console.error('API Error:', data)
+        alert(`Fout bij ophalen gesprekken: ${data.error || 'Onbekende fout'}`)
+        return
       }
-      const { conversations } = await response.json()
-      setConversations(conversations || [])
-    } catch (error) {
+      
+      setConversations(data.conversations || [])
+      console.log('✅ Conversations loaded:', data.conversations?.length || 0)
+    } catch (error: any) {
       console.error('Error fetching conversations:', error)
+      alert(`Fout bij ophalen gesprekken: ${error.message}`)
     } finally {
       setLoading(false)
     }
