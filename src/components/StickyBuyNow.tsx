@@ -1,15 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import { trackAddToCart } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
-import { useTranslations, useLocale } from 'next-intl'
-import { formatPrice } from '@/lib/format-price'
+import { useTranslations } from 'next-intl'
 
 interface StickyBuyNowProps {
   product: {
@@ -45,7 +43,6 @@ export default function StickyBuyNow({
   onVariantRequired,
 }: StickyBuyNowProps) {
   const t = useTranslations('product.sticky')
-  const locale = useLocale()
   const [isVisible, setIsVisible] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const addItem = useCart((state) => state.addItem)
@@ -93,12 +90,6 @@ export default function StickyBuyNow({
   const finalPrice = product.sale_price 
     ? product.sale_price + (selectedVariant?.price_adjustment || 0)
     : product.base_price + (selectedVariant?.price_adjustment || 0)
-
-  const originalPrice = product.base_price + (selectedVariant?.price_adjustment || 0)
-  const hasDiscount = product.sale_price !== null && product.sale_price < product.base_price
-  const discountPercentage = hasDiscount 
-    ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
-    : 0
 
   const handleAddToCart = async () => {
     if (!selectedVariant) {
@@ -185,35 +176,7 @@ export default function StickyBuyNow({
   if (!isVisible || isCartOpen) return null
 
   return (
-    <>
-      {/* CSS voor pulse animatie */}
-      <style jsx>{`
-        @keyframes gentle-pulse {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 rgba(0, 182, 122, 0.4);
-          }
-          50% { 
-            box-shadow: 0 0 0 8px rgba(0, 182, 122, 0);
-          }
-        }
-
-        .pulse-button {
-          animation: gentle-pulse 3s ease-in-out infinite;
-        }
-
-        /* Hover bounce - alleen desktop */
-        @media (min-width: 768px) {
-          .pulse-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-          }
-        }
-
-        .pulse-button {
-          transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-        }
-      `}</style>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3">
           {/* IN WINKELWAGEN button - Full width - GROEN */}
           <button
@@ -225,8 +188,7 @@ export default function StickyBuyNow({
             <span>{t('addToCart')}</span>
           </button>
         </div>
-      </div>
-    </>
+    </div>
   )
 }
 

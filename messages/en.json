@@ -460,10 +460,8 @@
       "required": "*"
     },
     "sticky": {
-      "addToCart": "ADD TO CART",
-      "buyNow": "BUY NOW",
-      "buyNowMobile": "BUY",
-      "adding": "ADDING..."
+      "addToCart": "Add to Cart",
+      "adding": "Adding..."
     }
   },
   "shipping": {

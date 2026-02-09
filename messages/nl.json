@@ -459,10 +459,8 @@
       "required": "*"
     },
     "sticky": {
-      "addToCart": "IN WAGEN",
-      "buyNow": "BESTEL NU",
-      "buyNowMobile": "KOPEN",
-      "adding": "BEZIG..."
+      "addToCart": "In winkelwagen",
+      "adding": "Toevoegen..."
     }
   },
   "shipping": {
