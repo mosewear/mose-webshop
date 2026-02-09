@@ -222,20 +222,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     return Object.keys(pendingChanges).length
   }
 
-  // Keep toggle functions that save immediately (they're action buttons, not form fields)
-  const handleTogglePresale = async (variantId: string, enabled: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('product_variants')
-        .update({ presale_enabled: enabled })
-        .eq('id', variantId)
-
-      if (error) throw error
-      fetchVariants()
-    } catch (err: any) {
-      alert(`Fout: ${err.message}`)
-    }
-  }
+  // Note: presale_enabled is now handled via handleFieldChange, not saved immediately
 
   const handleToggleAvailability = async (variantId: string, currentStatus: boolean) => {
     try {
@@ -757,8 +744,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={variant.presale_enabled}
-                              onChange={(e) => handleTogglePresale(variant.id, e.target.checked)}
+                              checked={pendingChanges[variant.id]?.presale_enabled !== undefined
+                                ? pendingChanges[variant.id]?.presale_enabled
+                                : variant.presale_enabled}
+                              onChange={(e) => handleFieldChange(variant.id, 'presale_enabled', e.target.checked)}
                               className="w-4 h-4"
                             />
                             <span className="text-xs text-gray-600">Enabled</span>
@@ -983,8 +972,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <label className="flex items-center gap-1 cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={variant.presale_enabled}
-                              onChange={(e) => handleTogglePresale(variant.id, e.target.checked)}
+                              checked={pendingChanges[variant.id]?.presale_enabled !== undefined
+                                ? pendingChanges[variant.id]?.presale_enabled
+                                : variant.presale_enabled}
+                              onChange={(e) => handleFieldChange(variant.id, 'presale_enabled', e.target.checked)}
                               className="w-3 h-3"
                             />
                             <span className="text-xs text-gray-600">Enabled</span>
