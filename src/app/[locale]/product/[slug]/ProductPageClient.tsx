@@ -312,6 +312,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [notifySubmitted, setNotifySubmitted] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [mobileDescriptionExpanded, setMobileDescriptionExpanded] = useState(false)
+
+  // Handle tab change while preserving scroll position
+  const handleTabChange = (newTab: 'description' | 'trust' | 'details' | 'materials' | 'shipping' | '') => {
+    // Save current scroll position
+    const scrollY = window.scrollY
+    
+    // Update tab state
+    setActiveTab(newTab as any)
+    
+    // Restore scroll position after a brief delay to allow DOM to update
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY)
+      })
+    })
+  }
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
     return_days: 14,
@@ -321,13 +337,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   // Ref for scroll container (CSS scroll-snap)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-
-  // Refs for accordion tab content (for smooth scrolling on mobile)
-  const descriptionTabRef = useRef<HTMLDivElement>(null)
-  const trustTabRef = useRef<HTMLDivElement>(null)
-  const detailsTabRef = useRef<HTMLDivElement>(null)
-  const materialsTabRef = useRef<HTMLDivElement>(null)
-  const shippingTabRef = useRef<HTMLDivElement>(null)
 
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
@@ -646,31 +655,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     
     toast.error('Selecteer eerst een maat en kleur')
   }
-
-  // Scroll to accordion tab content when opened (mobile only)
-  useEffect(() => {
-    if (!activeTab) return
-
-    // Map of tab names to their refs
-    const tabRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
-      description: descriptionTabRef,
-      trust: trustTabRef,
-      details: detailsTabRef,
-      materials: materialsTabRef,
-      shipping: shippingTabRef,
-    }
-
-    const ref = tabRefs[activeTab]
-    if (ref?.current) {
-      // Small delay to ensure content is rendered
-      setTimeout(() => {
-        ref.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest', // Only scroll if content is not visible
-        })
-      }, 150)
-    }
-  }, [activeTab])
 
   const handleAddToCart = async () => {
     if (!product || !selectedVariant) return
@@ -1522,7 +1506,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   <div className="md:hidden border-2 border-black">
                     <button
                       data-tab="description"
-                      onClick={() => setActiveTab(activeTab === 'description' ? '' as any : 'description')}
+                      onClick={() => handleTabChange(activeTab === 'description' ? '' : 'description')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
                       <span>{t('tabs.description')}</span>
@@ -1536,7 +1520,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'description' && (
-                      <div ref={descriptionTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50">
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50">
                         <div className={`text-gray-700 leading-relaxed text-sm ${mobileDescriptionExpanded ? '' : 'line-clamp-6'}`}>
                           {formatBoldText(getLocalizedDescription(product))}
                         </div>
@@ -1564,7 +1548,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Trust Badges Tab - Mobile only */}
                   <div className="md:hidden border-2 border-black">
                     <button
-                      onClick={() => setActiveTab(activeTab === 'trust' ? '' as any : 'trust')}
+                      onClick={() => handleTabChange(activeTab === 'trust' ? '' : 'trust')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
                       <span>{t('tabs.shippingReturns')}</span>
@@ -1578,7 +1562,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'trust' && (
-                      <div ref={trustTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-3">
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-3">
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
@@ -1598,7 +1582,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Details Tab */}
                   <div className="border-2 border-black">
                     <button
-                      onClick={() => setActiveTab(activeTab === 'details' ? '' as any : 'details')}
+                      onClick={() => handleTabChange(activeTab === 'details' ? '' : 'details')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
                       <span>{t('tabs.details')}</span>
@@ -1612,7 +1596,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'details' && (
-                      <div ref={detailsTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {product.categories?.default_product_details || product.categories?.default_product_details_en ? (
                           renderHTMLContent(
                             locale === 'en' && product.categories?.default_product_details_en 
@@ -1643,7 +1627,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Materials Tab */}
                   <div className="border-2 border-black">
                     <button
-                      onClick={() => setActiveTab(activeTab === 'materials' ? '' as any : 'materials')}
+                      onClick={() => handleTabChange(activeTab === 'materials' ? '' : 'materials')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
                       <span>{t('tabs.materials')}</span>
@@ -1657,7 +1641,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'materials' && (
-                      <div ref={materialsTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
                           renderHTMLContent(
                             locale === 'en' && product.categories?.default_materials_care_en 
@@ -1679,7 +1663,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   {/* Shipping Tab - Desktop only (mobile has it in Trust tab) */}
                   <div className="hidden md:block border-2 border-black">
                     <button
-                      onClick={() => setActiveTab(activeTab === 'shipping' ? '' as any : 'shipping')}
+                      onClick={() => handleTabChange(activeTab === 'shipping' ? '' : 'shipping')}
                       className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
                     >
                       <span>{t('tabs.shippingReturns')}</span>
@@ -1693,7 +1677,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </svg>
                     </button>
                     {activeTab === 'shipping' && (
-                      <div ref={shippingTabRef} className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
+                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</p>
                         <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
