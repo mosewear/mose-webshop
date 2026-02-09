@@ -56,16 +56,16 @@ export default function TrustpilotWidget({ variant = 'footer', className = '' }:
   if (variant === 'product') {
     return (
       <div className={`${className}`}>
-          <a
-            href="https://www.trustpilot.com/review/mosewear.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-xs md:text-sm text-gray-600 hover:text-brand-primary transition-colors"
-          >
-            <span className="font-semibold text-yellow-500">★★★★★</span>
-            <span className="uppercase tracking-wider">{t('rated')}</span>
-          </a>
-        </div>
+        <a
+          href="https://www.trustpilot.com/review/mosewear.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-xs md:text-sm text-gray-600 hover:text-brand-primary transition-colors"
+        >
+          <span className="font-semibold text-yellow-500">★★★★★</span>
+          <span className="uppercase tracking-wider">{t('rated')}</span>
+        </a>
+      </div>
     )
   }
 
@@ -73,17 +73,16 @@ export default function TrustpilotWidget({ variant = 'footer', className = '' }:
   // Note: Trustpilot script is already loaded in main layout for domain verification
   return (
     <div className={`${className}`}>
-        <a
-          href="https://www.trustpilot.com/review/mosewear.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          <span className="font-semibold text-yellow-500">★★★★★</span>
-          <span>{t('rated')}</span>
-        </a>
-      </div>
-    </>
+      <a
+        href="https://www.trustpilot.com/review/mosewear.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+      >
+        <span className="font-semibold text-yellow-500">★★★★★</span>
+        <span>{t('rated')}</span>
+      </a>
+    </div>
   )
 }
 
