@@ -179,33 +179,47 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     }))
   }
 
-  // Save all pending changes for a variant
-  const handleSaveVariant = async (variantId: string) => {
-    const changes = pendingChanges[variantId]
-    if (!changes || Object.keys(changes).length === 0) {
+  // Save all pending changes for all variants at once
+  const handleSaveAll = async () => {
+    const variantIds = Object.keys(pendingChanges)
+    if (variantIds.length === 0) {
       return // No changes to save
     }
 
     try {
-      const { error } = await supabase
-        .from('product_variants')
-        .update(changes)
-        .eq('id', variantId)
+      // Save all changes in parallel
+      const savePromises = variantIds.map(async (variantId) => {
+        const changes = pendingChanges[variantId]
+        if (!changes || Object.keys(changes).length === 0) {
+          return
+        }
 
-      if (error) throw error
+        const { error } = await supabase
+          .from('product_variants')
+          .update(changes)
+          .eq('id', variantId)
 
-      // Clear pending changes for this variant
-      setPendingChanges(prev => {
-        const newChanges = { ...prev }
-        delete newChanges[variantId]
-        return newChanges
+        if (error) throw error
       })
+
+      await Promise.all(savePromises)
+
+      // Clear all pending changes
+      setPendingChanges({})
 
       // Refresh variants to show updated data
       fetchVariants()
+
+      // Show success message
+      alert(`✅ ${variantIds.length} variant${variantIds.length > 1 ? 'en' : ''} opgeslagen!`)
     } catch (err: any) {
       alert(`Fout bij opslaan: ${err.message}`)
     }
+  }
+
+  // Get total number of pending changes
+  const getPendingChangesCount = () => {
+    return Object.keys(pendingChanges).length
   }
 
   // Keep toggle functions that save immediately (they're action buttons, not form fields)
@@ -334,36 +348,51 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     )
   }
 
+  const pendingCount = getPendingChangesCount()
+
   return (
-    <div>
+    <div className="pb-20 md:pb-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
         <div className="flex items-center gap-4">
           <Link
             href={`/admin/products/${id}/edit`}
-            className="p-2 hover:bg-gray-100 transition-colors"
+            className="p-2 hover:bg-gray-100 transition-colors rounded"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </Link>
           <div>
-            <h1 className="text-3xl font-display font-bold mb-2">Product Varianten</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1 md:mb-2">Product Varianten</h1>
             {product ? (
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 {product.name} <span className="text-brand-primary">€{product.base_price.toFixed(2)}</span>
               </p>
             ) : (
-              <p className="text-gray-500">Product laden...</p>
+              <p className="text-sm md:text-base text-gray-500">Product laden...</p>
             )}
           </div>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
-        >
-          {showAddForm ? 'Annuleren' : '+ Variant Toevoegen'}
-        </button>
+        <div className="flex gap-2">
+          {pendingCount > 0 && (
+            <button
+              onClick={handleSaveAll}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 uppercase tracking-wider transition-colors text-sm md:text-base flex items-center gap-2"
+            >
+              <span>Opslaan</span>
+              <span className="bg-white text-green-600 rounded-full px-2 py-0.5 text-xs font-bold">
+                {pendingCount}
+              </span>
+            </button>
+          )}
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 uppercase tracking-wider transition-colors text-sm md:text-base"
+          >
+            {showAddForm ? 'Annuleren' : '+ Variant'}
+          </button>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -374,24 +403,24 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-brand-primary mb-2">{variants.length}</div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Totaal Varianten</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-1 md:mb-2">{variants.length}</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Varianten</div>
         </div>
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-green-600 mb-2">{getAvailableVariants()}</div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Beschikbaar</div>
+        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1 md:mb-2">{getAvailableVariants()}</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Beschikbaar</div>
         </div>
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-orange-600 mb-2">{getTotalStock()}</div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Totale Voorraad</div>
+        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
+          <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-1 md:mb-2">{getTotalStock()}</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totale Voorraad</div>
         </div>
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-red-600 mb-2">
+        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
+          <div className="text-2xl md:text-3xl font-bold text-red-600 mb-1 md:mb-2">
             {variants.filter(v => v.stock_quantity < 5).length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Lage Voorraad</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Lage Voorraad</div>
         </div>
       </div>
 
@@ -606,38 +635,219 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y-2 divide-gray-200">
+          <>
+            {/* Mobile Card Layout */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {variants.map((variant, index) => {
+                const isFirst = index === 0
+                const isLast = index === variants.length - 1
+                const hasChanges = pendingChanges[variant.id] && Object.keys(pendingChanges[variant.id]).length > 0
+                
+                return (
+                  <div key={variant.id} className={`p-4 ${hasChanges ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {variant.color_hex && (
+                            <div
+                              className="w-6 h-6 border-2 border-gray-300 rounded"
+                              style={{ backgroundColor: variant.color_hex }}
+                            />
+                          )}
+                          <span className="font-bold text-gray-900">{variant.size} / {variant.color}</span>
+                        </div>
+                        {variant.sku && (
+                          <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded block mb-2">
+                            {variant.sku}
+                          </code>
+                        )}
+                        {product && (
+                          <div className="text-sm font-bold text-gray-900 mb-2">
+                            €{(product.base_price + variant.price_adjustment).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => handleMoveUp(variant.id, variant.display_order)}
+                          disabled={isFirst}
+                          className={`p-1 border-2 transition-colors ${
+                            isFirst
+                              ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                              : 'border-gray-300 hover:border-black hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleMoveDown(variant.id, variant.display_order)}
+                          disabled={isLast}
+                          className={`p-1 border-2 transition-colors ${
+                            isLast
+                              ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                              : 'border-gray-300 hover:border-black hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Color Hex */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Kleur Code</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={pendingChanges[variant.id]?.color_hex !== undefined 
+                              ? (pendingChanges[variant.id]?.color_hex || '#000000')
+                              : (variant.color_hex || '#000000')}
+                            onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
+                            className="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={pendingChanges[variant.id]?.color_hex !== undefined
+                              ? (pendingChanges[variant.id]?.color_hex || '')
+                              : (variant.color_hex || '')}
+                            onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
+                            placeholder="#000000"
+                            className="flex-1 px-3 py-2 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Stock */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Voorraad</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pendingChanges[variant.id]?.stock_quantity !== undefined
+                            ? pendingChanges[variant.id]?.stock_quantity
+                            : variant.stock_quantity}
+                          onChange={(e) => handleFieldChange(variant.id, 'stock_quantity', parseInt(e.target.value) || 0)}
+                          className={`w-full px-3 py-2 border-2 focus:outline-none transition-colors ${
+                            (pendingChanges[variant.id]?.stock_quantity !== undefined
+                              ? (pendingChanges[variant.id]?.stock_quantity ?? 0)
+                              : variant.stock_quantity) < 5
+                              ? 'border-red-300 focus:border-red-500 bg-red-50'
+                              : 'border-gray-300 focus:border-brand-primary'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Presale */}
+                      <div className="border-t pt-3">
+                        <label className="block text-xs font-bold text-gray-700 mb-2">Pre-sale</label>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500 w-12">Qty:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={pendingChanges[variant.id]?.presale_stock_quantity !== undefined
+                                ? pendingChanges[variant.id]?.presale_stock_quantity
+                                : variant.presale_stock_quantity}
+                              onChange={(e) => handleFieldChange(variant.id, 'presale_stock_quantity', parseInt(e.target.value) || 0)}
+                              className="flex-1 px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={variant.presale_enabled}
+                              onChange={(e) => handleTogglePresale(variant.id, e.target.checked)}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-xs text-gray-600">Enabled</span>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">NL:</label>
+                            <input
+                              type="text"
+                              value={pendingChanges[variant.id]?.presale_expected_date !== undefined
+                                ? (pendingChanges[variant.id]?.presale_expected_date || '')
+                                : (variant.presale_expected_date || '')}
+                              onChange={(e) => handleFieldChange(variant.id, 'presale_expected_date', e.target.value || null)}
+                              placeholder="Week 10 feb"
+                              className="w-full px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">EN:</label>
+                            <input
+                              type="text"
+                              value={pendingChanges[variant.id]?.presale_expected_date_en !== undefined
+                                ? (pendingChanges[variant.id]?.presale_expected_date_en || '')
+                                : (variant.presale_expected_date_en || '')}
+                              onChange={(e) => handleFieldChange(variant.id, 'presale_expected_date_en', e.target.value || null)}
+                              placeholder="Week 10 Feb"
+                              className="w-full px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status & Actions */}
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <button
+                          onClick={() => handleToggleAvailability(variant.id, variant.is_available)}
+                          className={`px-3 py-1.5 text-xs font-semibold border-2 transition-colors ${
+                            variant.is_available
+                              ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          {variant.is_available ? 'Beschikbaar' : 'Niet beschikbaar'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteVariant(variant.id, variant.size, variant.color)}
+                          className="text-red-600 hover:text-red-900 font-semibold text-xs"
+                        >
+                          Verwijderen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y-2 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-20">
+                  <th className="px-2 md:px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-16 md:w-20">
                     Volgorde
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Maat
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Kleur
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Kleur Code
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                     SKU
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Prijs
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Voorraad
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden xl:table-cell">
                     Pre-sale
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Acties
                   </th>
                 </tr>
@@ -650,7 +860,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                   return (
                   <tr key={variant.id} className="hover:bg-gray-50 transition-colors">
                     {/* Order Controls */}
-                    <td className="px-2 py-4">
+                    <td className="px-2 md:px-2 py-4">
                       <div className="flex flex-col gap-0.5">
                         <button
                           onClick={() => handleMoveUp(variant.id, variant.display_order)}
@@ -680,29 +890,29 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-bold text-gray-900">{variant.size}</span>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <span className="font-bold text-gray-900 text-sm md:text-base">{variant.size}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {variant.color_hex && (
                           <div
-                            className="w-6 h-6 border-2 border-gray-300 rounded"
+                            className="w-5 h-5 md:w-6 md:h-6 border-2 border-gray-300 rounded"
                             style={{ backgroundColor: variant.color_hex }}
                           />
                         )}
-                        <span className="text-sm text-gray-900">{variant.color}</span>
+                        <span className="text-xs md:text-sm text-gray-900">{variant.color}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1 md:gap-2">
                         <input
                           type="color"
                           value={pendingChanges[variant.id]?.color_hex !== undefined 
                             ? (pendingChanges[variant.id]?.color_hex || '#000000')
                             : (variant.color_hex || '#000000')}
                           onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
-                          className="w-10 h-8 border-2 border-gray-300 rounded cursor-pointer"
+                          className="w-8 h-8 md:w-10 md:h-8 border-2 border-gray-300 rounded cursor-pointer"
                         />
                         <input
                           type="text"
@@ -711,11 +921,11 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                             : (variant.color_hex || '')}
                           onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
                           placeholder="#000000"
-                          className="w-24 px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none font-mono"
+                          className="w-20 md:w-24 px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none font-mono"
                         />
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                       {variant.sku ? (
                         <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                           {variant.sku}
@@ -724,13 +934,13 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         <span className="text-gray-400 text-sm">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       {product ? (
-                        <div className="text-sm font-bold text-gray-900">
+                        <div className="text-xs md:text-sm font-bold text-gray-900">
                           €{(product.base_price + variant.price_adjustment).toFixed(2)}
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-400">-</div>
+                        <div className="text-xs md:text-sm text-gray-400">-</div>
                       )}
                       {product && variant.price_adjustment !== 0 && (
                         <div className="text-xs text-gray-500">
@@ -738,7 +948,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       <input
                         type="number"
                         min="0"
@@ -746,7 +956,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           ? pendingChanges[variant.id]?.stock_quantity
                           : variant.stock_quantity}
                         onChange={(e) => handleFieldChange(variant.id, 'stock_quantity', parseInt(e.target.value) || 0)}
-                        className={`w-20 px-3 py-2 border-2 focus:outline-none transition-colors ${
+                        className={`w-16 md:w-20 px-2 md:px-3 py-1.5 md:py-2 text-sm border-2 focus:outline-none transition-colors ${
                           (pendingChanges[variant.id]?.stock_quantity !== undefined
                             ? (pendingChanges[variant.id]?.stock_quantity ?? 0)
                             : variant.stock_quantity) < 5
@@ -755,7 +965,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         }`}
                       />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 md:px-6 py-4 hidden xl:table-cell">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Qty:</span>
@@ -806,35 +1016,25 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleAvailability(variant.id, variant.is_available)}
-                        className={`px-3 py-1 text-xs font-semibold border-2 transition-colors ${
+                        className={`px-2 md:px-3 py-1 text-xs font-semibold border-2 transition-colors ${
                           variant.is_available
                             ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
                             : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                         }`}
                       >
-                        {variant.is_available ? 'Beschikbaar' : 'Niet beschikbaar'}
+                        {variant.is_available ? 'Ja' : 'Nee'}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-3">
-                        {pendingChanges[variant.id] && Object.keys(pendingChanges[variant.id]).length > 0 && (
-                          <button
-                            onClick={() => handleSaveVariant(variant.id)}
-                            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-1.5 px-4 uppercase tracking-wider transition-colors text-xs"
-                          >
-                            Opslaan
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteVariant(variant.id, variant.size, variant.color)}
-                          className="text-red-600 hover:text-red-900 font-semibold"
-                        >
-                          Verwijderen
-                        </button>
-                      </div>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleDeleteVariant(variant.id, variant.size, variant.color)}
+                        className="text-red-600 hover:text-red-900 font-semibold text-xs"
+                      >
+                        Verwijderen
+                      </button>
                     </td>
                   </tr>
                 )
@@ -842,8 +1042,24 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
+
+      {/* Sticky Save Button (Mobile) */}
+      {pendingCount > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-lg md:hidden z-50">
+          <button
+            onClick={handleSaveAll}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+          >
+            <span>Opslaan</span>
+            <span className="bg-white text-green-600 rounded-full px-3 py-1 text-sm font-bold">
+              {pendingCount}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
