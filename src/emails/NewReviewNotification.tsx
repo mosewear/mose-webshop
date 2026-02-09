@@ -59,8 +59,8 @@ export default function NewReviewNotificationEmail({
           {/* Hero Section */}
           <Section style={hero}>
             <IconCircle icon="check-circle" color="#667eea" size={38} />
-            <Text style={title}>{t('newReview.title')}</Text>
-            <Text style={subtitle}>
+            <Text style={titleStyle}>{t('newReview.title')}</Text>
+            <Text style={subtitleStyle}>
               {t('newReview.subtitle')}
             </Text>
           </Section>
@@ -182,7 +182,7 @@ const hero = {
   backgroundColor: '#ffffff',
 }
 
-const title = {
+const titleStyle = {
   margin: '20px 0 0 0',
   fontSize: '32px',
   fontWeight: '900',
@@ -192,7 +192,7 @@ const title = {
   textTransform: 'uppercase' as const,
 }
 
-const subtitle = {
+const subtitleStyle = {
   margin: '8px 0 0 0',
   fontSize: '16px',
   lineHeight: '24px',
