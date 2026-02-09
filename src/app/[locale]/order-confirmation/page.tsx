@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import Script from 'next/script'
 import { useCart } from '@/store/cart'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackPurchase } from '@/lib/analytics'
@@ -140,56 +141,6 @@ export default function OrderConfirmationPage({
       setOrderItems(data.items)
       setLoading(false)
       
-      // Trigger Trustpilot review invitation
-      // Trustpilot requires the invitation to be sent after DOMContentLoaded
-      const sendTrustpilotInvitation = () => {
-        const recipientName = data.order.shipping_address?.name || 
-                             `${data.order.shipping_address?.firstName || ''} ${data.order.shipping_address?.lastName || ''}`.trim() ||
-                             'Customer'
-        
-        const trustpilot_invitation = {
-          recipientEmail: data.order.email,
-          recipientName: recipientName,
-          referenceId: data.order.id,
-          source: 'InvitationScript'
-        }
-        
-        console.log('📧 [TRUSTPILOT] Preparing invitation:', trustpilot_invitation)
-        
-        // Wait for Trustpilot script to be fully loaded
-        const checkTrustpilot = setInterval(() => {
-          if (typeof window !== 'undefined' && (window as any).tp && typeof (window as any).tp === 'function') {
-            clearInterval(checkTrustpilot)
-            
-            try {
-              console.log('✅ [TRUSTPILOT] Script loaded, sending invitation...')
-              ;(window as any).tp('createInvitation', trustpilot_invitation)
-              console.log('✅ [TRUSTPILOT] Invitation sent successfully!')
-            } catch (error) {
-              console.error('❌ [TRUSTPILOT] Error sending invitation:', error)
-            }
-          }
-        }, 100)
-        
-        // Stop checking after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkTrustpilot)
-          if (typeof window !== 'undefined' && !(window as any).tp) {
-            console.warn('⚠️ [TRUSTPILOT] Script not loaded after 10 seconds, invitation may not be sent')
-          }
-        }, 10000)
-      }
-      
-      // Wait for DOM to be ready (as Trustpilot recommends)
-      if (typeof window !== 'undefined') {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', sendTrustpilotInvitation)
-        } else {
-          // DOM already loaded
-          sendTrustpilotInvitation()
-        }
-      }
-      
       console.log('🎯 [STEP 3] Tracking analytics...')
       
       // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
@@ -273,6 +224,36 @@ export default function OrderConfirmationPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Trustpilot Invitation Script - Exact zoals Trustpilot vereist */}
+      {order && (
+        <Script
+          id="trustpilot-invitation"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.addEventListener('DOMContentLoaded', function() {
+                const recipientName = ${JSON.stringify(
+                  order.shipping_address?.name || 
+                  `${order.shipping_address?.firstName || ''} ${order.shipping_address?.lastName || ''}`.trim() ||
+                  'Customer'
+                )};
+                const trustpilot_invitation = {
+                  recipientEmail: ${JSON.stringify(order.email)},
+                  recipientName: recipientName,
+                  referenceId: ${JSON.stringify(order.id)},
+                  source: 'InvitationScript',
+                };
+                if (typeof tp !== 'undefined' && typeof tp === 'function') {
+                  tp('createInvitation', trustpilot_invitation);
+                  console.log('✅ [TRUSTPILOT] Invitation sent:', trustpilot_invitation);
+                } else {
+                  console.warn('⚠️ [TRUSTPILOT] tp function not available yet');
+                }
+              });
+            `,
+          }}
+        />
+      )}
       {/* HERO SECTION - Full Screen Success */}
       <div className="min-h-screen flex flex-col items-center justify-center px-4 pb-32 pt-24 md:pt-32">
         <div className="text-center max-w-3xl mx-auto">
