@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     const { authorized, supabase } = await requireAdmin()
 
-    if (!authorized) {
+    if (!authorized || !supabase) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
