@@ -89,6 +89,7 @@ export default function ChatAdminPage() {
         }
       )
       .subscribe((status) => {
+        console.log('[Realtime] Messages channel status:', status)
         if (status === 'SUBSCRIBED') {
           setRealtimeStatus('connected')
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
