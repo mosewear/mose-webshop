@@ -38,6 +38,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
   const [showAddForm, setShowAddForm] = useState(false)
   const supabase = createClient()
 
+  // State to track pending changes per variant
+  const [pendingChanges, setPendingChanges] = useState<Record<string, Partial<ProductVariant>>>({})
+
   // Form state for new variant
   const [newVariant, setNewVariant] = useState({
     size: 'M',
@@ -85,6 +88,8 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
 
       if (error) throw error
       setVariants(data || [])
+      // Clear pending changes when refreshing data
+      setPendingChanges({})
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -163,81 +168,52 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     }
   }
 
-  const handleUpdateStock = async (variantId: string, newStock: number) => {
+  // Track changes in state instead of saving immediately
+  const handleFieldChange = (variantId: string, field: keyof ProductVariant, value: any) => {
+    setPendingChanges(prev => ({
+      ...prev,
+      [variantId]: {
+        ...prev[variantId],
+        [field]: value,
+      }
+    }))
+  }
+
+  // Save all pending changes for a variant
+  const handleSaveVariant = async (variantId: string) => {
+    const changes = pendingChanges[variantId]
+    if (!changes || Object.keys(changes).length === 0) {
+      return // No changes to save
+    }
+
     try {
       const { error } = await supabase
         .from('product_variants')
-        .update({ stock_quantity: newStock })
+        .update(changes)
         .eq('id', variantId)
 
       if (error) throw error
+
+      // Clear pending changes for this variant
+      setPendingChanges(prev => {
+        const newChanges = { ...prev }
+        delete newChanges[variantId]
+        return newChanges
+      })
+
+      // Refresh variants to show updated data
       fetchVariants()
     } catch (err: any) {
-      alert(`Fout: ${err.message}`)
+      alert(`Fout bij opslaan: ${err.message}`)
     }
   }
 
-  const handleUpdatePresaleStock = async (variantId: string, newStock: number) => {
-    try {
-      const { error } = await supabase
-        .from('product_variants')
-        .update({ presale_stock_quantity: newStock })
-        .eq('id', variantId)
-
-      if (error) throw error
-      fetchVariants()
-    } catch (err: any) {
-      alert(`Fout: ${err.message}`)
-    }
-  }
-
+  // Keep toggle functions that save immediately (they're action buttons, not form fields)
   const handleTogglePresale = async (variantId: string, enabled: boolean) => {
     try {
       const { error } = await supabase
         .from('product_variants')
         .update({ presale_enabled: enabled })
-        .eq('id', variantId)
-
-      if (error) throw error
-      fetchVariants()
-    } catch (err: any) {
-      alert(`Fout: ${err.message}`)
-    }
-  }
-
-  const handleUpdatePresaleDate = async (variantId: string, date: string) => {
-    try {
-      const { error } = await supabase
-        .from('product_variants')
-        .update({ presale_expected_date: date || null })
-        .eq('id', variantId)
-
-      if (error) throw error
-      fetchVariants()
-    } catch (err: any) {
-      alert(`Fout: ${err.message}`)
-    }
-  }
-
-  const handleUpdatePresaleDateEn = async (variantId: string, date: string) => {
-    try {
-      const { error } = await supabase
-        .from('product_variants')
-        .update({ presale_expected_date_en: date || null })
-        .eq('id', variantId)
-
-      if (error) throw error
-      fetchVariants()
-    } catch (err: any) {
-      alert(`Fout: ${err.message}`)
-    }
-  }
-
-  const handleUpdateColorHex = async (variantId: string, hex: string) => {
-    try {
-      const { error } = await supabase
-        .from('product_variants')
-        .update({ color_hex: hex || null })
         .eq('id', variantId)
 
       if (error) throw error
@@ -722,24 +698,18 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
-                          defaultValue={variant.color_hex || '#000000'}
-                          onBlur={(e) => {
-                            const newHex = e.target.value
-                            if (newHex !== (variant.color_hex || '')) {
-                              handleUpdateColorHex(variant.id, newHex)
-                            }
-                          }}
+                          value={pendingChanges[variant.id]?.color_hex !== undefined 
+                            ? (pendingChanges[variant.id].color_hex || '#000000')
+                            : (variant.color_hex || '#000000')}
+                          onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
                           className="w-10 h-8 border-2 border-gray-300 rounded cursor-pointer"
                         />
                         <input
                           type="text"
-                          defaultValue={variant.color_hex || ''}
-                          onBlur={(e) => {
-                            const newHex = e.target.value
-                            if (newHex !== (variant.color_hex || '')) {
-                              handleUpdateColorHex(variant.id, newHex)
-                            }
-                          }}
+                          value={pendingChanges[variant.id]?.color_hex !== undefined
+                            ? (pendingChanges[variant.id].color_hex || '')
+                            : (variant.color_hex || '')}
+                          onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
                           placeholder="#000000"
                           className="w-24 px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none font-mono"
                         />
@@ -772,15 +742,14 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       <input
                         type="number"
                         min="0"
-                        defaultValue={variant.stock_quantity}
-                        onBlur={(e) => {
-                          const newValue = parseInt(e.target.value) || 0
-                          if (newValue !== variant.stock_quantity) {
-                            handleUpdateStock(variant.id, newValue)
-                          }
-                        }}
+                        value={pendingChanges[variant.id]?.stock_quantity !== undefined
+                          ? pendingChanges[variant.id].stock_quantity
+                          : variant.stock_quantity}
+                        onChange={(e) => handleFieldChange(variant.id, 'stock_quantity', parseInt(e.target.value) || 0)}
                         className={`w-20 px-3 py-2 border-2 focus:outline-none transition-colors ${
-                          variant.stock_quantity < 5
+                          (pendingChanges[variant.id]?.stock_quantity !== undefined
+                            ? pendingChanges[variant.id].stock_quantity
+                            : variant.stock_quantity) < 5
                             ? 'border-red-300 focus:border-red-500 bg-red-50'
                             : 'border-gray-300 focus:border-brand-primary'
                         }`}
@@ -793,13 +762,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <input
                             type="number"
                             min="0"
-                            defaultValue={variant.presale_stock_quantity}
-                            onBlur={(e) => {
-                              const newValue = parseInt(e.target.value) || 0
-                              if (newValue !== variant.presale_stock_quantity) {
-                                handleUpdatePresaleStock(variant.id, newValue)
-                              }
-                            }}
+                            value={pendingChanges[variant.id]?.presale_stock_quantity !== undefined
+                              ? pendingChanges[variant.id].presale_stock_quantity
+                              : variant.presale_stock_quantity}
+                            onChange={(e) => handleFieldChange(variant.id, 'presale_stock_quantity', parseInt(e.target.value) || 0)}
                             className="w-16 px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                           />
                         </div>
@@ -818,13 +784,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <label className="text-xs text-gray-500">NL:</label>
                           <input
                             type="text"
-                            defaultValue={variant.presale_expected_date || ''}
-                            onBlur={(e) => {
-                              const newValue = e.target.value
-                              if (newValue !== (variant.presale_expected_date || '')) {
-                                handleUpdatePresaleDate(variant.id, newValue)
-                              }
-                            }}
+                            value={pendingChanges[variant.id]?.presale_expected_date !== undefined
+                              ? (pendingChanges[variant.id].presale_expected_date || '')
+                              : (variant.presale_expected_date || '')}
+                            onChange={(e) => handleFieldChange(variant.id, 'presale_expected_date', e.target.value || null)}
                             placeholder="Week 10 feb"
                             className="w-full px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                           />
@@ -833,13 +796,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <label className="text-xs text-gray-500">EN:</label>
                           <input
                             type="text"
-                            defaultValue={variant.presale_expected_date_en || ''}
-                            onBlur={(e) => {
-                              const newValue = e.target.value
-                              if (newValue !== (variant.presale_expected_date_en || '')) {
-                                handleUpdatePresaleDateEn(variant.id, newValue)
-                              }
-                            }}
+                            value={pendingChanges[variant.id]?.presale_expected_date_en !== undefined
+                              ? (pendingChanges[variant.id].presale_expected_date_en || '')
+                              : (variant.presale_expected_date_en || '')}
+                            onChange={(e) => handleFieldChange(variant.id, 'presale_expected_date_en', e.target.value || null)}
                             placeholder="Week 10 Feb"
                             className="w-full px-2 py-1 text-xs border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                           />
@@ -859,12 +819,22 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleDeleteVariant(variant.id, variant.size, variant.color)}
-                        className="text-red-600 hover:text-red-900 font-semibold"
-                      >
-                        Verwijderen
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        {pendingChanges[variant.id] && Object.keys(pendingChanges[variant.id]).length > 0 && (
+                          <button
+                            onClick={() => handleSaveVariant(variant.id)}
+                            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-1.5 px-4 uppercase tracking-wider transition-colors text-xs"
+                          >
+                            Opslaan
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteVariant(variant.id, variant.size, variant.color)}
+                          className="text-red-600 hover:text-red-900 font-semibold"
+                        >
+                          Verwijderen
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
