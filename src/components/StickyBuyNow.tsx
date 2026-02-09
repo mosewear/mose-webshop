@@ -48,17 +48,11 @@ export default function StickyBuyNow({
   const addItem = useCart((state) => state.addItem)
   const { openDrawer, isOpen: isCartOpen } = useCartDrawer()
 
-  // Scroll detection - show on mobile always, on desktop after scrolling past add to cart button
+  // Scroll detection - only show on mobile
   useEffect(() => {
     const handleScroll = () => {
-      // Mobile: always show (except on cart/checkout pages)
+      // Only show on mobile (never on desktop)
       if (window.innerWidth < 768) {
-        setIsVisible(true)
-        return
-      }
-
-      // Desktop: show after scrolling 600px (past the add to cart button)
-      if (window.scrollY > 600) {
         setIsVisible(true)
       } else {
         setIsVisible(false)
@@ -68,11 +62,9 @@ export default function StickyBuyNow({
     // Initial check
     handleScroll()
 
-    window.addEventListener('scroll', handleScroll)
     window.addEventListener('resize', handleScroll)
 
     return () => {
-      window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
     }
   }, [])
@@ -176,15 +168,15 @@ export default function StickyBuyNow({
   if (!isVisible || isCartOpen) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl md:hidden">
+      <div className="max-w-7xl mx-auto px-4 py-3">
           {/* IN WINKELWAGEN button - Full width - GROEN */}
           <button
             onClick={handleAddToCart}
             disabled={!inStock || isAdding}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 md:py-4 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-sm md:text-base transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-sm transition-colors"
           >
-            <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+            <ShoppingCart className="w-5 h-5" />
             <span>{t('addToCart')}</span>
           </button>
         </div>
