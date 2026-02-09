@@ -313,7 +313,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [mobileDescriptionExpanded, setMobileDescriptionExpanded] = useState(false)
 
-  // Handle tab change with smart scroll positioning
+  // Handle tab change with perfect scroll positioning (no visible scroll animation)
   const handleTabChange = (newTab: 'description' | 'trust' | 'details' | 'materials' | 'shipping' | '') => {
     // If closing a tab, just close it
     if (!newTab) {
@@ -346,10 +346,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     // Update tab state
     setActiveTab(newTab as any)
 
-    // After DOM updates, adjust scroll to compensate for content collapsing/expanding
-    // Use requestAnimationFrame + setTimeout to ensure DOM has fully updated
+    // After DOM updates, instantly adjust scroll to compensate for content collapsing/expanding
+    // Use double requestAnimationFrame for perfect timing (no setTimeout delay)
     requestAnimationFrame(() => {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (buttonElement) {
           const buttonRectAfter = buttonElement.getBoundingClientRect()
           const buttonTopAfter = buttonRectAfter.top
@@ -357,18 +357,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           // Calculate how much the button moved due to content collapsing above it
           const buttonMovement = buttonTopAfter - buttonTopBefore
           
-          // Adjust scroll position to keep button at same visual position
-          // Only adjust if movement is significant (more than 5px)
-          if (Math.abs(buttonMovement) > 5) {
+          // Instantly adjust scroll position to keep button at same visual position
+          // Use 'auto' behavior for instant scroll (no visible animation)
+          // Only adjust if movement is significant (more than 1px for precision)
+          if (Math.abs(buttonMovement) > 1) {
             const newScrollY = scrollYBefore + buttonMovement
             
+            // Instant scroll - no animation, completely invisible to user
             window.scrollTo({
               top: Math.max(0, newScrollY),
-              behavior: 'smooth'
+              behavior: 'auto' // Instant, no smooth animation
             })
           }
         }
-      }, 50) // Small delay to ensure all DOM updates are complete
+      })
     })
   }
   const [settings, setSettings] = useState({
