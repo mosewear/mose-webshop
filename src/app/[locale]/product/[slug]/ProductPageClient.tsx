@@ -333,49 +333,43 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     const buttonSelector = buttonMap[newTab]
     const buttonElement = buttonSelector ? document.querySelector(buttonSelector) as HTMLElement : null
 
-    // Save current scroll position and button position before state change
-    const currentScrollY = window.scrollY
-    const buttonRect = buttonElement?.getBoundingClientRect()
-    const buttonTopRelative = buttonRect ? buttonRect.top : null // Position relative to viewport
+    if (!buttonElement) {
+      setActiveTab(newTab as any)
+      return
+    }
+
+    // Save button position relative to viewport BEFORE state change
+    const buttonRectBefore = buttonElement.getBoundingClientRect()
+    const buttonTopBefore = buttonRectBefore.top // Position relative to viewport top
+    const scrollYBefore = window.scrollY
 
     // Update tab state
     setActiveTab(newTab as any)
 
-    // After DOM updates, scroll to keep the opened accordion button in view
-    // Use setTimeout to ensure all DOM updates (collapsing/expanding) are complete
-    setTimeout(() => {
-      if (buttonElement) {
-        const newButtonRect = buttonElement.getBoundingClientRect()
-        const newButtonTop = newButtonRect.top + window.scrollY
-        
-        // Check if button is currently visible in viewport
-        const isButtonVisible = newButtonRect.top >= 0 && newButtonRect.bottom <= window.innerHeight
-        
-        // If button is not fully visible, scroll it into view
-        if (!isButtonVisible) {
-          // Scroll to button with offset from top for better UX
-          const offset = 20 // 20px breathing room from top
-          const targetScroll = newButtonTop - offset
+    // After DOM updates, adjust scroll to compensate for content collapsing/expanding
+    // Use requestAnimationFrame + setTimeout to ensure DOM has fully updated
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (buttonElement) {
+          const buttonRectAfter = buttonElement.getBoundingClientRect()
+          const buttonTopAfter = buttonRectAfter.top
           
-          window.scrollTo({
-            top: Math.max(0, targetScroll),
-            behavior: 'smooth'
-          })
-        } else {
-          // Button is visible, but we need to compensate for content collapsing above
-          // Calculate how much content collapsed above the button
-          const scrollAdjustment = (buttonTopRelative || 0) - newButtonRect.top
+          // Calculate how much the button moved due to content collapsing above it
+          const buttonMovement = buttonTopAfter - buttonTopBefore
           
-          // Only adjust if there's a significant change (more than 10px)
-          if (Math.abs(scrollAdjustment) > 10) {
+          // Adjust scroll position to keep button at same visual position
+          // Only adjust if movement is significant (more than 5px)
+          if (Math.abs(buttonMovement) > 5) {
+            const newScrollY = scrollYBefore + buttonMovement
+            
             window.scrollTo({
-              top: currentScrollY + scrollAdjustment,
+              top: Math.max(0, newScrollY),
               behavior: 'smooth'
             })
           }
         }
-      }
-    }, 100) // Small delay to ensure DOM has fully updated
+      }, 50) // Small delay to ensure all DOM updates are complete
+    })
   }
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
