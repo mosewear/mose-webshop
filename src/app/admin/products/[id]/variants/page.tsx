@@ -699,7 +699,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         <input
                           type="color"
                           value={pendingChanges[variant.id]?.color_hex !== undefined 
-                            ? (pendingChanges[variant.id].color_hex || '#000000')
+                            ? (pendingChanges[variant.id]?.color_hex || '#000000')
                             : (variant.color_hex || '#000000')}
                           onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
                           className="w-10 h-8 border-2 border-gray-300 rounded cursor-pointer"
@@ -707,7 +707,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         <input
                           type="text"
                           value={pendingChanges[variant.id]?.color_hex !== undefined
-                            ? (pendingChanges[variant.id].color_hex || '')
+                            ? (pendingChanges[variant.id]?.color_hex || '')
                             : (variant.color_hex || '')}
                           onChange={(e) => handleFieldChange(variant.id, 'color_hex', e.target.value)}
                           placeholder="#000000"
@@ -743,12 +743,12 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         type="number"
                         min="0"
                         value={pendingChanges[variant.id]?.stock_quantity !== undefined
-                          ? pendingChanges[variant.id].stock_quantity
+                          ? pendingChanges[variant.id]?.stock_quantity
                           : variant.stock_quantity}
                         onChange={(e) => handleFieldChange(variant.id, 'stock_quantity', parseInt(e.target.value) || 0)}
                         className={`w-20 px-3 py-2 border-2 focus:outline-none transition-colors ${
                           (pendingChanges[variant.id]?.stock_quantity !== undefined
-                            ? pendingChanges[variant.id].stock_quantity
+                            ? (pendingChanges[variant.id]?.stock_quantity ?? 0)
                             : variant.stock_quantity) < 5
                             ? 'border-red-300 focus:border-red-500 bg-red-50'
                             : 'border-gray-300 focus:border-brand-primary'
@@ -763,7 +763,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                             type="number"
                             min="0"
                             value={pendingChanges[variant.id]?.presale_stock_quantity !== undefined
-                              ? pendingChanges[variant.id].presale_stock_quantity
+                              ? pendingChanges[variant.id]?.presale_stock_quantity
                               : variant.presale_stock_quantity}
                             onChange={(e) => handleFieldChange(variant.id, 'presale_stock_quantity', parseInt(e.target.value) || 0)}
                             className="w-16 px-2 py-1 text-sm border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
@@ -785,7 +785,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <input
                             type="text"
                             value={pendingChanges[variant.id]?.presale_expected_date !== undefined
-                              ? (pendingChanges[variant.id].presale_expected_date || '')
+                              ? (pendingChanges[variant.id]?.presale_expected_date || '')
                               : (variant.presale_expected_date || '')}
                             onChange={(e) => handleFieldChange(variant.id, 'presale_expected_date', e.target.value || null)}
                             placeholder="Week 10 feb"
@@ -797,7 +797,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                           <input
                             type="text"
                             value={pendingChanges[variant.id]?.presale_expected_date_en !== undefined
-                              ? (pendingChanges[variant.id].presale_expected_date_en || '')
+                              ? (pendingChanges[variant.id]?.presale_expected_date_en || '')
                               : (variant.presale_expected_date_en || '')}
                             onChange={(e) => handleFieldChange(variant.id, 'presale_expected_date_en', e.target.value || null)}
                             placeholder="Week 10 Feb"
