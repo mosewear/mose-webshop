@@ -48,8 +48,6 @@ export default function StickyBuyNow({
   const locale = useLocale()
   const [isVisible, setIsVisible] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
-  const [isBuying, setIsBuying] = useState(false)
-  const router = useRouter()
   const addItem = useCart((state) => state.addItem)
   const { openDrawer, isOpen: isCartOpen } = useCartDrawer()
 
@@ -182,85 +180,6 @@ export default function StickyBuyNow({
     }
   }
 
-  const handleBuyNow = async () => {
-    if (!selectedVariant) {
-      onVariantRequired()
-      return
-    }
-
-    if (!inStock) {
-      toast.error('Dit product is niet op voorraad')
-      return
-    }
-
-    setIsBuying(true)
-
-    // PRESALE: Calculate if item is presale
-    const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity && selectedVariant.presale_stock_quantity > 0
-
-    console.log('═════════════════════════════════════════')
-    console.log('🚀 STICKY BAR - BUY NOW (Direct Checkout)')
-    console.log('═════════════════════════════════════════')
-    console.log('📦 Product:', product.name)
-    console.log('🎨 Variant ID:', selectedVariant.id)
-    console.log('═════════════════════════════════════════')
-    console.log('🔍 PRESALE CHECK:')
-    console.log('   - presale_enabled:', selectedVariant.presale_enabled)
-    console.log('   - stock_quantity:', selectedVariant.stock_quantity)
-    console.log('   - presale_stock_quantity:', selectedVariant.presale_stock_quantity)
-    console.log('   - presale_expected_date:', selectedVariant.presale_expected_date)
-    console.log('   - CALCULATED isPresale:', isPresaleItem)
-    console.log('═════════════════════════════════════════')
-
-    try {
-      // Add to cart first
-      const cartItem = {
-        productId: product.id,
-        variantId: selectedVariant.id,
-        name: product.name,
-        size: selectedVariant.size,
-        color: selectedVariant.color,
-        colorHex: selectedVariant.color_hex,
-        price: finalPrice,
-        quantity: quantity,
-        image: cartImage,
-        sku: selectedVariant.sku,
-        stock: selectedVariant.stock_quantity,
-        isPresale: isPresaleItem || false,
-        presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
-        presaleStock: selectedVariant.presale_stock_quantity,  // Pass presale stock for quantity limits
-      }
-
-      console.log('📦 STICKY BUY NOW CART ITEM:', JSON.stringify(cartItem, null, 2))
-      console.log('═════════════════════════════════════════')
-
-      addItem(cartItem)
-
-      // Track analytics
-      trackAddToCart({
-        id: product.id,
-        name: product.name,
-        category: 'product',
-        price: finalPrice,
-        quantity: quantity,
-      })
-
-      trackPixelEvent('AddToCart', {
-        content_ids: [selectedVariant.id],
-        content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
-        content_type: 'product',
-        value: finalPrice * quantity,
-        currency: 'EUR',
-      })
-
-      // Redirect to checkout immediately
-      router.push('/checkout')
-    } catch (error) {
-      console.error('Error during buy now:', error)
-      toast.error('Er is iets misgegaan')
-      setIsBuying(false)
-    }
-  }
 
   // Hide sticky bar if cart drawer is open or not visible
   if (!isVisible || isCartOpen) return null
@@ -296,36 +215,15 @@ export default function StickyBuyNow({
 
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-50 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3 md:gap-4">
-            {/* IN WAGEN button - 50% width - WIT met zwarte tekst */}
-            <button
-              onClick={handleAddToCart}
-              disabled={!inStock || isAdding || isBuying}
-              className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-3 md:py-3.5 border-2 border-white bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
-            >
-              <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-              <span>{t('addToCart')}</span>
-            </button>
-
-            {/* BESTEL NU button - 50% width - GROEN met PULSE! */}
-            <button
-              onClick={handleBuyNow}
-              disabled={!inStock || isAdding || isBuying}
-              className="pulse-button flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-3 md:py-3.5 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-xs md:text-sm"
-            >
-              {isBuying ? (
-                <span>{t('adding')}</span>
-              ) : (
-                <>
-                  <span className="min-[400px]:hidden">{t('buyNowMobile')}</span>
-                  <span className="hidden min-[400px]:inline">{t('buyNow')}</span>
-                  <svg className="w-4 h-4 md:w-5 md:h-5 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </>
-              )}
-            </button>
-          </div>
+          {/* IN WINKELWAGEN button - Full width - GROEN */}
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock || isAdding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 md:py-4 bg-[#00B67A] border-2 border-[#00B67A] text-white hover:bg-[#009966] hover:border-[#009966] disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase tracking-wide text-sm md:text-base transition-colors"
+          >
+            <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+            <span>{t('addToCart')}</span>
+          </button>
         </div>
       </div>
     </>
