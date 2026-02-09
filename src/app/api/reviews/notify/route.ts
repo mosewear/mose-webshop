@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch review and product details from database
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Fetch review
     const { data: review, error: reviewError } = await supabase
