@@ -48,6 +48,7 @@ export default function SurveyPopup({
   // Survey answers
   const [purchaseLikelihood, setPurchaseLikelihood] = useState('')
   const [whatNeeded, setWhatNeeded] = useState<string[]>([])
+  const [whatNeededOther, setWhatNeededOther] = useState('')
   const [firstImpression, setFirstImpression] = useState('')
   
   const [hasTriggeredTimer, setHasTriggeredTimer] = useState(false)
@@ -187,11 +188,18 @@ export default function SurveyPopup({
   }
 
   const handleWhatNeededToggle = (value: string) => {
-    setWhatNeeded(prev => 
-      prev.includes(value) 
+    setWhatNeeded(prev => {
+      const newValue = prev.includes(value) 
         ? prev.filter(v => v !== value)
         : [...prev, value]
-    )
+      
+      // Clear other text if "other" is unchecked
+      if (value === 'other' && !newValue.includes('other')) {
+        setWhatNeededOther('')
+      }
+      
+      return newValue
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,6 +212,12 @@ export default function SurveyPopup({
     }
 
     if (whatNeeded.length === 0) {
+      setError(t('errorRequired'))
+      return
+    }
+
+    // Validate that if "other" is selected, the text field is filled
+    if (whatNeeded.includes('other') && !whatNeededOther.trim()) {
       setError(t('errorRequired'))
       return
     }
@@ -223,6 +237,7 @@ export default function SurveyPopup({
           locale,
           purchase_likelihood: purchaseLikelihood,
           what_needed: whatNeeded,
+          what_needed_other: whatNeeded.includes('other') ? whatNeededOther : null,
           first_impression: firstImpression || null,
         }),
       })
@@ -354,19 +369,32 @@ export default function SurveyPopup({
                   </label>
                   <div className="space-y-2">
                     {['free_shipping', 'discount', 'more_reviews', 'better_size_guide', 'more_photos', 'videos', 'other'].map((value) => (
-                      <label
-                        key={value}
-                        className="flex items-center p-3 border-2 border-gray-300 hover:border-brand-primary cursor-pointer transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          value={value}
-                          checked={whatNeeded.includes(value)}
-                          onChange={() => handleWhatNeededToggle(value)}
-                          className="mr-3 w-4 h-4"
-                        />
-                        <span className="text-sm font-medium">{t(`needed_${value}`)}</span>
-                      </label>
+                      <div key={value}>
+                        <label
+                          className="flex items-center p-3 border-2 border-gray-300 hover:border-brand-primary cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            value={value}
+                            checked={whatNeeded.includes(value)}
+                            onChange={() => handleWhatNeededToggle(value)}
+                            className="mr-3 w-4 h-4"
+                          />
+                          <span className="text-sm font-medium">{t(`needed_${value}`)}</span>
+                        </label>
+                        {value === 'other' && whatNeeded.includes('other') && (
+                          <div className="mt-2 ml-7">
+                            <input
+                              type="text"
+                              value={whatNeededOther}
+                              onChange={(e) => setWhatNeededOther(e.target.value)}
+                              placeholder={t('neededOtherPlaceholder')}
+                              maxLength={200}
+                              className="w-full px-4 py-2 border-2 border-black focus:outline-none focus:border-brand-primary transition-colors"
+                            />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>

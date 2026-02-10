@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
       locale,
       purchase_likelihood,
       what_needed,
+      what_needed_other,
       first_impression,
     } = await req.json()
 
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
         locale: locale || 'nl',
         purchase_likelihood,
         what_needed: Array.isArray(what_needed) ? what_needed : [],
+        what_needed_other: what_needed_other || null,
         first_impression: first_impression || null,
       })
       .select('id')

@@ -13,6 +13,7 @@ interface SurveyResponse {
   locale: string
   purchase_likelihood: string
   what_needed: string[]
+  what_needed_other: string | null
   first_impression: string | null
   created_at: string
 }
@@ -137,7 +138,7 @@ export default function SurveyAdminPage() {
 
     try {
       const csv = [
-        ['Datum', 'Pagina', 'Device', 'Taal', 'Kans op kopen', 'Wat nodig', 'Eerste indruk'].join(','),
+        ['Datum', 'Pagina', 'Device', 'Taal', 'Kans op kopen', 'Wat nodig', 'Anders, namelijk', 'Eerste indruk'].join(','),
         ...filteredResponses.map((r) => [
           new Date(r.created_at).toLocaleString('nl-NL'),
           r.page_url || '',
@@ -145,6 +146,7 @@ export default function SurveyAdminPage() {
           r.locale.toUpperCase(),
           r.purchase_likelihood,
           r.what_needed.join('; '),
+          (r.what_needed_other || '').replace(/"/g, '""'),
           (r.first_impression || '').replace(/"/g, '""'),
         ].map((cell) => `"${cell}"`).join(','))
       ].join('\n')
@@ -527,6 +529,7 @@ export default function SurveyAdminPage() {
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Device</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Kans op kopen</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Wat nodig</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase">Anders, namelijk</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Eerste indruk</th>
                 </tr>
               </thead>
@@ -573,13 +576,16 @@ export default function SurveyAdminPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 max-w-xs">
+                        {response.what_needed_other || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs">
                         {response.first_impression || '-'}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                       Geen responses gevonden
                     </td>
                   </tr>
