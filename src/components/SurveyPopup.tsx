@@ -408,11 +408,11 @@ export default function SurveyPopup({
                     value={firstImpression}
                     onChange={(e) => setFirstImpression(e.target.value)}
                     placeholder={t('question3Placeholder')}
-                    maxLength={100}
+                    maxLength={200}
                     rows={3}
                     className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary transition-colors resize-none"
                   />
-                  <p className="text-xs text-gray-500 mt-1">{firstImpression.length}/100</p>
+                  <p className="text-xs text-gray-500 mt-1">{firstImpression.length}/200</p>
                 </div>
 
                 {error && (
