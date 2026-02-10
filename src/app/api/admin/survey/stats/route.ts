@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 
+interface SurveyResponse {
+  purchase_likelihood: string
+  what_needed: string[]
+  first_impression: string | null
+  created_at: string
+}
+
 export async function GET() {
   try {
     const { authorized, supabase } = await requireAdmin()
@@ -27,13 +34,13 @@ export async function GET() {
 
     // Calculate purchase likelihood stats
     const likelihoodStats: Record<string, number> = {}
-    responses?.forEach((r) => {
+    ;(responses as SurveyResponse[] | null)?.forEach((r) => {
       likelihoodStats[r.purchase_likelihood] = (likelihoodStats[r.purchase_likelihood] || 0) + 1
     })
 
     // Calculate what_needed stats
     const neededStats: Record<string, number> = {}
-    responses?.forEach((r) => {
+    ;(responses as SurveyResponse[] | null)?.forEach((r) => {
       if (Array.isArray(r.what_needed)) {
         r.what_needed.forEach((item: string) => {
           neededStats[item] = (neededStats[item] || 0) + 1
@@ -42,7 +49,7 @@ export async function GET() {
     })
 
     // Get first impressions (non-empty)
-    const firstImpressions = responses
+    const firstImpressions = (responses as SurveyResponse[] | null)
       ?.filter((r) => r.first_impression && r.first_impression.trim().length > 0)
       .map((r) => r.first_impression)
       .slice(0, 50) || []
