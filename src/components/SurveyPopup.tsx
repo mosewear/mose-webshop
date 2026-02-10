@@ -50,6 +50,7 @@ export default function SurveyPopup({
   const [whatNeeded, setWhatNeeded] = useState<string[]>([])
   const [whatNeededOther, setWhatNeededOther] = useState('')
   const [firstImpression, setFirstImpression] = useState('')
+  const [newsletterEmail, setNewsletterEmail] = useState('')
   
   const [hasTriggeredTimer, setHasTriggeredTimer] = useState(false)
   const [hasTriggeredScroll, setHasTriggeredScroll] = useState(false)
@@ -248,6 +249,29 @@ export default function SurveyPopup({
         throw new Error(data.error || t('error'))
       }
 
+      // Subscribe to newsletter if email is provided
+      if (newsletterEmail.trim()) {
+        try {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (emailRegex.test(newsletterEmail.trim())) {
+            // Subscribe with early_access source to get the insider welcome email
+            await fetch('/api/newsletter/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: newsletterEmail.trim(),
+                source: 'early_access',
+                locale,
+              }),
+            })
+            // Don't wait for response or show errors - just try to subscribe
+          }
+        } catch (newsletterError) {
+          console.error('Newsletter subscription error:', newsletterError)
+          // Don't fail the survey if newsletter subscription fails
+        }
+      }
+
       trackPixelEvent('CompleteRegistration', {
         content_name: 'Survey Completed',
         content_category: 'Survey'
@@ -413,6 +437,23 @@ export default function SurveyPopup({
                     className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary transition-colors resize-none"
                   />
                   <p className="text-xs text-gray-500 mt-1">{firstImpression.length}/200</p>
+                </div>
+
+                {/* Question 4: Newsletter */}
+                <div>
+                  <label className="block font-bold text-lg mb-3">
+                    {t('question4')} <span className="text-gray-500 text-sm font-normal">({t('question4Optional')})</span>
+                  </label>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {t('question4Description')}
+                  </p>
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder={t('question4Placeholder')}
+                    className="w-full px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary transition-colors"
+                  />
                 </div>
 
                 {error && (
