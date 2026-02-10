@@ -41,6 +41,7 @@ export default function InsiderCommunityEmail({
   featuredProducts = [],
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
+  locale = 'nl',
   contactEmail = 'info@mosewear.com',
   contactPhone = '+31 50 211 1931',
   contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
