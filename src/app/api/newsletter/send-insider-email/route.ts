@@ -165,17 +165,29 @@ Elke hoodie, elk shirt, elke cap is limited edition. Als het uitverkocht is, is 
           // Record that this email was sent to this subscriber (skip for test emails)
           if (!testEmail && subscriber.id !== 'test') {
             try {
-              await serviceSupabase
+              // Check if record already exists
+              const { data: existing } = await serviceSupabase
                 .from('insider_email_sent')
-                .insert({
-                  subscriber_id: subscriber.id,
-                  email_type: emailType,
-                  sent_at: new Date().toISOString(),
-                })
-                .onConflict('subscriber_id,email_type')
-                .ignore()
-            } catch (recordError) {
-              console.error(`Error recording sent email for ${subscriber.email}:`, recordError)
+                .select('id')
+                .eq('subscriber_id', subscriber.id)
+                .eq('email_type', emailType)
+                .single()
+
+              // Only insert if it doesn't exist
+              if (!existing) {
+                await serviceSupabase
+                  .from('insider_email_sent')
+                  .insert({
+                    subscriber_id: subscriber.id,
+                    email_type: emailType,
+                    sent_at: new Date().toISOString(),
+                  })
+              }
+            } catch (recordError: any) {
+              // Ignore duplicate key errors (23505 is PostgreSQL unique constraint violation)
+              if (recordError?.code !== '23505') {
+                console.error(`Error recording sent email for ${subscriber.email}:`, recordError)
+              }
               // Don't fail the whole process if recording fails
             }
           }
