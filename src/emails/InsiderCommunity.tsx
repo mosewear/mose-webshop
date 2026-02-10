@@ -455,7 +455,7 @@ const presaleTitle = {
   margin: '0 0 8px 0',
   fontSize: '24px',
   fontWeight: '900',
-  color: '#000000',
+  color: '#ffffff',
   textTransform: 'uppercase' as const,
   letterSpacing: '1px',
 }
@@ -464,7 +464,7 @@ const presaleSubtitle = {
   margin: '0 0 16px 0',
   fontSize: '18px',
   fontWeight: '700',
-  color: '#000000',
+  color: '#ffffff',
   textTransform: 'uppercase' as const,
   letterSpacing: '0.5px',
 }
@@ -473,7 +473,7 @@ const presaleText = {
   margin: '0 0 24px 0',
   fontSize: '15px',
   lineHeight: '22px',
-  color: '#000000',
+  color: '#ffffff',
   fontWeight: '600',
 }
 
@@ -486,7 +486,7 @@ const presaleButton = {
   display: 'inline-block',
   padding: '16px 32px',
   backgroundColor: '#000000',
-  color: '#00B67A',
+  color: '#ffffff',
   fontSize: '16px',
   fontWeight: '900',
   textDecoration: 'none',

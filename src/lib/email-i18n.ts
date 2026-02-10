@@ -760,7 +760,7 @@ const nl: EmailTranslationKeys = {
     ps: 'P.S. Houd je inbox in de gaten. We sturen je meer insider content voor de launch.',
   },
   insiderCommunity: {
-    title: 'JE BENT NIET DE ENIGE',
+    title: 'WELKOM IN DE COMMUNITY',
     subtitle: 'Een blik achter de schermen van onze community',
     intro: 'Er zijn nu honderden insiders die op de launch wachten. Niet zomaar klanten, maar mensen die snappen waar MOSE voor staat. Mensen die kwaliteit waarderen. Mensen die klaar zijn voor iets anders dan de massa.',
     numbers: 'De cijfers:',
@@ -1190,7 +1190,7 @@ const en: EmailTranslationKeys = {
     ps: 'P.S. Keep an eye on your inbox. We\'ll send you more insider content before launch.',
   },
   insiderCommunity: {
-    title: 'YOU\'RE NOT ALONE',
+    title: 'WELCOME TO THE COMMUNITY',
     subtitle: 'A behind-the-scenes look at our community',
     intro: 'There are now hundreds of insiders waiting for the launch. Not just customers — people who get what MOSE stands for. People who value quality. People who are ready for something different from the mass market.',
     numbers: 'The numbers:',
