@@ -172,7 +172,20 @@ export default function InsiderCommunityEmail({
 
             {/* PS */}
             <Text style={psText}>
-              {t('insiderCommunity.ps', { days: daysUntilLaunch })}
+              {(() => {
+                const psText = t('insiderCommunity.ps', { days: daysUntilLaunch })
+                const parts = psText.split('www.mosewear.com')
+                if (parts.length === 1) return psText
+                return (
+                  <>
+                    {parts[0]}
+                    <Link href="https://www.mosewear.com" style={psLink}>
+                      www.mosewear.com
+                    </Link>
+                    {parts[1]}
+                  </>
+                )
+              })()}
             </Text>
           </Section>
 
@@ -406,4 +419,10 @@ const psText = {
   lineHeight: '18px',
   color: '#718096',
   fontStyle: 'italic' as const,
+}
+
+const psLink = {
+  color: '#00B67A',
+  textDecoration: 'underline',
+  fontWeight: '600',
 }
