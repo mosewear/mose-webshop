@@ -55,6 +55,27 @@ export default function SurveyPopup({
   const [hasTriggeredExit, setHasTriggeredExit] = useState(false)
   const [isDismissedThisSession, setIsDismissedThisSession] = useState(false)
 
+  // Lock body scroll when modal is visible
+  useEffect(() => {
+    if (isVisible) {
+      // Save current scroll position
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      document.body.style.overflow = 'hidden'
+      
+      return () => {
+        // Restore scroll position
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        document.body.style.overflow = ''
+        window.scrollTo(0, scrollY)
+      }
+    }
+  }, [isVisible])
+
   // Check if popup should be shown
   const shouldShowPopup = useCallback((): boolean => {
     if (!enabled) return false
@@ -243,20 +264,21 @@ export default function SurveyPopup({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div 
-          className="bg-white border-4 border-black max-w-md w-full p-6 md:p-8 relative pointer-events-auto animate-slideUp shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
+          className="bg-white border-4 border-black max-w-md w-full max-h-[90vh] flex flex-col relative pointer-events-auto animate-slideUp shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-4 right-4 p-2 hover:bg-gray-100 transition-colors border-2 border-black"
+            className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 transition-colors border-2 border-black bg-white"
             aria-label={t('close')}
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Content */}
-          <div className="text-center">
+          {/* Scrollable Content */}
+          <div className="overflow-y-auto flex-1 px-6 md:px-8 pt-6 md:pt-8 pb-6 md:pb-8">
+            <div className="text-center">
             {/* Logo */}
             <div className="mb-6 flex justify-center">
               <Image
@@ -392,6 +414,7 @@ export default function SurveyPopup({
                 </p>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
