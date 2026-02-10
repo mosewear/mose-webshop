@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     const today = new Date()
     const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
     const launchUTC = new Date(Date.UTC(launchDate.getUTCFullYear(), launchDate.getUTCMonth(), launchDate.getUTCDate()))
-    const daysUntilLaunch = Math.max(0, Math.ceil((launchUTC.getTime() - todayUTC.getTime()) / (1000 * 60 * 60 * 24))) + 10
+    const daysUntilLaunch = Math.max(0, Math.ceil((launchUTC.getTime() - todayUTC.getTime()) / (1000 * 60 * 60 * 24)))
 
     // Story content for behind-scenes email (can be customized)
     const storyContent = `Het begon met een simpel idee: kleding zonder poespas. Gemaakt in Groningen, ontworpen voor mensen die weten wat ze willen.
