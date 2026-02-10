@@ -337,6 +337,9 @@ export type EmailTranslationKeys = {
     stat1: string
     stat2: string
     stat3: string
+    productsTitle: string
+    productsIntro: string
+    viewProduct: string
     communityTitle: string
     testimonial1: string
     testimonial2: string
@@ -755,11 +758,14 @@ const nl: EmailTranslationKeys = {
   insiderCommunity: {
     title: 'JE BENT NIET DE ENIGE',
     subtitle: 'Een blik achter de schermen van onze community',
-    intro: 'Er zijn nu honderden insiders die op de launch wachten. Niet zomaar klanten, maar mensen die snappen waar MOSE voor staat.',
+    intro: 'Er zijn nu honderden insiders die op de launch wachten. Niet zomaar klanten — mensen die snappen waar MOSE voor staat. Mensen die kwaliteit waarderen. Mensen die klaar zijn voor iets anders dan de massa.',
     numbers: 'De cijfers:',
     stat1: '{{count}}+ insiders op de lijst',
     stat2: 'Meest populair: Hoodies (al 40% van voorraad gereserveerd)',
     stat3: 'Top 3 landen: Nederland, België, Duitsland',
+    productsTitle: 'Dit is wat er komt',
+    productsIntro: 'Dit zijn de basics waar de community op wacht. Limited edition. Lokaal gemaakt. Premium kwaliteit. Als insider heb je 24 uur voorsprong. Maar wees er snel bij — limited betekent limited.',
+    viewProduct: 'Bekijk product',
     communityTitle: 'Wat de community zegt:',
     testimonial1: '"Eindelijk een Nederlands merk dat geen bullshit verkoopt. Just clean, solid basics."',
     testimonial2: '"Die hoodies zien er insane uit. Kan niet wachten tot 2 maart."',
@@ -768,8 +774,8 @@ const nl: EmailTranslationKeys = {
     joinText: 'Volg ons op Instagram en Facebook voor daily updates, drops en insider content:',
     socialInsta: 'Instagram: @mosewearcom',
     socialFb: 'Facebook: @mosewearcom',
-    closing: 'We bouwen dit samen. Tot de launch.',
-    ps: 'P.S. Nog {{days}} dagen tot lancering. Ben je er klaar voor?',
+    closing: 'We bouwen dit samen. Dit is niet zomaar kleding — dit is een statement. Een keuze voor kwaliteit boven kwantiteit. Voor lokaal boven global. Voor echt boven nep. Tot de launch.',
+    ps: 'P.S. Nog {{days}} dagen tot lancering. Als insider kun je al vanaf 1 maart 00:00 bestellen. De rest wacht tot 2 maart. Wees erbij.',
   },
   insiderBehindScenes: {
     title: 'HOE WE DIT MAKEN',
@@ -1178,11 +1184,14 @@ const en: EmailTranslationKeys = {
   insiderCommunity: {
     title: 'YOU\'RE NOT ALONE',
     subtitle: 'A behind-the-scenes look at our community',
-    intro: 'There are now hundreds of insiders waiting for the launch. Not just customers, but people who get what MOSE stands for.',
+    intro: 'There are now hundreds of insiders waiting for the launch. Not just customers — people who get what MOSE stands for. People who value quality. People who are ready for something different from the mass market.',
     numbers: 'The numbers:',
     stat1: '{{count}}+ insiders on the list',
     stat2: 'Most popular: Hoodies (already 40% of stock reserved)',
     stat3: 'Top 3 countries: Netherlands, Belgium, Germany',
+    productsTitle: 'This is what\'s coming',
+    productsIntro: 'These are the basics the community is waiting for. Limited edition. Locally made. Premium quality. As an insider, you get 24 hours head start. But be quick — limited means limited.',
+    viewProduct: 'View product',
     communityTitle: 'What the community says:',
     testimonial1: '"Finally a Dutch brand that doesn\'t sell bullshit. Just clean, solid basics."',
     testimonial2: '"Those hoodies look insane. Can\'t wait for March 2nd."',
@@ -1191,8 +1200,8 @@ const en: EmailTranslationKeys = {
     joinText: 'Follow us on Instagram and Facebook for daily updates, drops and insider content:',
     socialInsta: 'Instagram: @mosewearcom',
     socialFb: 'Facebook: @mosewearcom',
-    closing: 'We\'re building this together. See you at launch.',
-    ps: 'P.S. {{days}} days until launch. Are you ready?',
+    closing: 'We\'re building this together. This isn\'t just clothing — it\'s a statement. A choice for quality over quantity. For local over global. For real over fake. See you at launch.',
+    ps: 'P.S. {{days}} days until launch. As an insider, you can order from March 1st at 00:00. Everyone else waits until March 2nd. Be there.',
   },
   insiderBehindScenes: {
     title: 'HOW WE MAKE THIS',

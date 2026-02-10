@@ -5,14 +5,27 @@ import {
   Container,
   Section,
   Text,
+  Row,
+  Column,
+  Img,
+  Link,
+  Button,
 } from '@react-email/components'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
+
+interface FeaturedProduct {
+  name: string
+  slug: string
+  imageUrl: string
+  url: string
+}
 
 interface InsiderCommunityEmailProps {
   email: string
   subscriberCount: number
   daysUntilLaunch: number
+  featuredProducts?: FeaturedProduct[]
   t: (key: string, options?: any) => string
   siteUrl?: string
   contactEmail?: string
@@ -24,6 +37,7 @@ export default function InsiderCommunityEmail({
   email,
   subscriberCount,
   daysUntilLaunch,
+  featuredProducts = [],
   t,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
   contactEmail = 'info@mosewear.com',
@@ -85,6 +99,53 @@ export default function InsiderCommunityEmail({
                 </tr>
               </table>
             </Section>
+
+            {/* Featured Products Section */}
+            {featuredProducts.length > 0 && (
+              <>
+                <Text style={sectionTitle}>{t('insiderCommunity.productsTitle')}</Text>
+                <Text style={productsIntro}>{t('insiderCommunity.productsIntro')}</Text>
+                
+                <Section style={productsSection}>
+                  <table cellPadding="0" cellSpacing="0" border={0} width="100%" style={productsTable}>
+                    <tr>
+                      {featuredProducts.map((product) => (
+                        <td key={product.slug} style={productColumn} width="33.33%">
+                          <Link href={product.url} style={productLink}>
+                            <table cellPadding="0" cellSpacing="0" border={0} width="100%" style={productCard}>
+                              <tr>
+                                <td style={productImageCell}>
+                                  {product.imageUrl && (
+                                    <Img
+                                      src={product.imageUrl}
+                                      alt={product.name}
+                                      width="100%"
+                                      style={productImage}
+                                    />
+                                  )}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style={productNameCell}>
+                                  <Text style={productName}>{product.name}</Text>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style={productButtonCell}>
+                                  <Button href={product.url} style={productButton}>
+                                    {t('insiderCommunity.viewProduct')}
+                                  </Button>
+                                </td>
+                              </tr>
+                            </table>
+                          </Link>
+                        </td>
+                      ))}
+                    </tr>
+                  </table>
+                </Section>
+              </>
+            )}
 
             {/* Testimonials */}
             <Text style={sectionTitle}>{t('insiderCommunity.communityTitle')}</Text>
@@ -176,6 +237,7 @@ const introText = {
   fontSize: '15px',
   lineHeight: '22px',
   color: '#2d3748',
+  fontWeight: '500',
 }
 
 const sectionTitle = {
@@ -208,6 +270,87 @@ const statText = {
   lineHeight: '22px',
   color: '#2d3748',
   fontWeight: '600',
+}
+
+const productsSection = {
+  margin: '16px 0 24px 0',
+}
+
+const productsIntro = {
+  margin: '0 0 20px 0',
+  fontSize: '15px',
+  lineHeight: '22px',
+  color: '#2d3748',
+  fontWeight: '500',
+}
+
+const productsTable = {
+  width: '100%',
+  borderCollapse: 'collapse' as const,
+}
+
+const productColumn = {
+  width: '33.33%',
+  padding: '0 8px',
+  verticalAlign: 'top' as const,
+}
+
+const productLink = {
+  textDecoration: 'none',
+  color: 'inherit',
+}
+
+const productCard = {
+  width: '100%',
+  backgroundColor: '#ffffff',
+  border: '2px solid #000000',
+  borderCollapse: 'collapse' as const,
+}
+
+const productImageCell = {
+  padding: '0',
+  textAlign: 'center' as const,
+}
+
+const productImage = {
+  width: '100%',
+  height: 'auto',
+  display: 'block',
+  border: 'none',
+}
+
+const productNameCell = {
+  padding: '12px 12px 8px',
+  textAlign: 'center' as const,
+}
+
+const productName = {
+  margin: '0',
+  fontSize: '13px',
+  fontWeight: '700',
+  color: '#000000',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+  lineHeight: '18px',
+}
+
+const productButtonCell = {
+  padding: '0 12px 12px',
+  textAlign: 'center' as const,
+}
+
+const productButton = {
+  display: 'inline-block',
+  padding: '10px 16px',
+  backgroundColor: '#00B67A',
+  color: '#ffffff',
+  fontSize: '12px',
+  fontWeight: '700',
+  textDecoration: 'none',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+  border: '2px solid #000000',
+  borderRadius: '0',
 }
 
 const testimonialsBox = {
@@ -254,6 +397,7 @@ const closingText = {
   fontSize: '15px',
   lineHeight: '22px',
   color: '#2d3748',
+  fontWeight: '600',
 }
 
 const psText = {

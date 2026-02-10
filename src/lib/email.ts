@@ -17,6 +17,7 @@ import { render } from '@react-email/render'
 import { getSiteSettings } from './settings'
 import { getEmailT } from './email-i18n'
 import { logEmail } from './email-logger'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { 
   OrderConfirmationEmail,
   ShippingConfirmationEmail,
@@ -1188,11 +1189,45 @@ export async function sendInsiderCommunityEmail(props: {
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
+  // Fetch the 3 featured products
+  const supabase = createServiceRoleClient()
+  const productSlugs = ['mose-essential-tee-zwart', 'mose-crewneck-sweater', 'mose-classic-hoodie-zwart']
+  
+  const { data: products } = await supabase
+    .from('products')
+    .select(`
+      id,
+      slug,
+      name,
+      name_en,
+      product_images(url, is_primary)
+    `)
+    .in('slug', productSlugs)
+
+  // Map products with images
+  const featuredProducts = productSlugs.map(slug => {
+    const product = products?.find(p => p.slug === slug)
+    if (!product) return null
+    
+    // Find primary image or first image
+    const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
+    const imageUrl = primaryImage?.url || ''
+    const productName = locale === 'en' && product.name_en ? product.name_en : product.name
+    
+    return {
+      name: productName,
+      slug: product.slug,
+      imageUrl: imageUrl ? (imageUrl.startsWith('http') ? imageUrl : `${siteUrl}${imageUrl}`) : '',
+      url: `${siteUrl}/${locale}/product/${product.slug}`,
+    }
+  }).filter(Boolean)
+
   const html = await render(
     InsiderCommunityEmail({
       email: props.email,
       subscriberCount: props.subscriberCount,
       daysUntilLaunch: props.daysUntilLaunch,
+      featuredProducts: featuredProducts as Array<{ name: string; slug: string; imageUrl: string; url: string }>,
       t,
       siteUrl,
       contactEmail,
