@@ -20,26 +20,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { emailType } = await req.json()
+    const { emailType, testEmail } = await req.json()
 
     if (!emailType || !['welcome', 'community', 'behind-scenes', 'launch-week'].includes(emailType)) {
       return NextResponse.json({ error: 'Invalid email type' }, { status: 400 })
     }
 
-    // Fetch all active subscribers from early_access sources
-    const { data: subscribers, error: fetchError } = await supabase
-      .from('newsletter_subscribers')
-      .select('email, locale')
-      .eq('status', 'active')
-      .in('source', ['early_access', 'early_access_landing'])
+    // If testEmail is provided, send only to that email
+    let subscribers: Array<{ email: string; locale: string }> = []
+    
+    if (testEmail) {
+      // Test mode: send to single email
+      subscribers = [{ email: testEmail, locale: 'nl' }]
+    } else {
+      // Production mode: fetch all active subscribers from early_access sources
+      const { data: fetchedSubscribers, error: fetchError } = await supabase
+        .from('newsletter_subscribers')
+        .select('email, locale')
+        .eq('status', 'active')
+        .in('source', ['early_access', 'early_access_landing'])
 
-    if (fetchError) {
-      console.error('Error fetching subscribers:', fetchError)
-      return NextResponse.json({ error: 'Failed to fetch subscribers' }, { status: 500 })
-    }
+      if (fetchError) {
+        console.error('Error fetching subscribers:', fetchError)
+        return NextResponse.json({ error: 'Failed to fetch subscribers' }, { status: 500 })
+      }
 
-    if (!subscribers || subscribers.length === 0) {
-      return NextResponse.json({ error: 'No subscribers found', sent: 0 }, { status: 200 })
+      if (!fetchedSubscribers || fetchedSubscribers.length === 0) {
+        return NextResponse.json({ error: 'No subscribers found', sent: 0 }, { status: 200 })
+      }
+
+      subscribers = fetchedSubscribers
     }
 
     // Calculate dynamic data

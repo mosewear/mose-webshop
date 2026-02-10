@@ -34,6 +34,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [exporting, setExporting] = useState(false)
   const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails' | 'popup-settings'>('subscribers')
   const [sendingEmail, setSendingEmail] = useState<string | null>(null)
+  const [sendingTestEmail, setSendingTestEmail] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingAll, setDeletingAll] = useState(false)
 
@@ -146,6 +147,37 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       toast.error(error.message || 'Kon emails niet versturen')
     } finally {
       setSendingEmail(null)
+    }
+  }
+
+  const handleSendTestEmail = async (emailType: string) => {
+    setSendingTestEmail(emailType)
+    toast.loading('Test email wordt verstuurd...')
+
+    try {
+      const response = await fetch('/api/newsletter/send-insider-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          emailType,
+          testEmail: 'h.schlimback@gmail.com'
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send test email')
+      }
+
+      toast.dismiss()
+      toast.success('Test email succesvol verstuurd naar h.schlimback@gmail.com!')
+    } catch (error: any) {
+      console.error('Send test email error:', error)
+      toast.dismiss()
+      toast.error(error.message || 'Kon test email niet versturen')
+    } finally {
+      setSendingTestEmail(null)
     }
   }
 
@@ -622,6 +654,14 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                 <Send className="w-4 h-4" />
                 {sendingEmail === 'welcome' ? 'Bezig...' : 'Verstuur Email 1'}
               </button>
+              <button
+                onClick={() => handleSendTestEmail('welcome')}
+                disabled={sendingTestEmail !== null}
+                className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black"
+              >
+                <Send className="w-4 h-4" />
+                {sendingTestEmail === 'welcome' ? 'Bezig...' : 'Verzend test e-mail'}
+              </button>
             </div>
 
             {/* Email 2: Community */}
@@ -649,6 +689,14 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               >
                 <Send className="w-4 h-4" />
                 {sendingEmail === 'community' ? 'Bezig...' : 'Verstuur Email 2'}
+              </button>
+              <button
+                onClick={() => handleSendTestEmail('community')}
+                disabled={sendingTestEmail !== null}
+                className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black"
+              >
+                <Send className="w-4 h-4" />
+                {sendingTestEmail === 'community' ? 'Bezig...' : 'Verzend test e-mail'}
               </button>
             </div>
 
@@ -678,6 +726,14 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                 <Send className="w-4 h-4" />
                 {sendingEmail === 'behind-scenes' ? 'Bezig...' : 'Verstuur Email 3'}
               </button>
+              <button
+                onClick={() => handleSendTestEmail('behind-scenes')}
+                disabled={sendingTestEmail !== null}
+                className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black"
+              >
+                <Send className="w-4 h-4" />
+                {sendingTestEmail === 'behind-scenes' ? 'Bezig...' : 'Verzend test e-mail'}
+              </button>
             </div>
 
             {/* Email 4: Launch Week */}
@@ -705,6 +761,14 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               >
                 <Send className="w-4 h-4" />
                 {sendingEmail === 'launch-week' ? 'Bezig...' : 'Verstuur Email 4'}
+              </button>
+              <button
+                onClick={() => handleSendTestEmail('launch-week')}
+                disabled={sendingTestEmail !== null}
+                className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black"
+              >
+                <Send className="w-4 h-4" />
+                {sendingTestEmail === 'launch-week' ? 'Bezig...' : 'Verzend test e-mail'}
               </button>
             </div>
           </div>
