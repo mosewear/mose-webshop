@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import {
   sendInsiderWelcomeEmail,
   sendInsiderCommunityEmail,
@@ -26,19 +27,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email type' }, { status: 400 })
     }
 
+    // Use service role client for database operations
+    const serviceSupabase = createServiceRoleClient()
+
     // If testEmail is provided, send only to that email
-    let subscribers: Array<{ email: string; locale: string }> = []
+    let subscribers: Array<{ id: string; email: string; locale: string }> = []
     
     if (testEmail) {
-      // Test mode: send to single email
-      subscribers = [{ email: testEmail, locale: 'nl' }]
-    } else {
-      // Production mode: fetch all active subscribers from early_access sources
-      const { data: fetchedSubscribers, error: fetchError } = await supabase
+      // Test mode: send to single email (don't check if already sent)
+      const { data: testSubscriber } = await serviceSupabase
         .from('newsletter_subscribers')
-        .select('email, locale')
+        .select('id, email, locale')
+        .eq('email', testEmail)
         .eq('status', 'active')
-        .in('source', ['early_access', 'early_access_landing'])
+        .single()
+
+      if (testSubscriber) {
+        subscribers = [testSubscriber]
+      } else {
+        // If subscriber doesn't exist, create a temporary entry for testing
+        subscribers = [{ id: 'test', email: testEmail, locale: 'nl' }]
+      }
+    } else {
+      // Production mode: fetch all active subscribers who haven't received this email yet
+      const { data: fetchedSubscribers, error: fetchError } = await serviceSupabase
+        .from('newsletter_subscribers')
+        .select(`
+          id,
+          email,
+          locale
+        `)
+        .eq('status', 'active')
 
       if (fetchError) {
         console.error('Error fetching subscribers:', fetchError)
@@ -49,11 +68,31 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'No subscribers found', sent: 0 }, { status: 200 })
       }
 
-      subscribers = fetchedSubscribers
+      // Get list of subscribers who have already received this email type
+      const { data: alreadySent, error: sentError } = await serviceSupabase
+        .from('insider_email_sent')
+        .select('subscriber_id')
+        .eq('email_type', emailType)
+
+      if (sentError) {
+        console.error('Error fetching sent emails:', sentError)
+        return NextResponse.json({ error: 'Failed to check sent emails' }, { status: 500 })
+      }
+
+      const sentSubscriberIds = new Set(alreadySent?.map(s => s.subscriber_id) || [])
+
+      // Filter out subscribers who have already received this email
+      subscribers = fetchedSubscribers.filter(sub => !sentSubscriberIds.has(sub.id))
     }
 
     // Calculate dynamic data
-    const subscriberCount = subscribers.length
+    // Get total count of all active subscribers for stats
+    const { count: totalSubscriberCount } = await serviceSupabase
+      .from('newsletter_subscribers')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active')
+    
+    const subscriberCount = totalSubscriberCount || subscribers.length
     // Launch date: March 2, 2026 at 00:00 UTC
     const launchDate = new Date('2026-03-02T00:00:00Z')
     // Get today's date at midnight UTC to avoid timezone issues
@@ -122,6 +161,24 @@ Elke hoodie, elk shirt, elke cap is limited edition. Als het uitverkocht is, is 
 
         if (result?.success) {
           sentCount++
+          
+          // Record that this email was sent to this subscriber (skip for test emails)
+          if (!testEmail && subscriber.id !== 'test') {
+            try {
+              await serviceSupabase
+                .from('insider_email_sent')
+                .insert({
+                  subscriber_id: subscriber.id,
+                  email_type: emailType,
+                  sent_at: new Date().toISOString(),
+                })
+                .onConflict('subscriber_id,email_type')
+                .ignore()
+            } catch (recordError) {
+              console.error(`Error recording sent email for ${subscriber.email}:`, recordError)
+              // Don't fail the whole process if recording fails
+            }
+          }
         } else {
           errors.push(`${subscriber.email}: ${result?.error || 'Unknown error'}`)
         }
