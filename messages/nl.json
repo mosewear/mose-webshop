@@ -1700,5 +1700,33 @@
         "other": "Andere vragen"
       }
     }
+  },
+  "surveyPopup": {
+    "introTitle": "Mogen wij 1 minuutje van uw tijd?",
+    "introText": "Wij zijn MOSE, een beginnend kledingmerk uit Groningen. We willen de beste webshop maken. Jouw feedback is cruciaal.",
+    "introYes": "Ja, help MOSE",
+    "introNo": "Nee, bedankt",
+    "question1": "Hoe groot acht je de kans dat je iets gaat kopen in onze webshop?",
+    "question2": "Wat heb je nodig om wel iets in onze webshop aan te schaffen?",
+    "question3": "Wat is je eerste indruk van MOSE?",
+    "question3Optional": "optioneel",
+    "question3Placeholder": "Deel je eerste indruk...",
+    "likelihood_probably_yes": "Waarschijnlijk wel",
+    "likelihood_not_sure": "Weet ik nog niet",
+    "likelihood_probably_not": "Waarschijnlijk niet",
+    "needed_free_shipping": "Gratis verzending",
+    "needed_discount": "Korting",
+    "needed_more_reviews": "Meer reviews",
+    "needed_better_size_guide": "Betere maattabel",
+    "needed_more_photos": "Meer productfoto's",
+    "needed_videos": "Video's van producten",
+    "needed_other": "Andere",
+    "submit": "VERSTUUR",
+    "submitting": "BEZIG...",
+    "thankYou": "Bedankt!",
+    "thankYouMessage": "We gebruiken jouw feedback om de webshop te verbeteren.",
+    "error": "Er ging iets mis. Probeer het opnieuw.",
+    "errorRequired": "Vul alle verplichte vragen in.",
+    "close": "Sluiten"
   }
 }

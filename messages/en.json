@@ -1712,5 +1712,33 @@
         "other": "Other questions"
       }
     }
+  },
+  "surveyPopup": {
+    "introTitle": "Can we have 1 minute of your time?",
+    "introText": "We are MOSE, a new clothing brand from Groningen. We want to create the best webshop. Your feedback is crucial.",
+    "introYes": "Yes, help MOSE",
+    "introNo": "No, thanks",
+    "question1": "How likely are you to buy something in our webshop?",
+    "question2": "What do you need to purchase something in our webshop?",
+    "question3": "What is your first impression of MOSE?",
+    "question3Optional": "optional",
+    "question3Placeholder": "Share your first impression...",
+    "likelihood_probably_yes": "Probably yes",
+    "likelihood_not_sure": "Not sure yet",
+    "likelihood_probably_not": "Probably not",
+    "needed_free_shipping": "Free shipping",
+    "needed_discount": "Discount",
+    "needed_more_reviews": "More reviews",
+    "needed_better_size_guide": "Better size guide",
+    "needed_more_photos": "More product photos",
+    "needed_videos": "Product videos",
+    "needed_other": "Other",
+    "submit": "SUBMIT",
+    "submitting": "SUBMITTING...",
+    "thankYou": "Thank you!",
+    "thankYouMessage": "We use your feedback to improve the webshop.",
+    "error": "Something went wrong. Please try again.",
+    "errorRequired": "Please fill in all required questions.",
+    "close": "Close"
   }
 }

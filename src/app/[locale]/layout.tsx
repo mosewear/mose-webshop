@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer'
 import MainContentWrapper from '@/components/layout/MainContentWrapper'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
+import SurveyPopupWrapper from '@/components/SurveyPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
 import ChatButtonWrapper from '@/components/ChatButtonWrapper'
 
@@ -103,6 +104,7 @@ export default async function LocaleLayout({
       <MainContentWrapper>{children}</MainContentWrapper>
       <Footer />
       <NewsletterPopupWrapper />
+      <SurveyPopupWrapper />
       <CookieConsent />
       <ChatButtonWrapper />
     </NextIntlClientProvider>
