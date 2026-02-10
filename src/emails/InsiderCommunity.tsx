@@ -28,6 +28,7 @@ interface InsiderCommunityEmailProps {
   featuredProducts?: FeaturedProduct[]
   t: (key: string, options?: any) => string
   siteUrl?: string
+  locale?: string
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
@@ -146,6 +147,20 @@ export default function InsiderCommunityEmail({
                 </Section>
               </>
             )}
+
+            {/* Presale CTA Section */}
+            <Section style={presaleSection}>
+              <Text style={presaleTitle}>{t('insiderCommunity.presaleTitle')}</Text>
+              <Text style={presaleSubtitle}>{t('insiderCommunity.presaleSubtitle')}</Text>
+              <Text style={presaleText}>
+                {t('insiderCommunity.presaleText')}
+              </Text>
+              <Section style={presaleButtonContainer}>
+                <Button href={`${siteUrl}/${locale}/shop`} style={presaleButton}>
+                  {t('insiderCommunity.presaleCTA')}
+                </Button>
+              </Section>
+            </Section>
 
             {/* Testimonials */}
             <Text style={sectionTitle}>{t('insiderCommunity.communityTitle')}</Text>
@@ -425,4 +440,57 @@ const psLink = {
   color: '#00B67A',
   textDecoration: 'underline',
   fontWeight: '600',
+}
+
+const presaleSection = {
+  margin: '32px 0 24px 0',
+  padding: '32px 24px',
+  backgroundColor: '#00B67A',
+  border: '4px solid #000000',
+  textAlign: 'center' as const,
+}
+
+const presaleTitle = {
+  margin: '0 0 8px 0',
+  fontSize: '24px',
+  fontWeight: '900',
+  color: '#000000',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '1px',
+}
+
+const presaleSubtitle = {
+  margin: '0 0 16px 0',
+  fontSize: '18px',
+  fontWeight: '700',
+  color: '#000000',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+}
+
+const presaleText = {
+  margin: '0 0 24px 0',
+  fontSize: '15px',
+  lineHeight: '22px',
+  color: '#000000',
+  fontWeight: '600',
+}
+
+const presaleButtonContainer = {
+  margin: '0',
+  padding: '0',
+}
+
+const presaleButton = {
+  display: 'inline-block',
+  padding: '16px 32px',
+  backgroundColor: '#000000',
+  color: '#00B67A',
+  fontSize: '16px',
+  fontWeight: '900',
+  textDecoration: 'none',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '1px',
+  border: '3px solid #000000',
+  borderRadius: '0',
 }

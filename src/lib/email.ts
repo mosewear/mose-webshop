@@ -1230,6 +1230,7 @@ export async function sendInsiderCommunityEmail(props: {
       featuredProducts: featuredProducts as Array<{ name: string; slug: string; imageUrl: string; url: string }>,
       t,
       siteUrl,
+      locale,
       contactEmail,
       contactPhone,
       contactAddress,

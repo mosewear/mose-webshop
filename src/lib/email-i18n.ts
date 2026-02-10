@@ -348,6 +348,10 @@ export type EmailTranslationKeys = {
     joinText: string
     socialInsta: string
     socialFb: string
+    presaleTitle: string
+    presaleSubtitle: string
+    presaleText: string
+    presaleCTA: string
     closing: string
     ps: string
   }
@@ -766,6 +770,10 @@ const nl: EmailTranslationKeys = {
     productsTitle: 'Dit is wat er komt',
     productsIntro: 'Dit zijn de basics waar de community op wacht. Limited edition. Lokaal gemaakt. Premium kwaliteit. Als insider heb je 24 uur voorsprong. Maar wees er snel bij — limited betekent limited.',
     viewProduct: 'Bekijk product',
+    presaleTitle: 'Shop nu in presale',
+    presaleSubtitle: '30% korting op alle items',
+    presaleText: 'Je hoeft niet te wachten tot de launch. Shop nu al onze tees, sweaters en hoodies in de presale met 30% korting. Limited voorraad. Als het op is, is het op.',
+    presaleCTA: 'Shop presale met 30% korting',
     communityTitle: 'Wat de community zegt:',
     testimonial1: '"Eindelijk een Nederlands merk dat geen bullshit verkoopt. Just clean, solid basics."',
     testimonial2: '"Die hoodies zien er insane uit. Kan niet wachten tot 2 maart."',
@@ -1192,6 +1200,10 @@ const en: EmailTranslationKeys = {
     productsTitle: 'This is what\'s coming',
     productsIntro: 'These are the basics the community is waiting for. Limited edition. Locally made. Premium quality. As an insider, you get 24 hours head start. But be quick — limited means limited.',
     viewProduct: 'View product',
+    presaleTitle: 'Shop presale now',
+    presaleSubtitle: '30% off all items',
+    presaleText: 'You don\'t have to wait until launch. Shop all our tees, sweaters and hoodies in presale now with 30% off. Limited stock. When it\'s gone, it\'s gone.',
+    presaleCTA: 'Shop presale with 30% off',
     communityTitle: 'What the community says:',
     testimonial1: '"Finally a Dutch brand that doesn\'t sell bullshit. Just clean, solid basics."',
     testimonial2: '"Those hoodies look insane. Can\'t wait for March 2nd."',
