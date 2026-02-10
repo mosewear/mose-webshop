@@ -87,6 +87,13 @@ export async function GET(req: NextRequest) {
         break
 
       case 'community':
+        // Calculate days until launch (same as send-insider-email route)
+        const launchDate = new Date('2026-03-02T00:00:00Z')
+        const today = new Date()
+        const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+        const launchUTC = new Date(Date.UTC(launchDate.getUTCFullYear(), launchDate.getUTCMonth(), launchDate.getUTCDate()))
+        const daysUntilLaunch = Math.max(0, Math.ceil((launchUTC.getTime() - todayUTC.getTime()) / (1000 * 60 * 60 * 24))) + 10
+        
         html = await render(
           InsiderCommunityEmail({
             email: 'preview@mosewear.com',
@@ -96,7 +103,7 @@ export async function GET(req: NextRequest) {
             contactPhone,
             contactAddress,
             subscriberCount: 500,
-            daysUntilLaunch: 10,
+            daysUntilLaunch,
           })
         )
         break
