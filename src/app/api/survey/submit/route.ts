@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient() // Use service role to bypass RLS for anonymous survey submissions
 
     const { data, error } = await supabase
       .from('survey_responses')
