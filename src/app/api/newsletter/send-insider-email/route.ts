@@ -44,9 +44,13 @@ export async function POST(req: NextRequest) {
 
     // Calculate dynamic data
     const subscriberCount = subscribers.length
-    const launchDate = new Date('2026-03-02')
+    // Launch date: March 2, 2026 at 00:00 UTC
+    const launchDate = new Date('2026-03-02T00:00:00Z')
+    // Get today's date at midnight UTC to avoid timezone issues
     const today = new Date()
-    const daysUntilLaunch = Math.max(0, Math.ceil((launchDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
+    const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+    const launchUTC = new Date(Date.UTC(launchDate.getUTCFullYear(), launchDate.getUTCMonth(), launchDate.getUTCDate()))
+    const daysUntilLaunch = Math.max(0, Math.ceil((launchUTC.getTime() - todayUTC.getTime()) / (1000 * 60 * 60 * 24)))
 
     // Story content for behind-scenes email (can be customized)
     const storyContent = `Het begon met een simpel idee: kleding zonder poespas. Gemaakt in Groningen, ontworpen voor mensen die weten wat ze willen.
