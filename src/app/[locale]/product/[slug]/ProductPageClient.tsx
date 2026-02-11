@@ -1762,7 +1762,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {
                           settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                            ? t('shipping.alwaysFreeShipping')
+                            ? tShipping('alwaysFreeShipping')
                             : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }</p>
                         <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {t('shipping.deliveryTimeValue')}</p>
