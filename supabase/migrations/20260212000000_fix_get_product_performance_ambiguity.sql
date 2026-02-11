@@ -1,6 +1,8 @@
 -- Fix ambiguous "product_id" reference in get_product_performance RPC
 -- Error seen: 42702 column reference "product_id" is ambiguous
 
+DROP FUNCTION IF EXISTS public.get_product_performance(TIMESTAMPTZ, TIMESTAMPTZ);
+
 CREATE OR REPLACE FUNCTION public.get_product_performance(
   p_start_date TIMESTAMPTZ,
   p_end_date TIMESTAMPTZ
