@@ -55,3 +55,50 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const { authorized, supabase } = await requireAdmin()
+
+    if (!authorized || !supabase) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const body = await req.json()
+    const { ids } = body
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: 'IDs array is required' },
+        { status: 400 }
+      )
+    }
+
+    const { error } = await supabase
+      .from('survey_responses')
+      .delete()
+      .in('id', ids)
+
+    if (error) {
+      console.error('Error deleting survey responses:', error)
+      return NextResponse.json(
+        { error: 'Failed to delete responses', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `${ids.length} response(s) deleted`,
+    })
+  } catch (error: any) {
+    console.error('Error in delete survey responses route:', error)
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    )
+  }
+}
+

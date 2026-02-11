@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { ArrowLeft, MessageSquare, TrendingUp, Download, Filter, Calendar, Globe, Monitor, Smartphone } from 'lucide-react'
+import { ArrowLeft, MessageSquare, TrendingUp, Download, Filter, Calendar, Globe, Monitor, Smartphone, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
@@ -131,6 +131,32 @@ export default function SurveyAdminPage() {
   const filteredResponses = useMemo(() => {
     return responses
   }, [responses])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Weet je zeker dat je deze response wilt verwijderen?')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/survey/responses', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete response')
+      }
+
+      toast.success('Response verwijderd!')
+      fetchResponses()
+      fetchStats()
+    } catch (error: any) {
+      console.error('Delete error:', error)
+      toast.error('Fout bij verwijderen')
+    }
+  }
 
   const handleExport = async () => {
     setExporting(true)
@@ -531,6 +557,7 @@ export default function SurveyAdminPage() {
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Wat nodig</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Anders, namelijk</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase">Eerste indruk</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase">Acties</th>
                 </tr>
               </thead>
               <tbody>
@@ -581,11 +608,20 @@ export default function SurveyAdminPage() {
                       <td className="px-4 py-3 text-sm text-gray-600 max-w-xs">
                         {response.first_impression || '-'}
                       </td>
+                      <td className="px-4 py-3 text-sm">
+                        <button
+                          onClick={() => handleDelete(response.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 border-2 border-red-600 hover:border-red-700 transition-colors"
+                          title="Verwijder response"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                       Geen responses gevonden
                     </td>
                   </tr>
