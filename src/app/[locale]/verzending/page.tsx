@@ -13,11 +13,12 @@ export default function VerzendingPage() {
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   
-  const [settings, setSettings] = useState({
-    free_shipping_threshold: 100,
-    shipping_cost: 0,
-    return_days: 14,
-  })
+  const [settings, setSettings] = useState<{
+    free_shipping_threshold: number
+    shipping_cost: number
+    return_days: number
+  } | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     getSiteSettings().then((s) => {
@@ -26,8 +27,21 @@ export default function VerzendingPage() {
         shipping_cost: s.shipping_cost,
         return_days: s.return_days,
       })
+      setLoading(false)
     })
   }, [])
+
+  // Don't render content until settings are loaded to prevent flash of incorrect text
+  if (loading || !settings) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Laden...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white">
