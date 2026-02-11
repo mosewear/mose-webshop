@@ -284,6 +284,7 @@ function VideoThumbnail({
 
 export default function ProductPage({ params }: { params: Promise<{ slug: string; locale: string }> }) {
   const t = useTranslations('product')
+  const tShipping = useTranslations('shipping')
   const locale = useLocale()
   const { slug } = use(params)
   
@@ -1216,7 +1217,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       <span className="flex items-center gap-1">
                         <Truck className="w-3.5 h-3.5 text-emerald-600" />
                         {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                          ? t('shipping.alwaysFreeShipping')
+                          ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
                       </span>
@@ -1514,7 +1515,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       <span className="flex items-center gap-1">
                         <Truck className="w-3.5 h-3.5 text-emerald-600" />
                         {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                          ? t('shipping.alwaysFreeShipping')
+                          ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
                       </span>
@@ -1540,7 +1541,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       <p className="font-bold uppercase tracking-wide mb-1">{t('tabs.shipping')}</p>
                       <p className="text-gray-700">
                         {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                          ? t('shipping.alwaysFreeShippingText')
+                          ? tShipping('alwaysFreeShippingText')
                           : t('shipping.info', { cost: settings.shipping_cost.toFixed(2), threshold: settings.free_shipping_threshold })
                         }
                       </p>
