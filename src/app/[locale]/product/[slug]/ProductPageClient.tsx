@@ -1436,14 +1436,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <button
                   onClick={async () => {
                     if (!product) return
-                    if (isWishlisted) {
+                    const wasWishlisted = isInWishlist(product.id)
+
+                    if (wasWishlisted) {
                       await removeFromWishlist(product.id)
-                      setIsWishlisted(false)
-                      toast.success(t('wishlist.removed'))
                     } else {
                       await addToWishlist(product.id)
-                      setIsWishlisted(true)
+                    }
+
+                    const nowWishlisted = isInWishlist(product.id)
+                    setIsWishlisted(nowWishlisted)
+
+                    if (!wasWishlisted && nowWishlisted) {
                       toast.success(t('wishlist.added'))
+                    } else if (wasWishlisted && !nowWishlisted) {
+                      toast.success(t('wishlist.removed'))
                     }
                   }}
                   className={`hidden md:flex md:w-auto md:p-4 border-2 border-black transition-all items-center justify-center ${

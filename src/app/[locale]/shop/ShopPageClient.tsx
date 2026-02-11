@@ -14,6 +14,8 @@ import { Link as LocaleLink } from '@/i18n/routing'
 import { mapLocalizedProduct, mapLocalizedCategory } from '@/lib/i18n-db'
 import { formatPrice } from '@/lib/format-price'
 import { getSiteSettings } from '@/lib/settings'
+import { useWishlist } from '@/store/wishlist'
+import toast from 'react-hot-toast'
 
 interface Product {
   id: string
@@ -56,6 +58,7 @@ interface Category {
 
 export default function ShopPageClient() {
   const t = useTranslations('shop')
+  const tProduct = useTranslations('product')
   const locale = useLocale()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -80,6 +83,7 @@ export default function ShopPageClient() {
   const [showInStockOnly, setShowInStockOnly] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const supabase = createClient()
+  const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
 
   // Body scroll lock when drawer is open
   useEffect(() => {
@@ -105,6 +109,7 @@ export default function ShopPageClient() {
   }, [mobileFiltersOpen])
 
   useEffect(() => {
+    loadWishlist()
     fetchCategories()
     fetchProducts()
     loadSettings()
@@ -913,6 +918,7 @@ export default function ShopPageClient() {
                 }}
               >
                 {filteredProducts.map((product, index) => {
+                  const isWishlisted = isInWishlist(product.id)
                   const inStock = isInStock(product)
                   const totalStock = getTotalStock(product)
                   const hasPresale = product.variants?.some(v => 
@@ -993,9 +999,40 @@ export default function ShopPageClient() {
                           )}
 
                           {/* Wishlist Button - Hidden on mobile, shown on hover on desktop */}
-                          <button className="hidden md:flex absolute bottom-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90">
+                          <button
+                            className={`hidden md:flex absolute bottom-4 right-4 z-20 w-12 h-12 backdrop-blur-sm items-center justify-center transition-all duration-300 border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90 ${
+                              isWishlisted
+                                ? 'bg-red-500 text-white hover:bg-red-600'
+                                : 'bg-white/90 hover:bg-brand-primary hover:text-white'
+                            }`}
+                            onClick={async (e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+
+                              const wasWishlisted = isInWishlist(product.id)
+                              if (wasWishlisted) {
+                                await removeFromWishlist(product.id)
+                              } else {
+                                await addToWishlist(product.id)
+                              }
+
+                              const nowWishlisted = isInWishlist(product.id)
+                              if (!wasWishlisted && nowWishlisted) {
+                                toast.success(tProduct('wishlist.added'))
+                              } else if (wasWishlisted && !nowWishlisted) {
+                                toast.success(tProduct('wishlist.removed'))
+                              }
+                            }}
+                            title={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
+                            aria-label={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
+                          >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                fill={isWishlisted ? 'currentColor' : 'none'}
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                              />
                             </svg>
                           </button>
 
