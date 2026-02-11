@@ -15,6 +15,7 @@ export default function VerzendingPage() {
   
   const [settings, setSettings] = useState({
     free_shipping_threshold: 100,
+    shipping_cost: 0,
     return_days: 14,
   })
 
@@ -22,6 +23,7 @@ export default function VerzendingPage() {
     getSiteSettings().then((s) => {
       setSettings({
         free_shipping_threshold: s.free_shipping_threshold,
+        shipping_cost: s.shipping_cost,
         return_days: s.return_days,
       })
     })
@@ -52,7 +54,10 @@ export default function VerzendingPage() {
             </h1>
             
             <p className="text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto">
-              {t('freeShipping', { threshold: settings.free_shipping_threshold })}. 
+              {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                ? t('alwaysFreeShipping')
+                : t('freeShipping', { threshold: settings.free_shipping_threshold })
+              }. 
               {t('returnPolicy', { days: settings.return_days })}.
             </p>
           </div>
@@ -60,7 +65,13 @@ export default function VerzendingPage() {
           {/* Trust Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
             {[
-              { icon: <Truck className="w-6 h-6" />, label: t('freeFrom', { threshold: settings.free_shipping_threshold }), sublabel: t('shipping') },
+              { 
+                icon: <Truck className="w-6 h-6" />, 
+                label: settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                  ? t('alwaysFree')
+                  : t('freeFrom', { threshold: settings.free_shipping_threshold }), 
+                sublabel: t('shipping') 
+              },
               { icon: <Clock className="w-6 h-6" />, label: t('deliveryTime'), sublabel: t('deliveryTimeLabel') },
               { icon: <RefreshCw className="w-6 h-6" />, label: t('returnDays', { days: settings.return_days }), sublabel: t('returns') },
               { icon: <Check className="w-6 h-6" />, label: t('free'), sublabel: t('manufacturingFault') },
@@ -93,11 +104,20 @@ export default function VerzendingPage() {
               <Package className="w-8 h-8 flex-shrink-0" />
               <div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-2 uppercase">
-                  {t('freeShipping', { threshold: settings.free_shipping_threshold })}
+                  {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                    ? t('alwaysFreeShipping')
+                    : t('freeShipping', { threshold: settings.free_shipping_threshold })
+                  }
                 </h3>
-                <p className="text-xl text-white/90">
-                  {t('shippingCost', { threshold: settings.free_shipping_threshold, cost: '5.95' })}
-                </p>
+                {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0 ? (
+                  <p className="text-xl text-white/90">
+                    {t('alwaysFreeShippingText')}
+                  </p>
+                ) : (
+                  <p className="text-xl text-white/90">
+                    {t('shippingCost', { threshold: settings.free_shipping_threshold, cost: settings.shipping_cost.toFixed(2) })}
+                  </p>
+                )}
               </div>
             </div>
           </div>
