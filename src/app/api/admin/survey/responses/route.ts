@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,9 +58,9 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { authorized, supabase } = await requireAdmin()
+    const { authorized } = await requireAdmin()
 
-    if (!authorized || !supabase) {
+    if (!authorized) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -76,10 +77,13 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const { error } = await supabase
+    // Use service role for destructive admin actions to avoid RLS no-op deletes.
+    const serviceSupabase = createServiceRoleClient()
+    const { data: deletedRows, error } = await serviceSupabase
       .from('survey_responses')
       .delete()
       .in('id', ids)
+      .select('id')
 
     if (error) {
       console.error('Error deleting survey responses:', error)
@@ -89,9 +93,18 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
+    const deletedCount = deletedRows?.length || 0
+    if (deletedCount === 0) {
+      return NextResponse.json(
+        { error: 'No responses were deleted' },
+        { status: 404 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
-      message: `${ids.length} response(s) deleted`,
+      message: `${deletedCount} response(s) deleted`,
+      deletedCount,
     })
   } catch (error: any) {
     console.error('Error in delete survey responses route:', error)
