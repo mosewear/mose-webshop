@@ -40,3 +40,4 @@ COMMENT ON COLUMN insider_email_sent.sent_at IS 'When the email was actually sen
 
 
 
+

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatPrice } from '@/lib/format-price'
+import { useWishlist } from '@/store/wishlist'
+import toast from 'react-hot-toast'
 
 interface Product {
   id: string
@@ -29,6 +31,8 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
   const [activeIndex, setActiveIndex] = useState(0)
   const locale = useLocale()
   const t = useTranslations('homepage')
+  const tProduct = useTranslations('product')
+  const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
 
   // Fallback products (matching new Product interface)
   const fallbackProducts: Product[] = [
@@ -62,6 +66,10 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
   ]
 
   const products = propProducts && propProducts.length > 0 ? propProducts : fallbackProducts
+
+  useEffect(() => {
+    loadWishlist()
+  }, [])
 
   // Update active index based on scroll position
   useEffect(() => {
@@ -104,6 +112,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
             || product.images?.[0]?.url 
             || product.product_images?.[0]?.url 
             || '/hoodieblack.png'
+          const isWishlisted = isInWishlist(product.id)
           
           return (
             <Link
@@ -151,14 +160,41 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                   })()}
                   
                   {/* Wishlist Button - Always visible on mobile */}
-                  <button 
-                    className="absolute top-2 right-2 w-11 h-11 bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
-                    onClick={(e) => {
+                  <button
+                    className={`absolute top-2 right-2 z-20 w-11 h-11 backdrop-blur-sm flex items-center justify-center transition-all duration-300 active:scale-90 border-2 border-black ${
+                      isWishlisted
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-white/90 hover:bg-brand-primary hover:text-white'
+                    }`}
+                    onClick={async (e) => {
                       e.preventDefault()
+                      e.stopPropagation()
+
+                      const wasWishlisted = isInWishlist(product.id)
+                      if (wasWishlisted) {
+                        await removeFromWishlist(product.id)
+                      } else {
+                        await addToWishlist(product.id)
+                      }
+
+                      const nowWishlisted = isInWishlist(product.id)
+                      if (!wasWishlisted && nowWishlisted) {
+                        toast.success(tProduct('wishlist.added'))
+                      } else if (wasWishlisted && !nowWishlisted) {
+                        toast.success(tProduct('wishlist.removed'))
+                      }
                     }}
+                    title={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
+                    aria-label={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        fill={isWishlisted ? 'currentColor' : 'none'}
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      />
                     </svg>
                   </button>
                 </div>

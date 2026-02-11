@@ -10,3 +10,4 @@ CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_source ON newsletter_subsc
 COMMENT ON COLUMN newsletter_subscribers.locale IS 'Language preference of the subscriber (nl or en)';
 
 
+

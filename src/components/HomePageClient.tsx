@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
+import { useWishlist } from '@/store/wishlist'
 import * as LucideIcons from 'lucide-react'
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -29,7 +30,9 @@ export default function HomePageClient({
   categories: initialCategories,
 }: HomePageClientProps) {
   const t = useTranslations('homepage')
+  const tProduct = useTranslations('product')
   const locale = useLocale()
+  const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -43,6 +46,10 @@ export default function HomePageClient({
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterLoading, setNewsletterLoading] = useState(false)
   const [newsletterSuccess, setNewsletterSuccess] = useState(false)
+
+  useEffect(() => {
+    loadWishlist()
+  }, [])
 
   const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -303,13 +310,16 @@ export default function HomePageClient({
           {/* Desktop: Grid - Dynamic Products */}
           <div className="hidden md:grid grid-cols-3 gap-8">
             {featuredProducts && featuredProducts.length > 0 ? (
-              featuredProducts.slice(0, 3).map((product: any) => (
-                <LocaleLink
-                  key={product.id}
-                  href={`/product/${product.slug}`}
-                  className="group active:scale-95 transition-transform"
-                >
-                  <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
+              featuredProducts.slice(0, 3).map((product: any) => {
+                const isWishlisted = isInWishlist(product.id)
+
+                return (
+                  <LocaleLink
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    className="group active:scale-95 transition-transform"
+                  >
+                    <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
                     {/* Product Image Container */}
                     <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                       <Image
@@ -348,20 +358,46 @@ export default function HomePageClient({
                       })()}
                       
                       {/* Wishlist Button - Hover on desktop */}
-                      <button 
-                        className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-brand-primary hover:text-white active:scale-90 border-2 border-black"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // Wishlist logic here
+                      <button
+                        className={`absolute top-4 right-4 z-20 w-10 h-10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-90 border-2 border-black ${
+                          isWishlisted
+                            ? 'bg-red-500 text-white hover:bg-red-600'
+                            : 'bg-white/90 hover:bg-brand-primary hover:text-white'
+                        }`}
+                        onClick={async (e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+
+                          const wasWishlisted = isInWishlist(product.id)
+                          if (wasWishlisted) {
+                            await removeFromWishlist(product.id)
+                          } else {
+                            await addToWishlist(product.id)
+                          }
+
+                          const nowWishlisted = isInWishlist(product.id)
+                          if (!wasWishlisted && nowWishlisted) {
+                            toast.success(tProduct('wishlist.added'))
+                          } else if (wasWishlisted && !nowWishlisted) {
+                            toast.success(tProduct('wishlist.removed'))
+                          }
                         }}
+                        title={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
+                        aria-label={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            fill={isWishlisted ? 'currentColor' : 'none'}
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                          />
                         </svg>
                       </button>
                       
                       {/* Gradient Overlay on Hover (Desktop only) */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
                       {/* Quick View Button (Desktop only) - Volledig verborgen tot hover */}
                       <div className="absolute bottom-4 left-4 right-4 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
@@ -422,9 +458,10 @@ export default function HomePageClient({
                         </div>
                       )}
                     </div>
-                  </div>
-                </LocaleLink>
-              ))
+                    </div>
+                  </LocaleLink>
+                )
+              })
             ) : (
               // Fallback: show placeholder if no products
               <div className="col-span-3 text-center py-12 text-gray-500">
