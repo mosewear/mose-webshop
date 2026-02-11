@@ -22,3 +22,4 @@ BEGIN
   RAISE NOTICE '✅ Ready for automated newsletter promo code generation!';
 END $$;
 
+

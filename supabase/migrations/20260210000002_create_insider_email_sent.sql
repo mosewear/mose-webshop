@@ -38,3 +38,4 @@ COMMENT ON TABLE insider_email_sent IS 'Tracks which insider emails have been se
 COMMENT ON COLUMN insider_email_sent.email_type IS 'Type of insider email: welcome, community, behind-scenes, or launch-week';
 COMMENT ON COLUMN insider_email_sent.sent_at IS 'When the email was actually sent';
 
+

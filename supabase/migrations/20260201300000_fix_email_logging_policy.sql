@@ -43,3 +43,4 @@ COMMENT ON POLICY "Service role and admins can insert order emails" ON order_ema
   'Allows email logging from server-side operations (service role) and admin users via UI. Service role is used by webhooks and email functions.';
 
 
+

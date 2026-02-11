@@ -21,3 +21,4 @@ SELECT 'Locale column added to orders table successfully!' as status;
 
 
 
+

@@ -80,3 +80,4 @@ CREATE TRIGGER update_conversation_stats_on_message
   FOR EACH ROW
   EXECUTE FUNCTION update_chat_conversation_stats();
 
+

@@ -49,3 +49,4 @@ COMMENT ON POLICY "Public can view public site settings" ON site_settings IS
   'Allows public access to non-sensitive settings needed for the frontend (favicon, shipping info, etc.)';
 
 
+

@@ -656,7 +656,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               {/* Desktop Summary */}
               <div className="hidden md:block p-3 space-y-2">
                 {/* Progress to Free Shipping - Enhanced with Progress Bar */}
-                {subtotalAfterDiscount < freeShippingThreshold && (
+                {freeShippingThreshold > 0 && subtotalAfterDiscount < freeShippingThreshold && (
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-gray-600">
@@ -919,7 +919,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </LocaleLink>
                   </div>
                   {/* Enhanced shipping progress for mobile */}
-                  {subtotalAfterDiscount < freeShippingThreshold ? (
+                  {freeShippingThreshold > 0 && subtotalAfterDiscount < freeShippingThreshold ? (
                     <div className="border-t border-gray-700 pt-2">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-xs text-gray-400">
