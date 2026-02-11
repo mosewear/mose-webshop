@@ -81,3 +81,4 @@ CREATE TRIGGER update_conversation_stats_on_message
   EXECUTE FUNCTION update_chat_conversation_stats();
 
 
+

@@ -39,3 +39,4 @@ COMMENT ON COLUMN insider_email_sent.email_type IS 'Type of insider email: welco
 COMMENT ON COLUMN insider_email_sent.sent_at IS 'When the email was actually sent';
 
 
+

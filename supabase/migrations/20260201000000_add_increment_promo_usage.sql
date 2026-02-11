@@ -66,3 +66,4 @@ COMMENT ON FUNCTION track_promo_usage IS 'Increments usage count AND logs detail
 
 
 
+

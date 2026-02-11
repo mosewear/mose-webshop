@@ -176,3 +176,4 @@ COMMENT ON FUNCTION public.update_customer_stats IS 'Updates cached order statis
 
 
 
+

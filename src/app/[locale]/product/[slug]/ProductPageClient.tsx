@@ -374,12 +374,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       })
     })
   }
-  const [settings, setSettings] = useState({
-    free_shipping_threshold: 100,
-    return_days: 14,
-    shipping_cost: 6.95,
-    show_preview_images_notice: false,
-  })
+  const [settings, setSettings] = useState<{
+    free_shipping_threshold: number
+    return_days: number
+    shipping_cost: number
+    show_preview_images_notice: boolean
+  } | null>(null)
+  const [settingsLoading, setSettingsLoading] = useState(true)
 
   // Ref for scroll container (CSS scroll-snap)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -403,8 +404,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         shipping_cost: siteSettings.shipping_cost,
         show_preview_images_notice: siteSettings.show_preview_images_notice || false,
       })
+      setSettingsLoading(false)
     } catch (error) {
       console.error('Error loading settings:', error)
+      setSettingsLoading(false)
     }
   }
 
@@ -874,6 +877,22 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     )
   }
 
+  // Don't render settings-dependent content until settings are loaded
+  if (settingsLoading || !settings) {
+    return (
+      <div className="min-h-screen pt-6 md:pt-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+              <p className="text-gray-600">{t('common.loading')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const inStock = selectedVariant ? selectedVariant.stock_quantity > 0 : false
   const lowStock = selectedVariant && selectedVariant.stock_quantity > 0 && selectedVariant.stock_quantity <= 5
   const isPresale = selectedVariant && selectedVariant.presale_enabled && selectedVariant.stock_quantity === 0 && selectedVariant.presale_stock_quantity > 0
@@ -1196,7 +1215,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </span>
                       <span className="flex items-center gap-1">
                         <Truck className="w-3.5 h-3.5 text-emerald-600" />
-                        {t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}
+                        {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          ? t('shipping.alwaysFreeShipping')
+                          : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
+                        }
                       </span>
                       {/* Only show warranty for watches */}
                       {product.categories.size_guide_type === 'watch' && (
@@ -1491,7 +1513,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       </span>
                       <span className="flex items-center gap-1">
                         <Truck className="w-3.5 h-3.5 text-emerald-600" />
-                        {t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}
+                        {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          ? t('shipping.alwaysFreeShipping')
+                          : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
+                        }
                       </span>
                       {/* Only show warranty for watches */}
                       {product.categories.size_guide_type === 'watch' && (
@@ -1514,7 +1539,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <div className="text-sm">
                       <p className="font-bold uppercase tracking-wide mb-1">{t('tabs.shipping')}</p>
                       <p className="text-gray-700">
-                        {t('shipping.info', { cost: settings.shipping_cost.toFixed(2), threshold: settings.free_shipping_threshold })}
+                        {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          ? t('shipping.alwaysFreeShippingText')
+                          : t('shipping.info', { cost: settings.shipping_cost.toFixed(2), threshold: settings.free_shipping_threshold })
+                        }
                       </p>
                     </div>
                   </div>
@@ -1610,7 +1638,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-3">
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
-                          <span className="text-sm font-semibold text-gray-900">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                              ? t('shipping.alwaysFreeShipping')
+                              : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
+                            }
+                          </span>
                         </div>
                         <div className="flex items-center gap-3">
                           <RotateCcw className="w-5 h-5 text-brand-primary flex-shrink-0" />
@@ -1726,7 +1759,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                     {activeTab === 'shipping' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        <p><span className="font-semibold">{t('shipping.label')}:</span> {t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</p>
+                        <p><span className="font-semibold">{t('shipping.label')}:</span> {
+                          settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                            ? t('shipping.alwaysFreeShipping')
+                            : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
+                        }</p>
                         <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
                         <p><span className="font-semibold">{t('returns.cost')}:</span> {t('returns.costValue')}</p>
