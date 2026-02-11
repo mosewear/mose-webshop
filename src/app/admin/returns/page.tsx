@@ -199,7 +199,52 @@ export default function AdminReturnsPage() {
           <p className="text-gray-600 text-lg">Geen retouren gevonden</p>
         </div>
       ) : (
-        <div className="bg-white border-2 border-black overflow-x-auto">
+        <>
+        <div className="md:hidden space-y-3">
+          {filteredReturns.map((returnItem) => (
+            <div key={returnItem.id} className="bg-white border-2 border-black p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-mono text-sm font-bold">#{returnItem.id.slice(0, 8).toUpperCase()}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {new Date(returnItem.created_at).toLocaleDateString('nl-NL', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </div>
+                </div>
+                <span className={`inline-block px-2 py-1 text-xs font-bold uppercase border ${getStatusColor(returnItem.status)}`}>
+                  {getStatusLabel(returnItem.status)}
+                </span>
+              </div>
+
+              <div className="mt-3 text-sm">
+                <div className="text-gray-900 break-all">{returnItem.orders?.email || 'N/A'}</div>
+                <Link
+                  href={`/admin/orders/${returnItem.order_id}`}
+                  className="text-brand-primary hover:underline font-mono text-xs"
+                >
+                  Order #{returnItem.orders?.id?.slice(0, 8).toUpperCase() || 'N/A'}
+                </Link>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-sm font-bold">
+                  {returnItem.total_refund ? `EUR ${returnItem.total_refund.toFixed(2)}` : '-'}
+                </span>
+                <Link
+                  href={`/admin/returns/${returnItem.id}`}
+                  className="text-brand-primary border-2 border-brand-primary px-4 py-1.5 font-bold text-xs uppercase"
+                >
+                  Bekijk
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden md:block bg-white border-2 border-black overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b-2 border-gray-200">
               <tr>
@@ -266,6 +311,7 @@ export default function AdminReturnsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* Stats */}

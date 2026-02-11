@@ -222,14 +222,14 @@ export default function InventoryPage() {
               </p>
               <div className="space-y-2">
                 {productsWithoutVariants.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between bg-white p-3 border border-yellow-300">
+                  <div key={product.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-3 border border-yellow-300">
                     <div>
                       <span className="font-semibold text-gray-900">{product.name}</span>
                       <span className="ml-2 text-sm text-gray-500">€{product.base_price.toFixed(2)}</span>
                     </div>
                     <Link
                       href={`/admin/products/${product.id}/variants`}
-                      className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 px-4 text-xs uppercase tracking-wider transition-colors"
+                      className="w-full sm:w-auto text-center bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 px-4 text-xs uppercase tracking-wider transition-colors"
                     >
                       + Varianten Toevoegen
                     </Link>
@@ -262,7 +262,7 @@ export default function InventoryPage() {
                 : 'border-gray-300 text-gray-700 hover:border-gray-400'
             }`}
           >
-            ⚠️ Laag ({getLowStockCount()})
+            Laag ({getLowStockCount()})
           </button>
           <button
             onClick={() => setFilter('out')}
@@ -272,7 +272,7 @@ export default function InventoryPage() {
                 : 'border-gray-300 text-gray-700 hover:border-gray-400'
             }`}
           >
-            🚫 Uitverkocht ({getOutOfStockCount()})
+            Uitverkocht ({getOutOfStockCount()})
           </button>
           <button
             onClick={() => setFilter('available')}
@@ -282,7 +282,7 @@ export default function InventoryPage() {
                 : 'border-gray-300 text-gray-700 hover:border-gray-400'
             }`}
           >
-            ✅ Op Voorraad ({variants.filter(v => v.stock_quantity >= 5).length})
+            Op voorraad ({variants.filter(v => v.stock_quantity >= 5).length})
           </button>
         </div>
       </div>
@@ -297,7 +297,74 @@ export default function InventoryPage() {
             <h3 className="text-lg font-bold text-gray-700 mb-2">Geen items in deze categorie</h3>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="md:hidden space-y-3 p-3">
+            {filteredVariants.map((variant) => (
+              <div
+                key={variant.id}
+                className={`border-2 p-4 ${
+                  variant.stock_quantity === 0
+                    ? 'border-red-200 bg-red-50'
+                    : variant.stock_quantity < 5
+                    ? 'border-orange-200 bg-orange-50'
+                    : 'border-gray-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-gray-900">{variant.product.name}</div>
+                    <div className="text-xs text-gray-600">{variant.size} / {variant.color}</div>
+                    {variant.sku && <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block mt-1">{variant.sku}</code>}
+                  </div>
+                  <span className="text-xs font-bold text-gray-900">EUR {(variant.product.base_price + variant.price_adjustment).toFixed(2)}</span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Regulier</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={variant.stock_quantity}
+                      onChange={(e) => handleUpdateStock(variant.id, parseInt(e.target.value) || 0, false)}
+                      className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Presale</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={variant.presale_stock_quantity || 0}
+                      onChange={(e) => handleUpdateStock(variant.id, parseInt(e.target.value) || 0, true)}
+                      disabled={!variant.presale_enabled}
+                      className="w-full px-3 py-2 border-2 border-purple-300 focus:border-purple-500 focus:outline-none text-sm disabled:bg-gray-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={variant.presale_enabled}
+                      onChange={(e) => handleTogglePresale(variant.id, e.target.checked)}
+                      className="w-4 h-4 text-purple-600 border-2 border-gray-300 rounded"
+                    />
+                    <span className="text-xs font-semibold text-purple-700">Presale</span>
+                  </label>
+                  <Link
+                    href={`/admin/products/${variant.product.id}/variants`}
+                    className="text-xs font-semibold text-brand-primary"
+                  >
+                    Varianten
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y-2 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -439,6 +506,7 @@ export default function InventoryPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>

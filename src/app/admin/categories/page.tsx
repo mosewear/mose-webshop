@@ -69,14 +69,14 @@ export default function AdminCategoriesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-8">
         <div>
           <h1 className="text-3xl font-display font-bold mb-2">Categorieën</h1>
           <p className="text-gray-600">Organiseer je producten in categorieën</p>
         </div>
         <Link
           href="/admin/categories/create"
-          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+          className="w-full md:w-auto text-center bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
         >
           + Nieuwe Categorie
         </Link>
@@ -126,7 +126,58 @@ export default function AdminCategoriesPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="md:hidden space-y-3 p-3">
+            {categories.map((category) => (
+              <div key={category.id} className="border-2 border-gray-200 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
+                    {category.image_url ? (
+                      <Image
+                        src={category.image_url}
+                        alt={category.name}
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold text-gray-900">{category.name}</div>
+                    <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block mt-1">
+                      {category.slug}
+                    </code>
+                    <div className="text-xs text-gray-600 mt-2 line-clamp-2">
+                      {category.description || 'Geen beschrijving'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <Link
+                    href={`/admin/categories/${category.id}/edit`}
+                    className="flex-1 text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
+                  >
+                    Bewerken
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(category.id, category.name)}
+                    className="flex-1 text-center text-red-600 border-2 border-red-600 py-2 text-sm font-semibold"
+                  >
+                    Verwijderen
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y-2 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -204,6 +255,7 @@ export default function AdminCategoriesPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>

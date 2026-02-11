@@ -84,14 +84,14 @@ export default function AdminProductsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-8">
         <div>
           <h1 className="text-3xl font-display font-bold mb-2">Producten</h1>
           <p className="text-gray-600">Beheer alle producten in je webshop</p>
         </div>
         <Link
           href="/admin/products/create"
-          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
+          className="w-full md:w-auto text-center bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
         >
           + Nieuw Product
         </Link>
@@ -147,7 +147,101 @@ export default function AdminProductsPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="md:hidden space-y-3 p-3">
+            {products.map((product) => {
+              const hasDiscount = product.sale_price && product.sale_price < product.base_price
+              const discountPercentage = hasDiscount && product.sale_price
+                ? Math.round(((product.base_price - product.sale_price) / product.base_price) * 100)
+                : 0
+
+              return (
+                <div key={product.id} className="border-2 border-gray-200 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 h-14 w-14 bg-gray-100 border border-gray-200 overflow-hidden">
+                      {(() => {
+                        const primaryImage = product.product_images?.find(img => img.is_primary)
+                        const imageUrl = primaryImage?.url || product.product_images?.[0]?.url
+
+                        if (imageUrl) {
+                          return (
+                            <Image
+                              src={imageUrl}
+                              alt={product.name}
+                              width={56}
+                              height={56}
+                              className="w-full h-full object-cover"
+                            />
+                          )
+                        }
+
+                        return (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-gray-900 truncate">{product.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{product.slug}</div>
+                      <div className="mt-2">
+                        {product.category ? (
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                            {product.category.name}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                            Geen categorie
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div>
+                      {hasDiscount && product.sale_price ? (
+                        <>
+                          <div className="text-sm font-bold text-red-600">
+                            EUR {Number(product.sale_price).toFixed(2)}
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-bold bg-red-600 text-white">
+                              -{discountPercentage}%
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500 line-through">EUR {Number(product.base_price).toFixed(2)}</div>
+                        </>
+                      ) : (
+                        <div className="text-sm font-bold text-gray-900">EUR {Number(product.base_price).toFixed(2)}</div>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(product.created_at).toLocaleDateString('nl-NL')}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex gap-2">
+                    <Link
+                      href={`/admin/products/${product.id}/edit`}
+                      className="flex-1 text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
+                    >
+                      Bewerken
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product.id, product.name)}
+                      className="flex-1 text-center text-red-600 border-2 border-red-600 py-2 text-sm font-semibold"
+                    >
+                      Verwijderen
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y-2 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -272,6 +366,7 @@ export default function AdminProductsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>

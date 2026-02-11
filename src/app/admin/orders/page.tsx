@@ -106,10 +106,10 @@ export default function AdminOrdersPage() {
       delivered: 'Afgeleverd',
       cancelled: 'Geannuleerd',
       // Return statussen
-      return_requested: '🔄 Return Aangevraagd',
-      return_in_transit: '📦 Return Onderweg',
-      return_received: '✓ Return Ontvangen',
-      return_completed: '✓ Return Voltooid',
+      return_requested: 'Return aangevraagd',
+      return_in_transit: 'Return onderweg',
+      return_received: 'Return ontvangen',
+      return_completed: 'Return voltooid',
     }
     return labels[status] || status
   }
@@ -200,7 +200,7 @@ export default function AdminOrdersPage() {
     { value: 'processing', label: 'In behandeling', count: orders.filter(o => o.status === 'processing').length },
     { value: 'shipped', label: 'Verzonden', count: orders.filter(o => o.status === 'shipped').length },
     { value: 'delivered', label: 'Afgeleverd', count: orders.filter(o => o.status === 'delivered').length },
-    { value: 'returns', label: '🔄 Returns', count: orders.filter(o => ['return_requested', 'return_in_transit', 'return_received', 'return_completed'].includes(o.status)).length },
+    { value: 'returns', label: 'Returns', count: orders.filter(o => ['return_requested', 'return_in_transit', 'return_received', 'return_completed'].includes(o.status)).length },
   ]
 
   if (loading) {
@@ -219,16 +219,16 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-display font-bold mb-2">Orders</h1>
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full md:w-auto items-center gap-2">
           <button 
             onClick={() => fetchOrders()}
             disabled={refreshing}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95 disabled:opacity-50 flex items-center gap-2"
+            className="flex-1 md:flex-none bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Bezig...' : 'Ververs'}
           </button>
-          <button className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95">
+          <button className="flex-1 md:flex-none bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95">
             Exporteren
           </button>
         </div>
@@ -300,12 +300,12 @@ export default function AdminOrdersPage() {
           <>
             {/* Bulk Actions Bar */}
             {selectedOrders.length > 0 && (
-              <div className="bg-brand-primary text-white p-4 flex items-center gap-4">
+              <div className="bg-brand-primary text-white p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                 <span className="font-bold">{selectedOrders.length} order(s) geselecteerd</span>
                 <select
                   value={bulkAction}
                   onChange={(e) => setBulkAction(e.target.value)}
-                  className="px-4 py-2 bg-white text-gray-800 border-2 border-white font-bold"
+                  className="w-full md:w-auto px-4 py-2 bg-white text-gray-800 border-2 border-white font-bold"
                 >
                   <option value="">Kies actie...</option>
                   <option value="processing">Markeer als: In behandeling</option>
@@ -316,20 +316,59 @@ export default function AdminOrdersPage() {
                 <button
                   onClick={handleBulkAction}
                   disabled={!bulkAction || bulkUpdating}
-                  className="bg-white text-brand-primary font-bold py-2 px-6 uppercase tracking-wider hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  className="w-full md:w-auto bg-white text-brand-primary font-bold py-2 px-6 uppercase tracking-wider hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                   {bulkUpdating ? 'Bijwerken...' : 'Toepassen'}
                 </button>
                 <button
                   onClick={() => setSelectedOrders([])}
-                  className="ml-auto text-white hover:text-gray-200"
+                  className="md:ml-auto text-white hover:text-gray-200 text-left md:text-right"
                 >
-                  ✕ Deselecteren
+                  Deselecteren
                 </button>
               </div>
             )}
 
-            <div className="overflow-x-auto">
+            <div className="md:hidden space-y-3 p-3">
+              {orders.map((order) => (
+                <div key={order.id} className="border-2 border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                        #{order.id.slice(0, 8)}
+                      </code>
+                      <div className="text-sm font-semibold text-gray-900 mt-2 break-all">{order.email}</div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => handleSelectOrder(order.id)}
+                      className="w-5 h-5 mt-1"
+                    />
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <span className={`px-2 py-1 font-semibold border inline-block ${getPaymentStatusColor(order.payment_status || 'unpaid')}`}>
+                      {getPaymentStatusLabel(order.payment_status || 'unpaid')}
+                    </span>
+                    <span className={`px-2 py-1 font-semibold border inline-block ${getStatusColor(order.status)}`}>
+                      {getStatusLabel(order.status)}
+                    </span>
+                    <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
+                    <div className="font-bold text-gray-900 text-right">EUR {Number(order.total).toFixed(2)}</div>
+                  </div>
+
+                  <Link
+                    href={`/admin/orders/${order.id}`}
+                    className="mt-3 block w-full text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
+                  >
+                    Details
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y-2 divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>

@@ -100,7 +100,7 @@ export default function CustomersPage() {
           onClick={handleExportCSV}
           className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors"
         >
-          📥 Exporteer CSV
+          Exporteer CSV
         </button>
       </div>
 
@@ -145,7 +145,56 @@ export default function CustomersPage() {
             <p className="text-gray-500">Klanten verschijnen hier zodra ze zich registreren!</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="md:hidden space-y-3 p-3">
+            {customers.map((customer) => (
+              <div key={customer.id} className="border-2 border-gray-200 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    {customer.avatar_url ? (
+                      <img
+                        src={customer.avatar_url}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <svg className="w-6 h-6 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold text-gray-900">
+                      {customer.first_name || customer.last_name
+                        ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+                        : customer.email?.split('@')[0] || 'Geen naam'}
+                    </div>
+                    <div className="text-xs text-gray-500 break-all">{customer.email || 'Geen email'}</div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                      <div>
+                        <span className="font-semibold">Orders:</span> {customer.total_orders || 0}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Uitgegeven:</span> EUR {(customer.total_spent || 0).toFixed(2)}
+                      </div>
+                      <div className="col-span-2">
+                        <span className="font-semibold">Aangemaakt:</span> {new Date(customer.created_at).toLocaleDateString('nl-NL')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/admin/customers/${customer.id}`}
+                  className="mt-3 block w-full text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
+                >
+                  Details
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y-2 divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -230,6 +279,7 @@ export default function CustomersPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>

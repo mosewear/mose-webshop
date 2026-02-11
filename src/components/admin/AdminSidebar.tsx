@@ -204,17 +204,19 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       {/* Mobile Menu Button - Fixed bottom bar */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="lg:hidden fixed bottom-4 right-4 z-[70] w-14 h-14 bg-brand-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="lg:hidden fixed bottom-4 right-4 z-[70] px-4 h-12 bg-brand-primary text-white rounded-full shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform"
+        aria-label={mobileMenuOpen ? 'Sluit menu' : 'Open menu'}
       >
         {mobileMenuOpen ? (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         )}
+        <span className="text-xs font-bold uppercase tracking-wide">Menu</span>
       </button>
 
       {/* Mobile Overlay */}

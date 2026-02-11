@@ -230,7 +230,7 @@ export default function SurveyAdminPage() {
       {/* Header */}
       <div className="bg-white border-b-2 border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <Link
                 href="/admin"
@@ -249,7 +249,7 @@ export default function SurveyAdminPage() {
             <button
               onClick={handleExport}
               disabled={exporting || filteredResponses.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase text-sm"
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary text-white border-2 border-black hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase text-sm"
             >
               <Download size={16} />
               {exporting ? 'Exporteren...' : 'Export CSV'}
@@ -546,7 +546,47 @@ export default function SurveyAdminPage() {
           <div className="p-4 border-b-2 border-gray-200">
             <h2 className="text-lg font-bold">Alle Responses ({filteredResponses.length})</h2>
           </div>
-          <div className="overflow-x-auto">
+          <div className="md:hidden space-y-3 p-3">
+            {filteredResponses.length > 0 ? (
+              filteredResponses.map((response) => (
+                <div key={response.id} className="border-2 border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-xs text-gray-500">
+                      {new Date(response.created_at).toLocaleString('nl-NL')}
+                    </div>
+                    <button
+                      onClick={() => handleDelete(response.id)}
+                      className="p-2 text-red-600 border-2 border-red-600"
+                      title="Verwijder response"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <div className="mt-2 text-sm font-medium">
+                    {getLikelihoodLabel(response.purchase_likelihood)}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {response.what_needed.map((item, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-1 bg-gray-100 border border-gray-300 text-xs"
+                      >
+                        {getNeededLabel(item)}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600 break-all">{response.page_url || '-'}</div>
+                  <div className="mt-2 text-xs text-gray-600">Anders: {response.what_needed_other || '-'}</div>
+                  <div className="mt-1 text-xs text-gray-600">Eerste indruk: {response.first_impression || '-'}</div>
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center text-gray-500">Geen responses gevonden</div>
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b-2 border-gray-200">
                 <tr>
