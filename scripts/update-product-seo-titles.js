@@ -18,6 +18,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 })
 
 const MAX_TITLE_LENGTH = 60
+const MAX_DESCRIPTION_LENGTH = 155
 
 function normalizeWhitespace(value) {
   return (value || '').replace(/\s+/g, ' ').trim()
@@ -52,6 +53,11 @@ function trimTitle(value) {
   return `${value.slice(0, MAX_TITLE_LENGTH - 1).trimEnd()}…`
 }
 
+function trimDescription(value) {
+  if (value.length <= MAX_DESCRIPTION_LENGTH) return value
+  return `${value.slice(0, MAX_DESCRIPTION_LENGTH - 1).trimEnd()}…`
+}
+
 function buildMetaTitle(product) {
   const name = normalizeWhitespace(product.name)
   const categoryName = normalizeWhitespace(product.categories?.name || '')
@@ -73,10 +79,35 @@ function buildMetaTitle(product) {
   return trimTitle(`${name} | MOSE`)
 }
 
+function buildMetaDescription(product) {
+  const name = normalizeWhitespace(product.name)
+  const categoryName = normalizeWhitespace(product.categories?.name || '')
+  const keyword = categoryKeyword(categoryName, name)
+  const sourceDescription = normalizeWhitespace(product.description || '')
+
+  const variants = [
+    `${name} van MOSE: premium ${keyword} met sterke kwaliteit en tijdloos design. Shop nu online.`,
+    `${name} van MOSE. Tijdloos design, premium materialen en perfecte fit. Bestel vandaag online.`,
+    `Ontdek ${name} van MOSE. Premium kwaliteit, comfortabele fit en gemaakt voor dagelijks gebruik.`,
+  ]
+
+  if (sourceDescription) {
+    variants.unshift(`${name} van MOSE. ${sourceDescription}`)
+  }
+
+  for (const variant of variants) {
+    if (variant.length <= MAX_DESCRIPTION_LENGTH) {
+      return variant
+    }
+  }
+
+  return trimDescription(variants[0])
+}
+
 async function run() {
   const { data: products, error } = await supabase
     .from('products')
-    .select('id, name, slug, meta_title, is_active, categories(name)')
+    .select('id, name, slug, description, meta_title, meta_description, is_active, categories(name)')
     .eq('is_active', true)
     .order('created_at', { ascending: true })
 
@@ -94,15 +125,21 @@ async function run() {
 
   for (const product of products) {
     const newTitle = buildMetaTitle(product)
+    const newDescription = buildMetaDescription(product)
     const currentTitle = normalizeWhitespace(product.meta_title)
+    const currentDescription = normalizeWhitespace(product.meta_description)
 
-    if (currentTitle === newTitle) {
+    if (currentTitle === newTitle && currentDescription === newDescription) {
       continue
     }
 
     const { error: updateError } = await supabase
       .from('products')
-      .update({ meta_title: newTitle, updated_at: new Date().toISOString() })
+      .update({
+        meta_title: newTitle,
+        meta_description: newDescription,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', product.id)
 
     if (updateError) {
@@ -111,7 +148,9 @@ async function run() {
     }
 
     updated += 1
-    console.log(`Updated: ${product.slug} -> ${newTitle}`)
+    console.log(`Updated: ${product.slug}`)
+    console.log(`  title: ${newTitle}`)
+    console.log(`  description: ${newDescription}`)
   }
 
   console.log(`Done. Updated ${updated} of ${products.length} active products.`)
