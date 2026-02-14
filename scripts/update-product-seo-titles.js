@@ -27,19 +27,19 @@ const PRODUCT_COPY_BY_SLUG = {
       'Ontdek het MOSE Automatisch Horloge: premium herenhorloge met tijdloos design, automatische uurwerkbeweging en hoogwaardige afwerking. Shop nu online.',
   },
   'mose-tee': {
-    title: 'MOSE Tee - premium t-shirt heren | MOSE',
+    title: 'MOSE Tee - premium t-shirt heren met perfecte fit | MOSE',
     description:
-      'MOSE Tee: premium t-shirt voor heren met comfortabele fit, stevige kwaliteit en minimalistisch design. Perfect voor elke dag. Shop nu online.',
+      'MOSE Tee: premium t-shirt voor heren met comfortabele fit, stevige kwaliteit en minimalistisch design. Perfect voor elke dag. Shop nu online bij MOSE.',
   },
   'mose-essential-hoodie': {
-    title: 'MOSE Essential Hoodie - premium hoodie heren | MOSE',
+    title: 'MOSE Essential Hoodie - premium hoodie met comfort | MOSE',
     description:
       'MOSE Essential Hoodie: premium hoodie voor heren met comfortabele pasvorm, zachte stof en tijdloze look. Ideaal voor dagelijks gebruik. Bestel nu online.',
   },
   'mose-classic-sweater': {
-    title: 'MOSE Classic Sweater - premium sweater heren | MOSE',
+    title: 'MOSE Classic Sweater - premium sweater met comfort | MOSE',
     description:
-      'MOSE Classic Sweater: premium sweater voor heren met sterke kwaliteit, comfortabele fit en clean design. Een tijdloze essential. Shop nu online.',
+      'MOSE Classic Sweater: premium sweater voor heren met sterke kwaliteit, comfortabele fit en clean design. Een tijdloze essential. Shop vandaag online.',
   },
 }
 
