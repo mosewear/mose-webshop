@@ -20,6 +20,29 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 const MAX_TITLE_LENGTH = 60
 const MAX_DESCRIPTION_LENGTH = 155
 
+const PRODUCT_COPY_BY_SLUG = {
+  'mose-automatisch-horloge': {
+    title: 'MOSE Automatisch Horloge - premium herenhorloge | MOSE',
+    description:
+      'Ontdek het MOSE Automatisch Horloge: premium herenhorloge met tijdloos design, automatische uurwerkbeweging en hoogwaardige afwerking. Shop nu online.',
+  },
+  'mose-tee': {
+    title: 'MOSE Tee - premium t-shirt heren | MOSE',
+    description:
+      'MOSE Tee: premium t-shirt voor heren met comfortabele fit, stevige kwaliteit en minimalistisch design. Perfect voor elke dag. Shop nu online.',
+  },
+  'mose-essential-hoodie': {
+    title: 'MOSE Essential Hoodie - premium hoodie heren | MOSE',
+    description:
+      'MOSE Essential Hoodie: premium hoodie voor heren met comfortabele pasvorm, zachte stof en tijdloze look. Ideaal voor dagelijks gebruik. Bestel nu online.',
+  },
+  'mose-classic-sweater': {
+    title: 'MOSE Classic Sweater - premium sweater heren | MOSE',
+    description:
+      'MOSE Classic Sweater: premium sweater voor heren met sterke kwaliteit, comfortabele fit en clean design. Een tijdloze essential. Shop nu online.',
+  },
+}
+
 function normalizeWhitespace(value) {
   return (value || '').replace(/\s+/g, ' ').trim()
 }
@@ -59,6 +82,11 @@ function trimDescription(value) {
 }
 
 function buildMetaTitle(product) {
+  const bySlug = PRODUCT_COPY_BY_SLUG[product.slug]
+  if (bySlug?.title) {
+    return trimTitle(normalizeWhitespace(bySlug.title))
+  }
+
   const name = normalizeWhitespace(product.name)
   const categoryName = normalizeWhitespace(product.categories?.name || '')
   const keyword = categoryKeyword(categoryName, name)
@@ -80,6 +108,11 @@ function buildMetaTitle(product) {
 }
 
 function buildMetaDescription(product) {
+  const bySlug = PRODUCT_COPY_BY_SLUG[product.slug]
+  if (bySlug?.description) {
+    return trimDescription(normalizeWhitespace(bySlug.description))
+  }
+
   const name = normalizeWhitespace(product.name)
   const categoryName = normalizeWhitespace(product.categories?.name || '')
   const keyword = categoryKeyword(categoryName, name)
