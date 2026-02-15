@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 /**
  * API route to save chat messages to database
@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    // Use service role for server-side logging; this endpoint is called from the client
+    // and should not depend on an authenticated Supabase session / RLS.
+    const supabase = createServiceRoleClient()
 
     let conversation_id = conversationId
 
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
       .insert({
         conversation_id: conversation_id,
         role: role,
-        content: content,
+        content: String(content).slice(0, 5000),
         metadata: metadata || {},
       })
       .select('id')
@@ -85,6 +87,7 @@ export async function POST(req: NextRequest) {
     )
   }
 }
+
 
 
 
