@@ -194,7 +194,9 @@ export default function VerzendingPage() {
                 <h3 className="font-bold text-xl uppercase">{t('trackTrace')}</h3>
               </div>
               <p className="text-sm mb-3">
-                {t('viaDHL')}
+                {t.rich('viaDHL', {
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
