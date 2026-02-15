@@ -2,7 +2,6 @@ import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
-import { z } from 'zod'
 
 // Runtime config for streaming
 export const runtime = 'edge'
@@ -210,31 +209,26 @@ export async function POST(req: Request) {
       contextPrompt += `\n\nWINKELWAGEN: EUR ${context.cart.total} (${context.cart.items} items)`
     }
 
+    // Enrich the system prompt with live context so we don't rely on tool schemas
+    // (tool JSON schema conversion can break on edge if misconfigured).
+    if (context?.product?.slug) {
+      const productDetails = await getProductDetails(String(context.product.slug), locale)
+      contextPrompt += `\n\nPRODUCT CONTEXT (read-only JSON):\n${JSON.stringify(productDetails).slice(0, 8000)}`
+    }
+
+    if (context?.cart?.total) {
+      const cartTotal = Number(context.cart.total)
+      if (Number.isFinite(cartTotal) && cartTotal > 0) {
+        const shipping = await calculateShipping(cartTotal)
+        contextPrompt += `\n\nSHIPPING CONTEXT (based on cart total):\n${JSON.stringify(shipping)}`
+      }
+    }
+
     // Call OpenAI with streaming (Vercel AI SDK v4+)
     const result = streamText({
       model: openai('gpt-4o'),
       system: contextPrompt,
       messages,
-      tools: {
-        get_product_details: {
-          description: 'Haal gedetailleerde productinformatie op uit de database, inclusief materiaal, fit, maten, kleuren, voorraad en maattabel',
-          parameters: z.object({
-            product_slug: z.string().min(1),
-          }),
-          execute: async ({ product_slug }: { product_slug: string }) => {
-            return await getProductDetails(product_slug, locale)
-          },
-        },
-        calculate_shipping: {
-          description: 'Bereken verzendkosten op basis van winkelwagen totaal',
-          parameters: z.object({
-            cart_total: z.coerce.number().nonnegative(),
-          }),
-          execute: async ({ cart_total }: { cart_total: number }) => {
-            return await calculateShipping(cart_total)
-          },
-        },
-      },
       temperature: 0.7,
       maxTokens: 500,
     })
