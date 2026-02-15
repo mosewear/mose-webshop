@@ -37,7 +37,7 @@ export default function VerzendingPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Laden...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     )
@@ -240,14 +240,13 @@ export default function VerzendingPage() {
           {/* Hero Card - Bedenktijd */}
           <div className="bg-black text-white p-8 md:p-12 border-4 border-black mb-8">
             <h3 className="text-3xl md:text-4xl font-bold mb-3 uppercase">
-              {settings.return_days} Dagen Bedenktijd
+              {t('returnPeriodTitle', { days: settings.return_days })}
             </h3>
             <p className="text-xl text-gray-300">
-              Niet tevreden? Je hebt {settings.return_days} dagen bedenktijd vanaf ontvangst. 
-              Retourneer zonder opgaaf van reden.
+              {t('returnPeriodText', { days: settings.return_days })}
             </p>
             <p className="text-sm text-gray-400 mt-3">
-              De retourvoorwaarden zijn gelijk voor Nederland en Belgie.
+              {t('sameConditionsNLBE')}
             </p>
           </div>
 
@@ -255,14 +254,14 @@ export default function VerzendingPage() {
           <div className="border-4 border-black p-8 bg-white mb-8">
             <h3 className="text-2xl font-bold uppercase mb-6 flex items-center gap-3">
               <div className="w-8 h-1 bg-brand-primary" />
-              Voorwaarden
+              {t('conditionsTitle')}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                'Ongedragen en ongewassen',
-                'Labels zitten er nog aan',
-                'Originele staat en verpakking',
-                `Binnen ${settings.return_days} dagen na ontvangst`,
+                t('conditionUnworn'),
+                t('conditionTagsAttached'),
+                t('conditionOriginalPackaging'),
+                t('conditionWithinDays', { days: settings.return_days }),
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-4 border-2 border-gray-200">
                   <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
@@ -276,47 +275,47 @@ export default function VerzendingPage() {
           <div className="border-4 border-black bg-gray-50 p-8 mb-8">
             <h3 className="text-2xl font-bold uppercase mb-8 flex items-center gap-3">
               <div className="w-8 h-1 bg-brand-primary" />
-              Hoe Retourneren?
+              {t('howToReturnTitle')}
             </h3>
             <div className="space-y-6">
               {[
                 {
                   number: '1',
-                  title: 'Log in op je account',
+                  title: t('step1Title'),
                   text: (
                     <>
-                      Ga naar{' '}
+                      {t('step1TextBeforeLink')}{' '}
                       <LocaleLink href="/account" className="text-brand-primary font-bold underline hover:no-underline">
-                        je klantportaal
+                        {t('step1LinkText')}
                       </LocaleLink>{' '}
-                      en log in met je gegevens.
+                      {t('step1TextAfterLink')}
                     </>
                   ),
                 },
                 {
                   number: '2',
-                  title: 'Selecteer je order',
-                  text: 'Kies de bestelling en selecteer de artikelen die je wilt retourneren.',
+                  title: t('step2Title'),
+                  text: t('step2Text'),
                 },
                 {
                   number: '3',
-                  title: 'Betaal retourkosten',
-                  text: 'Betaal €5,95 retourkosten direct online en download je retourlabel.',
+                  title: t('step3Title'),
+                  text: t('step3Text'),
                 },
                 {
                   number: '4',
-                  title: 'Pak je artikel(en) in',
-                  text: 'Stop alles veilig in de originele verpakking of een stevige doos.',
+                  title: t('step4Title'),
+                  text: t('step4Text'),
                 },
                 {
                   number: '5',
-                  title: 'Plak het label erop',
-                  text: 'Breng het pakket naar een DHL ServicePoint bij jou in de buurt.',
+                  title: t('step5Title'),
+                  text: t('step5Text'),
                 },
                 {
                   number: '6',
-                  title: 'Ontvang je geld terug',
-                  text: 'Binnen 5-7 werkdagen na ontvangst storten we het bedrag terug.',
+                  title: t('step6Title'),
+                  text: t('step6Text'),
                 },
               ].map((step, idx) => (
                 <div key={idx} className="flex gap-4 items-start group">
@@ -336,15 +335,15 @@ export default function VerzendingPage() {
           <div className="border-4 border-yellow-400 bg-yellow-50 p-8 mb-8">
             <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-yellow-600" />
-              Retourkosten
+              {t('returnCostsTitle')}
             </h3>
             <p className="text-lg mb-3">
-              Retourneren binnen Nederland en België kost <strong className="text-xl">€5,95</strong>. 
-              Je betaalt dit direct bij het aanmaken van het retourlabel in je klantportaal.
+              {t('returnCostsText')}{' '}
+              <strong className="text-xl">€5,95</strong>. {t('returnCostsFollowup')}
             </p>
             <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
               <Check className="w-5 h-5" />
-              Retour bij fabricagefout of verkeerde levering is altijd gratis.
+              {t('manufacturingFaultReturnFree')}
             </p>
           </div>
 
@@ -352,20 +351,20 @@ export default function VerzendingPage() {
           <div className="border-4 border-black bg-white p-8">
             <h3 className="text-2xl font-bold uppercase mb-4 flex items-center gap-3">
               <div className="w-8 h-1 bg-brand-primary" />
-              Terugbetaling
+              {t('refundTitle')}
             </h3>
             <div className="space-y-4 text-gray-700">
               <p className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-brand-primary flex-shrink-0 mt-1" />
                 <span>
-                  Na ontvangst en controle van je retourzending krijg je het aankoopbedrag binnen{' '}
-                  <strong>5-7 werkdagen</strong> teruggestort op de rekening waarmee je hebt betaald.
+                  {t('refundTextOneBefore')}
+                  <strong>5-7 {t('businessDays')}</strong> {t('refundTextOneAfter')}
                 </span>
               </p>
               <p className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-brand-primary flex-shrink-0 mt-1" />
                 <span>
-                  Je ontvangt een bevestigingsmail zodra je retour is verwerkt en het bedrag is teruggestort.
+                  {t('refundTextTwo')}
                 </span>
               </p>
             </div>
@@ -376,24 +375,24 @@ export default function VerzendingPage() {
         <section className="mt-16 md:mt-24">
           <div className="bg-black text-white p-12 md:p-16 border-4 border-black text-center">
             <h2 className="font-display text-4xl md:text-5xl mb-6 uppercase">
-              Nog Vragen?
+              {t('questionsTitle')}
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Neem gerust contact met ons op. We helpen je graag verder!
+              {t('questionsText')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <LocaleLink 
                 href={localeLink('/contact')} 
                 className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-all duration-300 border-2 border-brand-primary"
               >
-                Contact opnemen
+                {t('contactUs')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </LocaleLink>
               <LocaleLink 
                 href={localeLink('/shop')} 
                 className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-lg uppercase tracking-wider hover:bg-white hover:text-black transition-all duration-300"
               >
-                Verder shoppen
+                {t('continueShopping')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </LocaleLink>
             </div>
