@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Truck, Package, Clock, MapPin, RefreshCw, Check, ArrowRight } from 'lucide-react'
+import { Truck, Package, Clock, MapPin, RefreshCw, Check, ArrowRight, Lightbulb, AlertTriangle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -73,6 +73,9 @@ export default function VerzendingPage() {
                 : t('freeShipping', { threshold: settings.free_shipping_threshold })
               }. 
               {t('returnPolicy', { days: settings.return_days })}.
+            </p>
+            <p className="text-sm text-gray-400 mt-3">
+              {t('sameConditionsNLBE')}
             </p>
           </div>
 
@@ -213,7 +216,7 @@ export default function VerzendingPage() {
           {/* Info Box */}
           <div className="mt-6 border-4 border-black bg-gray-100 p-6">
             <p className="flex items-start gap-3">
-              <span className="text-2xl">💡</span>
+              <Lightbulb className="w-6 h-6 text-brand-primary flex-shrink-0 mt-0.5" />
               <span>
                 <strong>{t('trackOrder')}</strong> {t('goToAccount')}{' '}
                 <LocaleLink href="/account" className="text-brand-primary font-bold underline hover:no-underline">
@@ -242,6 +245,9 @@ export default function VerzendingPage() {
             <p className="text-xl text-gray-300">
               Niet tevreden? Je hebt {settings.return_days} dagen bedenktijd vanaf ontvangst. 
               Retourneer zonder opgaaf van reden.
+            </p>
+            <p className="text-sm text-gray-400 mt-3">
+              De retourvoorwaarden zijn gelijk voor Nederland en Belgie.
             </p>
           </div>
 
@@ -329,7 +335,7 @@ export default function VerzendingPage() {
           {/* Retourkosten Warning */}
           <div className="border-4 border-yellow-400 bg-yellow-50 p-8 mb-8">
             <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
-              <span className="text-3xl">⚠️</span>
+              <AlertTriangle className="w-8 h-8 text-yellow-600" />
               Retourkosten
             </h3>
             <p className="text-lg mb-3">

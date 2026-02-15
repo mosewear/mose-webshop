@@ -493,6 +493,7 @@
     "free": "Free",
     "manufacturingFault": "For manufacturing defects",
     "shippingCost": "Under €{threshold}? Then you pay €{cost} shipping costs.",
+    "sameConditionsNLBE": "The same shipping and return conditions apply to the Netherlands and Belgium.",
     "shippingAreas": "Shipping Areas",
     "netherlands": "Netherlands",
     "belgium": "Belgium",

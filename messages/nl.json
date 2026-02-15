@@ -492,6 +492,7 @@
     "free": "Gratis",
     "manufacturingFault": "Bij fabricagefout",
     "shippingCost": "Onder €{threshold}? Dan betaal je €{cost} verzendkosten.",
+    "sameConditionsNLBE": "Dezelfde verzend- en retourvoorwaarden gelden voor Nederland en Belgie.",
     "shippingAreas": "Verzendgebieden",
     "netherlands": "Nederland",
     "belgium": "België",
