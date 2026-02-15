@@ -14,6 +14,7 @@ interface Order {
   paid_at: string | null
   payment_method: string | null
   total: number
+  delivery_method?: 'shipping' | 'pickup'
   shipping_address: any
   billing_address: any
   payment_intent_id: string | null
@@ -356,6 +357,15 @@ export default function AdminOrdersPage() {
                     </span>
                     <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
                     <div className="font-bold text-gray-900 text-right">EUR {Number(order.total).toFixed(2)}</div>
+                    <div className="col-span-2">
+                      <span className={`px-2 py-1 font-semibold border inline-block ${
+                        order.delivery_method === 'pickup'
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-gray-100 text-gray-700 border-gray-200'
+                      }`}>
+                        {order.delivery_method === 'pickup' ? 'Afhalen' : 'Verzending'}
+                      </span>
+                    </div>
                   </div>
 
                   <Link
@@ -391,6 +401,9 @@ export default function AdminOrdersPage() {
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Fulfillment
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Levering
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Totaal
@@ -432,6 +445,15 @@ export default function AdminOrdersPage() {
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${getStatusColor(order.status)}`}>
                         {getStatusLabel(order.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${
+                        order.delivery_method === 'pickup'
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-gray-100 text-gray-700 border-gray-200'
+                      }`}>
+                        {order.delivery_method === 'pickup' ? 'Afhalen' : 'Verzending'}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">

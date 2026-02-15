@@ -29,6 +29,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (order.delivery_method === 'pickup') {
+      return NextResponse.json(
+        { error: 'Order is pickup; shipping email is not applicable' },
+        { status: 400 }
+      )
+    }
+
     if (!order.tracking_code) {
       return NextResponse.json(
         { error: 'Order has no tracking code' },

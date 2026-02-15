@@ -20,6 +20,9 @@ interface Order {
   total: number
   discount_amount?: number
   promo_code?: string
+  delivery_method?: 'shipping' | 'pickup'
+  pickup_location_name?: string | null
+  pickup_location_address?: string | null
   status: string
   payment_status: string
   created_at: string
@@ -349,7 +352,9 @@ export default function OrderConfirmationPage({
               <div className="flex justify-between text-lg">
                 <span>{t('summary.shipping')}</span>
                 <span className="font-semibold">
-                  {order.shipping_cost === 0 ? (
+                  {order.delivery_method === 'pickup' ? (
+                    <span className="text-brand-primary">{t('summary.pickup')}</span>
+                  ) : order.shipping_cost === 0 ? (
                     <span className="text-brand-primary">{t('summary.free')}</span>
                   ) : (
                     `€${order.shipping_cost.toFixed(2)}`
@@ -375,11 +380,23 @@ export default function OrderConfirmationPage({
           {/* Delivery Info Grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-16">
             <div className="bg-gray-50 border-2 border-gray-200 p-6">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-4">{t('delivery.shippingAddress')}</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-600 mb-4">
+                {order.delivery_method === 'pickup' ? t('delivery.pickupLocation') : t('delivery.shippingAddress')}
+              </h3>
               <div className="space-y-1 text-gray-700">
-                <p className="font-semibold text-black">{order.shipping_address?.name}</p>
-                <p>{order.shipping_address?.address}</p>
-                <p>{order.shipping_address?.postalCode} {order.shipping_address?.city}</p>
+                {order.delivery_method === 'pickup' ? (
+                  <>
+                    <p className="font-semibold text-black">{order.pickup_location_name || 'MOSE Groningen'}</p>
+                    <p>{order.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen'}</p>
+                    <p className="text-sm text-gray-600">{t('delivery.pickupHint')}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-black">{order.shipping_address?.name}</p>
+                    <p>{order.shipping_address?.address}</p>
+                    <p>{order.shipping_address?.postalCode} {order.shipping_address?.city}</p>
+                  </>
+                )}
               </div>
             </div>
             <div className="bg-gray-50 border-2 border-gray-200 p-6">
@@ -419,7 +436,7 @@ export default function OrderConfirmationPage({
                 </div>
                 <h3 className="font-bold text-lg mb-2">{t('timeline.step3.title')}</h3>
                 <p className="text-gray-600 text-sm">
-                  {t('timeline.step3.description')}
+                  {order.delivery_method === 'pickup' ? t('timeline.step3.pickupDescription') : t('timeline.step3.description')}
                 </p>
               </div>
             </div>

@@ -26,6 +26,12 @@ interface SiteSettings {
   popup_show_on_pages?: string[]
   popup_discount_percentage?: number
   ai_chat_enabled?: boolean
+  pickup_enabled?: boolean
+  pickup_max_distance_km?: number
+  pickup_location_name?: string
+  pickup_location_address?: string
+  pickup_latitude?: number
+  pickup_longitude?: number
   updated_at?: string
 }
 
@@ -104,6 +110,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       show_preview_images_notice: settings.show_preview_images_notice === 'true' || settings.show_preview_images_notice === true,
       show_category_labels: settings.show_category_labels === 'true' || settings.show_category_labels === true,
       ai_chat_enabled: settings.ai_chat_enabled === 'true' || settings.ai_chat_enabled === true || settings.ai_chat_enabled === undefined, // Default true
+      pickup_enabled: settings.pickup_enabled === 'true' || settings.pickup_enabled === true || settings.pickup_enabled === undefined,
+      pickup_max_distance_km: parseFloat(settings.pickup_max_distance_km) || 50,
+      pickup_location_name: settings.pickup_location_name || 'MOSE Groningen',
+      pickup_location_address: settings.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen',
+      pickup_latitude: parseFloat(settings.pickup_latitude) || 53.2194,
+      pickup_longitude: parseFloat(settings.pickup_longitude) || 6.5665,
       updated_at: latestUpdate,
     }
 
@@ -136,6 +148,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       show_preview_images_notice: false,
       show_category_labels: false,
       ai_chat_enabled: true, // Default enabled
+      pickup_enabled: true,
+      pickup_max_distance_km: 50,
+      pickup_location_name: 'MOSE Groningen',
+      pickup_location_address: 'Stavangerweg 13, 9723 JC Groningen',
+      pickup_latitude: 53.2194,
+      pickup_longitude: 6.5665,
       updated_at: undefined,
     }
   }

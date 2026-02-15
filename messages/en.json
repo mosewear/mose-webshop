@@ -111,6 +111,15 @@
       "delivery": "Delivery",
       "secure": "Secure & encrypted"
     },
+    "deliveryMethod": {
+      "title": "Delivery method",
+      "shipping": "Ship to address",
+      "shippingDesc": "Standard shipping to your address",
+      "pickup": "Pickup in Groningen",
+      "pickupDesc": "Within {max} km from Groningen ({distance} km from your address)",
+      "pickupFree": "FREE (pickup)",
+      "checking": "Checking pickup availability..."
+    },
     "field": {
       "email": "Email Address",
       "firstName": "First Name",
@@ -1188,11 +1197,14 @@
       "shipping": "Shipping",
       "discount": "Discount",
       "free": "FREE",
+      "pickup": "Pickup in Groningen",
       "total": "Total",
       "inclVat": "Incl. €{amount} VAT"
     },
     "delivery": {
       "shippingAddress": "Shipping address",
+      "pickupLocation": "Pickup location",
+      "pickupHint": "We will contact you once your order is ready for pickup.",
       "contact": "Contact"
     },
     "timeline": {
@@ -1207,7 +1219,8 @@
       },
       "step3": {
         "title": "Shipping & tracking",
-        "description": "Track & trace code upon shipping. Delivery time: 2-3 business days."
+        "description": "Track & trace code upon shipping. Delivery time: 2-3 business days.",
+        "pickupDescription": "We will contact you as soon as your order is ready for pickup in Groningen."
       }
     },
     "actions": {

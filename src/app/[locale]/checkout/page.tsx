@@ -22,6 +22,7 @@ import { Link as LocaleLink } from '@/i18n/routing'
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 type PaymentMethod = 'ideal' | 'card' | 'klarna' | 'bancontact' | 'paypal'
+type DeliveryMethod = 'shipping' | 'pickup'
 
 const StripePaymentForm = dynamic(() => import('@/components/StripePaymentForm'), {
   ssr: false,
@@ -97,6 +98,22 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(5.95)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
   const [returnDays, setReturnDays] = useState(14)
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('shipping')
+  const [pickupEligibility, setPickupEligibility] = useState<{
+    loading: boolean
+    eligible: boolean
+    distanceKm: number | null
+    locationName: string
+    locationAddress: string
+    maxDistanceKm: number
+  }>({
+    loading: false,
+    eligible: false,
+    distanceKm: null,
+    locationName: 'MOSE Groningen',
+    locationAddress: 'Stavangerweg 13, 9723 JC Groningen',
+    maxDistanceKm: 50,
+  })
   const [currentStep, setCurrentStep] = useState<'details' | 'payment'>('details')
   const [clientSecret, setClientSecret] = useState<string>()
   const [orderId, setOrderId] = useState<string>()
@@ -162,7 +179,8 @@ export default function CheckoutPage() {
 
   const subtotal = getTotal()
   const subtotalAfterDiscount = subtotal - promoDiscount
-  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
+  const baseShipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
+  const shipping = deliveryMethod === 'pickup' ? 0 : baseShipping
   
   // BTW berekening (21% is al inbegrepen in de prijzen)
   const subtotalExclBtw = subtotalAfterDiscount / 1.21
@@ -401,6 +419,59 @@ export default function CheckoutPage() {
     loadUserData()
   }, [])
 
+  useEffect(() => {
+    const shouldCheckPickup =
+      form.country === 'NL' &&
+      /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, '')) &&
+      /^\d+$/.test(form.huisnummer.trim())
+
+    if (!shouldCheckPickup) {
+      setPickupEligibility((prev) => ({
+        ...prev,
+        loading: false,
+        eligible: false,
+        distanceKm: null,
+      }))
+      if (deliveryMethod === 'pickup') setDeliveryMethod('shipping')
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        setPickupEligibility((prev) => ({ ...prev, loading: true }))
+        const response = await fetch('/api/pickup-eligibility', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            country: form.country,
+            postalCode: form.postalCode,
+            houseNumber: form.huisnummer,
+            addition: form.toevoeging,
+          }),
+        })
+
+        if (!response.ok) throw new Error('Pickup check failed')
+        const data = await response.json()
+        setPickupEligibility({
+          loading: false,
+          eligible: Boolean(data.eligible),
+          distanceKm: typeof data.distanceKm === 'number' ? data.distanceKm : null,
+          locationName: data.pickupConfig?.locationName || 'MOSE Groningen',
+          locationAddress: data.pickupConfig?.locationAddress || 'Stavangerweg 13, 9723 JC Groningen',
+          maxDistanceKm: typeof data.pickupConfig?.maxDistanceKm === 'number' ? data.pickupConfig.maxDistanceKm : 50,
+        })
+        if (!data.eligible && deliveryMethod === 'pickup') {
+          setDeliveryMethod('shipping')
+        }
+      } catch {
+        setPickupEligibility((prev) => ({ ...prev, loading: false, eligible: false, distanceKm: null }))
+        if (deliveryMethod === 'pickup') setDeliveryMethod('shipping')
+      }
+    }, 350)
+
+    return () => clearTimeout(timeout)
+  }, [form.country, form.postalCode, form.huisnummer, form.toevoeging, deliveryMethod])
+
   // Track analytics when cart values change (only once per session)
   const [hasTrackedCheckout, setHasTrackedCheckout] = useState(false)
   useEffect(() => {
@@ -636,6 +707,12 @@ export default function CheckoutPage() {
       
       // Set order ID
       setOrderId(order.id)
+      setDeliveryMethod(order.delivery_method === 'pickup' ? 'pickup' : 'shipping')
+      setPickupEligibility((prev) => ({
+        ...prev,
+        eligible: order.delivery_method === 'pickup',
+        distanceKm: typeof order.pickup_distance_km === 'number' ? order.pickup_distance_km : prev.distanceKm,
+      }))
       
       // Go directly to payment step
       setCurrentStep('payment')
@@ -1065,6 +1142,8 @@ export default function CheckoutPage() {
           address: form.address.trim(),
           city: form.city.trim(),
           postalCode: form.postalCode.trim(),
+          houseNumber: form.huisnummer.trim(),
+          addition: form.toevoeging.trim(),
           phone: form.phone.trim(),
           country: form.country,
         },
@@ -1073,9 +1152,16 @@ export default function CheckoutPage() {
           address: form.address.trim(),
           city: form.city.trim(),
           postalCode: form.postalCode.trim(),
+          houseNumber: form.huisnummer.trim(),
+          addition: form.toevoeging.trim(),
           phone: form.phone.trim(),
           country: form.country,
         },
+        delivery_method: deliveryMethod,
+        pickup_eligible: pickupEligibility.eligible,
+        pickup_distance_km: pickupEligibility.distanceKm,
+        pickup_location_name: deliveryMethod === 'pickup' ? pickupEligibility.locationName : null,
+        pickup_location_address: deliveryMethod === 'pickup' ? pickupEligibility.locationAddress : null,
         payment_status: 'pending',
         payment_method: null,
         checkout_started_at: new Date().toISOString(),
@@ -1194,9 +1280,12 @@ export default function CheckoutPage() {
             address: form.address,
             city: form.city,
             postalCode: form.postalCode,
+            houseNumber: form.huisnummer,
+            addition: form.toevoeging,
             phone: form.phone,
             country: form.country,
           },
+          deliveryMethod,
           paymentMethod: paymentMethod,
           // Include promo code for server-side validation
           promoCode: promoCode || null,
@@ -1555,7 +1644,9 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('shipping')}</span>
                   <span className="font-semibold">
-                    {shipping === 0 ? (
+                    {deliveryMethod === 'pickup' ? (
+                      <span className="text-brand-primary font-bold">{t('deliveryMethod.pickupFree')}</span>
+                    ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
                       `€${shipping.toFixed(2)}`
@@ -2165,6 +2256,56 @@ export default function CheckoutPage() {
                       />
                       {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
                     </div>
+
+                    {/* Delivery method */}
+                    <div className="border-2 border-gray-200 p-4 sm:p-5 space-y-3">
+                      <h3 className="text-sm font-bold uppercase tracking-wide">{t('deliveryMethod.title')}</h3>
+                      <label className={`flex items-start gap-3 border-2 p-3 cursor-pointer transition-colors ${
+                        deliveryMethod === 'shipping' ? 'border-brand-primary bg-brand-primary/5' : 'border-gray-200'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryMethod"
+                          checked={deliveryMethod === 'shipping'}
+                          onChange={() => setDeliveryMethod('shipping')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-semibold">{t('deliveryMethod.shipping')}</p>
+                          <p className="text-xs text-gray-600">{t('deliveryMethod.shippingDesc')}</p>
+                        </div>
+                      </label>
+
+                      {pickupEligibility.loading && (
+                        <div className="text-xs text-gray-500">{t('deliveryMethod.checking')}</div>
+                      )}
+
+                      {pickupEligibility.eligible && (
+                        <label className={`flex items-start gap-3 border-2 p-3 cursor-pointer transition-colors ${
+                          deliveryMethod === 'pickup' ? 'border-brand-primary bg-brand-primary/5' : 'border-gray-200'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="deliveryMethod"
+                            checked={deliveryMethod === 'pickup'}
+                            onChange={() => setDeliveryMethod('pickup')}
+                            className="mt-1"
+                          />
+                          <div>
+                            <p className="font-semibold">{t('deliveryMethod.pickup')}</p>
+                            <p className="text-xs text-gray-600">
+                              {t('deliveryMethod.pickupDesc', {
+                                distance: pickupEligibility.distanceKm ?? 0,
+                                max: pickupEligibility.maxDistanceKm,
+                              })}
+                            </p>
+                            <p className="text-xs text-gray-700 mt-1">
+                              {pickupEligibility.locationName} - {pickupEligibility.locationAddress}
+                            </p>
+                          </div>
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -2379,7 +2520,9 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('shipping')}</span>
                   <span className="font-semibold">
-                    {shipping === 0 ? (
+                    {deliveryMethod === 'pickup' ? (
+                      <span className="text-brand-primary font-bold">{t('deliveryMethod.pickupFree')}</span>
+                    ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
                       `€${shipping.toFixed(2)}`

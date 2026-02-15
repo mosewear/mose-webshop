@@ -50,6 +50,12 @@ export default function SettingsPage() {
 
   // AI Chat
   const [aiChatEnabled, setAiChatEnabled] = useState(true)
+  const [pickupEnabled, setPickupEnabled] = useState(true)
+  const [pickupMaxDistanceKm, setPickupMaxDistanceKm] = useState('50')
+  const [pickupLocationName, setPickupLocationName] = useState('MOSE Groningen')
+  const [pickupLocationAddress, setPickupLocationAddress] = useState('Stavangerweg 13, 9723 JC Groningen')
+  const [pickupLatitude, setPickupLatitude] = useState('53.2194')
+  const [pickupLongitude, setPickupLongitude] = useState('6.5665')
 
   // Admin users state
   const [adminUsers, setAdminUsers] = useState<any[]>([])
@@ -150,6 +156,24 @@ export default function SettingsPage() {
             case 'ai_chat_enabled':
               setAiChatEnabled(setting.value === 'true' || setting.value === true)
               break
+            case 'pickup_enabled':
+              setPickupEnabled(setting.value === 'true' || setting.value === true)
+              break
+            case 'pickup_max_distance_km':
+              setPickupMaxDistanceKm(String(setting.value))
+              break
+            case 'pickup_location_name':
+              setPickupLocationName(String(setting.value))
+              break
+            case 'pickup_location_address':
+              setPickupLocationAddress(String(setting.value))
+              break
+            case 'pickup_latitude':
+              setPickupLatitude(String(setting.value))
+              break
+            case 'pickup_longitude':
+              setPickupLongitude(String(setting.value))
+              break
           }
         })
       }
@@ -193,6 +217,12 @@ export default function SettingsPage() {
         { key: 'show_preview_images_notice', value: showPreviewImagesNotice },
         { key: 'show_category_labels', value: showCategoryLabels },
         { key: 'ai_chat_enabled', value: aiChatEnabled },
+        { key: 'pickup_enabled', value: pickupEnabled },
+        { key: 'pickup_max_distance_km', value: pickupMaxDistanceKm },
+        { key: 'pickup_location_name', value: pickupLocationName },
+        { key: 'pickup_location_address', value: pickupLocationAddress },
+        { key: 'pickup_latitude', value: pickupLatitude },
+        { key: 'pickup_longitude', value: pickupLongitude },
       ]
 
       for (const setting of settingsToSave) {
@@ -503,6 +533,88 @@ export default function SettingsPage() {
                 onChange={(e) => setShippingCost(e.target.value)}
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
               />
+            </div>
+
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <h3 className="text-base sm:text-lg font-bold mb-3">Afhalen in Groningen</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="pickup_enabled"
+                    checked={pickupEnabled}
+                    onChange={(e) => setPickupEnabled(e.target.checked)}
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                  />
+                  <label htmlFor="pickup_enabled" className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer">
+                    Afhalen inschakelen
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                    Max afstand (km)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={pickupMaxDistanceKm}
+                    onChange={(e) => setPickupMaxDistanceKm(e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                    Locatie naam
+                  </label>
+                  <input
+                    type="text"
+                    value={pickupLocationName}
+                    onChange={(e) => setPickupLocationName(e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                    Locatie adres
+                  </label>
+                  <input
+                    type="text"
+                    value={pickupLocationAddress}
+                    onChange={(e) => setPickupLocationAddress(e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                      Latitude
+                    </label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={pickupLatitude}
+                      onChange={(e) => setPickupLatitude(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                      Longitude
+                    </label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={pickupLongitude}
+                      onChange={(e) => setPickupLongitude(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>

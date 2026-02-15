@@ -40,6 +40,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Order niet gevonden' }, { status: 404 })
     }
 
+    if (order.delivery_method === 'pickup') {
+      return NextResponse.json(
+        { error: 'Deze order is ingesteld op afhalen en heeft geen verzendlabel nodig.' },
+        { status: 400 }
+      )
+    }
+
     // Check of er al een label is
     if (order.tracking_code && order.carrier) {
       return NextResponse.json(

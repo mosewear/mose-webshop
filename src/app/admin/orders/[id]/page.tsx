@@ -20,6 +20,10 @@ interface Order {
   payment_metadata: any
   checkout_started_at: string | null
   total: number
+  delivery_method?: 'shipping' | 'pickup'
+  pickup_distance_km?: number | null
+  pickup_location_name?: string | null
+  pickup_location_address?: string | null
   shipping_address: any
   billing_address: any
   tracking_code: string | null
@@ -612,6 +616,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
               )}
+
+              <div>
+                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Levermethode</span>
+                <div className="text-sm md:text-base mt-1 text-gray-700">
+                  {order.delivery_method === 'pickup' ? (
+                    <>
+                      <div className="font-semibold text-green-700">Afhalen in Groningen</div>
+                      <div>{order.pickup_location_name || 'MOSE Groningen'}</div>
+                      <div>{order.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen'}</div>
+                      {typeof order.pickup_distance_km === 'number' && (
+                        <div className="text-xs text-gray-500 mt-1">Afstand klant: {order.pickup_distance_km.toFixed(1)} km</div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="font-semibold">Verzending</div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -948,7 +970,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           {/* Verzending - Stapsgewijze Flow */}
           <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
             <h2 className="text-xl font-bold mb-4">📦 Verzending</h2>
-            
+            {order.delivery_method === 'pickup' ? (
+              <div className="bg-green-50 border-2 border-green-300 p-4 rounded text-sm text-green-900">
+                Deze order is gekozen als afhalen in Groningen. Verzendlabel en track & trace zijn niet nodig.
+              </div>
+            ) : (
+              <>
             {/* Als er nog geen tracking is */}
             {!order.tracking_code ? (
               <div className="space-y-4">
@@ -1220,6 +1247,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </button>
                 )}
               </div>
+            )}
+              </>
             )}
           </div>
 

@@ -1,9 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { evaluatePickupEligibility } from '@/lib/pickup-eligibility'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
   try {
+    const parseNumber = (value: unknown, fallback: number) => {
+      if (typeof value === 'number' && Number.isFinite(value)) return value
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value)
+        if (!Number.isNaN(parsed)) return parsed
+      }
+      return fallback
+    }
+
+    const parseBoolean = (value: unknown, fallback: boolean) => {
+      if (typeof value === 'boolean') return value
+      if (typeof value === 'string') {
+        if (value === 'true') return true
+        if (value === 'false') return false
+      }
+      return fallback
+    }
+
     const { order, items } = await request.json()
 
     console.log('🔥 SERVER CHECKOUT - Order:', order)
@@ -214,9 +233,76 @@ export async function POST(request: Request) {
     
     // Override client-provided discount with server-validated discount
     order.discount_amount = validatedDiscount
-    // Calculate total: (subtotal - discount) + shipping
-    // IMPORTANT: Keep order.subtotal as the original subtotal (before discount)
+
+    // Read shipping + pickup settings
+    const { data: settingsRows } = await supabase
+      .from('site_settings')
+      .select('key, value')
+      .in('key', [
+        'shipping_cost',
+        'free_shipping_threshold',
+        'pickup_enabled',
+        'pickup_max_distance_km',
+        'pickup_location_name',
+        'pickup_location_address',
+      ])
+
+    const settings: Record<string, unknown> = {}
+    for (const row of settingsRows || []) settings[row.key] = row.value
+
+    const baseShippingCost = parseNumber(settings.shipping_cost, 0)
+    const freeShippingThreshold = parseNumber(settings.free_shipping_threshold, 100)
+    const pickupEnabled = parseBoolean(settings.pickup_enabled, true)
+    const pickupMaxDistance = parseNumber(settings.pickup_max_distance_km, 50)
+    const pickupLocationName =
+      typeof settings.pickup_location_name === 'string' && settings.pickup_location_name.trim()
+        ? settings.pickup_location_name
+        : 'MOSE Groningen'
+    const pickupLocationAddress =
+      typeof settings.pickup_location_address === 'string' && settings.pickup_location_address.trim()
+        ? settings.pickup_location_address
+        : 'Stavangerweg 13, 9723 JC Groningen'
+
     const subtotalAfterDiscount = order.subtotal - validatedDiscount
+    let finalDeliveryMethod: 'shipping' | 'pickup' = order.delivery_method === 'pickup' ? 'pickup' : 'shipping'
+    let pickupEligible = false
+    let pickupDistanceKm: number | null = null
+
+    if (finalDeliveryMethod === 'pickup') {
+      if (!pickupEnabled) {
+        finalDeliveryMethod = 'shipping'
+      } else {
+        const shippingAddress = order.shipping_address || {}
+        const pickupResult = await evaluatePickupEligibility({
+          country: shippingAddress.country || 'NL',
+          postalCode: shippingAddress.postalCode || '',
+          houseNumber: shippingAddress.houseNumber || '',
+          addition: shippingAddress.addition || '',
+        })
+
+        pickupEligible = pickupResult.eligible
+        pickupDistanceKm = pickupResult.distanceKm
+
+        if (pickupResult.distanceKm !== null && pickupResult.distanceKm > pickupMaxDistance) {
+          finalDeliveryMethod = 'shipping'
+          pickupEligible = false
+        } else if (!pickupResult.eligible) {
+          finalDeliveryMethod = 'shipping'
+        }
+      }
+    }
+
+    order.delivery_method = finalDeliveryMethod
+    order.pickup_eligible = pickupEligible
+    order.pickup_distance_km = pickupDistanceKm
+    order.pickup_location_name = finalDeliveryMethod === 'pickup' ? pickupLocationName : null
+    order.pickup_location_address = finalDeliveryMethod === 'pickup' ? pickupLocationAddress : null
+    order.shipping_cost =
+      finalDeliveryMethod === 'pickup'
+        ? 0
+        : subtotalAfterDiscount >= freeShippingThreshold
+          ? 0
+          : baseShippingCost
     order.total = subtotalAfterDiscount + order.shipping_cost
 
     // ============================================

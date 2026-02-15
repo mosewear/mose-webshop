@@ -111,6 +111,15 @@
       "delivery": "Bezorging",
       "secure": "Veilig & versleuteld"
     },
+    "deliveryMethod": {
+      "title": "Ontvangst",
+      "shipping": "Laten bezorgen",
+      "shippingDesc": "Standaard verzending naar je adres",
+      "pickup": "Afhalen in Groningen",
+      "pickupDesc": "Binnen {max} km van Groningen ({distance} km vanaf jouw adres)",
+      "pickupFree": "GRATIS (afhalen)",
+      "checking": "Controleren of afhalen beschikbaar is..."
+    },
     "field": {
       "email": "E-mailadres",
       "firstName": "Voornaam",
@@ -1175,11 +1184,14 @@
       "shipping": "Verzending",
       "discount": "Korting",
       "free": "GRATIS",
+      "pickup": "Afhalen in Groningen",
       "total": "Totaal",
       "inclVat": "Incl. €{amount} BTW"
     },
     "delivery": {
       "shippingAddress": "Bezorgadres",
+      "pickupLocation": "Afhaallocatie",
+      "pickupHint": "We nemen contact op wanneer je bestelling klaarstaat voor afhalen.",
       "contact": "Contact"
     },
     "timeline": {
@@ -1194,7 +1206,8 @@
       },
       "step3": {
         "title": "Verzending & tracking",
-        "description": "Track & trace code bij verzending. Levertijd: 2-3 werkdagen."
+        "description": "Track & trace code bij verzending. Levertijd: 2-3 werkdagen.",
+        "pickupDescription": "We nemen contact op zodra je bestelling klaarstaat om af te halen in Groningen."
       }
     },
     "actions": {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getSiteSettings } from '@/lib/settings'
+import { evaluatePickupEligibility } from '@/lib/pickup-eligibility'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -11,7 +12,18 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     console.log('🔵 API: Request body:', body)
     
-    const { orderId, items, customerEmail, customerName, shippingAddress, paymentMethod, promoCode, promoDiscount, expectedTotal } = body
+    const {
+      orderId,
+      items,
+      customerEmail,
+      customerName,
+      shippingAddress,
+      paymentMethod,
+      promoCode,
+      promoDiscount,
+      expectedTotal,
+      deliveryMethod,
+    } = body
 
     if (!orderId || !items || items.length === 0) {
       console.error('🔴 API: Missing required fields')
@@ -82,7 +94,23 @@ export async function POST(req: NextRequest) {
     
     // Calculate final total with validated discount
     const subtotalAfterDiscount = subtotal - validatedDiscount
-    const shippingCost = subtotalAfterDiscount >= settings.free_shipping_threshold ? 0 : settings.shipping_cost
+    let finalDeliveryMethod: 'shipping' | 'pickup' = deliveryMethod === 'pickup' ? 'pickup' : 'shipping'
+    let shippingCost = subtotalAfterDiscount >= settings.free_shipping_threshold ? 0 : settings.shipping_cost
+
+    if (finalDeliveryMethod === 'pickup') {
+      const pickup = await evaluatePickupEligibility({
+        country: shippingAddress?.country || 'NL',
+        postalCode: shippingAddress?.postalCode || '',
+        houseNumber: shippingAddress?.houseNumber || '',
+        addition: shippingAddress?.addition || '',
+      })
+
+      if (pickup.eligible) {
+        shippingCost = 0
+      } else {
+        finalDeliveryMethod = 'shipping'
+      }
+    }
     const total = subtotalAfterDiscount + shippingCost
 
     console.log('🔵 API: Calculated totals:', { 
@@ -112,6 +140,7 @@ export async function POST(req: NextRequest) {
         orderId,
         customerName,
         customerEmail,
+        deliveryMethod: finalDeliveryMethod,
         shippingAddress: JSON.stringify(shippingAddress),
       },
       description: `Order #${orderId} - ${customerName}`,
@@ -155,6 +184,9 @@ export async function POST(req: NextRequest) {
           stripe_payment_intent_id: paymentIntent.id,
           payment_status: 'pending',
           payment_method: paymentMethod,
+          delivery_method: finalDeliveryMethod,
+          shipping_cost: shippingCost,
+          total: total,
           checkout_started_at: new Date().toISOString(),
         })
         .eq('id', orderId)
