@@ -4,9 +4,11 @@ import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import Script from 'next/script'
+import { MessageCircle, CalendarClock } from 'lucide-react'
 import { useCart } from '@/store/cart'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackPurchase } from '@/lib/analytics'
+import { getSiteSettings } from '@/lib/settings'
 import { useTranslations } from 'next-intl'
 import { useParams } from 'next/navigation'
 
@@ -53,6 +55,7 @@ export default function OrderConfirmationPage({
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
   const { clearCart } = useCart()
 
   useEffect(() => {
@@ -75,6 +78,27 @@ export default function OrderConfirmationPage({
       setLoading(false)
     }
   }, [orderId, paymentIntentId])
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadContactPhone() {
+      try {
+        const settings = await getSiteSettings()
+        if (mounted && settings.contact_phone) {
+          setContactPhone(settings.contact_phone)
+        }
+      } catch {
+        // Keep fallback phone number if settings fetch fails.
+      }
+    }
+
+    loadContactPhone()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   async function fetchOrder() {
     try {
@@ -224,6 +248,16 @@ export default function OrderConfirmationPage({
       </div>
     )
   }
+
+  const normalizedContactPhone = contactPhone.replace(/\D/g, '')
+  const orderRef = order.id.slice(0, 8).toUpperCase()
+  const whatsappMessage = locale === 'en'
+    ? `Hi MOSE! I placed a pickup order (#${orderRef}) and I would like to schedule a pickup time in Groningen.`
+    : `Hi MOSE! Ik heb een afhaalbestelling geplaatst (#${orderRef}) en wil graag een afhaalmoment in Groningen plannen.`
+  const whatsappUrl = normalizedContactPhone
+    ? `https://wa.me/${normalizedContactPhone}?text=${encodeURIComponent(whatsappMessage)}`
+    : null
+  const showPickupWhatsappCta = order.delivery_method === 'pickup' && order.payment_status === 'paid' && Boolean(whatsappUrl)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -407,6 +441,42 @@ export default function OrderConfirmationPage({
               </div>
             </div>
           </div>
+
+          {showPickupWhatsappCta && (
+            <div className="mb-16 border-2 border-black bg-white p-6 md:p-8">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-[#25D366] text-white flex items-center justify-center rounded-full flex-shrink-0">
+                    <MessageCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                      {t('pickupWhatsapp.badge')}
+                    </p>
+                    <h3 className="text-xl md:text-2xl font-display mb-2">
+                      {t('pickupWhatsapp.title')}
+                    </h3>
+                    <p className="text-gray-700">
+                      {t('pickupWhatsapp.description')}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-3 flex items-center gap-2">
+                      <CalendarClock className="w-4 h-4" />
+                      {t('pickupWhatsapp.note')}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={whatsappUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#25D366] text-white font-bold uppercase tracking-wider hover:brightness-95 transition-all"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {t('pickupWhatsapp.button')}
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Timeline */}
           <div className="mb-16">

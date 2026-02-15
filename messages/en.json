@@ -1263,6 +1263,13 @@
     "actions": {
       "continueShopping": "Continue shopping",
       "contact": "Contact us"
+    },
+    "pickupWhatsapp": {
+      "badge": "Pickup in Groningen",
+      "title": "Schedule your pickup via WhatsApp",
+      "description": "Your order is paid. Send us a WhatsApp message and we will schedule a pickup time that works for you.",
+      "note": "We usually respond quickly on business days.",
+      "button": "WhatsApp us now"
     }
   },
   "privacy": {

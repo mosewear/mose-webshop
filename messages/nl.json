@@ -1250,6 +1250,13 @@
     "actions": {
       "continueShopping": "Verder shoppen",
       "contact": "Contact opnemen"
+    },
+    "pickupWhatsapp": {
+      "badge": "Afhalen in Groningen",
+      "title": "Plan je afhaalmoment via WhatsApp",
+      "description": "Je bestelling is betaald. Stuur ons een WhatsApp en we plannen samen een geschikt afhaalmoment.",
+      "note": "We reageren meestal snel op werkdagen.",
+      "button": "WhatsApp ons nu"
     }
   },
   "privacy": {
