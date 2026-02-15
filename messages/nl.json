@@ -138,10 +138,10 @@
       "firstName": "Voornaam",
       "lastName": "Achternaam",
       "houseNumber": "27",
-      "addition": "A",
+      "addition": "Bijv. A",
       "address": "Straat en huisnummer",
       "city": "Plaats",
-      "phone": "050 211 1931",
+      "phone": "06 12345678",
       "promoCode": "CODE"
     },
     "country": {

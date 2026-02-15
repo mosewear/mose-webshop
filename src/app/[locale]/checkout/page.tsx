@@ -24,6 +24,11 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 type PaymentMethod = 'ideal' | 'card' | 'klarna' | 'bancontact' | 'paypal'
 type DeliveryMethod = 'shipping' | 'pickup'
 
+function sanitizeAddition(value: string): string {
+  // Keep common house-number additions readable and avoid odd symbols like "/".
+  return value.replace(/[^A-Za-z0-9\s-]/g, '').slice(0, 10).trim()
+}
+
 const StripePaymentForm = dynamic(() => import('@/components/StripePaymentForm'), {
   ssr: false,
   loading: () => (
@@ -558,7 +563,7 @@ export default function CheckoutPage() {
         if (addressMatch) {
           addressOnly = addressMatch[1].trim()
           huisnummer = addressMatch[2]
-          toevoeging = (addressMatch[3] || '').trim()
+          toevoeging = sanitizeAddition((addressMatch[3] || '').trim())
         }
       }
 
@@ -674,7 +679,7 @@ export default function CheckoutPage() {
         if (addressMatch) {
           addressOnly = addressMatch[1].trim()
           huisnummer = addressMatch[2]
-          toevoeging = (addressMatch[3] || '').trim()
+          toevoeging = sanitizeAddition((addressMatch[3] || '').trim())
         }
       }
       
@@ -1991,7 +1996,7 @@ export default function CheckoutPage() {
                             {errors.huisnummer && <p className="text-red-600 text-xs">{errors.huisnummer}</p>}
                           </div>
                         </div>
-                        <div className="col-span-1 flex flex-col">
+                        <div className="col-span-2 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center">
                             {t('field.addition')}
                           </label>
@@ -1999,14 +2004,14 @@ export default function CheckoutPage() {
                             type="text"
                             value={form.toevoeging}
                             onChange={(e) => {
-                              const value = e.target.value.slice(0, 10)
+                              const value = sanitizeAddition(e.target.value)
                               updateForm('toevoeging', value)
                             }}
                             onBlur={() => handleBlur('toevoeging')}
                             className={`w-full px-4 py-3 border-2 ${
                               getInputBorderClass('toevoeging')
                             } focus:border-brand-primary focus:outline-none`}
-                            placeholder="A"
+                            placeholder={t('placeholder.addition')}
                             autoComplete="off"
                             disabled={addressLookup.isLookingUp}
                             maxLength={10}
@@ -2017,7 +2022,7 @@ export default function CheckoutPage() {
                         </div>
                         {/* Lookup button - ALLEEN voor Nederland */}
                         {form.country === 'NL' && (
-                          <div className="col-span-5 flex flex-col">
+                          <div className="col-span-4 flex flex-col">
                             <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
                               {/* Invisible label voor alignment */}
                               &nbsp;
@@ -2104,7 +2109,7 @@ export default function CheckoutPage() {
                               type="text"
                               value={form.toevoeging}
                               onChange={(e) => {
-                                const value = e.target.value.slice(0, 10)
+                                const value = sanitizeAddition(e.target.value)
                                 updateForm('toevoeging', value)
                               }}
                               onBlur={() => handleBlur('toevoeging')}
@@ -2242,6 +2247,9 @@ export default function CheckoutPage() {
 
                     {/* Phone */}
                     <div>
+                      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
+                        {t('field.phone')} <span className="text-red-600 ml-0.5">*</span>
+                      </label>
                       <input
                         type="tel"
                         inputMode="tel"

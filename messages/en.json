@@ -138,10 +138,10 @@
       "firstName": "First Name",
       "lastName": "Last Name",
       "houseNumber": "27",
-      "addition": "A",
+      "addition": "e.g. A",
       "address": "Street and house number",
       "city": "City",
-      "phone": "+31 50 211 1931",
+      "phone": "+31 6 12345678",
       "promoCode": "CODE"
     },
     "country": {
