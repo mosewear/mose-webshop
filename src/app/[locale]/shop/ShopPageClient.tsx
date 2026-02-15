@@ -184,6 +184,8 @@ export default function ShopPageClient() {
           images:product_images(url, alt_text, is_primary, media_type, color),
           variants:product_variants(color, color_hex, stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
         `)
+        .eq('is_active', true)
+        .eq('status', 'active')
         .order('created_at', { ascending: false })
 
       if (error) throw error

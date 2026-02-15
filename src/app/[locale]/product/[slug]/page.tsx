@@ -4,6 +4,7 @@ import ProductPageClient from './ProductPageClient'
 import { getTranslations } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
+import { notFound } from 'next/navigation'
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic'
@@ -45,12 +46,17 @@ export async function generateMetadata({
     `)
     .eq('slug', slug)
     .eq('is_active', true)
+    .eq('status', 'active')
     .maybeSingle()
 
   if (!product) {
     return {
       title: `${t('product.notFound')} - MOSE`,
       description: t('product.notFoundDesc'),
+      robots: {
+        index: false,
+        follow: false,
+      },
     }
   }
 
@@ -148,7 +154,12 @@ export default async function ProductPage({
     `)
     .eq('slug', slug)
     .eq('is_active', true)
+    .eq('status', 'active')
     .maybeSingle()
+
+  if (!product) {
+    notFound()
+  }
 
   // Generate structured data for SEO
   let structuredData = null

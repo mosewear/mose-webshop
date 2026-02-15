@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from('products')
     .select('slug, updated_at')
     .eq('is_active', true)
+    .eq('status', 'active')
     .order('updated_at', { ascending: false })
 
   // Fetch all categories

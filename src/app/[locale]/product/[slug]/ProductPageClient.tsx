@@ -485,6 +485,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en)
       `)
       .eq('slug', slug)
+      .eq('is_active', true)
+      .eq('status', 'active')
       .single()
 
     if (error) {
@@ -551,6 +553,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           categories(name, name_en, slug)
         `)
         .eq('category_id', data.category_id)
+        .eq('is_active', true)
+        .eq('status', 'active')
         .neq('id', data.id)
         .limit(4)
 
