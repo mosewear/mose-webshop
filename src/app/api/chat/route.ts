@@ -253,7 +253,15 @@ export async function POST(req: Request) {
       maxTokens: 500,
     })
 
-    return result.toDataStreamResponse()
+    // By default the data stream may hide the underlying error. We surface a safe message
+    // (and log the full error server-side) to make debugging production issues possible.
+    return result.toDataStreamResponse({
+      getErrorMessage: (error) => {
+        console.error('[AI Chat Stream Error]:', error)
+        if (error instanceof Error) return error.message
+        return 'Unknown AI error'
+      },
+    })
   } catch (error: any) {
     console.error('[AI Chat Error]:', error)
     return new Response(
