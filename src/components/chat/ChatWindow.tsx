@@ -155,6 +155,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let aiContent = ''
+      let buffer = ''
+      let hadStreamError = false
 
       // Create AI message placeholder
       const aiMessageId = (Date.now() + 1).toString()
@@ -173,25 +175,69 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
+          buffer += decoder.decode(value, { stream: true })
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
+          // Process complete lines only; chunks may split mid-line.
+          while (true) {
+            const newlineIndex = buffer.indexOf('\n')
+            if (newlineIndex === -1) break
 
-          for (const line of lines) {
-            if (line.startsWith('0:')) {
-              const text = line.slice(3, -1) // Remove '0:"' and '"'
-              aiContent += text
-              
-              // Update AI message in real-time
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === aiMessageId
-                    ? { ...m, content: aiContent }
-                    : m
-                )
-              )
+            const rawLine = buffer.slice(0, newlineIndex).trimEnd()
+            buffer = buffer.slice(newlineIndex + 1)
+
+            if (!rawLine) continue
+
+            // Vercel AI SDK data stream protocol:
+            // 0: "text"
+            // 3: {error...}
+            if (rawLine.startsWith('0:')) {
+              try {
+                const text = JSON.parse(rawLine.slice(2))
+                if (typeof text === 'string') {
+                  aiContent += text
+                }
+              } catch {
+                // Ignore malformed chunks
+              }
+            } else if (rawLine.startsWith('3:')) {
+              hadStreamError = true
             }
+
+            // Update AI message in real-time
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMessageId
+                  ? { ...m, content: aiContent }
+                  : m
+              )
+            )
           }
+        }
+
+        // Flush any remaining buffered text (if the stream doesn't end with newline)
+        const tail = buffer.trim()
+        if (tail.startsWith('0:')) {
+          try {
+            const text = JSON.parse(tail.slice(2))
+            if (typeof text === 'string') {
+              aiContent += text
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        // If the stream ended but we received no content, show a friendly fallback.
+        if (!aiContent.trim()) {
+          const fallback = hadStreamError ? t('aiOffline') : t('aiOffline')
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMessageId
+                ? { ...m, content: fallback }
+                : m
+            )
+          )
+          aiContent = fallback
         }
         
         // Save AI response to database after streaming is complete
