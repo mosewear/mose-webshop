@@ -38,10 +38,27 @@ export async function GET() {
   const baseUrl = 'https://www.mosewear.com'
   const itemsXml = (products || [])
     .map((product: any) => {
-      const primaryImage =
-        product.product_images?.find((img: any) => img.is_primary)?.url ||
-        product.product_images?.[0]?.url ||
+      const isLikelyImage = (url: string) => !/\.(mp4|mov|webm)$/i.test(url || '')
+      const allImages = (product.product_images || [])
+        .map((img: any) => img.url)
+        .filter((url: string) => Boolean(url) && isLikelyImage(url))
+
+      const primaryImageRaw =
+        product.product_images?.find((img: any) => img.is_primary && isLikelyImage(img.url))?.url ||
+        allImages[0] ||
         `${baseUrl}/logomose.png`
+
+      const buildImageUrl = (rawUrl: string) => {
+        if (!rawUrl) return `${baseUrl}/logomose.png`
+        return `${baseUrl}/api/google-image?src=${encodeURIComponent(rawUrl)}`
+      }
+
+      const primaryImage = buildImageUrl(primaryImageRaw)
+      const additionalImages = allImages
+        .filter((url: string) => url !== primaryImageRaw)
+        .slice(0, 10)
+        .map((url: string) => `<g:additional_image_link>${escapeXml(buildImageUrl(url))}</g:additional_image_link>`)
+        .join('\n      ')
 
       const variants = product.product_variants || []
       const inStock = variants.some(
@@ -57,7 +74,8 @@ export async function GET() {
       <title>${escapeXml(product.name || 'MOSE product')}</title>
       <description>${escapeXml(description)}</description>
       <link>${baseUrl}/product/${escapeXml(product.slug)}</link>
-      <g:image_link>${escapeXml(primaryImage.startsWith('http') ? primaryImage : `${baseUrl}${primaryImage}`)}</g:image_link>
+      <g:image_link>${escapeXml(primaryImage)}</g:image_link>
+      ${additionalImages}
       <g:availability>${inStock ? 'in_stock' : 'out_of_stock'}</g:availability>
       <g:condition>new</g:condition>
       <g:price>${Number(price).toFixed(2)} EUR</g:price>
