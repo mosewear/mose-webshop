@@ -2,6 +2,7 @@ import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
+import { z } from 'zod'
 
 // Runtime config for streaming
 export const runtime = 'edge'
@@ -217,35 +218,20 @@ export async function POST(req: Request) {
       tools: {
         get_product_details: {
           description: 'Haal gedetailleerde productinformatie op uit de database, inclusief materiaal, fit, maten, kleuren, voorraad en maattabel',
-          parameters: {
-            type: 'object',
-            properties: {
-              product_slug: {
-                type: 'string',
-                description: 'De slug van het product (bijv. "hoodie-black")',
-              },
-            },
-            required: ['product_slug'],
-          },
+          parameters: z.object({
+            product_slug: z.string().min(1),
+          }),
           execute: async ({ product_slug }: { product_slug: string }) => {
             return await getProductDetails(product_slug, locale)
           },
         },
         calculate_shipping: {
           description: 'Bereken verzendkosten op basis van winkelwagen totaal',
-          parameters: {
-            type: 'object',
-            properties: {
-              cart_total: {
-                type: 'number',
-                description: 'Het totaalbedrag in de winkelwagen in euros',
-              },
-            },
-            required: ['cart_total'],
-          },
-          execute: async ({ cart_total }: { cart_total: number | string }) => {
-            const numeric = typeof cart_total === 'string' ? Number(cart_total) : cart_total
-            return await calculateShipping(Number.isFinite(numeric) ? numeric : 0)
+          parameters: z.object({
+            cart_total: z.coerce.number().nonnegative(),
+          }),
+          execute: async ({ cart_total }: { cart_total: number }) => {
+            return await calculateShipping(cart_total)
           },
         },
       },
