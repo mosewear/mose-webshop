@@ -15,10 +15,10 @@ export default function ChatTabs({ activeTab, onTabChange }: ChatTabsProps) {
     <div className="flex-shrink-0 flex border-b-2 border-black bg-white">
       <button
         onClick={() => onTabChange('ai')}
-        className={`flex-1 py-3 px-4 font-display text-sm uppercase tracking-wide transition-colors flex items-center justify-center gap-2 ${
+        className={`flex-1 py-3 px-4 text-sm uppercase tracking-[0.14em] transition-colors flex items-center justify-center gap-2 ${
           activeTab === 'ai'
-            ? 'bg-brand-primary text-white font-bold'
-            : 'bg-white text-gray-700 hover:bg-gray-100'
+            ? 'bg-brand-primary text-white font-semibold'
+            : 'bg-white text-gray-800 hover:bg-gray-100 font-medium'
         }`}
       >
         <Zap className={`w-4 h-4 ${activeTab === 'ai' ? 'text-white' : 'text-gray-700'}`} strokeWidth={2.5} />
@@ -27,10 +27,10 @@ export default function ChatTabs({ activeTab, onTabChange }: ChatTabsProps) {
       <div className="w-px bg-black" />
       <button
         onClick={() => onTabChange('team')}
-        className={`flex-1 py-3 px-4 font-display text-sm uppercase tracking-wide transition-colors flex items-center justify-center gap-2 ${
+        className={`flex-1 py-3 px-4 text-sm uppercase tracking-[0.14em] transition-colors flex items-center justify-center gap-2 ${
           activeTab === 'team'
-            ? 'bg-brand-primary text-white font-bold'
-            : 'bg-white text-gray-700 hover:bg-gray-100'
+            ? 'bg-brand-primary text-white font-semibold'
+            : 'bg-white text-gray-800 hover:bg-gray-100 font-medium'
         }`}
       >
         <Users className={`w-4 h-4 ${activeTab === 'team' ? 'text-white' : 'text-gray-700'}`} strokeWidth={2.5} />
