@@ -31,6 +31,7 @@ export interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  isTyping?: boolean
 }
 
 export default function ChatWindow({ onClose }: ChatWindowProps) {
@@ -126,7 +127,20 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    const typingMessageId = (Date.now() + 2).toString()
+
+    // Add the user message + a single assistant "typing" placeholder (WhatsApp-style)
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+      {
+        id: typingMessageId,
+        role: 'assistant',
+        content: '',
+        isTyping: true,
+        timestamp: new Date(),
+      },
+    ])
     
     // Save user message to database
     await saveMessage('user', content.trim())
@@ -211,17 +225,15 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           aiContent = hadStreamError ? t('aiOffline') : t('aiOffline')
         }
 
-        // WhatsApp-like UX: show typing indicator while streaming, then append full message at once.
+        // Replace the typing bubble with the final answer (no word-by-word updates).
         const finalAnswer = aiContent.trim() || t('aiOffline')
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: finalAnswer,
-            timestamp: new Date(),
-          },
-        ])
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === typingMessageId
+              ? { ...m, content: finalAnswer, isTyping: false }
+              : m
+          )
+        )
 
         // Save AI response to database after the full message is ready
         await saveMessage('assistant', finalAnswer)
@@ -229,16 +241,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     } catch (error) {
       console.error('[Chat Error]:', error)
       
-      // Add friendly error message (AI not yet configured)
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: t('aiOffline'),
-          timestamp: new Date(),
-        },
-      ])
+      // Replace typing bubble with friendly error message
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === typingMessageId
+            ? { ...m, content: t('aiOffline'), isTyping: false }
+            : m
+        )
+      )
     } finally {
       setIsLoading(false)
     }
@@ -336,7 +346,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex-1 overflow-hidden flex flex-col">
           {activeTab === 'ai' ? (
             <>
-              <ChatMessages messages={messages} isLoading={isLoading} />
+              <ChatMessages messages={messages} />
               <ChatInput onSend={handleSendMessage} disabled={isLoading} />
             </>
           ) : (
@@ -375,7 +385,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         <div className="flex-1 overflow-hidden flex flex-col">
           {activeTab === 'ai' ? (
             <>
-              <ChatMessages messages={messages} isLoading={isLoading} />
+              <ChatMessages messages={messages} />
               <ChatInput onSend={handleSendMessage} disabled={isLoading} />
             </>
           ) : (

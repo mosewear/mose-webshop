@@ -5,10 +5,9 @@ import { Message } from './ChatWindow'
 
 interface ChatMessagesProps {
   messages: Message[]
-  isLoading: boolean
 }
 
-export default function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+export default function ChatMessages({ messages }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll to bottom
@@ -30,9 +29,17 @@ export default function ChatMessages({ messages, isLoading }: ChatMessagesProps)
                 : 'bg-brand-primary text-white rounded-2xl rounded-bl-md'
             }`}
           >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
+            {message.isTyping ? (
+              <div className="flex gap-1 py-1">
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            ) : (
+              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                {message.content}
+              </p>
+            )}
             <p className={`text-[11px] mt-1 ${message.role === 'user' ? 'text-gray-600' : 'text-white/80'}`}>
               {message.timestamp.toLocaleTimeString('nl-NL', {
                 hour: '2-digit',
@@ -42,18 +49,6 @@ export default function ChatMessages({ messages, isLoading }: ChatMessagesProps)
           </div>
         </div>
       ))}
-
-      {isLoading && (
-        <div className="flex justify-start">
-          <div className="bg-brand-primary border-2 border-black px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          </div>
-        </div>
-      )}
 
       <div ref={messagesEndRef} />
     </div>
