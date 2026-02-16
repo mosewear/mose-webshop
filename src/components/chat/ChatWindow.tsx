@@ -158,18 +158,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       let buffer = ''
       let hadStreamError = false
 
-      // Create AI message placeholder
-      const aiMessageId = (Date.now() + 1).toString()
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: aiMessageId,
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-        },
-      ])
-
       // Read stream
       if (reader) {
         while (true) {
@@ -202,15 +190,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
             } else if (rawLine.startsWith('3:')) {
               hadStreamError = true
             }
-
-            // Update AI message in real-time
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === aiMessageId
-                  ? { ...m, content: aiContent }
-                  : m
-              )
-            )
           }
         }
 
@@ -229,21 +208,23 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
         // If the stream ended but we received no content, show a friendly fallback.
         if (!aiContent.trim()) {
-          const fallback = hadStreamError ? t('aiOffline') : t('aiOffline')
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiMessageId
-                ? { ...m, content: fallback }
-                : m
-            )
-          )
-          aiContent = fallback
+          aiContent = hadStreamError ? t('aiOffline') : t('aiOffline')
         }
-        
-        // Save AI response to database after streaming is complete
-        if (aiContent.trim()) {
-          await saveMessage('assistant', aiContent.trim())
-        }
+
+        // WhatsApp-like UX: show typing indicator while streaming, then append full message at once.
+        const finalAnswer = aiContent.trim() || t('aiOffline')
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: finalAnswer,
+            timestamp: new Date(),
+          },
+        ])
+
+        // Save AI response to database after the full message is ready
+        await saveMessage('assistant', finalAnswer)
       }
     } catch (error) {
       console.error('[Chat Error]:', error)
