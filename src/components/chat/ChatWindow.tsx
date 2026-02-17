@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
@@ -37,33 +38,16 @@ export interface Message {
 export default function ChatWindow({ onClose }: ChatWindowProps) {
   const t = useTranslations('chat')
   const [activeTab, setActiveTab] = useState<'ai' | 'team'>('ai')
-  const readMobileViewport = () => {
-    if (typeof window === 'undefined') return null
+  const portalEl = typeof document !== 'undefined' ? document.body : null
+  const [keyboardOffsetPx, setKeyboardOffsetPx] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0
     const vv = window.visualViewport
-
-    const rawHeight = vv?.height ?? window.innerHeight
-    const rawWidth = vv?.width ?? window.innerWidth
-    const rawOffsetTop = vv?.offsetTop ?? 0
-    const rawOffsetLeft = vv?.offsetLeft ?? 0
-
-    // Guard against transient/buggy values (can happen during keyboard animation).
-    const heightPx =
-      Number.isFinite(rawHeight) && rawHeight > 200 ? Math.round(rawHeight) : window.innerHeight
-    const widthPx =
-      Number.isFinite(rawWidth) && rawWidth > 200 ? Math.round(rawWidth) : window.innerWidth
-    const offsetTopPx = Number.isFinite(rawOffsetTop) ? Math.round(rawOffsetTop) : 0
-    const offsetLeftPx = Number.isFinite(rawOffsetLeft) ? Math.round(rawOffsetLeft) : 0
-
-    return { heightPx, widthPx, offsetTopPx, offsetLeftPx }
-  }
-
-  // Initialize synchronously so the first paint is already correct (prevents a 1-frame "jump" on iOS).
-  const [mobileViewport, setMobileViewport] = useState<{
-    heightPx: number
-    widthPx: number
-    offsetTopPx: number
-    offsetLeftPx: number
-  } | null>(() => readMobileViewport())
+    const innerH = window.innerHeight
+    const vvH = vv?.height ?? innerH
+    const vvTop = vv?.offsetTop ?? 0
+    return Math.max(0, Math.round(innerH - vvH - vvTop))
+  })
+  const updateKeyboardOffsetRef = useRef<() => void>(() => {})
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -335,8 +319,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [])
 
-  // Keep mobile overlay pinned to the *visual* viewport (iOS keyboard safe).
-  // useLayoutEffect ensures we update measurements before the browser paints.
+  // Industry-standard approach for mobile modals:
+  // keep the overlay fullscreen (`fixed inset-0`) and only offset the bottom area by keyboard height.
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -346,9 +330,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     const vv = window.visualViewport
 
     const update = () => {
-      const snapshot = readMobileViewport()
-      if (snapshot) setMobileViewport(snapshot)
+      const innerH = window.innerHeight
+      const vvH = vv?.height ?? innerH
+      const vvTop = vv?.offsetTop ?? 0
+      const next = Math.max(0, Math.round(innerH - vvH - vvTop))
+      setKeyboardOffsetPx(next)
     }
+
+    updateKeyboardOffsetRef.current = update
 
     update()
     vv?.addEventListener('resize', update)
@@ -395,7 +384,13 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [onClose])
 
-  return (
+  const handleInputFocus = () => {
+    // VisualViewport events sometimes arrive a tick later on iOS. This forces a fast re-measure.
+    updateKeyboardOffsetRef.current?.()
+    requestAnimationFrame(() => updateKeyboardOffsetRef.current?.())
+  }
+
+  const ui = (
     <>
       {/* Overlay - Desktop only */}
       <motion.div
@@ -410,22 +405,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       {/* Mobile: Fullscreen */}
       <div
         id="chat-window"
-        className="fixed z-[9998] bg-white flex flex-col md:hidden overscroll-none pb-[env(safe-area-inset-bottom)]"
-        style={
-          mobileViewport
-            ? {
-                top: `${mobileViewport.offsetTopPx}px`,
-                left: `${mobileViewport.offsetLeftPx}px`,
-                width: `${mobileViewport.widthPx}px`,
-                height: `${mobileViewport.heightPx}px`,
-              }
-            : {
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-              }
-        }
+        className="fixed inset-0 z-[9998] bg-white flex flex-col md:hidden overscroll-none"
       >
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">
@@ -450,7 +430,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           {activeTab === 'ai' ? (
             <>
               <ChatMessages messages={messages} />
-              <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+              <div
+                className="flex-shrink-0"
+                style={{
+                  paddingBottom: `calc(env(safe-area-inset-bottom) + ${keyboardOffsetPx}px)`,
+                }}
+              >
+                <ChatInput onSend={handleSendMessage} disabled={isLoading} onFocusInput={handleInputFocus} />
+              </div>
             </>
           ) : (
             <TeamMoseTab />
@@ -498,5 +485,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       </motion.div>
     </>
   )
+
+  // Render as a portal so the modal isn't affected by transforms/stacking contexts higher up the tree.
+  return portalEl ? createPortal(ui, portalEl) : ui
 }
 

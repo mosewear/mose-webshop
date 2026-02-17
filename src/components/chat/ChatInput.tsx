@@ -7,9 +7,10 @@ import { useTranslations } from 'next-intl'
 interface ChatInputProps {
   onSend: (message: string) => void
   disabled?: boolean
+  onFocusInput?: () => void
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({ onSend, disabled, onFocusInput }: ChatInputProps) {
   const t = useTranslations('chat.input')
   const [message, setMessage] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -46,6 +47,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
+          onFocus={() => onFocusInput?.()}
           disabled={disabled}
           placeholder={t('placeholder')}
           className="flex-1 px-4 py-3 border-2 border-black focus:outline-none focus:border-brand-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
