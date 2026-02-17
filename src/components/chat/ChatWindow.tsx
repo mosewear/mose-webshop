@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
@@ -37,12 +37,33 @@ export interface Message {
 export default function ChatWindow({ onClose }: ChatWindowProps) {
   const t = useTranslations('chat')
   const [activeTab, setActiveTab] = useState<'ai' | 'team'>('ai')
+  const readMobileViewport = () => {
+    if (typeof window === 'undefined') return null
+    const vv = window.visualViewport
+
+    const rawHeight = vv?.height ?? window.innerHeight
+    const rawWidth = vv?.width ?? window.innerWidth
+    const rawOffsetTop = vv?.offsetTop ?? 0
+    const rawOffsetLeft = vv?.offsetLeft ?? 0
+
+    // Guard against transient/buggy values (can happen during keyboard animation).
+    const heightPx =
+      Number.isFinite(rawHeight) && rawHeight > 200 ? Math.round(rawHeight) : window.innerHeight
+    const widthPx =
+      Number.isFinite(rawWidth) && rawWidth > 200 ? Math.round(rawWidth) : window.innerWidth
+    const offsetTopPx = Number.isFinite(rawOffsetTop) ? Math.round(rawOffsetTop) : 0
+    const offsetLeftPx = Number.isFinite(rawOffsetLeft) ? Math.round(rawOffsetLeft) : 0
+
+    return { heightPx, widthPx, offsetTopPx, offsetLeftPx }
+  }
+
+  // Initialize synchronously so the first paint is already correct (prevents a 1-frame "jump" on iOS).
   const [mobileViewport, setMobileViewport] = useState<{
     heightPx: number
     widthPx: number
     offsetTopPx: number
     offsetLeftPx: number
-  } | null>(null)
+  } | null>(() => readMobileViewport())
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -315,8 +336,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   }, [])
 
   // Keep mobile overlay pinned to the *visual* viewport (iOS keyboard safe).
-  // Using CSS variables + transforms proved inconsistent on some iOS Safari setups; using explicit px values is steadier.
-  useEffect(() => {
+  // useLayoutEffect ensures we update measurements before the browser paints.
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') return
 
     const isMobile = window.matchMedia('(max-width: 767px)').matches
@@ -324,32 +345,20 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
     const vv = window.visualViewport
 
-    const readViewport = () => {
-      const rawHeight = vv?.height ?? window.innerHeight
-      const rawWidth = vv?.width ?? window.innerWidth
-      const rawOffsetTop = vv?.offsetTop ?? 0
-      const rawOffsetLeft = vv?.offsetLeft ?? 0
-
-      // Guard against transient/buggy values (can happen during keyboard animation).
-      const heightPx =
-        Number.isFinite(rawHeight) && rawHeight > 200 ? Math.round(rawHeight) : window.innerHeight
-      const widthPx =
-        Number.isFinite(rawWidth) && rawWidth > 200 ? Math.round(rawWidth) : window.innerWidth
-      const offsetTopPx = Number.isFinite(rawOffsetTop) ? Math.round(rawOffsetTop) : 0
-      const offsetLeftPx = Number.isFinite(rawOffsetLeft) ? Math.round(rawOffsetLeft) : 0
-
-      setMobileViewport({ heightPx, widthPx, offsetTopPx, offsetLeftPx })
+    const update = () => {
+      const snapshot = readMobileViewport()
+      if (snapshot) setMobileViewport(snapshot)
     }
 
-    readViewport()
-    vv?.addEventListener('resize', readViewport)
-    vv?.addEventListener('scroll', readViewport)
-    window.addEventListener('resize', readViewport)
+    update()
+    vv?.addEventListener('resize', update)
+    vv?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
 
     return () => {
-      vv?.removeEventListener('resize', readViewport)
-      vv?.removeEventListener('scroll', readViewport)
-      window.removeEventListener('resize', readViewport)
+      vv?.removeEventListener('resize', update)
+      vv?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
     }
   }, [])
 
