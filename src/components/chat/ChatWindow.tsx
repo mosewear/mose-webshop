@@ -262,13 +262,77 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [])
 
-  // Disable body scroll when chat is open (mobile)
+  // On mobile Safari, `overflow: hidden` alone is not a reliable scroll lock (especially with the keyboard).
+  // We lock scroll by fixing the body in place and restoring scroll position on close.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = 'unset'
-      }
+    if (typeof window === 'undefined') return
+
+    const isMobile = window.matchMedia('(max-width: 767px)').matches
+    if (!isMobile) return
+
+    const body = document.body
+    const html = document.documentElement
+    const scrollY = window.scrollY
+
+    const prev = {
+      body: {
+        position: body.style.position,
+        top: body.style.top,
+        left: body.style.left,
+        right: body.style.right,
+        width: body.style.width,
+        overflow: body.style.overflow,
+      },
+      html: {
+        overscrollBehaviorY: html.style.overscrollBehaviorY,
+      },
+    }
+
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+    body.style.overflow = 'hidden'
+    html.style.overscrollBehaviorY = 'none'
+
+    return () => {
+      body.style.position = prev.body.position
+      body.style.top = prev.body.top
+      body.style.left = prev.body.left
+      body.style.right = prev.body.right
+      body.style.width = prev.body.width
+      body.style.overflow = prev.body.overflow
+      html.style.overscrollBehaviorY = prev.html.overscrollBehaviorY
+      window.scrollTo(0, scrollY)
+    }
+  }, [])
+
+  // Keep a CSS variable in sync with the *visual* viewport height (iOS keyboard safe).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const isMobile = window.matchMedia('(max-width: 767px)').matches
+    if (!isMobile) return
+
+    const root = document.documentElement
+    const vv = window.visualViewport
+
+    const update = () => {
+      const height = vv?.height ?? window.innerHeight
+      root.style.setProperty('--chat-viewport-height', `${Math.round(height)}px`)
+    }
+
+    update()
+    vv?.addEventListener('resize', update)
+    vv?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+
+    return () => {
+      vv?.removeEventListener('resize', update)
+      vv?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      root.style.removeProperty('--chat-viewport-height')
     }
   }, [])
 
@@ -286,7 +350,9 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       const diff = currentY - startY
 
       // Only close if swiping down from top
-      if (diff > 100 && window.scrollY === 0) {
+      const scrollContainer = document.querySelector('[data-chat-scroll]') as HTMLElement | null
+      const atTop = !scrollContainer || scrollContainer.scrollTop === 0
+      if (diff > 100 && atTop) {
         onClose()
       }
     }
@@ -322,7 +388,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed inset-0 z-[9998] bg-white flex flex-col md:hidden"
+        className="fixed top-0 left-0 right-0 z-[9998] bg-white flex flex-col md:hidden overscroll-none pb-[env(safe-area-inset-bottom)]"
+        style={{ height: 'var(--chat-viewport-height, 100dvh)' }}
       >
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">

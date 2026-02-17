@@ -16,7 +16,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
   }, [messages])
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+    <div data-chat-scroll className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 overscroll-contain">
       {messages.map((message) => (
         <div
           key={message.id}
