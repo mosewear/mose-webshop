@@ -37,6 +37,12 @@ export interface Message {
 export default function ChatWindow({ onClose }: ChatWindowProps) {
   const t = useTranslations('chat')
   const [activeTab, setActiveTab] = useState<'ai' | 'team'>('ai')
+  const [mobileViewport, setMobileViewport] = useState<{
+    heightPx: number
+    widthPx: number
+    offsetTopPx: number
+    offsetLeftPx: number
+  } | null>(null)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -308,36 +314,42 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [])
 
-  // Keep a CSS variable in sync with the *visual* viewport height (iOS keyboard safe).
+  // Keep mobile overlay pinned to the *visual* viewport (iOS keyboard safe).
+  // Using CSS variables + transforms proved inconsistent on some iOS Safari setups; using explicit px values is steadier.
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const isMobile = window.matchMedia('(max-width: 767px)').matches
     if (!isMobile) return
 
-    const root = document.documentElement
     const vv = window.visualViewport
 
-    const update = () => {
-      // On iOS Safari, when the keyboard opens the visual viewport can shrink *and* shift.
-      // If we only set height, a fixed overlay can end up partially outside the visible area.
-      const height = vv?.height ?? window.innerHeight
-      const offsetTop = vv?.offsetTop ?? 0
-      root.style.setProperty('--chat-viewport-height', `${Math.round(height)}px`)
-      root.style.setProperty('--chat-viewport-offset-top', `${Math.round(offsetTop)}px`)
+    const readViewport = () => {
+      const rawHeight = vv?.height ?? window.innerHeight
+      const rawWidth = vv?.width ?? window.innerWidth
+      const rawOffsetTop = vv?.offsetTop ?? 0
+      const rawOffsetLeft = vv?.offsetLeft ?? 0
+
+      // Guard against transient/buggy values (can happen during keyboard animation).
+      const heightPx =
+        Number.isFinite(rawHeight) && rawHeight > 200 ? Math.round(rawHeight) : window.innerHeight
+      const widthPx =
+        Number.isFinite(rawWidth) && rawWidth > 200 ? Math.round(rawWidth) : window.innerWidth
+      const offsetTopPx = Number.isFinite(rawOffsetTop) ? Math.round(rawOffsetTop) : 0
+      const offsetLeftPx = Number.isFinite(rawOffsetLeft) ? Math.round(rawOffsetLeft) : 0
+
+      setMobileViewport({ heightPx, widthPx, offsetTopPx, offsetLeftPx })
     }
 
-    update()
-    vv?.addEventListener('resize', update)
-    vv?.addEventListener('scroll', update)
-    window.addEventListener('resize', update)
+    readViewport()
+    vv?.addEventListener('resize', readViewport)
+    vv?.addEventListener('scroll', readViewport)
+    window.addEventListener('resize', readViewport)
 
     return () => {
-      vv?.removeEventListener('resize', update)
-      vv?.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-      root.style.removeProperty('--chat-viewport-height')
-      root.style.removeProperty('--chat-viewport-offset-top')
+      vv?.removeEventListener('resize', readViewport)
+      vv?.removeEventListener('scroll', readViewport)
+      window.removeEventListener('resize', readViewport)
     }
   }, [])
 
@@ -387,17 +399,24 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       />
 
       {/* Mobile: Fullscreen */}
-      <motion.div
+      <div
         id="chat-window"
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed top-0 left-0 right-0 z-[9998] bg-white flex flex-col md:hidden overscroll-none pb-[env(safe-area-inset-bottom)]"
-        style={{
-          height: 'var(--chat-viewport-height, 100dvh)',
-          transform: 'translateY(var(--chat-viewport-offset-top, 0px))',
-        }}
+        className="fixed z-[9998] bg-white flex flex-col md:hidden overscroll-none pb-[env(safe-area-inset-bottom)]"
+        style={
+          mobileViewport
+            ? {
+                top: `${mobileViewport.offsetTopPx}px`,
+                left: `${mobileViewport.offsetLeftPx}px`,
+                width: `${mobileViewport.widthPx}px`,
+                height: `${mobileViewport.heightPx}px`,
+              }
+            : {
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }
+        }
       >
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">
@@ -428,7 +447,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
             <TeamMoseTab />
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Desktop: Window - MOSE Brutalist Style (no shadow) */}
       <motion.div
