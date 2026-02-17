@@ -319,8 +319,12 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     const vv = window.visualViewport
 
     const update = () => {
+      // On iOS Safari, when the keyboard opens the visual viewport can shrink *and* shift.
+      // If we only set height, a fixed overlay can end up partially outside the visible area.
       const height = vv?.height ?? window.innerHeight
+      const offsetTop = vv?.offsetTop ?? 0
       root.style.setProperty('--chat-viewport-height', `${Math.round(height)}px`)
+      root.style.setProperty('--chat-viewport-offset-top', `${Math.round(offsetTop)}px`)
     }
 
     update()
@@ -333,6 +337,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       vv?.removeEventListener('scroll', update)
       window.removeEventListener('resize', update)
       root.style.removeProperty('--chat-viewport-height')
+      root.style.removeProperty('--chat-viewport-offset-top')
     }
   }, [])
 
@@ -389,7 +394,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="fixed top-0 left-0 right-0 z-[9998] bg-white flex flex-col md:hidden overscroll-none pb-[env(safe-area-inset-bottom)]"
-        style={{ height: 'var(--chat-viewport-height, 100dvh)' }}
+        style={{
+          height: 'var(--chat-viewport-height, 100dvh)',
+          transform: 'translateY(var(--chat-viewport-offset-top, 0px))',
+        }}
       >
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">
