@@ -747,6 +747,25 @@ export function estimateClothingWeight(quantity: number, type: 'tshirt' | 'hoodi
   return weights[type] * quantity
 }
 
+const COUNTRY_NAME_TO_ISO: Record<string, string> = {
+  'nederland': 'NL', 'netherlands': 'NL', 'the netherlands': 'NL', 'holland': 'NL',
+  'belgie': 'BE', 'belgië': 'BE', 'belgium': 'BE',
+  'duitsland': 'DE', 'germany': 'DE', 'deutschland': 'DE',
+  'frankrijk': 'FR', 'france': 'FR',
+  'luxemburg': 'LU', 'luxembourg': 'LU',
+  'verenigd koninkrijk': 'GB', 'united kingdom': 'GB', 'uk': 'GB', 'great britain': 'GB',
+  'oostenrijk': 'AT', 'austria': 'AT', 'österreich': 'AT',
+  'spanje': 'ES', 'spain': 'ES', 'españa': 'ES',
+  'italie': 'IT', 'italië': 'IT', 'italy': 'IT', 'italia': 'IT',
+  'portugal': 'PT',
+}
+
+function normalizeCountryCode(country: string): string {
+  const trimmed = country.trim()
+  if (trimmed.length === 2) return trimmed.toUpperCase()
+  return COUNTRY_NAME_TO_ISO[trimmed.toLowerCase()] || trimmed.toUpperCase()
+}
+
 /**
  * Format adres naar Sendcloud format
  */
@@ -769,13 +788,12 @@ export function formatAddressForSendcloud(address: {
   let houseNumber: string
 
   if (address.houseNumber) {
-    // houseNumber is explicitly provided (modern checkout format)
     street = address.address.trim()
     houseNumber = address.addition
-      ? `${address.houseNumber.trim()} ${address.addition.trim()}`
+      ? `${address.houseNumber.trim()}${address.addition.trim()}`
       : address.houseNumber.trim()
   } else {
-    // Fallback: try to split house number from street (legacy format like "Kalverstraat 123")
+    // Fallback: try to split house number from street (legacy/Express Checkout format like "Kalverstraat 123a")
     const addressMatch = address.address.match(/^(.+?)\s+(\d+[a-zA-Z]?.*)$/)
     street = addressMatch ? addressMatch[1].trim() : address.address.trim()
     houseNumber = addressMatch ? addressMatch[2].trim() : ''
@@ -787,7 +805,7 @@ export function formatAddressForSendcloud(address: {
     house_number: houseNumber,
     city: address.city.trim(),
     postal_code: address.postalCode.toUpperCase(),
-    country: (address.country || 'NL').toUpperCase(),
+    country: normalizeCountryCode(address.country || 'NL'),
     email: address.email?.trim() || '',
     telephone: address.phone?.trim() || '',
   }

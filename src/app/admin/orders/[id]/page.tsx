@@ -61,6 +61,17 @@ interface StatusHistoryItem {
   email_sent: boolean
 }
 
+const COUNTRY_LABELS: Record<string, string> = {
+  NL: 'Nederland', BE: 'België', DE: 'Duitsland', FR: 'Frankrijk',
+  LU: 'Luxemburg', GB: 'Verenigd Koninkrijk', AT: 'Oostenrijk',
+  ES: 'Spanje', IT: 'Italië', PT: 'Portugal',
+}
+
+function displayCountry(code: string | undefined): string {
+  if (!code) return 'Nederland'
+  return COUNTRY_LABELS[code.toUpperCase()] || code
+}
+
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [order, setOrder] = useState<Order | null>(null)
@@ -433,7 +444,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     setShippingAddition(sa?.addition || '')
     setShippingPostalCode(sa?.postalCode || '')
     setShippingCity(sa?.city || '')
-    setShippingCountry(sa?.country || 'Nederland')
+    setShippingCountry(sa?.country || 'NL')
     setShippingPhone(sa?.phone || '')
     setBillingName(ba?.name || '')
     setBillingAddress(ba?.address || '')
@@ -456,7 +467,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         addition: shippingAddition,
         postalCode: shippingPostalCode,
         city: shippingCity,
-        country: shippingCountry || 'Nederland',
+        country: shippingCountry || 'NL',
         phone: shippingPhone,
       }
       const hasBilling = billingName || billingAddress || billingCity || billingPostalCode
@@ -467,7 +478,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         addition: billingAddition,
         postalCode: billingPostalCode,
         city: billingCity,
-        country: billingCountry || 'Nederland',
+        country: billingCountry || 'NL',
       } : null
 
       const { error } = await supabase
@@ -777,7 +788,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         {order.shipping_address.addition && ` ${order.shipping_address.addition}`}
                       </div>
                       <div>{order.shipping_address.postalCode || 'N/A'}, {order.shipping_address.city || 'N/A'}</div>
-                      <div>{order.shipping_address.country || 'Nederland'}</div>
+                      <div>{displayCountry(order.shipping_address.country)}</div>
                       {order.shipping_address.phone && (
                         <div className="mt-1 text-gray-600">Tel: {order.shipping_address.phone}</div>
                       )}
@@ -796,7 +807,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         {order.billing_address.addition && ` ${order.billing_address.addition}`}
                       </div>
                       <div>{order.billing_address.postalCode || 'N/A'}, {order.billing_address.city || 'N/A'}</div>
-                      <div>{order.billing_address.country || 'Nederland'}</div>
+                      <div>{displayCountry(order.billing_address.country)}</div>
                     </div>
                   </div>
                 )}
@@ -882,8 +893,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Land</label>
-                      <input type="text" value={shippingCountry} onChange={(e) => setShippingCountry(e.target.value)}
-                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Nederland" />
+                      <select value={shippingCountry} onChange={(e) => setShippingCountry(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm bg-white">
+                        <option value="NL">Nederland</option>
+                        <option value="BE">België</option>
+                        <option value="DE">Duitsland</option>
+                        <option value="FR">Frankrijk</option>
+                        <option value="LU">Luxemburg</option>
+                        <option value="GB">Verenigd Koninkrijk</option>
+                        <option value="AT">Oostenrijk</option>
+                        <option value="ES">Spanje</option>
+                        <option value="IT">Italië</option>
+                        <option value="PT">Portugal</option>
+                      </select>
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Telefoon</label>
@@ -939,8 +961,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Land</label>
-                      <input type="text" value={billingCountry} onChange={(e) => setBillingCountry(e.target.value)}
-                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Nederland" />
+                      <select value={billingCountry} onChange={(e) => setBillingCountry(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm bg-white">
+                        <option value="">— Selecteer —</option>
+                        <option value="NL">Nederland</option>
+                        <option value="BE">België</option>
+                        <option value="DE">Duitsland</option>
+                        <option value="FR">Frankrijk</option>
+                        <option value="LU">Luxemburg</option>
+                        <option value="GB">Verenigd Koninkrijk</option>
+                        <option value="AT">Oostenrijk</option>
+                        <option value="ES">Spanje</option>
+                        <option value="IT">Italië</option>
+                        <option value="PT">Portugal</option>
+                      </select>
                     </div>
                   </div>
                 </div>
