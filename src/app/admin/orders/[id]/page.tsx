@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw } from 'lucide-react'
+import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2 } from 'lucide-react'
 import { getCarrierOptions, generateTrackingUrl, calculateEstimatedDelivery } from '@/lib/order-utils'
 
 interface Order {
@@ -87,6 +87,26 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [labelSuccess, setLabelSuccess] = useState(false)
   const [labelUrl, setLabelUrl] = useState('')
   const [refreshingReturns, setRefreshingReturns] = useState(false)
+
+  // Customer info edit states
+  const [editingCustomer, setEditingCustomer] = useState(false)
+  const [savingCustomer, setSavingCustomer] = useState(false)
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [shippingName, setShippingName] = useState('')
+  const [shippingAddress, setShippingAddress] = useState('')
+  const [shippingHouseNumber, setShippingHouseNumber] = useState('')
+  const [shippingAddition, setShippingAddition] = useState('')
+  const [shippingPostalCode, setShippingPostalCode] = useState('')
+  const [shippingCity, setShippingCity] = useState('')
+  const [shippingCountry, setShippingCountry] = useState('')
+  const [shippingPhone, setShippingPhone] = useState('')
+  const [billingName, setBillingName] = useState('')
+  const [billingAddress, setBillingAddress] = useState('')
+  const [billingHouseNumber, setBillingHouseNumber] = useState('')
+  const [billingAddition, setBillingAddition] = useState('')
+  const [billingPostalCode, setBillingPostalCode] = useState('')
+  const [billingCity, setBillingCity] = useState('')
+  const [billingCountry, setBillingCountry] = useState('')
 
   const carrierOptions = getCarrierOptions()
 
@@ -406,6 +426,135 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const startEditingCustomer = () => {
+    if (!order) return
+    const sa = typeof order.shipping_address === 'object' ? order.shipping_address : {}
+    const ba = typeof order.billing_address === 'object' ? order.billing_address : {}
+    setCustomerEmail(order.email || '')
+    setShippingName(sa?.name || '')
+    setShippingAddress(sa?.address || '')
+    setShippingHouseNumber(sa?.houseNumber || '')
+    setShippingAddition(sa?.addition || '')
+    setShippingPostalCode(sa?.postalCode || '')
+    setShippingCity(sa?.city || '')
+    setShippingCountry(sa?.country || 'Nederland')
+    setShippingPhone(sa?.phone || '')
+    setBillingName(ba?.name || '')
+    setBillingAddress(ba?.address || '')
+    setBillingHouseNumber(ba?.houseNumber || '')
+    setBillingAddition(ba?.addition || '')
+    setBillingPostalCode(ba?.postalCode || '')
+    setBillingCity(ba?.city || '')
+    setBillingCountry(ba?.country || '')
+    setEditingCustomer(true)
+  }
+
+  const handleSaveCustomerInfo = async () => {
+    if (!order) return
+    try {
+      setSavingCustomer(true)
+      const newShippingAddress = {
+        name: shippingName,
+        address: shippingAddress,
+        houseNumber: shippingHouseNumber,
+        addition: shippingAddition,
+        postalCode: shippingPostalCode,
+        city: shippingCity,
+        country: shippingCountry || 'Nederland',
+        phone: shippingPhone,
+      }
+      const hasBilling = billingName || billingAddress || billingCity || billingPostalCode
+      const newBillingAddress = hasBilling ? {
+        name: billingName,
+        address: billingAddress,
+        houseNumber: billingHouseNumber,
+        addition: billingAddition,
+        postalCode: billingPostalCode,
+        city: billingCity,
+        country: billingCountry || 'Nederland',
+      } : null
+
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          email: customerEmail,
+          shipping_address: newShippingAddress,
+          billing_address: newBillingAddress,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+
+      if (error) throw error
+      await fetchOrder()
+      setEditingCustomer(false)
+      alert('✅ Klantgegevens opgeslagen!')
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setSavingCustomer(false)
+    }
+  }
+
+  const handleClearShippingAddress = async () => {
+    if (!order) return
+    if (!confirm('Weet je zeker dat je het verzendadres wilt verwijderen?')) return
+    try {
+      setSavingCustomer(true)
+      const { error } = await supabase
+        .from('orders')
+        .update({ shipping_address: null, updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+      await fetchOrder()
+      setEditingCustomer(false)
+      alert('✅ Verzendadres verwijderd!')
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setSavingCustomer(false)
+    }
+  }
+
+  const handleClearBillingAddress = async () => {
+    if (!order) return
+    if (!confirm('Weet je zeker dat je het factuuradres wilt verwijderen?')) return
+    try {
+      setSavingCustomer(true)
+      const { error } = await supabase
+        .from('orders')
+        .update({ billing_address: null, updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+      await fetchOrder()
+      setEditingCustomer(false)
+      alert('✅ Factuuradres verwijderd!')
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setSavingCustomer(false)
+    }
+  }
+
+  const handleClearEmail = async () => {
+    if (!order) return
+    if (!confirm('Weet je zeker dat je het e-mailadres wilt verwijderen? Dit kan invloed hebben op communicatie met de klant.')) return
+    try {
+      setSavingCustomer(true)
+      const { error } = await supabase
+        .from('orders')
+        .update({ email: '', updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+      await fetchOrder()
+      setEditingCustomer(false)
+      alert('✅ E-mailadres verwijderd!')
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setSavingCustomer(false)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -592,49 +741,233 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Customer Info */}
           <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
-            <h2 className="text-xl font-bold mb-4">Klantinformatie</h2>
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Email</span>
-                <div className="text-sm md:text-base mt-1">{order.email}</div>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Klantinformatie</h2>
+              {!editingCustomer ? (
+                <button
+                  onClick={startEditingCustomer}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-brand-primary hover:bg-brand-primary hover:text-white border-2 border-brand-primary transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Bewerken
+                </button>
+              ) : (
+                <button
+                  onClick={() => setEditingCustomer(false)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 border-2 border-gray-300 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Annuleren
+                </button>
+              )}
+            </div>
 
-              {order.shipping_address && (
+            {!editingCustomer ? (
+              /* --- VIEW MODE --- */
+              <div className="space-y-3">
                 <div>
-                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Verzendadres</span>
+                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Email</span>
+                  <div className="text-sm md:text-base mt-1">{order.email || <span className="text-gray-400 italic">Geen email</span>}</div>
+                </div>
+
+                {order.shipping_address && typeof order.shipping_address === 'object' && (
+                  <div>
+                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Verzendadres</span>
+                    <div className="text-sm md:text-base mt-1 text-gray-700">
+                      <div>{order.shipping_address.name || 'N/A'}</div>
+                      <div>
+                        {order.shipping_address.address || 'N/A'}
+                        {order.shipping_address.houseNumber && ` ${order.shipping_address.houseNumber}`}
+                        {order.shipping_address.addition && ` ${order.shipping_address.addition}`}
+                      </div>
+                      <div>{order.shipping_address.postalCode || 'N/A'}, {order.shipping_address.city || 'N/A'}</div>
+                      <div>{order.shipping_address.country || 'Nederland'}</div>
+                      {order.shipping_address.phone && (
+                        <div className="mt-1 text-gray-600">Tel: {order.shipping_address.phone}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {order.billing_address && typeof order.billing_address === 'object' && (
+                  <div>
+                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Factuuradres</span>
+                    <div className="text-sm md:text-base mt-1 text-gray-700">
+                      <div>{order.billing_address.name || 'N/A'}</div>
+                      <div>
+                        {order.billing_address.address || 'N/A'}
+                        {order.billing_address.houseNumber && ` ${order.billing_address.houseNumber}`}
+                        {order.billing_address.addition && ` ${order.billing_address.addition}`}
+                      </div>
+                      <div>{order.billing_address.postalCode || 'N/A'}, {order.billing_address.city || 'N/A'}</div>
+                      <div>{order.billing_address.country || 'Nederland'}</div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Levermethode</span>
                   <div className="text-sm md:text-base mt-1 text-gray-700">
-                    {typeof order.shipping_address === 'object' ? (
+                    {order.delivery_method === 'pickup' ? (
                       <>
-                        <div>{order.shipping_address.name || 'N/A'}</div>
-                        <div>{order.shipping_address.address || 'N/A'}</div>
-                        <div>{order.shipping_address.city || 'N/A'}, {order.shipping_address.postalCode || 'N/A'}</div>
-                        <div>{order.shipping_address.country || 'Nederland'}</div>
+                        <div className="font-semibold text-green-700">Afhalen in Groningen</div>
+                        <div>{order.pickup_location_name || 'MOSE Groningen'}</div>
+                        <div>{order.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen'}</div>
+                        {typeof order.pickup_distance_km === 'number' && (
+                          <div className="text-xs text-gray-500 mt-1">Afstand klant: {order.pickup_distance_km.toFixed(1)} km</div>
+                        )}
                       </>
                     ) : (
-                      <div className="text-gray-500">Geen adres beschikbaar</div>
+                      <div className="font-semibold">Verzending</div>
                     )}
                   </div>
                 </div>
-              )}
+              </div>
+            ) : (
+              /* --- EDIT MODE --- */
+              <div className="space-y-5">
+                {/* Email */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-bold text-gray-700 uppercase tracking-wide">Email</label>
+                    <button onClick={handleClearEmail} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
+                      <Trash2 className="w-3 h-3" /> Verwijderen
+                    </button>
+                  </div>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm"
+                    placeholder="klant@voorbeeld.nl"
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Levermethode</span>
-                <div className="text-sm md:text-base mt-1 text-gray-700">
-                  {order.delivery_method === 'pickup' ? (
-                    <>
-                      <div className="font-semibold text-green-700">Afhalen in Groningen</div>
-                      <div>{order.pickup_location_name || 'MOSE Groningen'}</div>
-                      <div>{order.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen'}</div>
-                      {typeof order.pickup_distance_km === 'number' && (
-                        <div className="text-xs text-gray-500 mt-1">Afstand klant: {order.pickup_distance_km.toFixed(1)} km</div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="font-semibold">Verzending</div>
-                  )}
+                {/* Verzendadres */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Verzendadres</span>
+                    <button onClick={handleClearShippingAddress} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
+                      <Trash2 className="w-3 h-3" /> Verwijderen
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Naam</label>
+                      <input type="text" value={shippingName} onChange={(e) => setShippingName(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Volledige naam" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Straat</label>
+                      <input type="text" value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Straatnaam" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Huisnr.</label>
+                        <input type="text" value={shippingHouseNumber} onChange={(e) => setShippingHouseNumber(e.target.value)}
+                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Nr." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Toev.</label>
+                        <input type="text" value={shippingAddition} onChange={(e) => setShippingAddition(e.target.value)}
+                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="A, B..." />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Postcode</label>
+                      <input type="text" value={shippingPostalCode} onChange={(e) => setShippingPostalCode(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="1234 AB" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Plaats</label>
+                      <input type="text" value={shippingCity} onChange={(e) => setShippingCity(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Stad" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Land</label>
+                      <input type="text" value={shippingCountry} onChange={(e) => setShippingCountry(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Nederland" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Telefoon</label>
+                      <input type="tel" value={shippingPhone} onChange={(e) => setShippingPhone(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="+31 6 12345678" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Factuuradres */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Factuuradres</span>
+                    {(billingName || billingAddress || billingCity) && (
+                      <button onClick={handleClearBillingAddress} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
+                        <Trash2 className="w-3 h-3" /> Verwijderen
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">Laat leeg als hetzelfde als verzendadres</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Naam</label>
+                      <input type="text" value={billingName} onChange={(e) => setBillingName(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Factuurnaam" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Straat</label>
+                      <input type="text" value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Straatnaam" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Huisnr.</label>
+                        <input type="text" value={billingHouseNumber} onChange={(e) => setBillingHouseNumber(e.target.value)}
+                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Nr." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Toev.</label>
+                        <input type="text" value={billingAddition} onChange={(e) => setBillingAddition(e.target.value)}
+                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="A, B..." />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Postcode</label>
+                      <input type="text" value={billingPostalCode} onChange={(e) => setBillingPostalCode(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="1234 AB" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Plaats</label>
+                      <input type="text" value={billingCity} onChange={(e) => setBillingCity(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Stad" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Land</label>
+                      <input type="text" value={billingCountry} onChange={(e) => setBillingCountry(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors text-sm" placeholder="Nederland" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save / Cancel buttons */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <button
+                    onClick={handleSaveCustomerInfo}
+                    disabled={savingCustomer}
+                    className="flex-1 bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    {savingCustomer ? 'Opslaan...' : 'Klantgegevens Opslaan'}
+                  </button>
+                  <button
+                    onClick={() => setEditingCustomer(false)}
+                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
+                  >
+                    Annuleren
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Returns Information */}
