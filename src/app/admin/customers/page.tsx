@@ -175,7 +175,7 @@ export default function CustomersPage() {
                         <span className="font-semibold">Orders:</span> {customer.total_orders || 0}
                       </div>
                       <div>
-                        <span className="font-semibold">Uitgegeven:</span> EUR {(customer.total_spent || 0).toFixed(2)}
+                        <span className="font-semibold">Uitgegeven:</span> €{(customer.total_spent || 0).toFixed(2)}
                       </div>
                       <div className="col-span-2">
                         <span className="font-semibold">Aangemaakt:</span> {new Date(customer.created_at).toLocaleDateString('nl-NL')}

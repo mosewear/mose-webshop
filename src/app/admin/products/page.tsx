@@ -105,7 +105,7 @@ export default function AdminProductsPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 border-2 border-gray-200">
           <div className="text-3xl font-bold text-brand-primary mb-2">{products.length}</div>
           <div className="text-sm text-gray-600 uppercase tracking-wide">Totaal Producten</div>
@@ -206,15 +206,15 @@ export default function AdminProductsPage() {
                       {hasDiscount && product.sale_price ? (
                         <>
                           <div className="text-sm font-bold text-red-600">
-                            EUR {Number(product.sale_price).toFixed(2)}
+                            €{Number(product.sale_price).toFixed(2)}
                             <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-bold bg-red-600 text-white">
                               -{discountPercentage}%
                             </span>
                           </div>
-                          <div className="text-xs text-gray-500 line-through">EUR {Number(product.base_price).toFixed(2)}</div>
+                          <div className="text-xs text-gray-500 line-through">€{Number(product.base_price).toFixed(2)}</div>
                         </>
                       ) : (
-                        <div className="text-sm font-bold text-gray-900">EUR {Number(product.base_price).toFixed(2)}</div>
+                        <div className="text-sm font-bold text-gray-900">€{Number(product.base_price).toFixed(2)}</div>
                       )}
                     </div>
                     <div className="text-xs text-gray-500">

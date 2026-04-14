@@ -17,7 +17,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
 
   const navigation = [
     {
-      name: 'Dashboard',
+      name: 'Overzicht',
       href: '/admin',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +26,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
-      name: 'Analytics',
+      name: 'Statistieken',
       href: '/admin/analytics',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
-      name: 'Chat',
+      name: 'Berichten',
       href: '/admin/chat',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
-      name: 'Survey',
+      name: 'Enquête',
       href: '/admin/survey',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +143,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
-      name: 'Email Log',
+      name: 'E-mail Log',
       href: '/admin/emails',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +170,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
-      name: 'Social Media',
+      name: 'Socials',
       href: '/admin/social-media',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -566,6 +566,8 @@ export async function createReturnLabel(
     const customerAddress = formatAddressForSendcloud({
       name: shippingAddress.name,
       address: shippingAddress.address,
+      houseNumber: shippingAddress.houseNumber,
+      addition: shippingAddress.addition,
       city: shippingAddress.city,
       postalCode: shippingAddress.postalCode,
       country: shippingAddress.country || 'NL',
@@ -751,6 +753,8 @@ export function estimateClothingWeight(quantity: number, type: 'tshirt' | 'hoodi
 export function formatAddressForSendcloud(address: {
   name: string
   address: string
+  houseNumber?: string
+  addition?: string
   city: string
   postalCode: string
   country?: string
@@ -761,25 +765,33 @@ export function formatAddressForSendcloud(address: {
     throw new Error(`Incompleet adres: name=${!!address.name}, address=${!!address.address}, city=${!!address.city}, postalCode=${!!address.postalCode}`)
   }
   
-  // Split huisnummer van straat (Nederlandse format)
-  // Bijv. "Helper Brink 27a" -> street: "Helper Brink", house_number: "27a"
-  // Bijv. "Kalverstraat 123" -> street: "Kalverstraat", house_number: "123"
-  const addressMatch = address.address.match(/^(.+?)\s+(\d+[a-zA-Z]?.*)$/)
-  const street = addressMatch ? addressMatch[1].trim() : address.address.trim()
-  const houseNumber = addressMatch ? addressMatch[2].trim() : ''
+  let street: string
+  let houseNumber: string
+
+  if (address.houseNumber) {
+    // houseNumber is explicitly provided (modern checkout format)
+    street = address.address.trim()
+    houseNumber = address.addition
+      ? `${address.houseNumber.trim()} ${address.addition.trim()}`
+      : address.houseNumber.trim()
+  } else {
+    // Fallback: try to split house number from street (legacy format like "Kalverstraat 123")
+    const addressMatch = address.address.match(/^(.+?)\s+(\d+[a-zA-Z]?.*)$/)
+    street = addressMatch ? addressMatch[1].trim() : address.address.trim()
+    houseNumber = addressMatch ? addressMatch[2].trim() : ''
+  }
 
   const formatted: SendcloudAddress = {
     name: address.name.trim(),
     address: street,
     house_number: houseNumber,
     city: address.city.trim(),
-    postal_code: address.postalCode.toUpperCase(), // Behoud spatie in postcode (bijv. "9723 JC")
+    postal_code: address.postalCode.toUpperCase(),
     country: (address.country || 'NL').toUpperCase(),
     email: address.email?.trim() || '',
     telephone: address.phone?.trim() || '',
   }
   
-  // Validate dat alle vereiste velden gevuld zijn
   if (!formatted.name || !formatted.address || !formatted.city || !formatted.postal_code) {
     throw new Error(`Adres formatting faalt: ${JSON.stringify(formatted)}`)
   }

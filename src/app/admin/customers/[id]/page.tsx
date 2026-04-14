@@ -37,8 +37,6 @@ interface Order {
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  console.log('🟢 [CUSTOMER DETAIL] Component mounted with ID:', id)
-  
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,55 +44,36 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const supabase = createClient()
 
   useEffect(() => {
-    console.log('🟢 [CUSTOMER DETAIL] useEffect triggered for ID:', id)
     fetchCustomerAndOrders()
   }, [id])
 
   const fetchCustomerAndOrders = async () => {
     try {
-      console.log('🔵 [CUSTOMER DETAIL] ========== FETCH START ==========')
-      console.log('🔵 [CUSTOMER DETAIL] Customer ID:', id)
       setLoading(true)
       
-      // Fetch customer profile
-      console.log('🔵 [CUSTOMER DETAIL] Fetching customer profile...')
       const { data: customerData, error: customerError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', id)
         .single()
 
-      console.log('🔵 [CUSTOMER DETAIL] Customer query result:', { customerData, customerError })
-
       if (customerError) throw customerError
-      
-      console.log('🔵 [CUSTOMER DETAIL] Customer email:', customerData?.email)
       setCustomer(customerData)
       
-      // Fetch orders by email (for guest checkouts) OR user_id (for future authenticated users)
       if (customerData?.email) {
         const orQuery = `email.eq.${customerData.email},user_id.eq.${id}`
-        console.log('🔵 [CUSTOMER DETAIL] Fetching orders with OR query:', orQuery)
-        
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
           .select('id, status, total, created_at, payment_status, shipping_address')
           .or(orQuery)
           .order('created_at', { ascending: false })
 
-        console.log('🔵 [CUSTOMER DETAIL] Orders query result:', { ordersData, ordersError })
-        console.log('🔵 [CUSTOMER DETAIL] Number of orders found:', ordersData?.length || 0)
-
         if (ordersError) throw ordersError
         setOrders(ordersData || [])
       } else {
-        console.log('⚠️ [CUSTOMER DETAIL] No customer email, skipping orders fetch')
         setOrders([])
       }
-      
-      console.log('🔵 [CUSTOMER DETAIL] ========== FETCH END ==========')
     } catch (err: any) {
-      console.error('❌ [CUSTOMER DETAIL] Error:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -147,15 +126,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     .filter(o => o.payment_status === 'paid')
     .reduce((sum, o) => sum + Number(o.total), 0)
   
-  console.log('🟣 [CUSTOMER DETAIL] Render state:', {
-    loading,
-    hasCustomer: !!customer,
-    customerEmail: customer?.email,
-    ordersCount: orders.length,
-    totalSpent,
-    error
-  })
-
   return (
     <div className="space-y-6">
       {/* Header */}

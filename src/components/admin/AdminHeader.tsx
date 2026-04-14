@@ -43,7 +43,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
-          <span className="hidden md:inline">View Site</span>
+          <span className="hidden md:inline">Bekijk Site</span>
         </a>
 
         {/* Logout Button */}
@@ -54,7 +54,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          <span className="hidden md:inline">Logout</span>
+          <span className="hidden md:inline">Uitloggen</span>
         </button>
       </div>
     </header>

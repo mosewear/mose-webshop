@@ -128,7 +128,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           filter: `order_id=eq.${id}`
         },
         (payload) => {
-          console.log('🔄 Return status updated in real-time:', payload)
           fetchReturns()
         }
       )
@@ -136,7 +135,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     
     // Refresh data wanneer admin terugkomt naar tab
     const handleFocus = () => {
-      console.log('👁️ Tab focused, refreshing data...')
       fetchReturns()
     }
     
@@ -159,7 +157,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       if (error) throw error
       
-      console.log('📦 Fetched returns:', data)
       setReturns(data || [])
     } catch (err: any) {
       console.error('Error fetching returns:', err)
@@ -342,7 +339,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         throw new Error(data.error || 'Failed to send email')
       }
 
-      console.log('✅ Status email sent')
     } catch (err: any) {
       console.error('Error sending status email:', err)
       // Don't fail the status update if email fails

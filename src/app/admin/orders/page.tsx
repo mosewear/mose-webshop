@@ -39,7 +39,7 @@ export default function AdminOrdersPage() {
     
     // Refresh data wanneer admin terugkomt naar tab
     const handleFocus = () => {
-      console.log('👁️ Tab focused, refreshing orders...')
+      
       fetchOrders()
     }
     
@@ -71,7 +71,6 @@ export default function AdminOrdersPage() {
       const { data, error } = await query
 
       if (error) throw error
-      console.log('📦 Fetched orders:', data?.length, 'orders')
       setOrders(data || [])
     } catch (err: any) {
       setError(err.message)
@@ -229,7 +228,33 @@ export default function AdminOrdersPage() {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Bezig...' : 'Ververs'}
           </button>
-          <button className="flex-1 md:flex-none bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95">
+          <button
+            onClick={() => {
+              if (orders.length === 0) { alert('Geen orders om te exporteren'); return }
+              const headers = ['Order ID','Email','Status','Betaling','Levering','Totaal','Datum']
+              const csvRows = [
+                headers.join(','),
+                ...orders.map(o => [
+                  o.id.slice(0, 8),
+                  o.email,
+                  o.status,
+                  o.payment_status || 'unpaid',
+                  o.delivery_method === 'pickup' ? 'Afhalen' : 'Verzending',
+                  `€${Number(o.total).toFixed(2)}`,
+                  new Date(o.created_at).toLocaleDateString('nl-NL'),
+                ].map(val => `"${val}"`).join(','))
+              ]
+              const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+              const link = document.createElement('a')
+              link.href = URL.createObjectURL(blob)
+              link.download = `orders-export-${new Date().toISOString().split('T')[0]}.csv`
+              link.style.visibility = 'hidden'
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }}
+            className="flex-1 md:flex-none bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95"
+          >
             Exporteren
           </button>
         </div>
@@ -356,7 +381,7 @@ export default function AdminOrdersPage() {
                       {getStatusLabel(order.status)}
                     </span>
                     <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
-                    <div className="font-bold text-gray-900 text-right">EUR {Number(order.total).toFixed(2)}</div>
+                    <div className="font-bold text-gray-900 text-right">€{Number(order.total).toFixed(2)}</div>
                     <div className="col-span-2">
                       <span className={`px-2 py-1 font-semibold border inline-block ${
                         order.delivery_method === 'pickup'

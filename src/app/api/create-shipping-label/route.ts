@@ -73,6 +73,8 @@ export async function POST(req: NextRequest) {
     const sendcloudAddress = formatAddressForSendcloud({
       name: shippingAddress.name,
       address: shippingAddress.address,
+      houseNumber: shippingAddress.houseNumber,
+      addition: shippingAddress.addition,
       city: shippingAddress.city,
       postalCode: shippingAddress.postalCode,
       country: shippingAddress.country || 'NL',

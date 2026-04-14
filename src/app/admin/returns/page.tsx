@@ -45,7 +45,6 @@ export default function AdminReturnsPage() {
           table: 'returns'
         },
         (payload) => {
-          console.log('🔄 Returns table changed:', payload)
           fetchReturns()
         }
       )
@@ -53,7 +52,7 @@ export default function AdminReturnsPage() {
     
     // Refresh data wanneer admin terugkomt naar tab
     const handleFocus = () => {
-      console.log('👁️ Tab focused, refreshing returns...')
+      
       fetchReturns()
     }
     
@@ -76,7 +75,6 @@ export default function AdminReturnsPage() {
         throw new Error(data.error || 'Failed to fetch returns')
       }
 
-      console.log('📦 Fetched returns:', data.returns?.length, 'returns')
       setReturns(data.returns || [])
     } catch (err: any) {
       setError(err.message)
@@ -156,8 +154,34 @@ export default function AdminReturnsPage() {
         </button>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white border-2 border-gray-200 p-4">
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{returns.length}</div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Retouren</div>
+        </div>
+        <div className="bg-white border-2 border-gray-200 p-4">
+          <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">
+            {returns.filter((r) => r.status === 'return_requested').length}
+          </div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Aangevraagd</div>
+        </div>
+        <div className="bg-white border-2 border-gray-200 p-4">
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
+            {returns.filter((r) => r.status === 'return_label_generated' || r.status === 'return_in_transit').length}
+          </div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Actief</div>
+        </div>
+        <div className="bg-white border-2 border-gray-200 p-4">
+          <div className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+            {returns.filter((r) => r.status === 'refunded').length}
+          </div>
+          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Terugbetaald</div>
+        </div>
+      </div>
+
       {/* Filters */}
-      <div className="bg-white border-2 border-black p-4">
+      <div className="bg-white border-2 border-gray-200 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <input
@@ -202,7 +226,7 @@ export default function AdminReturnsPage() {
         <>
         <div className="md:hidden space-y-3">
           {filteredReturns.map((returnItem) => (
-            <div key={returnItem.id} className="bg-white border-2 border-black p-4">
+            <div key={returnItem.id} className="bg-white border-2 border-gray-200 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-mono text-sm font-bold">#{returnItem.id.slice(0, 8).toUpperCase()}</div>
@@ -231,7 +255,7 @@ export default function AdminReturnsPage() {
 
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-sm font-bold">
-                  {returnItem.total_refund ? `EUR ${returnItem.total_refund.toFixed(2)}` : '-'}
+                  {returnItem.total_refund ? `€${returnItem.total_refund.toFixed(2)}` : '-'}
                 </span>
                 <Link
                   href={`/admin/returns/${returnItem.id}`}
@@ -244,7 +268,7 @@ export default function AdminReturnsPage() {
           ))}
         </div>
 
-        <div className="hidden md:block bg-white border-2 border-black overflow-x-auto">
+        <div className="hidden md:block bg-white border-2 border-gray-200 overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b-2 border-gray-200">
               <tr>
@@ -314,31 +338,6 @@ export default function AdminReturnsPage() {
         </>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border-2 border-black p-4">
-          <div className="text-2xl font-display font-bold">{returns.length}</div>
-          <div className="text-sm text-gray-600">Totaal Retouren</div>
-        </div>
-        <div className="bg-white border-2 border-black p-4">
-          <div className="text-2xl font-display font-bold text-yellow-600">
-            {returns.filter((r) => r.status === 'return_requested').length}
-          </div>
-          <div className="text-sm text-gray-600">Aangevraagd</div>
-        </div>
-        <div className="bg-white border-2 border-black p-4">
-          <div className="text-2xl font-display font-bold text-green-600">
-            {returns.filter((r) => r.status === 'return_label_generated' || r.status === 'return_in_transit').length}
-          </div>
-          <div className="text-sm text-gray-600">Actief</div>
-        </div>
-        <div className="bg-white border-2 border-black p-4">
-          <div className="text-2xl font-display font-bold text-gray-800">
-            {returns.filter((r) => r.status === 'refunded').length}
-          </div>
-          <div className="text-sm text-gray-600">Terugbetaald</div>
-        </div>
-      </div>
     </div>
   )
 }

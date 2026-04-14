@@ -160,7 +160,7 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <div className="text-5xl md:text-6xl font-display group-hover:scale-105 transition-transform">
+            <div className="text-3xl sm:text-5xl md:text-6xl font-display group-hover:scale-105 transition-transform truncate">
               €{stats.totalRevenue.toFixed(2)}
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <div className="text-5xl md:text-6xl font-display text-purple-600">
+            <div className="text-3xl sm:text-5xl md:text-6xl font-display text-purple-600">
               {stats.totalCustomers}
             </div>
           </div>
