@@ -181,20 +181,22 @@ export async function POST(request: Request) {
     const firstName = nameParts[0] || null
     const lastName = nameParts.slice(1).join(' ') || null
 
-    await supabase.rpc('upsert_customer_profile', {
+    const { error: profileError } = await supabase.rpc('upsert_customer_profile', {
       p_email: email.trim(),
       p_first_name: firstName,
       p_last_name: lastName,
       p_phone: shipping_address.phone || null,
-    }).catch(() => {})
+    })
+    if (profileError) console.error('Customer profile upsert failed:', profileError.message)
 
     // Customer stats update (only if paid)
     if (isPaid) {
-      await supabase.rpc('update_customer_stats', {
+      const { error: statsError } = await supabase.rpc('update_customer_stats', {
         p_email: email.trim(),
         p_order_total: total,
         p_order_date: orderData.created_at,
-      }).catch(() => {})
+      })
+      if (statsError) console.error('Customer stats update failed:', statsError.message)
     }
 
     return NextResponse.json({ success: true, orderId: orderData.id })
