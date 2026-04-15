@@ -286,6 +286,7 @@ function VideoThumbnail({
 export default function ProductPage({ params }: { params: Promise<{ slug: string; locale: string }> }) {
   const t = useTranslations('product')
   const tShipping = useTranslations('shipping')
+  const tCommon = useTranslations('common')
   const locale = useLocale()
   const { slug } = use(params)
   
@@ -892,7 +893,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">{t('common.loading')}</p>
+              <p className="text-gray-600">{tCommon('loading')}</p>
             </div>
           </div>
         </div>
@@ -1664,7 +1665,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">
                             {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                              ? t('shipping.alwaysFreeShipping')
+                              ? tShipping('alwaysFreeShipping')
                               : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                             }
                           </span>
