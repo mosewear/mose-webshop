@@ -634,6 +634,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }))
   }
 
+  const handleUpdateItemPrice = (itemId: string, newPrice: number) => {
+    setEditedItems(prev => prev.map(item =>
+      item.id === itemId ? { ...item, price_at_purchase: Math.max(0, newPrice) } : item
+    ))
+  }
+
   const handleDeleteItem = (itemId: string) => {
     if (editedItems.length <= 1) {
       alert('Een order moet minimaal 1 product bevatten.')
@@ -706,10 +712,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       for (const item of toUpdate) {
         const original = orderItems.find(i => i.id === item.id)
-        if (original && original.quantity !== item.quantity) {
+        if (original && (original.quantity !== item.quantity || original.price_at_purchase !== item.price_at_purchase)) {
           const { error } = await supabase
             .from('order_items')
-            .update({ quantity: item.quantity })
+            .update({
+              quantity: item.quantity,
+              price_at_purchase: item.price_at_purchase,
+              subtotal: item.price_at_purchase * item.quantity,
+            })
             .eq('id', item.id)
           if (error) throw error
         }
@@ -991,7 +1001,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm truncate">{item.product_name}</div>
                         <div className="text-xs text-gray-500">{item.size} / {item.color}</div>
-                        <div className="text-xs font-medium">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="text-xs text-gray-500">€</span>
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={item.price_at_purchase}
+                            onChange={e => handleUpdateItemPrice(item.id, parseFloat(e.target.value) || 0)}
+                            className="w-20 px-1.5 py-0.5 border border-gray-300 focus:border-brand-primary focus:outline-none text-xs font-medium"
+                          />
+                          <span className="text-xs text-gray-400">p/s</span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button type="button" onClick={() => handleUpdateItemQuantity(item.id, -1)}
