@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2 } from 'lucide-react'
+import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2, Plus, Minus } from 'lucide-react'
 import { getCarrierOptions, generateTrackingUrl, calculateEstimatedDelivery } from '@/lib/order-utils'
 
 interface Order {
@@ -20,6 +20,8 @@ interface Order {
   payment_metadata: any
   checkout_started_at: string | null
   total: number
+  subtotal?: number
+  shipping_cost?: number
   delivery_method?: 'shipping' | 'pickup'
   pickup_distance_km?: number | null
   pickup_location_name?: string | null
@@ -119,6 +121,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [billingCity, setBillingCity] = useState('')
   const [billingCountry, setBillingCountry] = useState('')
 
+  // Order items edit states
+  const [editingItems, setEditingItems] = useState(false)
+  const [savingItems, setSavingItems] = useState(false)
+  const [editedItems, setEditedItems] = useState<OrderItem[]>([])
+  const [addingProduct, setAddingProduct] = useState(false)
+  const [availableProducts, setAvailableProducts] = useState<{ id: string; name: string; base_price: number; sale_price: number | null; product_images: { url: string; is_primary: boolean; color: string | null }[] }[]>([])
+  const [availableVariants, setAvailableVariants] = useState<{ id: string; product_id: string; size: string; color: string; color_hex: string | null; sku: string; stock_quantity: number; price_adjustment: number; is_available: boolean }[]>([])
+  const [selectedProductId, setSelectedProductId] = useState('')
+  const [selectedVariantId, setSelectedVariantId] = useState('')
+  const [addQuantity, setAddQuantity] = useState(1)
+
   const carrierOptions = getCarrierOptions()
 
   useEffect(() => {
@@ -205,7 +218,36 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         .eq('order_id', id)
 
       if (error) throw error
-      setOrderItems(data || [])
+
+      const items: OrderItem[] = data || []
+
+      const productIds = [...new Set(items.filter(i => i.product_id).map(i => i.product_id!))]
+      if (productIds.length > 0) {
+        const { data: images } = await supabase
+          .from('product_images')
+          .select('product_id, url, color, is_primary')
+          .in('product_id', productIds)
+
+        if (images && images.length > 0) {
+          const enriched = items.map(item => {
+            if (!item.product_id) return item
+            const productImgs = images.filter(img => img.product_id === item.product_id)
+            const colorImg = item.color
+              ? productImgs.find(img => img.color === item.color)
+              : null
+            const primaryImg = productImgs.find(img => img.is_primary)
+            const bestUrl = colorImg?.url || primaryImg?.url || productImgs[0]?.url || null
+            if (bestUrl && bestUrl !== item.image_url) {
+              return { ...item, image_url: bestUrl }
+            }
+            return item
+          })
+          setOrderItems(enriched)
+          return
+        }
+      }
+
+      setOrderItems(items)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -562,6 +604,158 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const startEditingItems = async () => {
+    setEditedItems(orderItems.map(item => ({ ...item })))
+    setEditingItems(true)
+    setAddingProduct(false)
+    setSelectedProductId('')
+    setSelectedVariantId('')
+    setAddQuantity(1)
+
+    const { data: products } = await supabase
+      .from('products')
+      .select('id, name, base_price, sale_price, product_images(url, is_primary, color)')
+      .eq('is_active', true)
+      .order('name')
+    if (products) setAvailableProducts(products)
+
+    const { data: variants } = await supabase
+      .from('product_variants')
+      .select('id, product_id, size, color, color_hex, sku, stock_quantity, price_adjustment, is_available')
+      .eq('is_available', true)
+    if (variants) setAvailableVariants(variants)
+  }
+
+  const handleUpdateItemQuantity = (itemId: string, delta: number) => {
+    setEditedItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item
+      const newQty = Math.max(1, item.quantity + delta)
+      return { ...item, quantity: newQty }
+    }))
+  }
+
+  const handleDeleteItem = (itemId: string) => {
+    if (editedItems.length <= 1) {
+      alert('Een order moet minimaal 1 product bevatten.')
+      return
+    }
+    setEditedItems(prev => prev.filter(item => item.id !== itemId))
+  }
+
+  const handleAddItemToOrder = () => {
+    if (!selectedProductId || !selectedVariantId) return
+    const product = availableProducts.find(p => p.id === selectedProductId)
+    const variant = availableVariants.find(v => v.id === selectedVariantId)
+    if (!product || !variant) return
+
+    const existing = editedItems.find(i => i.variant_id === variant.id)
+    if (existing) {
+      setEditedItems(prev => prev.map(item =>
+        item.variant_id === variant.id
+          ? { ...item, quantity: item.quantity + addQuantity }
+          : item
+      ))
+    } else {
+      const colorImg = product.product_images?.find(img => img.color === variant.color)
+      const primaryImg = product.product_images?.find(img => img.is_primary)
+      const imageUrl = colorImg?.url || primaryImg?.url || product.product_images?.[0]?.url || null
+      const price = (product.sale_price ?? product.base_price) + (variant.price_adjustment || 0)
+
+      setEditedItems(prev => [
+        ...prev,
+        {
+          id: `new-${Date.now()}`,
+          product_id: product.id,
+          product_name: product.name,
+          variant_id: variant.id,
+          quantity: addQuantity,
+          price_at_purchase: price,
+          size: variant.size,
+          color: variant.color,
+          sku: variant.sku,
+          image_url: imageUrl,
+        },
+      ])
+    }
+
+    setSelectedProductId('')
+    setSelectedVariantId('')
+    setAddQuantity(1)
+    setAddingProduct(false)
+  }
+
+  const handleSaveItems = async () => {
+    if (!order || editedItems.length === 0) return
+    try {
+      setSavingItems(true)
+
+      const originalIds = new Set(orderItems.map(i => i.id))
+      const editedIds = new Set(editedItems.map(i => i.id))
+
+      const toDelete = orderItems.filter(i => !editedIds.has(i.id))
+      const toUpdate = editedItems.filter(i => originalIds.has(i.id))
+      const toInsert = editedItems.filter(i => i.id.startsWith('new-'))
+
+      for (const item of toDelete) {
+        const { error } = await supabase
+          .from('order_items')
+          .delete()
+          .eq('id', item.id)
+        if (error) throw error
+      }
+
+      for (const item of toUpdate) {
+        const original = orderItems.find(i => i.id === item.id)
+        if (original && original.quantity !== item.quantity) {
+          const { error } = await supabase
+            .from('order_items')
+            .update({ quantity: item.quantity })
+            .eq('id', item.id)
+          if (error) throw error
+        }
+      }
+
+      for (const item of toInsert) {
+        const { error } = await supabase
+          .from('order_items')
+          .insert([{
+            order_id: id,
+            product_id: item.product_id,
+            variant_id: item.variant_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            price_at_purchase: item.price_at_purchase,
+            size: item.size,
+            color: item.color,
+            sku: item.sku,
+            image_url: item.image_url,
+          }])
+        if (error) throw error
+      }
+
+      const newSubtotal = editedItems.reduce((sum, i) => sum + (i.price_at_purchase * i.quantity), 0)
+      const shippingCost = order.shipping_cost || 0
+      const newTotal = newSubtotal + shippingCost
+      const { error: orderErr } = await supabase
+        .from('orders')
+        .update({ subtotal: newSubtotal, total: newTotal, updated_at: new Date().toISOString() })
+        .eq('id', id)
+      if (orderErr) throw orderErr
+
+      await fetchOrder()
+      await fetchOrderItems()
+      setEditingItems(false)
+      alert('✅ Producten bijgewerkt!')
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setSavingItems(false)
+    }
+  }
+
+  const editedSubtotal = editedItems.reduce((sum, i) => sum + (i.price_at_purchase * i.quantity), 0)
+  const editedTotal = editedSubtotal + (order?.shipping_cost || 0)
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -686,64 +880,218 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items */}
           <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
-            <h2 className="text-xl font-bold mb-4">Bestelde Producten</h2>
-            <div className="space-y-4">
-              {orderItems.map((item) => (
-                <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
-                  <div className="relative w-20 h-24 bg-gray-100 flex-shrink-0 border border-gray-200">
-                    {item.image_url ? (
-                      <Image
-                        src={item.image_url}
-                        alt={item.product_name || 'Product'}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-8 h-8 text-gray-400" />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Bestelde Producten</h2>
+              {!editingItems ? (
+                <button
+                  onClick={startEditingItems}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-brand-primary hover:bg-brand-primary hover:text-white border-2 border-brand-primary transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Bewerken
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button onClick={() => setEditingItems(false)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 border-2 border-gray-300 transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                    Annuleren
+                  </button>
+                  <button onClick={handleSaveItems} disabled={savingItems}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover border-2 border-brand-primary transition-colors disabled:opacity-50">
+                    <Save className="w-3.5 h-3.5" />
+                    {savingItems ? 'Opslaan...' : 'Opslaan'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!editingItems ? (
+              <>
+                <div className="space-y-4">
+                  {orderItems.map((item) => (
+                    <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
+                      <div className="relative w-20 h-24 bg-gray-100 flex-shrink-0 border border-gray-200">
+                        {item.image_url ? (
+                          <Image
+                            src={item.image_url}
+                            alt={item.product_name || 'Product'}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="flex-1">
+                        <div className="font-bold text-sm md:text-base">
+                          {item.product_name || `Product ${item.product_id?.slice(0, 8)}`}
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">
+                          {item.size && `Maat: ${item.size}`} {item.color && `• Kleur: ${item.color}`}
+                        </div>
+                        {item.sku && (
+                          <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mt-1 inline-block">
+                            {item.sku}
+                          </code>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                        <div className="text-xs md:text-sm text-gray-600">Aantal: {item.quantity}</div>
+                        <div className="text-xs md:text-sm font-semibold text-brand-primary mt-1">
+                          €{(Number(item.price_at_purchase) * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 pt-4 border-t-2 border-gray-200 space-y-2">
+                  {(order.shipping_cost || 0) > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Subtotaal</span>
+                        <span className="font-semibold">€{(Number(order.subtotal || 0) || (Number(order.total) - Number(order.shipping_cost || 0))).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Verzendkosten</span>
+                        <span className="font-semibold">€{Number(order.shipping_cost).toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Waarvan BTW (21%)</span>
+                    <span className="text-gray-500">€{(Number(order.total) - Number(order.total) / 1.21).toFixed(2)}</span>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-sm md:text-base">
-                      {item.product_name || `Product ${item.product_id?.slice(0, 8)}`}
-                    </div>
-                    <div className="text-xs md:text-sm text-gray-600">
-                      {item.size && `Maat: ${item.size}`} {item.color && `• Kleur: ${item.color}`}
-                    </div>
-                    {item.sku && (
-                      <code className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mt-1 inline-block">
-                        {item.sku}
-                      </code>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
-                    <div className="text-xs md:text-sm text-gray-600">Aantal: {item.quantity}</div>
-                    <div className="text-xs md:text-sm font-semibold text-brand-primary mt-1">
-                      €{(Number(item.price_at_purchase) * item.quantity).toFixed(2)}
-                    </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="text-lg font-bold">Totaal (incl. BTW)</span>
+                    <span className="text-2xl md:text-3xl font-bold text-brand-primary">
+                      €{Number(order.total).toFixed(2)}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="mt-6 pt-4 border-t-2 border-gray-200 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotaal</span>
-                <span className="font-semibold">€{Number(order.total).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500">Waarvan BTW (21%)</span>
-                <span className="text-gray-500">€{(Number(order.total) - Number(order.total) / 1.21).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                <span className="text-lg font-bold">Totaal (incl. BTW)</span>
-                <span className="text-2xl md:text-3xl font-bold text-brand-primary">
-                  €{Number(order.total).toFixed(2)}
-                </span>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {editedItems.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 pb-3 border-b border-gray-200 last:border-0">
+                      <div className="relative w-14 h-16 bg-gray-100 flex-shrink-0 border border-gray-200">
+                        {item.image_url ? (
+                          <Image src={item.image_url} alt="" fill className="object-cover" sizes="56px" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-5 h-5 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{item.product_name}</div>
+                        <div className="text-xs text-gray-500">{item.size} / {item.color}</div>
+                        <div className="text-xs font-medium">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button type="button" onClick={() => handleUpdateItemQuantity(item.id, -1)}
+                          disabled={item.quantity <= 1}
+                          className="w-7 h-7 flex items-center justify-center border border-gray-300 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-8 text-center text-sm font-semibold">{item.quantity}</span>
+                        <button type="button" onClick={() => handleUpdateItemQuantity(item.id, 1)}
+                          className="w-7 h-7 flex items-center justify-center border border-gray-300 hover:bg-gray-100 transition-colors">
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="text-right text-sm font-semibold w-16 flex-shrink-0">
+                        €{(item.price_at_purchase * item.quantity).toFixed(2)}
+                      </div>
+                      <button type="button" onClick={() => handleDeleteItem(item.id)}
+                        className="w-7 h-7 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {!addingProduct ? (
+                  <button onClick={() => setAddingProduct(true)}
+                    className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-brand-primary hover:underline">
+                    <Plus className="w-4 h-4" /> Product toevoegen
+                  </button>
+                ) : (
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                    <div className="text-sm font-semibold text-gray-700">Product toevoegen</div>
+                    <select value={selectedProductId}
+                      onChange={e => { setSelectedProductId(e.target.value); setSelectedVariantId('') }}
+                      className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm bg-white">
+                      <option value="">— Kies product —</option>
+                      {availableProducts.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} — €{(p.sale_price ?? p.base_price).toFixed(2)}</option>
+                      ))}
+                    </select>
+                    {selectedProductId && (
+                      <select value={selectedVariantId} onChange={e => setSelectedVariantId(e.target.value)}
+                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm bg-white">
+                        <option value="">— Kies variant —</option>
+                        {availableVariants
+                          .filter(v => v.product_id === selectedProductId)
+                          .map(v => (
+                            <option key={v.id} value={v.id}>{v.size} / {v.color} (voorraad: {v.stock_quantity})</option>
+                          ))}
+                      </select>
+                    )}
+                    {selectedVariantId && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600">Aantal:</label>
+                        <input type="number" min={1} value={addQuantity} onChange={e => setAddQuantity(Math.max(1, Number(e.target.value)))}
+                          className="w-20 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm" />
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <button onClick={handleAddItemToOrder} disabled={!selectedVariantId}
+                        className="px-4 py-2 text-sm font-semibold bg-black text-white hover:bg-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        Toevoegen
+                      </button>
+                      <button onClick={() => { setAddingProduct(false); setSelectedProductId(''); setSelectedVariantId('') }}
+                        className="px-4 py-2 text-sm font-semibold text-gray-600 border border-gray-300 hover:bg-gray-100 transition-colors">
+                        Annuleren
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-4 border-t-2 border-gray-200 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotaal producten</span>
+                    <span className="font-semibold">€{editedSubtotal.toFixed(2)}</span>
+                  </div>
+                  {(order.shipping_cost || 0) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Verzendkosten</span>
+                      <span className="font-semibold">€{Number(order.shipping_cost).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Waarvan BTW (21%)</span>
+                    <span className="text-gray-500">€{(editedTotal - editedTotal / 1.21).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="text-lg font-bold">Nieuw totaal</span>
+                    <span className="text-2xl md:text-3xl font-bold text-brand-primary">
+                      €{editedTotal.toFixed(2)}
+                    </span>
+                  </div>
+                  {editedTotal !== Number(order.total) && (
+                    <div className="text-xs text-amber-600 font-medium">
+                      Verschil: {editedTotal > Number(order.total) ? '+' : ''}€{(editedTotal - Number(order.total)).toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Customer Info */}

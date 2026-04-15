@@ -24,7 +24,7 @@ interface Product {
   name: string
   base_price: number
   sale_price: number | null
-  product_images: { url: string; is_primary: boolean }[]
+  product_images: { url: string; is_primary: boolean; color: string | null }[]
 }
 
 interface Variant {
@@ -122,7 +122,7 @@ export default function CreateOrderPage() {
   const fetchProducts = async () => {
     const { data } = await supabase
       .from('products')
-      .select('id, name, base_price, sale_price, product_images(url, is_primary)')
+      .select('id, name, base_price, sale_price, product_images(url, is_primary, color)')
       .eq('is_active', true)
       .order('name')
     if (data) setProducts(data)
@@ -162,7 +162,11 @@ export default function CreateOrderPage() {
     return base + adjustment
   }
 
-  const getProductImage = (product: Product): string | null => {
+  const getProductImage = (product: Product, variantColor?: string): string | null => {
+    if (variantColor) {
+      const colorImage = product.product_images?.find(img => img.color === variantColor)
+      if (colorImage) return colorImage.url
+    }
     const primary = product.product_images?.find(img => img.is_primary)
     return primary?.url || product.product_images?.[0]?.url || null
   }
@@ -206,7 +210,7 @@ export default function CreateOrderPage() {
           sku: variant.sku,
           quantity: itemQuantity,
           price_at_purchase: getProductPrice(product, variant),
-          image_url: getProductImage(product),
+          image_url: getProductImage(product, variant.color),
         },
       ])
     }
