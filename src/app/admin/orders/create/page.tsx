@@ -24,7 +24,7 @@ interface Product {
   name: string
   base_price: number
   sale_price: number | null
-  product_images: { url: string; is_primary: boolean; color: string | null }[]
+  product_images: { url: string; is_primary: boolean; color: string | null; media_type: string | null }[]
 }
 
 interface Variant {
@@ -122,7 +122,7 @@ export default function CreateOrderPage() {
   const fetchProducts = async () => {
     const { data } = await supabase
       .from('products')
-      .select('id, name, base_price, sale_price, product_images(url, is_primary, color)')
+      .select('id, name, base_price, sale_price, product_images(url, is_primary, color, media_type)')
       .eq('is_active', true)
       .order('name')
     if (data) setProducts(data)
@@ -163,12 +163,13 @@ export default function CreateOrderPage() {
   }
 
   const getProductImage = (product: Product, variantColor?: string): string | null => {
+    const images = product.product_images?.filter(img => img.media_type !== 'video') || []
     if (variantColor) {
-      const colorImage = product.product_images?.find(img => img.color === variantColor)
+      const colorImage = images.find(img => img.color === variantColor)
       if (colorImage) return colorImage.url
     }
-    const primary = product.product_images?.find(img => img.is_primary)
-    return primary?.url || product.product_images?.[0]?.url || null
+    const primary = images.find(img => img.is_primary)
+    return primary?.url || images[0]?.url || null
   }
 
   const handleAddItem = () => {

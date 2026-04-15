@@ -126,7 +126,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [savingItems, setSavingItems] = useState(false)
   const [editedItems, setEditedItems] = useState<OrderItem[]>([])
   const [addingProduct, setAddingProduct] = useState(false)
-  const [availableProducts, setAvailableProducts] = useState<{ id: string; name: string; base_price: number; sale_price: number | null; product_images: { url: string; is_primary: boolean; color: string | null }[] }[]>([])
+  const [availableProducts, setAvailableProducts] = useState<{ id: string; name: string; base_price: number; sale_price: number | null; product_images: { url: string; is_primary: boolean; color: string | null; media_type: string | null }[] }[]>([])
   const [availableVariants, setAvailableVariants] = useState<{ id: string; product_id: string; size: string; color: string; color_hex: string | null; sku: string; stock_quantity: number; price_adjustment: number; is_available: boolean }[]>([])
   const [selectedProductId, setSelectedProductId] = useState('')
   const [selectedVariantId, setSelectedVariantId] = useState('')
@@ -225,13 +225,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       if (productIds.length > 0) {
         const { data: images } = await supabase
           .from('product_images')
-          .select('product_id, url, color, is_primary')
+          .select('product_id, url, color, is_primary, media_type')
           .in('product_id', productIds)
 
         if (images && images.length > 0) {
+          const onlyImages = images.filter(img => img.media_type !== 'video')
           const enriched = items.map(item => {
             if (!item.product_id) return item
-            const productImgs = images.filter(img => img.product_id === item.product_id)
+            const productImgs = onlyImages.filter(img => img.product_id === item.product_id)
             const colorImg = item.color
               ? productImgs.find(img => img.color === item.color)
               : null
@@ -614,7 +615,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
     const { data: products } = await supabase
       .from('products')
-      .select('id, name, base_price, sale_price, product_images(url, is_primary, color)')
+      .select('id, name, base_price, sale_price, product_images(url, is_primary, color, media_type)')
       .eq('is_active', true)
       .order('name')
     if (products) setAvailableProducts(products)
@@ -662,9 +663,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           : item
       ))
     } else {
-      const colorImg = product.product_images?.find(img => img.color === variant.color)
-      const primaryImg = product.product_images?.find(img => img.is_primary)
-      const imageUrl = colorImg?.url || primaryImg?.url || product.product_images?.[0]?.url || null
+      const imgs = product.product_images?.filter(img => img.media_type !== 'video') || []
+      const colorImg = imgs.find(img => img.color === variant.color)
+      const primaryImg = imgs.find(img => img.is_primary)
+      const imageUrl = colorImg?.url || primaryImg?.url || imgs[0]?.url || null
       const price = (product.sale_price ?? product.base_price) + (variant.price_adjustment || 0)
 
       setEditedItems(prev => [
