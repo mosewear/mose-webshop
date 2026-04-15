@@ -842,16 +842,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                   {/* Staffelkorting */}
                   {staffelInfo.totalSavings > 0 && (
-                    <div className="flex justify-between items-center text-sm px-2 py-1 bg-green-50 border-l-2 border-green-600">
-                      <span className="font-semibold text-green-800">Staffelkorting</span>
-                      <span className="font-bold text-green-700">-€{staffelInfo.totalSavings.toFixed(2)}</span>
+                    <div className="flex justify-between items-center text-sm px-2 py-1.5 bg-gray-50 border-l-2 border-black">
+                      <span className="font-semibold text-gray-800 uppercase tracking-wide text-xs">Staffelkorting</span>
+                      <span className="font-bold text-black">-€{staffelInfo.totalSavings.toFixed(2)}</span>
                     </div>
                   )}
 
                   {/* Staffelkorting hint */}
                   {staffelInfo.hints.length > 0 && (
-                    <div className="text-xs text-amber-700 bg-amber-50 px-2 py-1.5 border-l-2 border-amber-400">
-                      {staffelInfo.hints.map((h, i) => <p key={i}>{h.message}</p>)}
+                    <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 border-l-2 border-gray-300">
+                      {staffelInfo.hints.map((h, i) => <p key={i} className="font-medium">{h.message}</p>)}
                     </div>
                   )}
 
@@ -1003,15 +1003,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                 {/* Staffelkorting hint - Mobile */}
                 {staffelInfo.hints.length > 0 && (
-                  <div className="px-3 py-2 bg-amber-50 border-b border-amber-200">
-                    {staffelInfo.hints.map((h, i) => <p key={i} className="text-xs text-amber-700 font-semibold">{h.message}</p>)}
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+                    {staffelInfo.hints.map((h, i) => <p key={i} className="text-xs text-gray-600 font-medium">{h.message}</p>)}
                   </div>
                 )}
 
                 {staffelInfo.totalSavings > 0 && (
-                  <div className="px-3 py-2 bg-green-50 border-b border-green-200 flex justify-between items-center">
-                    <span className="text-xs font-semibold text-green-800">Staffelkorting</span>
-                    <span className="text-xs font-bold text-green-700">-€{staffelInfo.totalSavings.toFixed(2)}</span>
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                    <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
+                    <span className="text-xs font-bold text-black">-€{staffelInfo.totalSavings.toFixed(2)}</span>
                   </div>
                 )}
 

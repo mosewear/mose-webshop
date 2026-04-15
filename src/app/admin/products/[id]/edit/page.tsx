@@ -417,35 +417,37 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             {discountTiers.length > 0 && (
               <div className="space-y-2 mb-4">
                 {discountTiers.map(tier => (
-                  <div key={tier.id} className={`flex items-center gap-3 p-3 border-2 ${tier.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
-                    <div className="flex-1">
+                  <div key={tier.id} className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 border-2 ${tier.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                    <div className="flex-1 min-w-0">
                       <span className="font-semibold text-sm">
                         Koop {tier.min_quantity}+ stuks
                       </span>
-                      <span className="mx-2 text-gray-400">→</span>
-                      <span className="text-sm font-medium text-green-700">
+                      <span className="mx-1.5 text-gray-300">→</span>
+                      <span className="text-sm font-bold text-black">
                         {tier.discount_type === 'percentage'
                           ? `${tier.discount_value}% korting`
                           : `€${Number(tier.discount_value).toFixed(2)} korting per stuk`}
                       </span>
                       {formData.base_price && (
-                        <span className="text-xs text-gray-500 ml-2">
+                        <span className="text-xs text-gray-400 ml-1.5">
                           (€{(
                             tier.discount_type === 'percentage'
                               ? parseFloat(formData.base_price) * (1 - tier.discount_value / 100)
                               : parseFloat(formData.base_price) - tier.discount_value
-                          ).toFixed(2)} per stuk)
+                          ).toFixed(2)} p/s)
                         </span>
                       )}
                     </div>
-                    <button type="button" onClick={() => handleToggleTier(tier.id!, tier.is_active)}
-                      className={`px-3 py-1 text-xs font-semibold border transition-colors ${tier.is_active ? 'border-green-300 text-green-700 hover:bg-green-50' : 'border-gray-300 text-gray-500 hover:bg-gray-100'}`}>
-                      {tier.is_active ? 'Actief' : 'Inactief'}
-                    </button>
-                    <button type="button" onClick={() => handleDeleteTier(tier.id!)}
-                      className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button type="button" onClick={() => handleToggleTier(tier.id!, tier.is_active)}
+                        className={`px-3 py-1 text-xs font-semibold border transition-colors ${tier.is_active ? 'border-black text-black hover:bg-gray-100' : 'border-gray-300 text-gray-400 hover:bg-gray-100'}`}>
+                        {tier.is_active ? 'Actief' : 'Inactief'}
+                      </button>
+                      <button type="button" onClick={() => handleDeleteTier(tier.id!)}
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1677,9 +1677,9 @@ export default function CheckoutPage() {
                 {staffelSavings > 0 && (
                   <>
                     <div className="h-px bg-gray-200"></div>
-                    <div className="flex justify-between items-center py-1 px-3 bg-green-50 border-l-2 border-green-600 -mx-3">
-                      <span className="text-xs font-semibold text-green-800">Staffelkorting</span>
-                      <span className="font-bold text-green-700 text-xs">-€{staffelSavings.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
+                      <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
+                      <span className="font-bold text-black text-xs">-€{staffelSavings.toFixed(2)}</span>
                     </div>
                   </>
                 )}
@@ -2567,9 +2567,9 @@ export default function CheckoutPage() {
                 {staffelSavings > 0 && (
                   <>
                     <div className="h-px bg-gray-200"></div>
-                    <div className="flex justify-between items-center py-1 px-3 bg-green-50 border-l-2 border-green-600 -mx-3">
-                      <span className="text-sm font-semibold text-green-800">Staffelkorting</span>
-                      <span className="font-bold text-green-700 text-sm">-€{staffelSavings.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
+                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
+                      <span className="font-bold text-black text-sm">-€{staffelSavings.toFixed(2)}</span>
                     </div>
                   </>
                 )}

@@ -962,8 +962,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         {item.quantity_discount_amount && item.quantity_discount_amount > 0 && item.original_price ? (
                           <>
                             <div className="text-xs text-gray-400 line-through">€{Number(item.original_price).toFixed(2)}</div>
-                            <div className="font-bold text-sm md:text-base text-green-700">€{Number(item.price_at_purchase).toFixed(2)}</div>
-                            <div className="text-[10px] text-green-600 font-semibold">Staffelkorting: -€{Number(item.quantity_discount_amount).toFixed(2)}/stuk</div>
+                            <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                            <div className="text-[10px] text-gray-500 font-semibold">
+                              <span className="inline-flex items-center px-1 py-0.5 bg-gray-100 text-gray-600">
+                                Staffelkorting -€{Number(item.quantity_discount_amount).toFixed(2)}/stuk
+                              </span>
+                            </div>
                           </>
                         ) : (
                           <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>

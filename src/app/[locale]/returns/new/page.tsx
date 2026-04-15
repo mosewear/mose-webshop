@@ -681,8 +681,8 @@ export default function NewReturnPage() {
 
         {/* Staffelkorting warning */}
         {staffelWarning && (
-          <div className="bg-amber-50 border-2 border-amber-300 p-4 mb-6">
-            <p className="text-sm text-amber-800 font-semibold">{staffelWarning}</p>
+          <div className="bg-gray-50 border-l-[3px] border-black p-3 md:p-4 mb-6">
+            <p className="text-xs md:text-sm text-gray-800 font-semibold leading-relaxed">{staffelWarning}</p>
           </div>
         )}
 

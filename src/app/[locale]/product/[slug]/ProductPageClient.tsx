@@ -1134,8 +1134,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   if (activeTiers.length === 0) return null
                   const base = product.base_price + (selectedVariant?.price_adjustment || 0)
                   return (
-                    <div className="border-l-[3px] border-black pl-3 py-1 space-y-0.5">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">Meer kopen = meer korting</p>
+                    <div className="border-l-[3px] border-black pl-3 py-1.5 space-y-1">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-1">Meer kopen = meer korting</p>
                       {activeTiers.map((tier, i) => {
                         const discount = tier.discount_type === 'percentage'
                           ? base * (tier.discount_value / 100)
@@ -1143,16 +1143,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         const finalPrice = base - discount
                         const isLast = i === activeTiers.length - 1
                         return (
-                          <div key={tier.id} className={`flex items-baseline gap-2 ${isLast ? 'text-black' : 'text-gray-600'}`}>
-                            <span className={`text-sm ${isLast ? 'font-bold' : 'font-medium'}`}>
+                          <div key={tier.id} className={`flex items-center gap-1.5 md:gap-2 flex-wrap ${isLast ? 'text-black' : 'text-gray-600'}`}>
+                            <span className={`text-xs md:text-sm whitespace-nowrap ${isLast ? 'font-bold' : 'font-medium'}`}>
                               {tier.min_quantity}+ stuks
                             </span>
-                            <span className="text-gray-300">—</span>
-                            <span className={`text-sm ${isLast ? 'font-bold' : 'font-semibold'}`}>
+                            <span className="text-gray-300 hidden md:inline">—</span>
+                            <span className="text-gray-300 md:hidden">·</span>
+                            <span className={`text-xs md:text-sm whitespace-nowrap ${isLast ? 'font-bold' : 'font-semibold'}`}>
                               €{finalPrice.toFixed(2)}
-                              <span className="text-xs font-normal text-gray-400 ml-0.5">p/s</span>
+                              <span className="text-[10px] md:text-xs font-normal text-gray-400 ml-0.5">p/s</span>
                             </span>
-                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${isLast ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${isLast ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}>
                               {tier.discount_type === 'percentage'
                                 ? `-${tier.discount_value}%`
                                 : `-€${tier.discount_value.toFixed(2)}`}
