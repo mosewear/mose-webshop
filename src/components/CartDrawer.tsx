@@ -602,6 +602,17 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 ))}
               </div>
 
+              {/* Clear Cart Button - Desktop Only */}
+              <div className="hidden md:block px-4 md:px-6 pb-4">
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
+                >
+                  <Trash2 size={16} />
+                  <span>{t('remove')}</span>
+                </button>
+              </div>
+
               {/* Upsell Products - "Maak je Look Compleet" */}
               {upsellProducts.length > 0 && (
                 <div className="px-4 md:px-6 pb-4 border-t-2 border-gray-200 pt-4">
@@ -610,7 +621,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </h3>
                   <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
                     {upsellProducts.map((product) => {
-                      // Get unique sizes and sort them logically
                       const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
                       const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))] as string[]
                       availableSizes.sort((a: string, b: string) => {
@@ -724,16 +734,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
               )}
 
-              {/* Clear Cart Button - Desktop Only */}
-              <div className="hidden md:block px-4 md:px-6 pb-4">
-                <button
-                  onClick={() => setShowClearConfirm(true)}
-                  className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
-                >
-                  <Trash2 size={16} />
-                  <span>{t('remove')}</span>
-                </button>
-              </div>
             </div>
 
             {/* Summary - Sticky Bottom (Desktop) / Fixed Bottom (Mobile) */}
