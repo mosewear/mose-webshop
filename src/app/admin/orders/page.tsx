@@ -222,7 +222,7 @@ export default function AdminOrdersPage() {
         <div className="grid grid-cols-3 md:flex md:w-auto gap-2 w-full">
           <Link
             href="/admin/orders/create"
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center gap-1.5 md:gap-2"
+            className="bg-black hover:bg-gray-800 text-white font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center gap-1.5 md:gap-2"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Nieuwe</span> Order
