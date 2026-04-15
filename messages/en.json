@@ -126,7 +126,7 @@
       "lastName": "Last Name",
       "country": "Country",
       "postalCode": "Postal Code",
-      "houseNumber": "House Number",
+      "houseNumber": "House nr.",
       "addition": "Addition",
       "address": "Street and house number",
       "city": "City",
