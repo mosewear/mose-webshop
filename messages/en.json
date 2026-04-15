@@ -398,12 +398,15 @@
       "thumbnail": "Video thumbnail",
       "label": "VIDEO"
     },
+    "selectVariantFirst": "Please select a size and colour first",
     "notify": {
       "title": "Don't miss this product!",
       "description": "Receive an email when this product is back in stock.",
       "email": "Email Address",
       "submit": "Send",
-      "success": "You'll receive an email as soon as it's back in stock!"
+      "success": "You'll receive an email as soon as it's back in stock!",
+      "error": "Something went wrong. Please try again.",
+      "subscribed": "You're signed up! We'll email you when the product is back in stock."
     },
     "wishlist": {
       "add": "Add to wishlist",

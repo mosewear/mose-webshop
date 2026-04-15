@@ -138,6 +138,7 @@ export default function WishlistPage() {
     addItem({
       productId: product.id,
       variantId: variant.id,
+      slug: product.slug,
       name: product.name,
       price: finalPrice,
       size: variant.size,

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 import Image from 'next/image'
 import { X, SlidersHorizontal, Search } from 'lucide-react'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -11,7 +10,6 @@ import DualRangeSlider from '@/components/DualRangeSlider'
 import PresaleBadge from '@/components/PresaleBadge'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
-import { mapLocalizedProduct, mapLocalizedCategory } from '@/lib/i18n-db'
 import { formatPrice } from '@/lib/format-price'
 import { getSiteSettings } from '@/lib/settings'
 import { useWishlist } from '@/store/wishlist'
@@ -67,7 +65,6 @@ export default function ShopPageClient() {
   const [showCategoryLabels, setShowCategoryLabels] = useState(true) // Default to true
   
   // Helper for locale-aware links
-  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   
   // Helper to get localized names
   const getProductName = (product: Product) => 
@@ -240,10 +237,12 @@ export default function ShopPageClient() {
       filtered = filtered.filter(p => p.category?.slug === selectedCategory)
     }
 
-    // Filter by search
+    // Filter by search (match both NL and EN names)
     if (searchQuery) {
+      const q = searchQuery.toLowerCase()
       filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(q) ||
+        (p.name_en && p.name_en.toLowerCase().includes(q))
       )
     }
 
@@ -268,20 +267,26 @@ export default function ShopPageClient() {
     switch (sortBy) {
       case 'price-asc':
         filtered.sort((a, b) => {
-          const priceDiff = a.base_price - b.base_price
-          return priceDiff !== 0 ? priceDiff : a.id.localeCompare(b.id)
+          const priceA = a.sale_price ?? a.base_price
+          const priceB = b.sale_price ?? b.base_price
+          const diff = priceA - priceB
+          return diff !== 0 ? diff : a.id.localeCompare(b.id)
         })
         break
       case 'price-desc':
         filtered.sort((a, b) => {
-          const priceDiff = b.base_price - a.base_price
-          return priceDiff !== 0 ? priceDiff : a.id.localeCompare(b.id)
+          const priceA = a.sale_price ?? a.base_price
+          const priceB = b.sale_price ?? b.base_price
+          const diff = priceB - priceA
+          return diff !== 0 ? diff : a.id.localeCompare(b.id)
         })
         break
       case 'name':
         filtered.sort((a, b) => {
-          const nameDiff = a.name.localeCompare(b.name)
-          return nameDiff !== 0 ? nameDiff : a.id.localeCompare(b.id)
+          const nameA = getProductName(a)
+          const nameB = getProductName(b)
+          const diff = nameA.localeCompare(nameB)
+          return diff !== 0 ? diff : a.id.localeCompare(b.id)
         })
         break
       case 'newest':
@@ -294,101 +299,6 @@ export default function ShopPageClient() {
 
     return filtered
   }, [products, selectedCategory, searchQuery, priceRange, minPrice, maxPrice, showInStockOnly, sortBy])
-
-  // 🔍 DEEP DEBUG: Track what causes layout shifts
-  useEffect(() => {
-    console.log('🚨 [SHIFT DEBUG] ========== MOUNT ==========')
-    
-    // Track layout shifts with FULL details
-    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
-            const sources = (entry as any).sources || []
-            console.log('🚨 [SHIFT DEBUG] LAYOUT SHIFT!', {
-              value: (entry as any).value,
-              time: entry.startTime,
-              sourceCount: sources.length,
-              sources: sources.map((s: any) => ({
-                className: s.node?.className,
-                tagName: s.node?.tagName,
-                id: s.node?.id,
-                textContent: s.node?.textContent?.substring(0, 50),
-                previousRect: {
-                  x: s.previousRect?.x,
-                  y: s.previousRect?.y,
-                  width: s.previousRect?.width,
-                  height: s.previousRect?.height
-                },
-                currentRect: {
-                  x: s.currentRect?.x,
-                  y: s.currentRect?.y,
-                  width: s.currentRect?.width,
-                  height: s.currentRect?.height
-                },
-                movement: {
-                  deltaX: (s.currentRect?.x || 0) - (s.previousRect?.x || 0),
-                  deltaY: (s.currentRect?.y || 0) - (s.previousRect?.y || 0),
-                  deltaHeight: (s.currentRect?.height || 0) - (s.previousRect?.height || 0)
-                }
-              }))
-            })
-          }
-        }
-      })
-      observer.observe({ entryTypes: ['layout-shift'] })
-      
-      return () => observer.disconnect()
-    }
-  }, [])
-
-  // Track state changes
-  useEffect(() => {
-    console.log('📦 [SHIFT DEBUG] Products state:', {
-      count: products.length,
-      loading,
-      timestamp: performance.now()
-    })
-  }, [products, loading])
-
-  useEffect(() => {
-    console.log('🔍 [SHIFT DEBUG] FilteredProducts changed:', {
-      count: filteredProducts.length,
-      timestamp: performance.now()
-    })
-  }, [filteredProducts])
-
-  useEffect(() => {
-    console.log('🎯 [SHIFT DEBUG] Selected category changed:', selectedCategory)
-  }, [selectedCategory])
-
-  useEffect(() => {
-    console.log('💰 [SHIFT DEBUG] Price range changed:', priceRange)
-  }, [priceRange])
-
-  // Track when images load
-  useEffect(() => {
-    if (!loading && filteredProducts.length > 0) {
-      console.log('📸 [SHIFT DEBUG] Products rendered, waiting for images...')
-      
-      const images = document.querySelectorAll('img[src*="supabase"]')
-      console.log(`📸 [SHIFT DEBUG] Found ${images.length} product images`)
-      
-      let loadedCount = 0
-      images.forEach((img, index) => {
-        if ((img as HTMLImageElement).complete) {
-          loadedCount++
-        } else {
-          img.addEventListener('load', () => {
-            loadedCount++
-            console.log(`📸 [SHIFT DEBUG] Image ${loadedCount}/${images.length} loaded at ${performance.now()}ms`)
-          }, { once: true })
-        }
-      })
-      
-      console.log(`📸 [SHIFT DEBUG] ${loadedCount}/${images.length} images already loaded`)
-    }
-  }, [loading, filteredProducts.length])
 
   const getTotalStock = (product: Product) => {
     return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0

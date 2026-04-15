@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
 import { Instagram, Facebook } from 'lucide-react'
 import { SiTiktok } from 'react-icons/si'
@@ -15,7 +14,6 @@ export function Footer() {
   const locale = useLocale()
   
   // Helper for locale-aware links
-  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   const [settings, setSettings] = useState({
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
     contact_phone: '+31 50 211 1931',

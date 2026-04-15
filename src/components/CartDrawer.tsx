@@ -2,9 +2,8 @@
 
 import { useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useCart } from '@/store/cart'
-import { X, Minus, Plus, Trash2, Truck, Lock, RotateCcw, ShoppingBag, Ticket, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react'
+import { X, Minus, Plus, Trash2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
@@ -439,6 +438,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     addItem({
       productId: product.id,
       variantId: variant.id,
+      slug: product.slug,
       name: getProductName(product),
       size: variant.size,
       color: variant.color || 'Zwart',
@@ -529,9 +529,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <div className="flex gap-4">
                         {/* Product Image */}
                         <LocaleLink
-                          href={`/product/${item.productId}`}
+                          href={`/product/${item.slug || item.productId}`}
                           onClick={onClose}
-                          className="relative w-20 h-26 md:w-[100px] md:h-[130px] bg-gray-100 flex-shrink-0 overflow-hidden"
+                          className="relative w-20 h-[104px] md:w-[100px] md:h-[130px] bg-gray-100 flex-shrink-0 overflow-hidden"
                         >
                           <Image
                             src={item.image || '/placeholder-product.svg'}
@@ -549,7 +549,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           <div>
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <LocaleLink
-                                href={`/product/${item.productId}`}
+                                href={`/product/${item.slug || item.productId}`}
                                 onClick={onClose}
                                 className="font-display text-lg md:text-xl uppercase hover:text-brand-primary transition-colors leading-tight"
                               >

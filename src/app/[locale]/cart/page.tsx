@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
@@ -22,8 +21,6 @@ export default function CartPage() {
   const [showMobileSummary, setShowMobileSummary] = useState(false)
   const [staffelSavings, setStaffelSavings] = useState(0)
   
-  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
-
   const subtotal = getTotal()
   const subtotalAfterStaffel = subtotal - staffelSavings
   const shipping = subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
@@ -149,7 +146,7 @@ export default function CartPage() {
                 <div className="flex gap-4 md:gap-8">
                   {/* Product Image */}
                   <LocaleLink
-                    href={`/product/${item.productId}`}
+                    href={`/product/${item.slug || item.productId}`}
                     className="relative w-24 h-32 md:w-36 md:h-48 bg-gray-100 flex-shrink-0 overflow-hidden"
                   >
                     <Image
@@ -167,7 +164,7 @@ export default function CartPage() {
                     <div>
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <LocaleLink
-                          href={`/product/${item.productId}`}
+                          href={`/product/${item.slug || item.productId}`}
                           className="font-display text-xl md:text-3xl uppercase hover:text-brand-primary transition-colors leading-tight"
                         >
                           {item.name}

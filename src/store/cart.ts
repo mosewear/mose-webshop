@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 export interface CartItem {
   productId: string
   variantId: string
+  slug: string
   name: string
   size: string
   color: string
@@ -13,9 +14,9 @@ export interface CartItem {
   image: string
   stock: number
   sku: string
-  isPresale?: boolean  // Is this item from presale stock?
-  presaleExpectedDate?: string  // Expected delivery date for presale items
-  presaleStock?: number  // Presale stock quantity (if isPresale is true)
+  isPresale?: boolean
+  presaleExpectedDate?: string
+  presaleStock?: number
 }
 
 interface CartStore {
@@ -34,7 +35,6 @@ let cartChannel: BroadcastChannel | null = null
 
 if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
   cartChannel = new BroadcastChannel('mose-cart-sync')
-  console.log('🔄 Cart multi-tab sync enabled')
 }
 
 export const useCart = create<CartStore>()(

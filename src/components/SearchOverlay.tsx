@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { X, Search as SearchIcon } from 'lucide-react'
+import { Link } from '@/i18n/routing'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -93,7 +93,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             product_images (url),
             categories (name, name_en)
           `)
-          .ilike('name', `%${query}%`)
+          .or(`name.ilike.%${query}%,name_en.ilike.%${query}%`)
           .limit(8)
 
         if (!error && data) {

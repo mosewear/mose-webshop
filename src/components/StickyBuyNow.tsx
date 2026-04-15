@@ -13,6 +13,7 @@ interface StickyBuyNowProps {
   product: {
     id: string
     name: string
+    slug: string
     base_price: number
     sale_price: number | null
   }
@@ -99,24 +100,11 @@ export default function StickyBuyNow({
     // PRESALE: Calculate if item is presale
     const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity && selectedVariant.presale_stock_quantity > 0
 
-    console.log('═════════════════════════════════════════')
-    console.log('🛒 STICKY BAR - ADD TO CART')
-    console.log('═════════════════════════════════════════')
-    console.log('📦 Product:', product.name)
-    console.log('🎨 Variant ID:', selectedVariant.id)
-    console.log('═════════════════════════════════════════')
-    console.log('🔍 PRESALE CHECK:')
-    console.log('   - presale_enabled:', selectedVariant.presale_enabled)
-    console.log('   - stock_quantity:', selectedVariant.stock_quantity)
-    console.log('   - presale_stock_quantity:', selectedVariant.presale_stock_quantity)
-    console.log('   - presale_expected_date:', selectedVariant.presale_expected_date)
-    console.log('   - CALCULATED isPresale:', isPresaleItem)
-    console.log('═════════════════════════════════════════')
-
     try {
       const cartItem = {
         productId: product.id,
         variantId: selectedVariant.id,
+        slug: product.slug,
         name: product.name,
         size: selectedVariant.size,
         color: selectedVariant.color,
@@ -130,9 +118,6 @@ export default function StickyBuyNow({
         presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
         presaleStock: selectedVariant.presale_stock_quantity,  // Pass presale stock for quantity limits
       }
-
-      console.log('📦 STICKY CART ITEM:', JSON.stringify(cartItem, null, 2))
-      console.log('═════════════════════════════════════════')
 
       addItem(cartItem)
 

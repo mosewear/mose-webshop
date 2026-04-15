@@ -397,12 +397,15 @@
       "thumbnail": "Video thumbnail",
       "label": "VIDEO"
     },
+    "selectVariantFirst": "Selecteer eerst een maat en kleur",
     "notify": {
       "title": "Mis dit product niet!",
       "description": "Ontvang een email als dit product weer op voorraad is.",
       "email": "E-mailadres",
       "submit": "Stuur",
-      "success": "Je ontvangt een email zodra het op voorraad is!"
+      "success": "Je ontvangt een email zodra het op voorraad is!",
+      "error": "Er ging iets mis bij het aanmelden",
+      "subscribed": "Je bent aangemeld! We sturen je een email wanneer het product weer op voorraad is."
     },
     "wishlist": {
       "add": "Toevoegen aan wishlist",

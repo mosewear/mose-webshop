@@ -1029,6 +1029,7 @@ export default function CheckoutPage() {
                 mergedItems.push({
                   productId: variantInfo.product_id,
                   variantId: savedItem.variant_id,
+                  slug: product.slug || variantInfo.product_id,
                   name: product.name,
                   size: variant.size,
                   color: variant.color,
