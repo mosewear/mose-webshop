@@ -1134,29 +1134,35 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   if (activeTiers.length === 0) return null
                   const base = product.base_price + (selectedVariant?.price_adjustment || 0)
                   return (
-                    <div className="mt-1 space-y-0">
-                      {activeTiers.map((tier, i) => {
-                        const discount = tier.discount_type === 'percentage'
-                          ? base * (tier.discount_value / 100)
-                          : Math.min(tier.discount_value, base)
-                        const finalPrice = base - discount
-                        const isLast = i === activeTiers.length - 1
-                        return (
-                          <div key={tier.id} className="flex items-baseline gap-1.5 md:gap-2">
-                            <span className="text-xs text-gray-400 font-medium whitespace-nowrap">
-                              {tier.min_quantity}+
-                            </span>
-                            <span className={`text-xs md:text-sm whitespace-nowrap ${isLast ? 'font-bold text-black' : 'font-semibold text-gray-500'}`}>
-                              €{finalPrice.toFixed(2)}
-                            </span>
-                            <span className={`text-[10px] font-bold uppercase whitespace-nowrap ${isLast ? 'text-black' : 'text-gray-400'}`}>
-                              {tier.discount_type === 'percentage'
-                                ? `(-${tier.discount_value}%)`
-                                : `(-€${tier.discount_value.toFixed(2)})`}
-                            </span>
-                          </div>
-                        )
-                      })}
+                    <div className="border-2 border-black mt-3">
+                      <div className="px-3 md:px-4 py-2 bg-black text-white">
+                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Meer kopen = meer korting</p>
+                      </div>
+                      <div className="divide-y-2 divide-black">
+                        {activeTiers.map((tier) => {
+                          const discount = tier.discount_type === 'percentage'
+                            ? base * (tier.discount_value / 100)
+                            : Math.min(tier.discount_value, base)
+                          const finalPrice = base - discount
+                          return (
+                            <div key={tier.id} className="px-3 md:px-4 py-2 flex items-center justify-between">
+                              <span className="text-xs md:text-sm font-bold uppercase tracking-wider">
+                                {tier.min_quantity}+ stuks
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs md:text-sm font-bold">
+                                  €{finalPrice.toFixed(2)} p/s
+                                </span>
+                                <span className="inline-flex items-center px-2 py-0.5 bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-wide">
+                                  {tier.discount_type === 'percentage'
+                                    ? `-${tier.discount_value}%`
+                                    : `-€${tier.discount_value.toFixed(2)}`}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )
                 })()}
@@ -1206,49 +1212,52 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* AVAILABILITY & TRUST - Desktop */}
               {selectedVariant && !isPresale && (
-                <div className="hidden md:block space-y-0">
-                  <div className="flex items-center gap-2">
-                    {inStock ? (
-                      lowStock ? (
-                        <>
-                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                          <p className="text-sm font-semibold text-gray-900">
-                            {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
-                          </p>
-                        </>
+                <div className="hidden md:block border-2 border-black">
+                  <div className={`px-4 py-3 flex items-center justify-between ${
+                    inStock 
+                      ? lowStock ? 'bg-white' : 'bg-black text-white'
+                      : 'bg-white'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {inStock ? (
+                        lowStock ? (
+                          <>
+                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                            <p className="text-sm font-bold uppercase tracking-wider">
+                              {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <Package className="w-5 h-5 flex-shrink-0" />
+                            <p className="text-sm font-bold uppercase tracking-wider">
+                              {t('stock.inStock')}
+                            </p>
+                          </>
+                        )
                       ) : (
-                        <>
-                          <span className="w-2 h-2 rounded-full bg-black flex-shrink-0" />
-                          <p className="text-sm font-semibold text-gray-900">
-                            {t('stock.inStock')}
-                          </p>
-                        </>
-                      )
-                    ) : (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                        <p className="text-sm font-semibold text-gray-400">
+                        <p className="text-sm font-bold uppercase tracking-wider text-gray-400">
                           {t('outOfStock')}
                         </p>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
                   {inStock && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400 mt-1 pl-4">
-                      <span className="flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
+                    <div className="px-4 py-2 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold uppercase tracking-wider border-t-2 border-black">
+                      <span className="flex items-center gap-1.5">
+                        <Shield className="w-3.5 h-3.5" />
                         {t('trust.returns', { days: settings.return_days })}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Truck className="w-3 h-3" />
+                      <span className="flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5" />
                         {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
                       </span>
                       {product.categories.size_guide_type === 'watch' && (
-                        <span className="flex items-center gap-1">
-                          <Lock className="w-3 h-3" />
+                        <span className="flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5" />
                           {t('trust.warranty')}
                         </span>
                       )}
@@ -1493,35 +1502,36 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* AVAILABILITY & TRUST - Mobile */}
               {selectedVariant && !isPresale && (
-                <div className="md:hidden space-y-0">
-                  <div className="flex items-center gap-2">
+                <div className="md:hidden border-2 border-black">
+                  <div className={`px-3 py-2.5 flex items-center gap-2 ${
+                    inStock 
+                      ? lowStock ? 'bg-white' : 'bg-black text-white'
+                      : 'bg-white'
+                  }`}>
                     {inStock ? (
                       lowStock ? (
                         <>
-                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                          <p className="text-sm font-semibold text-gray-900">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                          <p className="text-xs font-bold uppercase tracking-wider">
                             {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
                           </p>
                         </>
                       ) : (
                         <>
-                          <span className="w-2 h-2 rounded-full bg-black flex-shrink-0" />
-                          <p className="text-sm font-semibold text-gray-900">
+                          <Package className="w-4 h-4 flex-shrink-0" />
+                          <p className="text-xs font-bold uppercase tracking-wider">
                             {t('stock.inStock')}
                           </p>
                         </>
                       )
                     ) : (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                        <p className="text-sm font-semibold text-gray-400">
-                          {t('outOfStock')}
-                        </p>
-                      </>
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                        {t('outOfStock')}
+                      </p>
                     )}
                   </div>
                   {inStock && (
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-400 mt-1 pl-4">
+                    <div className="px-3 py-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold uppercase tracking-wider border-t-2 border-black">
                       <span className="flex items-center gap-1">
                         <Shield className="w-3 h-3" />
                         {t('trust.returns', { days: settings.return_days })}
