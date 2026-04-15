@@ -1983,7 +1983,7 @@ export default function CheckoutPage() {
                       <div className="space-y-3">
                         {/* Desktop: Grid layout */}
                         <div className="hidden md:grid md:grid-cols-12 gap-3">
-                        <div className="col-span-3 flex flex-col">
+                        <div className="col-span-2 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                             {t('field.postalCode')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
@@ -2024,7 +2024,7 @@ export default function CheckoutPage() {
                             ) : null}
                           </div>
                         </div>
-                        <div className="col-span-3 flex flex-col">
+                        <div className="col-span-2 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                             {t('field.houseNumber')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
@@ -2090,16 +2090,15 @@ export default function CheckoutPage() {
                         </div>
                         {/* Lookup button - ALLEEN voor Nederland */}
                         {form.country === 'NL' && (
-                          <div className="col-span-4 flex flex-col">
+                          <div className="col-span-6 flex flex-col">
                             <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
-                              {/* Invisible label voor alignment */}
                               &nbsp;
                             </label>
                             <button
                               type="button"
                               onClick={handleAddressLookup}
                               disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                              className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                              className="w-full px-4 py-3 border-2 border-brand-primary bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover hover:border-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                               {addressLookup.isLookingUp ? (
                                 <>
@@ -2113,6 +2112,7 @@ export default function CheckoutPage() {
                                 </>
                               )}
                             </button>
+                            <div className="min-h-[20px] mt-1"></div>
                           </div>
                         )}
                       </div>
