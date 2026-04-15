@@ -1127,34 +1127,42 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                 {/* Staffelkorting badge */}
                 {product.product_quantity_discounts && product.product_quantity_discounts.length > 0
-                  && !(product.sale_price && product.sale_price < product.base_price) && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 p-3 rounded space-y-1">
-                    <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Staffelkorting</p>
-                    {product.product_quantity_discounts
-                      .filter(t => t.is_active)
-                      .sort((a, b) => a.min_quantity - b.min_quantity)
-                      .map(tier => {
-                        const base = product.base_price + (selectedVariant?.price_adjustment || 0)
+                  && !(product.sale_price && product.sale_price < product.base_price) && (() => {
+                  const activeTiers = product.product_quantity_discounts!
+                    .filter(t => t.is_active)
+                    .sort((a, b) => a.min_quantity - b.min_quantity)
+                  if (activeTiers.length === 0) return null
+                  const base = product.base_price + (selectedVariant?.price_adjustment || 0)
+                  return (
+                    <div className="border-l-[3px] border-black pl-3 py-1 space-y-0.5">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">Meer kopen = meer korting</p>
+                      {activeTiers.map((tier, i) => {
                         const discount = tier.discount_type === 'percentage'
                           ? base * (tier.discount_value / 100)
                           : Math.min(tier.discount_value, base)
+                        const finalPrice = base - discount
+                        const isLast = i === activeTiers.length - 1
                         return (
-                          <p key={tier.id} className="text-sm text-green-700">
-                            <span className="font-semibold">Koop {tier.min_quantity}+ stuks</span>
-                            <span className="mx-1">→</span>
-                            <span className="font-bold">
+                          <div key={tier.id} className={`flex items-baseline gap-2 ${isLast ? 'text-black' : 'text-gray-600'}`}>
+                            <span className={`text-sm ${isLast ? 'font-bold' : 'font-medium'}`}>
+                              {tier.min_quantity}+ stuks
+                            </span>
+                            <span className="text-gray-300">—</span>
+                            <span className={`text-sm ${isLast ? 'font-bold' : 'font-semibold'}`}>
+                              €{finalPrice.toFixed(2)}
+                              <span className="text-xs font-normal text-gray-400 ml-0.5">p/s</span>
+                            </span>
+                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${isLast ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}>
                               {tier.discount_type === 'percentage'
-                                ? `${tier.discount_value}% korting`
-                                : `€${tier.discount_value.toFixed(2)} korting`}
+                                ? `-${tier.discount_value}%`
+                                : `-€${tier.discount_value.toFixed(2)}`}
                             </span>
-                            <span className="text-green-600 text-xs ml-1">
-                              (€{(base - discount).toFixed(2)} p/s)
-                            </span>
-                          </p>
+                          </div>
                         )
                       })}
-                  </div>
-                )}
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* 🎯 COMPACT PRESALE CARD */}
