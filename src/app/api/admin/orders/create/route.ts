@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
+import { capitalizeName } from '@/lib/utils'
 
 export async function POST(request: Request) {
   try {
@@ -99,8 +100,10 @@ export async function POST(request: Request) {
         shipping_cost: finalShippingCost,
         tax_amount: 0,
         discount_amount: 0,
-        shipping_address,
-        billing_address: billing_address || shipping_address,
+        shipping_address: { ...shipping_address, name: capitalizeName(shipping_address.name || '') },
+        billing_address: billing_address
+          ? { ...billing_address, name: capitalizeName(billing_address.name || '') }
+          : { ...shipping_address, name: capitalizeName(shipping_address.name || '') },
         delivery_method: delivery_method || 'shipping',
         internal_notes: internal_notes || null,
         checkout_started_at: null,
@@ -177,7 +180,8 @@ export async function POST(request: Request) {
     }
 
     // Customer profile upsert
-    const nameParts = (shipping_address.name || '').trim().split(' ')
+    const capitalizedName = capitalizeName(shipping_address.name || '')
+    const nameParts = capitalizedName.split(' ')
     const firstName = nameParts[0] || null
     const lastName = nameParts.slice(1).join(' ') || null
 

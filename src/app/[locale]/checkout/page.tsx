@@ -13,6 +13,7 @@ import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { capitalizeName } from '@/lib/utils'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
 import ExpressCheckout from '@/components/ExpressCheckout'
@@ -1143,7 +1144,7 @@ export default function CheckoutPage() {
         discount_amount: promoDiscount,
         locale: locale, // Save customer's language preference for emails
         shipping_address: {
-          name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+          name: capitalizeName(`${form.firstName.trim()} ${form.lastName.trim()}`),
           address: form.address.trim(),
           city: form.city.trim(),
           postalCode: form.postalCode.trim(),
@@ -1153,7 +1154,7 @@ export default function CheckoutPage() {
           country: form.country,
         },
         billing_address: {
-          name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+          name: capitalizeName(`${form.firstName.trim()} ${form.lastName.trim()}`),
           address: form.address.trim(),
           city: form.city.trim(),
           postalCode: form.postalCode.trim(),
@@ -1240,8 +1241,8 @@ export default function CheckoutPage() {
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
       }, {
         email: form.email.trim(),
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
+        firstName: capitalizeName(form.firstName.trim()),
+        lastName: capitalizeName(form.lastName.trim()),
         phone: form.phone.trim(),
         city: form.city.trim(),
         zip: form.postalCode.trim(),
@@ -1279,9 +1280,9 @@ export default function CheckoutPage() {
           orderId: orderId,
           items: items,
           customerEmail: form.email,
-          customerName: `${form.firstName} ${form.lastName}`,
+          customerName: capitalizeName(`${form.firstName} ${form.lastName}`),
           shippingAddress: {
-            name: `${form.firstName} ${form.lastName}`,
+            name: capitalizeName(`${form.firstName} ${form.lastName}`),
             address: form.address,
             city: form.city,
             postalCode: form.postalCode,
@@ -2433,7 +2434,7 @@ export default function CheckoutPage() {
                 isCreatingIntent={isCreatingIntent}
                 orderId={orderId}
                 billingDetails={{
-                  name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim() || 'Klant', // Stripe requires min 3 chars
+                  name: capitalizeName(`${form.firstName.trim()} ${form.lastName.trim()}`) || 'Klant',
                   email: form.email.trim(),
                   phone: form.phone.trim(),
                   address: {

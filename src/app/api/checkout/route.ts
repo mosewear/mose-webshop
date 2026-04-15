@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { evaluatePickupEligibility } from '@/lib/pickup-eligibility'
+import { capitalizeName } from '@/lib/utils'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
@@ -342,9 +343,9 @@ export async function POST(request: Request) {
     // ============================================
     console.log('👤 Upserting customer profile for:', order.email)
     
-    // Extract name from shipping address
     const shippingName = order.shipping_address?.name || ''
-    const nameParts = shippingName.trim().split(' ')
+    const capitalizedName = capitalizeName(shippingName)
+    const nameParts = capitalizedName.split(' ')
     const firstName = nameParts[0] || null
     const lastName = nameParts.slice(1).join(' ') || null
     const phone = order.shipping_address?.phone || null

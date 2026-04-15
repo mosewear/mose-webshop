@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
+import { capitalizeName } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
 interface ExpressCheckoutProps {
@@ -140,7 +141,7 @@ export default function ExpressCheckout({
                 promo_code: promoCode || null,
                 discount_amount: discount,
                 shipping_address: {
-                  name: e.payerName,
+                  name: capitalizeName(e.payerName || ''),
                   address: e.shippingAddress?.addressLine?.[0] || '',
                   city: e.shippingAddress?.city || '',
                   postalCode: e.shippingAddress?.postalCode || '',
@@ -148,7 +149,7 @@ export default function ExpressCheckout({
                   phone: e.payerPhone || '',
                 },
                 billing_address: {
-                  name: e.payerName,
+                  name: capitalizeName(e.payerName || ''),
                   address: e.shippingAddress?.addressLine?.[0] || '',
                   city: e.shippingAddress?.city || '',
                   postalCode: e.shippingAddress?.postalCode || '',
