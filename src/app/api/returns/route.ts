@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import Stripe from 'stripe'
+import { calculateReturnRefundWithDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
 // GET /api/returns - Haal alle retouren op voor ingelogde gebruiker of admin
 export async function GET(req: NextRequest) {
@@ -148,8 +149,92 @@ export async function POST(req: NextRequest) {
           error: `Quantity ${returnItem.quantity} exceeds order quantity ${orderItem.quantity}` 
         }, { status: 400 })
       }
+    }
 
-      totalRefundAmount += orderItem.price_at_purchase * returnItem.quantity
+    // Calculate refund with staffelkorting recalculation
+    const productIdsInReturn = [...new Set(return_items.map((ri: any) => {
+      const oi = order.order_items.find((item: any) => item.id === ri.order_item_id)
+      return oi?.product_id
+    }).filter(Boolean))]
+
+    // Fetch quantity discount tiers for affected products
+    const { data: returnTiers } = await supabase
+      .from('product_quantity_discounts')
+      .select('*')
+      .in('product_id', productIdsInReturn)
+      .eq('is_active', true)
+
+    // Fetch existing approved returns for these products
+    const { data: previousReturns } = await supabase
+      .from('returns')
+      .select('return_items, refund_amount')
+      .eq('order_id', order_id)
+      .in('status', ['return_approved', 'return_label_payment_pending', 'return_label_payment_completed', 'return_label_generated', 'return_in_transit', 'return_received', 'refund_processing', 'refund_completed'])
+
+    const tiersByProduct: Record<string, QuantityDiscountTier[]> = {}
+    returnTiers?.forEach(t => {
+      if (!tiersByProduct[t.product_id]) tiersByProduct[t.product_id] = []
+      tiersByProduct[t.product_id].push(t)
+    })
+
+    // Group return items by product
+    const returnByProduct: Record<string, number> = {}
+    for (const ri of return_items) {
+      const oi = order.order_items.find((item: any) => item.id === ri.order_item_id)
+      if (!oi) continue
+      returnByProduct[oi.product_id] = (returnByProduct[oi.product_id] || 0) + ri.quantity
+    }
+
+    // Calculate previously returned quantities per product
+    const previouslyReturnedByProduct: Record<string, number> = {}
+    const previouslyRefundedByProduct: Record<string, number> = {}
+    if (previousReturns) {
+      for (const prev of previousReturns) {
+        if (!prev.return_items || !Array.isArray(prev.return_items)) continue
+        for (const pri of prev.return_items) {
+          const oi = order.order_items.find((item: any) => item.id === pri.order_item_id)
+          if (!oi) continue
+          previouslyReturnedByProduct[oi.product_id] = (previouslyReturnedByProduct[oi.product_id] || 0) + (pri.quantity || 0)
+        }
+      }
+    }
+
+    // Calculate refund per product
+    for (const [productId, returningQty] of Object.entries(returnByProduct)) {
+      const productItems = order.order_items.filter((oi: any) => oi.product_id === productId)
+      const tiers = tiersByProduct[productId] || []
+      const originalTotalQty = productItems.reduce((sum: number, oi: any) => sum + oi.quantity, 0)
+      const alreadyReturnedQty = previouslyReturnedByProduct[productId] || 0
+      const alreadyRefunded = previouslyRefundedByProduct[productId] || 0
+      const totalPaid = productItems.reduce((sum: number, oi: any) => sum + (oi.price_at_purchase * oi.quantity), 0)
+      const originalPrice = productItems[0]?.original_price || productItems[0]?.price_at_purchase || 0
+
+      if (tiers.length > 0 && originalPrice > 0) {
+        const result = calculateReturnRefundWithDiscount({
+          productId,
+          originalPrice,
+          originalTotalQty,
+          alreadyReturnedQty,
+          returningNowQty: returningQty,
+          totalPaidForProduct: totalPaid,
+          alreadyRefundedForProduct: alreadyRefunded,
+          tiers,
+        })
+        totalRefundAmount += result.refundAmount
+        console.log(`📊 Staffelkorting retour ${productId}: refund €${result.refundAmount.toFixed(2)}`, {
+          discountLapsed: result.discountLapsed,
+          oldTier: result.oldTierLabel,
+          newTier: result.newTierLabel,
+        })
+      } else {
+        // Simple calculation without staffelkorting
+        for (const ri of return_items) {
+          const oi = order.order_items.find((item: any) => item.id === ri.order_item_id && item.product_id === productId)
+          if (oi) {
+            totalRefundAmount += oi.price_at_purchase * ri.quantity
+          }
+        }
+      }
     }
 
     // Check of er al een actieve retour is voor deze order

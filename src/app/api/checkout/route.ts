@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { evaluatePickupEligibility } from '@/lib/pickup-eligibility'
 import { capitalizeName } from '@/lib/utils'
+import { calculateQuantityDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
@@ -92,6 +93,94 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ Stock validation passed for all items (including presale)')
+
+    // ============================================
+    // STEP 1B: APPLY QUANTITY DISCOUNTS (STAFFELKORTING)
+    // ============================================
+    console.log('📊 Calculating quantity discounts...')
+
+    // Group items by product_id and count total quantity per product
+    const productQuantities: Record<string, { totalQty: number; itemIndices: number[] }> = {}
+    for (let i = 0; i < items.length; i++) {
+      const pid = items[i].product_id
+      if (!productQuantities[pid]) productQuantities[pid] = { totalQty: 0, itemIndices: [] }
+      productQuantities[pid].totalQty += items[i].quantity
+      productQuantities[pid].itemIndices.push(i)
+    }
+
+    const productIds = Object.keys(productQuantities)
+
+    // Fetch quantity discount tiers for all products
+    const { data: allTiers } = await supabase
+      .from('product_quantity_discounts')
+      .select('*')
+      .in('product_id', productIds)
+      .eq('is_active', true)
+
+    // Fetch product sale_price info to check if staffelkorting is blocked
+    const { data: productPrices } = await supabase
+      .from('products')
+      .select('id, base_price, sale_price')
+      .in('id', productIds)
+
+    const tiersByProduct: Record<string, QuantityDiscountTier[]> = {}
+    if (allTiers) {
+      for (const tier of allTiers) {
+        if (!tiersByProduct[tier.product_id]) tiersByProduct[tier.product_id] = []
+        tiersByProduct[tier.product_id].push(tier)
+      }
+    }
+
+    const salePriceByProduct: Record<string, number | null> = {}
+    if (productPrices) {
+      for (const p of productPrices) {
+        salePriceByProduct[p.id] = (p.sale_price && p.sale_price < p.base_price) ? p.sale_price : null
+      }
+    }
+
+    let totalQuantityDiscount = 0
+
+    for (const [productId, group] of Object.entries(productQuantities)) {
+      const hasSalePrice = salePriceByProduct[productId] !== null && salePriceByProduct[productId] !== undefined
+      const tiers = tiersByProduct[productId]
+
+      if (hasSalePrice || !tiers || tiers.length === 0) {
+        // No staffelkorting: set original_price = unit_price, discount = 0
+        for (const idx of group.itemIndices) {
+          items[idx].original_price = items[idx].unit_price
+          items[idx].quantity_discount_amount = 0
+        }
+        continue
+      }
+
+      // Apply staffelkorting
+      for (const idx of group.itemIndices) {
+        const originalPrice = items[idx].unit_price
+        const result = calculateQuantityDiscount(originalPrice, group.totalQty, tiers)
+
+        items[idx].original_price = originalPrice
+        items[idx].quantity_discount_amount = result.discountPerItem
+        items[idx].unit_price = result.finalPrice
+        items[idx].price_at_purchase = result.finalPrice
+        items[idx].subtotal = result.finalPrice * items[idx].quantity
+
+        totalQuantityDiscount += result.discountPerItem * items[idx].quantity
+
+        if (result.discountPerItem > 0) {
+          console.log(`  ✅ Staffelkorting: ${items[idx].product_name} - €${result.discountPerItem.toFixed(2)} per stuk (tier: ${result.tier?.min_quantity}+)`)
+        }
+      }
+    }
+
+    // Recalculate order subtotal after staffelkorting
+    const recalcSubtotal = items.reduce((sum: number, item: any) => sum + (item.unit_price * item.quantity), 0)
+    order.subtotal = Math.round(recalcSubtotal * 100) / 100
+
+    if (totalQuantityDiscount > 0) {
+      console.log(`✅ Total staffelkorting: -€${totalQuantityDiscount.toFixed(2)} | New subtotal: €${order.subtotal.toFixed(2)}`)
+    } else {
+      console.log('ℹ️ No quantity discounts applicable')
+    }
 
     // ============================================
     // STEP 2: VALIDATE PROMO CODE (SERVER-SIDE) + NO STACKING DISCOUNTS

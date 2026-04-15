@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS wishlists (
 );
 
 -- Indexes
-CREATE INDEX idx_wishlists_user_id ON wishlists(user_id);
-CREATE INDEX idx_wishlists_product_id ON wishlists(product_id);
+CREATE INDEX IF NOT EXISTS idx_wishlists_user_id ON wishlists(user_id);
+CREATE INDEX IF NOT EXISTS idx_wishlists_product_id ON wishlists(product_id);
 
 -- RLS Policies
 ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;

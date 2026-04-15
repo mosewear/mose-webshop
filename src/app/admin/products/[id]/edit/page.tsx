@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import LanguageTabs from '@/components/admin/LanguageTabs'
+import { Trash2, Plus } from 'lucide-react'
 
 interface Category {
   id: string
@@ -25,6 +26,15 @@ interface Product {
   meta_description: string | null
 }
 
+interface QuantityDiscountTier {
+  id?: string
+  product_id: string
+  min_quantity: number
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  is_active: boolean
+}
+
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [categories, setCategories] = useState<Category[]>([])
@@ -34,6 +44,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [activeLanguage, setActiveLanguage] = useState<'nl' | 'en'>('nl')
   const router = useRouter()
   const supabase = createClient()
+
+  const [discountTiers, setDiscountTiers] = useState<QuantityDiscountTier[]>([])
+  const [newTier, setNewTier] = useState({ min_quantity: '2', discount_type: 'percentage' as 'percentage' | 'fixed', discount_value: '' })
+  const [savingTiers, setSavingTiers] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -52,6 +66,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     fetchCategories()
     if (id) {
       fetchProduct(id)
+      fetchDiscountTiers(id)
     }
   }, [id])
 
@@ -93,6 +108,52 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchDiscountTiers = async (productId: string) => {
+    const { data } = await supabase
+      .from('product_quantity_discounts')
+      .select('*')
+      .eq('product_id', productId)
+      .order('min_quantity')
+    if (data) setDiscountTiers(data)
+  }
+
+  const handleAddTier = async () => {
+    const minQty = parseInt(newTier.min_quantity)
+    const discVal = parseFloat(newTier.discount_value)
+    if (!minQty || minQty < 2) return alert('Minimum aantal moet 2 of meer zijn')
+    if (!discVal || discVal <= 0) return alert('Kortingswaarde moet groter dan 0 zijn')
+    if (newTier.discount_type === 'percentage' && discVal >= 100) return alert('Percentage moet onder 100% zijn')
+    if (discountTiers.some(t => t.min_quantity === minQty)) return alert('Er bestaat al een staffel voor dit aantal')
+
+    setSavingTiers(true)
+    const { error } = await supabase.from('product_quantity_discounts').insert([{
+      product_id: id,
+      min_quantity: minQty,
+      discount_type: newTier.discount_type,
+      discount_value: discVal,
+      is_active: true,
+    }])
+    if (error) { alert(`Fout: ${error.message}`); setSavingTiers(false); return }
+    await fetchDiscountTiers(id)
+    setNewTier({ min_quantity: '2', discount_type: 'percentage', discount_value: '' })
+    setSavingTiers(false)
+  }
+
+  const handleDeleteTier = async (tierId: string) => {
+    if (!confirm('Weet je zeker dat je deze staffel wilt verwijderen?')) return
+    const { error } = await supabase.from('product_quantity_discounts').delete().eq('id', tierId)
+    if (error) { alert(`Fout: ${error.message}`); return }
+    await fetchDiscountTiers(id)
+  }
+
+  const handleToggleTier = async (tierId: string, currentActive: boolean) => {
+    const { error } = await supabase.from('product_quantity_discounts')
+      .update({ is_active: !currentActive, updated_at: new Date().toISOString() })
+      .eq('id', tierId)
+    if (error) { alert(`Fout: ${error.message}`); return }
+    await fetchDiscountTiers(id)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -339,6 +400,84 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
           )}
+
+          {/* Staffelkorting */}
+          <div className="border-t-2 border-gray-200 pt-6">
+            <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide mb-1">Staffelkorting</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Stel kwantumkorting in (bijv. koop 2 = 10% korting). Geldt niet als er een sale prijs actief is.
+            </p>
+
+            {formData.sale_price && parseFloat(formData.sale_price) > 0 && parseFloat(formData.sale_price) < parseFloat(formData.base_price) && (
+              <div className="bg-amber-50 border-2 border-amber-200 p-3 mb-4 text-sm text-amber-800">
+                Let op: staffelkorting is uitgeschakeld zolang er een sale prijs actief is.
+              </div>
+            )}
+
+            {discountTiers.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {discountTiers.map(tier => (
+                  <div key={tier.id} className={`flex items-center gap-3 p-3 border-2 ${tier.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                    <div className="flex-1">
+                      <span className="font-semibold text-sm">
+                        Koop {tier.min_quantity}+ stuks
+                      </span>
+                      <span className="mx-2 text-gray-400">→</span>
+                      <span className="text-sm font-medium text-green-700">
+                        {tier.discount_type === 'percentage'
+                          ? `${tier.discount_value}% korting`
+                          : `€${Number(tier.discount_value).toFixed(2)} korting per stuk`}
+                      </span>
+                      {formData.base_price && (
+                        <span className="text-xs text-gray-500 ml-2">
+                          (€{(
+                            tier.discount_type === 'percentage'
+                              ? parseFloat(formData.base_price) * (1 - tier.discount_value / 100)
+                              : parseFloat(formData.base_price) - tier.discount_value
+                          ).toFixed(2)} per stuk)
+                        </span>
+                      )}
+                    </div>
+                    <button type="button" onClick={() => handleToggleTier(tier.id!, tier.is_active)}
+                      className={`px-3 py-1 text-xs font-semibold border transition-colors ${tier.is_active ? 'border-green-300 text-green-700 hover:bg-green-50' : 'border-gray-300 text-gray-500 hover:bg-gray-100'}`}>
+                      {tier.is_active ? 'Actief' : 'Inactief'}
+                    </button>
+                    <button type="button" onClick={() => handleDeleteTier(tier.id!)}
+                      className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-600 whitespace-nowrap">Koop</span>
+                <input type="number" min={2} value={newTier.min_quantity}
+                  onChange={e => setNewTier({ ...newTier, min_quantity: e.target.value })}
+                  className="w-16 px-2 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm text-center" />
+                <span className="text-sm text-gray-600 whitespace-nowrap">+ stuks =</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <input type="number" min={0} step={0.01} placeholder="10"
+                  value={newTier.discount_value}
+                  onChange={e => setNewTier({ ...newTier, discount_value: e.target.value })}
+                  className="w-20 px-2 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm" />
+                <select value={newTier.discount_type}
+                  onChange={e => setNewTier({ ...newTier, discount_type: e.target.value as 'percentage' | 'fixed' })}
+                  className="px-2 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm bg-white">
+                  <option value="percentage">% korting</option>
+                  <option value="fixed">€ per stuk</option>
+                </select>
+              </div>
+              <button type="button" onClick={handleAddTier} disabled={savingTiers}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-black text-white hover:bg-gray-800 transition-colors disabled:opacity-50">
+                <Plus className="w-4 h-4" />
+                Toevoegen
+              </button>
+            </div>
+          </div>
 
           {/* Category */}
           <div>

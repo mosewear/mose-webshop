@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { capitalizeName } from '@/lib/utils'
+import { calculateQuantityDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
 export async function POST(request: Request) {
   try {
@@ -120,20 +121,82 @@ export async function POST(request: Request) {
       )
     }
 
-    // Insert order items
-    const orderItems = items.map((item: any) => ({
-      order_id: orderData.id,
-      product_id: item.product_id,
-      variant_id: item.variant_id,
-      product_name: item.product_name,
-      size: item.size,
-      color: item.color,
-      sku: item.sku || `${item.product_id}-${item.size}-${item.color}`,
-      quantity: item.quantity,
-      price_at_purchase: item.price_at_purchase,
-      subtotal: item.price_at_purchase * item.quantity,
-      image_url: item.image_url || null,
-    }))
+    // Apply staffelkorting to manual order items
+    const productIds = [...new Set(items.map((i: any) => i.product_id))]
+    const { data: allTiers } = await supabase
+      .from('product_quantity_discounts')
+      .select('*')
+      .in('product_id', productIds)
+      .eq('is_active', true)
+
+    const { data: productPrices } = await supabase
+      .from('products')
+      .select('id, base_price, sale_price')
+      .in('id', productIds)
+
+    const tiersByProduct: Record<string, QuantityDiscountTier[]> = {}
+    allTiers?.forEach((t: any) => {
+      if (!tiersByProduct[t.product_id]) tiersByProduct[t.product_id] = []
+      tiersByProduct[t.product_id].push(t)
+    })
+
+    const salePriceMap: Record<string, boolean> = {}
+    productPrices?.forEach((p: any) => {
+      salePriceMap[p.id] = !!(p.sale_price && p.sale_price < p.base_price)
+    })
+
+    const qtyByProduct: Record<string, number> = {}
+    items.forEach((item: any) => {
+      qtyByProduct[item.product_id] = (qtyByProduct[item.product_id] || 0) + item.quantity
+    })
+
+    const orderItems = items.map((item: any) => {
+      const tiers = tiersByProduct[item.product_id]
+      const hasSale = salePriceMap[item.product_id]
+      const totalQty = qtyByProduct[item.product_id]
+
+      if (!hasSale && tiers && tiers.length > 0) {
+        const result = calculateQuantityDiscount(item.price_at_purchase, totalQty, tiers)
+        return {
+          order_id: orderData.id,
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          product_name: item.product_name,
+          size: item.size,
+          color: item.color,
+          sku: item.sku || `${item.product_id}-${item.size}-${item.color}`,
+          quantity: item.quantity,
+          original_price: item.price_at_purchase,
+          quantity_discount_amount: result.discountPerItem,
+          price_at_purchase: result.finalPrice,
+          subtotal: result.finalPrice * item.quantity,
+          image_url: item.image_url || null,
+        }
+      }
+
+      return {
+        order_id: orderData.id,
+        product_id: item.product_id,
+        variant_id: item.variant_id,
+        product_name: item.product_name,
+        size: item.size,
+        color: item.color,
+        sku: item.sku || `${item.product_id}-${item.size}-${item.color}`,
+        quantity: item.quantity,
+        original_price: item.price_at_purchase,
+        quantity_discount_amount: 0,
+        price_at_purchase: item.price_at_purchase,
+        subtotal: item.price_at_purchase * item.quantity,
+        image_url: item.image_url || null,
+      }
+    })
+
+    // Recalculate order subtotal and total after staffelkorting
+    const newSubtotal = orderItems.reduce((sum: number, i: any) => sum + i.subtotal, 0)
+    if (Math.abs(newSubtotal - orderData.subtotal) > 0.01) {
+      const newTotal = newSubtotal + (orderData.shipping_cost || 0) - (orderData.discount_amount || 0)
+      await supabase.from('orders').update({ subtotal: newSubtotal, total: newTotal }).eq('id', orderData.id)
+    }
 
     const { error: itemsError } = await supabase
       .from('order_items')

@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS product_reviews (
 );
 
 -- Indexes
-CREATE INDEX idx_product_reviews_product_id ON product_reviews(product_id);
-CREATE INDEX idx_product_reviews_user_id ON product_reviews(user_id);
-CREATE INDEX idx_product_reviews_rating ON product_reviews(rating);
-CREATE INDEX idx_product_reviews_approved ON product_reviews(is_approved);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_product_id ON product_reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_user_id ON product_reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_rating ON product_reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_approved ON product_reviews(is_approved);
 
 -- RLS Policies
 ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
@@ -71,8 +71,8 @@ CREATE TABLE IF NOT EXISTS review_votes (
 );
 
 -- Indexes
-CREATE INDEX idx_review_votes_review_id ON review_votes(review_id);
-CREATE INDEX idx_review_votes_user_id ON review_votes(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_votes_review_id ON review_votes(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_votes_user_id ON review_votes(user_id);
 
 -- RLS Policies
 ALTER TABLE review_votes ENABLE ROW LEVEL SECURITY;

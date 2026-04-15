@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { calculateReturnRefundWithDiscount, findApplicableTier, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
 interface Order {
   id: string
@@ -15,11 +16,14 @@ interface Order {
   status: string
   order_items: {
     id: string
+    product_id: string
     product_name: string
     size: string
     color: string
     quantity: number
     price_at_purchase: number
+    original_price: number | null
+    quantity_discount_amount: number | null
     subtotal: number
     image_url: string | null
   }[]
@@ -181,10 +185,11 @@ export default function NewReturnPage() {
   }>>({})
   const [returnReason, setReturnReason] = useState('')
   const [customerNotes, setCustomerNotes] = useState('')
+  const [discountTiers, setDiscountTiers] = useState<Record<string, QuantityDiscountTier[]>>({})
+  const [staffelWarning, setStaffelWarning] = useState<string | null>(null)
 
   useEffect(() => {
     checkUser()
-    // Default 14 dagen retourtermijn
     setReturnDays(14)
   }, [])
 
@@ -195,6 +200,32 @@ export default function NewReturnPage() {
       setLoading(false)
     }
   }, [user, orderId, returnDays])
+
+  // Fetch discount tiers when order loads
+  useEffect(() => {
+    if (!order) return
+    const fetchTiers = async () => {
+      const supabase = createClient()
+      const productIds = [...new Set(order.order_items.map(oi => oi.product_id).filter(Boolean))]
+      if (productIds.length === 0) return
+
+      const { data } = await supabase
+        .from('product_quantity_discounts')
+        .select('*')
+        .in('product_id', productIds)
+        .eq('is_active', true)
+
+      if (data) {
+        const grouped: Record<string, QuantityDiscountTier[]> = {}
+        data.forEach(t => {
+          if (!grouped[t.product_id]) grouped[t.product_id] = []
+          grouped[t.product_id].push(t)
+        })
+        setDiscountTiers(grouped)
+      }
+    }
+    fetchTiers()
+  }, [order])
 
   async function checkUser() {
     const supabase = createClient()
@@ -311,15 +342,57 @@ export default function NewReturnPage() {
 
   function calculateRefund() {
     if (!order) return 0
-    
-    let total = 0
+
+    // Group return items by product
+    const returnByProduct: Record<string, { qty: number; items: { orderItem: typeof order.order_items[0]; returnQty: number }[] }> = {}
     Object.entries(selectedItems).forEach(([itemId, data]) => {
       const orderItem = order.order_items.find((item) => item.id === itemId)
-      if (orderItem) {
-        total += orderItem.price_at_purchase * data.quantity
-      }
+      if (!orderItem) return
+      const pid = orderItem.product_id
+      if (!returnByProduct[pid]) returnByProduct[pid] = { qty: 0, items: [] }
+      returnByProduct[pid].qty += data.quantity
+      returnByProduct[pid].items.push({ orderItem, returnQty: data.quantity })
     })
-    return total
+
+    let total = 0
+    let hasStaffelWarning = false
+
+    for (const [productId, group] of Object.entries(returnByProduct)) {
+      const tiers = discountTiers[productId]
+      const allProductItems = order.order_items.filter(oi => oi.product_id === productId)
+      const originalPrice = allProductItems[0]?.original_price || allProductItems[0]?.price_at_purchase || 0
+
+      if (tiers && tiers.length > 0 && originalPrice > 0) {
+        const totalQty = allProductItems.reduce((s, oi) => s + oi.quantity, 0)
+        const totalPaid = allProductItems.reduce((s, oi) => s + oi.price_at_purchase * oi.quantity, 0)
+
+        const result = calculateReturnRefundWithDiscount({
+          productId,
+          originalPrice,
+          originalTotalQty: totalQty,
+          alreadyReturnedQty: 0,
+          returningNowQty: group.qty,
+          totalPaidForProduct: totalPaid,
+          alreadyRefundedForProduct: 0,
+          tiers,
+        })
+
+        total += result.refundAmount
+        if (result.discountLapsed) hasStaffelWarning = true
+      } else {
+        for (const { orderItem, returnQty } of group.items) {
+          total += orderItem.price_at_purchase * returnQty
+        }
+      }
+    }
+
+    if (hasStaffelWarning && !staffelWarning) {
+      setStaffelWarning('Let op: door deze retour vervalt je staffelkorting. Het refundbedrag is hierop aangepast.')
+    } else if (!hasStaffelWarning && staffelWarning) {
+      setStaffelWarning(null)
+    }
+
+    return Math.round(total * 100) / 100
   }
 
   async function submitReturn() {
@@ -605,6 +678,13 @@ export default function NewReturnPage() {
             </div>
           </div>
         </div>
+
+        {/* Staffelkorting warning */}
+        {staffelWarning && (
+          <div className="bg-amber-50 border-2 border-amber-300 p-4 mb-6">
+            <p className="text-sm text-amber-800 font-semibold">{staffelWarning}</p>
+          </div>
+        )}
 
         {/* Summary */}
         <div className="bg-black text-white p-6 mb-6">

@@ -67,6 +67,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [upsellProducts, setUpsellProducts] = useState<any[]>([])
   const [addingProduct, setAddingProduct] = useState<string | null>(null)
   const [selectedUpsellSizes, setSelectedUpsellSizes] = useState<Record<string, string>>({})
+  const [quantityDiscountTiers, setQuantityDiscountTiers] = useState<Record<string, { min_quantity: number; discount_type: string; discount_value: number }[]>>({})
+  const [productSalePrices, setProductSalePrices] = useState<Record<string, number | null>>({})
 
   // Load promo from localStorage and revalidate on mount
   useEffect(() => {
@@ -254,6 +256,90 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     fetchUpsellProducts()
   }, [isOpen, items])
+
+  // Fetch quantity discount tiers for products in cart
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return
+
+    const fetchTiers = async () => {
+      const supabase = createClient()
+      const productIds = [...new Set(items.map(i => i.productId))]
+
+      const { data: tiers } = await supabase
+        .from('product_quantity_discounts')
+        .select('product_id, min_quantity, discount_type, discount_value')
+        .in('product_id', productIds)
+        .eq('is_active', true)
+        .order('min_quantity')
+
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, sale_price, base_price')
+        .in('id', productIds)
+
+      if (tiers) {
+        const grouped: Record<string, typeof tiers> = {}
+        tiers.forEach(t => {
+          if (!grouped[t.product_id]) grouped[t.product_id] = []
+          grouped[t.product_id].push(t)
+        })
+        setQuantityDiscountTiers(grouped)
+      }
+
+      if (products) {
+        const salePrices: Record<string, number | null> = {}
+        products.forEach(p => {
+          salePrices[p.id] = (p.sale_price && p.sale_price < p.base_price) ? p.sale_price : null
+        })
+        setProductSalePrices(salePrices)
+      }
+    }
+
+    fetchTiers()
+  }, [isOpen, items.length])
+
+  // Calculate staffelkorting for display
+  const getStaffelInfo = () => {
+    const productGroups: Record<string, { totalQty: number; price: number; productId: string }> = {}
+    items.forEach(item => {
+      if (!productGroups[item.productId]) {
+        productGroups[item.productId] = { totalQty: 0, price: item.price, productId: item.productId }
+      }
+      productGroups[item.productId].totalQty += item.quantity
+    })
+
+    let totalSavings = 0
+    const hints: { productId: string; message: string }[] = []
+
+    Object.entries(productGroups).forEach(([productId, group]) => {
+      if (productSalePrices[productId]) return
+      const tiers = quantityDiscountTiers[productId]
+      if (!tiers || tiers.length === 0) return
+
+      const activeTiers = tiers.filter(t => group.totalQty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)
+      const currentTier = activeTiers[0]
+
+      if (currentTier) {
+        const discountPerItem = currentTier.discount_type === 'percentage'
+          ? group.price * (currentTier.discount_value / 100)
+          : Math.min(currentTier.discount_value, group.price)
+        totalSavings += discountPerItem * group.totalQty
+      }
+
+      const nextTier = tiers.find(t => t.min_quantity > group.totalQty)
+      if (nextTier) {
+        const needed = nextTier.min_quantity - group.totalQty
+        const label = nextTier.discount_type === 'percentage'
+          ? `${nextTier.discount_value}%`
+          : `€${nextTier.discount_value.toFixed(2)}`
+        hints.push({ productId, message: `Nog ${needed} stuk${needed > 1 ? 's' : ''} voor ${label} korting!` })
+      }
+    })
+
+    return { totalSavings: Math.round(totalSavings * 100) / 100, hints }
+  }
+
+  const staffelInfo = items.length > 0 ? getStaffelInfo() : { totalSavings: 0, hints: [] }
 
   // Disable body scroll when drawer is open
   useEffect(() => {
@@ -754,7 +840,22 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <span className="font-bold">€{subtotal.toFixed(2)}</span>
                   </div>
 
-                  {/* Promo Discount - VOORSTEL 1: Clean & Transparent */}
+                  {/* Staffelkorting */}
+                  {staffelInfo.totalSavings > 0 && (
+                    <div className="flex justify-between items-center text-sm px-2 py-1 bg-green-50 border-l-2 border-green-600">
+                      <span className="font-semibold text-green-800">Staffelkorting</span>
+                      <span className="font-bold text-green-700">-€{staffelInfo.totalSavings.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  {/* Staffelkorting hint */}
+                  {staffelInfo.hints.length > 0 && (
+                    <div className="text-xs text-amber-700 bg-amber-50 px-2 py-1.5 border-l-2 border-amber-400">
+                      {staffelInfo.hints.map((h, i) => <p key={i}>{h.message}</p>)}
+                    </div>
+                  )}
+
+                  {/* Promo Discount */}
                   {promoDiscount > 0 && (
                     <>
                       <div className="h-px bg-gray-300"></div>
@@ -899,6 +1000,20 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Staffelkorting hint - Mobile */}
+                {staffelInfo.hints.length > 0 && (
+                  <div className="px-3 py-2 bg-amber-50 border-b border-amber-200">
+                    {staffelInfo.hints.map((h, i) => <p key={i} className="text-xs text-amber-700 font-semibold">{h.message}</p>)}
+                  </div>
+                )}
+
+                {staffelInfo.totalSavings > 0 && (
+                  <div className="px-3 py-2 bg-green-50 border-b border-green-200 flex justify-between items-center">
+                    <span className="text-xs font-semibold text-green-800">Staffelkorting</span>
+                    <span className="text-xs font-bold text-green-700">-€{staffelInfo.totalSavings.toFixed(2)}</span>
+                  </div>
+                )}
 
                 {/* Total & Checkout - Mobile */}
                 <div className="p-4 bg-black text-white">

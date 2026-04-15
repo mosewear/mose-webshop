@@ -41,6 +41,7 @@ interface Product {
   size_guide_content_en?: any | null
   product_images: ProductImage[]
   product_variants: ProductVariant[]
+  product_quantity_discounts?: { id: string; min_quantity: number; discount_type: string; discount_value: number; is_active: boolean }[]
   categories: {
     name: string
     name_en?: string
@@ -482,7 +483,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           display_order,
           created_at
         ),
-        categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en)
+        categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en),
+        product_quantity_discounts(id, min_quantity, discount_type, discount_value, is_active)
       `)
       .eq('slug', slug)
       .eq('is_active', true)
@@ -1122,6 +1124,37 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     )
                   })()}
                 </div>
+
+                {/* Staffelkorting badge */}
+                {product.product_quantity_discounts && product.product_quantity_discounts.length > 0
+                  && !(product.sale_price && product.sale_price < product.base_price) && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 p-3 rounded space-y-1">
+                    <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Staffelkorting</p>
+                    {product.product_quantity_discounts
+                      .filter(t => t.is_active)
+                      .sort((a, b) => a.min_quantity - b.min_quantity)
+                      .map(tier => {
+                        const base = product.base_price + (selectedVariant?.price_adjustment || 0)
+                        const discount = tier.discount_type === 'percentage'
+                          ? base * (tier.discount_value / 100)
+                          : Math.min(tier.discount_value, base)
+                        return (
+                          <p key={tier.id} className="text-sm text-green-700">
+                            <span className="font-semibold">Koop {tier.min_quantity}+ stuks</span>
+                            <span className="mx-1">→</span>
+                            <span className="font-bold">
+                              {tier.discount_type === 'percentage'
+                                ? `${tier.discount_value}% korting`
+                                : `€${tier.discount_value.toFixed(2)} korting`}
+                            </span>
+                            <span className="text-green-600 text-xs ml-1">
+                              (€{(base - discount).toFixed(2)} p/s)
+                            </span>
+                          </p>
+                        )
+                      })}
+                  </div>
+                )}
               </div>
 
               {/* 🎯 COMPACT PRESALE CARD */}

@@ -134,8 +134,11 @@ export default function CheckoutPage() {
   const [promoType, setPromoType] = useState<'percentage' | 'fixed'>('fixed')
   const [promoValue, setPromoValue] = useState(0)
   
+  // Staffelkorting state
+  const [staffelSavings, setStaffelSavings] = useState(0)
+
   // Newsletter subscription state
-  const [newsletterOptIn, setNewsletterOptIn] = useState(true) // Default checked
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true)
   const [newsletterSubscribing, setNewsletterSubscribing] = useState(false)
 
   // Subscribe to newsletter (async, non-blocking)
@@ -196,6 +199,57 @@ export default function CheckoutPage() {
   const totalBtw = btwAmount + shippingBtw
   
   const total = subtotalAfterDiscount + shipping
+
+  // Calculate staffelkorting for display on checkout page
+  useEffect(() => {
+    if (items.length === 0) { setStaffelSavings(0); return }
+    const calcStaffel = async () => {
+      const supabase = createClient()
+      const productIds = [...new Set(items.map(i => i.productId))]
+
+      const { data: tiers } = await supabase
+        .from('product_quantity_discounts')
+        .select('product_id, min_quantity, discount_type, discount_value')
+        .in('product_id', productIds)
+        .eq('is_active', true)
+
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, base_price, sale_price')
+        .in('id', productIds)
+
+      if (!tiers || tiers.length === 0) { setStaffelSavings(0); return }
+
+      const salePrices: Record<string, boolean> = {}
+      products?.forEach(p => { salePrices[p.id] = !!(p.sale_price && p.sale_price < p.base_price) })
+
+      const grouped: Record<string, { totalQty: number; items: typeof items }> = {}
+      items.forEach(item => {
+        if (!grouped[item.productId]) grouped[item.productId] = { totalQty: 0, items: [] }
+        grouped[item.productId].totalQty += item.quantity
+        grouped[item.productId].items.push(item)
+      })
+
+      let savings = 0
+      Object.entries(grouped).forEach(([productId, group]) => {
+        if (salePrices[productId]) return
+        const productTiers = tiers.filter(t => t.product_id === productId)
+        const applicable = productTiers.filter(t => group.totalQty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)
+        const tier = applicable[0]
+        if (!tier) return
+
+        group.items.forEach(item => {
+          const disc = tier.discount_type === 'percentage'
+            ? item.price * (tier.discount_value / 100)
+            : Math.min(tier.discount_value, item.price)
+          savings += disc * item.quantity
+        })
+      })
+
+      setStaffelSavings(Math.round(savings * 100) / 100)
+    }
+    calcStaffel()
+  }, [items])
 
   // Auto-revalidate promo code whenever cart total changes
   useEffect(() => {
@@ -1197,11 +1251,12 @@ export default function CheckoutPage() {
           color: item.color,
           sku: `${item.productId}-${item.size}-${item.color}`,
           quantity: item.quantity,
+          unit_price: item.price,
           price_at_purchase: item.price,
           subtotal: item.price * item.quantity,
           image_url: item.image,
-          is_presale: item.isPresale || false,  // PRESALE: Pass presale status
-          presale_expected_date: item.presaleExpectedDate || null,  // PRESALE: Pass expected date
+          is_presale: item.isPresale || false,
+          presale_expected_date: item.presaleExpectedDate || null,
         }
       })
 
@@ -1610,15 +1665,26 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* Price Breakdown - VOORSTEL 1 DESIGN */}
+              {/* Price Breakdown - Mobile */}
               <div className="space-y-2 border-t border-gray-200 pt-3">
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
+
+                {/* Staffelkorting - Mobile */}
+                {staffelSavings > 0 && (
+                  <>
+                    <div className="h-px bg-gray-200"></div>
+                    <div className="flex justify-between items-center py-1 px-3 bg-green-50 border-l-2 border-green-600 -mx-3">
+                      <span className="text-xs font-semibold text-green-800">Staffelkorting</span>
+                      <span className="font-bold text-green-700 text-xs">-€{staffelSavings.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 
-                {/* Promo Discount - VOORSTEL 1: Clean & Transparent */}
+                {/* Promo Discount */}
                 {promoDiscount > 0 && (
                   <>
                     <div className="h-px bg-gray-200"></div>
@@ -2496,8 +2562,19 @@ export default function CheckoutPage() {
                   </span>
                   <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
                 </div>
+
+                {/* Staffelkorting - Desktop */}
+                {staffelSavings > 0 && (
+                  <>
+                    <div className="h-px bg-gray-200"></div>
+                    <div className="flex justify-between items-center py-1 px-3 bg-green-50 border-l-2 border-green-600 -mx-3">
+                      <span className="text-sm font-semibold text-green-800">Staffelkorting</span>
+                      <span className="font-bold text-green-700 text-sm">-€{staffelSavings.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 
-                {/* Promo Discount - VOORSTEL 1: Clean & Transparent */}
+                {/* Promo Discount */}
                 {promoDiscount > 0 && (
                   <>
                     <div className="h-px bg-gray-200"></div>

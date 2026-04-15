@@ -9,6 +9,7 @@ import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
 import { capitalizeName } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { calculateQuantityDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
 interface ExpressCheckoutProps {
   cartItems: Array<{
@@ -170,16 +171,81 @@ export default function ExpressCheckout({
 
             console.log('✅ [Express Checkout] Order created:', order.id)
 
-            // Create order items
-            const orderItems = cartItems.map(item => ({
-              order_id: order.id,
-              product_id: item.productId,
-              variant_id: item.variantId,
-              quantity: item.quantity,
-              price: item.price,
-              size: item.size,
-              color: item.color,
-            }))
+            // Fetch quantity discount tiers
+            const productIds = [...new Set(cartItems.map(i => i.productId))]
+            const { data: allTiers } = await supabase
+              .from('product_quantity_discounts')
+              .select('*')
+              .in('product_id', productIds)
+              .eq('is_active', true)
+
+            const { data: productPrices } = await supabase
+              .from('products')
+              .select('id, base_price, sale_price')
+              .in('id', productIds)
+
+            const tiersByProduct: Record<string, QuantityDiscountTier[]> = {}
+            allTiers?.forEach(t => {
+              if (!tiersByProduct[t.product_id]) tiersByProduct[t.product_id] = []
+              tiersByProduct[t.product_id].push(t)
+            })
+
+            const salePriceMap: Record<string, boolean> = {}
+            productPrices?.forEach(p => {
+              salePriceMap[p.id] = !!(p.sale_price && p.sale_price < p.base_price)
+            })
+
+            // Group by product for quantity counting
+            const qtyByProduct: Record<string, number> = {}
+            cartItems.forEach(item => {
+              qtyByProduct[item.productId] = (qtyByProduct[item.productId] || 0) + item.quantity
+            })
+
+            // Create order items with staffelkorting
+            const orderItems = cartItems.map(item => {
+              const tiers = tiersByProduct[item.productId]
+              const hasSale = salePriceMap[item.productId]
+              const totalQty = qtyByProduct[item.productId]
+
+              if (!hasSale && tiers && tiers.length > 0) {
+                const result = calculateQuantityDiscount(item.price, totalQty, tiers)
+                return {
+                  order_id: order.id,
+                  product_id: item.productId,
+                  variant_id: item.variantId,
+                  quantity: item.quantity,
+                  price_at_purchase: result.finalPrice,
+                  original_price: item.price,
+                  quantity_discount_amount: result.discountPerItem,
+                  subtotal: result.finalPrice * item.quantity,
+                  size: item.size,
+                  color: item.color,
+                }
+              }
+
+              return {
+                order_id: order.id,
+                product_id: item.productId,
+                variant_id: item.variantId,
+                quantity: item.quantity,
+                price_at_purchase: item.price,
+                original_price: item.price,
+                quantity_discount_amount: 0,
+                subtotal: item.price * item.quantity,
+                size: item.size,
+                color: item.color,
+              }
+            })
+
+            // Update order total if staffelkorting applied
+            const newSubtotal = orderItems.reduce((sum, item) => sum + (item.subtotal || 0), 0)
+            if (Math.abs(newSubtotal - (subtotal - discount)) > 0.01) {
+              const newTotal = newSubtotal + shippingCost
+              await supabase
+                .from('orders')
+                .update({ subtotal: newSubtotal, total: newTotal })
+                .eq('id', order.id)
+            }
 
             const { error: itemsError } = await supabase
               .from('order_items')

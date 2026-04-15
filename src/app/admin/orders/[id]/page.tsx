@@ -47,6 +47,8 @@ interface OrderItem {
   variant_id: string | null
   quantity: number
   price_at_purchase: number
+  original_price: number | null
+  quantity_discount_amount: number | null
   size: string | null
   color: string | null
   sku: string | null
@@ -952,7 +954,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                        {item.quantity_discount_amount && item.quantity_discount_amount > 0 && item.original_price ? (
+                          <>
+                            <div className="text-xs text-gray-400 line-through">€{Number(item.original_price).toFixed(2)}</div>
+                            <div className="font-bold text-sm md:text-base text-green-700">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                            <div className="text-[10px] text-green-600 font-semibold">Staffelkorting: -€{Number(item.quantity_discount_amount).toFixed(2)}/stuk</div>
+                          </>
+                        ) : (
+                          <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                        )}
                         <div className="text-xs md:text-sm text-gray-600">Aantal: {item.quantity}</div>
                         <div className="text-xs md:text-sm font-semibold text-brand-primary mt-1">
                           €{(Number(item.price_at_purchase) * item.quantity).toFixed(2)}
