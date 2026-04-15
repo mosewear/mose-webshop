@@ -26,6 +26,7 @@ interface ExpressCheckoutProps {
   subtotal: number
   shippingCost: number
   discount: number
+  staffelSavings?: number
   promoCode?: string
   userEmail?: string
 }
@@ -35,6 +36,7 @@ export default function ExpressCheckout({
   subtotal,
   shippingCost,
   discount,
+  staffelSavings = 0,
   promoCode,
   userEmail,
 }: ExpressCheckoutProps) {
@@ -52,9 +54,9 @@ export default function ExpressCheckout({
     async function initializePaymentRequest() {
       if (!stripe) return
 
-      const total = subtotal - discount + shippingCost
+      const total = subtotal - discount - staffelSavings + shippingCost
       const totalInCents = Math.round(total * 100)
-      const subtotalInCents = Math.round(subtotal * 100)
+      const subtotalInCents = Math.round((subtotal - staffelSavings) * 100)
       const shippingInCents = Math.round(shippingCost * 100)
       const discountInCents = Math.round(discount * 100)
 
@@ -135,8 +137,8 @@ export default function ExpressCheckout({
               .insert({
                 email: e.payerEmail,
                 status: 'pending',
-                total: subtotal - discount + shippingCost,
-                subtotal: subtotal - discount,
+                total: subtotal - discount - staffelSavings + shippingCost,
+                subtotal: subtotal - discount - staffelSavings,
                 shipping_cost: shippingCost,
                 tax_amount: 0,
                 promo_code: promoCode || null,
@@ -239,7 +241,7 @@ export default function ExpressCheckout({
 
             // Update order total if staffelkorting applied
             const newSubtotal = orderItems.reduce((sum, item) => sum + (item.subtotal || 0), 0)
-            if (Math.abs(newSubtotal - (subtotal - discount)) > 0.01) {
+            if (Math.abs(newSubtotal - (subtotal - discount - staffelSavings)) > 0.01) {
               const newTotal = newSubtotal + shippingCost
               await supabase
                 .from('orders')
@@ -265,7 +267,7 @@ export default function ExpressCheckout({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 orderId: order.id,
-                amount: Math.round((subtotal - discount + shippingCost) * 100),
+                amount: Math.round((subtotal - discount - staffelSavings + shippingCost) * 100),
                 paymentMethodId: e.paymentMethod.id,
               }),
             })
@@ -310,7 +312,7 @@ export default function ExpressCheckout({
               content_ids: cartItems.map(item => item.productId),
               content_name: cartItems.map(item => item.name).join(', '),
               content_type: 'product',
-              value: subtotal - discount + shippingCost,
+              value: subtotal - discount - staffelSavings + shippingCost,
               currency: 'EUR',
               num_items: cartItems.reduce((sum, item) => sum + item.quantity, 0),
             })
@@ -342,7 +344,7 @@ export default function ExpressCheckout({
     }
 
     initializePaymentRequest()
-  }, [cartItems, subtotal, shippingCost, discount, promoCode, stripe])
+  }, [cartItems, subtotal, shippingCost, discount, staffelSavings, promoCode, stripe])
 
   if (!paymentRequest || isProcessing) {
     return null

@@ -187,7 +187,7 @@ export default function CheckoutPage() {
   }, [])
 
   const subtotal = getTotal()
-  const subtotalAfterDiscount = subtotal - promoDiscount
+  const subtotalAfterDiscount = subtotal - promoDiscount - staffelSavings
   const baseShipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   const shipping = deliveryMethod === 'pickup' ? 0 : baseShipping
   
@@ -1856,6 +1856,7 @@ export default function CheckoutPage() {
                   subtotal={subtotal}
                   shippingCost={shipping}
                   discount={promoDiscount}
+                  staffelSavings={staffelSavings}
                   promoCode={promoCode}
                   userEmail={user?.email}
                 />

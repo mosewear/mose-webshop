@@ -5,6 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
+import { createClient } from '@/lib/supabase/client'
+import { calculateQuantityDiscount } from '@/lib/quantity-discount'
 import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -18,22 +20,22 @@ export default function CartPage() {
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
   const [returnDays, setReturnDays] = useState(14)
   const [showMobileSummary, setShowMobileSummary] = useState(false)
+  const [staffelSavings, setStaffelSavings] = useState(0)
   
-  // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
 
   const subtotal = getTotal()
-  const shipping = subtotal >= freeShippingThreshold ? 0 : shippingCost
+  const subtotalAfterStaffel = subtotal - staffelSavings
+  const shipping = subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
   
-  // BTW berekening (21% is al inbegrepen in de prijzen)
   const vatRate = 0.21
-  const subtotalExclBtw = subtotal / (1 + vatRate)
-  const btwAmount = subtotal - subtotalExclBtw
+  const subtotalExclBtw = subtotalAfterStaffel / (1 + vatRate)
+  const btwAmount = subtotalAfterStaffel - subtotalExclBtw
   const shippingExclBtw = shipping / (1 + vatRate)
   const shippingBtw = shipping - shippingExclBtw
   const totalBtw = btwAmount + shippingBtw
   
-  const total = subtotal + shipping
+  const total = subtotalAfterStaffel + shipping
 
   useEffect(() => {
     getSiteSettings().then((settings) => {
@@ -42,6 +44,41 @@ export default function CartPage() {
       setReturnDays(settings.return_days)
     })
   }, [])
+
+  useEffect(() => {
+    if (items.length === 0) { setStaffelSavings(0); return }
+    const calc = async () => {
+      const supabase = createClient()
+      const productIds = [...new Set(items.map(i => i.productId))]
+      const { data: tiers } = await supabase
+        .from('product_quantity_discounts')
+        .select('*')
+        .in('product_id', productIds)
+        .eq('is_active', true)
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, sale_price, base_price')
+        .in('id', productIds)
+      if (!tiers || tiers.length === 0) { setStaffelSavings(0); return }
+      const salePriceMap: Record<string, boolean> = {}
+      products?.forEach(p => { salePriceMap[p.id] = !!(p.sale_price && p.sale_price < p.base_price) })
+      const groups: Record<string, { qty: number; price: number }> = {}
+      items.forEach(item => {
+        if (!groups[item.productId]) groups[item.productId] = { qty: 0, price: item.price }
+        groups[item.productId].qty += item.quantity
+      })
+      let savings = 0
+      Object.entries(groups).forEach(([pid, g]) => {
+        if (salePriceMap[pid]) return
+        const productTiers = tiers.filter(t => t.product_id === pid)
+        if (productTiers.length === 0) return
+        const result = calculateQuantityDiscount(g.price, g.qty, productTiers)
+        savings += result.discountPerItem * g.qty
+      })
+      setStaffelSavings(Math.round(savings * 100) / 100)
+    }
+    calc()
+  }, [items])
 
   if (items.length === 0) {
     return (

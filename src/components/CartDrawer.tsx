@@ -84,8 +84,49 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
   }, [])
 
+  const getStaffelInfo = () => {
+    const productGroups: Record<string, { totalQty: number; price: number; productId: string }> = {}
+    items.forEach(item => {
+      if (!productGroups[item.productId]) {
+        productGroups[item.productId] = { totalQty: 0, price: item.price, productId: item.productId }
+      }
+      productGroups[item.productId].totalQty += item.quantity
+    })
+
+    let totalSavings = 0
+    const hints: { productId: string; message: string }[] = []
+
+    Object.entries(productGroups).forEach(([productId, group]) => {
+      if (productSalePrices[productId]) return
+      const tiers = quantityDiscountTiers[productId]
+      if (!tiers || tiers.length === 0) return
+
+      const activeTiers = tiers.filter(t => group.totalQty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)
+      const currentTier = activeTiers[0]
+
+      if (currentTier) {
+        const discountPerItem = currentTier.discount_type === 'percentage'
+          ? group.price * (currentTier.discount_value / 100)
+          : Math.min(currentTier.discount_value, group.price)
+        totalSavings += discountPerItem * group.totalQty
+      }
+
+      const nextTier = tiers.find(t => t.min_quantity > group.totalQty)
+      if (nextTier) {
+        const needed = nextTier.min_quantity - group.totalQty
+        const label = nextTier.discount_type === 'percentage'
+          ? `${nextTier.discount_value}%`
+          : `€${nextTier.discount_value.toFixed(2)}`
+        hints.push({ productId, message: `Nog ${needed} stuk${needed > 1 ? 's' : ''} voor ${label} korting!` })
+      }
+    })
+
+    return { totalSavings: Math.round(totalSavings * 100) / 100, hints }
+  }
+
   const subtotal = getTotal()
-  const subtotalAfterDiscount = subtotal - promoDiscount
+  const staffelInfo = items.length > 0 ? getStaffelInfo() : { totalSavings: 0, hints: [] }
+  const subtotalAfterDiscount = subtotal - promoDiscount - staffelInfo.totalSavings
   const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
   // BTW berekening (21% is al inbegrepen in de prijzen)
@@ -298,48 +339,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     fetchTiers()
   }, [isOpen, items.length])
 
-  // Calculate staffelkorting for display
-  const getStaffelInfo = () => {
-    const productGroups: Record<string, { totalQty: number; price: number; productId: string }> = {}
-    items.forEach(item => {
-      if (!productGroups[item.productId]) {
-        productGroups[item.productId] = { totalQty: 0, price: item.price, productId: item.productId }
-      }
-      productGroups[item.productId].totalQty += item.quantity
-    })
-
-    let totalSavings = 0
-    const hints: { productId: string; message: string }[] = []
-
-    Object.entries(productGroups).forEach(([productId, group]) => {
-      if (productSalePrices[productId]) return
-      const tiers = quantityDiscountTiers[productId]
-      if (!tiers || tiers.length === 0) return
-
-      const activeTiers = tiers.filter(t => group.totalQty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)
-      const currentTier = activeTiers[0]
-
-      if (currentTier) {
-        const discountPerItem = currentTier.discount_type === 'percentage'
-          ? group.price * (currentTier.discount_value / 100)
-          : Math.min(currentTier.discount_value, group.price)
-        totalSavings += discountPerItem * group.totalQty
-      }
-
-      const nextTier = tiers.find(t => t.min_quantity > group.totalQty)
-      if (nextTier) {
-        const needed = nextTier.min_quantity - group.totalQty
-        const label = nextTier.discount_type === 'percentage'
-          ? `${nextTier.discount_value}%`
-          : `€${nextTier.discount_value.toFixed(2)}`
-        hints.push({ productId, message: `Nog ${needed} stuk${needed > 1 ? 's' : ''} voor ${label} korting!` })
-      }
-    })
-
-    return { totalSavings: Math.round(totalSavings * 100) / 100, hints }
-  }
-
-  const staffelInfo = items.length > 0 ? getStaffelInfo() : { totalSavings: 0, hints: [] }
 
   // Disable body scroll when drawer is open
   useEffect(() => {
