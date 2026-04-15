@@ -1134,8 +1134,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   if (activeTiers.length === 0) return null
                   const base = product.base_price + (selectedVariant?.price_adjustment || 0)
                   return (
-                    <div className="border-l-[3px] border-black pl-3 py-1.5 space-y-1">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-1">Meer kopen = meer korting</p>
+                    <div className="mt-1 space-y-0">
                       {activeTiers.map((tier, i) => {
                         const discount = tier.discount_type === 'percentage'
                           ? base * (tier.discount_value / 100)
@@ -1143,20 +1142,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         const finalPrice = base - discount
                         const isLast = i === activeTiers.length - 1
                         return (
-                          <div key={tier.id} className={`flex items-center gap-1.5 md:gap-2 flex-wrap ${isLast ? 'text-black' : 'text-gray-600'}`}>
-                            <span className={`text-xs md:text-sm whitespace-nowrap ${isLast ? 'font-bold' : 'font-medium'}`}>
-                              {tier.min_quantity}+ stuks
+                          <div key={tier.id} className="flex items-baseline gap-1.5 md:gap-2">
+                            <span className="text-xs text-gray-400 font-medium whitespace-nowrap">
+                              {tier.min_quantity}+
                             </span>
-                            <span className="text-gray-300 hidden md:inline">—</span>
-                            <span className="text-gray-300 md:hidden">·</span>
-                            <span className={`text-xs md:text-sm whitespace-nowrap ${isLast ? 'font-bold' : 'font-semibold'}`}>
+                            <span className={`text-xs md:text-sm whitespace-nowrap ${isLast ? 'font-bold text-black' : 'font-semibold text-gray-500'}`}>
                               €{finalPrice.toFixed(2)}
-                              <span className="text-[10px] md:text-xs font-normal text-gray-400 ml-0.5">p/s</span>
                             </span>
-                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${isLast ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`text-[10px] font-bold uppercase whitespace-nowrap ${isLast ? 'text-black' : 'text-gray-400'}`}>
                               {tier.discount_type === 'percentage'
-                                ? `-${tier.discount_value}%`
-                                : `-€${tier.discount_value.toFixed(2)}`}
+                                ? `(-${tier.discount_value}%)`
+                                : `(-€${tier.discount_value.toFixed(2)})`}
                             </span>
                           </div>
                         )
@@ -1166,20 +1162,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 })()}
               </div>
 
-              {/* 🎯 COMPACT PRESALE CARD */}
+              {/* PRESALE CARD */}
               {isPresale && selectedVariant && (
-                <div className="bg-gradient-to-r from-[#f0f4e8] to-[#e8f0e4] border-l-4 border-[#86A35A] p-3 md:p-4 rounded-r">
+                <div className="border-2 border-black p-3 md:p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Package className="w-5 h-5 text-[#86A35A] flex-shrink-0" />
-                    <p className="text-sm font-bold text-[#4a5c2a] uppercase tracking-wide">
+                    <Package className="w-4 h-4 flex-shrink-0" />
+                    <p className="text-xs font-bold text-black uppercase tracking-[0.15em]">
                       {t('presale.available', { ns: 'product' })}
                     </p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2">
-                    <strong>{t('presale.expected', { ns: 'product' })}:</strong> {(locale === 'en' ? selectedVariant.presale_expected_date_en : selectedVariant.presale_expected_date) || t('presale.comingSoon', { ns: 'product' })} • {t('presale.limitedEdition', { ns: 'product' })}
+                    <strong>{t('presale.expected', { ns: 'product' })}:</strong> {(locale === 'en' ? selectedVariant.presale_expected_date_en : selectedVariant.presale_expected_date) || t('presale.comingSoon', { ns: 'product' })} · {t('presale.limitedEdition', { ns: 'product' })}
                   </p>
-                  <p className="text-xs text-gray-600">
-                    ✓ {t('presale.payNowReceiveLater', { ns: 'product' })}  •  ✓ {t('presale.shippedImmediately', { ns: 'product' })}
+                  <p className="text-xs text-gray-400">
+                    {t('presale.payNowReceiveLater', { ns: 'product' })}  ·  {t('presale.shippedImmediately', { ns: 'product' })}
                   </p>
                 </div>
               )}
@@ -1208,70 +1204,52 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 )}
               </div>
 
-              {/* 🎯 SMART AVAILABILITY & TRUST BANNER - Desktop: Boven keuzes / Mobile: Onder keuzes */}
+              {/* AVAILABILITY & TRUST - Desktop */}
               {selectedVariant && !isPresale && (
-                <div className={`hidden md:block border-l-4 p-3 md:p-4 rounded-r space-y-2.5 ${
-                  inStock 
-                    ? lowStock 
-                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500' 
-                      : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-500'
-                    : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-400'
-                }`}>
-                  {/* Row 1: Stock Status (Dynamic: Urgency OR Availability OR Out of Stock) */}
+                <div className="hidden md:block space-y-0">
                   <div className="flex items-center gap-2">
                     {inStock ? (
                       lowStock ? (
                         <>
-                          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-gray-900">
-                              {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
-                            </p>
-                          </div>
+                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-900">
+                            {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
+                          </p>
                         </>
                       ) : (
                         <>
-                          <Package className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-gray-900">
-                              {t('stock.inStock')}
-                            </p>
-                          </div>
+                          <span className="w-2 h-2 rounded-full bg-black flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-900">
+                            {t('stock.inStock')}
+                          </p>
                         </>
                       )
                     ) : (
                       <>
-                        <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-red-600">
-                            {t('outOfStock')}
-                          </p>
-                        </div>
+                        <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                        <p className="text-sm font-semibold text-gray-400">
+                          {t('outOfStock')}
+                        </p>
                       </>
                     )}
                   </div>
-                  
-                  {/* Row 2: Trust Badges (Always show, using dynamic settings) */}
                   {inStock && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 pl-7">
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400 mt-1 pl-4">
                       <span className="flex items-center gap-1">
-                        <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                        <Shield className="w-3 h-3" />
                         {t('trust.returns', { days: settings.return_days })}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                        <Truck className="w-3 h-3" />
                         {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
                       </span>
-                      {/* Only show warranty for watches */}
                       {product.categories.size_guide_type === 'watch' && (
                         <span className="flex items-center gap-1">
-                          <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                        {t('trust.warranty')}
+                          <Lock className="w-3 h-3" />
+                          {t('trust.warranty')}
                         </span>
                       )}
                     </div>
@@ -1513,70 +1491,52 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </button>
               </div>
 
-              {/* 🎯 SMART AVAILABILITY & TRUST BANNER - Mobile only (na keuzes) */}
+              {/* AVAILABILITY & TRUST - Mobile */}
               {selectedVariant && !isPresale && (
-                <div className={`md:hidden border-l-4 p-3 rounded-r space-y-2.5 ${
-                  inStock 
-                    ? lowStock 
-                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500' 
-                      : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-500'
-                    : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-400'
-                }`}>
-                  {/* Row 1: Stock Status (Dynamic: Urgency OR Availability OR Out of Stock) */}
+                <div className="md:hidden space-y-0">
                   <div className="flex items-center gap-2">
                     {inStock ? (
                       lowStock ? (
                         <>
-                          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-gray-900">
-                              {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
-                            </p>
-                          </div>
+                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-900">
+                            {t('stock.lowStock', { count: selectedVariant.stock_quantity })}
+                          </p>
                         </>
                       ) : (
                         <>
-                          <Package className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-gray-900">
-                              {t('stock.inStock')}
-                            </p>
-                          </div>
+                          <span className="w-2 h-2 rounded-full bg-black flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-900">
+                            {t('stock.inStock')}
+                          </p>
                         </>
                       )
                     ) : (
                       <>
-                        <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-red-600">
-                            {t('outOfStock')}
-                          </p>
-                        </div>
+                        <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                        <p className="text-sm font-semibold text-gray-400">
+                          {t('outOfStock')}
+                        </p>
                       </>
                     )}
                   </div>
-                  
-                  {/* Row 2: Trust Badges (Always show, using dynamic settings) */}
                   {inStock && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 pl-7">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-400 mt-1 pl-4">
                       <span className="flex items-center gap-1">
-                        <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                        <Shield className="w-3 h-3" />
                         {t('trust.returns', { days: settings.return_days })}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                        <Truck className="w-3 h-3" />
                         {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
                       </span>
-                      {/* Only show warranty for watches */}
                       {product.categories.size_guide_type === 'watch' && (
                         <span className="flex items-center gap-1">
-                          <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                        {t('trust.warranty')}
+                          <Lock className="w-3 h-3" />
+                          {t('trust.warranty')}
                         </span>
                       )}
                     </div>
