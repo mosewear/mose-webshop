@@ -219,18 +219,18 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-display font-bold mb-2">Orders</h1>
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
         </div>
-        <div className="flex w-full md:w-auto items-center gap-2">
+        <div className="grid grid-cols-3 md:flex md:w-auto gap-2 w-full">
           <Link
             href="/admin/orders/create"
-            className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center gap-2"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center gap-1.5 md:gap-2"
           >
             <Plus className="w-4 h-4" />
-            Nieuwe Order
+            <span className="hidden sm:inline">Nieuwe</span> Order
           </Link>
           <button 
             onClick={() => fetchOrders()}
             disabled={refreshing}
-            className="flex-1 md:flex-none bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 md:gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Bezig...' : 'Ververs'}
@@ -260,7 +260,7 @@ export default function AdminOrdersPage() {
               link.click()
               document.body.removeChild(link)
             }}
-            className="flex-1 md:flex-none bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95"
+            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center"
           >
             Exporteren
           </button>

@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: Request) {
   try {
+    const { authorized } = await requireAdmin()
+    if (!authorized) {
+      return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 401 })
+    }
+
     const body = await request.json()
     const {
       email,

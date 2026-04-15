@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, Trash2, Package, User, Truck, CreditCard } from 'lucide-react'
+import { Plus, Trash2, Package, User, Truck, CreditCard, Minus } from 'lucide-react'
 
 const COUNTRY_OPTIONS = [
   { value: 'NL', label: 'Nederland' },
@@ -59,6 +59,7 @@ export default function CreateOrderPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const errorRef = useRef<HTMLDivElement>(null)
 
   // Customer
   const [email, setEmail] = useState('')
@@ -94,6 +95,11 @@ export default function CreateOrderPage() {
   const [shippingCost, setShippingCost] = useState(0)
   const [defaultShippingCost, setDefaultShippingCost] = useState(0)
   const [internalNotes, setInternalNotes] = useState('')
+
+  const showError = (msg: string) => {
+    setError(msg)
+    setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+  }
 
   useEffect(() => {
     fetchProducts()
@@ -173,7 +179,7 @@ export default function CreateOrderPage() {
     const existingQty = existingItem?.quantity || 0
 
     if (existingQty + itemQuantity > totalStock) {
-      setError(`Maximaal ${totalStock} beschikbaar voor ${product.name} (${variant.size} - ${variant.color}). Je hebt al ${existingQty} in de order.`)
+      showError(`Maximaal ${totalStock} beschikbaar voor ${product.name} (${variant.size} - ${variant.color}). Je hebt al ${existingQty} in de order.`)
       return
     }
 
@@ -211,6 +217,17 @@ export default function CreateOrderPage() {
 
   const handleRemoveItem = (key: string) => {
     setLineItems(prev => prev.filter(li => li.key !== key))
+  }
+
+  const handleUpdateQuantity = (key: string, delta: number) => {
+    setLineItems(prev =>
+      prev.map(li => {
+        if (li.key !== key) return li
+        const newQty = li.quantity + delta
+        if (newQty < 1) return li
+        return { ...li, quantity: newQty }
+      })
+    )
   }
 
   const subtotal = lineItems.reduce((sum, li) => sum + li.price_at_purchase * li.quantity, 0)
@@ -273,7 +290,7 @@ export default function CreateOrderPage() {
 
       router.push(`/admin/orders/${data.orderId}`)
     } catch (err: any) {
-      setError(err.message)
+      showError(err.message)
     } finally {
       setLoading(false)
     }
@@ -301,7 +318,7 @@ export default function CreateOrderPage() {
       </div>
 
       {error && (
-        <div className="bg-red-100 border-2 border-red-300 text-red-700 px-4 py-3 mb-6 text-sm font-semibold">
+        <div ref={errorRef} className="bg-red-100 border-2 border-red-300 text-red-700 px-4 py-3 mb-6 text-sm font-semibold">
           {error}
         </div>
       )}
@@ -432,12 +449,12 @@ export default function CreateOrderPage() {
             <h2 className="text-lg font-bold uppercase tracking-wide">Producten</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-            <div className="md:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+            <div className="sm:col-span-2 md:col-span-1">
               <label className={labelClass}>Product</label>
               <select value={selectedProductId} onChange={e => setSelectedProductId(e.target.value)}
                 className={`${inputClass} bg-white`}>
-                <option value="">— Selecteer —</option>
+                <option value="">— Selecteer product —</option>
                 {products.map(p => (
                   <option key={p.id} value={p.id}>
                     {p.name} — €{(p.sale_price ?? p.base_price).toFixed(2)}
@@ -449,7 +466,7 @@ export default function CreateOrderPage() {
               <label className={labelClass}>Variant</label>
               <select value={selectedVariantId} onChange={e => setSelectedVariantId(e.target.value)}
                 className={`${inputClass} bg-white`} disabled={!selectedProductId}>
-                <option value="">— Selecteer —</option>
+                <option value="">{selectedProductId ? '— Selecteer variant —' : '— Kies eerst product —'}</option>
                 {variants.map(v => (
                   <option key={v.id} value={v.id}>
                     {v.size} / {v.color} ({v.stock_quantity + v.presale_stock_quantity} op voorraad)
@@ -457,17 +474,20 @@ export default function CreateOrderPage() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className={labelClass}>Aantal</label>
-              <input type="number" min={1} value={itemQuantity} onChange={e => setItemQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className={inputClass} />
-            </div>
-            <div>
-              <button type="button" onClick={handleAddItem}
-                disabled={!selectedProductId || !selectedVariantId}
-                className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2.5 px-4 uppercase tracking-wider text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                <Plus className="w-4 h-4" /> Toevoegen
-              </button>
+            <div className="grid grid-cols-2 gap-3 sm:contents">
+              <div>
+                <label className={labelClass}>Aantal</label>
+                <input type="number" min={1} value={itemQuantity} onChange={e => setItemQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className={inputClass} />
+              </div>
+              <div>
+                <label className={`${labelClass} sm:hidden`}>&nbsp;</label>
+                <button type="button" onClick={handleAddItem}
+                  disabled={!selectedProductId || !selectedVariantId}
+                  className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2.5 px-4 uppercase tracking-wider text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                  <Plus className="w-4 h-4" /> Toevoegen
+                </button>
+              </div>
             </div>
           </div>
 
@@ -484,18 +504,37 @@ export default function CreateOrderPage() {
             <div className="mt-5 border-t pt-4">
               <div className="space-y-3">
                 {lineItems.map(li => (
-                  <div key={li.key} className="flex items-center gap-4 p-3 bg-gray-50 border border-gray-200">
-                    {li.image_url && (
-                      <img src={li.image_url} alt="" className="w-12 h-12 object-cover border border-gray-200 flex-shrink-0" />
-                    )}
+                  <div key={li.key} className="flex items-center gap-3 md:gap-4 p-3 bg-gray-50 border border-gray-200">
+                    <div className="w-12 h-12 flex-shrink-0 border border-gray-200 bg-white overflow-hidden">
+                      {li.image_url ? (
+                        <img src={li.image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-5 h-5 text-gray-300" />
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm truncate">{li.product_name}</div>
-                      <div className="text-xs text-gray-500">{li.size} / {li.color} — SKU: {li.sku}</div>
+                      <div className="text-xs text-gray-500">{li.size} / {li.color}</div>
+                      <div className="text-xs text-gray-400 hidden md:block">SKU: {li.sku}</div>
                     </div>
-                    <div className="text-sm text-gray-600 flex-shrink-0">
-                      {li.quantity}x €{li.price_at_purchase.toFixed(2)}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button type="button" onClick={() => handleUpdateQuantity(li.key, -1)}
+                        disabled={li.quantity <= 1}
+                        className="w-7 h-7 flex items-center justify-center border border-gray-300 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="w-8 text-center text-sm font-semibold">{li.quantity}</span>
+                      <button type="button" onClick={() => handleUpdateQuantity(li.key, 1)}
+                        className="w-7 h-7 flex items-center justify-center border border-gray-300 hover:bg-gray-100 transition-colors">
+                        <Plus className="w-3 h-3" />
+                      </button>
                     </div>
-                    <div className="font-bold text-sm flex-shrink-0 w-20 text-right">
+                    <div className="text-sm text-gray-600 flex-shrink-0 hidden md:block">
+                      €{li.price_at_purchase.toFixed(2)}/st
+                    </div>
+                    <div className="font-bold text-sm flex-shrink-0 w-16 md:w-20 text-right">
                       €{(li.price_at_purchase * li.quantity).toFixed(2)}
                     </div>
                     <button type="button" onClick={() => handleRemoveItem(li.key)}
@@ -608,13 +647,13 @@ export default function CreateOrderPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-4 pt-2">
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button type="submit" disabled={loading || lineItems.length === 0}
-            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center">
             {loading ? 'Order Aanmaken...' : 'Order Aanmaken'}
           </button>
           <Link href="/admin/orders"
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 uppercase tracking-wider transition-colors flex items-center">
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 uppercase tracking-wider transition-colors flex items-center justify-center">
             Annuleren
           </Link>
         </div>
