@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533" fill="none">
+  <rect width="400" height="533" fill="#F3F4F6"/>
+  <g transform="translate(150, 220)">
+    <rect x="10" y="10" width="80" height="60" rx="4" stroke="#D1D5DB" stroke-width="3" fill="none"/>
+    <circle cx="30" cy="30" r="6" fill="#D1D5DB"/>
+    <path d="M10 55 L35 35 L55 50 L70 40 L90 55" stroke="#D1D5DB" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  </g>
+  <text x="200" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#9CA3AF" letter-spacing="2">GEEN AFBEELDING</text>
+</svg>

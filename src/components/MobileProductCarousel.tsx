@@ -66,6 +66,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
   ]
 
   const products = propProducts && propProducts.length > 0 ? propProducts : fallbackProducts
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadWishlist()
@@ -124,10 +125,11 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                 {/* Product Image Container */}
                 <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                   <Image
-                    src={primaryImage}
+                    src={failedImages.has(product.id) ? '/placeholder-product.svg' : primaryImage}
                     alt={product.name}
                     fill
                     className="object-cover object-center"
+                    onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                   />
                   
                   {/* Badge - show stock status including presale */}

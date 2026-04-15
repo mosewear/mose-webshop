@@ -1091,7 +1091,7 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   
   url = url.trim()
   
-  if (url === '/placeholder.png' || url === '/placeholder-product.png' || url === '') {
+  if (url === '/placeholder.png' || url === '/placeholder-product.png' || url === '/placeholder-product.svg' || url === '') {
     return ''
   }
   

@@ -25,6 +25,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
   const t = useTranslations('product.recentlyViewed')
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadRecentlyViewed()
@@ -84,9 +85,9 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
         {products.map((product) => {
-          const primaryImage = product.product_images.find(img => img.is_primary && img.media_type === 'image') 
-            || product.product_images.find(img => img.media_type === 'image')
-            || product.product_images[0]
+          const imageOnly = product.product_images.filter(img => img.media_type !== 'video')
+          const primaryImage = imageOnly.find(img => img.is_primary) 
+            || imageOnly[0]
 
           const hasDiscount = product.sale_price && product.sale_price < product.base_price
 
@@ -98,15 +99,14 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
             >
               <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 hover:shadow-xl md:hover:-translate-y-2">
                 <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                  {primaryImage && (
-                    <Image
-                      src={primaryImage.url}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
-                      className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
-                    />
-                  )}
+                  <Image
+                    src={failedImages.has(product.id) ? '/placeholder-product.svg' : (primaryImage?.url || '/placeholder-product.svg')}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
+                    className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                    onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
+                  />
                 </div>
                 <div className="p-2 md:p-3">
                   <h3 className="font-bold text-xs md:text-sm mb-1 line-clamp-2 min-h-[2rem]">

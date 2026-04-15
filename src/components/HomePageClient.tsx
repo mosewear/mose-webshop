@@ -42,7 +42,8 @@ export default function HomePageClient({
   const featuredProducts = initialFeaturedProducts
   const categories = initialCategories
 
-  // Newsletter form state
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterLoading, setNewsletterLoading] = useState(false)
   const [newsletterSuccess, setNewsletterSuccess] = useState(false)
@@ -323,11 +324,12 @@ export default function HomePageClient({
                     {/* Product Image Container */}
                     <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                       <Image
-                        src={product.images?.[0]?.image_url || product.image_url || '/placeholder.png'}
+                        src={failedImages.has(product.id) ? '/placeholder-product.svg' : (product.image_url || '/placeholder-product.svg')}
                         alt={product.name}
                         fill
                         sizes="(max-width: 768px) 50vw, 33vw"
                         className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
+                        onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                       />
                       
                       {/* Badge - show stock status including presale */}
@@ -495,11 +497,12 @@ export default function HomePageClient({
                   >
                     {/* Image */}
                     <Image
-                      src={categoryImage}
+                      src={failedImages.has(category.id) ? '/placeholder-product.svg' : categoryImage}
                       alt={category.name}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                      onError={() => setFailedImages(prev => new Set(prev).add(category.id))}
                     />
                     
                     {/* Gradient Overlay */}

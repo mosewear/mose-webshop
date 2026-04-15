@@ -40,7 +40,7 @@ function normalizeImageUrl(url: string | undefined, siteUrl: string): string {
   url = url.trim()
   
   // Skip placeholder images
-  if (url === '/placeholder.png' || url === '/placeholder-product.png' || url === '') {
+  if (url === '/placeholder.png' || url === '/placeholder-product.png' || url === '/placeholder-product.svg' || url === '') {
     return ''
   }
   
@@ -94,7 +94,7 @@ async function getImageAsBase64(imageUrl: string | undefined, siteUrl: string): 
     let url = imageUrl.trim()
     
     // Skip if URL is empty or just a placeholder
-    if (!url || url === '/placeholder.png' || url === '/placeholder-product.png') {
+    if (!url || url === '/placeholder.png' || url === '/placeholder-product.png' || url === '/placeholder-product.svg') {
       return null
     }
     

@@ -37,6 +37,7 @@ interface Product {
     is_primary: boolean
     media_type?: 'image' | 'video'
     color?: string | null
+    position?: number
   }>
   variants?: Array<{
     color?: string
@@ -82,6 +83,7 @@ export default function ShopPageClient() {
   const [maxPrice, setMaxPrice] = useState(500)
   const [showInStockOnly, setShowInStockOnly] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   const supabase = createClient()
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
 
@@ -181,7 +183,7 @@ export default function ShopPageClient() {
           name_en,
           description_en,
           category:categories(name, name_en, slug),
-          images:product_images(url, alt_text, is_primary, media_type, color),
+          images:product_images(url, alt_text, is_primary, media_type, color, position),
           variants:product_variants(color, color_hex, stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
         `)
         .eq('is_active', true)
@@ -190,13 +192,21 @@ export default function ShopPageClient() {
 
       if (error) throw error
       
+      // Sort images by position for consistent ordering
+      if (data) {
+        data.forEach(product => {
+          if (product.images) {
+            product.images.sort((a: any, b: any) => (a.position ?? 999) - (b.position ?? 999))
+          }
+        })
+      }
+      
       // Calculate min/max prices from products
       if (data && data.length > 0) {
         const prices = data.map(p => p.sale_price || p.base_price)
         const calculatedMin = Math.floor(Math.min(...prices) / 10) * 10
         const calculatedMax = Math.ceil(Math.max(...prices) / 10) * 10
         
-        // Update products first
         setProducts(data)
         
         // Only update price range if it's different (prevent re-render)
@@ -389,34 +399,17 @@ export default function ShopPageClient() {
   }
 
   const getPrimaryImage = (product: Product) => {
-    // Eerst proberen primary te vinden (image OF video)
-    const primaryMedia = product.images?.find(img => img.is_primary)
+    const images = product.images?.filter(img => img.media_type !== 'video') || []
     
-    // Als primary een video is, gebruik de eerste image als fallback voor thumbnail
-    if (primaryMedia?.url) {
-      // Als het een video is, zoek eerste image als thumbnail
-      if (primaryMedia.media_type === 'video') {
-        const firstImage = product.images?.find(img => img.media_type === 'image')
-        return firstImage?.url || primaryMedia.url  // Fallback to video URL if no images
-      }
-      return primaryMedia.url
-    }
-    
-    // Geen primary? Probeer fallback logic:
-    // 1. Eerst algemene afbeelding (color = null, image type)
-    const generalImage = product.images?.find(img => 
-      img.media_type === 'image' && (img.color === null || img.color === undefined)
-    )
-    if (generalImage?.url) return generalImage.url
-    
-    // 2. Anders eerste afbeelding van eerste variant (color !== null, image type)
-    const variantImage = product.images?.find(img => 
-      img.media_type === 'image' && img.color
-    )
-    if (variantImage?.url) return variantImage.url
-    
-    // 3. Ultieme fallback: eerste media item (ook video) of placeholder
-    return product.images?.[0]?.url || '/placeholder-product.png'
+    if (images.length === 0) return '/placeholder-product.svg'
+
+    const primary = images.find(img => img.is_primary)
+    if (primary?.url) return primary.url
+
+    const general = images.find(img => !img.color)
+    if (general?.url) return general.url
+
+    return images[0]?.url || '/placeholder-product.svg'
   }
 
   const handleApplyFilters = () => {
@@ -951,13 +944,14 @@ export default function ShopPageClient() {
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
-                            src={getPrimaryImage(product)}
+                            src={failedImages.has(product.id) ? '/placeholder-product.svg' : getPrimaryImage(product)}
                             alt={getProductName(product)}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover object-center"
                             priority={isPriority}
                             loading={isPriority ? 'eager' : 'lazy'}
+                            onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                           />
                           
                           {/* Stock Badge */}

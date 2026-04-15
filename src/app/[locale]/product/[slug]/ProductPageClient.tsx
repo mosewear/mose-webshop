@@ -718,7 +718,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
     // Get first IMAGE (not video) for cart thumbnail
     const firstImage = displayImages.find(img => img.media_type === 'image')
-    const cartImage = firstImage?.url || displayImages[0]?.url || '/placeholder.png'
+    const cartImage = firstImage?.url || displayImages[0]?.url || '/placeholder-product.svg'
 
     const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity > 0
     
@@ -971,7 +971,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             className={`relative w-full h-full ${index === selectedImage ? 'cursor-zoom-in' : ''}`}
                           >
                             <Image
-                              src={media.url || '/placeholder.png'}
+                              src={media.url || '/placeholder-product.svg'}
                               alt={media.alt_text || product.name}
                               fill
                               sizes="(max-width: 768px) 100vw, 50vw"
@@ -1876,7 +1876,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </button>
           <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
             <Image
-              src={displayImages[selectedImage]?.url || '/placeholder.png'}
+              src={displayImages[selectedImage]?.url || '/placeholder-product.svg'}
               alt={displayImages[selectedImage]?.alt_text || product.name}
               fill
               sizes="100vw"
@@ -2023,7 +2023,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           product={product}
           selectedVariant={selectedVariant}
           quantity={quantity}
-          cartImage={displayImages.find(img => img.media_type === 'image')?.url || displayImages[0]?.url || '/placeholder.png'}
+          cartImage={displayImages.find(img => img.media_type === 'image')?.url || displayImages[0]?.url || '/placeholder-product.svg'}
           inStock={hasAnyStock}
           onVariantRequired={handleVariantRequired}
         />

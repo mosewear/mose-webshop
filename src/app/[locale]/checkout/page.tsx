@@ -1024,7 +1024,7 @@ export default function CheckoutPage() {
               
               if (variant) {
                 const product = variant.products as any
-                const imageUrl = product.product_images?.[0]?.url || '/placeholder.png'
+                const imageUrl = product.product_images?.[0]?.url || '/placeholder-product.svg'
                 
                 mergedItems.push({
                   productId: variantInfo.product_id,

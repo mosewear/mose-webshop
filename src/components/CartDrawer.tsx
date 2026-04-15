@@ -445,7 +445,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       colorHex: variant.color_hex || '#000000',
       price: product.base_price,
       quantity: 1,
-      image: product.product_images[0]?.url || '/placeholder.png',
+      image: product.product_images[0]?.url || '/placeholder-product.svg',
       sku: variant.sku,
       stock: variant.stock_quantity,
     })
@@ -534,11 +534,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           className="relative w-20 h-26 md:w-[100px] md:h-[130px] bg-gray-100 flex-shrink-0 overflow-hidden"
                         >
                           <Image
-                            src={item.image}
+                            src={item.image || '/placeholder-product.svg'}
                             alt={item.name}
                             fill
                             sizes="100px"
                             className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.svg' }}
                           />
                         </LocaleLink>
 
@@ -657,11 +658,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
                             >
                               <Image
-                                src={product.product_images[0]?.url || '/placeholder.png'}
+                                src={product.product_images[0]?.url || '/placeholder-product.svg'}
                                 alt={getProductName(product)}
                                 fill
                                 sizes="60px"
                                 className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.svg' }}
                               />
                             </LocaleLink>
                             

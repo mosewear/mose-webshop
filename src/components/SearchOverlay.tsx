@@ -182,7 +182,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   {/* Image */}
                   <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 border-2 border-black">
                     <Image
-                      src={product.product_images[0]?.url || '/placeholder.png'}
+                      src={product.product_images[0]?.url || '/placeholder-product.svg'}
                       alt={getProductName(product)}
                       fill
                       sizes="80px"

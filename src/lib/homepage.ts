@@ -272,7 +272,7 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
         .in('id', validIds),
       supabase
         .from('product_images')
-        .select('product_id, url, is_primary')
+        .select('product_id, url, is_primary, media_type')
         .in('product_id', validIds),
       supabase
         .from('product_variants')
@@ -299,7 +299,8 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
     
     // Combine the data
     const products = productsData.map(p => {
-      const productImages = imagesData?.filter(img => img.product_id === p.id) || []
+      const allImages = imagesData?.filter(img => img.product_id === p.id) || []
+      const productImages = allImages.filter(img => img.media_type !== 'video')
       const productVariants = variantsData?.filter(v => v.product_id === p.id) || []
       const primaryImage = productImages.find(img => img.is_primary)
       
@@ -315,7 +316,7 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
         sale_price: p.sale_price,
         stock_quantity: totalStock, // Regular stock
         presale_stock_quantity: totalPresaleStock, // Presale stock
-        image_url: primaryImage?.url || productImages[0]?.url || '/placeholder.png',
+        image_url: primaryImage?.url || productImages[0]?.url || '/placeholder-product.svg',
         images: productImages,
         variants: productVariants,
       }

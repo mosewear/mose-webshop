@@ -46,6 +46,7 @@ export default function WishlistPage() {
   const locale = useLocale()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadWishlist()
@@ -132,7 +133,7 @@ export default function WishlistPage() {
     // Get first product image
     const productImage = product.product_images && product.product_images.length > 0 
       ? product.product_images[0].url 
-      : '/placeholder.png'
+      : '/placeholder-product.svg'
 
     addItem({
       productId: product.id,
@@ -229,14 +230,14 @@ export default function WishlistPage() {
 
                 {/* Product Image */}
                 <LocaleLink href={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden border-b-2 border-black">
-                  {product.product_images && product.product_images.length > 0 ? (
+                  {product.product_images && product.product_images.length > 0 && !failedImages.has(product.id) ? (
                     <Image
                       src={product.product_images[0].url}
                       alt={product.product_images[0].alt_text || displayName}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-contain group-hover:scale-105 transition-transform duration-500"
-                      unoptimized
+                      onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">

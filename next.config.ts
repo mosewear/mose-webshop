@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
       },
     ],
     qualities: [75, 90],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
   // Redirect mosewear.nl → mosewear.com (permanent 301)
