@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Plus } from 'lucide-react'
 
 interface Order {
   id: string
@@ -220,6 +220,13 @@ export default function AdminOrdersPage() {
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
         </div>
         <div className="flex w-full md:w-auto items-center gap-2">
+          <Link
+            href="/admin/orders/create"
+            className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 text-sm md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nieuwe Order
+          </Link>
           <button 
             onClick={() => fetchOrders()}
             disabled={refreshing}
