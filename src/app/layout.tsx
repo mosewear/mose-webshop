@@ -30,10 +30,6 @@ export const viewport: Viewport = {
 // no explicit force-dynamic needed.
 
 export async function generateMetadata(): Promise<Metadata> {
-  console.log('🎯 [LAYOUT] generateMetadata called')
-  
-  // Use static favicon files from /public folder
-  // This ensures consistent branding with the new MOSE logo
   const timestamp = Date.now()
 
   return {
@@ -113,7 +109,6 @@ export default async function RootLayout({
   return (
     <html lang={lang} className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        {/* lang attribute is set by [locale]/layout.tsx via generateMetadata */}
         {/* Facebook Pixel - Only load after consent */}
         <Script
           id="facebook-pixel"

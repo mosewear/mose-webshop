@@ -7,11 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
 export async function POST(req: NextRequest) {
   try {
-    console.log('🔵 API: create-payment-intent called')
-    
     const body = await req.json()
-    console.log('🔵 API: Request body:', body)
-    
     const {
       orderId,
       items,
@@ -26,7 +22,6 @@ export async function POST(req: NextRequest) {
     } = body
 
     if (!orderId || !items || items.length === 0) {
-      console.error('🔴 API: Missing required fields')
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -34,19 +29,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (expectedTotal == null) {
-      console.error('🔴 API: Missing expectedTotal')
       return NextResponse.json(
         { error: 'Missing expectedTotal' },
         { status: 400 }
       )
     }
 
-    // Get dynamic shipping settings
     const settings = await getSiteSettings()
-    console.log('🔵 API: Settings from Supabase:', {
-      shipping_cost: settings.shipping_cost,
-      free_shipping_threshold: settings.free_shipping_threshold
-    })
 
     // Calculate subtotal from items
     const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
@@ -54,8 +43,6 @@ export async function POST(req: NextRequest) {
     // Server-side promo code validation
     let validatedDiscount = 0
     if (promoCode) {
-      console.log('🎟️ Validating promo code:', promoCode)
-      
       try {
         const { createClient } = await import('@supabase/supabase-js')
         const supabase = createClient(
@@ -73,25 +60,18 @@ export async function POST(req: NextRequest) {
         if (promoData && !promoError && promoData.is_active) {
           // Check expiry
           if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
-            console.log('⚠️ Promo code expired, ignoring')
-          } 
-          // Check usage limit
-          else if (promoData.usage_limit && promoData.usage_count >= promoData.usage_limit) {
-            console.log('⚠️ Promo code usage limit reached, ignoring')
-          }
-          // Check minimum order value
-          else if (promoData.min_order_value && subtotal < promoData.min_order_value) {
-            console.log('⚠️ Minimum order value not met, ignoring')
-          }
-          // Valid! Calculate discount
-          else {
+            // Expired
+          } else if (promoData.usage_limit && promoData.usage_count >= promoData.usage_limit) {
+            // Usage limit reached
+          } else if (promoData.min_order_value && subtotal < promoData.min_order_value) {
+            // Minimum order value not met
+          } else {
             if (promoData.discount_type === 'percentage') {
               validatedDiscount = (subtotal * promoData.discount_value) / 100
             } else if (promoData.discount_type === 'fixed') {
               validatedDiscount = promoData.discount_value
             }
-            validatedDiscount = Math.min(validatedDiscount, subtotal) // Cap at subtotal
-            console.log('✅ Promo code validated, discount:', validatedDiscount)
+            validatedDiscount = Math.min(validatedDiscount, subtotal)
           }
         }
       } catch (err) {
@@ -121,18 +101,9 @@ export async function POST(req: NextRequest) {
     }
     const total = subtotalAfterDiscount + shippingCost
 
-    console.log('🔵 API: Calculated totals:', { 
-      subtotal, 
-      promoDiscount: validatedDiscount,
-      subtotalAfterDiscount,
-      shippingCost, 
-      total,
-      expectedTotal 
-    })
-    
     // Security check: compare with expected total (allow 1 cent difference for rounding)
     if (Math.abs(total - expectedTotal) > 0.01) {
-      console.error('🔴 Total mismatch! Calculated:', total, 'Expected:', expectedTotal)
+      console.error('[create-payment-intent] Total mismatch:', { total, expectedTotal })
       return NextResponse.json(
         { error: 'Price mismatch. Please refresh and try again.' },
         { status: 400 }
@@ -166,18 +137,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log('🔵 API: Creating Payment Intent with config:', {
-      amount: paymentIntentConfig.amount,
-      payment_method_types: paymentIntentConfig.payment_method_types,
-      automatic_payment_methods: paymentIntentConfig.automatic_payment_methods,
-    })
-
-    // Create Payment Intent
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig)
 
-    console.log('✅ API: Payment Intent created:', paymentIntent.id)
-
-    // Update order with stripe_payment_intent_id for later lookup
+    // Update order with stripe_payment_intent_id
     try {
       const { createClient } = await import('@supabase/supabase-js')
       const supabase = createClient(
@@ -198,10 +160,8 @@ export async function POST(req: NextRequest) {
           checkout_started_at: new Date().toISOString(),
         })
         .eq('id', orderId)
-        
-      console.log('✅ API: Order updated with payment intent and status')
     } catch (err) {
-      console.error('⚠️ API: Failed to update order:', err)
+      console.error('[create-payment-intent] Failed to update order:', err)
       // Don't fail the whole request if this fails
     }
 
@@ -210,9 +170,9 @@ export async function POST(req: NextRequest) {
       paymentIntentId: paymentIntent.id
     })
   } catch (error: any) {
-    console.error('🔴 API: Payment Intent error:', error)
+    console.error('[create-payment-intent] Error:', error.message || error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create payment intent' },
+      { error: 'Er is een fout opgetreden bij het aanmaken van de betaling' },
       { status: 500 }
     )
   }
