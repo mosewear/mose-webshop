@@ -88,7 +88,7 @@ export default function CookieConsent() {
               </button>
               <button
                 onClick={() => handleAccept('all')}
-                className="px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider border-2 border-brand-primary hover:bg-brand-primary-hover transition-all shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 text-sm whitespace-nowrap"
+                className="px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider border-2 border-brand-primary hover:bg-brand-primary-hover transition-all hover:translate-x-1 hover:translate-y-1 text-sm whitespace-nowrap"
               >
                 {t('acceptAll')}
               </button>

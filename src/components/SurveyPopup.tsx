@@ -303,7 +303,7 @@ export default function SurveyPopup({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div 
-          className="bg-white border-4 border-black max-w-md w-full max-h-[90vh] flex flex-col relative pointer-events-auto animate-slideUp shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
+          className="bg-white border-4 border-black max-w-md w-full max-h-[90vh] flex flex-col relative pointer-events-auto animate-slideUp"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}

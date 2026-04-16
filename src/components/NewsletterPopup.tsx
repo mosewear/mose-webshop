@@ -246,7 +246,7 @@ export default function NewsletterPopup({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div 
-          className="bg-white border-4 border-black max-w-md w-full p-6 md:p-8 relative pointer-events-auto animate-slideUp shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
+          className="bg-white border-4 border-black max-w-md w-full p-6 md:p-8 relative pointer-events-auto animate-slideUp"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
@@ -327,7 +327,7 @@ export default function NewsletterPopup({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 border-4 border-black uppercase tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                    className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 border-4 border-black uppercase tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:translate-x-1 hover:translate-y-1"
                   >
                     {isSubmitting ? t('ctaSubmitting') : t('ctaButton', { discount: discountPercentage })}
                   </button>
