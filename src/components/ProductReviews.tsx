@@ -89,47 +89,37 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     }
 
     setSubmitting(true)
-    const supabase = createClient()
     
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const res = await fetch('/api/reviews/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          rating: formData.rating,
+          title: formData.title,
+          comment: formData.comment,
+          reviewer_name: formData.reviewer_name,
+          reviewer_email: formData.reviewer_email,
+        }),
+      })
 
-      const { data: insertedReview, error } = await supabase
-        .from('product_reviews')
-        .insert([
-          {
-            product_id: productId,
-            user_id: user?.id || null,
-            rating: formData.rating,
-            title: formData.title,
-            comment: formData.comment,
-            reviewer_name: formData.reviewer_name,
-            reviewer_email: formData.reviewer_email,
-            is_approved: false, // Admin moet goedkeuren
-          },
-        ])
-        .select()
-        .single()
+      const data = await res.json()
 
-      if (error) throw error
+      if (!res.ok) {
+        throw new Error(data.error || 'Review kon niet worden opgeslagen')
+      }
 
-      // Send notification email to admin
-      if (insertedReview) {
-        try {
-          await fetch('/api/reviews/notify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              reviewId: insertedReview.id,
-              productId: productId,
-            }),
-          })
-        } catch (emailError) {
-          // Log error but don't fail the review submission
-          console.error('Error sending review notification email:', emailError)
-        }
+      // Send notification email to admin (fire-and-forget)
+      if (data.reviewId) {
+        fetch('/api/reviews/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewId: data.reviewId,
+            productId: productId,
+          }),
+        }).catch(() => {})
       }
 
       alert('✅ Bedankt voor je review! Je review wordt binnen 24 uur goedgekeurd.')
@@ -143,7 +133,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       })
     } catch (error: any) {
       console.error('Error submitting review:', error)
-      alert('Er ging iets mis bij het verzenden van je review')
+      alert(error.message || 'Er ging iets mis bij het verzenden van je review')
     } finally {
       setSubmitting(false)
     }
