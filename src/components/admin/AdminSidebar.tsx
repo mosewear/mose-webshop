@@ -282,7 +282,7 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       {/* Mobile Menu Button - Fixed bottom bar */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="lg:hidden fixed bottom-4 right-4 z-[70] px-4 h-12 bg-brand-primary text-white rounded-full shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform"
+        className="lg:hidden fixed bottom-4 right-4 z-[70] px-4 h-12 bg-brand-primary text-white border-2 border-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
         aria-label={mobileMenuOpen ? 'Sluit menu' : 'Open menu'}
       >
         {mobileMenuOpen ? (

@@ -60,7 +60,7 @@ export async function generateMetadata({
       title: `${title} - MOSE Blog`,
       description,
       type: 'article',
-      url: `https://mosewear.com/${locale}/blog/${slug}`,
+      url: `https://www.mosewear.com/${locale}/blog/${slug}`,
       publishedTime: post.published_at || post.created_at,
       modifiedTime: post.updated_at,
       authors: [post.author],
@@ -75,7 +75,7 @@ export async function generateMetadata({
           ]
         : [
             {
-              url: 'https://mosewear.com/hero_mose.png',
+              url: 'https://www.mosewear.com/hero_mose.png',
               width: 1200,
               height: 630,
               alt: 'MOSE Blog',
@@ -89,7 +89,7 @@ export async function generateMetadata({
       description,
       images: post.featured_image_url
         ? [post.featured_image_url]
-        : ['https://mosewear.com/hero_mose.png'],
+        : ['https://www.mosewear.com/hero_mose.png'],
     },
     alternates: {
       canonical: `/${locale}/blog/${slug}`,
@@ -124,12 +124,17 @@ export default async function BlogDetailPage({
 
   const typedPost = post as BlogPost
 
-  const { data: relatedPosts } = await supabase
+  let relatedQuery = supabase
     .from('blog_posts')
     .select('id, title_nl, title_en, slug, excerpt_nl, excerpt_en, featured_image_url, category, author, reading_time, published_at, created_at')
     .eq('status', 'published')
     .neq('id', typedPost.id)
-    .eq('category', typedPost.category || '')
+
+  if (typedPost.category) {
+    relatedQuery = relatedQuery.eq('category', typedPost.category)
+  }
+
+  const { data: relatedPosts } = await relatedQuery
     .order('published_at', { ascending: false })
     .limit(3)
 
@@ -141,7 +146,7 @@ export default async function BlogDetailPage({
     description: locale === 'en'
       ? (typedPost.excerpt_en || typedPost.excerpt_nl || '')
       : (typedPost.excerpt_nl || ''),
-    image: typedPost.featured_image_url || 'https://mosewear.com/hero_mose.png',
+    image: typedPost.featured_image_url || 'https://www.mosewear.com/hero_mose.png',
     author: {
       '@type': 'Person',
       name: typedPost.author,
@@ -151,7 +156,7 @@ export default async function BlogDetailPage({
       name: 'MOSE',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://mosewear.com/logomose.png',
+        url: 'https://www.mosewear.com/logomose.png',
       },
     },
     datePublished: typedPost.published_at || typedPost.created_at,

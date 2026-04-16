@@ -117,5 +117,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-GRANT EXECUTE ON FUNCTION award_loyalty_points TO authenticated;
-GRANT EXECUTE ON FUNCTION award_loyalty_points TO anon;
+GRANT EXECUTE ON FUNCTION award_loyalty_points TO service_role;

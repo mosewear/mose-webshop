@@ -382,36 +382,6 @@ export default function AdminBlogCreatePage() {
             <p className="text-xs text-gray-500 mt-1">Automatisch berekend op basis van content</p>
           </div>
 
-          {/* Status */}
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Status
-            </label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStatus('draft')}
-                className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider border-2 transition-colors ${
-                  status === 'draft'
-                    ? 'bg-yellow-100 border-yellow-400 text-yellow-700'
-                    : 'border-gray-300 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                Concept
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatus('published')}
-                className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider border-2 transition-colors ${
-                  status === 'published'
-                    ? 'bg-green-100 border-green-400 text-green-700'
-                    : 'border-gray-300 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                Gepubliceerd
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

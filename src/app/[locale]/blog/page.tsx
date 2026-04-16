@@ -18,10 +18,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title,
       description,
       type: 'website',
-      url: `https://mosewear.com/${locale}/blog`,
+      url: `https://www.mosewear.com/${locale}/blog`,
       images: [
         {
-          url: 'https://mosewear.com/hero_mose.png',
+          url: 'https://www.mosewear.com/hero_mose.png',
           width: 1200,
           height: 630,
           alt: 'MOSE Blog',
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://mosewear.com/hero_mose.png'],
+      images: ['https://www.mosewear.com/hero_mose.png'],
     },
     alternates: {
       canonical: `/${locale}/blog`,
@@ -65,7 +65,7 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
     isPartOf: {
       '@type': 'WebSite',
       name: 'MOSE',
-      url: 'https://mosewear.com',
+      url: 'https://www.mosewear.com',
     },
     breadcrumb: {
       '@type': 'BreadcrumbList',

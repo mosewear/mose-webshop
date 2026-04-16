@@ -48,7 +48,7 @@ export function Header() {
     <>
       {/* Desktop Header */}
       <header
-        className="fixed left-0 right-0 z-40 bg-white shadow-md py-4 transition-shadow duration-300"
+        className="fixed left-0 right-0 z-40 bg-white border-b-2 border-gray-200 py-4 transition-colors duration-300"
         style={{ top: 'var(--announcement-banner-height, 0px)' }}
       >
         {/* Scroll Progress Indicator */}
@@ -84,7 +84,7 @@ export function Header() {
                 {t('lookbook')}
               </Link>
               <Link href={localeLink('/blog')} className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
-                Blog
+                {t('blog')}
               </Link>
               <Link href={localeLink('/over-mose')} className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
                 {t('about')}
@@ -187,7 +187,7 @@ export function Header() {
             className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <span className="uppercase">Blog</span>
+            <span className="uppercase">{t('blog')}</span>
             <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link

@@ -12,9 +12,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { points } = body
+    const rawPoints = body.points
 
-    if (!points || typeof points !== 'number' || points < LOYALTY_CONFIG.redemptionMinPoints) {
+    const points = typeof rawPoints === 'string' ? Number(rawPoints) : rawPoints
+
+    if (!points || typeof points !== 'number' || !Number.isFinite(points) || points < LOYALTY_CONFIG.redemptionMinPoints) {
       return NextResponse.json(
         { error: `Minimaal ${LOYALTY_CONFIG.redemptionMinPoints} punten vereist` },
         { status: 400 }
@@ -40,7 +42,27 @@ export async function POST(req: NextRequest) {
 
     const discountValue = calculateRedemptionValue(redeemPoints)
 
-    await serviceClient
+    // Step 1: Update balance first with a conditional check (balance must still be sufficient)
+    const { error: updateError, data: updatedRecord } = await serviceClient
+      .from('loyalty_points')
+      .update({
+        points_balance: loyaltyRecord.points_balance - redeemPoints,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', loyaltyRecord.id)
+      .gte('points_balance', redeemPoints)
+      .select('points_balance')
+      .single()
+
+    if (updateError || !updatedRecord) {
+      return NextResponse.json(
+        { error: 'Niet genoeg punten of balans is ondertussen gewijzigd' },
+        { status: 409 }
+      )
+    }
+
+    // Step 2: Insert the transaction record
+    const { error: insertError } = await serviceClient
       .from('loyalty_transactions')
       .insert({
         email: user.email,
@@ -50,21 +72,29 @@ export async function POST(req: NextRequest) {
         description: `${redeemPoints} punten ingewisseld voor €${discountValue.toFixed(2)} korting`,
       })
 
-    await serviceClient
-      .from('loyalty_points')
-      .update({
-        points_balance: loyaltyRecord.points_balance - redeemPoints,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', loyaltyRecord.id)
+    if (insertError) {
+      // Roll back the balance update
+      await serviceClient
+        .from('loyalty_points')
+        .update({
+          points_balance: updatedRecord.points_balance + redeemPoints,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', loyaltyRecord.id)
+
+      return NextResponse.json(
+        { error: 'Er ging iets mis bij het inwisselen' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
       points_redeemed: redeemPoints,
       discount_value: discountValue,
-      remaining_balance: loyaltyRecord.points_balance - redeemPoints,
+      remaining_balance: updatedRecord.points_balance,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Loyalty redeem error:', error)
     return NextResponse.json(
       { error: 'Er ging iets mis bij het inwisselen' },

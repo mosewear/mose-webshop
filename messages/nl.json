@@ -21,6 +21,7 @@
   "common": {
     "shop": "Shop",
     "lookbook": "Lookbook",
+    "blog": "Blog",
     "about": "Over MOSE",
     "contact": "Contact",
     "cart": "Winkelwagen",
@@ -909,23 +910,6 @@
     "questions": "Vragen?",
     "questionsText": "We helpen je graag! Neem contact met ons op:"
   },
-  "orderConfirmation": {
-    "subject": "Bestelling Bevestigd - #{orderId}",
-    "title": "BESTELLING BEVESTIGD",
-    "subtitle": "BEDANKT VOOR JE BESTELLING",
-    "heroText": "Bedankt {name}! We hebben je bestelling ontvangen en bevestigd.",
-    "presaleNotice": "Pre-order item in je bestelling",
-    "presaleNoticeText": "Let op: Deze bestelling bevat één of meer pre-order items. Verwachte levering: {date}",
-    "expected": "Verwacht",
-    "yourItems": "Jouw items",
-    "paymentSummary": "Betalingsoverzicht",
-    "subtotal": "Subtotaal (excl. BTW)",
-    "vat": "BTW (21%)",
-    "shipping": "Verzending",
-    "free": "Gratis",
-    "totalPaid": "Totaal betaald (incl. BTW)",
-    "shippingAddress": "Verzendadres"
-  },
   "metadata": {
     "title": "MOSE | Kleding en accessoires voor mannen",
     "description": "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
@@ -992,38 +976,6 @@
       "description": "We helpen je graag! Neem contact met ons op.",
       "button": "Contact Opnemen"
     }
-  },
-  "orderConfirmation": {
-    "title": "Bestelling Bevestigd!",
-    "thankYou": "Bedankt voor je bestelling!",
-    "orderNumber": "Bestelnummer",
-    "orderDate": "Besteldatum",
-    "email": "E-mailadres",
-    "confirmationSent": "We hebben een bevestiging gestuurd naar {email}",
-    "whatNow": "Wat gebeurt er nu?",
-    "step1": {
-      "title": "1. We verwerken je betaling",
-      "description": "Je betaling wordt gecontroleerd en goedgekeurd."
-    },
-    "step2": {
-      "title": "2. We pakken je bestelling in",
-      "description": "Je items worden zorgvuldig ingepakt in ons atelier."
-    },
-    "step3": {
-      "title": "3. Je pakket wordt verstuurd",
-      "description": "Je ontvangt een Track & Trace code per email."
-    },
-    "items": "Je items",
-    "subtotal": "Subtotaal",
-    "shipping": "Verzending",
-    "total": "Totaal",
-    "shippingAddress": "Verzendadres",
-    "billingAddress": "Factuuradres",
-    "paymentMethod": "Betaalmethode",
-    "continueShopping": "Verder Shoppen",
-    "viewAccount": "Bekijk Mijn Account",
-    "loading": "Bestelling laden...",
-    "error": "Er ging iets fout bij het ophalen van je bestelling."
   },
   "language": {
     "selector": "Taal",

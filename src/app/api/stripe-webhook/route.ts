@@ -460,7 +460,7 @@ export async function POST(req: NextRequest) {
                   points_balance: newBalance,
                   lifetime_points: newLifetime,
                   tier: newTier,
-                  user_id: order.user_id || existingRecord.id,
+                  user_id: order.user_id || null,
                   updated_at: new Date().toISOString(),
                 })
                 .eq('id', existingRecord.id)

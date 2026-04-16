@@ -48,6 +48,7 @@ export default function AdminBlogEditPage() {
   const [category, setCategory] = useState('')
   const [tags, setTags] = useState('')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
+  const [originalPublishedAt, setOriginalPublishedAt] = useState<string | null>(null)
   const [author, setAuthor] = useState('MOSE')
   const [seoTitleNl, setSeoTitleNl] = useState('')
   const [seoTitleEn, setSeoTitleEn] = useState('')
@@ -82,6 +83,7 @@ export default function AdminBlogEditPage() {
       setTags(data.tags ? data.tags.join(', ') : '')
       setStatus(data.status || 'draft')
       setAuthor(data.author || 'MOSE')
+      setOriginalPublishedAt(data.published_at || null)
       setSeoTitleNl(data.seo_title_nl || '')
       setSeoTitleEn(data.seo_title_en || '')
       setSeoDescNl(data.seo_description_nl || '')
@@ -138,7 +140,7 @@ export default function AdminBlogEditPage() {
           seo_title_en: seoTitleEn.trim() || null,
           seo_description_nl: seoDescNl.trim() || null,
           seo_description_en: seoDescEn.trim() || null,
-          published_at: publishStatus === 'published' ? new Date().toISOString() : null,
+          published_at: publishStatus === 'published' ? (originalPublishedAt || new Date().toISOString()) : null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', postId)
@@ -429,36 +431,6 @@ export default function AdminBlogEditPage() {
             <p className="text-xs text-gray-500 mt-1">Automatisch berekend op basis van content</p>
           </div>
 
-          {/* Status */}
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Status
-            </label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStatus('draft')}
-                className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider border-2 transition-colors ${
-                  status === 'draft'
-                    ? 'bg-yellow-100 border-yellow-400 text-yellow-700'
-                    : 'border-gray-300 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                Concept
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatus('published')}
-                className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider border-2 transition-colors ${
-                  status === 'published'
-                    ? 'bg-green-100 border-green-400 text-green-700'
-                    : 'border-gray-300 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                Gepubliceerd
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
