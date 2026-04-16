@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { sendAbandonedCartEmail } from '@/lib/email'
 import { logEmail } from '@/lib/email-logger'
 import { requireAdmin } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
-    // Only admins or cron jobs can trigger this
     const authHeader = req.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    // Check if it's a cron job with secret
+    // Vercel Cron sends: Authorization: Bearer <CRON_SECRET>
     const isCronJob = authHeader === `Bearer ${cronSecret}` && cronSecret
 
-    // If not cron, must be admin
     if (!isCronJob) {
       const { authorized } = await requireAdmin()
       if (!authorized) {
@@ -21,9 +19,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
-    // Get site settings for configuration
     const { data: settings } = await supabase
       .from('site_settings')
       .select('key, value')
@@ -45,7 +42,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Get abandoned carts using the database function
     const { data: abandonedCarts, error } = await supabase
       .rpc('get_abandoned_carts', { 
         hours_threshold: abandonedHours,
@@ -64,14 +60,13 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    console.log(`📧 Found ${abandonedCarts.length} abandoned cart(s) to email`)
+    console.log(`Found ${abandonedCarts.length} abandoned cart(s) to email`)
 
     const emailResults = []
 
-    // Send email for each abandoned cart
     for (const cart of abandonedCarts) {
       try {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
         const checkoutUrl = `${siteUrl}/checkout?recover=${cart.order_id}`
 
         const emailResult = await sendAbandonedCartEmail({
@@ -93,18 +88,16 @@ export async function POST(req: NextRequest) {
           returnDays: returnDays,
         })
 
-        // Log the email
         await logEmail({
           orderId: cart.order_id,
           emailType: 'abandoned_cart',
           recipientEmail: cart.customer_email,
-          subject: `${cart.customer_name || 'Klant'}, je MOSE items wachten nog op je! 🛒`,
+          subject: `${cart.customer_name || 'Klant'}, je MOSE items wachten nog op je!`,
           status: emailResult.success ? 'sent' : 'failed',
           errorMessage: emailResult.error ? JSON.stringify(emailResult.error) : undefined,
         })
 
         if (emailResult.success) {
-          // Mark as sent in database
           await supabase.rpc('mark_abandoned_cart_email_sent', { 
             order_uuid: cart.order_id 
           })
@@ -115,7 +108,7 @@ export async function POST(req: NextRequest) {
             success: true,
           })
 
-          console.log(`✅ Abandoned cart email sent to ${cart.customer_email}`)
+          console.log(`Abandoned cart email sent to ${cart.customer_email}`)
         } else {
           emailResults.push({
             orderId: cart.order_id,
@@ -124,10 +117,10 @@ export async function POST(req: NextRequest) {
             error: emailResult.error,
           })
 
-          console.error(`❌ Failed to send abandoned cart email to ${cart.customer_email}:`, emailResult.error)
+          console.error(`Failed to send abandoned cart email to ${cart.customer_email}:`, emailResult.error)
         }
       } catch (error) {
-        console.error(`❌ Error processing abandoned cart ${cart.order_id}:`, error)
+        console.error(`Error processing abandoned cart ${cart.order_id}:`, error)
         emailResults.push({
           orderId: cart.order_id,
           email: cart.customer_email,
@@ -147,25 +140,30 @@ export async function POST(req: NextRequest) {
       results: emailResults,
     })
   } catch (error: any) {
-    console.error('❌ Error in abandoned cart cron:', error)
+    console.error('Error in abandoned cart cron:', error)
     return NextResponse.json({ 
       error: error.message || 'Internal server error' 
     }, { status: 500 })
   }
 }
 
-// GET endpoint for manual testing (admin only)
 export async function GET(req: NextRequest) {
   try {
-    const { authorized } = await requireAdmin()
-    if (!authorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // GET can be called by Vercel Cron or admins
+    const authHeader = req.headers.get('authorization')
+    const cronSecret = process.env.CRON_SECRET
+    const isCronJob = authHeader === `Bearer ${cronSecret}` && cronSecret
+
+    if (!isCronJob) {
+      const { authorized } = await requireAdmin()
+      if (!authorized) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
-    // Get abandoned carts stats
-    const { data: abandonedCarts, error } = await supabase
+    const { data: allCarts, error } = await supabase
       .rpc('get_abandoned_carts', { 
         hours_threshold: 24,
         email_not_sent_only: false 
@@ -175,17 +173,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const emailNotSent = abandonedCarts?.filter((c: any) => !c.abandoned_cart_email_sent) || []
-    const emailSent = abandonedCarts?.filter((c: any) => c.abandoned_cart_email_sent) || []
+    const emailNotSent = allCarts?.filter((c: any) => !c.abandoned_cart_email_sent) || []
+    const emailSent = allCarts?.filter((c: any) => c.abandoned_cart_email_sent) || []
 
     return NextResponse.json({
-      total_abandoned: abandonedCarts?.length || 0,
+      total_abandoned: allCarts?.length || 0,
       pending_email: emailNotSent.length,
       email_sent: emailSent.length,
-      carts: abandonedCarts || [],
+      carts: allCarts || [],
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
-
