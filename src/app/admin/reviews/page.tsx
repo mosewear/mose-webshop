@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 interface Review {
   id: string
@@ -24,69 +24,80 @@ interface Review {
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all')
+  const [counts, setCounts] = useState({ total: 0, pending: 0, approved: 0 })
 
   useEffect(() => {
     fetchReviews()
   }, [filter])
 
+  useEffect(() => {
+    fetchCounts()
+  }, [])
+
+  const fetchCounts = async () => {
+    const res = await fetch('/api/admin/reviews?filter=all')
+    if (res.ok) {
+      const { reviews: all } = await res.json()
+      setCounts({
+        total: all.length,
+        pending: all.filter((r: Review) => !r.is_approved).length,
+        approved: all.filter((r: Review) => r.is_approved).length,
+      })
+    }
+  }
+
   const fetchReviews = async () => {
     setLoading(true)
-    const supabase = createClient()
 
-    let query = supabase
-      .from('product_reviews')
-      .select('*, products(name, slug)')
-      .order('created_at', { ascending: false })
+    const res = await fetch(`/api/admin/reviews?filter=${filter}`)
 
-    if (filter === 'pending') {
-      query = query.eq('is_approved', false)
-    } else if (filter === 'approved') {
-      query = query.eq('is_approved', true)
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      console.error('Error fetching reviews:', errData.error || res.statusText)
+      toast.error('Kon reviews niet laden')
+      setLoading(false)
+      return
     }
 
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching reviews:', error)
-    } else {
-      setReviews(data || [])
-    }
-
+    const { reviews: data } = await res.json()
+    setReviews(data || [])
     setLoading(false)
   }
 
   const handleApprove = async (reviewId: string) => {
-    const supabase = createClient()
+    const res = await fetch('/api/admin/reviews', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviewId, action: 'approve' }),
+    })
 
-    const { error } = await supabase
-      .from('product_reviews')
-      .update({ is_approved: true })
-      .eq('id', reviewId)
-
-    if (error) {
-      alert(`Fout: ${error.message}`)
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      toast.error(`Fout: ${errData.error || 'Onbekende fout'}`)
     } else {
-      alert('✅ Review goedgekeurd!')
+      toast.success('Review goedgekeurd!')
       fetchReviews()
+      fetchCounts()
     }
   }
 
   const handleReject = async (reviewId: string) => {
     if (!confirm('Weet je zeker dat je deze review wilt verwijderen?')) return
 
-    const supabase = createClient()
+    const res = await fetch('/api/admin/reviews', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviewId, action: 'delete' }),
+    })
 
-    const { error } = await supabase
-      .from('product_reviews')
-      .delete()
-      .eq('id', reviewId)
-
-    if (error) {
-      alert(`Fout: ${error.message}`)
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      toast.error(`Fout: ${errData.error || 'Onbekende fout'}`)
     } else {
-      alert('Review verwijderd')
+      toast.success('Review verwijderd')
       fetchReviews()
+      fetchCounts()
     }
   }
 
@@ -121,9 +132,9 @@ export default function AdminReviewsPage() {
       <div className="bg-white border-2 border-gray-200 p-4 mb-6 overflow-x-auto">
         <div className="flex gap-2 min-w-max">
           {([
-            { value: 'pending' as const, label: 'Te beoordelen' },
-            { value: 'approved' as const, label: 'Goedgekeurd' },
-            { value: 'all' as const, label: 'Alles' },
+            { value: 'all' as const, label: 'Alles', count: counts.total },
+            { value: 'pending' as const, label: 'Te beoordelen', count: counts.pending },
+            { value: 'approved' as const, label: 'Goedgekeurd', count: counts.approved },
           ]).map((f) => (
             <button
               key={f.value}
@@ -134,7 +145,7 @@ export default function AdminReviewsPage() {
                   : 'border-gray-300 text-gray-700 hover:border-gray-400'
               }`}
             >
-              {f.label}
+              {f.label} ({f.count})
             </button>
           ))}
         </div>
@@ -143,19 +154,15 @@ export default function AdminReviewsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{reviews.length}</div>
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{counts.total}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">
-            {reviews.filter(r => !r.is_approved).length}
-          </div>
+          <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">{counts.pending}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Te beoordelen</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200 col-span-2 md:col-span-1">
-          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
-            {reviews.filter(r => r.is_approved).length}
-          </div>
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">{counts.approved}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Goedgekeurd</div>
         </div>
       </div>
@@ -195,7 +202,7 @@ export default function AdminReviewsPage() {
                 {review.comment && <p className="text-sm text-gray-700 mb-3 line-clamp-2">{review.comment}</p>}
 
                 <div className="text-xs text-gray-600 space-y-1 mb-3">
-                  <div><span className="font-semibold">Product:</span> {review.products.name}</div>
+                  <div><span className="font-semibold">Product:</span> {review.products?.name || 'Onbekend'}</div>
                   <div><span className="font-semibold">Door:</span> {review.reviewer_name}</div>
                   <div>{new Date(review.created_at).toLocaleDateString('nl-NL')}</div>
                 </div>
@@ -247,11 +254,11 @@ export default function AdminReviewsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
-                        href={`/product/${review.products.slug}`}
+                        href={`/product/${review.products?.slug}`}
                         target="_blank"
                         className="text-sm font-semibold text-brand-primary hover:underline"
                       >
-                        {review.products.name}
+                        {review.products?.name || 'Onbekend'}
                       </Link>
                       {review.is_verified_purchase && (
                         <div className="text-xs text-blue-600 mt-1">Geverifieerde koop</div>
@@ -297,6 +304,3 @@ export default function AdminReviewsPage() {
     </div>
   )
 }
-
-
-
