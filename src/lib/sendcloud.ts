@@ -248,19 +248,44 @@ export const CARRIER_CODES = {
   GLS: 'gls',
 } as const
 
-// Status mapping van Sendcloud naar onze statuses
+// Complete status mapping van Sendcloud status IDs naar onze order statuses
+// Bron: GET /api/v2/parcels/statuses (april 2026)
 const STATUS_MAPPING: Record<number, string> = {
-  1: 'processing',      // Announced
-  3: 'processing',      // Picked up by carrier
-  4: 'shipped',         // Sorting
-  5: 'shipped',         // In transit
-  6: 'shipped',         // Out for delivery
-  7: 'delivered',       // Delivered
-  8: 'shipped',         // Ready for pickup
-  11: 'delivered',      // Delivered at pickup point
-  12: 'cancelled',      // Cancelled
-  13: 'cancelled',      // Not delivered
-  91: 'shipped',        // Unknown status
+  1: 'processing',          // Announced
+  3: 'shipped',             // En route to sorting center
+  4: 'shipped',             // Delivery delayed
+  5: 'shipped',             // Sorted
+  6: 'shipped',             // Not sorted
+  7: 'shipped',             // Being sorted
+  8: 'shipped',             // Delivery attempt failed
+  11: 'delivered',          // Delivered
+  12: 'shipped',            // Awaiting customer pickup (at service point)
+  13: 'processing',         // Announced: not collected
+  15: 'shipped',            // Error collecting
+  22: 'shipped',            // Shipment picked up by driver
+  80: 'shipped',            // Unable to deliver
+  91: 'shipped',            // Parcel en route
+  92: 'shipped',            // Driver en route
+  93: 'delivered',          // Shipment collected by customer
+  94: 'shipped',            // Parcel cancellation failed
+  999: 'processing',        // No label
+  1000: 'processing',       // Ready to send
+  1001: 'processing',       // Being announced
+  1002: 'processing',       // Announcement failed
+  1337: 'shipped',          // Unknown status - check carrier page
+  1998: 'cancelled',        // Cancelled upstream
+  1999: 'cancelled',        // Cancellation requested
+  2000: 'cancelled',        // Cancelled
+  2001: 'cancelled',        // Submitting cancellation request
+  62989: 'shipped',         // At Customs
+  62990: 'shipped',         // At sorting centre
+  62991: 'shipped',         // Refused by recipient
+  62992: 'shipped',         // Returned to sender
+  62993: 'shipped',         // Delivery method changed
+  62994: 'shipped',         // Delivery date changed
+  62995: 'shipped',         // Delivery address changed
+  62996: 'shipped',         // Exception
+  62997: 'shipped',         // Address invalid
 }
 
 // ==========================================
