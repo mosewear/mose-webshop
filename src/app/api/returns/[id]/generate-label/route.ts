@@ -156,7 +156,7 @@ export async function POST(
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/generate-label:', error)
     return NextResponse.json({ 
-      error: error.message || 'Internal server error' 
+      error: 'Er is een fout opgetreden' 
     }, { status: 500 })
   }
 }

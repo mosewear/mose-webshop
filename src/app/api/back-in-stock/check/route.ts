@@ -168,7 +168,7 @@ async function handleCronCheck(req: NextRequest) {
           }
         }
       } catch (error: any) {
-        errors.push(`Error processing notification ${notification.id}: ${error.message}`)
+        errors.push(`Error processing notification ${notification.id}`)
         console.error('Error processing notification:', error)
       }
     }
@@ -181,7 +181,7 @@ async function handleCronCheck(req: NextRequest) {
   } catch (error: any) {
     console.error('Error in back-in-stock check:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

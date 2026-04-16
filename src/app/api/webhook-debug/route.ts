@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/admin'
 
-// This endpoint checks if webhooks are working and what events we receive
 export async function GET(req: NextRequest) {
   try {
+    const { authorized } = await requireAdmin(['admin'])
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const supabase = await createClient()
     
-    // Get recent orders with their payment status
     const { data: orders, error } = await supabase
       .from('orders')
       .select('id, email, payment_status, stripe_payment_intent_id, created_at, paid_at')
@@ -14,10 +18,9 @@ export async function GET(req: NextRequest) {
       .limit(10)
     
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to get debug info' }, { status: 500 })
     }
     
-    // Check environment variables
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT SET'
     const stripeKey = process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT SET'
     
@@ -48,10 +51,7 @@ export async function GET(req: NextRequest) {
       }
     })
   } catch (error: any) {
-    return NextResponse.json({ 
-      error: 'Failed to get debug info',
-      message: error.message 
-    }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to get debug info' }, { status: 500 })
   }
 }
 

@@ -64,7 +64,7 @@ export async function GET(
     })
   } catch (error: any) {
     console.error('Error in GET /api/returns/[id]:', error)
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
   }
 }
 

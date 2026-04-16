@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('Error saving survey response:', error)
       return NextResponse.json(
-        { error: 'Failed to save survey response', details: error.message },
+        { error: 'Er is een fout opgetreden' },
         { status: 500 }
       )
     }
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error in survey submit route:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

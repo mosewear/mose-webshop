@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error in back-in-stock notify:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

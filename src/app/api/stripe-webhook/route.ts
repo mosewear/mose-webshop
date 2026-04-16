@@ -355,6 +355,15 @@ export async function POST(req: NextRequest) {
         
         console.log('✅ Webhook: Order found:', order.id)
         
+        // Idempotency: skip if order is already paid
+        if (order.payment_status === 'paid') {
+          console.log(`⚡ Webhook: Order ${order.id} already paid - skipping duplicate event`)
+          return NextResponse.json({ 
+            received: true, 
+            message: 'Order already processed' 
+          })
+        }
+        
         // Update order to PAID
         const { data: updatedOrder, error: updateError } = await supabase
           .from('orders')
@@ -423,6 +432,67 @@ export async function POST(req: NextRequest) {
         } catch (statsError) {
           console.error('⚠️ Failed to update customer stats:', statsError)
           // Don't fail the webhook, just log the error
+        }
+        
+        // ============================================
+        // AWARD LOYALTY POINTS
+        // ============================================
+        try {
+          const { calculatePointsForOrder, calculateTier } = await import('@/lib/loyalty')
+          const pointsToAward = calculatePointsForOrder(updatedOrder.total)
+          
+          if (pointsToAward > 0) {
+            // Upsert loyalty_points record
+            const { data: existingRecord } = await supabase
+              .from('loyalty_points')
+              .select('id, points_balance, lifetime_points')
+              .eq('email', order.email)
+              .single()
+            
+            if (existingRecord) {
+              const newBalance = (existingRecord.points_balance || 0) + pointsToAward
+              const newLifetime = (existingRecord.lifetime_points || 0) + pointsToAward
+              const newTier = calculateTier(newLifetime)
+              
+              await supabase
+                .from('loyalty_points')
+                .update({
+                  points_balance: newBalance,
+                  lifetime_points: newLifetime,
+                  tier: newTier,
+                  user_id: order.user_id || existingRecord.id,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', existingRecord.id)
+            } else {
+              const newTier = calculateTier(pointsToAward)
+              await supabase
+                .from('loyalty_points')
+                .insert({
+                  email: order.email,
+                  user_id: order.user_id || null,
+                  points_balance: pointsToAward,
+                  lifetime_points: pointsToAward,
+                  tier: newTier,
+                })
+            }
+            
+            // Record the transaction
+            await supabase
+              .from('loyalty_transactions')
+              .insert({
+                email: order.email,
+                user_id: order.user_id || null,
+                type: 'earned',
+                points: pointsToAward,
+                description: `${pointsToAward} punten verdiend bij bestelling`,
+                order_id: order.id,
+              })
+            
+            console.log(`✅ Loyalty points awarded: ${pointsToAward} points to ${order.email}`)
+          }
+        } catch (loyaltyError) {
+          console.error('⚠️ Failed to award loyalty points:', loyaltyError)
         }
         
         // ============================================
@@ -511,7 +581,7 @@ export async function POST(req: NextRequest) {
         }
         
         // Send order confirmation email
-        if (updatedOrder) {
+        if (updatedOrder && !updatedOrder.last_email_sent_at) {
           try {
             console.log('═════════════════════════════════════════')
             console.log('📧 [WEBHOOK] PREPARING ORDER CONFIRMATION EMAIL')

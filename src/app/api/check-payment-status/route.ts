@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('❌ Error checking payment status:', error)
     return NextResponse.json(
-      { error: error.message },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Er is een fout opgetreden bij het ophalen van het adres.' 
+        error: 'Er is een fout opgetreden' 
       },
       { status: 500 }
     )

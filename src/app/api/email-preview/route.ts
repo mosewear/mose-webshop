@@ -471,7 +471,7 @@ export async function GET(req: NextRequest) {
     console.error('Error generating email preview:', error)
     return NextResponse.json({ 
       error: 'Failed to generate email preview',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: 'Er is een fout opgetreden'
     }, { status: 500 })
   }
 }

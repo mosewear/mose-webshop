@@ -88,7 +88,7 @@ export async function POST(
     })
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/reject:', error)
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
   }
 }
 

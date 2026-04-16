@@ -83,6 +83,9 @@ export function Header() {
               <Link href={localeLink('/lookbook')} className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
                 {t('lookbook')}
               </Link>
+              <Link href={localeLink('/blog')} className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
+                Blog
+              </Link>
               <Link href={localeLink('/over-mose')} className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
                 {t('about')}
               </Link>
@@ -177,6 +180,14 @@ export function Header() {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <span className="uppercase">{t('lookbook')}</span>
+            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
+          </Link>
+          <Link
+            href={localeLink('/blog')}
+            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span className="uppercase">Blog</span>
             <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     return NextResponse.json(
-      { error: error?.message || 'Failed to evaluate pickup eligibility' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

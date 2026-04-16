@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Unexpected error' }, { status: 500 })
+    return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
   }
 }
 

@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error in save-message route:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

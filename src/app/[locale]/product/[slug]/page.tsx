@@ -6,9 +6,7 @@ import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
 import { notFound } from 'next/navigation'
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 3600
 
 export async function generateMetadata({
   params,

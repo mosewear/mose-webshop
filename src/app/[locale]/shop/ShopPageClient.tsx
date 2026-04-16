@@ -14,6 +14,7 @@ import { formatPrice } from '@/lib/format-price'
 import { getSiteSettings } from '@/lib/settings'
 import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 interface Product {
   id: string
@@ -861,6 +862,8 @@ export default function ShopPageClient() {
                             className="object-cover object-center"
                             priority={isPriority}
                             loading={isPriority ? 'eager' : 'lazy'}
+                            placeholder="blur"
+                            blurDataURL={BLUR_DATA_URL}
                             onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                           />
                           

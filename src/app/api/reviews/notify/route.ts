@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error in review notification route:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

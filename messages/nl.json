@@ -608,7 +608,8 @@
       "minLength": "{field} moet minimaal {min} karakters bevatten"
     },
     "phone": {
-      "required": "Verplicht veld"
+      "required": "Verplicht veld",
+      "invalid": "Voer een geldig telefoonnummer in (minimaal 10 cijfers)"
     },
     "generic": "Er is een fout opgetreden. Probeer het opnieuw.",
     "network": "Netwerkfout. Controleer je internetverbinding."
@@ -1797,5 +1798,54 @@
     "error": "Er ging iets mis. Probeer het opnieuw.",
     "errorRequired": "Vul alle verplichte vragen in.",
     "close": "Sluiten"
+  },
+  "error": {
+    "description": "Er is iets misgegaan. Probeer het opnieuw of ga terug naar de shop.",
+    "tryAgain": "Probeer opnieuw",
+    "toShop": "Naar de shop"
+  },
+  "blog": {
+    "title": "Blog",
+    "readMore": "Lees meer",
+    "allCategories": "Alle",
+    "minuteRead": "{minutes} min leestijd",
+    "backToBlog": "Terug naar blog",
+    "shareArticle": "Deel dit artikel",
+    "linkCopied": "Link gekopieerd!",
+    "relatedPosts": "Gerelateerde artikelen",
+    "noPosts": "Nog geen artikelen gepubliceerd.",
+    "categories": {
+      "algemeen": "Algemeen",
+      "style": "Style",
+      "drops": "Drops",
+      "behind-the-scenes": "Behind the Scenes",
+      "sustainability": "Duurzaamheid",
+      "groningen": "Groningen"
+    }
+  },
+  "loyalty": {
+    "title": "Loyalty",
+    "points": "Punten",
+    "pointsBalance": "Punten Balans",
+    "lifetimePoints": "Lifetime Punten",
+    "tier": "Tier",
+    "bronze": "Bronze",
+    "silver": "Silver",
+    "gold": "Gold",
+    "progressToNext": "{points} punten tot {tier}",
+    "benefits": "Voordelen",
+    "freeShipping": "Gratis verzending",
+    "discount5": "5% korting op alles",
+    "earnPoints": "Verdien punten bij elke bestelling!",
+    "pointsPerEuro": "1 punt per bestede euro",
+    "redeemPoints": "Punten inwisselen",
+    "redeemDescription": "100 punten = €5 korting",
+    "apply": "Toepassen",
+    "applied": "Loyalty korting toegepast!",
+    "history": "Punten historie",
+    "earned": "Verdiend",
+    "redeemed": "Ingewisseld",
+    "adjusted": "Aangepast",
+    "noHistory": "Nog geen punten activiteit."
   }
 }

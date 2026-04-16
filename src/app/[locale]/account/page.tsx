@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import LoyaltyTab from '@/components/LoyaltyTab'
 
 interface Order {
   id: string
@@ -57,7 +58,7 @@ export default function AccountPage() {
   const [returns, setReturns] = useState<any[]>([])
   const [returnsLoading, setReturnsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses' | 'returns'>('orders')
+  const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses' | 'returns' | 'loyalty'>('orders')
 
   // Profile state
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -569,6 +570,16 @@ export default function AccountPage() {
             >
               {t('returns')}
             </button>
+            <button
+              onClick={() => setActiveTab('loyalty')}
+              className={`px-4 py-3 font-bold uppercase text-sm whitespace-nowrap transition-colors ${
+                activeTab === 'loyalty'
+                  ? 'border-b-2 border-brand-primary text-brand-primary'
+                  : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              Loyalty
+            </button>
           </div>
         </div>
 
@@ -616,6 +627,16 @@ export default function AccountPage() {
                   }`}
                 >
                   {t('returns')}
+                </button>
+                <button
+                  onClick={() => setActiveTab('loyalty')}
+                  className={`w-full text-left px-4 py-3 font-bold transition-colors ${
+                    activeTab === 'loyalty'
+                      ? 'bg-brand-primary text-white'
+                      : 'hover:bg-gray-200'
+                  }`}
+                >
+                  Loyalty
                 </button>
               </nav>
             </div>
@@ -1208,6 +1229,11 @@ export default function AccountPage() {
                   </div>
                 )}
               </>
+            )}
+
+            {/* Loyalty Tab */}
+            {activeTab === 'loyalty' && (
+              <LoyaltyTab />
             )}
           </div>
         </div>

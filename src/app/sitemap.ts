@@ -22,9 +22,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('is_active', true)
     .order('updated_at', { ascending: false })
 
+  const { data: blogPosts } = await supabase
+    .from('blog_posts')
+    .select('slug, updated_at')
+    .eq('status', 'published')
+    .order('updated_at', { ascending: false })
+
   const staticPaths = [
     { path: '', priority: 1, changeFrequency: 'daily' as const },
     { path: '/shop', priority: 0.9, changeFrequency: 'daily' as const },
+    { path: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
     { path: '/lookbook', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/over-mose', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/contact', priority: 0.6, changeFrequency: 'monthly' as const },
@@ -79,6 +86,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           languages: {
             nl: `${baseUrl}/nl/shop?category=${category.slug}`,
             en: `${baseUrl}/en/shop?category=${category.slug}`,
+          },
+        },
+      })
+    }
+  }
+
+  for (const post of blogPosts || []) {
+    for (const locale of locales) {
+      entries.push({
+        url: `${baseUrl}/${locale}/blog/${post.slug}`,
+        lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.7,
+        alternates: {
+          languages: {
+            nl: `${baseUrl}/nl/blog/${post.slug}`,
+            en: `${baseUrl}/en/blog/${post.slug}`,
           },
         },
       })

@@ -117,8 +117,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Fout bij aanmaken test label',
-        details: error.stack,
+        error: 'Er is een fout opgetreden',
       },
       { status: 500 }
     )

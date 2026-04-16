@@ -148,7 +148,7 @@ export async function POST(request: Request) {
           variant_id: item.variant_id,
           product_name: `${item.product_name} (${item.size} - ${item.color})`,
           success: false,
-          error: err.message
+          error: 'Er is een fout opgetreden'
         })
       }
     }
@@ -179,7 +179,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('💥 STOCK DECREMENT ERROR:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

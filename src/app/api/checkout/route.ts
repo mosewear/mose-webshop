@@ -539,7 +539,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('💥 SERVER CHECKOUT ERROR:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

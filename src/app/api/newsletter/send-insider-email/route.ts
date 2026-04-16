@@ -196,7 +196,7 @@ Elke hoodie, elk shirt, elke cap is limited edition. Als het uitverkocht is, is 
         }
       } catch (error: any) {
         console.error(`Error sending to ${subscriber.email}:`, error)
-        errors.push(`${subscriber.email}: ${error.message}`)
+        errors.push(`${subscriber.email}: Er is een fout opgetreden`)
       }
     }
 
@@ -216,7 +216,7 @@ Elke hoodie, elk shirt, elke cap is limited edition. Als het uitverkocht is, is 
   } catch (error: any) {
     console.error('Error in send-insider-email route:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

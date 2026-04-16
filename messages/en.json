@@ -620,7 +620,8 @@
       "minLength": "{field} must contain at least {min} characters"
     },
     "phone": {
-      "required": "Required field"
+      "required": "Required field",
+      "invalid": "Please enter a valid phone number (at least 10 digits)"
     },
     "generic": "An error occurred. Please try again.",
     "network": "Network error. Check your internet connection."
@@ -1808,5 +1809,54 @@
     "error": "Something went wrong. Please try again.",
     "errorRequired": "Please fill in all required questions.",
     "close": "Close"
+  },
+  "error": {
+    "description": "Something went wrong. Please try again or go back to the shop.",
+    "tryAgain": "Try again",
+    "toShop": "Go to shop"
+  },
+  "blog": {
+    "title": "Blog",
+    "readMore": "Read more",
+    "allCategories": "All",
+    "minuteRead": "{minutes} min read",
+    "backToBlog": "Back to blog",
+    "shareArticle": "Share this article",
+    "linkCopied": "Link copied!",
+    "relatedPosts": "Related articles",
+    "noPosts": "No articles published yet.",
+    "categories": {
+      "algemeen": "General",
+      "style": "Style",
+      "drops": "Drops",
+      "behind-the-scenes": "Behind the Scenes",
+      "sustainability": "Sustainability",
+      "groningen": "Groningen"
+    }
+  },
+  "loyalty": {
+    "title": "Loyalty",
+    "points": "Points",
+    "pointsBalance": "Points Balance",
+    "lifetimePoints": "Lifetime Points",
+    "tier": "Tier",
+    "bronze": "Bronze",
+    "silver": "Silver",
+    "gold": "Gold",
+    "progressToNext": "{points} points until {tier}",
+    "benefits": "Benefits",
+    "freeShipping": "Free shipping",
+    "discount5": "5% discount on everything",
+    "earnPoints": "Earn points with every order!",
+    "pointsPerEuro": "1 point per euro spent",
+    "redeemPoints": "Redeem points",
+    "redeemDescription": "100 points = €5 discount",
+    "apply": "Apply",
+    "applied": "Loyalty discount applied!",
+    "history": "Points history",
+    "earned": "Earned",
+    "redeemed": "Redeemed",
+    "adjusted": "Adjusted",
+    "noHistory": "No points activity yet."
   }
 }
