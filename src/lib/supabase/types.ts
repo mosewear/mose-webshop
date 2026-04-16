@@ -140,6 +140,20 @@ export interface Database {
           billing_address: Json
           stripe_payment_id: string | null
           tracking_code: string | null
+          payment_status: string | null
+          payment_method: string | null
+          payment_intent_id: string | null
+          subtotal: number | null
+          shipping_cost: number | null
+          discount_amount: number | null
+          promo_code: string | null
+          delivery_method: string | null
+          tracking_url: string | null
+          carrier: string | null
+          label_url: string | null
+          estimated_delivery_date: string | null
+          updated_at: string
+          paid_at: string | null
         }
         Insert: {
           id?: string
@@ -152,6 +166,20 @@ export interface Database {
           billing_address: Json
           stripe_payment_id?: string | null
           tracking_code?: string | null
+          payment_status?: string | null
+          payment_method?: string | null
+          payment_intent_id?: string | null
+          subtotal?: number | null
+          shipping_cost?: number | null
+          discount_amount?: number | null
+          promo_code?: string | null
+          delivery_method?: string | null
+          tracking_url?: string | null
+          carrier?: string | null
+          label_url?: string | null
+          estimated_delivery_date?: string | null
+          updated_at?: string
+          paid_at?: string | null
         }
         Update: {
           id?: string
@@ -164,6 +192,20 @@ export interface Database {
           billing_address?: Json
           stripe_payment_id?: string | null
           tracking_code?: string | null
+          payment_status?: string | null
+          payment_method?: string | null
+          payment_intent_id?: string | null
+          subtotal?: number | null
+          shipping_cost?: number | null
+          discount_amount?: number | null
+          promo_code?: string | null
+          delivery_method?: string | null
+          tracking_url?: string | null
+          carrier?: string | null
+          label_url?: string | null
+          estimated_delivery_date?: string | null
+          updated_at?: string
+          paid_at?: string | null
         }
       }
       order_items: {

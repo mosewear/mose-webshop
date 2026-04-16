@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Search } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface Customer {
   id: string
@@ -22,19 +24,51 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const supabase = createClient()
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const PAGE_SIZE = 25
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedQuery(value)
+      setPage(1)
+    }, 300)
+  }
+
+  const filteredCustomers = useMemo(() => {
+    const q = debouncedQuery.toLowerCase().trim()
+    if (!q) return customers
+    return customers.filter((c) => {
+      const fields = [c.first_name, c.last_name, c.email, c.phone]
+      return fields.some((f) => f?.toLowerCase().includes(q))
+    })
+  }, [customers, debouncedQuery])
 
   useEffect(() => {
     fetchCustomers()
-  }, [])
+  }, [page])
 
   const fetchCustomers = async () => {
     try {
       setLoading(true)
+
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+
+      setTotalCount(count || 0)
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
+        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
       if (error) throw error
       setCustomers(data || [])
@@ -47,7 +81,7 @@ export default function CustomersPage() {
 
   const handleExportCSV = () => {
     if (customers.length === 0) {
-      alert('Geen klanten om te exporteren')
+      toast.error('Geen klanten om te exporteren')
       return
     }
 
@@ -111,6 +145,18 @@ export default function CustomersPage() {
         </div>
       )}
 
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Zoek op naam, email of telefoonnummer..."
+          className="w-full border-2 border-gray-300 focus:border-brand-primary focus:outline-none pl-10 pr-4 py-3 text-sm font-medium transition-colors"
+        />
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
@@ -136,18 +182,24 @@ export default function CustomersPage() {
 
       {/* Customers Table */}
       <div className="bg-white border-2 border-gray-200">
-        {customers.length === 0 ? (
+        {filteredCustomers.length === 0 ? (
           <div className="text-center py-12">
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
-            <h3 className="text-lg font-bold text-gray-700 mb-2">Nog geen klanten</h3>
-            <p className="text-gray-500">Klanten verschijnen hier zodra ze zich registreren!</p>
+            <h3 className="text-lg font-bold text-gray-700 mb-2">
+              {debouncedQuery ? 'Geen resultaten gevonden' : 'Nog geen klanten'}
+            </h3>
+            <p className="text-gray-500">
+              {debouncedQuery
+                ? `Geen klanten gevonden voor "${debouncedQuery}"`
+                : 'Klanten verschijnen hier zodra ze zich registreren!'}
+            </p>
           </div>
         ) : (
           <>
           <div className="md:hidden space-y-3 p-3">
-            {customers.map((customer) => (
+            {filteredCustomers.map((customer) => (
               <div key={customer.id} className="border-2 border-gray-200 p-4">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -222,7 +274,7 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {customers.map((customer) => (
+                {filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -280,6 +332,29 @@ export default function CustomersPage() {
             </table>
           </div>
           </>
+        )}
+        {totalCount > PAGE_SIZE && (
+          <div className="flex items-center justify-between p-4 border-t-2 border-gray-200">
+            <div className="text-sm text-gray-600">
+              Pagina {page} van {Math.ceil(totalCount / PAGE_SIZE)} ({totalCount} items)
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 border-2 border-gray-300 text-sm font-bold uppercase disabled:opacity-30 hover:border-black transition-colors"
+              >
+                Vorige
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(Math.ceil(totalCount / PAGE_SIZE), p + 1))}
+                disabled={page >= Math.ceil(totalCount / PAGE_SIZE)}
+                className="px-4 py-2 border-2 border-gray-300 text-sm font-bold uppercase disabled:opacity-30 hover:border-black transition-colors"
+              >
+                Volgende
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader from '@/components/admin/AdminHeader'
+import CommandPalette from '@/components/admin/CommandPalette'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { authorized, adminUser } = await requireAdmin()
+  const { authorized, adminUser } = await requireAdmin(['admin', 'manager', 'viewer'])
 
   if (!authorized) {
     redirect('/admin/login')
@@ -43,6 +44,9 @@ export default async function AdminLayout({
           {children}
         </main>
       </div>
+
+      {/* Global Command Palette */}
+      <CommandPalette />
     </div>
   )
 }

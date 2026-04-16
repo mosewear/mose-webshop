@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { RefreshCw, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { RefreshCw, Plus, Search, Printer, Tag } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface Order {
   id: string
@@ -32,36 +34,95 @@ export default function AdminOrdersPage() {
   const [bulkAction, setBulkAction] = useState('')
   const [bulkUpdating, setBulkUpdating] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({})
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false)
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [batchLabelsLoading, setBatchLabelsLoading] = useState(false)
+  const router = useRouter()
   const supabase = createClient()
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const PAGE_SIZE = 25
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value)
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    searchTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(value)
+      setPage(1)
+    }, 300)
+  }, [])
+
+  const fetchStatusCounts = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('status')
+      if (error) throw error
+      const counts: Record<string, number> = {}
+      let total = 0
+      for (const row of data || []) {
+        counts[row.status] = (counts[row.status] || 0) + 1
+        total++
+      }
+      counts['all'] = total
+      counts['returns'] = (counts['return_requested'] || 0) +
+        (counts['return_in_transit'] || 0) +
+        (counts['return_received'] || 0) +
+        (counts['return_completed'] || 0)
+      setStatusCounts(counts)
+    } catch {
+      // counts are non-critical
+    }
+  }, [supabase])
 
   useEffect(() => {
     fetchOrders()
+    fetchStatusCounts()
     
-    // Refresh data wanneer admin terugkomt naar tab
     const handleFocus = () => {
-      
       fetchOrders()
+      fetchStatusCounts()
     }
     
     window.addEventListener('focus', handleFocus)
     
     return () => {
       window.removeEventListener('focus', handleFocus)
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     }
-  }, [filter])
+  }, [filter, page])
 
   const fetchOrders = async () => {
     try {
       setLoading(true)
       setRefreshing(true)
+
+      let countQuery = supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+
+      if (filter !== 'all') {
+        if (filter === 'returns') {
+          countQuery = countQuery.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
+        } else {
+          countQuery = countQuery.eq('status', filter)
+        }
+      }
+
+      const { count } = await countQuery
+      setTotalCount(count || 0)
+
       let query = supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false })
+        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
       if (filter !== 'all') {
         if (filter === 'returns') {
-          // Filter op alle return statussen
           query = query.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
         } else {
           query = query.eq('status', filter)
@@ -79,6 +140,20 @@ export default function AdminOrdersPage() {
       setRefreshing(false)
     }
   }
+
+  const filteredOrders = useMemo(() => {
+    if (!debouncedSearch.trim()) return orders
+    const q = debouncedSearch.toLowerCase().trim()
+    return orders.filter((order) => {
+      const idMatch = order.id.toLowerCase().includes(q)
+      const emailMatch = order.email.toLowerCase().includes(q)
+      const firstName = (order.shipping_address?.first_name || '').toLowerCase()
+      const lastName = (order.shipping_address?.last_name || '').toLowerCase()
+      const nameMatch = firstName.includes(q) || lastName.includes(q) || `${firstName} ${lastName}`.includes(q)
+      const trackingMatch = (order.tracking_code || '').toLowerCase().includes(q)
+      return idMatch || emailMatch || nameMatch || trackingMatch
+    })
+  }, [orders, debouncedSearch])
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -139,10 +214,10 @@ export default function AdminOrdersPage() {
   }
 
   const handleSelectAll = () => {
-    if (selectedOrders.length === orders.length) {
+    if (selectedOrders.length === filteredOrders.length) {
       setSelectedOrders([])
     } else {
-      setSelectedOrders(orders.map(o => o.id))
+      setSelectedOrders(filteredOrders.map(o => o.id))
     }
   }
 
@@ -156,19 +231,20 @@ export default function AdminOrdersPage() {
 
   const handleBulkAction = async () => {
     if (selectedOrders.length === 0) {
-      alert('Selecteer eerst orders')
+      toast.error('Selecteer eerst orders')
       return
     }
 
     if (!bulkAction) {
-      alert('Selecteer eerst een actie')
+      toast.error('Selecteer eerst een actie')
       return
     }
 
-    if (!confirm(`Weet je zeker dat je de status van ${selectedOrders.length} order(s) wilt wijzigen naar "${getStatusLabel(bulkAction)}"?`)) {
-      return
-    }
+    setShowBulkConfirm(true)
+  }
 
+  const executeBulkAction = async () => {
+    setShowBulkConfirm(false)
     try {
       setBulkUpdating(true)
 
@@ -182,25 +258,86 @@ export default function AdminOrdersPage() {
 
       if (error) throw error
 
-      alert(`✅ ${selectedOrders.length} order(s) bijgewerkt!`)
+      toast.success(`${selectedOrders.length} order(s) bijgewerkt!`)
       setSelectedOrders([])
       setBulkAction('')
       fetchOrders()
+      fetchStatusCounts()
     } catch (err: any) {
-      alert(`Fout: ${err.message}`)
+      toast.error(`Fout: ${err.message}`)
     } finally {
       setBulkUpdating(false)
     }
   }
 
+  const handleBatchLabels = async () => {
+    if (selectedOrders.length === 0) {
+      toast.error('Selecteer eerst orders')
+      return
+    }
+
+    setBatchLabelsLoading(true)
+    const toastId = toast.loading(`Labels aanmaken voor ${selectedOrders.length} order(s)...`)
+
+    try {
+      const res = await fetch('/api/admin/orders/batch-labels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: selectedOrders }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Fout bij batch label aanmaak')
+      }
+
+      toast.dismiss(toastId)
+
+      if (data.message) {
+        toast.success(data.message, { duration: 6000 })
+      } else {
+        const parts: string[] = []
+        if (data.success?.length) parts.push(`${data.success.length} label(s) aangemaakt`)
+        if (data.failed?.length) parts.push(`${data.failed.length} mislukt`)
+        toast.success(parts.join(', ') || 'Klaar!')
+
+        if (data.failed?.length) {
+          data.failed.forEach((f: { id: string; error: string }) => {
+            toast.error(`#${f.id.slice(0, 8)}: ${f.error}`, { duration: 5000 })
+          })
+        }
+      }
+
+      setSelectedOrders([])
+      setBulkAction('')
+      fetchOrders()
+      fetchStatusCounts()
+    } catch (err: any) {
+      toast.dismiss(toastId)
+      toast.error(err.message || 'Fout bij batch label aanmaak')
+    } finally {
+      setBatchLabelsLoading(false)
+    }
+  }
+
+  const handlePicklist = () => {
+    if (selectedOrders.length === 0) {
+      toast.error('Selecteer eerst orders')
+      return
+    }
+    const ids = selectedOrders.join(',')
+    window.open(`/admin/orders/picklist?ids=${ids}`, '_blank')
+  }
+
   const filters = [
-    { value: 'all', label: 'Alle Orders', count: orders.length },
-    { value: 'pending', label: 'In afwachting', count: orders.filter(o => o.status === 'pending').length },
-    { value: 'paid', label: 'Betaald', count: orders.filter(o => o.status === 'paid').length },
-    { value: 'processing', label: 'In behandeling', count: orders.filter(o => o.status === 'processing').length },
-    { value: 'shipped', label: 'Verzonden', count: orders.filter(o => o.status === 'shipped').length },
-    { value: 'delivered', label: 'Afgeleverd', count: orders.filter(o => o.status === 'delivered').length },
-    { value: 'returns', label: 'Returns', count: orders.filter(o => ['return_requested', 'return_in_transit', 'return_received', 'return_completed'].includes(o.status)).length },
+    { value: 'all', label: 'Alle Orders', count: statusCounts['all'] || 0 },
+    { value: 'pending', label: 'In afwachting', count: statusCounts['pending'] || 0 },
+    { value: 'paid', label: 'Betaald', count: statusCounts['paid'] || 0 },
+    { value: 'processing', label: 'In behandeling', count: statusCounts['processing'] || 0 },
+    { value: 'shipped', label: 'Verzonden', count: statusCounts['shipped'] || 0 },
+    { value: 'delivered', label: 'Afgeleverd', count: statusCounts['delivered'] || 0 },
+    { value: 'returns', label: 'Returns', count: statusCounts['returns'] || 0 },
   ]
 
   if (loading) {
@@ -237,11 +374,11 @@ export default function AdminOrdersPage() {
           </button>
           <button
             onClick={() => {
-              if (orders.length === 0) { alert('Geen orders om te exporteren'); return }
+              if (filteredOrders.length === 0) { toast.error('Geen orders om te exporteren'); return }
               const headers = ['Order ID','Email','Status','Betaling','Levering','Totaal','Datum']
               const csvRows = [
                 headers.join(','),
-                ...orders.map(o => [
+                ...filteredOrders.map(o => [
                   o.id.slice(0, 8),
                   o.email,
                   o.status,
@@ -274,13 +411,25 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Zoek op order ID, email, naam of tracking code..."
+          className="w-full pl-11 pr-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm font-medium bg-white transition-colors"
+        />
+      </div>
+
       {/* Filters */}
       <div className="bg-white border-2 border-gray-200 p-4 mb-6 overflow-x-auto">
         <div className="flex gap-2 min-w-max">
           {filters.map((f) => (
             <button
               key={f.value}
-              onClick={() => setFilter(f.value)}
+              onClick={() => { setFilter(f.value); setPage(1) }}
               className={`px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 transition-all whitespace-nowrap ${
                 filter === f.value
                   ? 'bg-brand-primary border-brand-primary text-white'
@@ -296,38 +445,71 @@ export default function AdminOrdersPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 md:mb-8">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{orders.length}</div>
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{filteredOrders.length}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Orders</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
-            {orders.filter(o => o.payment_status === 'paid').length}
+            {filteredOrders.filter(o => o.payment_status === 'paid').length}
           </div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Betaald</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">
-            {orders.filter(o => o.payment_status === 'pending').length}
+            {filteredOrders.filter(o => o.payment_status === 'pending').length}
           </div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Wacht op betaling</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
           <div className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            €{orders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + Number(o.total), 0).toFixed(2)}
+            €{filteredOrders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + Number(o.total), 0).toFixed(2)}
           </div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Omzet (Betaald)</div>
         </div>
       </div>
 
       {/* Orders Table */}
+      {/* Bulk Confirmation */}
+      {showBulkConfirm && (
+        <div className="bg-yellow-50 border-2 border-yellow-400 p-4 mb-4 flex flex-col md:flex-row md:items-center gap-3">
+          <span className="font-bold text-yellow-800">
+            Weet je zeker dat je de status van {selectedOrders.length} order(s) wilt wijzigen naar &quot;{getStatusLabel(bulkAction)}&quot;?
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={executeBulkAction}
+              disabled={bulkUpdating}
+              className="bg-black text-white font-bold py-2 px-6 uppercase tracking-wider text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
+            >
+              {bulkUpdating ? 'Bijwerken...' : 'Bevestigen'}
+            </button>
+            <button
+              onClick={() => setShowBulkConfirm(false)}
+              className="border-2 border-gray-300 text-gray-700 font-bold py-2 px-6 uppercase tracking-wider text-sm hover:border-gray-400 transition-colors"
+            >
+              Annuleren
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white border-2 border-gray-200">
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div className="text-center py-12">
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            <h3 className="text-lg font-bold text-gray-700 mb-2">Nog geen orders</h3>
-            <p className="text-gray-500">Orders verschijnen hier zodra klanten bestellen!</p>
+            {debouncedSearch.trim() ? (
+              <>
+                <h3 className="text-lg font-bold text-gray-700 mb-2">Geen resultaten</h3>
+                <p className="text-gray-500">Geen orders gevonden voor &quot;{debouncedSearch}&quot;</p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-bold text-gray-700 mb-2">Nog geen orders</h3>
+                <p className="text-gray-500">Orders verschijnen hier zodra klanten bestellen!</p>
+              </>
+            )}
           </div>
         ) : (
           <>
@@ -353,6 +535,23 @@ export default function AdminOrdersPage() {
                 >
                   {bulkUpdating ? 'Bijwerken...' : 'Toepassen'}
                 </button>
+                <div className="flex gap-2 w-full md:w-auto">
+                  <button
+                    onClick={handleBatchLabels}
+                    disabled={batchLabelsLoading}
+                    className="flex-1 md:flex-none bg-white text-brand-primary font-bold py-2 px-4 uppercase tracking-wider text-sm hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <Tag className="w-4 h-4" />
+                    {batchLabelsLoading ? 'Bezig...' : 'Labels aanmaken'}
+                  </button>
+                  <button
+                    onClick={handlePicklist}
+                    className="flex-1 md:flex-none bg-white text-brand-primary font-bold py-2 px-4 uppercase tracking-wider text-sm hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Picklijst
+                  </button>
+                </div>
                 <button
                   onClick={() => setSelectedOrders([])}
                   className="md:ml-auto text-white hover:text-gray-200 text-left md:text-right"
@@ -363,7 +562,7 @@ export default function AdminOrdersPage() {
             )}
 
             <div className="md:hidden space-y-3 p-3">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <div key={order.id} className="border-2 border-gray-200 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -417,7 +616,7 @@ export default function AdminOrdersPage() {
                     <th className="px-4 md:px-6 py-3 text-left">
                       <input
                         type="checkbox"
-                        checked={selectedOrders.length === orders.length}
+                        checked={filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length}
                         onChange={handleSelectAll}
                         className="w-5 h-5"
                       />
@@ -449,7 +648,7 @@ export default function AdminOrdersPage() {
                   </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <input
@@ -510,6 +709,29 @@ export default function AdminOrdersPage() {
             </table>
           </div>
           </>
+        )}
+        {totalCount > PAGE_SIZE && (
+          <div className="flex items-center justify-between p-4 border-t-2 border-gray-200">
+            <div className="text-sm text-gray-600">
+              Pagina {page} van {Math.ceil(totalCount / PAGE_SIZE)} ({totalCount} items)
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 border-2 border-gray-300 text-sm font-bold uppercase disabled:opacity-30 hover:border-black transition-colors"
+              >
+                Vorige
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(Math.ceil(totalCount / PAGE_SIZE), p + 1))}
+                disabled={page >= Math.ceil(totalCount / PAGE_SIZE)}
+                className="px-4 py-2 border-2 border-gray-300 text-sm font-bold uppercase disabled:opacity-30 hover:border-black transition-colors"
+              >
+                Volgende
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

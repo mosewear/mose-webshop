@@ -1,8 +1,10 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import NotificationBell from './NotificationBell'
+import ShortcutHelpModal from './ShortcutHelpModal'
 
 interface AdminHeaderProps {
   adminUser: {
@@ -14,6 +16,23 @@ interface AdminHeaderProps {
 export default function AdminHeader({ adminUser }: AdminHeaderProps) {
   const router = useRouter()
   const supabase = createClient()
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const target = e.target as HTMLElement
+    const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+    if (isInput) return
+
+    if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault()
+      setShortcutsOpen(prev => !prev)
+    }
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -22,6 +41,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
   }
 
   return (
+    <>
     <header className="bg-white/95 backdrop-blur border-b-2 border-gray-200 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between sticky top-0 z-30">
       {/* Page Title Area */}
       <div>
@@ -30,6 +50,15 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Keyboard Shortcuts Help */}
+        <button
+          onClick={() => setShortcutsOpen(true)}
+          className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 text-xs font-bold border-2 border-gray-300 hover:border-black hover:bg-black hover:text-white transition-colors rounded"
+          title="Sneltoetsen (?)"
+        >
+          ?
+        </button>
+
         {/* Notification Bell */}
         <NotificationBell />
 
@@ -58,6 +87,9 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
         </button>
       </div>
     </header>
+
+    <ShortcutHelpModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+    </>
   )
 }
 

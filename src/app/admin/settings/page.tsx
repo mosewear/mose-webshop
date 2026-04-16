@@ -61,6 +61,7 @@ export default function SettingsPage() {
   const [adminUsers, setAdminUsers] = useState<any[]>([])
   const [showAddAdmin, setShowAddAdmin] = useState(false)
   const [newAdminEmail, setNewAdminEmail] = useState('')
+  const [newAdminRole, setNewAdminRole] = useState<'admin' | 'manager' | 'viewer'>('viewer')
   const [addingAdmin, setAddingAdmin] = useState(false)
 
   useEffect(() => {
@@ -255,7 +256,7 @@ export default function SettingsPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, first_name, last_name, is_admin, admin_role, created_at')
         .eq('is_admin', true)
         .order('created_at', { ascending: false })
 
@@ -287,10 +288,10 @@ export default function SettingsPage() {
         return
       }
 
-      // Update to admin
+      // Update to admin with role
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ is_admin: true })
+        .update({ is_admin: true, admin_role: newAdminRole })
         .eq('id', profile.id)
 
       if (updateError) throw updateError
@@ -298,6 +299,7 @@ export default function SettingsPage() {
       alert('✅ Admin toegevoegd!')
       setShowAddAdmin(false)
       setNewAdminEmail('')
+      setNewAdminRole('viewer')
       fetchAdminUsers()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -307,7 +309,6 @@ export default function SettingsPage() {
   }
 
   const handleRemoveAdmin = async (userId: string, email: string) => {
-    // Prevent removing yourself
     const { data: { user } } = await supabase.auth.getUser()
     if (user?.id === userId) {
       alert('Je kunt jezelf niet als admin verwijderen')
@@ -319,7 +320,7 @@ export default function SettingsPage() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ is_admin: false })
+        .update({ is_admin: false, admin_role: 'viewer' })
         .eq('id', userId)
 
       if (error) throw error
@@ -328,6 +329,26 @@ export default function SettingsPage() {
       fetchAdminUsers()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.id === userId && newRole !== 'admin') {
+      alert('Je kunt je eigen rol niet verlagen')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ admin_role: newRole })
+        .eq('id', userId)
+
+      if (error) throw error
+      fetchAdminUsers()
+    } catch (err: any) {
+      alert(`Fout bij rol wijzigen: ${err.message}`)
     }
   }
 
@@ -905,6 +926,9 @@ export default function SettingsPage() {
                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell">
                   Naam
                 </th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Rol
+                </th>
                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                   Aangemaakt
                 </th>
@@ -916,7 +940,7 @@ export default function SettingsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {adminUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 sm:px-6 py-3 sm:py-4 text-center text-gray-500 text-xs sm:text-sm">
+                  <td colSpan={5} className="px-3 sm:px-6 py-3 sm:py-4 text-center text-gray-500 text-xs sm:text-sm">
                     Geen admin gebruikers gevonden
                   </td>
                 </tr>
@@ -930,6 +954,23 @@ export default function SettingsPage() {
                       {admin.first_name && admin.last_name 
                         ? `${admin.first_name} ${admin.last_name}` 
                         : '-'}
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <select
+                        value={admin.admin_role || 'viewer'}
+                        onChange={(e) => handleRoleChange(admin.id, e.target.value)}
+                        className={`text-xs sm:text-sm font-bold uppercase tracking-wide px-2 py-1 border-2 focus:outline-none transition-colors cursor-pointer ${
+                          admin.admin_role === 'admin'
+                            ? 'border-red-300 bg-red-50 text-red-700'
+                            : admin.admin_role === 'manager'
+                            ? 'border-blue-300 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden md:table-cell">
                       {new Date(admin.created_at).toLocaleDateString('nl-NL')}
@@ -974,6 +1015,20 @@ export default function SettingsPage() {
                   De gebruiker moet eerst inloggen op de website voordat je hem/haar admin kunt maken.
                 </p>
               </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                  Rol
+                </label>
+                <select
+                  value={newAdminRole}
+                  onChange={(e) => setNewAdminRole(e.target.value as 'admin' | 'manager' | 'viewer')}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                >
+                  <option value="admin">Admin — Volledige toegang</option>
+                  <option value="manager">Manager — Geen instellingen of kortingscodes</option>
+                  <option value="viewer">Viewer — Alleen inzien (read-only)</option>
+                </select>
+              </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={handleAddAdmin}
@@ -986,6 +1041,7 @@ export default function SettingsPage() {
                   onClick={() => {
                     setShowAddAdmin(false)
                     setNewAdminEmail('')
+                    setNewAdminRole('viewer')
                   }}
                   className="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 sm:py-3 px-4 sm:px-6 text-sm sm:text-base uppercase tracking-wider transition-colors"
                 >
