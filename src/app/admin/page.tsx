@@ -283,8 +283,8 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <div className="text-right">
-              <div className="text-3xl sm:text-5xl md:text-6xl font-display group-hover:scale-105 transition-transform truncate">
+            <div className="text-right min-w-0">
+              <div className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display group-hover:scale-105 transition-transform truncate">
                 €{stats.totalRevenue.toFixed(2)}
               </div>
               <DeltaBadge current={stats.totalRevenue} previous={prevStats.totalRevenue} />
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <div className="text-3xl sm:text-5xl md:text-6xl font-display text-purple-600">
+            <div className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display text-purple-600">
               {stats.totalCustomers}
             </div>
           </div>
@@ -399,47 +399,47 @@ export default function AdminDashboard() {
       {/* KPI Insights */}
       <div className="order-4">
         <h2 className="text-xl md:text-2xl font-display font-bold mb-4">KPI Inzichten</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <div className="text-xs uppercase tracking-wide text-gray-600 mb-2">Conversie</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-brand-primary">{stats.conversionRate.toFixed(1)}%</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Conversie</div>
+            <div className="flex items-baseline gap-1 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-bold text-brand-primary">{stats.conversionRate.toFixed(1)}%</span>
               <DeltaBadge current={stats.conversionRate} previous={prevStats.conversionRate} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Checkout → betaald</div>
           </div>
 
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <div className="text-xs uppercase tracking-wide text-gray-600 mb-2">Gem. Orderwaarde</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-brand-primary">€{stats.avgOrderValue.toFixed(2)}</span>
+          <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Gem. Orderwaarde</div>
+            <div className="flex items-baseline gap-1 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-bold text-brand-primary">€{stats.avgOrderValue.toFixed(2)}</span>
               <DeltaBadge current={stats.avgOrderValue} previous={prevStats.avgOrderValue} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Per betaalde order</div>
           </div>
 
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <div className="text-xs uppercase tracking-wide text-gray-600 mb-2">Verlaten Winkelmandjes</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-amber-600">{stats.abandonedCarts}</span>
+          <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten Mandjes</div>
+            <div className="flex items-baseline gap-1 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-bold text-amber-600">{stats.abandonedCarts}</span>
               <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Checkout gestart, niet betaald</div>
           </div>
 
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <div className="text-xs uppercase tracking-wide text-gray-600 mb-2">Onbetaalde Orders</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-red-600">{stats.unpaidOrders}</span>
+          <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Onbetaalde Orders</div>
+            <div className="flex items-baseline gap-1 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-bold text-red-600">{stats.unpaidOrders}</span>
               <DeltaBadge current={stats.unpaidOrders} previous={prevStats.unpaidOrders} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Geen betaling ontvangen</div>
           </div>
 
-          <div className="bg-white border-2 border-gray-200 p-6">
-            <div className="text-xs uppercase tracking-wide text-gray-600 mb-2">Betalingen Pending</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-orange-600">{stats.pendingPayments}</span>
+          <div className="bg-white border-2 border-gray-200 p-4 sm:p-6 col-span-2 sm:col-span-1">
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Betalingen Pending</div>
+            <div className="flex items-baseline gap-1 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-bold text-orange-600">{stats.pendingPayments}</span>
               <DeltaBadge current={stats.pendingPayments} previous={prevStats.pendingPayments} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Wachten op verwerking</div>

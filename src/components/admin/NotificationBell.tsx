@@ -464,7 +464,7 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-white border-2 border-black shadow-lg z-50">
+        <div className="fixed inset-x-0 top-[57px] mx-3 sm:mx-0 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 bg-white border-2 border-black shadow-lg z-50">
           {/* Header */}
           <div className="bg-black text-white p-3 flex justify-between items-center">
             <span className="font-bold text-sm uppercase tracking-wide">Notificaties</span>
@@ -479,7 +479,7 @@ export default function NotificationBell() {
           </div>
 
           {/* Notification List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
             {totalItems === 0 ? (
               <div className="p-6 text-center text-gray-400 text-sm">
                 Geen recente notificaties

@@ -49,11 +49,11 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 md:gap-4">
-        {/* Keyboard Shortcuts Help */}
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4">
+        {/* Keyboard Shortcuts Help - hidden on very small screens */}
         <button
           onClick={() => setShortcutsOpen(true)}
-          className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 text-xs font-bold border-2 border-gray-300 hover:border-black hover:bg-black hover:text-white transition-colors rounded"
+          className="hidden sm:flex items-center justify-center w-8 h-8 md:w-9 md:h-9 text-xs font-bold border-2 border-gray-300 hover:border-black hover:bg-black hover:text-white transition-colors rounded"
           title="Sneltoetsen (?)"
         >
           ?
@@ -67,7 +67,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-wide border-2 border-black hover:bg-black hover:text-white transition-colors active:scale-95"
+          className="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto md:gap-2 md:px-4 md:py-2 text-xs md:text-sm font-bold uppercase tracking-wide border-2 border-black hover:bg-black hover:text-white transition-colors active:scale-95"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -78,7 +78,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-wide bg-red-600 text-white hover:bg-red-700 transition-colors active:scale-95"
+          className="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto md:gap-2 md:px-4 md:py-2 text-xs md:text-sm font-bold uppercase tracking-wide bg-red-600 text-white hover:bg-red-700 transition-colors active:scale-95"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

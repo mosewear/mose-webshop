@@ -422,27 +422,27 @@ export default function InventoryPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{getTotalStock()}</div>
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-1 sm:mb-2">{getTotalStock()}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totale Voorraad</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-purple-200 bg-purple-50">
-          <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">{getTotalPresaleStock()}</div>
+          <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-1 sm:mb-2">{getTotalPresaleStock()}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Presale Voorraad</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1 sm:mb-2">
             {variants.filter(v => v.stock_quantity >= lowStockThreshold).length}
           </div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Op Voorraad</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-orange-200 bg-orange-50">
-          <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-2">{getLowStockCount()}</div>
+          <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-1 sm:mb-2">{getLowStockCount()}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Lage Voorraad</div>
         </div>
-        <div className="bg-white p-4 md:p-6 border-2 border-red-200 bg-red-50">
-          <div className="text-2xl md:text-3xl font-bold text-red-600 mb-2">{getOutOfStockCount()}</div>
+        <div className="bg-white p-4 md:p-6 border-2 border-red-200 bg-red-50 col-span-2 sm:col-span-1">
+          <div className="text-2xl md:text-3xl font-bold text-red-600 mb-1 sm:mb-2">{getOutOfStockCount()}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Uitverkocht</div>
         </div>
       </div>

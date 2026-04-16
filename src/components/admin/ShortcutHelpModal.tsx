@@ -37,7 +37,7 @@ export default function ShortcutHelpModal({ open, onClose }: ShortcutHelpModalPr
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center pt-[20vh]"
+      className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center px-3 sm:px-0 pt-[10vh] sm:pt-[20vh]"
       onClick={onClose}
     >
       <div
@@ -56,7 +56,7 @@ export default function ShortcutHelpModal({ open, onClose }: ShortcutHelpModalPr
           </button>
         </div>
 
-        <div className="p-4 grid grid-cols-2 gap-3">
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {SHORTCUTS.map((shortcut) => (
             <div key={shortcut.description} className="flex items-center gap-3">
               <div className="flex items-center gap-1 shrink-0">

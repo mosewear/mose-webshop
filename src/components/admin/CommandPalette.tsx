@@ -313,7 +313,7 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center pt-[20vh]"
+      className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center px-3 sm:px-0 pt-[10vh] sm:pt-[20vh]"
       onClick={close}
     >
       <div
@@ -378,7 +378,7 @@ export default function CommandPalette() {
         </div>
 
         {/* Keyboard hints */}
-        <div className="p-3 border-t-2 border-gray-200 text-xs text-gray-500 flex gap-4">
+        <div className="hidden sm:flex p-3 border-t-2 border-gray-200 text-xs text-gray-500 gap-4">
           <span><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px] font-mono">↑↓</kbd> navigeer</span>
           <span><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px] font-mono">↵</kbd> openen</span>
           <span><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px] font-mono">esc</kbd> sluiten</span>

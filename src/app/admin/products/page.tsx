@@ -255,28 +255,28 @@ export default function AdminProductsPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-brand-primary mb-2">{products.length}</div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Totaal Producten</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="bg-white p-4 sm:p-6 border-2 border-gray-200">
+          <div className="text-2xl sm:text-3xl font-bold text-brand-primary mb-1 sm:mb-2">{products.length}</div>
+          <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Totaal Producten</div>
         </div>
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-green-600 mb-2">
+        <div className="bg-white p-4 sm:p-6 border-2 border-gray-200">
+          <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1 sm:mb-2">
             {products.filter(p => p.category_id).length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Met Categorie</div>
+          <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Met Categorie</div>
         </div>
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-red-600 mb-2">
+        <div className="bg-white p-4 sm:p-6 border-2 border-gray-200">
+          <div className="text-2xl sm:text-3xl font-bold text-red-600 mb-1 sm:mb-2">
             {products.filter(p => p.sale_price && p.sale_price < p.base_price).length}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Met Korting</div>
+          <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Met Korting</div>
         </div>
-        <div className="bg-white p-6 border-2 border-gray-200">
-          <div className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="bg-white p-4 sm:p-6 border-2 border-gray-200">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2 truncate">
             €{products.reduce((sum, p) => sum + Number(p.sale_price || p.base_price), 0).toFixed(2)}
           </div>
-          <div className="text-sm text-gray-600 uppercase tracking-wide">Totale Waarde</div>
+          <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Totale Waarde</div>
         </div>
       </div>
 

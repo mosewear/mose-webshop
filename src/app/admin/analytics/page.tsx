@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, TrendingUp, ShoppingCart, Package, CreditCard, DollarSign, Clock, AlertCircle, Download } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { TrendingUp, ShoppingCart, Package, CreditCard, DollarSign, Clock, AlertCircle, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface AnalyticsStats {
@@ -31,7 +29,6 @@ interface TopProduct {
 }
 
 export default function AnalyticsPage() {
-  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState<number>(30)
   const [stats, setStats] = useState<AnalyticsStats>({
@@ -267,72 +264,48 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Analytics laden...</p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       {/* Header */}
-      <div className="bg-white border-b-2 border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/admin"
-                className="p-2 hover:bg-gray-100 transition-colors border-2 border-gray-300"
-              >
-                <ArrowLeft size={20} />
-              </Link>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-display font-bold flex items-center gap-3">
-                  <TrendingUp size={32} className="text-brand-primary" />
-                  Analytics & Conversie
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">Uitgebreide inzichten in je verkopen en conversies</p>
-              </div>
-            </div>
-            <button
-              onClick={exportCSV}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 border-gray-300 text-gray-700 hover:border-gray-400 transition-colors"
-            >
-              <Download size={16} />
-              Exporteren
-            </button>
-          </div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
+        <div>
+          <h1 className="text-3xl font-display font-bold mb-2 flex items-center gap-3">
+            <TrendingUp size={28} className="text-brand-primary" />
+            Analytics & Conversie
+          </h1>
+          <p className="text-gray-600 text-sm md:text-base">Uitgebreide inzichten in je verkopen en conversies</p>
         </div>
+        <button
+          onClick={exportCSV}
+          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 border-gray-300 text-gray-700 hover:border-gray-400 transition-colors"
+        >
+          <Download size={16} />
+          Exporteren
+        </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6">
-        {/* Date Range Filter + Mobile Export */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-2">
-            {([7, 30, 90] as const).map((days) => (
-              <button
-                key={days}
-                onClick={() => setDateRange(days)}
-                className={`px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 transition-colors ${
-                  dateRange === days
-                    ? 'bg-brand-primary border-brand-primary text-white'
-                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
-                }`}
-              >
-                {days} dagen
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={exportCSV}
-            className="sm:hidden flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 border-gray-300 text-gray-700 hover:border-gray-400 transition-colors"
-          >
-            <Download size={16} />
-            Exporteren
-          </button>
+      <div className="space-y-6">
+        {/* Date Range Filter */}
+        <div className="flex flex-wrap gap-2">
+          {([7, 30, 90] as const).map((days) => (
+            <button
+              key={days}
+              onClick={() => setDateRange(days)}
+              className={`px-4 py-2 text-sm font-bold uppercase tracking-wide border-2 transition-colors ${
+                dateRange === days
+                  ? 'bg-brand-primary border-brand-primary text-white'
+                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              {days} dagen
+            </button>
+          ))}
         </div>
 
         {/* Key Metrics Grid */}
