@@ -55,6 +55,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
           onClick={() => setShortcutsOpen(true)}
           className="hidden sm:flex items-center justify-center w-8 h-8 md:w-9 md:h-9 text-xs font-bold border-2 border-gray-300 hover:border-black hover:bg-black hover:text-white transition-colors rounded"
           title="Sneltoetsen (?)"
+          aria-label="Sneltoetsen"
         >
           ?
         </button>
@@ -68,6 +69,7 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto md:gap-2 md:px-4 md:py-2 text-xs md:text-sm font-bold uppercase tracking-wide border-2 border-black hover:bg-black hover:text-white transition-colors active:scale-95"
+          aria-label="Bekijk website"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
+import { headers } from 'next/headers'
 import { PostHogProvider } from './providers'
-import { getSiteSettings } from '@/lib/settings'
 import "./globals.css";
 
 const anton = Anton({
@@ -26,11 +26,8 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-// Revalidate layout every 60 seconds to pick up settings changes
-export const revalidate = 60
-
-// Force dynamic rendering to ensure favicon updates are picked up
-export const dynamic = 'force-dynamic'
+// headers() usage below already opts into dynamic rendering;
+// no explicit force-dynamic needed.
 
 export async function generateMetadata(): Promise<Metadata> {
   console.log('🎯 [LAYOUT] generateMetadata called')
@@ -108,27 +105,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers()
+  const pathname = headersList.get('x-next-url') || headersList.get('x-invoke-path') || ''
+  const pathSegments = pathname.split('/').filter(Boolean)
+  const lang = (pathSegments[0] === 'en' || pathSegments[0] === 'nl') ? pathSegments[0] : 'nl'
+
   return (
-    <html className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={lang} className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        {/* Set lang attribute dynamically based on URL */}
-        <Script
-          id="set-lang"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                const path = window.location.pathname;
-                const locale = path.split('/')[1];
-                if (locale === 'en' || locale === 'nl') {
-                  document.documentElement.lang = locale;
-                } else {
-                  document.documentElement.lang = 'nl';
-                }
-              })();
-            `,
-          }}
-        />
+        {/* lang attribute is set by [locale]/layout.tsx via generateMetadata */}
         {/* Facebook Pixel - Only load after consent */}
         <Script
           id="facebook-pixel"
@@ -172,19 +157,36 @@ export default async function RootLayout({
             alt=""
           />
         </noscript>
-        {/* Trustpilot JavaScript Integration - Required for domain verification */}
-        <script
+        {/* Trustpilot JavaScript Integration - Only load after cookie consent */}
+        <Script
+          id="trustpilot-script"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-(function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
-    a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
-    f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
-    tp('register', 'AAbEsaY7hRnD5xEZ');
+              function initTrustpilot() {
+                (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
+                    a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
+                    f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
+                    tp('register', 'AAbEsaY7hRnD5xEZ');
+                console.log('🎯 Trustpilot initialized');
+              }
+
+              if (typeof window !== 'undefined') {
+                var consent = localStorage.getItem('mose_cookie_consent');
+                if (consent === 'all') {
+                  initTrustpilot();
+                } else {
+                  window.addEventListener('mose-tracking-enabled', initTrustpilot);
+                }
+              }
             `,
           }}
         />
       </head>
       <body className="antialiased font-sans">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">
+          Skip to content
+        </a>
         <PostHogProvider>
           {children}
         </PostHogProvider>

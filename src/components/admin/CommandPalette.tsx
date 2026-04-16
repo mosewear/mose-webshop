@@ -222,8 +222,8 @@ export default function CommandPalette() {
         const [ordersRes, productsRes] = await Promise.all([
           supabase
             .from('orders')
-            .select('id, order_number, customer_email')
-            .or(`order_number.ilike.%${trimmed}%,customer_email.ilike.%${trimmed}%`)
+            .select('id, email')
+            .or(`id.ilike.%${trimmed}%,email.ilike.%${trimmed}%`)
             .limit(5),
           supabase
             .from('products')
@@ -236,7 +236,7 @@ export default function CommandPalette() {
 
         const orderItems: ResultItem[] = (ordersRes.data || []).map(o => ({
           id: `order-${o.id}`,
-          name: `#${o.order_number || o.id.slice(0, 8)} — ${o.customer_email || 'Onbekend'}`,
+          name: `#${o.id.slice(0, 8)} — ${o.email || 'Onbekend'}`,
           href: `/admin/orders/${o.id}`,
           icon: 'order',
           category: 'Orders' as const,
@@ -315,6 +315,9 @@ export default function CommandPalette() {
     <div
       className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center px-3 sm:px-0 pt-[10vh] sm:pt-[20vh]"
       onClick={close}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
     >
       <div
         className="bg-white border-2 border-black w-full max-w-lg shadow-2xl"

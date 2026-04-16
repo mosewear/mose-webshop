@@ -17,33 +17,6 @@
   animation: fadeInUp 1s ease-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(1rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slideUp {
-  animation: slideUp 0.4s ease-out;
-}
 
 :root {
   --background: #ffffff;
@@ -62,7 +35,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Hide scrollbar for scroll-snap gallery (mobile only) */
@@ -121,12 +93,3 @@ textarea {
   }
 }
 
-/* Hide scrollbar but keep scrolling */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}

@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useRef, ReactElement } from 'react'
 import Image from 'next/image'
+import DOMPurify from 'dompurify'
 import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
@@ -101,13 +102,15 @@ function formatTemplateText(text: string): ReactElement[] {
   })
 }
 
-// Helper functie om HTML content te renderen (voor database content)
 function renderHTMLContent(html: string): ReactElement {
-  // Convert **text** to <strong>text</strong> and \n to <br> before rendering
   const processedHTML = html
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
-    .replace(/\n/g, '<br>') // Newlines to line breaks
-  return <div dangerouslySetInnerHTML={{ __html: processedHTML }} />
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+  const sanitized = DOMPurify.sanitize(processedHTML, {
+    ALLOWED_TAGS: ['strong', 'b', 'em', 'i', 'br', 'p', 'ul', 'ol', 'li', 'a', 'span'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+  })
+  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />
 }
 
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)

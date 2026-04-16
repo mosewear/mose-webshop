@@ -143,6 +143,7 @@ export const useCart = create<CartStore>()(
     }),
     {
       name: 'mose-cart',
+      version: 1,
       // Listen to messages from other tabs
       onRehydrateStorage: () => (state) => {
         if (cartChannel && state) {

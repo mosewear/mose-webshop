@@ -278,6 +278,7 @@
   },
   "product": {
     "notFound": "Product niet gevonden",
+    "notFoundDesc": "Het door jou gezochte product bestaat niet meer.",
     "backToShop": "Terug naar shop",
     "breadcrumb": {
       "home": "Home",

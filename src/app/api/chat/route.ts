@@ -170,12 +170,34 @@ async function calculateShipping(cartTotal: number) {
   }
 }
 
+const chatRateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const CHAT_RATE_LIMIT = 10
+const CHAT_RATE_WINDOW_MS = 60_000
+
+function checkChatRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = chatRateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    chatRateLimitMap.set(ip, { count: 1, resetAt: now + CHAT_RATE_WINDOW_MS })
+    return true
+  }
+  entry.count++
+  return entry.count <= CHAT_RATE_LIMIT
+}
+
 export async function POST(req: Request) {
   try {
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0] || 'unknown'
+    if (!checkChatRateLimit(ip)) {
+      return new Response(
+        JSON.stringify({ error: 'Te veel verzoeken. Probeer het over een minuut opnieuw.' }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { messages, context } = await req.json()
     const locale = normalizeLocale(context?.locale)
 
-    // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
       return new Response(
         JSON.stringify({ 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface AdminSidebarProps {
   adminUser: {
@@ -14,6 +14,20 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        closeMobileMenu()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mobileMenuOpen, closeMobileMenu])
 
   const role = adminUser.role
 
@@ -267,12 +281,14 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       {mobileMenuOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-[45]"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
         />
       )}
 
       {/* Sidebar - Desktop: always visible, Mobile: slide-in */}
-      <aside className={`
+      <aside
+        {...(mobileMenuOpen ? { role: 'dialog' as const, 'aria-modal': true, 'aria-label': 'Navigatiemenu' } : {})}
+        className={`
         fixed lg:relative
         inset-y-0 left-0
         z-[50]

@@ -65,21 +65,26 @@ export default function AdminOrdersPage() {
 
   const fetchStatusCounts = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('status')
-      if (error) throw error
-      const counts: Record<string, number> = {}
-      let total = 0
-      for (const row of data || []) {
-        counts[row.status] = (counts[row.status] || 0) + 1
-        total++
+      const statuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled',
+        'return_requested', 'return_in_transit', 'return_received', 'return_completed']
+
+      const countQuery = (filter?: { eq?: string; in?: string[] }) => {
+        let q = supabase.from('orders').select('*', { count: 'exact', head: true })
+        if (filter?.eq) q = q.eq('status', filter.eq)
+        if (filter?.in) q = q.in('status', filter.in)
+        return q
       }
-      counts['all'] = total
-      counts['returns'] = (counts['return_requested'] || 0) +
-        (counts['return_in_transit'] || 0) +
-        (counts['return_received'] || 0) +
-        (counts['return_completed'] || 0)
+
+      const [allResult, ...statusResults] = await Promise.all([
+        countQuery(),
+        ...statuses.map(s => countQuery({ eq: s })),
+      ])
+
+      const counts: Record<string, number> = { all: allResult.count ?? 0 }
+      statuses.forEach((s, i) => { counts[s] = statusResults[i].count ?? 0 })
+      counts['returns'] = counts['return_requested'] + counts['return_in_transit'] +
+        counts['return_received'] + counts['return_completed']
+
       setStatusCounts(counts)
     } catch {
       // counts are non-critical
@@ -115,7 +120,7 @@ export default function AdminOrdersPage() {
       window.removeEventListener('focus', handleFocus)
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     }
-  }, [filter, page])
+  }, [filter, page, debouncedSearch])
 
   const fetchOrders = async () => {
     try {
@@ -134,6 +139,11 @@ export default function AdminOrdersPage() {
         }
       }
 
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.trim()
+        countQuery = countQuery.or(`id.ilike.%${q}%,email.ilike.%${q}%`)
+      }
+
       const { count } = await countQuery
       setTotalCount(count || 0)
 
@@ -149,6 +159,11 @@ export default function AdminOrdersPage() {
         } else {
           query = query.eq('status', filter)
         }
+      }
+
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.trim()
+        query = query.or(`id.ilike.%${q}%,email.ilike.%${q}%`)
       }
 
       const { data, error } = await query
@@ -650,9 +665,10 @@ export default function AdminOrdersPage() {
 
             <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y-2 divide-gray-200">
+                <caption className="sr-only">Overzicht van bestellingen</caption>
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 md:px-6 py-3 text-left">
+                    <th scope="col" className="px-4 md:px-6 py-3 text-left">
                       <input
                         type="checkbox"
                         checked={filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length}
@@ -660,10 +676,10 @@ export default function AdminOrdersPage() {
                         className="w-5 h-5"
                       />
                     </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Order ID
                     </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Klant
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">

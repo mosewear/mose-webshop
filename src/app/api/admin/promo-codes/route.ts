@@ -1,43 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/admin'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createServiceRoleClient()
-
-    // Check if user is admin
-    const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json(
-        { success: false, error: 'Niet geautoriseerd' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Niet geautoriseerd' },
-        { status: 401 }
-      )
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.is_admin) {
+    const { authorized } = await requireAdmin(['admin'])
+    if (!authorized) {
       return NextResponse.json(
         { success: false, error: 'Niet geautoriseerd' },
         { status: 403 }
       )
     }
 
-    // Fetch all promo codes (bypassing RLS with Service Role)
+    const supabase = createServiceRoleClient()
     const { data, error } = await supabase
       .from('promo_codes')
       .select('*')

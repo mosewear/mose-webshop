@@ -6,7 +6,8 @@ import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
 import { useWishlist } from '@/store/wishlist'
-import * as LucideIcons from 'lucide-react'
+import { Star, CalendarCheck, Crown } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useState, FormEvent, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
@@ -33,9 +34,6 @@ export default function HomePageClient({
   const tProduct = useTranslations('product')
   const locale = useLocale()
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
-  
-  // Helper for locale-aware links
-  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   
   const settings = initialSettings
   const homepageSettings = initialHomepageSettings
@@ -215,8 +213,9 @@ export default function HomePageClient({
               {/* Render Icon dynamically */}
               <div className="flex justify-center mb-2 md:mb-3">
                 {(() => {
+                  const iconMap: Record<string, LucideIcon> = { Star, CalendarCheck, Crown }
                   const iconName = homepageSettings?.stats_3_icon || 'Star'
-                  const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.Star
+                  const IconComponent = iconMap[iconName] || Star
                   return <IconComponent className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 drop-shadow-lg" strokeWidth={2.5} />
                 })()}
               </div>
@@ -586,12 +585,12 @@ export default function HomePageClient({
                     sublabel: t('story.stat1.sublabel') 
                   },
                   { 
-                    icon: <LucideIcons.CalendarCheck className="w-8 h-8 mx-auto" strokeWidth={2} />,
+                    icon: <CalendarCheck className="w-8 h-8 mx-auto" strokeWidth={2} />,
                     label: t('story.stat2.label'), 
                     sublabel: t('story.stat2.sublabel') 
                   },
                   { 
-                    icon: <LucideIcons.Crown className="w-8 h-8 mx-auto" strokeWidth={2} />,
+                    icon: <Crown className="w-8 h-8 mx-auto" strokeWidth={2} />,
                     label: t('story.stat3.label'), 
                     sublabel: t('story.stat3.sublabel') 
                   },

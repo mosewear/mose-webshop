@@ -2,6 +2,7 @@ import { getSiteSettings } from '@/lib/settings'
 import { getHomepageSettings, getFeaturedProducts, getCategoryData } from '@/lib/homepage'
 import HomePageClient from '@/components/HomePageClient'
 import { getTranslations } from 'next-intl/server'
+import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 
 // ✅ ISR with On-Demand Revalidation
@@ -17,7 +18,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   
   // Ensure that the incoming `locale` is valid
   if (!routing.locales.includes(locale as any)) {
-    return null
+    notFound()
   }
 
   const t = await getTranslations({ locale, namespace: 'metadata' })

@@ -30,6 +30,6 @@ export default function MainContentWrapper({ children }: { children: React.React
     }
   }, [])
 
-  return <main>{children}</main>
+  return <main id="main-content">{children}</main>
 }
 

@@ -18,6 +18,7 @@ export default function BrokenImagesScanner() {
   const [brokenImages, setBrokenImages] = useState<BrokenImage[]>([])
   const [fixing, setFixing] = useState(false)
   const [lastScan, setLastScan] = useState<Date | null>(null)
+  const [scanProgress, setScanProgress] = useState({ checked: 0, total: 0 })
 
   const supabase = createClient()
 
@@ -42,43 +43,42 @@ export default function BrokenImagesScanner() {
       if (error) throw error
 
       const broken: BrokenImage[] = []
+      const images = productImages || []
+      const BATCH_SIZE = 5
 
-      // Check each image
-      for (const image of productImages || []) {
-        try {
-          console.log(`🔍 Checking ${image.url}`)
-          
-          const response = await fetch(image.url, {
-            method: 'HEAD',
-            cache: 'no-cache',
+      setScanProgress({ checked: 0, total: images.length })
+
+      for (let i = 0; i < images.length; i += BATCH_SIZE) {
+        const batch = images.slice(i, i + BATCH_SIZE)
+
+        const results = await Promise.all(
+          batch.map(async (image) => {
+            try {
+              const response = await fetch(image.url, {
+                method: 'HEAD',
+                cache: 'no-cache',
+              })
+              return { image, accessible: response.ok && response.status === 200 }
+            } catch {
+              return { image, accessible: false }
+            }
           })
+        )
 
-          const accessible = response.ok && response.status === 200
-
+        for (const { image, accessible } of results) {
           if (!accessible) {
-            console.warn(`⚠️ BROKEN: ${image.url} (Status: ${response.status})`)
             broken.push({
               id: image.id,
               url: image.url,
               product_id: image.product_id,
               product_name: (image.products as any)?.name || 'Unknown',
               table: 'product_images',
-              accessible: false
+              accessible: false,
             })
-          } else {
-            console.log(`✅ OK: ${image.url}`)
           }
-        } catch (error) {
-          console.error(`❌ Error checking ${image.url}:`, error)
-          broken.push({
-            id: image.id,
-            url: image.url,
-            product_id: image.product_id,
-            product_name: (image.products as any)?.name || 'Unknown',
-            table: 'product_images',
-            accessible: false
-          })
         }
+
+        setScanProgress({ checked: Math.min(i + BATCH_SIZE, images.length), total: images.length })
       }
 
       setBrokenImages(broken)
@@ -183,7 +183,11 @@ export default function BrokenImagesScanner() {
             className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-5 h-5 ${scanning ? 'animate-spin' : ''}`} />
-            {scanning ? 'Scannen...' : 'Start Scan'}
+            {scanning
+              ? (scanProgress.total > 0
+                  ? `Checking ${scanProgress.checked} of ${scanProgress.total}...`
+                  : 'Scannen...')
+              : 'Start Scan'}
           </button>
         </div>
       </div>

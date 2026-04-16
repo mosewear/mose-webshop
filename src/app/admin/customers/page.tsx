@@ -160,7 +160,7 @@ export default function CustomersPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{customers.length}</div>
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{totalCount}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Klanten</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
@@ -248,9 +248,10 @@ export default function CustomersPage() {
 
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y-2 divide-gray-200">
+              <caption className="sr-only">Overzicht van klanten</caption>
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <th scope="col" className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Klant
                   </th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">

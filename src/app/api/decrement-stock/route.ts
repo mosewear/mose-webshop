@@ -1,12 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/supabase/admin'
 
-// Server-side stock decrement (called after payment success)
 export async function POST(request: Request) {
   try {
-    const { orderId } = await request.json()
+    const { authorized } = await requireAdmin(['admin', 'manager'])
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    console.log('📦 STOCK DECREMENT - Order:', orderId)
+    const { orderId } = await request.json()
 
     if (!orderId) {
       return NextResponse.json(

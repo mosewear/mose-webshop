@@ -51,13 +51,21 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('sendcloud-signature')
     const webhookSecret = process.env.SENDCLOUD_WEBHOOK_SECRET
 
-    if (webhookSecret && signature) {
-      const hmac = crypto.createHmac('sha256', webhookSecret)
-      const digest = hmac.update(rawBody).digest('hex')
-      if (digest !== signature) {
-        console.error('[Sendcloud Webhook] Invalid signature')
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-      }
+    if (!webhookSecret) {
+      console.error('[Sendcloud Webhook] SENDCLOUD_WEBHOOK_SECRET not configured')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
+    }
+
+    if (!signature) {
+      console.error('[Sendcloud Webhook] Missing sendcloud-signature header')
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
+    }
+
+    const hmac = crypto.createHmac('sha256', webhookSecret)
+    const digest = hmac.update(rawBody).digest('hex')
+    if (digest !== signature) {
+      console.error('[Sendcloud Webhook] Invalid signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     console.log(`[Sendcloud Webhook] ${payload.action} | tracking=${payload.parcel.tracking_number} | status=${payload.parcel.status.id} (${payload.parcel.status.message}) | order=${payload.parcel.order_number}`)

@@ -33,6 +33,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (expectedTotal == null) {
+      console.error('🔴 API: Missing expectedTotal')
+      return NextResponse.json(
+        { error: 'Missing expectedTotal' },
+        { status: 400 }
+      )
+    }
+
     // Get dynamic shipping settings
     const settings = await getSiteSettings()
     console.log('🔵 API: Settings from Supabase:', {
@@ -123,7 +131,7 @@ export async function POST(req: NextRequest) {
     })
     
     // Security check: compare with expected total (allow 1 cent difference for rounding)
-    if (expectedTotal && Math.abs(total - expectedTotal) > 0.01) {
+    if (Math.abs(total - expectedTotal) > 0.01) {
       console.error('🔴 Total mismatch! Calculated:', total, 'Expected:', expectedTotal)
       return NextResponse.json(
         { error: 'Price mismatch. Please refresh and try again.' },

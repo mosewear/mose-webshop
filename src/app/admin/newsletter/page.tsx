@@ -32,7 +32,6 @@ export default async function NewsletterAdminPage() {
   const { count: totalCount } = await supabase
     .from('newsletter_subscribers')
     .select('*', { count: 'exact', head: true })
-    .eq('status', 'active')
 
   const { count: activeCount } = await supabase
     .from('newsletter_subscribers')
@@ -60,7 +59,7 @@ export default async function NewsletterAdminPage() {
     thisMonth: thisMonthCount || 0,
     unsubscribed: unsubscribedCount || 0,
     unsubRate: totalCount && totalCount > 0 
-      ? ((unsubscribedCount || 0) / (totalCount + (unsubscribedCount || 0)) * 100).toFixed(1) 
+      ? ((unsubscribedCount || 0) / totalCount * 100).toFixed(1) 
       : '0.0',
   }
 

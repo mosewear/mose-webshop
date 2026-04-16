@@ -86,16 +86,6 @@ export default function AnalyticsPage() {
       const avgOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
       const conversionRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0
       
-      console.log('📊 Analytics calculated:', {
-        totalOrders,
-        paidOrders: paidOrders.length,
-        pendingOrders: pendingOrders.length,
-        abandonedCarts: abandonedCarts.length,
-        totalRevenue,
-        avgOrderValue,
-        conversionRate,
-      })
-
       setStats({
         totalOrders,
         paidOrdersCount: paidOrders.length,

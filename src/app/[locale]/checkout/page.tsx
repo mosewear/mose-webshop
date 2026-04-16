@@ -457,15 +457,19 @@ export default function CheckoutPage() {
           return
         }
 
-        // Fallback: Try IP geolocation (free service)
-        const response = await fetch('https://ipapi.co/json/')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.country_code === 'BE') {
-            setForm(prev => ({ ...prev, country: 'BE' }))
-          } else if (data.country_code === 'NL') {
-            setForm(prev => ({ ...prev, country: 'NL' }))
+        // Fallback: IP geolocation for auto-detecting country only
+        try {
+          const response = await fetch('https://ipapi.co/json/')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.country_code === 'BE') {
+              setForm(prev => ({ ...prev, country: 'BE' }))
+            } else if (data.country_code === 'NL') {
+              setForm(prev => ({ ...prev, country: 'NL' }))
+            }
           }
+        } catch {
+          // IP geolocation is best-effort; default country (NL) is fine
         }
       } catch (error) {
         console.log('Country detection failed, using default (NL)')

@@ -17,6 +17,13 @@ const testTrackingCode = 'TEST123456789'
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
 
 export async function GET() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Test emails are disabled in production' },
+      { status: 403 }
+    )
+  }
+
   try {
     const results = []
 

@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Review submit error:', error)
     return NextResponse.json(
-      { error: error.message || 'Er ging iets mis' },
+      { error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

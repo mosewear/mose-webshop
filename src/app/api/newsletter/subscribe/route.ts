@@ -3,7 +3,9 @@ import { createServiceRoleClient, createClient } from '@/lib/supabase/server'
 import { sendNewsletterWelcomeEmail, sendInsiderWelcomeEmail } from '@/lib/email'
 import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
 
-// Rate limiting map (in-memory, resets on server restart)
+// NOTE: In-memory rate limiter resets on each cold start and is per-instance only.
+// For Vercel serverless, this provides basic protection but is not cross-instance.
+// For stricter rate limiting, consider Vercel KV or Upstash Redis.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
 function getRateLimitKey(req: NextRequest): string {

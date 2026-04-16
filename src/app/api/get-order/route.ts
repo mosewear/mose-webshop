@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Use service role key to bypass RLS
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -25,73 +24,57 @@ export async function GET(req: NextRequest) {
     let order
     let orderError
 
-    if (orderId) {
-      console.log('🔍 API: Fetching order by ID:', orderId)
+    if (orderId && paymentIntentId) {
+      // Both provided: verify they match (authenticated via payment_intent ownership)
       const result = await supabase
         .from('orders')
         .select('*')
         .eq('id', orderId)
+        .eq('stripe_payment_intent_id', paymentIntentId)
         .single()
-      
       order = result.data
       orderError = result.error
     } else if (paymentIntentId) {
-      console.log('🔍 API: Fetching order by payment_intent:', paymentIntentId)
       const result = await supabase
         .from('orders')
         .select('*')
         .eq('stripe_payment_intent_id', paymentIntentId)
         .single()
-      
+      order = result.data
+      orderError = result.error
+    } else if (orderId) {
+      // order_id only: restrict to unpaid/pending orders (abandoned cart recovery)
+      const result = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .in('payment_status', ['pending', 'unpaid'])
+        .single()
       order = result.data
       orderError = result.error
     }
 
     if (orderError || !order) {
-      console.error('❌ API: Order not found:', orderError)
       return NextResponse.json(
-        { error: 'Order not found', details: orderError },
+        { error: 'Order not found' },
         { status: 404 }
       )
     }
 
-    // Fetch order items
     const { data: items, error: itemsError } = await supabase
       .from('order_items')
       .select('*')
       .eq('order_id', order.id)
 
     if (itemsError) {
-      console.error('❌ API: Error fetching items:', itemsError)
+      console.error('[get-order] Error fetching items:', itemsError.message)
     }
 
-    console.log('✅ API: Order found:', order.id)
-    console.log('📊 API: Order status:', {
-      payment_status: order.payment_status,
-      payment_method: order.payment_method,
-      email: order.email,
-      last_email_sent_at: order.last_email_sent_at
-    })
-
     // Send order confirmation email if not sent yet
-    // SIMPLE: If last_email_sent_at is null, email was NOT sent yet
-    // Don't check payment_status - if webhook set it to 'paid' but didn't send email, fallback must send it!
     const shouldSendEmail = !order.last_email_sent_at
     
-    console.log('📧 API: Should send email?', shouldSendEmail)
-    console.log('📧 API: Reason:', shouldSendEmail ? 'last_email_sent_at is NULL' : 'email already sent previously')
-    
     if (shouldSendEmail) {
-      console.log('═══════════════════════════════════════════')
-      console.log('📧 API: ATTEMPTING TO SEND EMAIL')
-      console.log('═══════════════════════════════════════════')
-      console.log('📧 API: Recipient:', order.email)
-      console.log('📧 API: Order ID:', order.id)
-      console.log('📧 API: Order Total: €', order.total)
-      console.log('📧 API: Locale:', order.locale || 'nl')
-      
-      // Get site URL for image URLs
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
       
       try {
         const emailResult = await sendOrderConfirmationEmail({
@@ -107,9 +90,9 @@ export async function GET(req: NextRequest) {
             color: item.color,
             quantity: item.quantity,
             price: item.price_at_purchase,
-            imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',  // IMAGE FIX: Absolute URL
-            isPresale: item.is_presale || false,  // PRESALE: Pass presale status
-            presaleExpectedDate: item.presale_expected_date || undefined,  // PRESALE: Expected date
+            imageUrl: item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url}`) : '',
+            isPresale: item.is_presale || false,
+            presaleExpectedDate: item.presale_expected_date || undefined,
           })) || [],
           shippingAddress: {
             name: order.shipping_address.name,
@@ -119,50 +102,24 @@ export async function GET(req: NextRequest) {
           },
           promoCode: order.promo_code || undefined,
           discountAmount: order.discount_amount || 0,
-          locale: order.locale || 'nl', // Pass locale for multi-language emails
+          locale: order.locale || 'nl',
         })
         
-        console.log('📧 API: Email function returned:', emailResult)
-        
         if (emailResult.success) {
-          console.log('✅ API: Order confirmation email sent successfully!')
-          console.log('✅ API: Resend Email ID:', emailResult.data)
-          
-          // Mark email as sent by updating last_email_sent_at and last_email_type
-          const updateResult = await supabase
+          await supabase
             .from('orders')
             .update({ 
               last_email_sent_at: new Date().toISOString(),
               last_email_type: 'order_confirmation'
             })
             .eq('id', order.id)
-            
-          console.log('✅ API: Order email timestamp updated:', updateResult.error ? 'FAILED' : 'SUCCESS')
-          if (updateResult.error) {
-            console.error('❌ API: Failed to update timestamp:', updateResult.error)
-          }
-          console.log('═══════════════════════════════════════════')
         } else {
-          console.error('❌ API: Email send failed!')
-          console.error('❌ API: Error details:', emailResult.error)
-          console.error('═══════════════════════════════════════════')
-          // Don't update status if email failed
+          console.error('[get-order] Email send failed:', emailResult.error)
         }
           
       } catch (emailError: any) {
-        console.error('═══════════════════════════════════════════')
-        console.error('❌ API: Exception sending email!')
-        console.error('═══════════════════════════════════════════')
-        console.error('❌ API: Error:', emailError)
-        console.error('❌ API: Error message:', emailError.message)
-        console.error('❌ API: Error stack:', emailError.stack)
-        console.error('═══════════════════════════════════════════')
-        // Don't fail the request if email fails, but log it
+        console.error('[get-order] Exception sending email:', emailError.message)
       }
-    } else {
-      console.log('ℹ️ API: Email already sent for this order')
-      console.log('   Payment status:', order.payment_status)
-      console.log('   Last email sent at:', order.last_email_sent_at)
     }
 
     return NextResponse.json({
@@ -170,9 +127,9 @@ export async function GET(req: NextRequest) {
       items: items || []
     })
   } catch (error: any) {
-    console.error('❌ API: Error:', error)
+    console.error('[get-order] Error:', error.message)
     return NextResponse.json(
-      { error: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

@@ -459,9 +459,10 @@ export default function AdminProductsPage() {
 
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y-2 divide-gray-200">
+              <caption className="sr-only">Overzicht van producten</caption>
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left">
+                  <th scope="col" className="px-4 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={products.length > 0 && selectedProducts.length === products.length}

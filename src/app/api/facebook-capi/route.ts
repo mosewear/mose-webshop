@@ -69,8 +69,33 @@ function normalizePhone(phone: string): string {
   return phone.replace(/[^0-9]/g, '')
 }
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 30
+const RATE_WINDOW_MS = 60_000
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return true
+  }
+  entry.count++
+  return entry.count <= RATE_LIMIT
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || ''
+    if (origin && !origin.includes('mosewear.com') && !origin.includes('localhost')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const accessToken = process.env.FACEBOOK_ACCESS_TOKEN
 
     if (!accessToken) {
@@ -162,15 +187,6 @@ export async function POST(request: NextRequest) {
       },
     }
 
-    // Send to Facebook
-    console.log(`[FB CAPI] Sending event: ${event_name}`, {
-      event_id,
-      has_email: !!hashedUserData.em,
-      has_phone: !!hashedUserData.ph,
-      has_name: !!hashedUserData.fn || !!hashedUserData.ln,
-      value: custom_data.value,
-    })
-
     const response = await fetch(FB_API_URL, {
       method: 'POST',
       headers: {
@@ -192,8 +208,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[FB CAPI] ✅ Event sent successfully:`, result)
-
     return NextResponse.json({
       success: true,
       events_received: result.events_received,
@@ -203,7 +217,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('[FB CAPI] Error:', error)
     return NextResponse.json(
-      { error: 'Internal server error', message: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
