@@ -28,10 +28,9 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
-  // Redirect mosewear.nl → mosewear.com (permanent 301)
   async redirects() {
     return [
-      // Redirect bare domain mosewear.nl
+      // Redirect mosewear.nl → www.mosewear.com
       {
         source: '/:path*',
         has: [
@@ -43,7 +42,6 @@ const nextConfig: NextConfig = {
         destination: 'https://www.mosewear.com/:path*',
         permanent: true,
       },
-      // Redirect www.mosewear.nl (als het werkt)
       {
         source: '/:path*',
         has: [
