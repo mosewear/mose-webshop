@@ -46,6 +46,14 @@ export default function AdminOrdersPage() {
   const [totalCount, setTotalCount] = useState(0)
   const PAGE_SIZE = 25
 
+  const pendingScrollRestore = useRef(false)
+
+  const saveScrollPosition = useCallback(() => {
+    sessionStorage.setItem('admin-orders-scroll', String(window.scrollY))
+    sessionStorage.setItem('admin-orders-filter', filter)
+    sessionStorage.setItem('admin-orders-page', String(page))
+  }, [filter, page])
+
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value)
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
@@ -78,7 +86,21 @@ export default function AdminOrdersPage() {
     }
   }, [supabase])
 
+  const initializedRef = useRef(false)
+
   useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true
+      const savedFilter = sessionStorage.getItem('admin-orders-filter')
+      const savedPage = sessionStorage.getItem('admin-orders-page')
+      if (savedFilter && savedFilter !== filter) {
+        setFilter(savedFilter)
+        if (savedPage) setPage(parseInt(savedPage, 10))
+        return
+      }
+      if (savedPage) setPage(parseInt(savedPage, 10))
+    }
+
     fetchOrders()
     fetchStatusCounts()
     
@@ -133,6 +155,7 @@ export default function AdminOrdersPage() {
 
       if (error) throw error
       setOrders(data || [])
+      pendingScrollRestore.current = true
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -140,6 +163,21 @@ export default function AdminOrdersPage() {
       setRefreshing(false)
     }
   }
+
+  useEffect(() => {
+    if (pendingScrollRestore.current && !loading && orders.length > 0) {
+      pendingScrollRestore.current = false
+      const saved = sessionStorage.getItem('admin-orders-scroll')
+      if (saved) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(saved, 10))
+          sessionStorage.removeItem('admin-orders-scroll')
+          sessionStorage.removeItem('admin-orders-filter')
+          sessionStorage.removeItem('admin-orders-page')
+        })
+      }
+    }
+  }, [loading, orders])
 
   const filteredOrders = useMemo(() => {
     if (!debouncedSearch.trim()) return orders
@@ -340,7 +378,7 @@ export default function AdminOrdersPage() {
     { value: 'returns', label: 'Returns', count: statusCounts['returns'] || 0 },
   ]
 
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary" />
@@ -601,6 +639,7 @@ export default function AdminOrdersPage() {
 
                   <Link
                     href={`/admin/orders/${order.id}`}
+                    onClick={saveScrollPosition}
                     className="mt-3 block w-full text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
                   >
                     Details
@@ -698,6 +737,7 @@ export default function AdminOrdersPage() {
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
                         href={`/admin/orders/${order.id}`}
+                        onClick={saveScrollPosition}
                         className="text-brand-primary hover:text-brand-primary-hover font-semibold"
                       >
                         Details
