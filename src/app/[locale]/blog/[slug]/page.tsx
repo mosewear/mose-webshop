@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createAnonClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import { setRequestLocale } from 'next-intl/server'
 import BlogDetailClient from './BlogDetailClient'
 
 interface BlogPost {
@@ -109,6 +110,7 @@ export default async function BlogDetailPage({
   params: Promise<{ locale: string; slug: string }>
 }) {
   const { locale, slug } = await params
+  setRequestLocale(locale)
   const supabase = createAnonClient()
 
   const { data: post } = await supabase

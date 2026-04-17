@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages, getTranslations } from 'next-intl/server'
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Script from 'next/script'
 import { routing } from '@/i18n/routing'
@@ -92,6 +92,11 @@ export default async function LocaleLayout({
   if (!routing.locales.includes(locale as any)) {
     notFound()
   }
+
+  // Enable static rendering voor deze locale (next-intl v4):
+  // zonder deze call valt getMessages/getTranslations terug op headers()
+  // wat statische/ISR rendering breekt met DYNAMIC_SERVER_USAGE.
+  setRequestLocale(locale)
 
   // Providing all messages to the client
   // side is the easiest way to get started

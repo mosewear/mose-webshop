@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { createAnonClient } from '@/lib/supabase/server'
 import ProductPageClient from './ProductPageClient'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
 import { notFound } from 'next/navigation'
@@ -117,6 +117,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string; locale: string }>
 }) {
   const { slug, locale: localeParam } = await params
+  setRequestLocale(localeParam)
   const supabase = createAnonClient()
 
   // Fetch product data for structured data
