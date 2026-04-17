@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createAnonClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import BlogDetailClient from './BlogDetailClient'
 
@@ -33,7 +33,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
   const { locale, slug } = await params
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data: post } = await supabase
     .from('blog_posts')
@@ -109,7 +109,7 @@ export default async function BlogDetailPage({
   params: Promise<{ locale: string; slug: string }>
 }) {
   const { locale, slug } = await params
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data: post } = await supabase
     .from('blog_posts')

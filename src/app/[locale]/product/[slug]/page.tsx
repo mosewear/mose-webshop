@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createAnonClient } from '@/lib/supabase/server'
 import ProductPageClient from './ProductPageClient'
 import { getTranslations } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
@@ -15,7 +15,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, locale } = await params
   const t = await getTranslations({ locale, namespace: 'metadata' })
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   const { data: product } = await supabase
     .from('products')
@@ -117,7 +117,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string; locale: string }>
 }) {
   const { slug, locale: localeParam } = await params
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   // Fetch product data for structured data
   const { data: product } = await supabase

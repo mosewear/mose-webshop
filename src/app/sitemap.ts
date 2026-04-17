@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createAnonClient } from '@/lib/supabase/server'
 
 export const revalidate = 3600
 
@@ -7,7 +7,7 @@ const locales = ['nl', 'en'] as const
 const baseUrl = 'https://www.mosewear.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
   
   const { data: products } = await supabase
     .from('products')
