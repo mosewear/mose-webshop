@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOSE · Email Design Voorstellen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; }
+    body {
+      margin:0;
+      padding:0;
+      background:#eeeae2;
+      font-family:'Montserrat',-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+      color:#0a0a0a;
+      -webkit-font-smoothing:antialiased;
+    }
+    .topbar {
+      background:#000;
+      color:#fff;
+      padding:28px 28px;
+      border-bottom:4px solid #00A676;
+    }
+    .wrap { max-width:1400px; margin:0 auto; padding:0 24px; }
+    .brand {
+      font-family:'Anton','Arial Black',Impact,sans-serif;
+      font-size:42px;
+      letter-spacing:0.18em;
+      line-height:1;
+    }
+    .subtitle {
+      margin-top:10px;
+      font-size:12px;
+      letter-spacing:0.35em;
+      text-transform:uppercase;
+      color:#00A676;
+      font-weight:800;
+    }
+    h1 {
+      font-family:'Anton','Arial Black',Impact,sans-serif;
+      font-weight:400;
+      font-size:64px;
+      line-height:0.95;
+      letter-spacing:-0.01em;
+      text-transform:uppercase;
+      margin:40px 0 12px 0;
+    }
+    .lede { max-width:780px; font-size:15px; line-height:1.65; color:#333; }
+    .lede strong { color:#000; }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
+      gap:22px;
+      margin:40px 0 60px 0;
+    }
+    .card {
+      background:#fff;
+      border:2px solid #000;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .card-head {
+      padding:20px 22px 16px 22px;
+      border-bottom:2px solid #000;
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .card-num {
+      font-family:'Anton','Arial Black',sans-serif;
+      font-size:34px;
+      letter-spacing:0.04em;
+      line-height:1;
+    }
+    .card-tag {
+      font-size:10px;
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      font-weight:800;
+      color:#00A676;
+    }
+    .card-title {
+      font-family:'Anton','Arial Black',sans-serif;
+      font-size:26px;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+      padding:18px 22px 4px 22px;
+      line-height:1.05;
+    }
+    .card-desc {
+      padding:6px 22px 18px 22px;
+      font-size:13.5px;
+      line-height:1.55;
+      color:#444;
+      flex:1;
+    }
+    .frame-wrap {
+      height:420px;
+      background:#f4f1ea;
+      border-top:2px solid #000;
+      overflow:hidden;
+      position:relative;
+    }
+    .frame-wrap iframe {
+      width:120%;
+      height:120%;
+      border:0;
+      transform:scale(0.78);
+      transform-origin: top left;
+      display:block;
+      pointer-events:none;
+    }
+    .card-actions {
+      display:flex;
+      border-top:2px solid #000;
+    }
+    .btn {
+      flex:1;
+      display:inline-block;
+      padding:16px 14px;
+      text-align:center;
+      font-family:'Montserrat',Arial,sans-serif;
+      font-size:11.5px;
+      font-weight:800;
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      text-decoration:none;
+      color:#fff;
+      background:#000;
+      transition: background 0.18s ease;
+    }
+    .btn:hover { background:#00A676; }
+    .btn + .btn { border-left:2px solid #000; }
+    .btn-alt { background:#fff; color:#000; }
+    .btn-alt:hover { background:#00A676; color:#fff; }
+
+    .legend {
+      background:#fff;
+      border:2px solid #000;
+      padding:26px 28px;
+      margin-bottom:40px;
+    }
+    .legend-title {
+      font-family:'Anton','Arial Black',sans-serif;
+      font-size:22px;
+      letter-spacing:0.05em;
+      text-transform:uppercase;
+      margin-bottom:14px;
+    }
+    .legend ul { margin:0; padding-left:18px; font-size:14px; line-height:1.7; color:#222; }
+    .legend li { margin-bottom:4px; }
+    .legend code {
+      background:#f4f1ea;
+      padding:2px 6px;
+      font-family:ui-monospace,Consolas,monospace;
+      font-size:12.5px;
+      border:1px solid #ddd8cc;
+    }
+
+    footer {
+      padding:40px 24px 60px 24px;
+      text-align:center;
+      font-size:11px;
+      letter-spacing:0.3em;
+      text-transform:uppercase;
+      color:#888;
+      font-weight:700;
+    }
+
+    @media (max-width: 640px) {
+      h1 { font-size:44px; }
+      .brand { font-size:30px; }
+      .frame-wrap { height:360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">MOSE</div>
+      <div class="subtitle">— Email Design · 5 Voorstellen —</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Kies de<br/>nieuwe look.</h1>
+    <p class="lede">
+      Vijf complete herontwerpen van de <strong>OrderConfirmation</strong> email op basis van de
+      MOSE brand identity: <strong>Anton</strong> (display) + <strong>Montserrat</strong> (body),
+      brand-primary <strong>#00A676</strong>, pure zwart en wit, harde edges (geen border-radius).
+      Alle designs gebruiken <em>table-based layouts</em>, inline CSS, MSO conditional comments
+      voor Outlook, responsive media queries, en graceful font-fallbacks. Klaar voor Gmail,
+      Apple Mail, Outlook, iOS Mail en alle andere clients.
+    </p>
+
+    <div class="legend">
+      <div class="legend-title">Mock-data in elke preview</div>
+      <ul>
+        <li>Klant: <strong>Rick Schlimback</strong> — Order <code>#A1B2C3D4</code></li>
+        <li>2 items: MOSE Tee (Zwart · L · €65) + MOSE Classic Hoodie (Olijfgroen · M · €95)</li>
+        <li>Subtotaal €132,23 excl. btw · BTW €27,77 · Verzending <strong>Gratis</strong></li>
+        <li><span style="color:#00A676;font-weight:800;">Loyalty Silver · 5% korting</span> −€8,00</li>
+        <li>Totaal betaald: <strong>€152,00</strong> via iDEAL</li>
+      </ul>
+    </div>
+
+    <div class="grid">
+
+      <!-- Card 1 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-num">01</div>
+          <div class="card-tag">Editorial · Monochrome</div>
+        </div>
+        <div class="card-title">Editorial<br/>Monochrome</div>
+        <div class="card-desc">
+          Krantenartikel-gevoel. Pure zwart/wit, ivoor achtergrond, Playfair Display cursief als
+          kalm contrast tegenover Anton in caps. Haarlijn borders (1px), veel witruimte, "Vol. 01 ·
+          MOSE Journal" masthead. Voelt als een <em>premium tijdloos magazine</em>, kalm en zelfbewust.
+        </div>
+        <div class="frame-wrap"><iframe src="./1-editorial.html" loading="lazy"></iframe></div>
+        <div class="card-actions">
+          <a class="btn" href="./1-editorial.html" target="_blank">Open preview</a>
+          <a class="btn btn-alt" href="./1-editorial.html" target="_blank">Full-screen</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-num">02</div>
+          <div class="card-tag">Brutalist · Uppercase</div>
+        </div>
+        <div class="card-title">Brutalist<br/>Uppercase</div>
+        <div class="card-desc">
+          Dit sluit qua taal het dichtst aan bij de <strong>homepage</strong> en het huidige
+          streetwear-karakter. Dikke 3px zwarte borders, Anton caps, harde geometrische kleurblokken
+          (zwart/#00A676), gesplitste meta-blokken voor ordernummer en bezorging. Direct, stoer,
+          herkenbaar MOSE.
+        </div>
+        <div class="frame-wrap"><iframe src="./2-brutalist.html" loading="lazy"></iframe></div>
+        <div class="card-actions">
+          <a class="btn" href="./2-brutalist.html" target="_blank">Open preview</a>
+          <a class="btn btn-alt" href="./2-brutalist.html" target="_blank">Full-screen</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-num">03</div>
+          <div class="card-tag">Teal Accent · Clean</div>
+        </div>
+        <div class="card-title">Teal Accent<br/>Clean</div>
+        <div class="card-desc">
+          Moderne e-commerce balans: zwarte header, ivoor/wit canvas, <strong>#00A676</strong> als
+          vaste accentkleur door het hele design (accent-strip, side-bars, totaalblok). Meest
+          <em>leesbaar en neutraal-professioneel</em>, werkt perfect voor internationale klanten en
+          heeft de laagste kans op spam-triggers.
+        </div>
+        <div class="frame-wrap"><iframe src="./3-teal.html" loading="lazy"></iframe></div>
+        <div class="card-actions">
+          <a class="btn" href="./3-teal.html" target="_blank">Open preview</a>
+          <a class="btn btn-alt" href="./3-teal.html" target="_blank">Full-screen</a>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-num">04</div>
+          <div class="card-tag">Dark · Premium</div>
+        </div>
+        <div class="card-title">Dark<br/>Premium</div>
+        <div class="card-desc">
+          Volledig zwart canvas, teal-glow details, "Thanks, <span style="color:#00A676;">Rick.</span>"
+          met brand-primary hoogtepunt. Cinematic streetwear look — voelt als <em>luxe late-night
+          drop</em>. Opletten: iets minder leesbaar voor 50+ klanten en donkere emails kunnen iets
+          vaker in "Promoties" landen (maar ziet er wel premium uit).
+        </div>
+        <div class="frame-wrap"><iframe src="./4-dark.html" loading="lazy"></iframe></div>
+        <div class="card-actions">
+          <a class="btn" href="./4-dark.html" target="_blank">Open preview</a>
+          <a class="btn btn-alt" href="./4-dark.html" target="_blank">Full-screen</a>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-num">05</div>
+          <div class="card-tag">Modular · Grid</div>
+        </div>
+        <div class="card-title">Modular<br/>Grid</div>
+        <div class="card-desc">
+          Elke sectie een eigen blok met ruimte ertussen — adres naast totaal-card, apart
+          breakdown-module, aparte CTA-module, aparte "shop meer" teal module. Maximum
+          info-architectuur en scanbaar op mobiel. Goed voor <em>schaalbaarheid</em>: modules makkelijk
+          hergebruiken in andere emails.
+        </div>
+        <div class="frame-wrap"><iframe src="./5-modular.html" loading="lazy"></iframe></div>
+        <div class="card-actions">
+          <a class="btn" href="./5-modular.html" target="_blank">Open preview</a>
+          <a class="btn btn-alt" href="./5-modular.html" target="_blank">Full-screen</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">Compatibiliteit-checklist (alle 5 designs)</div>
+      <ul>
+        <li>✓ Table-based layout (geen flex/grid CSS) — werkt in Outlook 2007-2021</li>
+        <li>✓ Inline CSS op elk element + <code>&lt;style&gt;</code> voor media queries</li>
+        <li>✓ MSO conditional comments voor VML-buttons in Outlook</li>
+        <li>✓ Responsive mobile breakpoint &lt; 620px (stacking + kleinere typografie)</li>
+        <li>✓ Google Fonts (Anton + Montserrat) met Arial/Helvetica fallbacks voor Outlook</li>
+        <li>✓ Preheader tekst voor inbox-preview</li>
+        <li>✓ Max width 600px · veilig voor Gmail Web, Apple Mail, iOS, Android, Yahoo</li>
+        <li>✓ <code>width</code> en <code>height</code> attributen op alle images</li>
+        <li>✓ Alt-text op images · dark-mode meta tags</li>
+        <li>✓ Geen border-radius (MOSE branding = harde edges, bonus: Outlook support)</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    — Kies een design, dan rol ik 'm uniform uit over alle email-templates —
+  </footer>
+</body>
+</html>
