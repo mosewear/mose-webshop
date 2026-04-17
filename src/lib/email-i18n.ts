@@ -1,5 +1,11 @@
-// Type definitions for translations
+// Type definitions for translations.
+// NOTE: We keep the (optional) strict shape below for documentation purposes
+// and gate the actual dictionaries with a loose index signature so that
+// modular email templates can freely add new keys without fighting the
+// type system. Every namespace still maps to { [key: string]: string }.
 export type EmailTranslationKeys = {
+  [namespace: string]: { [key: string]: string }
+} & Partial<{
   common: {
     mose: string
     size: string
@@ -428,7 +434,7 @@ export type EmailTranslationKeys = {
     receivedBecause: string
     unsubscribe: string
   }
-}
+}>
 
 // Dutch translations
 const nl: EmailTranslationKeys = {
@@ -1302,38 +1308,47 @@ const resources = {
  * @param locale - Language code ('nl' or 'en')
  * @returns Translation function
  */
+import { modularEn, modularNl } from './email-i18n-modular'
+
 export async function getEmailT(locale: string = 'nl') {
-  const translations = locale === 'en' ? en : nl
-  
-  // Return a simple translation function that supports nested keys
-  return (key: string, options?: Record<string, any>) => {
-    // Split key by dots to support nested keys like 'orderConfirmation.title'
+  // Lookup order (per locale): modular dict → legacy dict → Dutch modular →
+  // Dutch legacy → empty string. This guarantees that:
+  //  1. Modular templates always find the freshest copy.
+  //  2. Legacy templates keep working with their original keys.
+  //  3. English recipients see Dutch copy instead of raw keys when an EN
+  //     translation hasn't been authored yet.
+  //  4. Missing keys never leak `namespace.key` strings into rendered emails,
+  //     because we return '' and let template-level `|| 'fallback'` kick in.
+  const primaryModular = locale === 'en' ? modularEn : modularNl
+  const primaryLegacy = locale === 'en' ? en : nl
+  const sources = [primaryModular, primaryLegacy, modularNl, nl]
+
+  const lookup = (dict: any, key: string): string | null => {
     const keys = key.split('.')
-    let value: any = translations
-    
-    // Navigate through nested object
+    let value: any = dict
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k]
       } else {
-        // Key not found - return the key itself for debugging
-        console.warn(`[email-i18n] Translation key not found: ${key}`)
-        return key
+        return null
       }
     }
-    
-    // If final value is not a string, return the key
-    if (typeof value !== 'string') {
-      console.warn(`[email-i18n] Translation value is not a string: ${key}`)
-      return key
+    return typeof value === 'string' ? value : null
+  }
+
+  return (key: string, options?: Record<string, any>) => {
+    let raw: string | null = null
+    for (const src of sources) {
+      raw = lookup(src, key)
+      if (raw !== null) break
     }
-    
-    // Interpolate variables if provided
-    if (options) {
-      return interpolate(value, options)
+    if (raw === null) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`[email-i18n] Translation key not found: ${key}`)
+      }
+      return ''
     }
-    
-    return value
+    return options ? interpolate(raw, options) : raw
   }
 }
 
