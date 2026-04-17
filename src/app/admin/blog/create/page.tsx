@@ -21,6 +21,7 @@ function calculateReadingTime(text: string): number {
 }
 
 const CATEGORIES = [
+  { value: 'algemeen', label: 'Algemeen' },
   { value: 'style', label: 'Style' },
   { value: 'drops', label: 'Drops' },
   { value: 'behind-the-scenes', label: 'Behind the Scenes' },
@@ -86,11 +87,11 @@ export default function AdminBlogCreatePage() {
         slug: slug.trim(),
         content_nl: contentNl.trim(),
         content_en: contentEn.trim(),
-        excerpt_nl: excerptNl.trim() || null,
-        excerpt_en: excerptEn.trim() || null,
+        excerpt_nl: excerptNl.trim() || '',
+        excerpt_en: excerptEn.trim() || '',
         featured_image_url: featuredImageUrl.trim() || null,
-        category: category || null,
-        tags: tagsArray.length > 0 ? tagsArray : null,
+        category: category || 'algemeen',
+        tags: tagsArray.length > 0 ? tagsArray : [],
         status: publishStatus,
         author: author.trim() || 'MOSE',
         reading_time: readingTime,

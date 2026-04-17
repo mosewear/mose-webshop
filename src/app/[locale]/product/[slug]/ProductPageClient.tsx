@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect, useRef, ReactElement } from 'react'
 import Image from 'next/image'
-import DOMPurify from 'dompurify'
+import DOMPurify from 'isomorphic-dompurify'
 import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'

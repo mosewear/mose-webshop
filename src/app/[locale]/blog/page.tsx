@@ -5,8 +5,9 @@ import { routing } from '@/i18n/routing'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'blog' })
 
-  const title = locale === 'en' ? 'Blog - MOSE' : 'Blog - MOSE'
+  const title = `${t('title')} - MOSE`
   const description = locale === 'en'
     ? 'Read the latest stories, style guides, and behind-the-scenes content from MOSE streetwear.'
     : 'Lees de laatste verhalen, stijlgidsen en behind-the-scenes content van MOSE streetwear.'

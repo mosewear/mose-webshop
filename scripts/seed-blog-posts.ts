@@ -557,29 +557,57 @@ At MOSE, we do it differently. Everything we make — every hoodie, every T-shir
 
 ## The Long Journey of an Average Garment
 
-An average T-shirt from a fast fashion brand travels an average of 20,000 to 40,000 kilometers before reaching you. Each step adds CO2 emissions, makes control harder, and increases the chance of abuses in the chain.
+An average T-shirt from a fast fashion brand travels the following route:
+
+- Cotton is grown in India or the US
+- Spun into yarn in Pakistan or Turkey
+- Woven or knitted in Bangladesh or Vietnam
+- Dyed and finished in another factory
+- Shipped to a distribution center in Europe
+- Transported to a store or warehouse
+
+That journey averages 20,000 to 40,000 kilometers. Each step adds CO2 emissions, makes oversight harder, and increases the chance of abuses in the chain.
 
 ## Our Chain: Short and Transparent
 
-Our production chain looks different. Fabrics are sourced from European suppliers we personally know. Cutting, sewing, and finishing happens in our atelier in Groningen. Quality control is done by us, with our own hands. Packaging and shipping happens from Groningen.
+Our production chain looks different:
+
+- Fabrics are sourced from European suppliers we personally know
+- Cutting, sewing, and finishing happens in our atelier in Groningen
+- Quality control is done by us, with our own hands
+- Packaging and shipping happens from Groningen
+
+The total distance from fabric to customer: a fraction of the conventional model. But more important than the kilometers are the relationships.
 
 ## Faces Behind the Clothing
 
-When you have clothing produced in a factory on the other side of the world, you work with spreadsheets and samples. In Groningen, we know everyone. We see the hands that sew our hoodies.
+When you have clothing produced in a factory on the other side of the world, you work with spreadsheets and samples. You see photos of your product, but rarely of the people who make it.
+
+In Groningen, we know everyone. We see the hands that sew our hoodies. We can walk in at any moment and check the process. Not out of distrust, but because we believe good clothing starts with good working conditions.
 
 Everyone who works on MOSE clothing earns a fair wage. Not the legal minimum, but what's fair for the work they do. That's the baseline. Not marketing. Just how it should be.
 
 ## The Price of Local
 
-Let's be honest: producing locally in the Netherlands is significantly more expensive than producing in Bangladesh. That translates to our prices. A MOSE hoodie isn't €25. But it's not €250 either. We believe in fair prices: you pay what it actually costs to make a quality product under fair conditions.
+Let's be honest: producing locally in the Netherlands is significantly more expensive than producing in Bangladesh. Labor costs are higher, overhead is higher, and scale is smaller.
+
+That translates to our prices. A MOSE hoodie isn't €25. But it's not €250 either. We believe in fair prices: you pay what it actually costs to make a quality product under fair conditions.
+
+No inflated brand margin. No fake sales. No tricks. Just an honest price for an honest product.
 
 ## Groningen: Why Here?
 
-Groningen is a city with guts. A student city with an entrepreneurial spirit you don't find everywhere. Down-to-earth, direct, and not afraid to do things differently. That fits MOSE perfectly.
+Groningen is a city with guts. A student city with an entrepreneurial spirit you don't find everywhere. Down-to-earth, direct, and not afraid to do things differently.
+
+That fits MOSE. We started here because this is our city. Because the mentality here aligns with what we want to be: no fuss, just character.
+
+But there are practical reasons too. Groningen has a growing creative industry. There's talent, energy, and room to experiment. It's not Amsterdam or Rotterdam — and that's exactly the point.
 
 ## The Future
 
-Local production isn't a fashion trend. It's a necessity. We believe the future of fashion is local, transparent, and fair. MOSE is our proof that it can be done.`,
+Local production isn't a fashion trend. It's a necessity. The textile industry faces enormous challenges: climate change, resource scarcity, and growing consumer awareness.
+
+We believe the future of fashion is local, transparent, and fair. Not large-scale and anonymous. MOSE is our proof that it can be done. Every hoodie that leaves our atelier is evidence of that.`,
   },
 
   // ============================================================

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 
 interface BlogPost {
@@ -23,7 +23,8 @@ interface BlogPost {
 }
 
 const CATEGORIES = [
-  { value: 'all', label: { nl: 'Alles', en: 'All' } },
+  { value: 'all', label: { nl: 'Alle', en: 'All' } },
+  { value: 'algemeen', label: { nl: 'Algemeen', en: 'General' } },
   { value: 'style', label: { nl: 'Style', en: 'Style' } },
   { value: 'drops', label: { nl: 'Drops', en: 'Drops' } },
   { value: 'behind-the-scenes', label: { nl: 'Behind the Scenes', en: 'Behind the Scenes' } },
@@ -33,6 +34,7 @@ const CATEGORIES = [
 
 export default function BlogListClient() {
   const locale = useLocale() as 'nl' | 'en'
+  const t = useTranslations('blog')
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -84,6 +86,7 @@ export default function BlogListClient() {
   }
 
   const categoryLabels: Record<string, string> = {
+    algemeen: locale === 'en' ? 'General' : 'Algemeen',
     style: 'Style',
     drops: 'Drops',
     'behind-the-scenes': 'Behind the Scenes',
@@ -143,11 +146,8 @@ export default function BlogListClient() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
             <h3 className="text-2xl font-display font-bold mb-2 text-gray-800">
-              {locale === 'en' ? 'No articles yet' : 'Nog geen artikelen'}
+              {t('noPosts')}
             </h3>
-            <p className="text-gray-600">
-              {locale === 'en' ? 'Check back soon for new stories.' : 'Kom binnenkort terug voor nieuwe verhalen.'}
-            </p>
           </div>
         )}
 
@@ -193,10 +193,10 @@ export default function BlogListClient() {
                   <span>&middot;</span>
                   <span>{formatDate(featuredPost.published_at || featuredPost.created_at)}</span>
                   <span>&middot;</span>
-                  <span>{featuredPost.reading_time} min {locale === 'en' ? 'read' : 'leestijd'}</span>
+                  <span>{t('minuteRead', { minutes: featuredPost.reading_time })}</span>
                 </div>
                 <span className="inline-flex items-center gap-2 mt-6 text-sm font-bold uppercase tracking-wider text-brand-primary group-hover:gap-3 transition-all">
-                  {locale === 'en' ? 'Read more' : 'Lees meer'}
+                  {t('readMore')}
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -253,10 +253,10 @@ export default function BlogListClient() {
                     )}
                     <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-4 border-t border-gray-200">
                       <span>{formatDate(post.published_at || post.created_at)}</span>
-                      <span>{post.reading_time} min</span>
+                      <span>{t('minuteRead', { minutes: post.reading_time })}</span>
                     </div>
                     <span className="inline-flex items-center gap-2 mt-4 text-sm font-bold uppercase tracking-wider text-brand-primary group-hover:gap-3 transition-all">
-                      {locale === 'en' ? 'Read more' : 'Lees meer'}
+                      {t('readMore')}
                       <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>

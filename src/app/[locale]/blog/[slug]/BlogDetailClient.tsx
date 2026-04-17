@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import toast from 'react-hot-toast'
 
@@ -95,6 +95,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
   }
 
   const categoryLabels: Record<string, string> = {
+    algemeen: locale === 'en' ? 'General' : 'Algemeen',
     style: 'Style',
     drops: 'Drops',
     'behind-the-scenes': 'Behind the Scenes',
@@ -105,7 +106,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href)
-      toast.success(locale === 'en' ? 'Link copied!' : 'Link gekopieerd!')
+      toast.success(t('linkCopied'))
     } catch {
       toast.error(locale === 'en' ? 'Could not copy link' : 'Kon link niet kopiëren')
     }
@@ -166,7 +167,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           <span>&middot;</span>
           <span>{formatDate(post.published_at || post.created_at)}</span>
           <span>&middot;</span>
-          <span>{post.reading_time} min {locale === 'en' ? 'read' : 'leestijd'}</span>
+          <span>{t('minuteRead', { minutes: post.reading_time })}</span>
         </div>
       </div>
 
@@ -196,7 +197,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
         {/* Share Buttons */}
         <div className="mt-10 pt-6 border-t-2 border-gray-200">
           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">
-            {locale === 'en' ? 'Share this article' : 'Deel dit artikel'}
+            {t('shareArticle')}
           </h3>
           <div className="flex gap-3">
             <button
@@ -243,7 +244,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
           </svg>
-          {locale === 'en' ? 'Back to blog' : 'Terug naar blog'}
+          {t('backToBlog')}
         </Link>
       </div>
 
@@ -252,7 +253,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
         <section className="bg-gray-50 border-t-2 border-gray-200 py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="font-display text-3xl md:text-4xl mb-8 tracking-tight text-center">
-              {locale === 'en' ? 'Related Articles' : 'Gerelateerde Artikelen'}
+              {t('relatedPosts')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((relPost) => (
