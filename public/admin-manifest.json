@@ -2,7 +2,7 @@
   "name": "mosewear.com",
   "short_name": "mosewear.com",
   "description": "MOSE Webshop Admin Panel - Beheer orders, producten en klanten",
-  "start_url": "/admin",
+  "start_url": "/admin/",
   "scope": "/admin/",
   "display": "standalone",
   "background_color": "#000000",
