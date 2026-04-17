@@ -149,6 +149,52 @@ async function main() {
     ? recipients
     : recipients.slice(0, batchSize)
 
+  // Per ontvanger: zoek de meest recente order op om een echte naam te
+  // hebben (anders krijgt de hero "Status,\n<email-localpart>.")
+  const namesByEmail = new Map<string, string>()
+  const targetEmails = selected.map((r) => r.email).filter(Boolean) as string[]
+  if (targetEmails.length > 0) {
+    const lcEmails = targetEmails.map((e) => e.toLowerCase())
+    const { data: orderRows } = await supabase
+      .from('orders')
+      .select('email, shipping_address, created_at')
+      .in('email', targetEmails)
+      .order('created_at', { ascending: false })
+    for (const o of orderRows || []) {
+      if (!o?.email) continue
+      const lc = o.email.toLowerCase()
+      if (!lcEmails.includes(lc) || namesByEmail.has(lc)) continue
+      const sa: any = o.shipping_address || {}
+      const candidate =
+        sa.firstName ||
+        (typeof sa.name === 'string' ? sa.name.split(' ')[0] : '') ||
+        ''
+      const trimmed = candidate.trim()
+      if (trimmed) namesByEmail.set(lc, trimmed)
+    }
+
+    // Fallback via profiles voor wie nog geen naam heeft
+    const missing = lcEmails.filter((e) => !namesByEmail.has(e))
+    if (missing.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('email, first_name, full_name')
+        .in('email', missing)
+      for (const p of profiles || []) {
+        if (!p?.email) continue
+        const lc = p.email.toLowerCase()
+        const name =
+          (p as any).first_name ||
+          (typeof (p as any).full_name === 'string'
+            ? (p as any).full_name.split(' ')[0]
+            : '') ||
+          ''
+        const trimmed = String(name).trim()
+        if (trimmed) namesByEmail.set(lc, trimmed)
+      }
+    }
+  }
+
   console.log('[broadcast] Summary:')
   console.log(`  total loyalty rows     : ${allRows?.length || 0}`)
   console.log(`  distinct paid emails   : ${aggregated.size}`)
@@ -175,7 +221,14 @@ async function main() {
 
   for (const row of selected) {
     try {
-      const name = row.email.split('@')[0]
+      const lc = row.email.toLowerCase()
+      const lookedUp = namesByEmail.get(lc)
+      const fallback = row.email.split('@')[0]
+      // Capitaliseer email-localpart als laatste redmiddel ("mjgtrip" → "Mjgtrip")
+      const niceFallback = fallback
+        ? fallback.charAt(0).toUpperCase() + fallback.slice(1)
+        : 'Klant'
+      const name = lookedUp || niceFallback
       const result = await sendLoyaltyStatusUpdateEmail({
         customerEmail: row.email,
         customerName: name,
