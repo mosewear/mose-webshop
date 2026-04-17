@@ -352,16 +352,49 @@ export async function POST(req: NextRequest) {
         break
     }
 
-    // Linken aan bestaand user-account wanneer mogelijk
-    let linkedUserId: string | null = order.user_id
+    // Linken aan bestaand user-account wanneer mogelijk.
+    // BELANGRIJK: returns.user_id heeft een FK naar auth.users(id). Als we een
+    // profile-id of een stale order.user_id gebruiken die niet (meer) in
+    // auth.users voorkomt, faalt de insert met 23503. Daarom verifiëren we
+    // iedere kandidaat eerst tegen auth.users via de admin API en vallen
+    // anders terug op NULL (guest-style link, GET endpoints matchen alsnog
+    // op e-mail voor het klantportaal).
+    const verifyAuthUser = async (candidate: string | null | undefined) => {
+      if (!candidate) return null
+      try {
+        const { data, error } = await supabase.auth.admin.getUserById(candidate)
+        if (error || !data?.user) return null
+        return data.user.id
+      } catch {
+        return null
+      }
+    }
+
+    let linkedUserId: string | null = await verifyAuthUser(order.user_id)
+
     if (!linkedUserId && order.email) {
+      // Probeer via profiles -> auth.users
       const { data: matchingProfile } = await supabase
         .from('profiles')
         .select('id, email')
         .eq('email', order.email)
         .maybeSingle()
-      if (matchingProfile?.id) {
-        linkedUserId = matchingProfile.id
+      linkedUserId = await verifyAuthUser(matchingProfile?.id)
+
+      // Laatste poging: lookup direct in auth.users via admin API (e-mail match).
+      if (!linkedUserId) {
+        try {
+          const { data: authList } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 200,
+          })
+          const match = authList?.users?.find(
+            (u: any) => u.email?.toLowerCase() === order.email.toLowerCase()
+          )
+          if (match?.id) linkedUserId = match.id
+        } catch (err) {
+          console.warn('auth.admin.listUsers lookup failed:', err)
+        }
       }
     }
 

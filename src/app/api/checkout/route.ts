@@ -519,10 +519,44 @@ export async function POST(request: Request) {
     }
 
     // Insert order items
-    const orderItemsWithId = items.map((item: any) => ({
-      ...item,
-      order_id: orderData.id,
-    }))
+    // IMPORTANT: Whitelist columns that actually exist in `order_items` so that
+    // extra frontend-only fields (unit_price, is_presale, presale_expected_date, …)
+    // don't break the insert under PostgREST's strict schema cache (PGRST204).
+    const orderItemsWithId = items.map((item: any) => {
+      const priceAtPurchase =
+        typeof item.price_at_purchase === 'number'
+          ? item.price_at_purchase
+          : typeof item.unit_price === 'number'
+          ? item.unit_price
+          : 0
+      const quantity = typeof item.quantity === 'number' ? item.quantity : 0
+      const subtotal =
+        typeof item.subtotal === 'number'
+          ? item.subtotal
+          : Math.round(priceAtPurchase * quantity * 100) / 100
+
+      return {
+        order_id: orderData.id,
+        product_id: item.product_id ?? null,
+        variant_id: item.variant_id ?? null,
+        product_name: item.product_name,
+        size: item.size,
+        color: item.color,
+        sku: item.sku,
+        quantity,
+        price_at_purchase: priceAtPurchase,
+        subtotal,
+        image_url: item.image_url ?? null,
+        original_price:
+          typeof item.original_price === 'number'
+            ? item.original_price
+            : priceAtPurchase,
+        quantity_discount_amount:
+          typeof item.quantity_discount_amount === 'number'
+            ? item.quantity_discount_amount
+            : 0,
+      }
+    })
 
     console.log('═════════════════════════════════════════')
     console.log('📦 SERVER - ORDER ITEMS TO INSERT:')
@@ -532,8 +566,8 @@ export async function POST(request: Request) {
         product_name: item.product_name,
         variant_id: item.variant_id,
         quantity: item.quantity,
-        is_presale: item.is_presale,
-        presale_expected_date: item.presale_expected_date,
+        price_at_purchase: item.price_at_purchase,
+        subtotal: item.subtotal,
       })
     })
     console.log('═════════════════════════════════════════')
