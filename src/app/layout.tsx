@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
-import { headers } from 'next/headers'
 import { PostHogProvider } from './providers'
+import HtmlLangUpdater from '@/components/HtmlLangUpdater'
 import "./globals.css";
 
 const anton = Anton({
@@ -25,9 +25,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
 }
-
-// headers() usage below already opts into dynamic rendering;
-// no explicit force-dynamic needed.
 
 export async function generateMetadata(): Promise<Metadata> {
   const timestamp = Date.now()
@@ -96,18 +93,13 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers()
-  const pathname = headersList.get('x-next-url') || headersList.get('x-invoke-path') || ''
-  const pathSegments = pathname.split('/').filter(Boolean)
-  const lang = (pathSegments[0] === 'en' || pathSegments[0] === 'nl') ? pathSegments[0] : 'nl'
-
   return (
-    <html lang={lang} className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="nl" className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Facebook Pixel - Only load after consent */}
         <Script
@@ -182,6 +174,7 @@ export default async function RootLayout({
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">
           Skip to content
         </a>
+        <HtmlLangUpdater />
         <PostHogProvider>
           {children}
         </PostHogProvider>

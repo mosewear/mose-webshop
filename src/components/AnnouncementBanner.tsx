@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAnonClient } from '@/lib/supabase/server'
 import AnnouncementBannerClient from './AnnouncementBannerClient'
 
 interface AnnouncementMessage {
@@ -20,7 +20,7 @@ interface BannerConfig {
 }
 
 export default async function AnnouncementBanner() {
-  const supabase = await createClient()
+  const supabase = createAnonClient()
 
   try {
     // Fetch banner config
