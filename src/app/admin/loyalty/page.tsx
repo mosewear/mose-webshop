@@ -53,6 +53,17 @@ export default function AdminLoyaltyPage() {
     totalOutstandingPoints: 0,
   })
 
+  // Status mail broadcast state
+  const [mailStats, setMailStats] = useState({
+    mailed: 0,
+    notMailed: 0,
+  })
+  const [testEmail, setTestEmail] = useState('')
+  const [broadcastBusy, setBroadcastBusy] = useState(false)
+  const [broadcastResult, setBroadcastResult] = useState<any>(null)
+  const [confirmBroadcast, setConfirmBroadcast] = useState(false)
+  const [broadcastBatchSize, setBroadcastBatchSize] = useState(100)
+
   const PAGE_SIZE = 25
   const supabase = createClient()
 
@@ -93,6 +104,16 @@ export default function AdminLoyaltyPage() {
         (sum, r) => sum + (r.points_balance || 0), 0
       )
 
+      const { count: mailed } = await supabase
+        .from('loyalty_points')
+        .select('*', { count: 'exact', head: true })
+        .not('status_mail_sent_at', 'is', null)
+
+      const { count: notMailed } = await supabase
+        .from('loyalty_points')
+        .select('*', { count: 'exact', head: true })
+        .is('status_mail_sent_at', null)
+
       setStats({
         total: total || 0,
         bronze: bronze || 0,
@@ -100,9 +121,67 @@ export default function AdminLoyaltyPage() {
         gold: gold || 0,
         totalOutstandingPoints,
       })
+
+      setMailStats({
+        mailed: mailed || 0,
+        notMailed: notMailed || 0,
+      })
     } catch (err: any) {
       console.error('Error fetching stats:', err)
     }
+  }
+
+  async function callBroadcast(payload: Record<string, any>) {
+    setBroadcastBusy(true)
+    setBroadcastResult(null)
+    try {
+      const res = await fetch('/api/admin/loyalty/send-status-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Broadcast mislukt')
+        setBroadcastResult({ error: data.error, details: data.details })
+      } else {
+        setBroadcastResult(data)
+        if (data.dryRun) {
+          toast.success(`Dry run: ${data.wouldSendTo} ontvangers`)
+        } else if (data.sent !== undefined) {
+          toast.success(`Verstuurd: ${data.sent} (${data.failed || 0} mislukt)`)
+          fetchStats()
+        } else {
+          toast.success('Test-mail verstuurd')
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Broadcast mislukt')
+      setBroadcastResult({ error: err.message })
+    } finally {
+      setBroadcastBusy(false)
+    }
+  }
+
+  async function handleSendTest() {
+    if (!testEmail.trim()) {
+      toast.error('Vul een test-e-mailadres in')
+      return
+    }
+    await callBroadcast({ testEmail: testEmail.trim().toLowerCase() })
+  }
+
+  async function handleDryRun() {
+    await callBroadcast({ dryRun: true, batchSize: broadcastBatchSize })
+  }
+
+  async function handleBroadcastAll() {
+    if (!confirmBroadcast) {
+      setConfirmBroadcast(true)
+      return
+    }
+    setConfirmBroadcast(false)
+    await callBroadcast({ batchSize: broadcastBatchSize })
   }
 
   async function fetchMembers() {
@@ -314,6 +393,140 @@ export default function AdminLoyaltyPage() {
           <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1 sm:mb-2">{stats.totalOutstandingPoints.toLocaleString('nl-NL')}</div>
           <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Uitstaande Punten</div>
         </div>
+      </div>
+
+      {/* Status Mail Broadcast */}
+      <div className="bg-white border-2 border-black p-5 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+          <div>
+            <h2 className="text-xl font-display font-bold uppercase tracking-wide">
+              Loyalty Statusmail
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Stuur een statusmail naar iedereen met een bestelling. Werkt ook voor guest checkouts — ontbrekende loyalty profielen worden automatisch aangemaakt op basis van historische bestellingen.
+            </p>
+          </div>
+          <a
+            href="/api/email-preview?template=loyalty-status-update&variant=broadcast&tier=silver&points=250&lifetime=620"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center px-4 py-2 border-2 border-black text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors whitespace-nowrap"
+          >
+            Preview openen
+          </a>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <div className="border-2 border-gray-200 p-3">
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Ontvangers totaal</div>
+            <div className="text-2xl font-bold mt-1">
+              {(mailStats.mailed + mailStats.notMailed).toLocaleString('nl-NL')}
+            </div>
+          </div>
+          <div className="border-2 border-gray-200 p-3">
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Reeds gemaild</div>
+            <div className="text-2xl font-bold text-green-600 mt-1">
+              {mailStats.mailed.toLocaleString('nl-NL')}
+            </div>
+          </div>
+          <div className="border-2 border-gray-200 p-3">
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Nog te mailen</div>
+            <div className="text-2xl font-bold text-brand-primary mt-1">
+              {mailStats.notMailed.toLocaleString('nl-NL')}
+            </div>
+          </div>
+          <div className="border-2 border-gray-200 p-3">
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Batch grootte</div>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={broadcastBatchSize}
+              onChange={(e) => setBroadcastBatchSize(Math.max(1, parseInt(e.target.value) || 100))}
+              className="w-full mt-1 px-2 py-1 border-2 border-gray-300 text-lg font-bold focus:border-brand-primary focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">
+              Test e-mailadres
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="jouw@email.nl"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+              />
+              <button
+                onClick={handleSendTest}
+                disabled={broadcastBusy}
+                className="px-4 py-2 border-2 border-black text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+              >
+                {broadcastBusy ? '...' : 'Test sturen'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Stuurt 1 test-mail naar dit adres. Negeert broadcast-status.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 mb-1">
+              Broadcast acties
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleDryRun}
+                disabled={broadcastBusy}
+                className="px-4 py-2 border-2 border-gray-300 text-sm font-bold uppercase tracking-wider hover:border-black transition-colors disabled:opacity-50"
+              >
+                Dry run
+              </button>
+              <button
+                onClick={handleBroadcastAll}
+                disabled={broadcastBusy}
+                className={`px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${
+                  confirmBroadcast
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-brand-primary text-white hover:bg-brand-primary-hover'
+                }`}
+              >
+                {broadcastBusy
+                  ? 'Bezig...'
+                  : confirmBroadcast
+                  ? `Bevestig verstuur naar ${mailStats.notMailed} ontvangers`
+                  : `Verstuur naar iedereen (${mailStats.notMailed})`}
+              </button>
+              {confirmBroadcast && (
+                <button
+                  onClick={() => setConfirmBroadcast(false)}
+                  className="px-4 py-2 border-2 border-gray-300 text-sm font-bold uppercase tracking-wider hover:border-black transition-colors"
+                >
+                  Annuleren
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Alleen ontvangers zonder eerdere statusmail. Max {broadcastBatchSize} per run. Veilig om meerdere keren te draaien.
+            </p>
+          </div>
+        </div>
+
+        {broadcastResult && (
+          <div
+            className={`border-2 p-3 text-xs font-mono whitespace-pre-wrap break-words ${
+              broadcastResult.error
+                ? 'border-red-400 bg-red-50 text-red-800'
+                : 'border-green-400 bg-green-50 text-green-900'
+            }`}
+          >
+            {JSON.stringify(broadcastResult, null, 2)}
+          </div>
+        )}
       </div>
 
       {/* Search */}

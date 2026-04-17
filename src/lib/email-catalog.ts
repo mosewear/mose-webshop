@@ -14,6 +14,7 @@ export type EmailTemplateCategory =
   | 'return'
   | 'marketing'
   | 'insider'
+  | 'loyalty'
   | 'admin'
 
 export interface EmailTemplateDefinition {
@@ -95,6 +96,15 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
     category: 'return',
     accent: '#f59e0b',
     previewSlug: 'return-requested',
+    from: 'MOSE Returns <orders@mosewear.com>',
+  },
+  {
+    key: 'return_created_by_admin',
+    name: 'Return Created by Admin',
+    description: 'Sent when an admin manually creates a return on behalf of a customer.',
+    category: 'return',
+    accent: '#00A676',
+    previewSlug: 'return-created-by-admin',
     from: 'MOSE Returns <orders@mosewear.com>',
   },
   {
@@ -197,6 +207,16 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
     from: 'MOSE Insider Club <info@mosewear.com>',
   },
   {
+    key: 'loyalty_status_update',
+    name: 'Loyalty Status Update',
+    description:
+      'Snapshot van tier + punten. Verstuurd als one-off broadcast én automatisch bij tier-promoties.',
+    category: 'loyalty',
+    accent: '#00A676',
+    previewSlug: 'loyalty-status-update',
+    from: 'MOSE Loyalty <info@mosewear.com>',
+  },
+  {
     key: 'contact_form',
     name: 'Contact Form',
     description: 'Notification to the team when a customer uses the contact form.',
@@ -242,6 +262,8 @@ export function getCategoryLabel(category: EmailTemplateCategory): string {
       return 'Marketing'
     case 'insider':
       return 'Insider Club'
+    case 'loyalty':
+      return 'Loyalty'
     case 'admin':
       return 'Admin'
   }

@@ -32,6 +32,7 @@ import {
   OrderDeliveredEmail,
   OrderCancelledEmail,
   ReturnRequestedEmail,
+  ReturnCreatedByAdminEmail,
   ReturnLabelGeneratedEmail,
   ReturnApprovedEmail,
   ReturnRefundedEmail,
@@ -43,6 +44,7 @@ import {
   InsiderCommunityEmail,
   InsiderBehindScenesEmail,
   InsiderLaunchWeekEmail,
+  LoyaltyStatusUpdateEmail,
 } from '@/emails'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -545,6 +547,93 @@ export async function sendReturnRequestedEmail(props: {
       orderId: props.orderId,
       locale,
       metadata: { returnId: props.returnId },
+    }
+  )
+}
+
+/**
+ * Send "return created by admin" email
+ * Triggered when an admin manually creates a return on behalf of a customer.
+ * Supports the 4 label handling modes; see ReturnCreatedByAdmin template.
+ */
+export async function sendReturnCreatedByAdminEmail(props: {
+  customerEmail: string
+  customerName: string
+  returnId: string
+  orderId: string
+  labelMode: 'admin_generated' | 'customer_paid' | 'customer_free' | 'in_store'
+  inStoreState?: 'approved' | 'received'
+  returnItems: Array<{
+    product_name: string
+    size?: string
+    color?: string
+    quantity: number
+  }>
+  refundAmount: number
+  labelCost: number
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress =
+    settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const returnNumber = props.returnId.slice(0, 8).toUpperCase()
+  const orderNumber = props.orderId.slice(0, 8).toUpperCase()
+
+  const html = await render(
+    ReturnCreatedByAdminEmail({
+      returnNumber,
+      orderNumber,
+      customerName: props.customerName,
+      labelMode: props.labelMode,
+      inStoreState: props.inStoreState,
+      returnItems: props.returnItems,
+      refundAmount: props.refundAmount,
+      labelCost: props.labelCost,
+      t,
+      locale,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  // Subject varieert per mode
+  const fallbackSubjects: Record<string, string> = {
+    customer_paid: `Retour ${returnNumber} aangemaakt – rond de labelbetaling af`,
+    customer_free: `Retour ${returnNumber} aangemaakt – gratis retourlabel klaar`,
+    in_store: `Retour ${returnNumber} aangemaakt – breng langs in de winkel`,
+    admin_generated: `Retour ${returnNumber} aangemaakt – label onderweg`,
+  }
+  const subjectKey = `returnCreatedByAdmin.subject_${props.labelMode}`
+  let subject = t(subjectKey, { returnNumber })
+  if (!subject || subject === subjectKey) {
+    subject = fallbackSubjects[props.labelMode] || `Retour ${returnNumber} aangemaakt`
+  }
+
+  return await sendAndLog(
+    {
+      from: 'MOSE Returns <orders@mosewear.com>',
+      to: [props.customerEmail],
+      subject,
+      html,
+    },
+    {
+      templateKey: 'return_created_by_admin',
+      orderId: props.orderId,
+      locale,
+      metadata: {
+        returnId: props.returnId,
+        labelMode: props.labelMode,
+        inStoreState: props.inStoreState ?? null,
+      },
     }
   )
 }
@@ -1355,6 +1444,97 @@ export async function sendInsiderLaunchWeekEmail(props: {
       metadata: {
         daysUntilLaunch: props.daysUntilLaunch,
         limitedItems: props.limitedItems,
+      },
+    }
+  )
+}
+
+// =====================================================
+// Loyalty Status Update — broadcast & automatic tier-up
+// =====================================================
+
+type LoyaltyTier = 'bronze' | 'silver' | 'gold'
+
+/**
+ * Stuurt de Loyalty Status Update mail.
+ * - variant='broadcast' voor een algemene status-mail (bijv. vanuit admin broadcast)
+ * - variant='tier_up' voor een automatische mail bij tier-promotie (Stripe webhook)
+ */
+export async function sendLoyaltyStatusUpdateEmail(props: {
+  customerEmail: string
+  customerName: string
+  tier: LoyaltyTier
+  pointsBalance: number
+  lifetimePoints: number
+  previousTier?: LoyaltyTier | null
+  variant?: 'broadcast' | 'tier_up'
+  locale?: string
+}) {
+  const locale = props.locale || 'nl'
+  const settings = await getSiteSettings()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail = settings.contact_email || 'info@mosewear.com'
+  const contactPhone = settings.contact_phone || '+31 50 211 1931'
+  const contactAddress =
+    settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
+
+  const variant = props.variant || 'broadcast'
+
+  const html = await render(
+    LoyaltyStatusUpdateEmail({
+      customerName: props.customerName,
+      tier: props.tier,
+      pointsBalance: props.pointsBalance,
+      lifetimePoints: props.lifetimePoints,
+      previousTier: props.previousTier ?? null,
+      variant,
+      locale,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+    })
+  )
+
+  const tierLabelNl: Record<LoyaltyTier, string> = {
+    bronze: 'Brons',
+    silver: 'Zilver',
+    gold: 'Goud',
+  }
+  const tierLabelEn: Record<LoyaltyTier, string> = {
+    bronze: 'Bronze',
+    silver: 'Silver',
+    gold: 'Gold',
+  }
+  const tierLabel =
+    locale === 'en' ? tierLabelEn[props.tier] : tierLabelNl[props.tier]
+
+  const subject =
+    variant === 'tier_up'
+      ? locale === 'en'
+        ? `You\u2019re now ${tierLabel} — your new MOSE perks are live`
+        : `Gefeliciteerd, je bent nu ${tierLabel} bij MOSE`
+      : locale === 'en'
+        ? `Your MOSE loyalty status: ${tierLabel}`
+        : `Je MOSE loyalty status: ${tierLabel}`
+
+  return await sendAndLog(
+    {
+      from: 'MOSE Loyalty <info@mosewear.com>',
+      to: [props.customerEmail],
+      subject,
+      html,
+    },
+    {
+      templateKey: 'loyalty_status_update',
+      locale,
+      metadata: {
+        tier: props.tier,
+        variant,
+        pointsBalance: props.pointsBalance,
+        lifetimePoints: props.lifetimePoints,
+        previousTier: props.previousTier ?? null,
       },
     }
   )

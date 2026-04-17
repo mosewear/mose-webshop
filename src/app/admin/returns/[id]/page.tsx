@@ -30,6 +30,9 @@ interface ReturnData {
   return_label_url: string | null
   stripe_refund_id: string | null
   stripe_refund_status: string | null
+  label_mode: string | null
+  created_by_admin_id: string | null
+  admin_created_at: string | null
   created_at: string
   approved_at: string | null
   label_generated_at: string | null
@@ -374,11 +377,18 @@ export default function AdminReturnDetailsPage() {
           </svg>
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">
-            Retour #{returnData.id.slice(0, 8).toUpperCase()}
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap mb-2">
+            <h1 className="text-2xl md:text-3xl font-display font-bold">
+              Retour #{returnData.id.slice(0, 8).toUpperCase()}
+            </h1>
+            {returnData.created_by_admin_id && (
+              <span className="inline-block px-2 py-1 text-xs font-bold uppercase bg-black text-white">
+                Handmatig aangemaakt
+              </span>
+            )}
+          </div>
           <p className="text-sm md:text-base text-gray-600">
-            Aangevraagd op {new Date(returnData.created_at).toLocaleDateString('nl-NL', {
+            {returnData.created_by_admin_id ? 'Aangemaakt' : 'Aangevraagd'} op {new Date(returnData.created_at).toLocaleDateString('nl-NL', {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -467,6 +477,25 @@ export default function AdminReturnDetailsPage() {
               <p><strong>Reden:</strong> {returnData.return_reason}</p>
               {returnData.customer_notes && (
                 <p><strong>Klant notities:</strong> {returnData.customer_notes}</p>
+              )}
+              {returnData.label_mode && (
+                <p>
+                  <strong>Label-afhandeling:</strong>{' '}
+                  {returnData.label_mode === 'admin_generated' && 'Label door admin gegenereerd'}
+                  {returnData.label_mode === 'customer_paid' && 'Klant betaalt zelf voor label'}
+                  {returnData.label_mode === 'customer_free' && 'Gratis label (klant genereert zelf)'}
+                  {returnData.label_mode === 'in_store' && 'Geen label (pakket in winkel)'}
+                </p>
+              )}
+              {returnData.created_by_admin_id && returnData.admin_created_at && (
+                <p className="text-gray-600">
+                  <strong>Handmatig:</strong> aangemaakt op{' '}
+                  {new Date(returnData.admin_created_at).toLocaleDateString('nl-NL', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
               )}
               <p><strong>Order:</strong> <Link href={`/admin/orders/${returnData.order_id}`} className="text-brand-primary hover:underline">#{returnData.orders.id.slice(0, 8).toUpperCase()}</Link></p>
               <p><strong>Klant:</strong> {returnData.orders.email}</p>

@@ -46,8 +46,13 @@ export async function GET(
       .single()
 
     const isAdmin = profile?.is_admin === true
+    const ownerByUserId = returnRecord.user_id === user.id
+    const ownerByEmail =
+      !!user.email &&
+      (returnRecord as any).orders?.email?.toLowerCase() ===
+        user.email.toLowerCase()
 
-    if (!isAdmin && returnRecord.user_id !== user.id) {
+    if (!isAdmin && !ownerByUserId && !ownerByEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

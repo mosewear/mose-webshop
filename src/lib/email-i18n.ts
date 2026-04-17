@@ -194,6 +194,8 @@ export type EmailTranslationKeys = {
     step3: string
     viewReturnStatus: string
   }
+  // returnCreatedByAdmin keys are optional — the template provides
+  // full Dutch + English fallbacks so we don't bloat the type surface.
   returnRefunded: {
     subject: string
     title: string

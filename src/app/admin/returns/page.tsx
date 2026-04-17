@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 
 interface Return {
   id: string
@@ -15,11 +15,20 @@ interface Return {
   total_refund: number
   return_label_payment_status: string | null
   created_at: string
+  label_mode: string | null
+  created_by_admin_id: string | null
   orders: {
     id: string
     email: string
     shipping_address: any
   }
+}
+
+const LABEL_MODE_LABEL: Record<string, string> = {
+  admin_generated: 'Label door admin',
+  customer_paid: 'Klant betaalt label',
+  customer_free: 'Gratis label',
+  in_store: 'In winkel',
 }
 
 export default function AdminReturnsPage() {
@@ -144,14 +153,23 @@ export default function AdminReturnsPage() {
           <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">Retouren</h1>
           <p className="text-gray-600">Beheer alle retourverzoeken</p>
         </div>
-        <button
-          onClick={() => fetchReturns()}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Bezig...' : 'Ververs'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/returns/new"
+            className="flex items-center gap-2 px-4 py-2 bg-black text-white font-bold uppercase text-sm hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Nieuwe retour
+          </Link>
+          <button
+            onClick={() => fetchReturns()}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Bezig...' : 'Ververs'}
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -229,7 +247,14 @@ export default function AdminReturnsPage() {
             <div key={returnItem.id} className="bg-white border-2 border-gray-200 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-mono text-sm font-bold">#{returnItem.id.slice(0, 8).toUpperCase()}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-sm font-bold">#{returnItem.id.slice(0, 8).toUpperCase()}</span>
+                    {returnItem.created_by_admin_id && (
+                      <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase bg-black text-white">
+                        Handmatig
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {new Date(returnItem.created_at).toLocaleDateString('nl-NL', {
                       day: 'numeric',
@@ -237,6 +262,11 @@ export default function AdminReturnsPage() {
                       year: 'numeric',
                     })}
                   </div>
+                  {returnItem.label_mode && (
+                    <div className="text-[11px] text-gray-600 mt-1 uppercase tracking-wide">
+                      {LABEL_MODE_LABEL[returnItem.label_mode] || returnItem.label_mode}
+                    </div>
+                  )}
                 </div>
                 <span className={`inline-block px-2 py-1 text-xs font-bold uppercase border ${getStatusColor(returnItem.status)}`}>
                   {getStatusLabel(returnItem.status)}
@@ -285,7 +315,19 @@ export default function AdminReturnsPage() {
               {filteredReturns.map((returnItem) => (
                 <tr key={returnItem.id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <span className="font-mono text-sm">#{returnItem.id.slice(0, 8).toUpperCase()}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-sm">#{returnItem.id.slice(0, 8).toUpperCase()}</span>
+                      {returnItem.created_by_admin_id && (
+                        <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase bg-black text-white">
+                          Handmatig
+                        </span>
+                      )}
+                    </div>
+                    {returnItem.label_mode && (
+                      <div className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">
+                        {LABEL_MODE_LABEL[returnItem.label_mode] || returnItem.label_mode}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Link

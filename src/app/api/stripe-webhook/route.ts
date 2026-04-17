@@ -456,15 +456,21 @@ export async function POST(req: NextRequest) {
             // Upsert loyalty_points record
             const { data: existingRecord } = await supabase
               .from('loyalty_points')
-              .select('id, points_balance, lifetime_points')
+              .select('id, points_balance, lifetime_points, tier')
               .eq('email', order.email)
               .maybeSingle()
-            
+
+            let oldTier: 'bronze' | 'silver' | 'gold' = 'bronze'
+            let newTier: 'bronze' | 'silver' | 'gold' = 'bronze'
+            let newBalance = 0
+            let newLifetime = 0
+
             if (existingRecord) {
-              const newBalance = (existingRecord.points_balance || 0) + pointsToAward
-              const newLifetime = (existingRecord.lifetime_points || 0) + pointsToAward
-              const newTier = calculateTier(newLifetime)
-              
+              oldTier = (existingRecord.tier as any) || 'bronze'
+              newBalance = (existingRecord.points_balance || 0) + pointsToAward
+              newLifetime = (existingRecord.lifetime_points || 0) + pointsToAward
+              newTier = calculateTier(newLifetime) as any
+
               await supabase
                 .from('loyalty_points')
                 .update({
@@ -476,7 +482,9 @@ export async function POST(req: NextRequest) {
                 })
                 .eq('id', existingRecord.id)
             } else {
-              const newTier = calculateTier(pointsToAward)
+              newBalance = pointsToAward
+              newLifetime = pointsToAward
+              newTier = calculateTier(pointsToAward) as any
               await supabase
                 .from('loyalty_points')
                 .insert({
@@ -487,7 +495,7 @@ export async function POST(req: NextRequest) {
                   tier: newTier,
                 })
             }
-            
+
             // Record the transaction
             await supabase
               .from('loyalty_transactions')
@@ -499,8 +507,49 @@ export async function POST(req: NextRequest) {
                 description: `${pointsToAward} punten verdiend bij bestelling`,
                 order_id: order.id,
               })
-            
+
             console.log(`✅ Loyalty points awarded: ${pointsToAward} points to ${order.email}`)
+
+            // ============================================
+            // TIER PROMOTION -> auto tier_up mail
+            // ============================================
+            const tierRank: Record<string, number> = { bronze: 0, silver: 1, gold: 2 }
+            if (tierRank[newTier] > tierRank[oldTier]) {
+              try {
+                const { sendLoyaltyStatusUpdateEmail } = await import('@/lib/email')
+                const name =
+                  (order.shipping_address as any)?.name ||
+                  order.email.split('@')[0]
+
+                await sendLoyaltyStatusUpdateEmail({
+                  customerEmail: order.email,
+                  customerName: name,
+                  tier: newTier,
+                  pointsBalance: newBalance,
+                  lifetimePoints: newLifetime,
+                  previousTier: oldTier,
+                  variant: 'tier_up',
+                  locale: 'nl',
+                })
+
+                await supabase
+                  .from('loyalty_points')
+                  .update({
+                    status_mail_sent_at: new Date().toISOString(),
+                    last_tier_mailed: newTier,
+                  })
+                  .eq('email', order.email)
+
+                console.log(
+                  `🎉 Loyalty tier-up mail sent: ${order.email} (${oldTier} -> ${newTier})`
+                )
+              } catch (tierMailError) {
+                console.error(
+                  '⚠️ Failed to send tier-up loyalty mail:',
+                  tierMailError
+                )
+              }
+            }
           }
         } catch (loyaltyError) {
           console.error('⚠️ Failed to award loyalty points:', loyaltyError)

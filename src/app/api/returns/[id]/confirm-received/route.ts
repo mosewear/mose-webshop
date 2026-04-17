@@ -32,9 +32,14 @@ export async function POST(
       return NextResponse.json({ error: 'Return not found' }, { status: 404 })
     }
 
-    if (returnRecord.status !== 'return_in_transit' && returnRecord.status !== 'return_label_generated') {
-      return NextResponse.json({ 
-        error: `Cannot confirm receipt. Return status must be 'return_in_transit' or 'return_label_generated', current: ${returnRecord.status}` 
+    const allowedSourceStatuses = [
+      'return_in_transit',
+      'return_label_generated',
+      'return_approved', // in-store drop-off start
+    ]
+    if (!allowedSourceStatuses.includes(returnRecord.status)) {
+      return NextResponse.json({
+        error: `Cannot confirm receipt. Return status must be one of ${allowedSourceStatuses.join(', ')}, current: ${returnRecord.status}`,
       }, { status: 400 })
     }
 

@@ -44,7 +44,9 @@ export async function GET(req: NextRequest) {
       `)
       .order('created_at', { ascending: false })
 
-    // If not admin, only show own returns
+    // If not admin, only show own returns. We link manual/admin-created
+    // returns to the matching profile during creation, so filtering on
+    // user_id covers both self-service and admin-created returns.
     if (!isAdmin) {
       query = query.eq('user_id', user.id)
     }

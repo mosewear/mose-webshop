@@ -35,12 +35,34 @@ export async function POST(
     const isWebhookCall = authHeader === `Bearer ${internalSecret}`
 
     let isAdmin = false
+    let isOwner = false
     if (!isWebhookCall) {
       const { authorized } = await requireAdmin()
       isAdmin = authorized
       if (!isAdmin) {
-        console.error('❌ Unauthorized: Not webhook call and not admin')
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        // Owner mag alleen zelf label genereren bij customer_free retouren.
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: ownerCheck } = await supabase
+            .from('returns')
+            .select('id, user_id, label_mode, status, orders!inner(email)')
+            .eq('id', id)
+            .single()
+          if (
+            ownerCheck &&
+            ownerCheck.label_mode === 'customer_free' &&
+            ownerCheck.status === 'return_label_payment_completed' &&
+            (ownerCheck.user_id === user.id ||
+              (ownerCheck.orders as any)?.email === user.email)
+          ) {
+            isOwner = true
+          }
+        }
+        if (!isOwner) {
+          console.error('❌ Unauthorized: Not webhook call, not admin, not eligible owner')
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+        console.log('✅ Owner-triggered label generation (customer_free)')
       }
     } else {
       console.log('✅ Webhook call authenticated')

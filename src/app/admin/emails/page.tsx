@@ -43,6 +43,7 @@ const CATEGORY_ORDER: EmailTemplateCategory[] = [
   'return',
   'marketing',
   'insider',
+  'loyalty',
   'admin',
 ]
 
@@ -51,6 +52,7 @@ const CATEGORY_ACCENTS: Record<EmailTemplateCategory, string> = {
   return: 'bg-orange-100 text-orange-800 border-orange-200',
   marketing: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   insider: 'bg-purple-100 text-purple-800 border-purple-200',
+  loyalty: 'bg-pink-100 text-pink-800 border-pink-200',
   admin: 'bg-blue-100 text-blue-800 border-blue-200',
 }
 
@@ -139,6 +141,7 @@ export default function AdminEmailsPage() {
       return: [],
       marketing: [],
       insider: [],
+      loyalty: [],
       admin: [],
     }
     for (const tpl of EMAIL_TEMPLATES) {

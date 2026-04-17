@@ -8,6 +8,7 @@ import {
   InsiderCommunityEmail,
   InsiderLaunchWeekEmail,
   InsiderWelcomeEmail,
+  LoyaltyStatusUpdateEmail,
   NewReviewNotificationEmail,
   NewsletterWelcomeEmail,
   OrderCancelledEmail,
@@ -16,6 +17,7 @@ import {
   OrderProcessingEmail,
   PreorderConfirmationEmail,
   ReturnApprovedEmail,
+  ReturnCreatedByAdminEmail,
   ReturnLabelGeneratedEmail,
   ReturnRefundedEmail,
   ReturnRejectedEmail,
@@ -315,6 +317,38 @@ export async function GET(req: NextRequest) {
         )
         break
 
+      case 'return-created-by-admin': {
+        const labelMode = (searchParams.get('label_mode') as
+          | 'admin_generated'
+          | 'customer_paid'
+          | 'customer_free'
+          | 'in_store'
+          | null) || 'customer_free'
+        const inStoreState = (searchParams.get('in_store_state') as
+          | 'approved'
+          | 'received'
+          | null) || 'approved'
+        html = await render(
+          ReturnCreatedByAdminEmail({
+            returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
+            orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
+            customerName: dummyData.customerName,
+            labelMode,
+            inStoreState,
+            returnItems: dummyData.returnItems,
+            refundAmount: dummyData.refundAmount,
+            labelCost: 7.87,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            locale,
+          })
+        )
+        break
+      }
+
       case 'return-label':
         html = await render(
           ReturnLabelGeneratedEmail({
@@ -526,6 +560,47 @@ export async function GET(req: NextRequest) {
           })
         )
         break
+
+      case 'loyalty-status-update': {
+        const tier = (searchParams.get('tier') as
+          | 'bronze'
+          | 'silver'
+          | 'gold'
+          | null) || 'silver'
+        const pointsBalance = parseInt(
+          searchParams.get('points') || '640',
+          10
+        )
+        const lifetimePoints = parseInt(
+          searchParams.get('lifetime') || '640',
+          10
+        )
+        const variant = (searchParams.get('variant') as
+          | 'broadcast'
+          | 'tier_up'
+          | null) || 'broadcast'
+        const previousTier = (searchParams.get('previous_tier') as
+          | 'bronze'
+          | 'silver'
+          | 'gold'
+          | null) || null
+        html = await render(
+          LoyaltyStatusUpdateEmail({
+            customerName: dummyData.customerName,
+            tier,
+            pointsBalance,
+            lifetimePoints,
+            previousTier,
+            variant,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            locale,
+          })
+        )
+        break
+      }
 
       case 'insider-launch-week':
         html = await render(

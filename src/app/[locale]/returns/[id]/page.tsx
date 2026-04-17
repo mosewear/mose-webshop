@@ -23,6 +23,8 @@ interface ReturnData {
   return_tracking_code: string | null
   return_tracking_url: string | null
   return_label_url: string | null
+  label_mode: string | null
+  created_by_admin_id: string | null
   created_at: string
   orders: {
     id: string
@@ -204,6 +206,7 @@ export default function ReturnDetailsPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [pollingLabel, setPollingLabel] = useState(false)
+  const [generatingFreeLabel, setGeneratingFreeLabel] = useState(false)
   const pollingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isPollingRef = useRef<boolean>(false)
   const maxAttemptsRef = useRef<number>(0)
@@ -250,7 +253,14 @@ export default function ReturnDetailsPage() {
     }
 
     // Start polling als status payment_completed is en label nog niet klaar
-    if (returnData?.status === 'return_label_payment_completed' && !returnData.return_label_url && !isPollingRef.current) {
+    // customer_free returns starten wel op payment_completed maar wachten op
+    // een klikactie van de klant, dus die niet automatisch pollen.
+    if (
+      returnData?.status === 'return_label_payment_completed' &&
+      !returnData.return_label_url &&
+      returnData.label_mode !== 'customer_free' &&
+      !isPollingRef.current
+    ) {
       startPollingForLabel()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -386,6 +396,26 @@ export default function ReturnDetailsPage() {
     }
   }
 
+  async function handleGenerateFreeLabel() {
+    if (!returnData) return
+    setGeneratingFreeLabel(true)
+    try {
+      const response = await fetch(`/api/returns/${returnId}/generate-label`, {
+        method: 'POST',
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Kon label niet aanmaken')
+      }
+      toast.success('Retourlabel aangemaakt!')
+      await fetchReturn()
+    } catch (err: any) {
+      toast.error(err.message || 'Kon label niet aanmaken')
+    } finally {
+      setGeneratingFreeLabel(false)
+    }
+  }
+
   async function createPaymentIntent() {
     setPaymentLoading(true)
     try {
@@ -517,6 +547,62 @@ export default function ReturnDetailsPage() {
           </div>
         </div>
 
+        {/* Customer Free Label - klant mag zelf retourlabel genereren */}
+        {returnData.label_mode === 'customer_free' &&
+          returnData.status === 'return_label_payment_completed' &&
+          !returnData.return_label_url && (
+            <div className="bg-green-50 border-2 border-green-500 p-6 mb-6">
+              <h3 className="text-xl font-display mb-2">Gratis Retourlabel</h3>
+              <p className="mb-4">
+                Voor deze retour hoef je niets te betalen — het retourlabel is onze
+                trakteren. Klik hieronder om het label aan te maken. Je ontvangt
+                het label daarna per mail en hier op deze pagina.
+              </p>
+              <button
+                onClick={handleGenerateFreeLabel}
+                disabled={generatingFreeLabel}
+                className="w-full px-8 py-4 bg-green-600 text-white font-bold uppercase tracking-wider hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {generatingFreeLabel ? 'Label wordt aangemaakt...' : 'Retourlabel Aanmaken'}
+              </button>
+            </div>
+          )}
+
+        {/* In-Store drop-off instructies */}
+        {returnData.label_mode === 'in_store' &&
+          returnData.status === 'return_approved' && (
+            <div className="bg-yellow-50 border-2 border-yellow-500 p-6 mb-6">
+              <h3 className="text-xl font-display mb-2">Breng Langs In De Winkel</h3>
+              <p className="mb-3">
+                Deze retour handelen we in de winkel af. Kom langs met je items en
+                vermeld je retour-nummer{' '}
+                <span className="font-mono font-bold">
+                  #{returnData.id.slice(0, 8).toUpperCase()}
+                </span>{' '}
+                aan de balie.
+              </p>
+              <p className="text-sm text-gray-600">
+                Openingstijden en adres vind je op{' '}
+                <Link href="/contact" className="underline font-bold">
+                  onze contactpagina
+                </Link>
+                .
+              </p>
+            </div>
+          )}
+
+        {returnData.label_mode === 'in_store' &&
+          returnData.status === 'return_received' && (
+            <div className="bg-blue-50 border-2 border-blue-500 p-6 mb-6">
+              <h3 className="text-xl font-display mb-2">Retour Ontvangen</h3>
+              <p>
+                We hebben je retour in de winkel ontvangen. Onze collega's
+                controleren de items op schade en volledigheid. Binnen 3 werkdagen
+                storten we je refund terug op dezelfde betaalmethode.
+              </p>
+            </div>
+          )}
+
         {/* Payment Section - Klant moet direct betalen na aanvraag */}
         {returnData.status === 'return_label_payment_pending' && (
           <div className="bg-orange-50 border-2 border-orange-500 p-6 mb-6">
@@ -556,7 +642,9 @@ export default function ReturnDetailsPage() {
         )}
 
         {/* Payment Completed - Label Generating */}
-        {returnData.status === 'return_label_payment_completed' && !returnData.return_label_url && (
+        {returnData.status === 'return_label_payment_completed' &&
+          !returnData.return_label_url &&
+          returnData.label_mode !== 'customer_free' && (
           <div className="bg-purple-50 border-2 border-purple-500 p-6 mb-6">
             <h3 className="text-xl font-display mb-4">Betaling Voltooid</h3>
             <p className="mb-4">
