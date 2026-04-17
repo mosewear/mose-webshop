@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
+import { processReturnRefund } from '@/lib/process-return-refund'
 
 // POST /api/returns/[id]/confirm-received - Admin bevestigt ontvangst retour
 export async function POST(
@@ -80,9 +81,28 @@ export async function POST(
       console.error('Error updating order status:', error)
     }
 
+    // Auto-refund: zodra we de retour als ontvangen markeren,
+    // wordt het geld direct via Stripe naar de klant teruggestort.
+    // Helper is volledig idempotent en faalt zacht als er geen
+    // payment-intent/refundbedrag is.
+    let refundOutcome: any = null
+    try {
+      refundOutcome = await processReturnRefund(id)
+    } catch (refundErr) {
+      console.error('Auto-refund after confirm-received failed:', refundErr)
+    }
+
+    // Haal de definitieve record opnieuw op (refund-helper kan status hebben gewijzigd)
+    const { data: finalReturn } = await supabase
+      .from('returns')
+      .select('*')
+      .eq('id', id)
+      .single()
+
     return NextResponse.json({
       success: true,
-      return: updatedReturn,
+      return: finalReturn || updatedReturn,
+      refund: refundOutcome,
     })
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/confirm-received:', error)

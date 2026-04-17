@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/supabase/admin'
-import { sendReturnRefundedEmail } from '@/lib/email'
-import { updateOrderStatusForReturn } from '@/lib/update-order-status'
+import { processReturnRefund } from '@/lib/process-return-refund'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
-
-// POST /api/returns/[id]/process-refund - Admin start refund voor originele items
+// POST /api/returns/[id]/process-refund
+//
+// Manuele fallback: vrijwel altijd worden refunds al automatisch
+// uitgevoerd in `confirm-received`, `approve` of bij in-store manual return
+// creation. Deze endpoint blijft beschikbaar voor admins zodat ze het kunnen
+// herproberen als de auto-refund eerder mislukte (bv. tijdelijk Stripe-issue).
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,15 +21,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
-    const { admin_notes } = body
+    const body = await req.json().catch(() => ({}))
+    const { admin_notes, force } = body || {}
 
     const supabase = await createClient()
 
-    // Haal retour op
     const { data: returnRecord, error: fetchError } = await supabase
       .from('returns')
-      .select('*, orders!inner(*)')
+      .select('id, status, stripe_refund_id')
       .eq('id', id)
       .single()
 
@@ -36,124 +36,61 @@ export async function POST(
       return NextResponse.json({ error: 'Return not found' }, { status: 404 })
     }
 
-    if (returnRecord.status !== 'return_received') {
-      return NextResponse.json({ 
-        error: `Cannot process refund. Return status must be 'return_received', current: ${returnRecord.status}` 
-      }, { status: 400 })
+    const allowedSourceStatuses = [
+      'return_received',
+      'return_approved',
+      // Sta retry toe vanuit refund_processing (bv. eerdere poging hangt).
+      'refund_processing',
+    ]
+
+    if (
+      !allowedSourceStatuses.includes(returnRecord.status) &&
+      !force
+    ) {
+      return NextResponse.json(
+        {
+          error: `Cannot process refund. Return status moet één van ${allowedSourceStatuses.join(', ')} zijn (huidig: ${returnRecord.status}). Gebruik force=true om te overschrijven.`,
+        },
+        { status: 400 }
+      )
     }
 
-    // Check of er al een refund is
-    if (returnRecord.stripe_refund_id) {
-      return NextResponse.json({ 
-        error: 'Refund already processed' 
-      }, { status: 400 })
+    if (returnRecord.stripe_refund_id && !force) {
+      return NextResponse.json(
+        { error: 'Refund already processed' },
+        { status: 400 }
+      )
     }
 
-    // Check of order een payment intent heeft
-    if (!returnRecord.orders.stripe_payment_intent_id) {
-      return NextResponse.json({ 
-        error: 'Order has no payment intent' 
-      }, { status: 400 })
-    }
-
-    // Bereken refund amount (alleen items, geen label kosten)
-    const refundAmount = returnRecord.refund_amount || 0
-    const refundAmountCents = Math.round(refundAmount * 100)
-
-    if (refundAmountCents <= 0) {
-      return NextResponse.json({ 
-        error: 'Refund amount must be greater than 0' 
-      }, { status: 400 })
-    }
-
-    // Maak Stripe refund aan
-    const refund = await stripe.refunds.create({
-      payment_intent: returnRecord.orders.stripe_payment_intent_id,
-      amount: refundAmountCents,
-      reason: 'requested_by_customer',
-      metadata: {
-        return_id: id,
-        order_id: returnRecord.order_id,
-        type: 'return_refund',
-        refund_amount: refundAmount.toString(),
-      },
+    const outcome = await processReturnRefund(id, {
+      adminNotes: admin_notes,
+      force: !!force,
     })
 
-    // Update return met refund informatie
-    const { data: updatedReturn, error: updateError } = await supabase
+    if (!outcome.ok) {
+      return NextResponse.json(
+        { error: outcome.reason, details: outcome.details },
+        { status: 500 }
+      )
+    }
+
+    const { data: finalReturn } = await supabase
       .from('returns')
-      .update({
-        status: 'refund_processing',
-        stripe_refund_id: refund.id,
-        stripe_refund_status: refund.status,
-        admin_notes: admin_notes || returnRecord.admin_notes,
-      })
+      .select('*')
       .eq('id', id)
-      .select()
       .single()
-
-    if (updateError) {
-      console.error('Error updating return with refund:', updateError)
-      return NextResponse.json({ error: 'Failed to update return' }, { status: 500 })
-    }
-
-    // Als refund direct succeeded is (meestal het geval)
-    if (refund.status === 'succeeded') {
-      const { data: finalReturn } = await supabase
-        .from('returns')
-        .update({
-          status: 'refunded',
-          refunded_at: new Date().toISOString(),
-          stripe_refund_status: 'succeeded',
-        })
-        .eq('id', id)
-        .select()
-        .single()
-
-      // Update order status naar return_completed
-      try {
-        await updateOrderStatusForReturn(returnRecord.order_id, 'refunded')
-      } catch (error) {
-        console.error('Error updating order status:', error)
-      }
-
-      // Verstuur email naar klant
-      try {
-        const { data: order } = await supabase
-          .from('orders')
-          .select('email, shipping_address')
-          .eq('id', returnRecord.order_id)
-          .single()
-
-        if (order) {
-          const shippingAddress = order.shipping_address as any
-          
-          await sendReturnRefundedEmail({
-            customerEmail: order.email,
-            customerName: shippingAddress?.name || 'Klant',
-            returnId: id,
-            orderId: returnRecord.order_id,
-            refundAmount: refundAmount,
-          })
-        }
-      } catch (emailError) {
-        console.error('Error sending return refunded email:', emailError)
-        // Don't fail the request if email fails
-      }
-    }
 
     return NextResponse.json({
       success: true,
-      refund_id: refund.id,
-      refund_status: refund.status,
-      refund_amount: refundAmount,
-      return: updatedReturn,
+      refund_id: outcome.refundId,
+      refund_status: outcome.status,
+      return: finalReturn,
     })
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/process-refund:', error)
-    return NextResponse.json({ 
-      error: 'Er is een fout opgetreden' 
-    }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Er is een fout opgetreden' },
+      { status: 500 }
+    )
   }
 }
-

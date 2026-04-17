@@ -13,6 +13,7 @@ import {
   sendReturnCreatedByAdminEmail,
   sendReturnLabelGeneratedEmail,
 } from '@/lib/email'
+import { processReturnRefund } from '@/lib/process-return-refund'
 
 /**
  * POST /api/admin/returns
@@ -550,6 +551,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // In-store drop-off met direct ontvangen status → automatisch refund
+    // starten zodat de klant het geld zonder verdere admin-actie terugkrijgt.
+    let autoRefundOutcome: any = null
+    if (label_mode === 'in_store' && in_store_state === 'received') {
+      try {
+        autoRefundOutcome = await processReturnRefund(returnRecord.id, {
+          supabase,
+          sendEmail: send_email,
+        })
+      } catch (refundErr) {
+        console.error(
+          'Auto-refund after in-store manual return failed:',
+          refundErr
+        )
+      }
+    }
+
     // E-mail naar klant (voor customer_paid / customer_free / in_store)
     if (send_email && label_mode !== 'admin_generated') {
       try {
@@ -588,6 +606,7 @@ export async function POST(req: NextRequest) {
       tracking_code: trackingCode,
       tracking_url: trackingUrl,
       payment_intent_client_secret: paymentIntentClientSecret,
+      refund: autoRefundOutcome,
     })
   } catch (error: any) {
     console.error('Error in POST /api/admin/returns:', error)

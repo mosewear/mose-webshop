@@ -174,7 +174,14 @@ export default function AdminReturnDetailsPage() {
         throw new Error(data.error || 'Failed to approve return')
       }
 
-      toast.success('Retour goedgekeurd!')
+      const refund = data?.refund
+      if (refund?.ok) {
+        toast.success('Retour goedgekeurd & refund verstuurd naar klant!')
+      } else if (refund?.reason) {
+        toast.success('Retour goedgekeurd. Refund vereist aandacht: ' + refund.reason)
+      } else {
+        toast.success('Retour goedgekeurd!')
+      }
       await fetchReturn()
     } catch (error: any) {
       toast.error(error.message || 'Kon retour niet goedkeuren')
@@ -243,7 +250,12 @@ export default function AdminReturnDetailsPage() {
   }
 
   async function confirmReceived() {
-    if (!confirm('Bevestig je dat je de retour hebt ontvangen?')) return
+    if (
+      !confirm(
+        'Bevestig je dat je de retour hebt ontvangen?\n\nLet op: het refundbedrag wordt direct via Stripe teruggestort naar de klant.'
+      )
+    )
+      return
 
     setProcessing(true)
     try {
@@ -259,7 +271,14 @@ export default function AdminReturnDetailsPage() {
         throw new Error(data.error || 'Failed to confirm receipt')
       }
 
-      toast.success('Ontvangst bevestigd!')
+      const refund = data?.refund
+      if (refund?.ok) {
+        toast.success('Ontvangst bevestigd & refund gestart!')
+      } else if (refund?.reason) {
+        toast.success('Ontvangst bevestigd. Refund vereist actie: ' + refund.reason)
+      } else {
+        toast.success('Ontvangst bevestigd!')
+      }
       await fetchReturn()
     } catch (error: any) {
       toast.error(error.message || 'Kon ontvangst niet bevestigen')
@@ -616,25 +635,50 @@ export default function AdminReturnDetailsPage() {
                 </button>
               )}
 
-              {(returnData.status === 'return_label_generated' || returnData.status === 'return_in_transit') && (
-                <button
-                  onClick={confirmReceived}
-                  disabled={processing}
-                  className="w-full px-4 py-3 bg-blue-500 text-white font-bold uppercase text-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <Package className="w-5 h-5" />
-                  Bevestig Ontvangst
-                </button>
+              {(returnData.status === 'return_label_generated' ||
+                returnData.status === 'return_in_transit' ||
+                returnData.status === 'return_approved') && (
+                <>
+                  <button
+                    onClick={confirmReceived}
+                    disabled={processing}
+                    className="w-full px-4 py-3 bg-blue-500 text-white font-bold uppercase text-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Package className="w-5 h-5" />
+                    Bevestig Ontvangst & Refund
+                  </button>
+                  <p className="text-xs text-gray-600 -mt-1">
+                    Klant krijgt het bedrag direct via Stripe teruggestort.
+                  </p>
+                </>
               )}
 
               {returnData.status === 'return_received' && (
+                <>
+                  <button
+                    onClick={processRefund}
+                    disabled={processing}
+                    className="w-full px-4 py-3 bg-green-500 text-white font-bold uppercase text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    Refund Opnieuw Versturen
+                  </button>
+                  <p className="text-xs text-gray-600 -mt-1">
+                    Auto-refund draait normaal direct bij &quot;Bevestig
+                    Ontvangst&quot;. Gebruik deze knop alleen als die eerder
+                    mislukte.
+                  </p>
+                </>
+              )}
+
+              {returnData.status === 'refund_processing' && !returnData.stripe_refund_id && (
                 <button
                   onClick={processRefund}
                   disabled={processing}
-                  className="w-full px-4 py-3 bg-green-500 text-white font-bold uppercase text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-4 py-3 bg-amber-500 text-white font-bold uppercase text-sm hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <DollarSign className="w-5 h-5" />
-                  Start Refund
+                  Refund Forceren
                 </button>
               )}
 

@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { sendReturnApprovedEmail } from '@/lib/email'
+import { processReturnRefund } from '@/lib/process-return-refund'
+import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 
-// POST /api/returns/[id]/approve - Admin keurt retour goed
+// POST /api/returns/[id]/approve
+//
+// Final approval after the items have been received and inspected.
+// Status moet `return_received` of `return_approved` zijn — bij beide
+// triggeren we direct de Stripe-refund zodat het geld automatisch wordt
+// teruggestort aan de klant. Helper is idempotent dus dubbele klikken
+// veroorzaken geen dubbele refund.
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -16,12 +24,11 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
-    const { admin_notes } = body
+    const body = await req.json().catch(() => ({}))
+    const { admin_notes } = body || {}
 
     const supabase = await createClient()
 
-    // Haal retour op
     const { data: returnRecord, error: fetchError } = await supabase
       .from('returns')
       .select('*')
@@ -32,19 +39,23 @@ export async function POST(
       return NextResponse.json({ error: 'Return not found' }, { status: 404 })
     }
 
-    // Retour kan alleen worden goedgekeurd als het al is ontvangen
-    if (returnRecord.status !== 'return_received') {
-      return NextResponse.json({ 
-        error: `Cannot approve return with status ${returnRecord.status}. Return must be received first.` 
-      }, { status: 400 })
+    const allowedSourceStatuses = ['return_received', 'return_approved']
+    if (!allowedSourceStatuses.includes(returnRecord.status)) {
+      return NextResponse.json(
+        {
+          error: `Cannot approve return with status ${returnRecord.status}. Return moet eerst ontvangen zijn.`,
+        },
+        { status: 400 }
+      )
     }
 
-    // Update status naar goedgekeurd (na beoordeling kleding)
+    // Mark as approved (idempotent: als al approved skippen we de update niet
+    // omdat we ook de notes willen kunnen bijwerken).
     const { data: updatedReturn, error: updateError } = await supabase
       .from('returns')
       .update({
         status: 'return_approved',
-        approved_at: new Date().toISOString(),
+        approved_at: returnRecord.approved_at || new Date().toISOString(),
         admin_notes: admin_notes || returnRecord.admin_notes,
       })
       .eq('id', id)
@@ -56,42 +67,65 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to approve return' }, { status: 500 })
     }
 
-    // Verstuur email naar klant
+    // Sync order status.
     try {
-      const { data: order } = await supabase
-        .from('orders')
-        .select('email, shipping_address')
-        .eq('id', updatedReturn.order_id)
-        .single()
-
-      if (order) {
-        const shippingAddress = order.shipping_address as any
-        const returnItems = updatedReturn.return_items as any[]
-        
-        await sendReturnApprovedEmail({
-          customerEmail: order.email,
-          customerName: shippingAddress?.name || 'Klant',
-          returnId: id,
-          orderId: updatedReturn.order_id,
-          returnItems: returnItems.map((item: any) => ({
-            product_name: item.product_name || 'Product',
-            quantity: item.quantity,
-          })),
-          refundAmount: updatedReturn.refund_amount || 0,
-        })
-      }
-    } catch (emailError) {
-      console.error('Error sending return approved email:', emailError)
-      // Don't fail the request if email fails
+      await updateOrderStatusForReturn(returnRecord.order_id, 'return_approved')
+    } catch (err) {
+      console.error('Error updating order status after approve:', err)
     }
+
+    // E-mail "Retour goedgekeurd" — alleen wanneer dit de eerste keer is dat
+    // we naar `return_approved` springen, niet bij hercheck.
+    if (returnRecord.status !== 'return_approved') {
+      try {
+        const { data: order } = await supabase
+          .from('orders')
+          .select('email, shipping_address')
+          .eq('id', updatedReturn.order_id)
+          .single()
+
+        if (order) {
+          const shippingAddress = order.shipping_address as any
+          const returnItems = (updatedReturn.return_items as any[]) || []
+
+          await sendReturnApprovedEmail({
+            customerEmail: order.email,
+            customerName: shippingAddress?.name || 'Klant',
+            returnId: id,
+            orderId: updatedReturn.order_id,
+            returnItems: returnItems.map((item: any) => ({
+              product_name: item.product_name || 'Product',
+              quantity: item.quantity,
+            })),
+            refundAmount: updatedReturn.refund_amount || 0,
+          })
+        }
+      } catch (emailError) {
+        console.error('Error sending return approved email:', emailError)
+      }
+    }
+
+    // Direct na goedkeuring → automatisch geld terugstorten.
+    let refundOutcome: any = null
+    try {
+      refundOutcome = await processReturnRefund(id)
+    } catch (refundErr) {
+      console.error('Auto-refund after approve failed:', refundErr)
+    }
+
+    const { data: finalReturn } = await supabase
+      .from('returns')
+      .select('*')
+      .eq('id', id)
+      .single()
 
     return NextResponse.json({
       success: true,
-      return: updatedReturn,
+      return: finalReturn || updatedReturn,
+      refund: refundOutcome,
     })
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/approve:', error)
     return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
   }
 }
-
