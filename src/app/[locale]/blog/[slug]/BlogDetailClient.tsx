@@ -76,6 +76,7 @@ function renderMarkdown(text: string): string {
 
 export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClientProps) {
   const locale = useLocale() as 'nl' | 'en'
+  const t = useTranslations('blog')
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   const title = locale === 'en' && post.title_en ? post.title_en : post.title_nl
