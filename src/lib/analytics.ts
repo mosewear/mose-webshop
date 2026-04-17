@@ -86,12 +86,10 @@ export async function trackEvent({ event_name, properties = {}, user_id }: Track
     })
     
     if (error) {
-      console.error('[Analytics] ❌ Supabase error:', error)
-    } else {
-      console.log(`[Analytics] ✅ ${event_name}`, properties)
+      console.error('[Analytics] Supabase error:', error)
     }
   } catch (error) {
-    console.error(`[Analytics] ❌ Error tracking ${event_name}:`, error)
+    console.error(`[Analytics] Error tracking ${event_name}:`, error)
   }
 }
 

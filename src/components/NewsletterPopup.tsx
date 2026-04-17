@@ -84,23 +84,19 @@ export default function NewsletterPopup({
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        console.log('🔢 [Popup] Fetching subscriber count from API...')
         const response = await fetch('/api/newsletter/subscriber-count')
-        
+
         if (!response.ok) {
-          console.error('🔢 [Popup] API error:', response.status)
           return
         }
-        
+
         const data = await response.json()
-        console.log('🔢 [Popup] API response:', data)
-        
+
         if (data.success && data.total) {
           setSubscriberCount(data.total)
-          console.log('🔢 [Popup] Updated count to:', data.total)
         }
       } catch (err) {
-        console.error('🔢 [Popup] Fetch error:', err)
+        console.error('[Popup] Subscriber count fetch error:', err)
       }
     }
 

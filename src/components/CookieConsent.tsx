@@ -25,15 +25,6 @@ export default function CookieConsent() {
   }, [])
 
   const loadTrackingScripts = () => {
-    // Enable Facebook Pixel
-    if (typeof window !== 'undefined' && (window as any).fbq) {
-      console.log('🍪 Tracking enabled: Facebook Pixel')
-    }
-    
-    // PostHog is already loaded by provider, just notify
-    console.log('🍪 Tracking enabled: PostHog')
-    
-    // Dispatch event so other components know tracking is enabled
     window.dispatchEvent(new Event('mose-tracking-enabled'))
   }
 
@@ -43,7 +34,6 @@ export default function CookieConsent() {
       loadTrackingScripts()
     } else {
       localStorage.setItem('mose_cookie_consent', 'necessary')
-      console.log('🍪 Only necessary cookies accepted')
     }
     
     // Animate out

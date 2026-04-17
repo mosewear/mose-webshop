@@ -98,8 +98,7 @@ async function sendToConversionsAPI(
       return
     }
     
-    const result = await response.json()
-    console.log(`[FB CAPI] ✅ Server event sent: ${event}`, result)
+    await response.json()
   } catch (error) {
     console.error(`[FB CAPI] ❌ Error sending ${event}:`, error)
   }
@@ -114,7 +113,6 @@ export function trackPixelEvent(
   userData?: UserData
 ) {
   if (typeof window === 'undefined' || !window.fbq) {
-    console.warn('[FB Pixel] Not initialized')
     return
   }
 
@@ -141,8 +139,6 @@ export function trackPixelEvent(
     // Add event_id for deduplication
     eventParams.eventID = eventId
 
-    // 1. Track client-side (browser pixel)
-    console.log(`[FB Pixel Client] ${event}`, eventParams)
     window.fbq('track', event, eventParams)
     
     // 2. Track server-side (Conversions API) - async, don't wait

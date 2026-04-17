@@ -119,7 +119,6 @@ export default function RootLayout({
                 'https://connect.facebook.net/en_US/fbevents.js');
                 fbq('init', '1447430483627328');
                 fbq('track', 'PageView');
-                console.log('🎯 Facebook Pixel initialized');
               }
               
               // Check if consent already given
@@ -155,7 +154,6 @@ export default function RootLayout({
                     a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
                     f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
                     tp('register', 'AAbEsaY7hRnD5xEZ');
-                console.log('🎯 Trustpilot initialized');
               }
 
               if (typeof window !== 'undefined') {

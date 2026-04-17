@@ -144,7 +144,10 @@ export const useCart = create<CartStore>()(
     {
       name: 'mose-cart',
       version: 1,
-      // Listen to messages from other tabs
+      migrate: (persistedState: any) => {
+        // No schema changes between versions yet; just return the state.
+        return persistedState
+      },
       onRehydrateStorage: () => (state) => {
         if (cartChannel && state) {
           cartChannel.onmessage = (event) => {

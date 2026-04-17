@@ -40,37 +40,25 @@ let cacheTimestamp: number = 0
 const CACHE_TTL = 60000 // 60 seconds
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  console.log('🎯 [SETTINGS] getSiteSettings called')
-  
   const now = Date.now()
   const cacheAge = now - cacheTimestamp
-  
-  // Return cached settings if available AND not expired
+
   if (cachedSettings && cacheAge < CACHE_TTL) {
-    console.log(`🎯 [SETTINGS] Returning cached settings (age: ${Math.round(cacheAge / 1000)}s)`)
     return cachedSettings
-  }
-  
-  if (cachedSettings) {
-    console.log(`🎯 [SETTINGS] Cache expired (age: ${Math.round(cacheAge / 1000)}s), fetching fresh data`)
   }
 
   const supabase = createClient()
 
   try {
-    console.log('🎯 [SETTINGS] Fetching from database...')
     const { data, error } = await supabase
       .from('site_settings')
       .select('key, value, updated_at')
 
     if (error) {
-      console.error('❌ [SETTINGS] Database error:', error)
+      console.error('[SETTINGS] Database error:', error)
       throw error
     }
 
-    console.log('🎯 [SETTINGS] Raw database response:', data)
-
-    // Get the most recent updated_at timestamp
     let latestUpdate = ''
     if (data && data.length > 0) {
       latestUpdate = data.reduce((latest, current) => {
@@ -78,7 +66,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       }, data[0].updated_at)
     }
 
-    // Convert array to object
     const settings: any = {}
     if (data) {
       data.forEach((setting) => {
@@ -86,10 +73,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       })
     }
 
-    console.log('🎯 [SETTINGS] Converted settings object:', settings)
-    console.log('🎯 [SETTINGS] favicon_url from DB:', settings.favicon_url)
-
-    // Set defaults for missing values
     cachedSettings = {
       site_name: settings.site_name || 'MOSE Wear',
       contact_email: settings.contact_email || 'info@mosewear.nl',
@@ -109,7 +92,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       favicon_url: settings.favicon_url || '/favicon.ico',
       show_preview_images_notice: settings.show_preview_images_notice === 'true' || settings.show_preview_images_notice === true,
       show_category_labels: settings.show_category_labels === 'true' || settings.show_category_labels === true,
-      ai_chat_enabled: settings.ai_chat_enabled === 'true' || settings.ai_chat_enabled === true || settings.ai_chat_enabled === undefined, // Default true
+      ai_chat_enabled: settings.ai_chat_enabled === 'true' || settings.ai_chat_enabled === true || settings.ai_chat_enabled === undefined,
       pickup_enabled: settings.pickup_enabled === 'true' || settings.pickup_enabled === true || settings.pickup_enabled === undefined,
       pickup_max_distance_km: parseFloat(settings.pickup_max_distance_km) || 50,
       pickup_location_name: settings.pickup_location_name || 'MOSE Groningen',
@@ -119,16 +102,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       updated_at: latestUpdate,
     }
 
-    console.log('🎯 [SETTINGS] Final cached settings:', cachedSettings)
-    
-    // Update cache timestamp
     cacheTimestamp = Date.now()
 
     return cachedSettings
   } catch (error) {
-    console.error('❌ [SETTINGS] Error fetching site settings:', error)
-    
-    // Return defaults on error
+    console.error('[SETTINGS] Error fetching site settings:', error)
+
     return {
       site_name: 'MOSE Wear',
       contact_email: 'info@mosewear.nl',
@@ -147,7 +126,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       favicon_url: '/favicon.ico',
       show_preview_images_notice: false,
       show_category_labels: false,
-      ai_chat_enabled: true, // Default enabled
+      ai_chat_enabled: true,
       pickup_enabled: true,
       pickup_max_distance_km: 50,
       pickup_location_name: 'MOSE Groningen',
@@ -159,11 +138,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   }
 }
 
-// Clear cache when settings are updated
 export function clearSettingsCache() {
-  console.log('🎯 [SETTINGS] Cache cleared!')
   cachedSettings = null
   cacheTimestamp = 0
 }
-
-
