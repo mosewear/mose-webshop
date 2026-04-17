@@ -17,6 +17,10 @@ import { render } from '@react-email/render'
 import { getSiteSettings } from './settings'
 import { getEmailT } from './email-i18n'
 import { logEmail } from './email-logger'
+import {
+  EMAIL_TEMPLATES_BY_KEY,
+  type EmailTemplateDefinition,
+} from './email-catalog'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { 
   OrderConfirmationEmail,
@@ -42,6 +46,94 @@ import {
 } from '@/emails'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+// =====================================================
+// sendAndLog — central wrapper around Resend + email log
+// =====================================================
+
+type ResendPayload = Parameters<typeof resend.emails.send>[0]
+
+interface SendAndLogOptions {
+  /** Key from email-catalog. Required so every email ends up in the admin log. */
+  templateKey: string
+  /** Optional link to an order for order/return emails. */
+  orderId?: string | null
+  /** Locale used for rendering (nl/en). */
+  locale?: string
+  /** Optional extra metadata stored with the log. */
+  metadata?: Record<string, unknown>
+}
+
+interface SendAndLogResult<T> {
+  success: boolean
+  data?: T
+  error?: unknown
+}
+
+/**
+ * Send an email via Resend and log the result into `order_emails`.
+ * Never throws — returns a `SendAndLogResult` the caller can forward.
+ */
+async function sendAndLog(
+  payload: ResendPayload,
+  options: SendAndLogOptions
+): Promise<SendAndLogResult<{ id: string }>> {
+  const template: EmailTemplateDefinition | undefined =
+    EMAIL_TEMPLATES_BY_KEY[options.templateKey]
+  const emailType = template?.category ?? 'other'
+  const recipient = Array.isArray(payload.to)
+    ? payload.to[0]
+    : (payload.to as string)
+
+  try {
+    const { data, error } = await resend.emails.send(payload)
+
+    if (error) {
+      console.error(`❌ ${options.templateKey}: resend error`, error)
+      await logEmail({
+        emailType,
+        templateKey: options.templateKey,
+        orderId: options.orderId ?? null,
+        recipientEmail: recipient,
+        subject: String(payload.subject || ''),
+        status: 'failed',
+        errorMessage:
+          (error as any)?.message || JSON.stringify(error) || 'Unknown error',
+        locale: options.locale,
+        metadata: options.metadata,
+      })
+      return { success: false, error }
+    }
+
+    console.log(`✅ ${options.templateKey} sent`, data)
+    await logEmail({
+      emailType,
+      templateKey: options.templateKey,
+      orderId: options.orderId ?? null,
+      recipientEmail: recipient,
+      subject: String(payload.subject || ''),
+      status: 'sent',
+      resendId: data?.id,
+      locale: options.locale,
+      metadata: options.metadata,
+    })
+    return { success: true, data: data ?? undefined }
+  } catch (err) {
+    console.error(`❌ ${options.templateKey}: unexpected error`, err)
+    await logEmail({
+      emailType,
+      templateKey: options.templateKey,
+      orderId: options.orderId ?? null,
+      recipientEmail: recipient,
+      subject: String(payload.subject || ''),
+      status: 'failed',
+      errorMessage: (err as any)?.message || 'Unknown error',
+      locale: options.locale,
+      metadata: options.metadata,
+    })
+    return { success: false, error: err }
+  }
+}
 
 // =====================================================
 // ORDER EMAILS
@@ -160,39 +252,21 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
     console.log('📬 Email Subject:', subject)
     console.log('═══════════════════════════════════════════')
 
-    // Send via Resend
-    const { data, error } = await resend.emails.send({
-      from: 'MOSE Webshop <orders@mosewear.com>',
-      to: [props.customerEmail],
-      subject,
-      html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending order confirmation email:', error)
-      // Log failed email
-      await logEmail({
-        orderId: props.orderId,
-        emailType: isFullPresaleOrder ? 'preorder_confirmation' : 'order_confirmation',
-        recipientEmail: props.customerEmail,
+    return await sendAndLog(
+      {
+        from: 'MOSE Webshop <orders@mosewear.com>',
+        to: [props.customerEmail],
         subject,
-        status: 'failed',
-        errorMessage: error.message || 'Unknown error',
-      })
-      return { success: false, error }
-    }
-
-    // Log successful email
-    await logEmail({
-      orderId: props.orderId,
-      emailType: isFullPresaleOrder ? 'preorder_confirmation' : 'order_confirmation',
-      recipientEmail: props.customerEmail,
-      subject,
-      status: 'sent',
-    })
-
-    console.log(`✅ ${isFullPresaleOrder ? 'Preorder' : 'Order'} confirmation email sent:`, data)
-    return { success: true, data }
+        html,
+      },
+      {
+        templateKey: isFullPresaleOrder
+          ? 'preorder_confirmation'
+          : 'order_confirmation',
+        orderId: props.orderId,
+        locale,
+      }
+    )
   } catch (error) {
     console.error('❌ Error sending order confirmation email:', error)
     return { success: false, error }
@@ -230,22 +304,21 @@ export async function sendShippingConfirmationEmail(props: {
       })
     )
 
-    const { data, error } = await resend.emails.send({
-      from: 'MOSE Webshop <orders@mosewear.com>',
-      to: [props.customerEmail],
-      subject: t('shipping.subject', { 
-        orderNumber: props.orderId.slice(0, 8).toUpperCase() 
-      }),
-      html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending shipping confirmation email:', error)
-      return { success: false, error }
-    }
-
-    console.log('✅ Shipping confirmation email sent:', data)
-    return { success: true, data }
+    return await sendAndLog(
+      {
+        from: 'MOSE Webshop <orders@mosewear.com>',
+        to: [props.customerEmail],
+        subject: t('shipping.subject', {
+          orderNumber: props.orderId.slice(0, 8).toUpperCase(),
+        }),
+        html,
+      },
+      {
+        templateKey: 'shipping_confirmation',
+        orderId: props.orderId,
+        locale,
+      }
+    )
   } catch (error) {
     console.error('❌ Error sending shipping confirmation email:', error)
     return { success: false, error }
@@ -285,27 +358,21 @@ export async function sendOrderProcessingEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('processing.subject', { 
-        orderNumber: props.orderId.slice(0, 8).toUpperCase() 
+      subject: t('processing.subject', {
+        orderNumber: props.orderId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending processing email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'order_processing',
+      orderId: props.orderId,
+      locale,
     }
-
-    console.log('✅ Order processing email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending processing email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -346,27 +413,21 @@ export async function sendOrderDeliveredEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('delivered.subject', { 
-        orderNumber: props.orderId.slice(0, 8).toUpperCase() 
+      subject: t('delivered.subject', {
+        orderNumber: props.orderId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending delivered email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'order_delivered',
+      orderId: props.orderId,
+      locale,
     }
-
-    console.log('✅ Order delivered email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending delivered email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -403,27 +464,21 @@ export async function sendOrderCancelledEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('cancelled.subject', { 
-        orderNumber: props.orderId.slice(0, 8).toUpperCase() 
+      subject: t('cancelled.subject', {
+        orderNumber: props.orderId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending cancelled email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'order_cancelled',
+      orderId: props.orderId,
+      locale,
     }
-
-    console.log('✅ Order cancelled email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending cancelled email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 // =====================================================
@@ -476,27 +531,22 @@ export async function sendReturnRequestedEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnRequested.subject', { 
-        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
+      subject: t('returnRequested.subject', {
+        returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending return requested email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'return_requested',
+      orderId: props.orderId,
+      locale,
+      metadata: { returnId: props.returnId },
     }
-
-    console.log('✅ Return requested email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending return requested email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -535,33 +585,30 @@ export async function sendReturnLabelGeneratedEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnLabelGenerated.subject', { 
-        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
+      subject: t('returnLabelGenerated.subject', {
+        returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       }),
       html,
-      attachments: props.labelUrl ? [
-        {
-          filename: `retourlabel-${props.returnId.slice(0, 8)}.pdf`,
-          path: props.labelUrl,
-        },
-      ] : [],
-    })
-
-    if (error) {
-      console.error('❌ Error sending return label email:', error)
-      return { success: false, error }
+      attachments: props.labelUrl
+        ? [
+            {
+              filename: `retourlabel-${props.returnId.slice(0, 8)}.pdf`,
+              path: props.labelUrl,
+            },
+          ]
+        : [],
+    },
+    {
+      templateKey: 'return_label_generated',
+      orderId: props.orderId,
+      locale,
+      metadata: { returnId: props.returnId },
     }
-
-    console.log('✅ Return label email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending return label email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -602,27 +649,22 @@ export async function sendReturnApprovedEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnApproved.subject', { 
-        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
+      subject: t('returnApproved.subject', {
+        returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending return approved email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'return_approved',
+      orderId: props.orderId,
+      locale,
+      metadata: { returnId: props.returnId },
     }
-
-    console.log('✅ Return approved email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending return approved email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -660,27 +702,22 @@ export async function sendReturnRefundedEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnRefunded.subject', { 
-        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
+      subject: t('returnRefunded.subject', {
+        returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending return refunded email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'return_refunded',
+      orderId: props.orderId,
+      locale,
+      metadata: { returnId: props.returnId, refundAmount: props.refundAmount },
     }
-
-    console.log('✅ Return refunded email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending return refunded email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -717,27 +754,22 @@ export async function sendReturnRejectedEmail(props: {
     })
   )
 
-  try {
-    const { data, error} = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Returns <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('returnRejected.subject', { 
-        returnNumber: props.returnId.slice(0, 8).toUpperCase() 
+      subject: t('returnRejected.subject', {
+        returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending return rejected email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'return_rejected',
+      orderId: props.orderId,
+      locale,
+      metadata: { returnId: props.returnId },
     }
-
-    console.log('✅ Return rejected email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending return rejected email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 // =====================================================
@@ -797,25 +829,20 @@ export async function sendAbandonedCartEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Cart <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('abandonedCart.subject'),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending abandoned cart email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'abandoned_cart',
+      orderId: props.orderId,
+      locale,
+      metadata: { hoursSinceAbandoned: props.hoursSinceAbandoned },
     }
-
-    console.log('✅ Abandoned cart email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending abandoned cart email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -868,25 +895,22 @@ export async function sendBackInStockEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Notifications <info@mosewear.com>',
       to: [props.customerEmail],
       subject: t('backInStock.subject', { productName: props.productName }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending back in stock email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'back_in_stock',
+      locale,
+      metadata: {
+        productName: props.productName,
+        productSlug: props.productSlug,
+      },
     }
-
-    console.log('✅ Back in stock email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending back in stock email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -922,25 +946,19 @@ export async function sendNewsletterWelcomeEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Newsletter <info@mosewear.com>',
       to: [props.email],
       subject: t('newsletterWelcome.subject'),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending newsletter welcome email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'newsletter_welcome',
+      locale,
+      metadata: { source: props.source, promoCode: props.promoCode },
     }
-
-    console.log('✅ Newsletter welcome email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending newsletter welcome email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 // =====================================================
@@ -990,8 +1008,8 @@ export async function sendNewReviewNotificationEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Reviews <info@mosewear.com>',
       to: [adminEmail],
       replyTo: props.reviewerEmail,
@@ -1000,19 +1018,18 @@ export async function sendNewReviewNotificationEmail(props: {
       headers: {
         'X-Entity-Ref-ID': `review-${props.reviewId}`,
       },
-    })
-
-    if (error) {
-      console.error('❌ Error sending new review notification email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'new_review_notification',
+      locale,
+      metadata: {
+        reviewId: props.reviewId,
+        rating: props.rating,
+        reviewerEmail: props.reviewerEmail,
+        productSlug: props.productSlug,
+      },
     }
-
-    console.log('✅ New review notification email sent:', data)
-    return { success: true, data }
-  } catch (error: any) {
-    console.error('❌ Error sending new review notification email:', error)
-    return { success: false, error: error?.message || 'Unknown error' }
-  }
+  )
 }
 
 /**
@@ -1058,8 +1075,8 @@ export async function sendContactFormEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Contact <info@mosewear.com>',
       to: [adminEmail],
       replyTo: props.email,
@@ -1068,19 +1085,17 @@ export async function sendContactFormEmail(props: {
       headers: {
         'X-Entity-Ref-ID': `contact-${Date.now()}`,
       },
-    })
-
-    if (error) {
-      console.error('❌ Error sending contact form email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'contact_form',
+      locale,
+      metadata: {
+        fromName: props.name,
+        fromEmail: props.email,
+        topic: props.subject,
+      },
     }
-
-    console.log('✅ Contact form email sent:', data)
-    return { success: true, data }
-  } catch (error: any) {
-    console.error('❌ Error sending contact form email:', error)
-    return { success: false, error: error?.message || 'Unknown error' }
-  }
+  )
 }
 
 /**
@@ -1149,25 +1164,19 @@ export async function sendInsiderWelcomeEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderWelcome.title'),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending insider welcome email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'insider_welcome',
+      locale,
+      metadata: { promoCode: props.promoCode },
     }
-
-    console.log('✅ Insider welcome email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending insider welcome email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -1237,25 +1246,22 @@ export async function sendInsiderCommunityEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderCommunity.title'),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending insider community email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'insider_community',
+      locale,
+      metadata: {
+        subscriberCount: props.subscriberCount,
+        daysUntilLaunch: props.daysUntilLaunch,
+      },
     }
-
-    console.log('✅ Insider community email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending insider community email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -1289,25 +1295,19 @@ export async function sendInsiderBehindScenesEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderBehindScenes.title'),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending insider behind scenes email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'insider_behind_scenes',
+      locale,
+      metadata: { daysUntilLaunch: props.daysUntilLaunch },
     }
-
-    console.log('✅ Insider behind scenes email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending insider behind scenes email:', error)
-    return { success: false, error }
-  }
+  )
 }
 
 /**
@@ -1342,24 +1342,21 @@ export async function sendInsiderLaunchWeekEmail(props: {
     })
   )
 
-  try {
-    const { data, error } = await resend.emails.send({
+  return await sendAndLog(
+    {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderLaunchWeek.title', { days: props.daysUntilLaunch }),
       html,
-    })
-
-    if (error) {
-      console.error('❌ Error sending insider launch week email:', error)
-      return { success: false, error }
+    },
+    {
+      templateKey: 'insider_launch_week',
+      locale,
+      metadata: {
+        daysUntilLaunch: props.daysUntilLaunch,
+        limitedItems: props.limitedItems,
+      },
     }
-
-    console.log('✅ Insider launch week email sent:', data)
-    return { success: true, data }
-  } catch (error) {
-    console.error('❌ Error sending insider launch week email:', error)
-    return { success: false, error }
-  }
+  )
 }
 

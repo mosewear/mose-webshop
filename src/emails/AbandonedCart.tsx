@@ -1,16 +1,16 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-  Img,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
-import EmailButton from './components/EmailButton'
+import EmailHero from './components/EmailHero'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailItemRow from './components/EmailItemRow'
+import EmailBreakdown from './components/EmailBreakdown'
+import EmailCta from './components/EmailCta'
+import EmailCallout from './components/EmailCallout'
+import EmailShopMore from './components/EmailShopMore'
+import EmailParagraph from './components/EmailParagraph'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_SITE_URL } from './tokens'
 
 interface CartItem {
   name: string
@@ -25,10 +25,15 @@ interface AbandonedCartEmailProps {
   totalAmount: number
   cartUrl: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
+}
+
+function formatPrice(amount: number) {
+  return `€${amount.toFixed(2).replace('.', ',')}`
 }
 
 export default function AbandonedCartEmail({
@@ -37,238 +42,99 @@ export default function AbandonedCartEmail({
   totalAmount,
   cartUrl,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: AbandonedCartEmailProps) {
+  const visibleItems = items.slice(0, 3)
+  const hiddenCount = items.length > 3 ? items.length - 3 : 0
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('abandonedCart.preheader', { name: customerName }) ||
+        `${customerName}, je winkelwagen wacht nog op je.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('abandonedCart.status') || 'Cart Reminder'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="shopping-cart" color="#FF9500" size={38} />
-            <Text style={title}>{t('abandonedCart.title')}</Text>
-            <Text style={subtitle}>
-              {t('abandonedCart.subtitle', { name: customerName })}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('abandonedCart.badge') || '▲ Still Yours'}
+        title={t('abandonedCart.heroTitle') || 'Don\u2019t\nForget.'}
+        subtitle={
+          t('abandonedCart.subtitle', { name: customerName }) ||
+          `${customerName}, we bewaren je cart — maar niet voor eeuwig.`
+        }
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={description}>
-              {t('abandonedCart.description')}
-            </Text>
-          </Section>
+      <EmailModule padding="28px 30px">
+        <EmailParagraph>
+          {t('abandonedCart.description') ||
+            'Je hebt items achtergelaten in je winkelwagen. Rond je bestelling af voordat je maat wegraakt.'}
+        </EmailParagraph>
+      </EmailModule>
 
-          {/* Cart Items */}
-          <Section style={itemsSection}>
-            {items.slice(0, 3).map((item, index) => (
-              <Section key={index} style={itemBox}>
-                <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-                  <tr>
-                    <td style={{ width: '100px', verticalAlign: 'top' }}>
-                      {item.imageUrl && (
-                        <Img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          style={itemImage}
-                        />
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: 'middle', paddingLeft: '16px' }}>
-                      <Text style={itemName}>{item.name}</Text>
-                      <Text style={itemDetails}>
-                        {t('abandonedCart.quantity')}: {item.quantity} × €{item.price.toFixed(2)}
-                      </Text>
-                    </td>
-                  </tr>
-                </table>
-              </Section>
-            ))}
-            {items.length > 3 && (
-              <Text style={moreItems}>
-                {t('abandonedCart.moreItems', { count: items.length - 3 })}
-              </Text>
-            )}
-          </Section>
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle
+          title={t('abandonedCart.itemsTitle') || 'In je cart'}
+          meta={`${items.length}× ${t('abandonedCart.itemsMeta') || 'items'}`}
+        />
+        <div style={{ marginTop: '18px' }}>
+          {visibleItems.map((item, index) => (
+            <EmailItemRow
+              key={index}
+              name={item.name}
+              meta={`${t('abandonedCart.quantity') || 'Aantal'}: ${item.quantity}`}
+              price={formatPrice(item.price * item.quantity)}
+              imageUrl={item.imageUrl}
+              siteUrl={siteUrl}
+              last={index === visibleItems.length - 1 && hiddenCount === 0}
+            />
+          ))}
+          {hiddenCount > 0 ? (
+            <EmailParagraph tone="muted" align="center" mt={10} mb={0}>
+              {t('abandonedCart.moreItems', { count: hiddenCount }) ||
+                `+ ${hiddenCount} meer items`}
+            </EmailParagraph>
+          ) : null}
+        </div>
+      </EmailModule>
 
-          {/* Total */}
-          <Section style={totalSection}>
-            <Text style={totalLabel}>{t('abandonedCart.total')}</Text>
-            <Text style={totalAmountStyle}>€{totalAmount.toFixed(2)}</Text>
-          </Section>
+      <EmailModule padding="24px 30px" background={EMAIL_COLORS.sectionAlt}>
+        <EmailBreakdown
+          rows={[
+            {
+              label: t('abandonedCart.total') || 'Totaal',
+              value: formatPrice(totalAmount),
+              strong: true,
+              tone: 'highlight',
+            },
+          ]}
+        />
+      </EmailModule>
 
-          {/* CTA */}
-          <Section style={ctaSection}>
-            <EmailButton href={cartUrl}>
-              {t('abandonedCart.ctaButton')}
-            </EmailButton>
-          </Section>
+      <EmailCta
+        href={cartUrl}
+        label={`${t('abandonedCart.ctaButton') || 'Ga terug naar je cart'}  →`}
+        footnote={t('abandonedCart.ctaFootnote') || 'Jouw items wachten op je.'}
+      />
 
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="truck" color="#00B67A" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('abandonedCart.freeShipping')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+      <EmailCallout tone="success" title={t('abandonedCart.freeShippingTitle') || 'Altijd gratis verzending'}>
+        {t('abandonedCart.freeShipping') ||
+          'Bij elke bestelling, zonder minimum. Gewoon omdat het hoort.'}
+      </EmailCallout>
 
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
-          />
-        </Container>
-      </Body>
-    </Html>
+      <EmailShopMore siteUrl={siteUrl} locale={locale} />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const content = {
-  padding: '0 24px 24px',
-}
-
-const description = {
-  margin: '0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const itemsSection = {
-  padding: '0 24px 24px',
-}
-
-const itemBox = {
-  marginBottom: '16px',
-  padding: '16px',
-  backgroundColor: '#f7fafc',
-  border: '2px solid #e2e8f0',
-}
-
-const itemImage = {
-  width: '100px',
-  height: '100px',
-  objectFit: 'cover' as const,
-}
-
-const itemName = {
-  margin: '0 0 8px 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#000000',
-}
-
-const itemDetails = {
-  margin: '0',
-  fontSize: '14px',
-  color: '#718096',
-}
-
-const moreItems = {
-  margin: '16px 0 0 0',
-  fontSize: '14px',
-  color: '#718096',
-  textAlign: 'center' as const,
-  fontStyle: 'italic' as const,
-}
-
-const totalSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const totalLabel = {
-  margin: '0 0 8px 0',
-  fontSize: '16px',
-  fontWeight: '600',
-  color: '#718096',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const totalAmountStyle = {
-  margin: '0',
-  fontSize: '32px',
-  fontWeight: '900',
-  color: '#000000',
-  letterSpacing: '2px',
-}
-
-const ctaSection = {
-  margin: '32px 0',
-  textAlign: 'center' as const,
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#F0FDF4',
-  border: '2px solid #00B67A',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-

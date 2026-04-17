@@ -1,12 +1,13 @@
-import { Section, Img } from '@react-email/components'
+import { Img, Section } from '@react-email/components'
+import { EMAIL_COLORS, EMAIL_SITE_URL } from '../tokens'
 
-type IconType = 
-  | 'check-circle' 
+type IconType =
+  | 'check-circle'
   | 'check'
-  | 'truck' 
-  | 'settings' 
-  | 'x' 
-  | 'shopping-cart' 
+  | 'truck'
+  | 'settings'
+  | 'x'
+  | 'shopping-cart'
   | 'package'
   | 'clock'
   | 'calendar'
@@ -20,61 +21,20 @@ interface IconCircleProps {
   size?: number
 }
 
+/**
+ * MOSE brutalist icon tile — vierkant (geen rounded corners) in de MOSE
+ * brand kleur als default. Behoudt de oude API voor backwards-compat.
+ */
 const colorMap: Record<string, string> = {
-  success: '#2ECC71',
-  processing: '#667eea',
-  shipping: '#FF9500',
-  cancelled: '#e74c3c',
-  cart: '#FF6B6B',
-}
-
-export default function IconCircle({ 
-  icon, 
-  color = 'success',
-  size = 38 
-}: IconCircleProps) {
-  const bgColor = colorMap[color] || color
-  const circleSize = size + 34
-  
-  // Use hosted PNG images from public folder (deployed to Vercel)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
-  const iconUrl = `${siteUrl}/email-icons/icon-${icon}.png`
-
-  return (
-    <Section style={container}>
-      <table cellPadding="0" cellSpacing="0" border={0} style={{ margin: '0 auto' }}>
-        <tr>
-          <td
-            style={{
-              ...iconCircle,
-              backgroundColor: bgColor,
-              width: `${circleSize}px`,
-              height: `${circleSize}px`,
-              minWidth: `${circleSize}px`,
-              minHeight: `${circleSize}px`,
-              maxWidth: `${circleSize}px`,
-              maxHeight: `${circleSize}px`,
-              textAlign: 'center',
-              verticalAlign: 'middle',
-            }}
-          >
-            <Img
-              src={iconUrl}
-              width={size}
-              height={size}
-              alt={icon}
-              style={{
-                display: 'block',
-                margin: '0 auto',
-                width: `${size}px`,
-                height: `${size}px`,
-              }}
-            />
-          </td>
-        </tr>
-      </table>
-    </Section>
-  )
+  success: EMAIL_COLORS.primary,
+  processing: EMAIL_COLORS.primary,
+  shipping: EMAIL_COLORS.warning,
+  cancelled: EMAIL_COLORS.danger,
+  cart: EMAIL_COLORS.warning,
+  warning: EMAIL_COLORS.warning,
+  danger: EMAIL_COLORS.danger,
+  info: EMAIL_COLORS.primary,
+  neutral: EMAIL_COLORS.ink,
 }
 
 const container = {
@@ -83,11 +43,62 @@ const container = {
   textAlign: 'center' as const,
 }
 
-const iconCircle = {
-  borderRadius: '50%',
-  color: '#ffffff',
-  boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+const iconCell = {
+  color: EMAIL_COLORS.paper,
   padding: '0',
   lineHeight: '0',
 }
 
+export default function IconCircle({
+  icon,
+  color = 'success',
+  size = 38,
+}: IconCircleProps) {
+  const bgColor = colorMap[color] || color
+  const tileSize = size + 26
+  const iconUrl = `${EMAIL_SITE_URL}/email-icons/icon-${icon}.png`
+
+  return (
+    <Section style={container}>
+      <table
+        role="presentation"
+        cellPadding={0}
+        cellSpacing={0}
+        border={0}
+        style={{ margin: '0 auto' }}
+      >
+        <tbody>
+          <tr>
+            <td
+              align="center"
+              style={{
+                ...iconCell,
+                backgroundColor: bgColor,
+                width: `${tileSize}px`,
+                height: `${tileSize}px`,
+                minWidth: `${tileSize}px`,
+                minHeight: `${tileSize}px`,
+                textAlign: 'center',
+                verticalAlign: 'middle',
+              }}
+            >
+              <Img
+                src={iconUrl}
+                width={size}
+                height={size}
+                alt={icon}
+                style={{
+                  display: 'block',
+                  margin: '0 auto',
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  border: 0,
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </Section>
+  )
+}

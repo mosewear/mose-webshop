@@ -1,4 +1,5 @@
-import { Section, Row, Column, Img, Text } from '@react-email/components'
+import EmailItemRow from './EmailItemRow'
+import { EMAIL_SITE_URL } from '../tokens'
 
 interface ProductItemProps {
   name: string
@@ -9,8 +10,17 @@ interface ProductItemProps {
   imageUrl?: string
   siteUrl?: string
   t: (key: string) => string
+  /** Laatste item in de lijst? (geen divider onderaan) */
+  last?: boolean
+  /** Presale badge tonen? */
+  isPresale?: boolean
 }
 
+/**
+ * Backwards-compatible ProductItem die intern de nieuwe modulaire
+ * <EmailItemRow /> gebruikt. Zo blijven oude call-sites werken
+ * terwijl we meteen het nieuwe design krijgen.
+ */
 export default function ProductItem({
   name,
   size,
@@ -18,96 +28,28 @@ export default function ProductItem({
   quantity,
   price,
   imageUrl,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
+  siteUrl = EMAIL_SITE_URL,
   t,
+  last = false,
+  isPresale = false,
 }: ProductItemProps) {
-  // Normalize image URL
-  const normalizedImageUrl = imageUrl 
-    ? (imageUrl.startsWith('http') ? imageUrl : `${siteUrl}${imageUrl}`)
-    : ''
+  const metaParts: string[] = []
+  if (color) metaParts.push(color)
+  if (size) metaParts.push(size)
+  metaParts.push(`${quantity}×`)
+  const meta = metaParts.join(' · ')
+
+  const priceLabel = `€${(price * quantity).toFixed(2).replace('.', ',')}`
 
   return (
-    <Section style={productRow}>
-      <Row>
-        <Column style={productImageColumn}>
-          {normalizedImageUrl && (
-            <Img 
-              src={normalizedImageUrl} 
-              width="60" 
-              height="80" 
-              alt={name}
-              style={productImage}
-            />
-          )}
-        </Column>
-        <Column style={productInfo}>
-          <Text style={productName}>{name}</Text>
-          <Text style={productMeta}>
-            {size && `${t('common.size')} ${size}`}
-            {size && color && ' • '}
-            {color && color}
-            {(size || color) && ' • '}
-            {quantity}x {t('common.pieces')}
-          </Text>
-        </Column>
-        <Column style={productPrice}>
-          €{(price * quantity).toFixed(2)}
-        </Column>
-      </Row>
-    </Section>
+    <EmailItemRow
+      name={name}
+      meta={meta}
+      price={priceLabel}
+      imageUrl={imageUrl}
+      siteUrl={siteUrl}
+      last={last}
+      badge={isPresale ? (t('common.presale') || 'PRESALE') : undefined}
+    />
   )
 }
-
-const productRow = {
-  backgroundColor: '#f8f8f8',
-  padding: '16px',
-  borderLeft: '3px solid #2ECC71',
-  marginBottom: '10px',
-}
-
-const productImageColumn = {
-  width: '60px',
-  verticalAlign: 'middle' as const,
-}
-
-const productImage = {
-  width: '60px',
-  height: '80px',
-  objectFit: 'cover' as const,
-  border: '1px solid #e0e0e0',
-}
-
-const productInfo = {
-  verticalAlign: 'middle' as const,
-  paddingLeft: '12px',
-}
-
-const productName = {
-  fontSize: '14px',
-  fontWeight: 700,
-  textTransform: 'uppercase' as const,
-  margin: '0 0 5px 0',
-  color: '#000',
-}
-
-const productMeta = {
-  fontSize: '12px',
-  color: '#666',
-  margin: '0',
-}
-
-const productPrice = {
-  fontSize: '17px',
-  fontWeight: 900,
-  textAlign: 'right' as const,
-  verticalAlign: 'middle' as const,
-  paddingLeft: '12px',
-  color: '#000',
-}
-
-
-
-
-
-
-

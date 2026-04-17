@@ -1,14 +1,14 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailCallout from './components/EmailCallout'
+import EmailParagraph from './components/EmailParagraph'
+import EmailCta from './components/EmailCta'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface ReturnRequestedEmailProps {
   orderNumber: string
@@ -19,6 +19,7 @@ interface ReturnRequestedEmailProps {
     quantity: number
   }>
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -31,188 +32,138 @@ export default function ReturnRequestedEmail({
   customerName,
   items,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: ReturnRequestedEmailProps) {
+  const firstName = customerName.split(' ')[0] || customerName
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('returnRequested.preheader', { returnNumber }) ||
+        `Je retour ${returnNumber} is ontvangen. We verwerken het binnen 2 werkdagen.`
+      }
+    >
+      <EmailHeader
+        siteUrl={siteUrl}
+        status={t('returnRequested.status') || 'Return Requested'}
+        statusColor={EMAIL_COLORS.warning}
+      />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="package" color="#FF9500" size={38} />
-            <Text style={title}>{t('returnRequested.title')}</Text>
-            <Text style={subtitle}>
-              {t('returnRequested.subtitle', { name: customerName })}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('returnRequested.badge') || '↺ Retour Geregistreerd'}
+        badgeColor={EMAIL_COLORS.warning}
+        title={`${t('returnRequested.heroGreeting') || 'Return'},\n${firstName}.`}
+        subtitle={
+          t('returnRequested.heroSubtitle') ||
+          'We hebben je retour-aanvraag ontvangen. Binnen 2 werkdagen hoor je of alles is goedgekeurd.'
+        }
+      />
 
-          {/* Return Info */}
-          <Section style={infoSection}>
-            <Text style={infoLabel}>{t('returnRequested.returnNumber')}</Text>
-            <Text style={infoValue}>{returnNumber}</Text>
-            <Text style={infoLabel}>{t('returnRequested.orderNumber')}</Text>
-            <Text style={infoValue}>{orderNumber}</Text>
-          </Section>
+      <EmailMetaGrid
+        pairs={[
+          { label: t('returnRequested.returnNumber') || 'Retour', value: `#${returnNumber}` },
+          { label: t('returnRequested.orderNumber') || 'Order', value: `#${orderNumber}` },
+        ]}
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={description}>
-              {t('returnRequested.description')}
-            </Text>
-          </Section>
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle
+          title={t('returnRequested.itemsTitle') || 'Te retourneren items'}
+          meta={`${items.length} ${items.length === 1 ? 'item' : 'items'}`}
+        />
+        <div style={{ marginTop: '18px' }}>
+          {items.map((item, idx) => (
+            <div
+              key={idx}
+              style={{
+                padding: '14px 0',
+                borderBottom:
+                  idx === items.length - 1
+                    ? 'none'
+                    : `1px solid ${EMAIL_COLORS.border}`,
+              }}
+            >
+              <table
+                role="presentation"
+                width="100%"
+                cellPadding={0}
+                cellSpacing={0}
+                border={0}
+              >
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        fontFamily: EMAIL_FONTS.display,
+                        fontSize: '18px',
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        color: EMAIL_COLORS.ink,
+                      }}
+                    >
+                      {item.name}
+                    </td>
+                    <td
+                      align="right"
+                      style={{
+                        fontFamily: EMAIL_FONTS.body,
+                        fontSize: '13px',
+                        color: EMAIL_COLORS.textMuted,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.quantity}×
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      </EmailModule>
 
-          {/* Items */}
-          <Section style={itemsSection}>
-            <Text style={sectionTitle}>{t('returnRequested.itemsTitle')}</Text>
-            {items.map((item, index) => (
-              <Text key={index} style={itemText}>
-                • {item.name} (x{item.quantity})
-              </Text>
-            ))}
-          </Section>
+      <EmailModule padding="26px 30px" background={EMAIL_COLORS.sectionAlt}>
+        <EmailParagraph>
+          {t('returnRequested.description') ||
+            'Zodra we je aanvraag hebben beoordeeld sturen we je het retourlabel. Verstuur je items in de originele staat met labels nog bevestigd.'}
+        </EmailParagraph>
+      </EmailModule>
 
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="clock" color="#FF9500" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('returnRequested.processingTime')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+      <EmailCallout tone="warning" title={t('returnRequested.processingTimeTitle') || 'Verwerkingstijd'}>
+        {t('returnRequested.processingTime') ||
+          'We beoordelen retour-aanvragen binnen 2 werkdagen. Je hoort zo snel mogelijk van ons.'}
+      </EmailCallout>
 
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
-          />
-        </Container>
-      </Body>
-    </Html>
+      <EmailCta
+        href={`${siteUrl}/${locale}/account/returns/${returnNumber}`}
+        label={`${t('returnRequested.viewCta') || 'Bekijk mijn retour'}  →`}
+        footnote={
+          <>
+            {t('returnRequested.questions') || 'Vragen?'}{' '}
+            <a
+              href={`mailto:${contactEmail}`}
+              style={{ color: EMAIL_COLORS.primary, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {contactEmail}
+            </a>
+          </>
+        }
+      />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const infoSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const infoLabel = {
-  margin: '16px 0 8px 0',
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#718096',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const infoValue = {
-  margin: '0',
-  fontSize: '20px',
-  fontWeight: '900',
-  color: '#000000',
-  letterSpacing: '2px',
-}
-
-const content = {
-  padding: '0 24px 24px',
-}
-
-const description = {
-  margin: '0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const itemsSection = {
-  padding: '0 24px 24px',
-}
-
-const sectionTitle = {
-  margin: '0 0 16px 0',
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const itemText = {
-  margin: '8px 0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#4a5568',
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#FFF4E5',
-  border: '2px solid #FF9500',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-

@@ -1,14 +1,16 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailSteps from './components/EmailSteps'
+import EmailParagraph from './components/EmailParagraph'
+import EmailCta from './components/EmailCta'
+import EmailCallout from './components/EmailCallout'
+import EmailShopMore from './components/EmailShopMore'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface InsiderLaunchWeekEmailProps {
   email: string
@@ -16,6 +18,7 @@ interface InsiderLaunchWeekEmailProps {
   limitedItems: string[]
   t: (key: string, options?: any) => string
   siteUrl?: string
+  locale?: string
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
@@ -26,317 +29,147 @@ export default function InsiderLaunchWeekEmail({
   daysUntilLaunch,
   limitedItems,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  siteUrl = EMAIL_SITE_URL,
+  locale = 'nl',
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: InsiderLaunchWeekEmailProps) {
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('insiderLaunchWeek.preheader', { days: daysUntilLaunch }) ||
+        `Nog ${daysUntilLaunch} dagen tot de drop — dit is wat je moet weten.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('insiderLaunchWeek.status') || 'Launch Week'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="calendar" color="#00B67A" size={38} />
-            <Text style={title}>{t('insiderLaunchWeek.title')}</Text>
-            <Text style={subtitle}>{t('insiderLaunchWeek.subtitle', { days: daysUntilLaunch })}</Text>
-          </Section>
+      <EmailHero
+        badge={t('insiderLaunchWeek.badge') || '▲ Launch Week'}
+        title={t('insiderLaunchWeek.heroTitle') || 'Launch\nWeek.'}
+        subtitle={
+          t('insiderLaunchWeek.subtitle', { days: daysUntilLaunch }) ||
+          `Nog ${daysUntilLaunch} dagen. Zorg dat je klaar staat.`
+        }
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={introText}>
-              {t('insiderLaunchWeek.intro', { days: daysUntilLaunch })}
-            </Text>
+      <EmailMetaGrid
+        pairs={[
+          {
+            label: t('insiderLaunchWeek.countdownLabel') || 'Dagen tot drop',
+            value: String(daysUntilLaunch),
+          },
+          {
+            label: t('insiderLaunchWeek.accessLabel') || 'Early access',
+            value: '24H',
+          },
+        ]}
+      />
 
-            {/* What This Means Section */}
-            <Text style={sectionTitle}>{t('insiderLaunchWeek.whatThisMeansTitle')}</Text>
-            
-            <Section style={infoBox}>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '16px' }}>
-                <tr>
-                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                    <Text style={bulletPoint}>•</Text>
-                  </td>
-                  <td style={{ verticalAlign: 'top' }}>
-                    <Text style={infoText}>{t('insiderLaunchWeek.info1')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '16px' }}>
-                <tr>
-                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                    <Text style={bulletPoint}>•</Text>
-                  </td>
-                  <td style={{ verticalAlign: 'top' }}>
-                    <Text style={infoText}>{t('insiderLaunchWeek.info2')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-                <tr>
-                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                    <Text style={bulletPoint}>•</Text>
-                  </td>
-                  <td style={{ verticalAlign: 'top' }}>
-                    <Text style={infoText}>{t('insiderLaunchWeek.info3')}</Text>
-                  </td>
-                </tr>
-              </table>
-            </Section>
+      <EmailModule padding="28px 30px">
+        <EmailParagraph>
+          {t('insiderLaunchWeek.intro', { days: daysUntilLaunch }) ||
+            `Over ${daysUntilLaunch} dagen openen we de drop. Als insider zit je vooraan.`}
+        </EmailParagraph>
+      </EmailModule>
 
-            {/* Insider Perks Remain */}
-            <Text style={sectionTitle}>{t('insiderLaunchWeek.perksRemainTitle')}</Text>
-            
-            <Section style={perksList}>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
-                <tr>
-                  <td style={{ width: '50px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="check-circle" color="#00B67A" size={18} />
-                  </td>
-                  <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={perkText}>{t('insiderLaunchWeek.perk1')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
-                <tr>
-                  <td style={{ width: '50px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="check-circle" color="#00B67A" size={18} />
-                  </td>
-                  <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={perkText}>{t('insiderLaunchWeek.perk2')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-                <tr>
-                  <td style={{ width: '50px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="check-circle" color="#00B67A" size={18} />
-                  </td>
-                  <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={perkText}>{t('insiderLaunchWeek.perk3')}</Text>
-                  </td>
-                </tr>
-              </table>
-            </Section>
-
-            {/* Status Check */}
-            <Section style={statusSection}>
-              <Text style={statusTitle}>{t('insiderLaunchWeek.statusTitle')}</Text>
-              <Text style={statusText}>{t('insiderLaunchWeek.statusAlready')}</Text>
-              <Text style={statusText}>{t('insiderLaunchWeek.statusNotYet')}</Text>
-              
-              {limitedItems.length > 0 && (
-                <>
-                  <Text style={statusSubtitle}>{t('insiderLaunchWeek.limitedStockTitle')}</Text>
-                  {limitedItems.map((item, index) => (
-                    <Text key={index} style={limitedItemText}>• {item}</Text>
-                  ))}
-                </>
-              )}
-            </Section>
-
-            {/* CTA */}
-            <Section style={ctaSection}>
-              <a href={`${siteUrl}/shop`} style={button}>
-                {t('insiderLaunchWeek.shopNow')}
-              </a>
-            </Section>
-
-            {/* Closing */}
-            <Text style={closingText}>
-              {t('insiderLaunchWeek.closing')}
-            </Text>
-
-            {/* PS */}
-            <Text style={psText}>
-              {t('insiderLaunchWeek.ps')}
-            </Text>
-          </Section>
-
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle
+          title={t('insiderLaunchWeek.whatThisMeansTitle') || 'Wat dit betekent'}
+        />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            variant="bullet"
+            steps={[
+              t('insiderLaunchWeek.info1') || 'Jij krijgt als eerste toegang — 24 uur eerder.',
+              t('insiderLaunchWeek.info2') || 'Limited stock per stuk — op = op.',
+              t('insiderLaunchWeek.info3') || 'Geen restocks, geen tweede kansen.',
+            ]}
           />
-        </Container>
-      </Body>
-    </Html>
+        </div>
+      </EmailModule>
+
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle
+          title={t('insiderLaunchWeek.perksRemainTitle') || 'Je insider perks'}
+        />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            variant="numbered"
+            steps={[
+              t('insiderLaunchWeek.perk1') || 'Early access tot de drop.',
+              t('insiderLaunchWeek.perk2') || 'Altijd gratis verzending in NL.',
+              t('insiderLaunchWeek.perk3') || 'Insider-only pieces.',
+            ]}
+          />
+        </div>
+      </EmailModule>
+
+      <EmailCallout
+        tone="warning"
+        title={t('insiderLaunchWeek.statusTitle') || 'Status check'}
+      >
+        <div style={{ marginBottom: '8px' }}>
+          {t('insiderLaunchWeek.statusAlready') || 'Al ingelogd? Dan staat alles klaar.'}
+        </div>
+        <div>
+          {t('insiderLaunchWeek.statusNotYet') ||
+            'Nog niet? Log vandaag in zodat je op drop day geen tijd verliest.'}
+        </div>
+      </EmailCallout>
+
+      {limitedItems.length > 0 ? (
+        <EmailModule padding="28px 30px" background={EMAIL_COLORS.sectionAlt}>
+          <EmailSectionTitle
+            title={t('insiderLaunchWeek.limitedStockTitle') || 'Extra beperkt'}
+          />
+          <div style={{ marginTop: '14px' }}>
+            {limitedItems.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  fontFamily: EMAIL_FONTS.display,
+                  fontSize: '16px',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: EMAIL_COLORS.danger,
+                  padding: '8px 0',
+                  borderBottom:
+                    index < limitedItems.length - 1
+                      ? `1px solid ${EMAIL_COLORS.border}`
+                      : 'none',
+                }}
+              >
+                ▲ {item}
+              </div>
+            ))}
+          </div>
+        </EmailModule>
+      ) : null}
+
+      <EmailCta
+        href={`${siteUrl}/${locale}/shop`}
+        label={`${t('insiderLaunchWeek.shopNow') || 'Shop de drop'}  →`}
+        variant="teal"
+        footnote={t('insiderLaunchWeek.closing') || 'Zorg dat je op tijd bent. Insider love.'}
+      />
+
+      <EmailModule padding="18px 24px" background={EMAIL_COLORS.sectionAlt} align="center">
+        <EmailParagraph tone="muted" size={12} align="center" mb={0}>
+          {t('insiderLaunchWeek.ps') ||
+            'PS — zet je notifications aan zodat je de drop niet mist.'}
+        </EmailParagraph>
+      </EmailModule>
+
+      <EmailShopMore siteUrl={siteUrl} locale={locale} />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '24px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '1px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '12px 0 0 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#00B67A',
-  letterSpacing: '1px',
-}
-
-const content = {
-  padding: '0 24px 40px',
-}
-
-const introText = {
-  margin: '0 0 24px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-}
-
-const sectionTitle = {
-  margin: '32px 0 16px 0',
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const infoBox = {
-  margin: '16px 0 24px 0',
-  padding: '20px',
-  backgroundColor: '#f7fafc',
-  border: '2px solid #e2e8f0',
-}
-
-const bulletPoint = {
-  margin: '0',
-  fontSize: '20px',
-  fontWeight: '700',
-  color: '#00B67A',
-  lineHeight: '1',
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-}
-
-const perksList = {
-  margin: '16px 0 24px 0',
-}
-
-const perkText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-
-const statusSection = {
-  margin: '32px 0',
-  padding: '24px',
-  backgroundColor: '#fff5e6',
-  border: '2px solid #ffa726',
-}
-
-const statusTitle = {
-  margin: '0 0 16px 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#000000',
-}
-
-const statusText = {
-  margin: '0 0 8px 0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-}
-
-const statusSubtitle = {
-  margin: '16px 0 8px 0',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#000000',
-}
-
-const limitedItemText = {
-  margin: '4px 0',
-  fontSize: '13px',
-  color: '#d84315',
-  fontWeight: '600',
-}
-
-const ctaSection = {
-  margin: '32px 0',
-  textAlign: 'center' as const,
-}
-
-const button = {
-  display: 'inline-block',
-  padding: '16px 48px',
-  backgroundColor: '#00B67A',
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: '700',
-  textDecoration: 'none',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  border: '3px solid #000000',
-  boxShadow: '4px 4px 0 #000000',
-}
-
-const ctaSubtext = {
-  margin: '12px 0 0 0',
-  fontSize: '14px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const closingText = {
-  margin: '24px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-}
-
-const psText = {
-  margin: '16px 0 0 0',
-  fontSize: '13px',
-  lineHeight: '18px',
-  color: '#718096',
-  fontStyle: 'italic' as const,
-}
-

@@ -1,191 +1,129 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailSplitHighlight, { EmailTotalValue } from './components/EmailSplitHighlight'
+import EmailModule from './components/EmailModule'
+import EmailParagraph from './components/EmailParagraph'
+import EmailCallout from './components/EmailCallout'
+import EmailCta from './components/EmailCta'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_SITE_URL } from './tokens'
 
 interface ReturnApprovedEmailProps {
   returnNumber: string
   customerName: string
   refundAmount: number
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
 }
 
+const euro = (n: number) => `€${n.toFixed(2).replace('.', ',')}`
+
 export default function ReturnApprovedEmail({
   returnNumber,
   customerName,
   refundAmount,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: ReturnApprovedEmailProps) {
+  const firstName = customerName.split(' ')[0] || customerName
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('returnApproved.preheader', { amount: euro(refundAmount) }) ||
+        `Je retour is goedgekeurd. We storten ${euro(refundAmount)} terug binnen 3–5 werkdagen.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('returnApproved.status') || 'Return Approved'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="check-circle" color="#00B67A" size={38} />
-            <Text style={title}>{t('returnApproved.title')}</Text>
-            <Text style={subtitle}>
-              {t('returnApproved.subtitle', { name: customerName })}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('returnApproved.badge') || '✓ Goedgekeurd'}
+        title={`${t('returnApproved.heroGreeting') || 'Approved'},\n${firstName}.`}
+        subtitle={
+          t('returnApproved.heroSubtitle') ||
+          'We hebben je retour goedgekeurd. De terugbetaling wordt nu in gang gezet.'
+        }
+      />
 
-          {/* Return Info */}
-          <Section style={infoSection}>
-            <Text style={infoLabel}>{t('returnApproved.returnNumber')}</Text>
-            <Text style={infoValue}>{returnNumber}</Text>
-            <Text style={infoLabel}>{t('returnApproved.refundAmount')}</Text>
-            <Text style={amountValue}>€{refundAmount.toFixed(2)}</Text>
-          </Section>
+      <EmailMetaGrid
+        pairs={[
+          { label: t('returnApproved.returnNumber') || 'Retour', value: `#${returnNumber}` },
+          {
+            label: t('returnApproved.statusLabel') || 'Status',
+            value: t('returnApproved.statusValue') || 'Goedgekeurd',
+          },
+        ]}
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={description}>
-              {t('returnApproved.description')}
-            </Text>
-          </Section>
+      <EmailSplitHighlight
+        left={{
+          label: t('returnApproved.refundLabel') || 'Terugbetaling',
+          body: (
+            <>
+              <strong style={{ fontWeight: 800 }}>
+                {t('returnApproved.refundSoon') || 'Wordt automatisch teruggestort'}
+              </strong>
+              <br />
+              {t('returnApproved.refundMethod') ||
+                'Op de originele betaalmethode binnen 3–5 werkdagen.'}
+            </>
+          ),
+          background: 'paper',
+        }}
+        right={{
+          label: t('returnApproved.refundAmount') || 'Bedrag',
+          body: <EmailTotalValue value={euro(refundAmount)} />,
+          footnote: t('returnApproved.refundProcessing') || 'Refund · In verwerking',
+          background: 'black',
+        }}
+      />
 
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="clock" color="#00B67A" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('returnApproved.processingTime')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+      <EmailModule padding="26px 30px">
+        <EmailParagraph>
+          {t('returnApproved.description') ||
+            'Je ziet het bedrag meestal binnen 3–5 werkdagen terug op je rekening. Afhankelijk van je bank kan dit soms iets langer duren.'}
+        </EmailParagraph>
+      </EmailModule>
 
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
-          />
-        </Container>
-      </Body>
-    </Html>
+      <EmailCallout tone="info" title={t('returnApproved.nextStepsTitle') || 'Wat nu'}>
+        {t('returnApproved.nextSteps') ||
+          'Zodra de terugbetaling is verwerkt sturen we je een bevestigingsmail met het exacte moment van afronding.'}
+      </EmailCallout>
+
+      <EmailCta
+        href={`${siteUrl}/${locale}/shop`}
+        label={`${t('returnApproved.ctaButton') || 'Terug naar shoppen'}  →`}
+        variant="teal"
+        footnote={
+          <>
+            {t('returnApproved.questions') || 'Vragen?'}{' '}
+            <a
+              href={`mailto:${contactEmail}`}
+              style={{ color: EMAIL_COLORS.primary, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {contactEmail}
+            </a>
+          </>
+        }
+      />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const infoSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const infoLabel = {
-  margin: '16px 0 8px 0',
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#718096',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const infoValue = {
-  margin: '0',
-  fontSize: '20px',
-  fontWeight: '900',
-  color: '#000000',
-  letterSpacing: '2px',
-}
-
-const amountValue = {
-  margin: '0',
-  fontSize: '32px',
-  fontWeight: '900',
-  color: '#00B67A',
-  letterSpacing: '2px',
-}
-
-const content = {
-  padding: '0 24px 24px',
-}
-
-const description = {
-  margin: '0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#F0FDF4',
-  border: '2px solid #00B67A',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-

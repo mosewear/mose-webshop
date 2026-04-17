@@ -1,21 +1,20 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
-import EmailButton from './components/EmailButton'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailSteps from './components/EmailSteps'
+import EmailCta from './components/EmailCta'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_SITE_URL } from './tokens'
 
 interface ReturnLabelGeneratedEmailProps {
   returnNumber: string
   customerName: string
   returnLabelUrl: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -27,212 +26,100 @@ export default function ReturnLabelGeneratedEmail({
   customerName,
   returnLabelUrl,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: ReturnLabelGeneratedEmailProps) {
+  const firstName = customerName.split(' ')[0] || customerName
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('returnLabelGenerated.preheader', { returnNumber }) ||
+        `Je retourlabel voor ${returnNumber} staat klaar. Download en plak het op je pakket.`
+      }
+    >
+      <EmailHeader
+        siteUrl={siteUrl}
+        status={t('returnLabelGenerated.status') || 'Label Ready'}
+        statusColor={EMAIL_COLORS.warning}
+      />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="truck" color="#FF9500" size={38} />
-            <Text style={title}>{t('returnLabelGenerated.title')}</Text>
-            <Text style={subtitle}>
-              {t('returnLabelGenerated.subtitle', { name: customerName })}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('returnLabelGenerated.badge') || '▼ Retourlabel Klaar'}
+        badgeColor={EMAIL_COLORS.warning}
+        title={`${t('returnLabelGenerated.heroGreeting') || 'Label'},\n${firstName}.`}
+        subtitle={
+          t('returnLabelGenerated.heroSubtitle') ||
+          'Je retourlabel is klaar. Download het, plak het op het pakket en breng hem langs bij het afleverpunt.'
+        }
+      />
 
-          {/* Return Number */}
-          <Section style={returnSection}>
-            <Text style={returnLabel}>{t('returnLabelGenerated.returnNumber')}</Text>
-            <Text style={returnNumberStyle}>{returnNumber}</Text>
-          </Section>
+      <EmailMetaGrid
+        pairs={[
+          { label: t('returnLabelGenerated.returnNumber') || 'Retour', value: `#${returnNumber}` },
+          {
+            label: t('returnLabelGenerated.statusLabel') || 'Status',
+            value: t('returnLabelGenerated.statusValue') || 'Label Klaar',
+          },
+        ]}
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={description}>
-              {t('returnLabelGenerated.description')}
-            </Text>
-          </Section>
+      <EmailCta
+        href={returnLabelUrl}
+        label={`${t('returnLabelGenerated.downloadButton') || 'Download retourlabel'}  ▼`}
+        variant="teal"
+        footnote={
+          t('returnLabelGenerated.labelFootnote') ||
+          'Kan je het label niet openen? Kopieer deze link in je browser.'
+        }
+      />
 
-          {/* CTA */}
-          <Section style={ctaSection}>
-            <EmailButton href={returnLabelUrl}>
-              {t('returnLabelGenerated.downloadButton')}
-            </EmailButton>
-          </Section>
-
-          {/* Instructions */}
-          <Section style={instructionsBox}>
-            <Text style={instructionsTitle}>{t('returnLabelGenerated.instructionsTitle')}</Text>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
-              <tr>
-                <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <div style={stepNumber}>1</div>
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={stepText}>{t('returnLabelGenerated.step1')}</Text>
-                </td>
-              </tr>
-            </table>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
-              <tr>
-                <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <div style={stepNumber}>2</div>
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={stepText}>{t('returnLabelGenerated.step2')}</Text>
-                </td>
-              </tr>
-            </table>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <div style={stepNumber}>3</div>
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={stepText}>{t('returnLabelGenerated.step3')}</Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
-
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle
+          title={t('returnLabelGenerated.instructionsTitle') || 'Hoe retourneren'}
+        />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            steps={[
+              t('returnLabelGenerated.step1') ||
+                'Print het label en plak het goed zichtbaar op het pakket.',
+              t('returnLabelGenerated.step2') ||
+                'Stop de items in de originele verpakking met labels nog bevestigd.',
+              t('returnLabelGenerated.step3') ||
+                'Breng het pakket naar een PostNL/DHL afleverpunt in de buurt.',
+              t('returnLabelGenerated.step4') ||
+                'Zodra we het pakket ontvangen hoor je zo snel mogelijk van ons.',
+            ]}
           />
-        </Container>
-      </Body>
-    </Html>
+        </div>
+      </EmailModule>
+
+      <EmailCta
+        href={`${siteUrl}/${locale}/account/returns/${returnNumber}`}
+        label={`${t('returnLabelGenerated.trackCta') || 'Volg mijn retour'}  →`}
+        footnote={
+          <>
+            {t('returnLabelGenerated.questions') || 'Iets niet duidelijk?'}{' '}
+            <a
+              href={`mailto:${contactEmail}`}
+              style={{ color: EMAIL_COLORS.primary, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {contactEmail}
+            </a>
+          </>
+        }
+      />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const returnSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const returnLabel = {
-  margin: '0 0 8px 0',
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#718096',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const returnNumberStyle = {
-  margin: '0',
-  fontSize: '24px',
-  fontWeight: '900',
-  color: '#000000',
-  letterSpacing: '2px',
-}
-
-const content = {
-  padding: '0 24px 24px',
-}
-
-const description = {
-  margin: '0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const ctaSection = {
-  margin: '32px 0',
-  textAlign: 'center' as const,
-}
-
-const instructionsBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '24px',
-  backgroundColor: '#FFF4E5',
-  border: '2px solid #FF9500',
-  boxSizing: 'border-box' as const,
-}
-
-const instructionsTitle = {
-  margin: '0 0 20px 0',
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const stepNumber = {
-  width: '40px',
-  height: '40px',
-  minWidth: '40px',
-  maxWidth: '40px',
-  minHeight: '40px',
-  maxHeight: '40px',
-  borderRadius: '50%',
-  backgroundColor: '#FF9500',
-  color: '#ffffff',
-  fontSize: '18px',
-  fontWeight: '900',
-  display: 'inline-block',
-  textAlign: 'center' as const,
-  lineHeight: '40px',
-}
-
-const stepText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-}
-

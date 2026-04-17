@@ -1,18 +1,16 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-  Row,
-  Column,
-  Img,
-  Link,
-  Button,
-} from '@react-email/components'
+import { Img, Link } from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailSteps from './components/EmailSteps'
+import EmailParagraph from './components/EmailParagraph'
+import EmailCta from './components/EmailCta'
+import EmailShopMore from './components/EmailShopMore'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface FeaturedProduct {
   name: string
@@ -40,458 +38,218 @@ export default function InsiderCommunityEmail({
   daysUntilLaunch,
   featuredProducts = [],
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
+  siteUrl = EMAIL_SITE_URL,
   locale = 'nl',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: InsiderCommunityEmailProps) {
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('insiderCommunity.preheader', { count: subscriberCount, days: daysUntilLaunch }) ||
+        `${subscriberCount} insiders zijn al binnen. Nog ${daysUntilLaunch} dagen tot de drop.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('insiderCommunity.status') || 'Community'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <Text style={title}>{t('insiderCommunity.title')}</Text>
-            <Text style={subtitle}>{t('insiderCommunity.subtitle')}</Text>
-          </Section>
+      <EmailHero
+        badge={t('insiderCommunity.badge') || '▲ Insider Community'}
+        title={t('insiderCommunity.heroTitle') || 'Built\nTogether.'}
+        subtitle={
+          t('insiderCommunity.subtitle') ||
+          'MOSE groeit organisch — doordat insiders het delen. Bedankt dat je erbij bent.'
+        }
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={introText}>
-              {t('insiderCommunity.intro')}
-            </Text>
+      <EmailMetaGrid
+        pairs={[
+          {
+            label: t('insiderCommunity.subscriberLabel') || 'Insiders',
+            value: subscriberCount.toLocaleString('nl-NL'),
+          },
+          {
+            label: t('insiderCommunity.daysLabel') || 'Dagen tot drop',
+            value: String(daysUntilLaunch),
+          },
+        ]}
+      />
 
-            {/* Stats Section */}
-            <Text style={sectionTitle}>{t('insiderCommunity.numbers')}</Text>
-            
-            <Section style={statsBox}>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
-                <tr>
-                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                    <Text style={bulletPoint}>•</Text>
-                  </td>
-                  <td style={{ verticalAlign: 'top' }}>
-                    <Text style={statText}>{t('insiderCommunity.stat1', { count: subscriberCount })}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '12px' }}>
-                <tr>
-                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                    <Text style={bulletPoint}>•</Text>
-                  </td>
-                  <td style={{ verticalAlign: 'top' }}>
-                    <Text style={statText}>{t('insiderCommunity.stat2')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-                <tr>
-                  <td style={{ width: '40px', verticalAlign: 'top', paddingTop: '2px' }}>
-                    <Text style={bulletPoint}>•</Text>
-                  </td>
-                  <td style={{ verticalAlign: 'top' }}>
-                    <Text style={statText}>{t('insiderCommunity.stat3')}</Text>
-                  </td>
-                </tr>
-              </table>
-            </Section>
+      <EmailModule padding="28px 30px">
+        <EmailParagraph>
+          {t('insiderCommunity.intro') ||
+            'Je bent geen klant — je bent insider. Dat betekent dat jouw feedback mede bepaalt wat we volgend seizoen produceren.'}
+        </EmailParagraph>
+      </EmailModule>
 
-            {/* Featured Products Section */}
-            {featuredProducts.length > 0 && (
-              <>
-                <Text style={sectionTitle}>{t('insiderCommunity.productsTitle')}</Text>
-                <Text style={productsIntro}>{t('insiderCommunity.productsIntro')}</Text>
-                
-                <Section style={productsSection}>
-                  <table cellPadding="0" cellSpacing="0" border={0} width="100%" style={productsTable}>
-                    <tr>
-                      {featuredProducts.map((product) => (
-                        <td key={product.slug} style={productColumn} width="33.33%">
-                          <Link href={product.url} style={productLink}>
-                            <table cellPadding="0" cellSpacing="0" border={0} width="100%" style={productCard}>
-                              <tr>
-                                <td style={productImageCell}>
-                                  {product.imageUrl && (
-                                    <Img
-                                      src={product.imageUrl}
-                                      alt={product.name}
-                                      width="100%"
-                                      style={productImage}
-                                    />
-                                  )}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td style={productNameCell}>
-                                  <Text style={productName}>{product.name}</Text>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td style={productButtonCell}>
-                                  <Button href={product.url} style={productButton}>
-                                    {t('insiderCommunity.viewProduct')}
-                                  </Button>
-                                </td>
-                              </tr>
-                            </table>
-                          </Link>
-                        </td>
-                      ))}
-                    </tr>
-                  </table>
-                </Section>
-              </>
-            )}
-
-            {/* Presale CTA Section */}
-            <Section style={presaleSection}>
-              <Text style={presaleTitle}>{t('insiderCommunity.presaleTitle')}</Text>
-              <Text style={presaleSubtitle}>{t('insiderCommunity.presaleSubtitle')}</Text>
-              <Text style={presaleText}>
-                {t('insiderCommunity.presaleText')}
-              </Text>
-              <Section style={presaleButtonContainer}>
-                <Button href={`${siteUrl}/${locale}/shop`} style={presaleButton}>
-                  {t('insiderCommunity.presaleCTA')}
-                </Button>
-              </Section>
-            </Section>
-
-            {/* Testimonials */}
-            <Text style={sectionTitle}>{t('insiderCommunity.communityTitle')}</Text>
-            
-            <Section style={testimonialsBox}>
-              <Text style={testimonialText}>{t('insiderCommunity.testimonial1')}</Text>
-              <Text style={testimonialText}>{t('insiderCommunity.testimonial2')}</Text>
-              <Text style={testimonialText}>{t('insiderCommunity.testimonial3')}</Text>
-            </Section>
-
-            {/* Join Community */}
-            <Text style={sectionTitle}>{t('insiderCommunity.joinTitle')}</Text>
-            
-            <Section style={socialBox}>
-              <Text style={socialText}>{t('insiderCommunity.joinText')}</Text>
-              <Text style={socialHandle}>{t('insiderCommunity.socialInsta')}</Text>
-              <Text style={socialHandle}>{t('insiderCommunity.socialFb')}</Text>
-            </Section>
-
-            {/* Closing */}
-            <Text style={closingText}>
-              {t('insiderCommunity.closing')}
-            </Text>
-
-            {/* PS */}
-            <Text style={psText}>
-              {(() => {
-                const psText = t('insiderCommunity.ps', { days: daysUntilLaunch })
-                const parts = psText.split('www.mosewear.com')
-                if (parts.length === 1) return psText
-                return (
-                  <>
-                    {parts[0]}
-                    <Link href="https://www.mosewear.com" style={psLink}>
-                      www.mosewear.com
-                    </Link>
-                    {parts[1]}
-                  </>
-                )
-              })()}
-            </Text>
-          </Section>
-
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle title={t('insiderCommunity.numbers') || 'In cijfers'} />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            variant="bullet"
+            steps={[
+              t('insiderCommunity.stat1', { count: subscriberCount }) ||
+                `${subscriberCount} insiders zijn al binnen.`,
+              t('insiderCommunity.stat2') || '100% in Nederland en België geleverd.',
+              t('insiderCommunity.stat3') || 'Meer dan 90% positieve reviews op onze drops.',
+            ]}
           />
-        </Container>
-      </Body>
-    </Html>
+        </div>
+      </EmailModule>
+
+      {featuredProducts.length > 0 ? (
+        <EmailModule padding="28px 30px 14px 30px">
+          <EmailSectionTitle
+            title={t('insiderCommunity.productsTitle') || 'Featured drops'}
+          />
+          <div style={{ marginTop: '18px' }}>
+            <EmailParagraph tone="muted" mb={18}>
+              {t('insiderCommunity.productsIntro') ||
+                'Een greep uit wat nu bij insiders loopt.'}
+            </EmailParagraph>
+            <table
+              role="presentation"
+              width="100%"
+              cellPadding={0}
+              cellSpacing={0}
+              border={0}
+            >
+              <tbody>
+                <tr>
+                  {featuredProducts.slice(0, 3).map((product) => (
+                    <td
+                      key={product.slug}
+                      width={`${Math.floor(100 / Math.min(featuredProducts.length, 3))}%`}
+                      valign="top"
+                      style={{ padding: '0 6px', verticalAlign: 'top' }}
+                    >
+                      <Link
+                        href={product.url}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <div
+                          style={{
+                            backgroundColor: EMAIL_COLORS.productBg,
+                            padding: '8px',
+                            marginBottom: '8px',
+                          }}
+                        >
+                          {product.imageUrl ? (
+                            <Img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              width="100%"
+                              style={{
+                                width: '100%',
+                                height: 'auto',
+                                display: 'block',
+                                border: 0,
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: EMAIL_FONTS.display,
+                            fontSize: '15px',
+                            letterSpacing: '0.05em',
+                            textTransform: 'uppercase',
+                            color: EMAIL_COLORS.ink,
+                            textAlign: 'center',
+                            lineHeight: 1.2,
+                            marginBottom: '8px',
+                          }}
+                        >
+                          {product.name}
+                        </div>
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            fontFamily: EMAIL_FONTS.body,
+                            fontSize: '10px',
+                            letterSpacing: '0.22em',
+                            textTransform: 'uppercase',
+                            color: EMAIL_COLORS.primary,
+                            fontWeight: 800,
+                          }}
+                        >
+                          {t('insiderCommunity.viewProduct') || 'Bekijk →'}
+                        </div>
+                      </Link>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </EmailModule>
+      ) : null}
+
+      <EmailCta
+        href={`${siteUrl}/${locale}/shop`}
+        label={`${t('insiderCommunity.presaleCTA') || 'Claim je plek'}  →`}
+        variant="teal"
+        title={t('insiderCommunity.presaleSubtitle') || 'De drop komt eraan'}
+        footnote={t('insiderCommunity.presaleText') || 'Als insider krijg je 24u vroege toegang.'}
+      />
+
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle title={t('insiderCommunity.communityTitle') || 'Uit de community'} />
+        <div style={{ marginTop: '20px' }}>
+          {[
+            t('insiderCommunity.testimonial1'),
+            t('insiderCommunity.testimonial2'),
+            t('insiderCommunity.testimonial3'),
+          ]
+            .filter(Boolean)
+            .map((quote, idx) => (
+              <div
+                key={idx}
+                style={{
+                  fontFamily: EMAIL_FONTS.body,
+                  fontSize: '14px',
+                  fontStyle: 'italic',
+                  color: EMAIL_COLORS.text,
+                  paddingLeft: '14px',
+                  borderLeft: `3px solid ${EMAIL_COLORS.primary}`,
+                  margin: '14px 0',
+                  lineHeight: 1.55,
+                }}
+              >
+                “{quote}”
+              </div>
+            ))}
+        </div>
+      </EmailModule>
+
+      <EmailShopMore
+        title={t('insiderCommunity.joinTitle') || 'Kom erbij op socials'}
+        ctaLabel={t('insiderCommunity.socialInsta') || '@mosewear op Instagram'}
+        href="https://instagram.com/mosewear"
+        siteUrl={siteUrl}
+        locale={locale}
+      />
+
+      <EmailModule padding="18px 24px" background={EMAIL_COLORS.sectionAlt} align="center">
+        <EmailParagraph tone="muted" size={12} align="center" mb={0}>
+          {t('insiderCommunity.ps', { days: daysUntilLaunch }) ||
+            `PS — nog ${daysUntilLaunch} dagen tot de officiële drop op `}
+          <Link
+            href={siteUrl}
+            style={{ color: EMAIL_COLORS.primary, textDecoration: 'underline', fontWeight: 700 }}
+          >
+            mosewear.com
+          </Link>
+        </EmailParagraph>
+      </EmailModule>
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
-}
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '24px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '1px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '12px 0 0 0',
-  fontSize: '16px',
-  fontWeight: '600',
-  color: '#4a5568',
-  lineHeight: '24px',
-}
-
-const content = {
-  padding: '0 24px 40px',
-}
-
-const introText = {
-  margin: '0 0 24px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-  fontWeight: '500',
-}
-
-const sectionTitle = {
-  margin: '32px 0 16px 0',
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const statsBox = {
-  margin: '16px 0 24px 0',
-  padding: '20px',
-  backgroundColor: '#f7fafc',
-  border: '2px solid #e2e8f0',
-}
-
-const bulletPoint = {
-  margin: '0',
-  fontSize: '20px',
-  fontWeight: '700',
-  color: '#00B67A',
-  lineHeight: '1',
-}
-
-const statText = {
-  margin: '0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-
-const productsSection = {
-  margin: '16px 0 24px 0',
-}
-
-const productsIntro = {
-  margin: '0 0 20px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-  fontWeight: '500',
-}
-
-const productsTable = {
-  width: '100%',
-  borderCollapse: 'collapse' as const,
-}
-
-const productColumn = {
-  width: '33.33%',
-  padding: '0 8px',
-  verticalAlign: 'top' as const,
-}
-
-const productLink = {
-  textDecoration: 'none',
-  color: 'inherit',
-}
-
-const productCard = {
-  width: '100%',
-  backgroundColor: '#ffffff',
-  border: '2px solid #000000',
-  borderCollapse: 'collapse' as const,
-}
-
-const productImageCell = {
-  padding: '0',
-  textAlign: 'center' as const,
-}
-
-const productImage = {
-  width: '100%',
-  height: 'auto',
-  display: 'block',
-  border: 'none',
-}
-
-const productNameCell = {
-  padding: '12px 12px 8px',
-  textAlign: 'center' as const,
-}
-
-const productName = {
-  margin: '0',
-  fontSize: '13px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-  lineHeight: '18px',
-}
-
-const productButtonCell = {
-  padding: '0 12px 12px',
-  textAlign: 'center' as const,
-}
-
-const productButton = {
-  display: 'inline-block',
-  padding: '10px 16px',
-  backgroundColor: '#00B67A',
-  color: '#ffffff',
-  fontSize: '12px',
-  fontWeight: '700',
-  textDecoration: 'none',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-  border: '2px solid #000000',
-  borderRadius: '0',
-}
-
-const testimonialsBox = {
-  margin: '16px 0 24px 0',
-  padding: '20px',
-  backgroundColor: '#fff5e6',
-  border: '2px solid #ffa726',
-}
-
-const testimonialText = {
-  margin: '0 0 16px 0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontStyle: 'italic' as const,
-  paddingLeft: '16px',
-  borderLeft: '3px solid #00B67A',
-}
-
-const socialBox = {
-  margin: '16px 0 24px 0',
-  padding: '20px',
-  backgroundColor: '#f0fdf4',
-  border: '2px solid #00B67A',
-  textAlign: 'center' as const,
-}
-
-const socialText = {
-  margin: '0 0 12px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-}
-
-const socialHandle = {
-  margin: '8px 0',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#00B67A',
-}
-
-const closingText = {
-  margin: '24px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-
-const psText = {
-  margin: '16px 0 0 0',
-  fontSize: '13px',
-  lineHeight: '18px',
-  color: '#718096',
-  fontStyle: 'italic' as const,
-}
-
-const psLink = {
-  color: '#00B67A',
-  textDecoration: 'underline',
-  fontWeight: '600',
-}
-
-const presaleSection = {
-  margin: '32px 0 24px 0',
-  padding: '32px 24px',
-  backgroundColor: '#00B67A',
-  border: '4px solid #000000',
-  textAlign: 'center' as const,
-}
-
-const presaleTitle = {
-  margin: '0 0 8px 0',
-  fontSize: '24px',
-  fontWeight: '900',
-  color: '#ffffff',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const presaleSubtitle = {
-  margin: '0 0 16px 0',
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#ffffff',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-}
-
-const presaleText = {
-  margin: '0 0 24px 0',
-  fontSize: '15px',
-  lineHeight: '22px',
-  color: '#ffffff',
-  fontWeight: '600',
-}
-
-const presaleButtonContainer = {
-  margin: '0',
-  padding: '0',
-}
-
-const presaleButton = {
-  display: 'inline-block',
-  padding: '16px 32px',
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: '900',
-  textDecoration: 'none',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  border: '3px solid #000000',
-  borderRadius: '0',
 }

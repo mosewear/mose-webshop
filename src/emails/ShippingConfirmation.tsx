@@ -1,18 +1,14 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-  Link,
-  Row,
-  Column,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
-import EmailButton from './components/EmailButton'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailSteps from './components/EmailSteps'
+import EmailCta from './components/EmailCta'
+import EmailShopMore from './components/EmailShopMore'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface ShippingConfirmationEmailProps {
   customerName: string
@@ -22,6 +18,7 @@ interface ShippingConfirmationEmailProps {
   carrier?: string
   estimatedDelivery?: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -36,244 +33,166 @@ export default function ShippingConfirmationEmail({
   carrier,
   estimatedDelivery,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: ShippingConfirmationEmailProps) {
-  // Format delivery date
-  let deliveryText = t('shipping.workingDays')
+  const orderNumber = `#${orderId.slice(0, 8).toUpperCase()}`
+  const firstName = customerName.split(' ')[0] || customerName
+
+  let deliveryText = t('shipping.workingDays') || '2–3 werkdagen'
   if (estimatedDelivery) {
     try {
       const date = new Date(estimatedDelivery)
-      deliveryText = date.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
-    } catch (e) {
+      const loc = locale === 'en' ? 'en-GB' : 'nl-NL'
+      deliveryText = date.toLocaleDateString(loc, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    } catch {
       deliveryText = estimatedDelivery
     }
   }
 
+  const cta = trackingUrl || `${siteUrl}/${locale}/track-order`
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('shipping.preheader', { orderNumber, tracking: trackingCode }) ||
+        `Je MOSE pakket ${orderNumber} is onderweg. Track het met code ${trackingCode}.`
+      }
+    >
+      <EmailHeader
+        siteUrl={siteUrl}
+        status={t('shipping.status') || 'Shipped'}
+        statusColor={EMAIL_COLORS.primary}
+      />
 
-          {/* Hero */}
-          <Section style={hero}>
-            <IconCircle icon="truck" color="shipping" size={42} />
-            <Text style={title}>{t('shipping.title')}</Text>
-            <Text style={subtitle}>{t('shipping.subtitle')}</Text>
-            <Text style={heroText}>
-              {t('shipping.heroText', { name: customerName })}
-            </Text>
-            <div style={orderBadge}>#{orderId.slice(0, 8).toUpperCase()}</div>
-          </Section>
+      <EmailHero
+        badge={t('shipping.badge') || '→ Onderweg naar jou'}
+        title={`${t('shipping.heroGreeting') || 'Shipped'},\n${firstName}.`}
+        subtitle={
+          t('shipping.heroSubtitle') ||
+          'Je MOSE is onderweg. Track het pakket hieronder en hou je brievenbus in de gaten.'
+        }
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={sectionTitle}>{t('shipping.trackingInfo')}</Text>
-            {carrier && <div style={carrierBadge}>{carrier}</div>}
-            
-            <Section style={trackingBox}>
-              <Text style={trackingLabel}>{t('shipping.trackAndTrace')}</Text>
-              <Text style={trackingCodeStyle}>{trackingCode}</Text>
-              {trackingUrl && (
-                <EmailButton href={trackingUrl}>
-                  {t('shipping.trackOrder')}
-                </EmailButton>
-              )}
-            </Section>
+      <EmailMetaGrid
+        pairs={[
+          { label: t('shipping.order') || 'Ordernummer', value: orderNumber },
+          {
+            label: t('shipping.estimatedDelivery') || 'Verwacht',
+            value: deliveryText.toUpperCase(),
+          },
+        ]}
+      />
 
-            <Section style={infoBox}>
-              <Text style={infoTitle}>{t('shipping.estimatedDelivery')}</Text>
-              <Text style={infoText}>{deliveryText}</Text>
-            </Section>
+      <EmailModule padding="28px 30px" background={EMAIL_COLORS.ink}>
+        <div
+          style={{
+            fontFamily: EMAIL_FONTS.body,
+            fontSize: '10px',
+            letterSpacing: '0.35em',
+            textTransform: 'uppercase',
+            color: EMAIL_COLORS.primary,
+            fontWeight: 800,
+          }}
+        >
+          {carrier ? `${carrier} · ` : ''}
+          {t('shipping.trackAndTrace') || 'Track & Trace'}
+        </div>
+        <div
+          style={{
+            marginTop: '12px',
+            fontFamily: EMAIL_FONTS.display,
+            fontSize: '30px',
+            color: EMAIL_COLORS.paper,
+            letterSpacing: '0.14em',
+            wordBreak: 'break-all',
+          }}
+        >
+          {trackingCode}
+        </div>
+        <div
+          style={{
+            marginTop: '20px',
+          }}
+        >
+          <a
+            href={cta}
+            className="mose-btn"
+            style={{
+              display: 'inline-block',
+              backgroundColor: EMAIL_COLORS.primary,
+              color: EMAIL_COLORS.paper,
+              fontFamily: EMAIL_FONTS.body,
+              fontSize: '14px',
+              fontWeight: 800,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              padding: '18px 32px',
+            }}
+          >
+            {t('shipping.trackOrder') || 'Track mijn pakket'} &nbsp;→
+          </a>
+        </div>
+      </EmailModule>
 
-            <Text style={sectionTitle}>{t('shipping.helpfulTips')}</Text>
-            <Section style={checklist}>
-              <Row style={checklistItem}>
-                <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="package" color="#2d3748" size={16} />
-                </Column>
-                <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
-                  <Text style={checklistText}>{t('shipping.tip1')}</Text>
-                </Column>
-              </Row>
-              <Row style={checklistItem}>
-                <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="mail" color="#2d3748" size={16} />
-                </Column>
-                <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
-                  <Text style={checklistText}>{t('shipping.tip2')}</Text>
-                </Column>
-              </Row>
-              <Row style={checklistItem}>
-                <Column style={{ width: '40px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="clock" color="#2d3748" size={16} />
-                </Column>
-                <Column style={{ verticalAlign: 'middle', paddingLeft: '8px' }}>
-                  <Text style={checklistText}>{t('shipping.tip3')}</Text>
-                </Column>
-              </Row>
-            </Section>
-          </Section>
-
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
+      <EmailModule padding="26px 30px">
+        <EmailSectionTitle title={t('shipping.helpfulTips') || 'Handige tips'} />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            variant="bullet"
+            steps={[
+              {
+                title: t('shipping.tip1Title') || 'Hou je brievenbus in de gaten',
+                description: t('shipping.tip1') || 'Het pakket komt binnen 1–3 werkdagen aan.',
+              },
+              {
+                title: t('shipping.tip2Title') || 'Mail notificaties',
+                description:
+                  t('shipping.tip2') || 'Je ontvangt updates van de vervoerder zodra het pakket onderweg is.',
+              },
+              {
+                title: t('shipping.tip3Title') || 'Niet thuis?',
+                description:
+                  t('shipping.tip3') || 'Geen zorgen: de pakketbezorger levert opnieuw of bij de buren.',
+              },
+            ]}
           />
-        </Container>
-      </Body>
-    </Html>
+        </div>
+      </EmailModule>
+
+      <EmailCta
+        href={cta}
+        label={`${t('shipping.trackOrder') || 'Track mijn pakket'}  →`}
+        footnote={
+          <>
+            {t('shipping.questions') || 'Vragen over je pakket?'}{' '}
+            <a
+              href={`mailto:${contactEmail}`}
+              style={{ color: EMAIL_COLORS.primary, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {contactEmail}
+            </a>
+          </>
+        }
+      />
+
+      <EmailShopMore siteUrl={siteUrl} locale={locale} />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '50px 20px 40px',
-  textAlign: 'center' as const,
-  background: 'linear-gradient(180deg, #fff 0%, #fafafa 100%)',
-}
-
-const title = {
-  fontSize: '44px',
-  fontWeight: 900,
-  color: '#000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '2px',
-  margin: '0 0 10px',
-}
-
-const subtitle = {
-  fontSize: '15px',
-  color: '#666',
-  fontWeight: 600,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-  marginBottom: '4px',
-}
-
-const heroText = {
-  fontSize: '14px',
-  color: '#999',
-}
-
-const orderBadge = {
-  backgroundColor: '#000',
-  color: '#fff',
-  padding: '10px 24px',
-  display: 'inline-block',
-  marginTop: '20px',
-  fontFamily: 'monospace',
-  fontSize: '14px',
-  fontWeight: 700,
-  letterSpacing: '1.5px',
-}
-
-const content = {
-  padding: '32px 20px',
-}
-
-const sectionTitle = {
-  fontSize: '18px',
-  fontWeight: 900,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  marginBottom: '16px',
-  marginTop: '28px',
-  color: '#000',
-}
-
-const carrierBadge = {
-  display: 'inline-block',
-  backgroundColor: '#2ECC71',
-  color: '#fff',
-  padding: '6px 16px',
-  borderRadius: '20px',
-  fontSize: '12px',
-  fontWeight: 700,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  marginBottom: '12px',
-}
-
-const trackingBox = {
-  backgroundColor: '#000',
-  color: '#fff',
-  padding: '28px 24px',
-  borderRadius: '8px',
-  margin: '20px 0',
-  textAlign: 'center' as const,
-}
-
-const trackingLabel = {
-  fontSize: '13px',
-  color: '#999',
-  fontWeight: 600,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  marginBottom: '8px',
-}
-
-const trackingCodeStyle = {
-  fontSize: '24px',
-  fontWeight: 900,
-  letterSpacing: '3px',
-  fontFamily: 'monospace',
-  margin: '15px 0',
-  padding: '15px',
-  backgroundColor: 'rgba(255,255,255,0.1)',
-  borderRadius: '4px',
-}
-
-const infoBox = {
-  backgroundColor: '#f8f8f8',
-  padding: '20px',
-  borderLeft: '3px solid #2ECC71',
-  margin: '16px 0',
-}
-
-const infoTitle = {
-  margin: '0 0 8px 0',
-  fontSize: '16px',
-  fontWeight: 900,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.5px',
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '15px',
-  fontWeight: 600,
-}
-
-const checklist = {
-  padding: '0',
-  margin: '12px 0',
-}
-
-const checklistItem = {
-  marginBottom: '12px',
-  alignItems: 'center' as const,
-}
-
-const checklistText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#333',
-  display: 'inline-block',
-}
-

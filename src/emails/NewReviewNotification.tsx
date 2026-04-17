@@ -1,15 +1,13 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-  Button,
-} from '@react-email/components'
+import { Link } from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailCta from './components/EmailCta'
+import EmailCallout from './components/EmailCallout'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface NewReviewNotificationEmailProps {
   reviewerName: string
@@ -21,272 +19,181 @@ interface NewReviewNotificationEmailProps {
   comment?: string
   reviewId: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
 }
 
+function renderStars(rating: number) {
+  const clamped = Math.max(0, Math.min(5, Math.round(rating)))
+  return '★'.repeat(clamped) + '☆'.repeat(5 - clamped)
+}
+
 export default function NewReviewNotificationEmail({
   reviewerName,
   reviewerEmail,
   productName,
-  productSlug,
   rating,
   title,
   comment,
-  reviewId,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: NewReviewNotificationEmailProps) {
-  const renderStars = (rating: number) => {
-    return '★'.repeat(rating) + '☆'.repeat(5 - rating)
-  }
-
   const adminUrl = `${siteUrl}/admin/reviews`
 
+  const infoRows: Array<{ label: string; value: React.ReactNode }> = [
+    { label: t('newReview.product') || 'Product', value: productName },
+    { label: t('newReview.reviewer') || 'Reviewer', value: reviewerName },
+    {
+      label: t('newReview.email') || 'E-mail',
+      value: (
+        <Link
+          href={`mailto:${reviewerEmail}`}
+          style={{ color: EMAIL_COLORS.primary, textDecoration: 'none', fontWeight: 700 }}
+        >
+          {reviewerEmail}
+        </Link>
+      ),
+    },
+    {
+      label: t('newReview.rating') || 'Rating',
+      value: (
+        <span style={{ color: EMAIL_COLORS.warning, fontWeight: 800 }}>
+          {renderStars(rating)} <span style={{ color: EMAIL_COLORS.text }}>({rating}/5)</span>
+        </span>
+      ),
+    },
+  ]
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('newReview.preheader', { name: reviewerName, rating }) ||
+        `Nieuwe review (${rating}/5) van ${reviewerName} — klaar voor moderatie.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('newReview.status') || 'Review'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="check-circle" color="#667eea" size={38} />
-            <Text style={titleStyle}>{t('newReview.title')}</Text>
-            <Text style={subtitleStyle}>
-              {t('newReview.subtitle')}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('newReview.badge') || '▲ New Review'}
+        title={t('newReview.heroTitle') || 'New\nReview.'}
+        subtitle={
+          t('newReview.subtitle') ||
+          'Er wacht een nieuwe review op moderatie. Bekijk en keur goed in het dashboard.'
+        }
+      />
 
-          {/* Review Info */}
-          <Section style={infoSection}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('newReview.product')}:</Text>
+      <EmailModule padding="24px 30px">
+        <EmailSectionTitle title={t('newReview.detailsTitle') || 'Review details'} />
+        <table
+          role="presentation"
+          width="100%"
+          cellPadding={0}
+          cellSpacing={0}
+          border={0}
+          style={{ marginTop: '18px' }}
+        >
+          <tbody>
+            {infoRows.map((row, idx) => (
+              <tr key={idx}>
+                <td
+                  width="130"
+                  valign="top"
+                  style={{
+                    width: '130px',
+                    padding: '6px 0',
+                    fontFamily: EMAIL_FONTS.body,
+                    fontSize: '11px',
+                    letterSpacing: '0.22em',
+                    textTransform: 'uppercase',
+                    color: EMAIL_COLORS.textFaint,
+                    fontWeight: 800,
+                  }}
+                >
+                  {row.label}
                 </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={valueText}>{productName}</Text>
+                <td
+                  valign="top"
+                  style={{
+                    padding: '6px 0',
+                    fontFamily: EMAIL_FONTS.body,
+                    fontSize: '14px',
+                    color: EMAIL_COLORS.text,
+                    fontWeight: 600,
+                  }}
+                >
+                  {row.value}
                 </td>
               </tr>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('newReview.reviewer')}:</Text>
-                </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={valueText}>{reviewerName}</Text>
-                </td>
-              </tr>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('newReview.email')}:</Text>
-                </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={valueText}>{reviewerEmail}</Text>
-                </td>
-              </tr>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('newReview.rating')}:</Text>
-                </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={ratingText}>{renderStars(rating)} ({rating}/5)</Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+            ))}
+          </tbody>
+        </table>
+      </EmailModule>
 
-          {/* Review Content */}
-          {(title || comment) && (
-            <Section style={messageSection}>
-              {title && (
-                <>
-                  <Text style={messageTitle}>{t('newReview.reviewTitle')}:</Text>
-                  <Section style={messageBox}>
-                    <Text style={messageText}>{title}</Text>
-                  </Section>
-                </>
-              )}
-              {comment && (
-                <>
-                  <Text style={messageTitle}>{t('newReview.reviewComment')}:</Text>
-                  <Section style={messageBox}>
-                    <Text style={messageText}>{comment}</Text>
-                  </Section>
-                </>
-              )}
-            </Section>
-          )}
+      {title || comment ? (
+        <EmailModule padding="24px 30px" background={EMAIL_COLORS.sectionAlt}>
+          {title ? (
+            <>
+              <EmailSectionTitle title={t('newReview.reviewTitle') || 'Titel'} />
+              <div
+                style={{
+                  marginTop: '10px',
+                  marginBottom: '18px',
+                  fontFamily: EMAIL_FONTS.display,
+                  fontSize: '20px',
+                  letterSpacing: '0.04em',
+                  color: EMAIL_COLORS.ink,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {title}
+              </div>
+            </>
+          ) : null}
+          {comment ? (
+            <>
+              <EmailSectionTitle title={t('newReview.reviewComment') || 'Bericht'} />
+              <div
+                style={{
+                  marginTop: '12px',
+                  fontFamily: EMAIL_FONTS.body,
+                  fontSize: '15px',
+                  lineHeight: 1.7,
+                  color: EMAIL_COLORS.text,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {comment}
+              </div>
+            </>
+          ) : null}
+        </EmailModule>
+      ) : null}
 
-          {/* Action Button */}
-          <Section style={buttonSection}>
-            <Button style={button} href={adminUrl}>
-              {t('newReview.approveButton')}
-            </Button>
-          </Section>
+      <EmailCta
+        href={adminUrl}
+        label={`${t('newReview.approveButton') || 'Beoordeel review'}  →`}
+        variant="primary"
+      />
 
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="alert-circle" color="#667eea" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('newReview.info')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+      <EmailCallout tone="info">
+        {t('newReview.info') ||
+          'Reviews zijn pas zichtbaar op de productpagina nadat jij ze hebt goedgekeurd.'}
+      </EmailCallout>
 
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
-          />
-        </Container>
-      </Body>
-    </Html>
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const titleStyle = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitleStyle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const infoSection = {
-  padding: '0 24px 24px',
-  backgroundColor: '#f7fafc',
-  border: '2px solid #e2e8f0',
-  margin: '0 24px 24px',
-}
-
-const labelText = {
-  margin: '0',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#718096',
-}
-
-const valueText = {
-  margin: '0',
-  fontSize: '14px',
-  color: '#2d3748',
-}
-
-const ratingText = {
-  margin: '0',
-  fontSize: '16px',
-  color: '#fbbf24',
-  fontWeight: '700',
-}
-
-const messageSection = {
-  padding: '0 24px 24px',
-}
-
-const messageTitle = {
-  margin: '0 0 12px 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const messageBox = {
-  padding: '20px',
-  backgroundColor: '#ffffff',
-  border: '2px solid #e2e8f0',
-  marginBottom: '16px',
-}
-
-const messageText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '22px',
-  color: '#2d3748',
-  whiteSpace: 'pre-wrap' as const,
-}
-
-const buttonSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const button = {
-  backgroundColor: '#667eea',
-  borderRadius: '4px',
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: '700',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'inline-block',
-  padding: '14px 32px',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#EEF2FF',
-  border: '2px solid #667eea',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-

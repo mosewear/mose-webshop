@@ -1,68 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { render } from '@react-email/render'
 import {
-  OrderConfirmationEmail,
-  PreorderConfirmationEmail,
-  ShippingConfirmationEmail,
-  OrderProcessingEmail,
-  OrderDeliveredEmail,
-  OrderCancelledEmail,
-  ReturnRequestedEmail,
-  ReturnLabelGeneratedEmail,
-  ReturnApprovedEmail,
-  ReturnRefundedEmail,
-  ReturnRejectedEmail,
   AbandonedCartEmail,
-  NewsletterWelcomeEmail,
   BackInStockEmail,
   ContactFormEmail,
+  InsiderBehindScenesEmail,
+  InsiderCommunityEmail,
+  InsiderLaunchWeekEmail,
+  InsiderWelcomeEmail,
+  NewReviewNotificationEmail,
+  NewsletterWelcomeEmail,
+  OrderCancelledEmail,
+  OrderConfirmationEmail,
+  OrderDeliveredEmail,
+  OrderProcessingEmail,
+  PreorderConfirmationEmail,
+  ReturnApprovedEmail,
+  ReturnLabelGeneratedEmail,
+  ReturnRefundedEmail,
+  ReturnRejectedEmail,
+  ReturnRequestedEmail,
+  ShippingConfirmationEmail,
 } from '@/emails'
+import { EMAIL_TEMPLATES } from '@/lib/email-catalog'
 import { getEmailT } from '@/lib/email-i18n'
 import { createClient } from '@/lib/supabase/server'
 
-// Function to get real product data for preview
+/**
+ * Mapping from preview slug to the React Email template + dummy payload.
+ *
+ * We accept both the newer `previewSlug` (from the catalog) and the legacy
+ * type ids that the admin UI used to call, so old bookmarks keep working.
+ */
+
+const LEGACY_TYPE_ALIASES: Record<string, string> = {
+  confirmation: 'order-confirmation',
+  preorder: 'preorder-confirmation',
+  processing: 'order-processing',
+  shipped: 'shipping-confirmation',
+  delivered: 'order-delivered',
+  cancelled: 'order-cancelled',
+  return_label: 'return-label',
+  return_approved: 'return-approved',
+  return_refunded: 'return-refunded',
+  return_rejected: 'return-rejected',
+  return_requested: 'return-requested',
+  abandoned_cart: 'abandoned-cart',
+  newsletter_welcome: 'newsletter-welcome',
+  back_in_stock: 'back-in-stock',
+  contact_form: 'contact-form',
+  new_review: 'new-review',
+  insider_welcome: 'insider-welcome',
+  insider_community: 'insider-community',
+  insider_behind_scenes: 'insider-behind-scenes',
+  insider_launch_week: 'insider-launch-week',
+}
+
 async function getPreviewProductData() {
   try {
     const supabase = await createClient()
-    
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
-    
-    // Get 2 product variants with images - simpler query
+
     const { data: variants, error } = await supabase
       .from('product_variants')
-      .select(`
-        id,
-        size,
-        color,
-        price,
-        image_url,
-        products!inner(
-          id,
-          name,
-          slug
-        )
-      `)
+      .select(
+        `id, size, color, price, image_url, products!inner(id, name, slug)`
+      )
       .eq('is_available', true)
       .not('image_url', 'is', null)
       .limit(2)
-    
-    if (error) {
-      console.error('⚠️ Error fetching products for preview:', error)
-      return null
-    }
-    
-    if (!variants || variants.length === 0) {
-      console.log('⚠️ No products found for preview, using fallback')
-      return null
-    }
-    
-    console.log(`✅ Found ${variants.length} products for preview`)
-    
+
+    if (error || !variants?.length) return null
+
     return variants.map((variant: any) => {
-      const imageUrl = variant.image_url 
-        ? (variant.image_url.startsWith('http') ? variant.image_url : `${siteUrl}${variant.image_url}`)
+      const imageUrl = variant.image_url
+        ? variant.image_url.startsWith('http')
+          ? variant.image_url
+          : `${siteUrl}${variant.image_url}`
         : `${siteUrl}/logomose.png`
-      
+
       return {
         name: variant.products.name,
         size: variant.size || 'M',
@@ -81,19 +97,19 @@ async function getPreviewProductData() {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const type = searchParams.get('type') || 'confirmation'
+  const rawType = searchParams.get('type') || 'order-confirmation'
   const locale = searchParams.get('locale') || 'nl'
-  
+
+  const slug = LEGACY_TYPE_ALIASES[rawType] || rawType
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
   const contactEmail = 'info@mosewear.com'
   const contactPhone = '+31 50 211 1931'
   const contactAddress = 'Stavangerweg 13, 9723 JC Groningen'
-  
+
   try {
-    // Try to get real product data
     const realProducts = await getPreviewProductData()
-    
-    // Fallback dummy products if real data fetch fails
+
     const defaultProducts = [
       {
         name: 'MOSE Essential Hoodie',
@@ -101,7 +117,7 @@ export async function GET(req: NextRequest) {
         color: 'Zwart',
         quantity: 1,
         price: 69.95,
-        imageUrl: `${siteUrl}/logomose.png`, // Use MOSE logo as fallback
+        imageUrl: `${siteUrl}/logomose.png`,
         isPresale: false,
       },
       {
@@ -110,22 +126,20 @@ export async function GET(req: NextRequest) {
         color: 'Navy',
         quantity: 1,
         price: 19.99,
-        imageUrl: `${siteUrl}/logomose.png`, // Use MOSE logo as fallback
+        imageUrl: `${siteUrl}/logomose.png`,
         isPresale: false,
       },
     ]
-    
+
     const orderItems = realProducts || defaultProducts
-    
-    // Dummy data voor preview
+
     const dummyData = {
-      // Order data
       customerName: 'Jan de Vries',
       customerEmail: 'jan@example.com',
       orderId: 'abc123de-4567-89fg-hijk-lmnopqr12345',
       orderTotal: 89.95,
       subtotal: 84.95,
-      shippingCost: 5.00,
+      shippingCost: 5.0,
       tax: 15.75,
       orderItems,
       shippingAddress: {
@@ -134,24 +148,19 @@ export async function GET(req: NextRequest) {
         city: 'Amsterdam',
         postalCode: '1012 JM',
       },
-      
-      // Promo code data (for testing discount display)
       promoCode: 'PRESALE30',
-      discountAmount: 25.50,
-      
-      // Shipping data
+      discountAmount: 25.5,
       trackingCode: 'TEST-TRACKING-123456',
-      trackingUrl: 'https://www.dhlparcel.nl/en/private/track-trace?tt=TEST-TRACKING-123456',
+      trackingUrl:
+        'https://www.dhlparcel.nl/en/private/track-trace?tt=TEST-TRACKING-123456',
       carrier: 'DHL',
-      estimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
-      
-      // Presale data
-      presaleExpectedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('nl-NL'),
-      
-      // Cancellation data
+      estimatedDeliveryDate: new Date(
+        Date.now() + 2 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString('nl-NL'),
+      presaleExpectedDate: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString('nl-NL'),
       cancellationReason: 'Product niet op voorraad',
-      
-      // Return data
       returnId: 'ret-12345678-90ab-cdef-ghij-klmnopqrs123',
       returnItems: [
         {
@@ -165,40 +174,38 @@ export async function GET(req: NextRequest) {
       labelUrl: 'https://mosewear.com/downloads/return-label-example.pdf',
       refundAmount: 69.95,
       rejectionReason: 'Product is beschadigd geretourneerd',
-      
-      // Product data (for back in stock)
       productName: 'MOSE Essential Hoodie',
       productSlug: 'essential-hoodie',
       productImageUrl: orderItems[0]?.imageUrl || `${siteUrl}/logomose.png`,
-      variantInfo: {
-        size: 'L',
-        color: 'Zwart',
-      },
-      
-      // Contact form data
+      variantInfo: { size: 'L', color: 'Zwart' },
       name: 'Jan de Vries',
       email: 'jan@example.com',
       subject: 'Vraag over bestelling',
-      message: 'Ik heb een vraag over mijn recente bestelling. Wanneer wordt deze verzonden?',
-      
-      // Checkout URL (for abandoned cart)
+      message:
+        'Ik heb een vraag over mijn recente bestelling. Wanneer wordt deze verzonden?',
       checkoutUrl: 'https://mosewear.com/checkout?session=abc123',
+      reviewerName: 'Sanne K.',
+      reviewerEmail: 'sanne@example.com',
+      rating: 5,
+      reviewTitle: 'Zit als gegoten',
+      reviewComment:
+        'Echt top kwaliteit, pasvorm perfect en verzending razendsnel. Ik bestel volgend seizoen zeker weer.',
+      reviewId: 'rev-12345678-90ab-cdef-ghij-klmnopqrs123',
+      subscriberCount: 1247,
+      daysUntilLaunch: 7,
+      storyContent:
+        'Het begon met een idee op het atelier in Groningen: streetwear die mee-groeit met wie het draagt. Dit seizoen zoomen we in op het verhaal achter onze nieuwste midweight hoodie — van stof tot stiksel.',
+      limitedItems: ['Essential Hoodie — Stone', 'Crewneck — Midnight', 'Cap — Forest'],
+      promoCodeValue: 'INSIDER10',
+      promoExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     }
-    
+
     const t = await getEmailT(locale)
-    
-    // DEBUG: Test if translation function works (server-side logs)
-    console.log('🔍 [email-preview API] Testing translation function:')
-    console.log('  - Locale:', locale)
-    console.log('  - typeof t:', typeof t)
-    console.log('  - t("orderProcessing.title"):', t('orderProcessing.title'))
-    console.log('  - t("orderProcessing.subtitle"):', t('orderProcessing.subtitle', { name: 'TestName' }))
-    console.log('  - t("common.mose"):', t('common.mose'))
-    
+
     let html: string
 
-    switch (type) {
-      case 'confirmation':
+    switch (slug) {
+      case 'order-confirmation':
         html = await render(
           OrderConfirmationEmail({
             ...dummyData,
@@ -208,11 +215,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'preorder':
+      case 'preorder-confirmation':
         html = await render(
           PreorderConfirmationEmail({
             ...dummyData,
@@ -222,11 +230,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'shipped':
+      case 'shipping-confirmation':
         html = await render(
           ShippingConfirmationEmail({
             ...dummyData,
@@ -235,11 +244,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'processing':
+      case 'order-processing':
         html = await render(
           OrderProcessingEmail({
             orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
@@ -249,11 +259,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'delivered':
+      case 'order-delivered':
         html = await render(
           OrderDeliveredEmail({
             orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
@@ -263,11 +274,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'cancelled':
+      case 'order-cancelled':
         html = await render(
           OrderCancelledEmail({
             orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
@@ -278,17 +290,18 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'return_requested':
+      case 'return-requested':
         html = await render(
           ReturnRequestedEmail({
             orderNumber: dummyData.orderId.slice(0, 8).toUpperCase(),
             returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
             customerName: dummyData.customerName,
-            items: dummyData.returnItems.map(item => ({
+            items: dummyData.returnItems.map((item) => ({
               name: `${item.product_name} (${item.size} - ${item.color})`,
               quantity: item.quantity,
             })),
@@ -297,11 +310,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'return_label':
+      case 'return-label':
         html = await render(
           ReturnLabelGeneratedEmail({
             returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
@@ -312,11 +326,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'return_approved':
+      case 'return-approved':
         html = await render(
           ReturnApprovedEmail({
             returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
@@ -327,11 +342,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'return_refunded':
+      case 'return-refunded':
         html = await render(
           ReturnRefundedEmail({
             returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
@@ -343,11 +359,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'return_rejected':
+      case 'return-rejected':
         html = await render(
           ReturnRejectedEmail({
             returnNumber: dummyData.returnId.slice(0, 8).toUpperCase(),
@@ -358,15 +375,16 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'abandoned_cart':
+      case 'abandoned-cart':
         html = await render(
           AbandonedCartEmail({
             customerName: dummyData.customerName,
-            items: dummyData.orderItems.map(item => ({
+            items: dummyData.orderItems.map((item) => ({
               name: item.name,
               price: item.price,
               imageUrl: item.imageUrl,
@@ -379,11 +397,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'newsletter_welcome':
+      case 'newsletter-welcome':
         html = await render(
           NewsletterWelcomeEmail({
             email: dummyData.customerEmail,
@@ -392,11 +411,14 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
+            promoCode: dummyData.promoCodeValue,
+            promoExpiry: dummyData.promoExpiry,
           })
         )
         break
 
-      case 'back_in_stock':
+      case 'back-in-stock':
         html = await render(
           BackInStockEmail({
             email: dummyData.customerEmail,
@@ -409,11 +431,12 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
           })
         )
         break
 
-      case 'contact_form':
+      case 'contact-form':
         html = await render(
           ContactFormEmail({
             customerName: dummyData.name,
@@ -425,53 +448,122 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+            locale,
+          })
+        )
+        break
+
+      case 'new-review':
+        html = await render(
+          NewReviewNotificationEmail({
+            reviewerName: dummyData.reviewerName,
+            reviewerEmail: dummyData.reviewerEmail,
+            productName: dummyData.productName,
+            productSlug: dummyData.productSlug,
+            rating: dummyData.rating,
+            title: dummyData.reviewTitle,
+            comment: dummyData.reviewComment,
+            reviewId: dummyData.reviewId,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            locale,
+          })
+        )
+        break
+
+      case 'insider-welcome':
+        html = await render(
+          InsiderWelcomeEmail({
+            email: dummyData.customerEmail,
+            t,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            locale,
+            promoCode: dummyData.promoCodeValue,
+            promoExpiry: dummyData.promoExpiry,
+          })
+        )
+        break
+
+      case 'insider-community':
+        html = await render(
+          InsiderCommunityEmail({
+            email: dummyData.customerEmail,
+            subscriberCount: dummyData.subscriberCount,
+            daysUntilLaunch: dummyData.daysUntilLaunch,
+            featuredProducts: orderItems.slice(0, 3).map((item: any) => ({
+              name: item.name,
+              slug: 'essential-hoodie',
+              imageUrl: item.imageUrl,
+              url: `${siteUrl}/${locale}/shop`,
+            })),
+            t,
+            siteUrl,
+            locale,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'insider-behind-scenes':
+        html = await render(
+          InsiderBehindScenesEmail({
+            email: dummyData.customerEmail,
+            storyContent: dummyData.storyContent,
+            t,
+            siteUrl,
+            locale,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+          })
+        )
+        break
+
+      case 'insider-launch-week':
+        html = await render(
+          InsiderLaunchWeekEmail({
+            email: dummyData.customerEmail,
+            daysUntilLaunch: dummyData.daysUntilLaunch,
+            limitedItems: dummyData.limitedItems,
+            t,
+            siteUrl,
+            locale,
+            contactEmail,
+            contactPhone,
+            contactAddress,
           })
         )
         break
 
       default:
-        return NextResponse.json({ 
-          error: 'Invalid email type',
-          availableTypes: [
-            'confirmation', 'preorder', 'shipped', 'processing', 'delivered', 'cancelled',
-            'return_requested', 'return_label', 'return_approved', 'return_refunded', 'return_rejected',
-            'abandoned_cart', 'newsletter_welcome', 'back_in_stock', 'contact_form'
-          ]
-        }, { status: 400 })
+        return NextResponse.json(
+          {
+            error: 'Invalid email preview type',
+            availableTypes: EMAIL_TEMPLATES.map((tpl) => tpl.previewSlug),
+          },
+          { status: 400 }
+        )
     }
 
-    // Add debug script to HTML for browser console logging
-    const debugScript = `
-      <script>
-        console.log('🔍 [Email Preview - Browser] Loaded preview for type: ${type}');
-        console.log('🔍 [Email Preview - Browser] Locale: ${locale}');
-        console.log('🔍 [Email Preview - Browser] Check if translation keys are visible in the page');
-        
-        // Check for visible translation keys
-        const bodyText = document.body.innerText;
-        const hasKeys = bodyText.includes('orderProcessing.') || bodyText.includes('common.') || bodyText.includes('preorder.');
-        
-        if (hasKeys) {
-          console.error('❌ Translation keys ARE visible - translations failed!');
-          console.log('Sample text from body:', bodyText.substring(0, 500));
-        } else {
-          console.log('✅ No translation keys visible - translations working!');
-        }
-      </script>
-    `;
-    
-    const htmlWithDebug = html.replace('</body>', `${debugScript}</body>`);
-
-    return new NextResponse(htmlWithDebug, {
-      headers: {
-        'Content-Type': 'text/html',
-      },
+    return new NextResponse(html, {
+      headers: { 'Content-Type': 'text/html' },
     })
   } catch (error) {
     console.error('Error generating email preview:', error)
-    return NextResponse.json({ 
-      error: 'Failed to generate email preview',
-      details: 'Er is een fout opgetreden'
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'Failed to generate email preview',
+        details: (error as Error)?.message || 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
 }

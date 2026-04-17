@@ -1,14 +1,12 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import { Link } from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailCallout from './components/EmailCallout'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface ContactFormEmailProps {
   customerName: string
@@ -16,6 +14,7 @@ interface ContactFormEmailProps {
   subject: string
   message: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -28,194 +27,118 @@ export default function ContactFormEmail({
   subject,
   message,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: ContactFormEmailProps) {
+  const infoRows: Array<{ label: string; value: React.ReactNode }> = [
+    { label: t('contact.from') || 'Van', value: customerName },
+    {
+      label: t('contact.email') || 'E-mail',
+      value: (
+        <Link
+          href={`mailto:${customerEmail}`}
+          style={{ color: EMAIL_COLORS.primary, textDecoration: 'none', fontWeight: 700 }}
+        >
+          {customerEmail}
+        </Link>
+      ),
+    },
+    { label: t('contact.subject') || 'Onderwerp', value: subject },
+  ]
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('contact.preheader', { name: customerName, subject }) ||
+        `Nieuw bericht van ${customerName} via het contactformulier.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('contact.status') || 'Contact Form'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="mail" color="#667eea" size={38} />
-            <Text style={title}>{t('contact.title')}</Text>
-            <Text style={subtitle}>
-              {t('contact.subtitle')}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('contact.badge') || '▲ Inbox'}
+        title={t('contact.heroTitle') || 'New\nMessage.'}
+        subtitle={t('contact.subtitle') || 'Er is een nieuw bericht binnengekomen via het contactformulier.'}
+      />
 
-          {/* Customer Info */}
-          <Section style={infoSection}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('contact.from')}:</Text>
+      <EmailModule padding="24px 30px">
+        <EmailSectionTitle title={t('contact.detailsTitle') || 'Verzender'} />
+        <table
+          role="presentation"
+          width="100%"
+          cellPadding={0}
+          cellSpacing={0}
+          border={0}
+          style={{ marginTop: '18px' }}
+        >
+          <tbody>
+            {infoRows.map((row, idx) => (
+              <tr key={idx}>
+                <td
+                  width="140"
+                  valign="top"
+                  style={{
+                    width: '140px',
+                    padding: '6px 0',
+                    fontFamily: EMAIL_FONTS.body,
+                    fontSize: '11px',
+                    letterSpacing: '0.22em',
+                    textTransform: 'uppercase',
+                    color: EMAIL_COLORS.textFaint,
+                    fontWeight: 800,
+                  }}
+                >
+                  {row.label}
                 </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={valueText}>{customerName}</Text>
+                <td
+                  valign="top"
+                  style={{
+                    padding: '6px 0',
+                    fontFamily: EMAIL_FONTS.body,
+                    fontSize: '14px',
+                    color: EMAIL_COLORS.text,
+                    fontWeight: 600,
+                  }}
+                >
+                  {row.value}
                 </td>
               </tr>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('contact.email')}:</Text>
-                </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={valueText}>{customerEmail}</Text>
-                </td>
-              </tr>
-              <tr>
-                <td style={{ width: '150px', verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={labelText}>{t('contact.subject')}:</Text>
-                </td>
-                <td style={{ verticalAlign: 'top', paddingBottom: '12px' }}>
-                  <Text style={valueText}>{subject}</Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+            ))}
+          </tbody>
+        </table>
+      </EmailModule>
 
-          {/* Message */}
-          <Section style={messageSection}>
-            <Text style={messageTitle}>{t('contact.message')}:</Text>
-            <Section style={messageBox}>
-              <Text style={messageText}>{message}</Text>
-            </Section>
-          </Section>
+      <EmailModule padding="24px 30px" background={EMAIL_COLORS.sectionAlt}>
+        <EmailSectionTitle title={t('contact.message') || 'Bericht'} />
+        <div
+          style={{
+            marginTop: '16px',
+            fontFamily: EMAIL_FONTS.body,
+            fontSize: '15px',
+            lineHeight: 1.7,
+            color: EMAIL_COLORS.text,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {message}
+        </div>
+      </EmailModule>
 
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="alert-circle" color="#667eea" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('contact.replyInfo')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+      <EmailCallout tone="info">
+        {t('contact.replyInfo') ||
+          `Reageer direct door te antwoorden naar ${customerEmail}.`}
+      </EmailCallout>
 
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
-          />
-        </Container>
-      </Body>
-    </Html>
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const infoSection = {
-  padding: '0 24px 24px',
-  backgroundColor: '#f7fafc',
-  border: '2px solid #e2e8f0',
-  margin: '0 24px 24px',
-}
-
-const labelText = {
-  margin: '0',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: '#718096',
-}
-
-const valueText = {
-  margin: '0',
-  fontSize: '14px',
-  color: '#2d3748',
-}
-
-const messageSection = {
-  padding: '0 24px 24px',
-}
-
-const messageTitle = {
-  margin: '0 0 12px 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const messageBox = {
-  padding: '20px',
-  backgroundColor: '#ffffff',
-  border: '2px solid #e2e8f0',
-}
-
-const messageText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '22px',
-  color: '#2d3748',
-  whiteSpace: 'pre-wrap' as const,
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#EEF2FF',
-  border: '2px solid #667eea',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-

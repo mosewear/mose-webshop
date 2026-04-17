@@ -1,21 +1,21 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
-import EmailButton from './components/EmailButton'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailModule from './components/EmailModule'
+import EmailCallout from './components/EmailCallout'
+import EmailCta from './components/EmailCta'
+import EmailShopMore from './components/EmailShopMore'
+import EmailParagraph from './components/EmailParagraph'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_SITE_URL } from './tokens'
 
 interface OrderCancelledEmailProps {
   orderNumber: string
   customerName: string
   reason?: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -27,182 +27,90 @@ export default function OrderCancelledEmail({
   customerName,
   reason,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: OrderCancelledEmailProps) {
+  const firstName = customerName.split(' ')[0] || customerName
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('cancelled.preheader', { orderNumber }) ||
+        `Je MOSE order #${orderNumber} is geannuleerd. Je betaling wordt automatisch teruggestort.`
+      }
+    >
+      <EmailHeader
+        siteUrl={siteUrl}
+        status={t('cancelled.status') || 'Cancelled'}
+        statusColor={EMAIL_COLORS.danger}
+      />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="x" color="#e74c3c" size={38} />
-            <Text style={title}>{t('cancelled.title')}</Text>
-            <Text style={subtitle}>
-              {t('cancelled.heroText', { name: customerName })}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('cancelled.badge') || '✕ Geannuleerd'}
+        badgeColor={EMAIL_COLORS.danger}
+        title={`${t('cancelled.heroGreeting') || 'Order Gecanceld'},\n${firstName}.`}
+        subtitle={
+          t('cancelled.heroSubtitle') ||
+          'Je bestelling is geannuleerd. Je betaling wordt automatisch teruggestort.'
+        }
+      />
 
-          {/* Order Number */}
-          <Section style={orderSection}>
-            <Text style={orderLabel}>{t('cancelled.orderNumber')}</Text>
-            <Text style={orderNumberStyle}>{orderNumber}</Text>
-          </Section>
+      <EmailMetaGrid
+        pairs={[
+          { label: t('cancelled.orderNumber') || 'Ordernummer', value: `#${orderNumber}` },
+          {
+            label: t('cancelled.statusLabel') || 'Status',
+            value: t('cancelled.statusValue') || 'Geannuleerd',
+          },
+        ]}
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={description}>
-              {t('cancelled.description')}
-            </Text>
-            {reason && (
-              <Text style={reasonText}>
-                {t('cancelled.reason')}: {reason}
-              </Text>
-            )}
-          </Section>
+      {reason ? (
+        <EmailCallout tone="danger" title={t('cancelled.reason') || 'Reden van annulering'}>
+          {reason}
+        </EmailCallout>
+      ) : null}
 
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="alert-circle" color="#e74c3c" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('cancelled.refundInfo')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
+      <EmailModule padding="28px 30px">
+        <EmailParagraph>
+          {t('cancelled.description') ||
+            'Sorry voor het ongemak. We proberen dit in de toekomst te voorkomen. Heb je vragen over deze annulering? We helpen je graag.'}
+        </EmailParagraph>
+      </EmailModule>
 
-          {/* CTA */}
-          <Section style={ctaSection}>
-            <EmailButton href={`${siteUrl}/shop`}>
-              {t('cancelled.ctaButton')}
-            </EmailButton>
-          </Section>
+      <EmailCallout tone="info" title={t('cancelled.refundTitle') || 'Terugbetaling'}>
+        {t('cancelled.refundInfo') ||
+          'Je wordt automatisch teruggestort op de originele betaalmethode binnen 3–5 werkdagen.'}
+      </EmailCallout>
 
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
-          />
-        </Container>
-      </Body>
-    </Html>
+      <EmailCta
+        href={`${siteUrl}/${locale}/shop`}
+        label={`${t('cancelled.ctaButton') || 'Terug naar de shop'}  →`}
+        footnote={
+          <>
+            {t('cancelled.questions') || 'Vragen over de annulering?'}{' '}
+            <a
+              href={`mailto:${contactEmail}`}
+              style={{ color: EMAIL_COLORS.primary, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {contactEmail}
+            </a>
+          </>
+        }
+      />
+
+      <EmailShopMore siteUrl={siteUrl} locale={locale} />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const orderSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const orderLabel = {
-  margin: '0 0 8px 0',
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#718096',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const orderNumberStyle = {
-  margin: '0',
-  fontSize: '24px',
-  fontWeight: '900',
-  color: '#000000',
-  letterSpacing: '2px',
-}
-
-const content = {
-  padding: '0 24px 24px',
-}
-
-const description = {
-  margin: '0 0 16px 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const reasonText = {
-  margin: '16px 0 0 0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#718096',
-  textAlign: 'center' as const,
-  fontStyle: 'italic' as const,
-}
-
-const ctaSection = {
-  margin: '32px 0',
-  textAlign: 'center' as const,
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#FEF2F2',
-  border: '2px solid #e74c3c',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-

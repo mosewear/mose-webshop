@@ -1,18 +1,19 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailSteps from './components/EmailSteps'
+import EmailParagraph from './components/EmailParagraph'
+import EmailCta from './components/EmailCta'
+import EmailShopMore from './components/EmailShopMore'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_FONTS, EMAIL_SITE_URL } from './tokens'
 
 interface NewsletterWelcomeEmailProps {
   email: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -24,281 +25,149 @@ interface NewsletterWelcomeEmailProps {
 export default function NewsletterWelcomeEmail({
   email,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
   promoCode,
   promoExpiry,
 }: NewsletterWelcomeEmailProps) {
-  // Format expiry date
-  const expiryText = promoExpiry 
-    ? new Intl.DateTimeFormat('nl-NL', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
+  const expiryText = promoExpiry
+    ? new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'nl-NL', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       }).format(promoExpiry)
     : null
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('newsletterWelcome.preheader') ||
+        'Welkom bij MOSE — als eerste op de hoogte van drops, restocks en insider-only pieces.'
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('newsletterWelcome.status') || 'Newsletter'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="mail" color="#00B67A" size={38} />
-            <Text style={title}>{t('newsletterWelcome.title')}</Text>
-            <Text style={subtitle}>{t('newsletterWelcome.subtitle')}</Text>
-            <Text style={heroText}>
-              {t('newsletterWelcome.heroText')}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('newsletterWelcome.badge') || '▲ Welcome'}
+        title={t('newsletterWelcome.heroTitle') || 'You\u2019re\nIn.'}
+        subtitle={
+          t('newsletterWelcome.heroText') ||
+          'Je staat op de lijst. Vanaf nu ontvang je de nieuwste drops als eerste.'
+        }
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={welcomeText}>
-              {t('newsletterWelcome.whatYouGet')}
-            </Text>
+      {promoCode ? (
+        <EmailModule padding="30px 24px" background={EMAIL_COLORS.ink} align="center">
+          <div
+            style={{
+              fontFamily: EMAIL_FONTS.body,
+              fontSize: '10px',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              color: EMAIL_COLORS.primary,
+              fontWeight: 800,
+              marginBottom: '10px',
+            }}
+          >
+            {t('newsletterWelcome.promoTitle') || 'Jouw welkomstcode'}
+          </div>
+          <div
+            style={{
+              fontFamily: EMAIL_FONTS.display,
+              fontSize: '44px',
+              color: EMAIL_COLORS.paper,
+              letterSpacing: '0.2em',
+              lineHeight: 1,
+            }}
+          >
+            {promoCode}
+          </div>
+          <div
+            style={{
+              marginTop: '14px',
+              fontFamily: EMAIL_FONTS.body,
+              fontSize: '12px',
+              color: EMAIL_COLORS.textSubtle,
+              lineHeight: 1.5,
+            }}
+          >
+            {t('newsletterWelcome.promoSubtext', { discount: '10%' }) ||
+              'Gebruik deze code voor 10% korting op je eerste bestelling.'}
+          </div>
+          {expiryText ? (
+            <div
+              style={{
+                marginTop: '8px',
+                fontFamily: EMAIL_FONTS.body,
+                fontSize: '11px',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: EMAIL_COLORS.textSubtle,
+                fontWeight: 700,
+              }}
+            >
+              {t('newsletterWelcome.promoExpiry', { date: expiryText }) ||
+                `Geldig tot ${expiryText}`}
+            </div>
+          ) : null}
+        </EmailModule>
+      ) : null}
 
-            {/* Benefits List */}
-            <Section style={benefitsList}>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '16px' }}>
-                <tr>
-                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="package" color="#00B67A" size={20} />
-                  </td>
-                  <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={benefitTitle}>{t('newsletterWelcome.benefit1Title')}</Text>
-                    <Text style={benefitText}>{t('newsletterWelcome.benefit1Text')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '16px' }}>
-                <tr>
-                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="alert-circle" color="#00B67A" size={20} />
-                  </td>
-                  <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={benefitTitle}>{t('newsletterWelcome.benefit2Title')}</Text>
-                    <Text style={benefitText}>{t('newsletterWelcome.benefit2Text')}</Text>
-                  </td>
-                </tr>
-              </table>
-              <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%', marginBottom: '16px' }}>
-                <tr>
-                  <td style={{ width: '60px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <IconCircle icon="shopping-cart" color="#00B67A" size={20} />
-                  </td>
-                  <td style={{ verticalAlign: 'middle' }}>
-                    <Text style={benefitTitle}>{t('newsletterWelcome.benefit3Title')}</Text>
-                    <Text style={benefitText}>{t('newsletterWelcome.benefit3Text')}</Text>
-                  </td>
-                </tr>
-              </table>
-            </Section>
+      <EmailModule padding="28px 30px">
+        <EmailParagraph>
+          {t('newsletterWelcome.whatYouGet') ||
+            'Dit is wat je van ons kunt verwachten — geen spam, alleen relevant.'}
+        </EmailParagraph>
+      </EmailModule>
 
-            {/* Promo Code Section (NEW!) */}
-            {promoCode && (
-              <Section style={promoSection}>
-                <Text style={promoTitle}>{t('newsletterWelcome.promoTitle')}</Text>
-                <div style={promoCodeBox}>
-                  <Text style={promoCodeText}>{promoCode}</Text>
-                </div>
-                <Text style={promoSubtext}>
-                  {t('newsletterWelcome.promoSubtext', { discount: '10%' })}
-                </Text>
-                {expiryText && (
-                  <Text style={promoExpiryStyle}>
-                    {t('newsletterWelcome.promoExpiry', { date: expiryText })}
-                  </Text>
-                )}
-              </Section>
-            )}
-
-            {/* CTA Button */}
-            <Section style={ctaSection}>
-              <a href={`${siteUrl}/shop`} style={button}>
-                {t('newsletterWelcome.discoverCollection')}
-              </a>
-            </Section>
-
-            {/* Email Address */}
-            <Text style={emailInfo}>
-              {t('newsletterWelcome.receivedBecause')}
-            </Text>
-          </Section>
-
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle title={t('newsletterWelcome.benefitsTitle') || 'Wat je krijgt'} />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            variant="bullet"
+            steps={[
+              {
+                title: t('newsletterWelcome.benefit1Title') || 'Nieuwe drops',
+                description:
+                  t('newsletterWelcome.benefit1Text') ||
+                  'Als eerste horen wanneer er iets nieuws lanceert.',
+              },
+              {
+                title: t('newsletterWelcome.benefit2Title') || 'Restock alerts',
+                description:
+                  t('newsletterWelcome.benefit2Text') ||
+                  'Direct een seintje wanneer populaire pieces terug zijn.',
+              },
+              {
+                title: t('newsletterWelcome.benefit3Title') || 'Exclusieve deals',
+                description:
+                  t('newsletterWelcome.benefit3Text') ||
+                  'Newsletter-only kortingen die je nergens anders krijgt.',
+              },
+            ]}
           />
-        </Container>
-      </Body>
-    </Html>
+        </div>
+      </EmailModule>
+
+      <EmailCta
+        href={`${siteUrl}/${locale}/shop`}
+        label={`${t('newsletterWelcome.discoverCollection') || 'Ontdek de collectie'}  →`}
+        variant="teal"
+        footnote={t('newsletterWelcome.receivedBecause') || `Je ontvangt deze mail omdat je je aanmeldde met ${email}.`}
+      />
+
+      <EmailShopMore siteUrl={siteUrl} locale={locale} />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#00B67A',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const heroText = {
-  margin: '20px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const content = {
-  padding: '0 24px 40px',
-}
-
-const welcomeText = {
-  margin: '0 0 24px 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-
-const benefitsList = {
-  margin: '24px 0',
-  padding: '24px',
-  backgroundColor: '#f7fafc',
-  border: '2px solid #e2e8f0',
-}
-
-const benefitTitle = {
-  margin: '0 0 4px 0',
-  fontSize: '15px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '700',
-}
-
-const benefitText = {
-  margin: '0',
-  fontSize: '13px',
-  lineHeight: '18px',
-  color: '#4a5568',
-}
-
-const ctaSection = {
-  margin: '32px 0',
-  textAlign: 'center' as const,
-}
-
-const button = {
-  display: 'inline-block',
-  padding: '16px 48px',
-  backgroundColor: '#00B67A',
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: '700',
-  textDecoration: 'none',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-  border: '3px solid #000000',
-  boxShadow: '4px 4px 0 #000000',
-}
-
-const emailInfo = {
-  margin: '24px 0 0 0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#718096',
-  textAlign: 'center' as const,
-}
-
-// Promo Code Styles (NEW!)
-const promoSection = {
-  margin: '24px 0',
-  padding: '24px',
-  backgroundColor: '#B4FF39',
-  border: '2px solid #000000',
-  textAlign: 'center' as const,
-}
-
-const promoTitle = {
-  margin: '0 0 16px 0',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#000000',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1.5px',
-}
-
-const promoCodeBox = {
-  padding: '16px 24px',
-  backgroundColor: '#ffffff',
-  border: '2px solid #000000',
-  display: 'inline-block',
-  margin: '0 auto 16px',
-}
-
-const promoCodeText = {
-  margin: '0',
-  fontSize: '24px',
-  fontWeight: '700',
-  color: '#000000',
-  letterSpacing: '2px',
-  fontFamily: 'Courier New, monospace',
-}
-
-const promoSubtext = {
-  margin: '0',
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#000000',
-  lineHeight: '20px',
-}
-
-const promoExpiryStyle = {
-  margin: '8px 0 0 0',
-  fontSize: '13px',
-  color: '#4a5568',
-  fontWeight: '500',
-}
-

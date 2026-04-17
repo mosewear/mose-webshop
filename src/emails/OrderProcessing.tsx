@@ -1,19 +1,21 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Section,
-  Text,
-} from '@react-email/components'
+import EmailShell from './components/EmailShell'
 import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
-import IconCircle from './components/IconCircle'
+import EmailHero from './components/EmailHero'
+import EmailMetaGrid from './components/EmailMetaGrid'
+import EmailModule from './components/EmailModule'
+import EmailSectionTitle from './components/EmailSectionTitle'
+import EmailSteps from './components/EmailSteps'
+import EmailCta from './components/EmailCta'
+import EmailShopMore from './components/EmailShopMore'
+import EmailParagraph from './components/EmailParagraph'
+import { EMAIL_COLORS, EMAIL_DEFAULT_CONTACT, EMAIL_SITE_URL } from './tokens'
 
 interface OrderProcessingEmailProps {
   orderNumber: string
   customerName: string
   t: (key: string, options?: any) => string
+  locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
@@ -24,165 +26,86 @@ export default function OrderProcessingEmail({
   orderNumber,
   customerName,
   t,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com',
-  contactEmail = 'info@mosewear.com',
-  contactPhone = '+31 50 211 1931',
-  contactAddress = 'Stavangerweg 13, 9723 JC Groningen',
+  locale = 'nl',
+  siteUrl = EMAIL_SITE_URL,
+  contactEmail = EMAIL_DEFAULT_CONTACT.email,
+  contactPhone = EMAIL_DEFAULT_CONTACT.phone,
+  contactAddress = EMAIL_DEFAULT_CONTACT.address,
 }: OrderProcessingEmailProps) {
-  // DEBUG: Log translation function results to browser console
-  if (typeof window !== 'undefined') {
-    console.log('🔍 [OrderProcessing] Translation debug:')
-    console.log('  - typeof t:', typeof t)
-    console.log('  - t("processing.title"):', t('processing.title'))
-    console.log('  - t("processing.subtitle"):', t('processing.subtitle'))
-    console.log('  - t("common.mose"):', t('common.mose'))
-  }
-  
+  const firstName = customerName.split(' ')[0] || customerName
+  const trackUrl = `${siteUrl}/${locale}/track-order`
+
   return (
-    <Html>
-      <Head />
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <EmailHeader siteUrl={siteUrl} />
+    <EmailShell
+      locale={locale}
+      preview={
+        t('processing.preheader', { orderNumber }) ||
+        `Je MOSE order #${orderNumber} wordt nu voor je ingepakt.`
+      }
+    >
+      <EmailHeader siteUrl={siteUrl} status={t('processing.status') || 'Processing'} />
 
-          {/* Hero Section */}
-          <Section style={hero}>
-            <IconCircle icon="settings" color="#667eea" size={38} />
-            <Text style={title}>{t('processing.title')}</Text>
-            <Text style={subtitle}>
-              {t('processing.subtitle', { name: customerName })}
-            </Text>
-          </Section>
+      <EmailHero
+        badge={t('processing.badge') || '▸ In behandeling'}
+        title={`${t('processing.heroGreeting') || 'Packing'},\n${firstName}.`}
+        subtitle={
+          t('processing.heroSubtitle') ||
+          "We pakken je bestelling zorgvuldig in. Zodra 'ie onderweg is hoor je van ons."
+        }
+      />
 
-          {/* Order Number */}
-          <Section style={orderSection}>
-            <Text style={orderLabel}>{t('processing.orderNumber')}</Text>
-            <Text style={orderNumberStyle}>{orderNumber}</Text>
-          </Section>
+      <EmailMetaGrid
+        pairs={[
+          { label: t('processing.orderNumber') || 'Ordernummer', value: `#${orderNumber}` },
+          { label: t('processing.statusLabel') || 'Status', value: t('processing.statusValue') || 'In Behandeling' },
+        ]}
+      />
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={description}>
-              {t('processing.description')}
-            </Text>
-          </Section>
-
-          {/* Info Box */}
-          <Section style={infoBox}>
-            <table cellPadding="0" cellSpacing="0" border={0} style={{ width: '100%' }}>
-              <tr>
-                <td style={{ width: '80px', verticalAlign: 'middle', textAlign: 'center' }}>
-                  <IconCircle icon="package" color="#667eea" size={20} />
-                </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <Text style={infoText}>
-                    {t('processing.processingInfo')}
-                  </Text>
-                </td>
-              </tr>
-            </table>
-          </Section>
-
-          {/* Footer */}
-          <EmailFooter 
-            siteUrl={siteUrl}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactAddress={contactAddress}
+      <EmailModule padding="28px 30px">
+        <EmailSectionTitle title={t('processing.whatNext') || 'Wat gebeurt er nu' } />
+        <div style={{ marginTop: '22px' }}>
+          <EmailSteps
+            steps={[
+              t('processing.step1') || 'Onze pakkers pakken jouw items zorgvuldig in.',
+              t('processing.step2') || 'We printen je verzendlabel.',
+              t('processing.step3') || 'Het pakket gaat richting onze vervoerder.',
+              t('processing.step4') || 'Je ontvangt een tracking link zodra het onderweg is.',
+            ]}
           />
-        </Container>
-      </Body>
-    </Html>
+        </div>
+      </EmailModule>
+
+      <EmailModule padding="26px 30px" background={EMAIL_COLORS.sectionAlt}>
+        <EmailParagraph tone="ink">
+          {t('processing.description') ||
+            'Gemiddelde verwerkingstijd is 1 werkdag. Alleen gewijzigd adres? Mail ons zo snel mogelijk, we proberen het nog mee te nemen.'}
+        </EmailParagraph>
+      </EmailModule>
+
+      <EmailCta
+        href={trackUrl}
+        label={`${t('processing.viewOrder') || 'Bekijk mijn bestelling'}  →`}
+        footnote={
+          <>
+            {t('processing.questions') || 'Vragen?'}{' '}
+            <a
+              href={`mailto:${contactEmail}`}
+              style={{ color: EMAIL_COLORS.primary, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {contactEmail}
+            </a>
+          </>
+        }
+      />
+
+      <EmailShopMore siteUrl={siteUrl} locale={locale} />
+
+      <EmailFooter
+        siteUrl={siteUrl}
+        contactEmail={contactEmail}
+        contactPhone={contactPhone}
+        contactAddress={contactAddress}
+      />
+    </EmailShell>
   )
 }
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
-
-const container = {
-  margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-}
-
-const hero = {
-  padding: '40px 24px',
-  textAlign: 'center' as const,
-  backgroundColor: '#ffffff',
-}
-
-const title = {
-  margin: '20px 0 0 0',
-  fontSize: '32px',
-  fontWeight: '900',
-  lineHeight: '1.2',
-  color: '#000000',
-  letterSpacing: '2px',
-  textTransform: 'uppercase' as const,
-}
-
-const subtitle = {
-  margin: '8px 0 0 0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-}
-
-const orderSection = {
-  padding: '0 24px 24px',
-  textAlign: 'center' as const,
-}
-
-const orderLabel = {
-  margin: '0 0 8px 0',
-  fontSize: '14px',
-  fontWeight: '600',
-  color: '#718096',
-  textTransform: 'uppercase' as const,
-  letterSpacing: '1px',
-}
-
-const orderNumberStyle = {
-  margin: '0',
-  fontSize: '24px',
-  fontWeight: '900',
-  color: '#000000',
-  letterSpacing: '2px',
-}
-
-const content = {
-  padding: '0 24px 24px',
-}
-
-const description = {
-  margin: '0',
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#4a5568',
-  textAlign: 'center' as const,
-}
-
-const infoBox = {
-  margin: '24px auto',
-  width: 'calc(100% - 48px)',
-  padding: '20px 24px',
-  backgroundColor: '#EEF2FF',
-  border: '2px solid #667eea',
-  boxSizing: 'border-box' as const,
-}
-
-const infoText = {
-  margin: '0',
-  fontSize: '14px',
-  lineHeight: '20px',
-  color: '#2d3748',
-  fontWeight: '600',
-}
-
