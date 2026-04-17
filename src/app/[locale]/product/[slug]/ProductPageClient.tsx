@@ -2,7 +2,6 @@
 
 import { use, useState, useEffect, useRef, ReactElement } from 'react'
 import Image from 'next/image'
-import DOMPurify from 'isomorphic-dompurify'
 import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
@@ -103,15 +102,22 @@ function formatTemplateText(text: string): ReactElement[] {
   })
 }
 
+// XSS-safe: eerst alle HTML escapen, dan alleen onze eigen <strong> en <br> injecteren.
+// Zo is DOMPurify niet nodig (SSR-veilig, geen jsdom-bundle issues).
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function renderHTMLContent(html: string): ReactElement {
-  const processedHTML = html
+  const processedHTML = escapeHtml(html)
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\n/g, '<br>')
-  const sanitized = DOMPurify.sanitize(processedHTML, {
-    ALLOWED_TAGS: ['strong', 'b', 'em', 'i', 'br', 'p', 'ul', 'ol', 'li', 'a', 'span'],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
-  })
-  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />
+  return <div dangerouslySetInnerHTML={{ __html: processedHTML }} />
 }
 
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)
