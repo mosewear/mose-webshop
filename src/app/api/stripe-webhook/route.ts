@@ -435,19 +435,30 @@ export async function POST(req: NextRequest) {
         }
         
         // ============================================
-        // AWARD LOYALTY POINTS
+        // AWARD LOYALTY POINTS (idempotent on order_id)
         // ============================================
         try {
           const { calculatePointsForOrder, calculateTier } = await import('@/lib/loyalty')
           const pointsToAward = calculatePointsForOrder(updatedOrder.total)
-          
-          if (pointsToAward > 0) {
+
+          // Idempotency guard: if we already recorded an 'earned' transaction
+          // for this order, skip. Protects against Stripe webhook retries.
+          const { data: existingTx } = await supabase
+            .from('loyalty_transactions')
+            .select('id')
+            .eq('order_id', order.id)
+            .eq('type', 'earned')
+            .maybeSingle()
+
+          if (existingTx) {
+            console.log(`ℹ️ Loyalty points already awarded for order ${order.id}, skipping`)
+          } else if (pointsToAward > 0) {
             // Upsert loyalty_points record
             const { data: existingRecord } = await supabase
               .from('loyalty_points')
               .select('id, points_balance, lifetime_points')
               .eq('email', order.email)
-              .single()
+              .maybeSingle()
             
             if (existingRecord) {
               const newBalance = (existingRecord.points_balance || 0) + pointsToAward

@@ -17,6 +17,7 @@ import { capitalizeName } from '@/lib/utils'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
 import ExpressCheckout from '@/components/ExpressCheckout'
+import { calculateTierDiscount, getTierDiscountPercent, type LoyaltyTier } from '@/lib/loyalty'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 
@@ -143,6 +144,7 @@ export default function CheckoutPage() {
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0)
   const [loyaltyExpanded, setLoyaltyExpanded] = useState(false)
   const [loyaltyLoading, setLoyaltyLoading] = useState(false)
+  const [loyaltyTier, setLoyaltyTier] = useState<LoyaltyTier>('bronze')
 
   // Newsletter subscription state
   const [newsletterOptIn, setNewsletterOptIn] = useState(true)
@@ -179,15 +181,20 @@ export default function CheckoutPage() {
     }
   }
 
-  // Fetch loyalty points for authenticated users
+  // Fetch loyalty points + tier for authenticated users.
   useEffect(() => {
-    if (!isLoggedIn) return
+    if (!isLoggedIn) {
+      setLoyaltyPointsBalance(0)
+      setLoyaltyTier('bronze')
+      return
+    }
     const fetchLoyalty = async () => {
       try {
         const res = await fetch('/api/loyalty')
         const json = await res.json()
         if (res.ok) {
           setLoyaltyPointsBalance(json.points_balance || 0)
+          setLoyaltyTier((json.tier as LoyaltyTier) || 'bronze')
         }
       } catch (err) {
         console.error('Error fetching loyalty points:', err)
@@ -211,7 +218,16 @@ export default function CheckoutPage() {
   }, [])
 
   const subtotal = getTotal()
-  const subtotalAfterDiscount = subtotal - promoDiscount - staffelSavings - loyaltyDiscount
+  // Tier-benefit discount: applies on the post-staffelkorting subtotal for
+  // authenticated users whose tier is Silver (5%) or Gold (10%). Applies on
+  // top of promo codes and redeemed points (loyalty membership perk, always
+  // on). Bronze customers get 0.
+  const subtotalForTier = Math.max(0, subtotal - staffelSavings)
+  const loyaltyTierDiscount = isLoggedIn
+    ? calculateTierDiscount(loyaltyTier, subtotalForTier)
+    : 0
+  const loyaltyTierDiscountPct = isLoggedIn ? getTierDiscountPercent(loyaltyTier) : 0
+  const subtotalAfterDiscount = subtotal - promoDiscount - staffelSavings - loyaltyDiscount - loyaltyTierDiscount
   const baseShipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   const shipping = deliveryMethod === 'pickup' ? 0 : baseShipping
   
@@ -1229,6 +1245,7 @@ export default function CheckoutPage() {
         tax_amount: 0,
         promo_code: promoCode || null,
         discount_amount: promoDiscount + loyaltyDiscount,
+        loyalty_tier_discount: loyaltyTierDiscount,
         locale: locale, // Save customer's language preference for emails
         shipping_address: {
           name: capitalizeName(`${form.firstName.trim()} ${form.lastName.trim()}`),
@@ -1767,7 +1784,24 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                   </>
                 )}
-                
+
+                {/* Loyalty Tier Discount - Mobile */}
+                {loyaltyTierDiscount > 0 && (
+                  <>
+                    <div className="h-px bg-gray-200"></div>
+                    <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
+                      <div>
+                        <div className="font-semibold text-yellow-800 uppercase tracking-wide text-xs">
+                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)} — {loyaltyTierDiscountPct}% korting
+                        </div>
+                        <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
+                      </div>
+                      <span className="font-bold text-yellow-800 text-sm">-€{loyaltyTierDiscount.toFixed(2)}</span>
+                    </div>
+                    <div className="h-px bg-gray-200"></div>
+                  </>
+                )}
+
                 {/* Shipping */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('shipping')}</span>
@@ -2681,7 +2715,24 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                   </>
                 )}
-                
+
+                {/* Loyalty Tier Discount - Desktop */}
+                {loyaltyTierDiscount > 0 && (
+                  <>
+                    <div className="h-px bg-gray-200"></div>
+                    <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
+                      <div>
+                        <div className="font-semibold text-yellow-800 uppercase tracking-wide text-sm">
+                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)} — {loyaltyTierDiscountPct}% korting
+                        </div>
+                        <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
+                      </div>
+                      <span className="font-bold text-yellow-800">-€{loyaltyTierDiscount.toFixed(2)}</span>
+                    </div>
+                    <div className="h-px bg-gray-200"></div>
+                  </>
+                )}
+
                 {/* Shipping */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('shipping')}</span>

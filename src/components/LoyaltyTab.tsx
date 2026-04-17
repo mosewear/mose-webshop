@@ -31,8 +31,8 @@ const tierColors: Record<LoyaltyTier, { bg: string; text: string; border: string
 }
 
 const tierBenefitLabels: Record<string, string> = {
-  free_shipping: 'Gratis verzending',
   discount_5_percent: '5% korting op alle bestellingen',
+  discount_10_percent: '10% korting op alle bestellingen',
 }
 
 export default function LoyaltyTab() {
@@ -203,7 +203,10 @@ export default function LoyaltyTab() {
           </li>
           <li className="flex items-start gap-2">
             <span className="font-bold text-brand-primary mt-0.5">3.</span>
-            <span>Bereik hogere tiers voor extra voordelen zoals gratis verzending</span>
+            <span>
+              Bereik <strong>Silver</strong> (500 pt) voor <strong>5% korting</strong> of{' '}
+              <strong>Gold</strong> (1000 pt) voor <strong>10% korting</strong> op alle bestellingen
+            </span>
           </li>
         </ul>
       </div>

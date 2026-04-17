@@ -4,6 +4,8 @@ import {
   calculateTier,
   calculatePointsForOrder,
   calculateRedemptionValue,
+  calculateTierDiscount,
+  getTierDiscountPercent,
   getProgressToNextTier,
 } from '@/lib/loyalty'
 
@@ -106,6 +108,67 @@ describe('loyalty', () => {
       const result = getProgressToNextTier(99999)
       expect(result.progress).toBe(100)
       expect(result.pointsNeeded).toBe(0)
+    })
+  })
+
+  describe('getTierDiscountPercent', () => {
+    it('returns 0 for bronze', () => {
+      expect(getTierDiscountPercent('bronze')).toBe(0)
+    })
+
+    it('returns 5 for silver', () => {
+      expect(getTierDiscountPercent('silver')).toBe(5)
+    })
+
+    it('returns 10 for gold', () => {
+      expect(getTierDiscountPercent('gold')).toBe(10)
+    })
+  })
+
+  describe('calculateTierDiscount', () => {
+    it('returns 0 for bronze regardless of subtotal', () => {
+      expect(calculateTierDiscount('bronze', 100)).toBe(0)
+    })
+
+    it('returns 5% of subtotal for silver', () => {
+      expect(calculateTierDiscount('silver', 100)).toBe(5)
+    })
+
+    it('returns 10% of subtotal for gold', () => {
+      expect(calculateTierDiscount('gold', 100)).toBe(10)
+    })
+
+    it('rounds to 2 decimals', () => {
+      // 5% of 33.33 = 1.6665 -> rounds to 1.67
+      expect(calculateTierDiscount('silver', 33.33)).toBe(1.67)
+    })
+
+    it('returns 0 for negative subtotal', () => {
+      expect(calculateTierDiscount('gold', -50)).toBe(0)
+    })
+
+    it('returns 0 for zero subtotal', () => {
+      expect(calculateTierDiscount('gold', 0)).toBe(0)
+    })
+
+    it('handles large subtotals', () => {
+      expect(calculateTierDiscount('gold', 1234.56)).toBeCloseTo(123.46, 2)
+    })
+  })
+
+  describe('LOYALTY_CONFIG tier benefits', () => {
+    it('bronze has no benefits', () => {
+      expect(LOYALTY_CONFIG.tiers.bronze.benefits).toEqual([])
+    })
+
+    it('silver grants a 5% discount benefit', () => {
+      expect(LOYALTY_CONFIG.tiers.silver.discountPercent).toBe(5)
+      expect(LOYALTY_CONFIG.tiers.silver.benefits).toContain('discount_5_percent')
+    })
+
+    it('gold grants a 10% discount benefit', () => {
+      expect(LOYALTY_CONFIG.tiers.gold.discountPercent).toBe(10)
+      expect(LOYALTY_CONFIG.tiers.gold.benefits).toContain('discount_10_percent')
     })
   })
 })

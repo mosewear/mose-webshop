@@ -80,8 +80,31 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Calculate final total with validated discount
-    const subtotalAfterDiscount = subtotal - validatedDiscount
+    // Look up the loyalty tier discount that was locked in when the order
+    // was created (in /api/checkout). Using the stored value keeps the total
+    // stable between order creation and payment confirmation even if the
+    // customer's tier flips in the meantime.
+    let loyaltyTierDiscount = 0
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } }
+      )
+      const { data: existingOrder } = await adminClient
+        .from('orders')
+        .select('loyalty_tier_discount')
+        .eq('id', orderId)
+        .maybeSingle()
+      loyaltyTierDiscount = Number(existingOrder?.loyalty_tier_discount || 0)
+      if (!Number.isFinite(loyaltyTierDiscount) || loyaltyTierDiscount < 0) loyaltyTierDiscount = 0
+    } catch (err) {
+      console.error('[create-payment-intent] Failed to load loyalty tier discount (non-fatal):', err)
+    }
+
+    // Calculate final total with validated discount + tier discount
+    const subtotalAfterDiscount = subtotal - validatedDiscount - loyaltyTierDiscount
     let finalDeliveryMethod: 'shipping' | 'pickup' = deliveryMethod === 'pickup' ? 'pickup' : 'shipping'
     let shippingCost = subtotalAfterDiscount >= settings.free_shipping_threshold ? 0 : settings.shipping_cost
 

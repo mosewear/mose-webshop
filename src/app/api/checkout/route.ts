@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { evaluatePickupEligibility } from '@/lib/pickup-eligibility'
 import { capitalizeName } from '@/lib/utils'
 import { calculateQuantityDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
+import { createClient as createServerSupabaseClient } from '@/lib/supabase/server'
+import { calculateTier, calculateTierDiscount, type LoyaltyTier } from '@/lib/loyalty'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
@@ -353,7 +355,39 @@ export async function POST(request: Request) {
         ? settings.pickup_location_address
         : 'Stavangerweg 13, 9723 JC Groningen'
 
-    const subtotalAfterDiscount = order.subtotal - validatedDiscount
+    // ============================================
+    // STEP 2B: LOYALTY TIER DISCOUNT (auth-verified)
+    // ============================================
+    // Only apply tier discount when the authenticated user's email matches
+    // the order email. Prevents guests from using another customer's tier.
+    let loyaltyTierDiscount = 0
+    let loyaltyTierApplied: LoyaltyTier = 'bronze'
+    try {
+      const authClient = await createServerSupabaseClient()
+      const { data: { user: authUser } } = await authClient.auth.getUser()
+      if (authUser?.email && authUser.email.toLowerCase() === String(order.email || '').toLowerCase()) {
+        const { data: loyaltyRecord } = await supabase
+          .from('loyalty_points')
+          .select('tier, lifetime_points')
+          .eq('email', authUser.email)
+          .maybeSingle()
+        if (loyaltyRecord) {
+          const tier: LoyaltyTier = (loyaltyRecord.tier as LoyaltyTier | null)
+            || calculateTier(loyaltyRecord.lifetime_points || 0)
+          const eligible = Math.max(0, order.subtotal)
+          loyaltyTierDiscount = calculateTierDiscount(tier, eligible)
+          loyaltyTierApplied = tier
+        }
+      }
+    } catch (err) {
+      console.error('⚠️ Loyalty tier discount lookup failed (non-fatal):', err)
+    }
+    order.loyalty_tier_discount = loyaltyTierDiscount
+    if (loyaltyTierDiscount > 0) {
+      console.log(`✅ Loyalty tier discount applied: ${loyaltyTierApplied} -€${loyaltyTierDiscount.toFixed(2)}`)
+    }
+
+    const subtotalAfterDiscount = order.subtotal - validatedDiscount - loyaltyTierDiscount
     let finalDeliveryMethod: 'shipping' | 'pickup' = order.delivery_method === 'pickup' ? 'pickup' : 'shipping'
     let pickupEligible = false
     let pickupDistanceKm: number | null = null

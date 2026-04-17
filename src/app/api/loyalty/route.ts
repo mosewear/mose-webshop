@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
-import { getProgressToNextTier } from '@/lib/loyalty'
+import { calculateTier, getProgressToNextTier, getTierDiscountPercent, type LoyaltyTier } from '@/lib/loyalty'
 
 export async function GET() {
   try {
@@ -24,17 +24,23 @@ export async function GET() {
       return NextResponse.json({
         points_balance: 0,
         lifetime_points: 0,
-        tier: 'bronze',
+        tier: 'bronze' as LoyaltyTier,
+        discount_percent: getTierDiscountPercent('bronze'),
         progress,
       })
     }
 
-    const progress = getProgressToNextTier(loyaltyRecord.lifetime_points || 0)
+    const lifetimePoints = loyaltyRecord.lifetime_points || 0
+    // Trust stored tier but fall back to deterministic recompute so we never
+    // return a stale tier if the thresholds ever change.
+    const tier: LoyaltyTier = (loyaltyRecord.tier as LoyaltyTier | null) || calculateTier(lifetimePoints)
+    const progress = getProgressToNextTier(lifetimePoints)
 
     return NextResponse.json({
       points_balance: loyaltyRecord.points_balance || 0,
-      lifetime_points: loyaltyRecord.lifetime_points || 0,
-      tier: loyaltyRecord.tier || 'bronze',
+      lifetime_points: lifetimePoints,
+      tier,
+      discount_percent: getTierDiscountPercent(tier),
       progress,
     })
   } catch (error: any) {

@@ -21,6 +21,7 @@ interface Order {
   shipping_cost: number
   total: number
   discount_amount?: number
+  loyalty_tier_discount?: number
   promo_code?: string
   delivery_method?: 'shipping' | 'pickup'
   pickup_location_name?: string | null
@@ -401,6 +402,12 @@ export default function OrderConfirmationPage({
                   <span className="font-semibold">-€{order.discount_amount.toFixed(2)}</span>
                 </div>
               )}
+              {order.loyalty_tier_discount && order.loyalty_tier_discount > 0 ? (
+                <div className="flex justify-between text-lg text-yellow-400">
+                  <span>Loyalty korting</span>
+                  <span className="font-semibold">-€{order.loyalty_tier_discount.toFixed(2)}</span>
+                </div>
+              ) : null}
               <div className="border-t-2 border-white pt-4 flex justify-between items-center text-2xl md:text-3xl">
                 <span className="font-display">{t('summary.total')}</span>
                 <span className="font-display">€{order.total.toFixed(2)}</span>
