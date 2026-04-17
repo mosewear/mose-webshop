@@ -49,7 +49,7 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "Open admin dashboard",
-      "url": "/admin",
+      "url": "/admin/",
       "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
     },
     {
