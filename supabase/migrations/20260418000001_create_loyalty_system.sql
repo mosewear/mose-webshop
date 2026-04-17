@@ -17,16 +17,19 @@ CREATE INDEX IF NOT EXISTS idx_loyalty_points_tier ON loyalty_points(tier);
 
 ALTER TABLE loyalty_points ENABLE ROW LEVEL SECURITY;
 
--- Users can read their own loyalty data
+-- Users can read their own loyalty data (email uit JWT, geen query op auth.users)
 CREATE POLICY "Users can read own loyalty" ON loyalty_points
   FOR SELECT USING (
-    email = (SELECT email FROM auth.users WHERE id = auth.uid())
+    email = (auth.jwt() ->> 'email')
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
   );
 
 -- Only service role / admins can modify
 CREATE POLICY "Admins can manage loyalty" ON loyalty_points
   FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+  )
+  WITH CHECK (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
   );
 
@@ -48,16 +51,19 @@ CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_created_at ON loyalty_transa
 
 ALTER TABLE loyalty_transactions ENABLE ROW LEVEL SECURITY;
 
--- Users can read their own transactions
+-- Users can read their own transactions (email uit JWT, geen query op auth.users)
 CREATE POLICY "Users can read own transactions" ON loyalty_transactions
   FOR SELECT USING (
-    email = (SELECT email FROM auth.users WHERE id = auth.uid())
+    email = (auth.jwt() ->> 'email')
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
   );
 
 -- Only service role / admins can insert/modify
 CREATE POLICY "Admins can manage transactions" ON loyalty_transactions
   FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+  )
+  WITH CHECK (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
   );
 
