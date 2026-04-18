@@ -81,9 +81,11 @@ export default function EmailMetaGrid({
                       fontSize: '26px',
                       color: EMAIL_COLORS.ink,
                       letterSpacing: '0.06em',
-                      lineHeight: 1.05,
-                      wordBreak: 'break-word',
-                      overflowWrap: 'anywhere',
+                      lineHeight: 1.15,
+                      /* Keep amounts (#, €…) on one line; word-break:anywhere was splitting €65.00 */
+                      whiteSpace: 'nowrap',
+                      wordBreak: 'normal',
+                      overflowWrap: 'normal',
                     }}
                   >
                     {pair.value}
