@@ -18,7 +18,8 @@ interface EmailFooterProps {
 
 const footerSection = {
   backgroundColor: EMAIL_COLORS.black,
-  padding: '52px 24px 56px 24px',
+  /* Veel lucht boven het logo t.o.v. de witte content erboven */
+  padding: '120px 24px 56px 24px',
   textAlign: 'center' as const,
 }
 
