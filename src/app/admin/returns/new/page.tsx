@@ -285,8 +285,9 @@ export default function AdminCreateReturnPage() {
         <div className="bg-white border-2 border-gray-200 p-4 md:p-6 space-y-4">
           <h2 className="text-xl font-bold">1. Kies een bestelling</h2>
           <p className="text-sm text-gray-600">
-            Zoek op e-mailadres of de eerste karakters van een order-ID. Alleen
-            geleverde orders zijn zichtbaar tenzij je zoekt.
+            Zonder zoekterm zie je de recentste bestellingen (alle statussen). Met
+            minimaal 3 tekens zoek je op e-mailadres of op het begin van een
+            order-ID (hex, zonder #).
           </p>
           <div className="relative">
             <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
