@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { Package, Search } from 'lucide-react'
 
@@ -81,7 +80,6 @@ const LABEL_MODE_OPTIONS: Array<{
 
 export default function AdminCreateReturnPage() {
   const router = useRouter()
-  const supabase = createClient()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
 
@@ -116,37 +114,22 @@ export default function AdminCreateReturnPage() {
   async function runSearch(term: string) {
     setSearchLoading(true)
     try {
-      /** Postgres: ILIKE on uuid column fails (42883). Cast to text: id::text */
-      const ORDER_LIST_LIMIT = 100
-
-      let query = supabase
-        .from('orders')
-        .select(
-          `id, email, total, status, created_at, delivered_at, shipping_address, order_items(*)`
-        )
-        .order('created_at', { ascending: false })
-        .limit(ORDER_LIST_LIMIT)
-
+      const params = new URLSearchParams()
       const trimmed = term.trim()
-      if (trimmed.length >= 3) {
-        // email search or id-prefix search
-        if (trimmed.includes('@')) {
-          query = query.ilike('email', `%${trimmed}%`)
-        } else {
-          const idFragment = trimmed.replace(/^#/, '').trim()
-          query = query.filter('id::text', 'ilike', `${idFragment}%`)
-        }
-      } else {
-        // Recent delivered orders only when not searching (broader list than before)
-        query = query.eq('status', 'delivered')
-      }
+      if (trimmed) params.set('q', trimmed)
 
-      const { data, error } = await query
-      if (error) throw error
-      setOrders((data as any) || [])
-    } catch (err: any) {
+      const res = await fetch(`/api/admin/orders/search?${params.toString()}`, {
+        credentials: 'include',
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(body.error || res.statusText || 'Zoeken mislukt')
+      }
+      setOrders((body.orders as Order[]) || [])
+    } catch (err: unknown) {
       console.error('Order search error:', err)
-      toast.error(err.message || 'Zoeken mislukt')
+      const message = err instanceof Error ? err.message : 'Zoeken mislukt'
+      toast.error(message)
     } finally {
       setSearchLoading(false)
     }

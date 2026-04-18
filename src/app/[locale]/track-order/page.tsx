@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Package, Truck, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
@@ -31,7 +30,6 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [orderData, setOrderData] = useState<OrderTrackingData | null>(null)
-  const supabase = createClient()
 
   const handleTrackOrder = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,22 +43,20 @@ export default function TrackOrderPage() {
 
     try {
       setLoading(true)
-      
-      // Search for order by ID and email
-      const idFragment = orderNumber.replace(/^#/, '').trim()
-      const { data, error: fetchError } = await supabase
-        .from('orders')
-        .select('id, status, created_at, updated_at, tracking_code, tracking_url, carrier, estimated_delivery_date, total, order_items(product_name, quantity, size, color)')
-        .eq('email', email)
-        .filter('id::text', 'ilike', `${idFragment}%`)
-        .single()
 
-      if (fetchError || !data) {
+      const res = await fetch('/api/track-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, orderNumber }),
+      })
+      const payload = await res.json().catch(() => ({}))
+
+      if (!res.ok || !payload.order) {
         setError(t('errors.notFound'))
         return
       }
 
-      setOrderData(data as any)
+      setOrderData(payload.order as OrderTrackingData)
     } catch (err: any) {
       setError(t('errors.generic'))
     } finally {
