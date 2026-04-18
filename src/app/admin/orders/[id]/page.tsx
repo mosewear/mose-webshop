@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2, Plus, Minus } from 'lucide-react'
+import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2, Plus, Minus, RotateCcw } from 'lucide-react'
 import { getCarrierOptions, generateTrackingUrl, calculateEstimatedDelivery } from '@/lib/order-utils'
 
 interface Order {
@@ -847,33 +847,44 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link
-          href="/admin/orders"
-          className="p-2 hover:bg-gray-100 transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">
-            Order #{order.id.slice(0, 8)}
-          </h1>
-          <p className="text-sm md:text-base text-gray-600">
-            Geplaatst op {new Date(order.created_at).toLocaleDateString('nl-NL', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
+      <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-4 min-w-0 flex-1">
+          <Link
+            href="/admin/orders"
+            className="p-2 hover:bg-gray-100 transition-colors shrink-0"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl md:text-3xl font-display font-bold mb-2">
+              Order #{order.id.slice(0, 8)}
+            </h1>
+            <p className="text-sm md:text-base text-gray-600">
+              Geplaatst op {new Date(order.created_at).toLocaleDateString('nl-NL', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
         </div>
-        <span className={`px-4 py-2 text-sm font-semibold border-2 flex items-center gap-2 ${getStatusColor(order.status)}`}>
-          {getStatusIcon(order.status)}
-          {getStatusLabel(order.status).toUpperCase()}
-        </span>
+        <div className="flex flex-wrap items-stretch sm:items-center gap-2 shrink-0 lg:pt-1">
+          <Link
+            href={`/admin/returns/new?orderId=${encodeURIComponent(order.id)}`}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-brand-primary text-brand-primary font-bold uppercase text-xs sm:text-sm hover:bg-brand-primary hover:text-white transition-colors"
+          >
+            <RotateCcw className="w-4 h-4 shrink-0" aria-hidden />
+            Retour aanmaken
+          </Link>
+          <span className={`px-4 py-2 text-sm font-semibold border-2 flex items-center justify-center gap-2 ${getStatusColor(order.status)}`}>
+            {getStatusIcon(order.status)}
+            {getStatusLabel(order.status).toUpperCase()}
+          </span>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -1393,17 +1404,25 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           {/* Returns Information */}
           {returns.length > 0 && (
             <div className="bg-white border-2 border-gray-200 p-4 md:p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <h2 className="text-xl font-bold">Retouren</h2>
-                <button
-                  onClick={fetchReturns}
-                  disabled={refreshingReturns}
-                  className="flex items-center gap-2 px-3 py-1 text-sm font-semibold text-brand-primary hover:text-brand-primary-hover transition-colors disabled:opacity-50"
-                  title="Ververs retour statuses"
-                >
-                  <RefreshCw className={`w-4 h-4 ${refreshingReturns ? 'animate-spin' : ''}`} />
-                  {refreshingReturns ? 'Bezig...' : 'Ververs'}
-                </button>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Link
+                    href={`/admin/returns/new?orderId=${encodeURIComponent(order.id)}`}
+                    className="text-sm font-bold text-brand-primary hover:underline whitespace-nowrap"
+                  >
+                    + Nieuwe retour
+                  </Link>
+                  <button
+                    onClick={fetchReturns}
+                    disabled={refreshingReturns}
+                    className="flex items-center gap-2 px-3 py-1 text-sm font-semibold text-brand-primary hover:text-brand-primary-hover transition-colors disabled:opacity-50"
+                    title="Ververs retour statuses"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${refreshingReturns ? 'animate-spin' : ''}`} />
+                    {refreshingReturns ? 'Bezig...' : 'Ververs'}
+                  </button>
+                </div>
               </div>
               <div className="space-y-3">
                 {returns.map((returnItem) => (

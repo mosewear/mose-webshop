@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Package, Search } from 'lucide-react'
 
@@ -78,8 +78,14 @@ const LABEL_MODE_OPTIONS: Array<{
   },
 ]
 
-export default function AdminCreateReturnPage() {
+function AdminCreateReturnPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  /** Met ?orderId= eerst false zodat de orderlijst-search niet race't met prefill */
+  const [prefillReady, setPrefillReady] = useState(
+    () => !searchParams.get('orderId')?.trim()
+  )
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
 
@@ -104,12 +110,64 @@ export default function AdminCreateReturnPage() {
   const [force, setForce] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
+  // ---------- Prefill vanuit orderpagina (?orderId=uuid) ----------
+  useEffect(() => {
+    const oid = searchParams.get('orderId')?.trim()
+    if (!oid) {
+      setPrefillReady(true)
+      return
+    }
+
+    setPrefillReady(false)
+    const ac = new AbortController()
+
+    ;(async () => {
+      setSearchLoading(true)
+      try {
+        const res = await fetch(
+          `/api/admin/orders/search?q=${encodeURIComponent(oid)}`,
+          { credentials: 'include', signal: ac.signal }
+        )
+        const body = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(body.error || res.statusText || 'Laden mislukt')
+        const list = (body.orders || []) as Order[]
+        const exact = list.find((o) => o.id === oid)
+        if (ac.signal.aborted) return
+        if (exact) {
+          setOrders([exact])
+          setSearchTerm(exact.email || oid.slice(0, 8))
+          setSelectedOrder(exact)
+          setSelectedItems({})
+          setReturnReason('')
+          setAdminNotes('')
+          setRefundOverride('')
+          setStep(2)
+          router.replace('/admin/returns/new', { scroll: false })
+        } else {
+          toast.error('Order niet gevonden of geen toegang.')
+          router.replace('/admin/returns/new', { scroll: false })
+        }
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name === 'AbortError') return
+        const msg = e instanceof Error ? e.message : 'Laden mislukt'
+        toast.error(msg)
+        router.replace('/admin/returns/new', { scroll: false })
+      } finally {
+        setSearchLoading(false)
+        setPrefillReady(true)
+      }
+    })()
+
+    return () => ac.abort()
+  }, [searchParams, router])
+
   // ---------- Step 1 helpers ----------
   useEffect(() => {
+    if (!prefillReady || step !== 1) return
     const handle = setTimeout(() => runSearch(searchTerm), 250)
     return () => clearTimeout(handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm])
+  }, [searchTerm, step, prefillReady])
 
   async function runSearch(term: string) {
     setSearchLoading(true)
@@ -675,5 +733,17 @@ export default function AdminCreateReturnPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AdminCreateReturnPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="py-16 text-center text-gray-500 text-sm">Laden…</div>
+      }
+    >
+      <AdminCreateReturnPageContent />
+    </Suspense>
   )
 }
