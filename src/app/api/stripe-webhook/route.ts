@@ -1041,8 +1041,11 @@ export async function POST(req: NextRequest) {
           { auth: { persistSession: false } }
         )
 
-        // Check if this is a return refund
-        const refundMetadata = charge.refunds?.data?.[0]?.metadata
+        // Return refund: pick the refund row with our metadata (not refunds.data[0] — multiple refunds possible)
+        const returnRefund = charge.refunds?.data?.find(
+          (r) => r.metadata?.type === 'return_refund' && r.metadata?.return_id
+        )
+        const refundMetadata = returnRefund?.metadata
         if (refundMetadata?.type === 'return_refund' && refundMetadata?.return_id) {
           const returnId = refundMetadata.return_id
           console.log('💰 Webhook: Return refund detected for return:', returnId)
@@ -1063,6 +1066,23 @@ export async function POST(req: NextRequest) {
             console.error('❌ Error updating return refund status:', returnError)
           } else {
             console.log('✅ Return refund status updated:', returnId)
+
+            // Keep orders.status in sync (return_completed) when webhook completes refund async —
+            // processReturnRefund already does this when Stripe returns succeeded immediately.
+            if (returnRecord?.order_id) {
+              try {
+                await updateOrderStatusForReturn(returnRecord.order_id, 'refunded')
+                console.log(
+                  '✅ Order status synced after charge.refunded:',
+                  returnRecord.order_id
+                )
+              } catch (syncErr) {
+                console.error(
+                  '❌ updateOrderStatusForReturn after charge.refunded:',
+                  syncErr
+                )
+              }
+            }
             
             // ============================================
             // INCREMENT STOCK AFTER REFUND (Return items back to inventory)
@@ -1124,7 +1144,7 @@ export async function POST(req: NextRequest) {
                 payment_metadata: {
                   refunded_at: new Date().toISOString(),
                   refund_amount: charge.amount_refunded,
-                  refund_reason: charge.refunds?.data?.[0]?.reason,
+                  refund_reason: returnRefund?.reason ?? charge.refunds?.data?.[0]?.reason,
                   return_id: returnId,
                 },
               })
