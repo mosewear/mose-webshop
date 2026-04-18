@@ -98,6 +98,7 @@ export default function EmailHero({
               />
               {subtitle ? (
                 <div
+                  className="mose-hero-sub"
                   style={{
                     marginTop: '18px',
                     fontFamily: EMAIL_FONTS.body,

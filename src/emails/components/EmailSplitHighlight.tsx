@@ -123,6 +123,7 @@ export default function EmailSplitHighlight({
               &nbsp;
             </td>
             <td
+              width="50%"
               valign="top"
               className="mose-mobile-stack mose-mobile-stack-last"
               style={{

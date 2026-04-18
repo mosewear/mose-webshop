@@ -92,6 +92,8 @@ export default function EmailItemRow({
                   textTransform: 'uppercase',
                   color: EMAIL_COLORS.ink,
                   lineHeight: 1.15,
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {name}

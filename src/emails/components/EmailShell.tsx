@@ -44,13 +44,15 @@ const containerStyle = {
 const globalStyles = `
   body, table, td, p, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
   table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; }
-  img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; display:block; }
+  img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; display:block; max-width:100% !important; height:auto !important; }
   body { margin:0 !important; padding:0 !important; width:100% !important; background-color:${EMAIL_COLORS.surface} !important; }
   a { color:inherit; }
   a[x-apple-data-detectors] { color:inherit !important; text-decoration:none !important; }
+  .mose-container table { max-width:100% !important; }
+  .mose-hero-sub { max-width:100% !important; box-sizing:border-box !important; }
 
   @media only screen and (max-width: 620px) {
-    .mose-container { width:100% !important; padding:16px 8px 24px 8px !important; }
+    .mose-container { width:100% !important; max-width:100% !important; padding:16px 8px 24px 8px !important; }
     .mose-pad { padding:20px !important; }
     .mose-pad-lg { padding:28px 22px !important; }
     .mose-hero-title { font-size:56px !important; line-height:0.9 !important; }
@@ -61,11 +63,12 @@ const globalStyles = `
     .mose-product-col { width:112px !important; padding-right:14px !important; }
     .mose-logo-nav { width:108px !important; height:auto !important; }
     .mose-logo-footer { width:100px !important; height:auto !important; }
-    .mose-mobile-stack { display:block !important; width:100% !important; box-sizing:border-box; border-right:none !important; border-bottom:1px solid ${EMAIL_COLORS.borderStrong} !important; }
+    .mose-mobile-stack { display:block !important; width:100% !important; max-width:100% !important; box-sizing:border-box !important; border-right:none !important; border-bottom:1px solid ${EMAIL_COLORS.borderStrong} !important; }
     .mose-mobile-stack-last { border-bottom:none !important; }
-    .mose-gutter { display:none !important; width:0 !important; font-size:0 !important; line-height:0 !important; }
+    .mose-gutter { display:none !important; width:0 !important; font-size:0 !important; line-height:0 !important; height:0 !important; overflow:hidden !important; }
     .mose-hide-mobile { display:none !important; }
-    .mose-btn { display:block !important; width:100% !important; box-sizing:border-box; }
+    .mose-btn { display:block !important; width:100% !important; box-sizing:border-box !important; }
+    .mose-breakdown-value { white-space:normal !important; word-break:break-word !important; max-width:52% !important; }
   }
 
   @media (prefers-color-scheme: dark) {

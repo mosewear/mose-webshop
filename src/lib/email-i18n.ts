@@ -8,6 +8,7 @@ export type EmailTranslationKeys = {
 } & Partial<{
   common: {
     mose: string
+    piece: string
     size: string
     color: string
     quantity: string
@@ -440,6 +441,7 @@ export type EmailTranslationKeys = {
 const nl: EmailTranslationKeys = {
   common: {
     mose: 'MOSE',
+    piece: 'stuk',
     size: 'Maat',
     color: 'Kleur',
     quantity: 'Aantal',
@@ -870,6 +872,7 @@ const nl: EmailTranslationKeys = {
 const en: EmailTranslationKeys = {
   common: {
     mose: 'MOSE',
+    piece: 'piece',
     size: 'Size',
     color: 'Color',
     quantity: 'Quantity',
@@ -1310,6 +1313,24 @@ const resources = {
  */
 import { modularEn, modularNl } from './email-i18n-modular'
 
+/**
+ * If a resolved string still looks like the requested i18n key (or a variant
+ * such as ORDERCONFIRMATION.FREE vs orderConfirmation.free), treat it as a
+ * miss so template-level `|| 'fallback'` can run. Prevents raw keys leaking
+ * into HTML when legacy behaviour returned the key on miss or bad data.
+ */
+function translationLooksLikeRawKey(requestedKey: string, output: string): boolean {
+  const o = output.trim()
+  const k = requestedKey.trim()
+  if (!o || !k) return false
+  if (o === k) return true
+  if (o.toLowerCase() === k.toLowerCase()) return true
+  if (!k.includes('.')) return false
+  const strip = (s: string) => s.replace(/[^a-z0-9]/gi, '').toLowerCase()
+  if (o.includes('.') && strip(o) === strip(k)) return true
+  return false
+}
+
 export async function getEmailT(locale: string = 'nl') {
   // Lookup order (per locale): modular dict → legacy dict → Dutch modular →
   // Dutch legacy → empty string. This guarantees that:
@@ -1348,7 +1369,16 @@ export async function getEmailT(locale: string = 'nl') {
       }
       return ''
     }
-    return options ? interpolate(raw, options) : raw
+    const interpolated = options ? interpolate(raw, options) : raw
+    if (translationLooksLikeRawKey(key, interpolated)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          `[email-i18n] Suppressed raw-key-like translation output for key: ${key}`
+        )
+      }
+      return ''
+    }
+    return interpolated
   }
 }
 

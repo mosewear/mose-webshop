@@ -29,6 +29,8 @@ import InsiderBehindScenesEmail from '@/emails/InsiderBehindScenes'
 import InsiderLaunchWeekEmail from '@/emails/InsiderLaunchWeek'
 import ContactFormEmail from '@/emails/ContactForm'
 import NewReviewNotificationEmail from '@/emails/NewReviewNotification'
+import LoyaltyStatusUpdateEmail from '@/emails/LoyaltyStatusUpdate'
+import ReturnCreatedByAdminEmail from '@/emails/ReturnCreatedByAdmin'
 
 async function main() {
   const locales: Array<'nl' | 'en'> = ['nl', 'en']
@@ -291,6 +293,37 @@ async function main() {
           t,
           locale,
         } as any),
+    },
+    {
+      name: 'LoyaltyStatusUpdate',
+      build: (_t, locale) =>
+        React.createElement(LoyaltyStatusUpdateEmail, {
+          customerName: 'Pieter Jansen',
+          tier: 'bronze',
+          pointsBalance: 400,
+          lifetimePoints: 400,
+          previousTier: null,
+          variant: 'broadcast',
+          locale,
+        }),
+    },
+    {
+      name: 'ReturnCreatedByAdmin',
+      build: (t, locale) =>
+        React.createElement(ReturnCreatedByAdminEmail, {
+          returnNumber: 'A1B2C3D4',
+          orderNumber: '9919CFEA',
+          customerName: 'Rick',
+          labelMode: 'customer_free',
+          inStoreState: undefined,
+          returnItems: [
+            { product_name: 'MOSE Tee', size: 'M', color: 'Beige', quantity: 1 },
+          ],
+          refundAmount: 65,
+          labelCost: 7.87,
+          t,
+          locale,
+        }),
     },
   ]
 

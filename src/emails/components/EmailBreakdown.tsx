@@ -82,6 +82,7 @@ export default function EmailBreakdown({ title, rows }: EmailBreakdownProps) {
                 </td>
                 <td
                   align="right"
+                  className="mose-breakdown-value"
                   style={{
                     padding: '5px 0',
                     color,
@@ -90,6 +91,7 @@ export default function EmailBreakdown({ title, rows }: EmailBreakdownProps) {
                     letterSpacing: isHighlight ? '0.12em' : undefined,
                     textTransform: isHighlight ? 'uppercase' : undefined,
                     whiteSpace: 'nowrap',
+                    wordBreak: 'break-word',
                   }}
                 >
                   {row.value}
