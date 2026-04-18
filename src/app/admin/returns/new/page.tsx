@@ -116,13 +116,16 @@ export default function AdminCreateReturnPage() {
   async function runSearch(term: string) {
     setSearchLoading(true)
     try {
+      /** Postgres: ILIKE on uuid column fails (42883). Cast to text: id::text */
+      const ORDER_LIST_LIMIT = 100
+
       let query = supabase
         .from('orders')
         .select(
           `id, email, total, status, created_at, delivered_at, shipping_address, order_items(*)`
         )
         .order('created_at', { ascending: false })
-        .limit(15)
+        .limit(ORDER_LIST_LIMIT)
 
       const trimmed = term.trim()
       if (trimmed.length >= 3) {
@@ -130,11 +133,11 @@ export default function AdminCreateReturnPage() {
         if (trimmed.includes('@')) {
           query = query.ilike('email', `%${trimmed}%`)
         } else {
-          // order id prefix (case-insensitive — uuids are lowercased in DB)
-          query = query.ilike('id', `${trimmed.toLowerCase()}%`)
+          const idFragment = trimmed.replace(/^#/, '').trim()
+          query = query.filter('id::text', 'ilike', `${idFragment}%`)
         }
       } else {
-        // Limit to recently delivered so admin sees something useful by default
+        // Recent delivered orders only when not searching (broader list than before)
         query = query.eq('status', 'delivered')
       }
 

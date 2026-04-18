@@ -47,11 +47,12 @@ export default function TrackOrderPage() {
       setLoading(true)
       
       // Search for order by ID and email
+      const idFragment = orderNumber.replace(/^#/, '').trim()
       const { data, error: fetchError } = await supabase
         .from('orders')
         .select('id, status, created_at, updated_at, tracking_code, tracking_url, carrier, estimated_delivery_date, total, order_items(product_name, quantity, size, color)')
         .eq('email', email)
-        .ilike('id', `${orderNumber}%`)
+        .filter('id::text', 'ilike', `${idFragment}%`)
         .single()
 
       if (fetchError || !data) {
