@@ -76,7 +76,7 @@ export default function NewReviewNotificationEmail({
       locale={locale}
       preview={
         t('newReview.preheader', { name: reviewerName, rating }) ||
-        `Nieuwe review (${rating}/5) van ${reviewerName} — klaar voor moderatie.`
+        `Nieuwe review (${rating}/5) van ${reviewerName}. Wacht op je in het dashboard.`
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('newReview.status') || 'Review'} />

@@ -42,7 +42,7 @@ export default function ReturnApprovedEmail({
       locale={locale}
       preview={
         t('returnApproved.preheader', { amount: euro(refundAmount) }) ||
-        `Je retour is goedgekeurd. We storten ${euro(refundAmount)} terug binnen 3–5 werkdagen.`
+        `Je retour is goedgekeurd. We storten ${euro(refundAmount)} terug binnen ongeveer 3 tot 5 werkdagen.`
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('returnApproved.status') || 'Return Approved'} />
@@ -76,7 +76,7 @@ export default function ReturnApprovedEmail({
               </strong>
               <br />
               {t('returnApproved.refundMethod') ||
-                'Op de originele betaalmethode binnen 3–5 werkdagen.'}
+                'Terug naar dezelfde betaalmethode, meestal binnen 3 tot 5 werkdagen.'}
             </>
           ),
           background: 'paper',
@@ -92,7 +92,7 @@ export default function ReturnApprovedEmail({
       <EmailModule padding="26px 30px">
         <EmailParagraph>
           {t('returnApproved.description') ||
-            'Je ziet het bedrag meestal binnen 3–5 werkdagen terug op je rekening. Afhankelijk van je bank kan dit soms iets langer duren.'}
+            'Het geld staat meestal binnen 3 tot 5 werkdagen op je rekening. Bij sommige banken duurt het een dag langer.'}
         </EmailParagraph>
       </EmailModule>
 

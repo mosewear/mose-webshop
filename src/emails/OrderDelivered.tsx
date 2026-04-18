@@ -65,7 +65,7 @@ export default function OrderDeliveredEmail({
       <EmailModule padding="28px 30px">
         <EmailParagraph>
           {t('delivered.description') ||
-            'Hopelijk geniet je van je nieuwe MOSE. Als er ook maar iets niet 100% goed is, horen we dat graag — we lossen het voor je op.'}
+            'Fijn dat je MOSE binnen hebt. Zit er iets niet goed? Mail ons. Dan zoeken we het samen uit.'}
         </EmailParagraph>
       </EmailModule>
 

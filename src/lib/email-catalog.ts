@@ -182,7 +182,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
   {
     key: 'insider_community',
     name: 'Insider Community',
-    description: 'Second insider email — community proof.',
+    description: 'Second insider email: community proof.',
     category: 'insider',
     accent: '#00A676',
     previewSlug: 'insider-community',
@@ -191,7 +191,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
   {
     key: 'insider_behind_scenes',
     name: 'Insider Behind the Scenes',
-    description: 'Third insider email — the story behind the drop.',
+    description: 'Third insider email: the story behind the drop.',
     category: 'insider',
     accent: '#00A676',
     previewSlug: 'insider-behind-scenes',
@@ -200,7 +200,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
   {
     key: 'insider_launch_week',
     name: 'Insider Launch Week',
-    description: 'Fourth insider email — launch week countdown.',
+    description: 'Fourth insider email: launch week countdown.',
     category: 'insider',
     accent: '#f59e0b',
     previewSlug: 'insider-launch-week',

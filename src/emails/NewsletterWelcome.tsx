@@ -46,7 +46,7 @@ export default function NewsletterWelcomeEmail({
       locale={locale}
       preview={
         t('newsletterWelcome.preheader') ||
-        'Welkom bij MOSE — als eerste op de hoogte van drops, restocks en insider-only pieces.'
+        'Welkom bij MOSE. Je hoort als eerste van drops, restocks en stukken alleen voor insiders.'
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('newsletterWelcome.status') || 'Newsletter'} />
@@ -120,7 +120,7 @@ export default function NewsletterWelcomeEmail({
       <EmailModule padding="28px 30px">
         <EmailParagraph>
           {t('newsletterWelcome.whatYouGet') ||
-            'Dit is wat je van ons kunt verwachten — geen spam, alleen relevant.'}
+            'Geen spam. Alleen mail die voor jou telt.'}
         </EmailParagraph>
       </EmailModule>
 

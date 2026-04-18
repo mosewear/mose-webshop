@@ -66,7 +66,7 @@ export default function AbandonedCartEmail({
         title={t('abandonedCart.heroTitle') || 'Don\u2019t\nForget.'}
         subtitle={
           t('abandonedCart.subtitle', { name: customerName }) ||
-          `${customerName}, we bewaren je cart — maar niet voor eeuwig.`
+          `${customerName}, je winkelwagen staat nog voor je klaar. Niet voor altijd.`
         }
       />
 

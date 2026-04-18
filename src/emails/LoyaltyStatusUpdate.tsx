@@ -69,7 +69,7 @@ const COPY = {
     lifetimeLabel: 'Lifetime punten',
     progressTitle: 'Voortgang naar het volgende level',
     progressGoldReached:
-      'Je zit op het hoogste level: GOUD. Alle voordelen zijn voor jou al actief — van gratis verzending tot 10% korting.',
+      'Je zit op het hoogste level: GOUD. Alles staat voor je open: gratis verzending en 10% korting op elke order.',
     progressTo: (points: number, next: string) =>
       `Nog ${points} punten te gaan voor ${next}. Elke €1 die je besteedt = 1 punt.`,
     benefitsTitle: 'Jouw voordelen',
@@ -88,7 +88,7 @@ const COPY = {
     footerNote:
       'Vragen over je loyalty status? Mail ons en we helpen je graag verder.',
     preheader: (balance: number) =>
-      `Je staat op ${balance} punten — bekijk je loyalty status.`,
+      `Je staat op ${balance} punten. Check je loyalty status.`,
   },
   en: {
     status: 'Loyalty Update',
@@ -105,7 +105,7 @@ const COPY = {
     lifetimeLabel: 'Lifetime points',
     progressTitle: 'Progress to the next level',
     progressGoldReached:
-      'You\u2019re at the top tier: GOLD. Every perk is unlocked — from free shipping to 10% off everything.',
+      'You\u2019re at the top tier: GOLD. Everything is unlocked: free shipping and 10% off every order.',
     progressTo: (points: number, next: string) =>
       `${points} points to go until ${next}. Every €1 you spend = 1 point.`,
     benefitsTitle: 'Your perks',
@@ -122,9 +122,9 @@ const COPY = {
     howBody:
       'You earn 1 point per euro you spend. Points stack automatically, including guest-checkouts on the same email.',
     footerNote:
-      'Questions about your loyalty status? Hit reply — we\u2019re happy to help.',
+      'Questions about your loyalty status? Reply to this email. We read everything.',
     preheader: (balance: number) =>
-      `You\u2019re at ${balance} points — check out your loyalty status.`,
+      `You\u2019re at ${balance} points. Here is your loyalty snapshot.`,
   },
 } as const
 

@@ -37,7 +37,7 @@ export default function InsiderBehindScenesEmail({
       locale={locale}
       preview={
         t('insiderBehindScenes.preheader') ||
-        'Achter de schermen bij MOSE — het verhaal achter de volgende drop.'
+        'Achter de schermen bij MOSE: het verhaal achter de volgende drop.'
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('insiderBehindScenes.status') || 'Behind the Scenes'} />
@@ -91,7 +91,7 @@ export default function InsiderBehindScenesEmail({
         title={t('insiderBehindScenes.limitedTitle') || 'Limited edition'}
       >
         {t('insiderBehindScenes.limitedText') ||
-          'Elke drop is beperkt — als het weg is, is het weg. Geen restocks.'}
+          'Elke drop is klein. Op is op, geen restocks.'}
       </EmailCallout>
 
       <EmailModule padding="20px 30px">

@@ -111,7 +111,7 @@ const COPY = {
       'Na ontvangst verwerken we je refund binnen 3 werkdagen.',
     ],
     footerNote:
-      'Heb je vragen over deze retour? Mail ons of bel gerust — we helpen je graag verder.',
+      'Vragen over deze retour? Mail ons of bel. We helpen je graag.',
     preheader: (nr: string) => `We hebben een retour (#${nr}) voor je aangemaakt.`,
     itemsCount: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
   },
@@ -163,7 +163,7 @@ const COPY = {
       'Once we receive it, we process your refund within 3 working days.',
     ],
     stepsInStore: (address: string) => [
-      'Pack the items in a sturdy box — the original box works great.',
+      'Pack the items in a sturdy box. The original box works great.',
       `Drop the parcel off at our store: ${address}.`,
       'Mention your return number at the counter so we can help you quickly.',
       'Once we\u2019ve checked the items we process your refund.',
@@ -180,7 +180,7 @@ const COPY = {
       'Once we receive it, we process your refund within 3 working days.',
     ],
     footerNote:
-      'Questions about this return? Just reply to this email or give us a ring — happy to help.',
+      'Questions about this return? Reply to this email or call. Happy to help.',
     preheader: (nr: string) => `We've created a return (#${nr}) for you.`,
     itemsCount: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
   },

@@ -44,7 +44,7 @@ export default function ReturnRefundedEmail({
       locale={locale}
       preview={
         t('returnRefunded.preheader', { amount: euro(refundAmount) }) ||
-        `${euro(refundAmount)} is teruggestort op je rekening. Merci voor je vertrouwen in MOSE.`
+        `${euro(refundAmount)} is teruggestort op je rekening. Bedankt voor je vertrouwen in MOSE.`
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('returnRefunded.status') || 'Refunded'} />
@@ -54,7 +54,7 @@ export default function ReturnRefundedEmail({
         title={`${t('returnRefunded.heroGreeting') || 'Refunded'},\n${firstName}.`}
         subtitle={
           t('returnRefunded.heroSubtitle') ||
-          'Je terugbetaling is onderweg naar je rekening. Merci voor je vertrouwen in MOSE.'
+          'Het geld staat onderweg naar je rekening. Bedankt voor je vertrouwen in MOSE.'
         }
       />
 
@@ -94,7 +94,7 @@ export default function ReturnRefundedEmail({
       <EmailModule padding="26px 30px">
         <EmailParagraph>
           {t('returnRefunded.description') ||
-            'Afhankelijk van je bank kan het 1–3 werkdagen duren voordat je het bedrag daadwerkelijk op je rekening ziet verschijnen.'}
+            'Je bank kan er nog 1 tot 3 werkdagen over doen voordat het bedrag zichtbaar is.'}
         </EmailParagraph>
       </EmailModule>
 

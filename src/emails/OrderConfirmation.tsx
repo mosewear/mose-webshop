@@ -117,7 +117,7 @@ export default function OrderConfirmationEmail({
             label: t('orderConfirmation.deliveryLabel') || 'Bezorging',
             value: hasPresaleItems && presaleExpectedDate
               ? presaleExpectedDate.toUpperCase()
-              : (t('orderConfirmation.deliveryWindow') || '2–3 WERKDAGEN'),
+              : (t('orderConfirmation.deliveryWindow') || '2 TOT 3 WERKDAGEN'),
           },
         ]}
       />

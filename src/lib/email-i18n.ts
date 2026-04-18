@@ -780,7 +780,8 @@ const nl: EmailTranslationKeys = {
     stat2: 'Meest populair: Hoodies (al 40% van voorraad gereserveerd)',
     stat3: 'Top 3 landen: Nederland en België',
     productsTitle: 'Dit is wat er komt',
-    productsIntro: 'Dit zijn de basics waar de community op wacht. Limited edition. Lokaal gemaakt. Premium kwaliteit. Als insider heb je 24 uur voorsprong. Maar wees er snel bij — limited betekent limited.',
+    productsIntro:
+      'Dit zijn de basics waar de community op wacht. Limited edition. Lokaal gemaakt. Premium kwaliteit. Als insider heb je 24 uur voorsprong. Wees er snel bij: limited is limited.',
     viewProduct: 'Bekijk product',
     presaleTitle: 'Shop nu in presale',
     presaleSubtitle: '30% korting op alle items',
@@ -1205,13 +1206,15 @@ const en: EmailTranslationKeys = {
   insiderCommunity: {
     title: 'WELCOME TO THE COMMUNITY',
     subtitle: 'A behind-the-scenes look at our community',
-    intro: 'There are now hundreds of insiders waiting for the launch. Not just customers — people who get what MOSE stands for. People who value quality. People who are ready for something different from the mass market.',
+    intro:
+      'Hundreds of insiders are waiting for the launch. Not random shoppers. People who get MOSE. People who want quality instead of mass-market noise.',
     numbers: 'The numbers:',
     stat1: '{{count}}+ insiders on the list',
     stat2: 'Most popular: Hoodies (already 40% of stock reserved)',
     stat3: 'Top 3 countries: Netherlands, Belgium, Germany',
     productsTitle: 'This is what\'s coming',
-    productsIntro: 'These are the basics the community is waiting for. Limited edition. Locally made. Premium quality. As an insider, you get 24 hours head start. But be quick — limited means limited.',
+    productsIntro:
+      'These are the basics the community is waiting for. Limited edition. Locally made. Premium quality. As an insider you get 24 hours head start. Move fast: limited means limited.',
     viewProduct: 'View product',
     presaleTitle: 'Shop presale now',
     presaleSubtitle: '30% off all items',

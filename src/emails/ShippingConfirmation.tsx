@@ -42,7 +42,7 @@ export default function ShippingConfirmationEmail({
   const orderNumber = `#${orderId.slice(0, 8).toUpperCase()}`
   const firstName = customerName.split(' ')[0] || customerName
 
-  let deliveryText = t('shipping.workingDays') || '2–3 werkdagen'
+  let deliveryText = t('shipping.workingDays') || '2 tot 3 werkdagen'
   if (estimatedDelivery) {
     try {
       const date = new Date(estimatedDelivery)
@@ -152,7 +152,7 @@ export default function ShippingConfirmationEmail({
             steps={[
               {
                 title: t('shipping.tip1Title') || 'Hou je brievenbus in de gaten',
-                description: t('shipping.tip1') || 'Het pakket komt binnen 1–3 werkdagen aan.',
+                description: t('shipping.tip1') || 'Het pakket komt meestal binnen 1 tot 3 werkdagen aan.',
               },
               {
                 title: t('shipping.tip2Title') || 'Mail notificaties',

@@ -59,7 +59,7 @@ export default function InsiderCommunityEmail({
         title={t('insiderCommunity.heroTitle') || 'Built\nTogether.'}
         subtitle={
           t('insiderCommunity.subtitle') ||
-          'MOSE groeit organisch — doordat insiders het delen. Bedankt dat je erbij bent.'
+          'MOSE groeit omdat insiders het verder vertellen. Bedankt dat je meedoet.'
         }
       />
 
@@ -79,7 +79,7 @@ export default function InsiderCommunityEmail({
       <EmailModule padding="28px 30px">
         <EmailParagraph>
           {t('insiderCommunity.intro') ||
-            'Je bent geen klant — je bent insider. Dat betekent dat jouw feedback mede bepaalt wat we volgend seizoen produceren.'}
+            'Je bent insider, geen passant. Jouw feedback helpt bepalen wat we volgend seizoen maken.'}
         </EmailParagraph>
       </EmailModule>
 
@@ -234,7 +234,7 @@ export default function InsiderCommunityEmail({
       <EmailModule padding="18px 24px" background={EMAIL_COLORS.sectionAlt} align="center">
         <EmailParagraph tone="muted" size={12} align="center" mb={0}>
           {t('insiderCommunity.ps', { days: daysUntilLaunch }) ||
-            `PS — nog ${daysUntilLaunch} dagen tot de officiële drop op `}
+            `P.S. Nog ${daysUntilLaunch} dagen tot de officiële drop op `}
           <Link
             href={siteUrl}
             style={{ color: EMAIL_COLORS.primary, textDecoration: 'underline', fontWeight: 700 }}

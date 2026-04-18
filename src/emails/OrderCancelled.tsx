@@ -84,7 +84,7 @@ export default function OrderCancelledEmail({
 
       <EmailCallout tone="info" title={t('cancelled.refundTitle') || 'Terugbetaling'}>
         {t('cancelled.refundInfo') ||
-          'Je wordt automatisch teruggestort op de originele betaalmethode binnen 3–5 werkdagen.'}
+          'Je krijgt het bedrag automatisch terug op dezelfde betaalmethode. Reken op 3 tot 5 werkdagen.'}
       </EmailCallout>
 
       <EmailCta

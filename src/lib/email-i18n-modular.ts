@@ -3,7 +3,7 @@
  *
  * All MOSE emails moved to a modular design system with new copy/keys
  * (badge, heroGreeting, heroSubtitle, status, preheader, …). These keys
- * live here — kept separate from the legacy dictionary in `email-i18n.ts`
+ * live here, kept separate from the legacy dictionary in `email-i18n.ts`
  * so we don't touch the existing (still used) keys and can freely iterate
  * on modular copy.
  *
@@ -27,12 +27,12 @@ export const modularNl: ModularDict = {
   orderConfirmation: {
     status: 'Order Confirmed',
     badge: '✓ Bestelling Bevestigd',
-    heroGreeting: 'Thanks',
-    heroSubtitle: "Je bestelling is binnen. We pakken 'm zorgvuldig voor je in.",
+    heroGreeting: 'Bedankt',
+    heroSubtitle: "Je bestelling staat. We pakken 'm zorgvuldig in en houden je op de hoogte.",
     preheader: 'Je MOSE order {{orderNumber}} is bevestigd. We pakken \u2019m zorgvuldig voor je in.',
     orderNumber: 'Ordernummer',
     deliveryLabel: 'Bezorging',
-    deliveryWindow: '2–3 WERKDAGEN',
+    deliveryWindow: '2 TOT 3 WERKDAGEN',
     yourItems: 'Jouw Items',
     shippingAddress: 'Bezorgadres',
     totalPaid: 'Totaal Betaald',
@@ -58,7 +58,7 @@ export const modularNl: ModularDict = {
   preorder: {
     status: 'Pre-order Confirmed',
     badge: '▲ Pre-Order Gereserveerd',
-    heroGreeting: 'Reserved',
+    heroGreeting: 'Gereserveerd',
     heroSubtitle:
       'Je plek is geclaimd. Zodra de drop live gaat, pakken we jouw bestelling als eerste in.',
     preheader:
@@ -95,7 +95,7 @@ export const modularNl: ModularDict = {
   shipping: {
     status: 'Shipped',
     badge: '→ Onderweg naar jou',
-    heroGreeting: 'Shipped',
+    heroGreeting: 'Onderweg',
     heroSubtitle:
       'Je MOSE is onderweg. Track het pakket hieronder en hou je brievenbus in de gaten.',
     preheader:
@@ -106,14 +106,14 @@ export const modularNl: ModularDict = {
     trackOrder: 'Track mijn pakket',
     helpfulTips: 'Handige tips',
     tip1Title: 'Hou je brievenbus in de gaten',
-    tip1: 'Het pakket komt binnen 1–3 werkdagen aan.',
+    tip1: 'Het pakket komt meestal binnen 1 tot 3 werkdagen aan.',
     tip2Title: 'Mail notificaties',
     tip2:
       'Je ontvangt updates van de vervoerder zodra het pakket onderweg is.',
     tip3Title: 'Niet thuis?',
     tip3:
       'Geen zorgen: de pakketbezorger levert opnieuw of bij de buren.',
-    workingDays: '2–3 werkdagen',
+    workingDays: '2 tot 3 werkdagen',
     questions: 'Vragen over je pakket?',
   },
 
@@ -123,7 +123,7 @@ export const modularNl: ModularDict = {
   processing: {
     status: 'Processing',
     badge: '▸ In behandeling',
-    heroGreeting: 'Packing',
+    heroGreeting: 'Inpakken',
     heroSubtitle:
       "We pakken je bestelling zorgvuldig in. Zodra 'ie onderweg is hoor je van ons.",
     preheader: 'Je MOSE order #{{orderNumber}} wordt nu voor je ingepakt.',
@@ -147,7 +147,7 @@ export const modularNl: ModularDict = {
   delivered: {
     status: 'Delivered',
     badge: '✓ Afgeleverd',
-    heroGreeting: 'Delivered',
+    heroGreeting: 'Binnen',
     heroSubtitle:
       'Je pakket ligt waar het hoort. Tijd om die MOSE te dragen.',
     preheader:
@@ -156,7 +156,7 @@ export const modularNl: ModularDict = {
     statusLabel: 'Status',
     statusValue: 'Afgeleverd',
     description:
-      'Hopelijk geniet je van je nieuwe MOSE. Als er ook maar iets niet 100% goed is, horen we dat graag — we lossen het voor je op.',
+      'Fijn dat je MOSE binnen hebt. Zit er iets niet goed? Mail ons. Dan zoeken we het samen uit.',
     feedbackTitle: 'Deel je ervaring',
     feedback:
       'We zijn nieuwsgierig wat je ervan vindt. Laat een review achter en help anderen hun MOSE te vinden.',
@@ -171,7 +171,7 @@ export const modularNl: ModularDict = {
   cancelled: {
     status: 'Cancelled',
     badge: '✕ Geannuleerd',
-    heroGreeting: 'Order Gecanceld',
+    heroGreeting: 'Geannuleerd',
     heroSubtitle:
       'Je bestelling is geannuleerd. Je betaling wordt automatisch teruggestort.',
     preheader:
@@ -184,7 +184,7 @@ export const modularNl: ModularDict = {
     reason: 'Reden van annulering',
     refundTitle: 'Terugbetaling',
     refundInfo:
-      'Je wordt automatisch teruggestort op de originele betaalmethode binnen 3–5 werkdagen.',
+      'Je krijgt het bedrag automatisch terug op dezelfde betaalmethode. Reken op 3 tot 5 werkdagen.',
     ctaButton: 'Terug naar de shop',
     questions: 'Vragen over de annulering?',
   },
@@ -195,7 +195,7 @@ export const modularNl: ModularDict = {
   returnRequested: {
     status: 'Return Requested',
     badge: '↺ Retour Geregistreerd',
-    heroGreeting: 'Return',
+    heroGreeting: 'Retour',
     heroSubtitle:
       'We hebben je retour-aanvraag ontvangen. Binnen 2 werkdagen hoor je of alles is goedgekeurd.',
     preheader:
@@ -215,7 +215,7 @@ export const modularNl: ModularDict = {
   returnLabelGenerated: {
     status: 'Label Ready',
     badge: '▼ Retourlabel Klaar',
-    heroGreeting: 'Label',
+    heroGreeting: 'Label klaar',
     heroSubtitle:
       'Je retourlabel is klaar. Download het, plak het op het pakket en breng hem langs bij het afleverpunt.',
     preheader:
@@ -242,21 +242,21 @@ export const modularNl: ModularDict = {
   returnApproved: {
     status: 'Return Approved',
     badge: '✓ Goedgekeurd',
-    heroGreeting: 'Approved',
+    heroGreeting: 'Goedgekeurd',
     heroSubtitle:
       'We hebben je retour goedgekeurd. De terugbetaling wordt nu in gang gezet.',
     preheader:
-      'Je retour is goedgekeurd. We storten {{amount}} terug binnen 3–5 werkdagen.',
+      'Je retour is goedgekeurd. We storten {{amount}} terug binnen ongeveer 3 tot 5 werkdagen.',
     returnNumber: 'Retour',
     statusLabel: 'Status',
     statusValue: 'Goedgekeurd',
     description:
-      'Je ziet het bedrag meestal binnen 3–5 werkdagen terug op je rekening. Afhankelijk van je bank kan dit soms iets langer duren.',
+      'Het geld staat meestal binnen 3 tot 5 werkdagen op je rekening. Bij sommige banken duurt het een dag langer.',
     refundProcessing: 'Refund · In verwerking',
     refundLabel: 'Terugbetaling',
     refundAmount: 'Bedrag',
     refundMethod:
-      'Op de originele betaalmethode binnen 3–5 werkdagen.',
+      'Terug naar dezelfde betaalmethode, meestal binnen 3 tot 5 werkdagen.',
     refundSoon: 'Wordt automatisch teruggestort',
     nextStepsTitle: 'Wat nu',
     nextSteps:
@@ -268,11 +268,11 @@ export const modularNl: ModularDict = {
   returnRefunded: {
     status: 'Refunded',
     badge: '€ Teruggestort',
-    heroGreeting: 'Refunded',
+    heroGreeting: 'Terugbetaald',
     heroSubtitle:
-      'Je terugbetaling is onderweg naar je rekening. Merci voor je vertrouwen in MOSE.',
+      'Het geld staat onderweg naar je rekening. Bedankt voor je vertrouwen in MOSE.',
     preheader:
-      '{{amount}} is teruggestort op je rekening. Merci voor je vertrouwen in MOSE.',
+      '{{amount}} is teruggestort op je rekening. Bedankt voor je vertrouwen in MOSE.',
     returnNumber: 'Retour',
     refundCompleted: 'Refund · Completed',
     refundLabel: 'Terugbetaling',
@@ -281,7 +281,7 @@ export const modularNl: ModularDict = {
     methodLabel: 'Methode',
     methodBody: 'Betaalmethode: {{method}}',
     description:
-      'Afhankelijk van je bank kan het 1–3 werkdagen duren voordat je het bedrag daadwerkelijk op je rekening ziet verschijnen.',
+      'Je bank kan er nog 1 tot 3 werkdagen over doen voordat het bedrag zichtbaar is.',
     ctaButton: 'Terug naar shoppen',
     questions: 'Vragen?',
   },
@@ -312,7 +312,7 @@ export const modularNl: ModularDict = {
     badge: '▲ Still Yours',
     heroTitle: 'Don\u2019t Forget.',
     subtitle:
-      '{{customerName}}, we bewaren je cart — maar niet voor eeuwig.',
+      '{{customerName}}, je winkelwagen staat nog voor je klaar. Niet voor altijd, dus pak je moment.',
     preheader:
       '{{customerName}}, je winkelwagen wacht nog op je.',
     description:
@@ -335,9 +335,9 @@ export const modularNl: ModularDict = {
     heroTitle: 'Back In Stock.',
     subtitle: 'Het item waar je op wachtte is er weer. Maar niet lang.',
     preheader:
-      '{{productName}} is terug op voorraad — claim \u2019m voor hij weer weg is.',
+      '{{productName}} is weer op voorraad. Wees er snel bij.',
     description:
-      'Limited stock — ga er snel bij zodat je niet opnieuw op de wachtlijst hoeft.',
+      'Beperkte voorraad. Geen zin in weer wachten? Schiet op.',
     limitedStockTitle: 'Beperkte voorraad',
     limitedStock:
       'Op = op. Geen garantie dat deze restock lang blijft staan.',
@@ -369,7 +369,7 @@ export const modularNl: ModularDict = {
     subtitle:
       'Er wacht een nieuwe review op moderatie. Bekijk en keur goed in het dashboard.',
     preheader:
-      'Nieuwe review ({{rating}}/5) van {{reviewerName}} — klaar voor moderatie.',
+      'Nieuwe review ({{rating}}/5) van {{reviewerName}}. Wacht op je in het dashboard.',
     detailsTitle: 'Review details',
     product: 'Product',
     reviewer: 'Reviewer',
@@ -389,13 +389,13 @@ export const modularNl: ModularDict = {
     heroText:
       'Je staat op de lijst. Vanaf nu ontvang je de nieuwste drops als eerste.',
     preheader:
-      'Welkom bij MOSE — als eerste op de hoogte van drops, restocks en insider-only pieces.',
+      'Welkom bij MOSE. Je hoort als eerste van drops, restocks en stukken alleen voor insiders.',
     promoTitle: 'Jouw welkomstcode',
     promoSubtext:
       'Gebruik deze code voor 10% korting op je eerste bestelling.',
     promoExpiry: 'Geldig tot {{date}}',
     whatYouGet:
-      'Dit is wat je van ons kunt verwachten — geen spam, alleen relevant.',
+      'Geen spam. Alleen mail die voor jou telt.',
     benefitsTitle: 'Wat je krijgt',
     benefit1Title: 'Nieuwe drops',
     benefit1Text: 'Als eerste horen wanneer er iets nieuws lanceert.',
@@ -420,10 +420,10 @@ export const modularNl: ModularDict = {
     heroSubtitle:
       'Je zit erin. Als eerste zien wat er aankomt, toegang tot drops voor iedereen, en alleen voor insiders.',
     preheader:
-      'Welkom in de MOSE Insider Club — als eerste zien wat er aankomt.',
-    tagline: 'Made in Groningen — Dressed Worldwide',
+      'Welkom in de MOSE Insider Club. Jij ziet wat er aankomt vóór de rest.',
+    tagline: 'Made in Groningen. Dressed Worldwide.',
     intro:
-      'We pakken streetwear anders aan — doordacht, duurzaam en alleen in beperkte drops. Als insider krijg jij de eerste pick.',
+      'Streetwear zonder poespas: doordacht, duurzaam, kleine oplages. Als insider kies jij als eerste.',
     promoLabel: 'Welcome Drop Code',
     validUntil: 'Geldig tot {{date}}',
     perksTitle: 'Wat je krijgt',
@@ -431,12 +431,12 @@ export const modularNl: ModularDict = {
     perk1Text: 'Als eerste zien wat er aankomt, 24u voor iedereen.',
     perk2Title: 'Gratis Verzending',
     perk2Text:
-      'Altijd gratis verzending binnen Nederland — ook op pre-orders.',
+      'Altijd gratis verzending binnen Nederland, ook op pre-orders.',
     perk3Title: 'Insider Only Drops',
     perk3Text: 'Limited pieces die alleen insiders kunnen claimen.',
     perk4Title: 'Behind the Scenes',
     perk4Text:
-      'De verhalen achter MOSE — waar materiaal, design en productie samenkomen.',
+      'Hoe MOSE tot stand komt: materiaal, design en productie in één verhaal.',
     ctaButton: 'Bekijk de collectie',
     emailLabel: 'Je insider email',
     questions: 'Vragen?',
@@ -447,11 +447,11 @@ export const modularNl: ModularDict = {
     badge: '▲ Insider Community',
     heroTitle: 'Built Together.',
     subtitle:
-      'MOSE groeit organisch — doordat insiders het delen. Bedankt dat je erbij bent.',
+      'MOSE groeit omdat insiders het verder vertellen. Bedankt dat je meedoet.',
     preheader:
       '{{subscriberCount}} insiders zijn al binnen. Nog {{daysUntilLaunch}} dagen tot de drop.',
     intro:
-      'Je bent geen klant — je bent insider. Dat betekent dat jouw feedback mede bepaalt wat we volgend seizoen produceren.',
+      'Je bent insider, geen passant. Jouw feedback helpt bepalen wat we volgend seizoen maken.',
     numbers: 'In cijfers',
     stat1: '{{subscriberCount}} insiders zijn al binnen.',
     stat2: '100% in Nederland en België geleverd.',
@@ -473,7 +473,7 @@ export const modularNl: ModularDict = {
     testimonial3: '"Love dat ze lokaal produceren. Dat maakt het verschil."',
     joinTitle: 'Kom erbij op socials',
     socialInsta: '@mosewear op Instagram',
-    ps: 'PS — nog {{daysUntilLaunch}} dagen tot de officiële drop.',
+    ps: 'P.S. Nog {{daysUntilLaunch}} dagen tot de officiële drop.',
   },
 
   insiderBehindScenes: {
@@ -483,7 +483,7 @@ export const modularNl: ModularDict = {
     subtitle:
       'Waar materiaal, design en productie samenkomen. Alleen voor insiders.',
     preheader:
-      'Achter de schermen bij MOSE — het verhaal achter de volgende drop.',
+      'Achter de schermen bij MOSE: het verhaal achter de volgende drop.',
     intro:
       'Drops maak je niet in een week. Dit is het verhaal achter wat er nu op ons atelier gebeurt.',
     processTitle: 'Het proces',
@@ -492,7 +492,7 @@ export const modularNl: ModularDict = {
     process3: 'Kleine batch productie in Europa.',
     limitedTitle: 'Limited edition',
     limitedText:
-      'Elke drop is beperkt — als het weg is, is het weg. Geen restocks.',
+      'Elke drop is klein. Op is op, geen restocks.',
     followCTA: 'Volg op Instagram',
     followSubtext: 'Daily behind-the-scenes content.',
     closing: 'Bedankt dat je erbij bent. Jouw support maakt het mogelijk.',
@@ -505,14 +505,14 @@ export const modularNl: ModularDict = {
     subtitle:
       'Nog {{daysUntilLaunch}} dagen. Zorg dat je klaar staat.',
     preheader:
-      'Nog {{daysUntilLaunch}} dagen tot de drop — dit is wat je moet weten.',
+      'Nog {{daysUntilLaunch}} dagen tot de drop. Dit moet je weten.',
     intro:
       'Over {{daysUntilLaunch}} dagen openen we de drop. Als insider zit je vooraan.',
     countdownLabel: 'Dagen tot drop',
     accessLabel: 'Early access',
     whatThisMeansTitle: 'Wat dit betekent',
-    info1: 'Jij krijgt als eerste toegang — 24 uur eerder.',
-    info2: 'Limited stock per stuk — op = op.',
+    info1: 'Jij shopt 24 uur eerder dan de rest.',
+    info2: 'Per stuk beperkte voorraad. Op is op.',
     info3: 'Geen restocks, geen tweede kansen.',
     perksRemainTitle: 'Je insider perks',
     perk1: 'Early access tot de drop.',
@@ -525,7 +525,7 @@ export const modularNl: ModularDict = {
     limitedStockTitle: 'Extra beperkt',
     shopNow: 'Shop de drop',
     closing: 'Zorg dat je op tijd bent. Insider love.',
-    ps: 'PS — zet je notifications aan zodat je de drop niet mist.',
+    ps: 'P.S. Zet je notificaties aan, dan mis je de drop niet.',
   },
 }
 
@@ -550,7 +550,7 @@ export const modularEn: ModularDict = {
       "Your MOSE order {{orderNumber}} is confirmed. We'll pack it with care.",
     orderNumber: 'Order number',
     deliveryLabel: 'Delivery',
-    deliveryWindow: '2–3 BUSINESS DAYS',
+    deliveryWindow: '2 TO 3 BUSINESS DAYS',
     yourItems: 'Your Items',
     shippingAddress: 'Shipping address',
     totalPaid: 'Total Paid',
@@ -618,14 +618,14 @@ export const modularEn: ModularDict = {
     trackOrder: 'Track my package',
     helpfulTips: 'Helpful tips',
     tip1Title: 'Keep an eye on your mailbox',
-    tip1: 'The package arrives within 1–3 business days.',
+    tip1: 'The package usually arrives within 1 to 3 business days.',
     tip2Title: 'Carrier notifications',
     tip2:
       "You'll get updates from the carrier as soon as the package is moving.",
     tip3Title: 'Not home?',
     tip3:
       'No stress: the courier will redeliver or leave it with a neighbour.',
-    workingDays: '2–3 business days',
+    workingDays: '2 to 3 business days',
     questions: 'Questions about your package?',
   },
 
@@ -662,7 +662,7 @@ export const modularEn: ModularDict = {
     statusLabel: 'Status',
     statusValue: 'Delivered',
     description:
-      "Hope you're loving your new MOSE. If anything is less than 100% right, let us know — we'll sort it for you.",
+      "Hope you're loving your new MOSE. Something off? Reply to this email and we'll fix it.",
     feedbackTitle: 'Share your experience',
     feedback:
       "We're curious what you think. Drop a review and help others find their MOSE.",
@@ -687,7 +687,7 @@ export const modularEn: ModularDict = {
     reason: 'Reason for cancellation',
     refundTitle: 'Refund',
     refundInfo:
-      'You will be refunded automatically to the original payment method within 3–5 business days.',
+      'Refund goes back to the same payment method automatically. Allow 3 to 5 business days.',
     ctaButton: 'Back to the shop',
     questions: 'Questions about the cancellation?',
   },
@@ -746,17 +746,17 @@ export const modularEn: ModularDict = {
     heroSubtitle:
       'We approved your return. Your refund is now being processed.',
     preheader:
-      "Your return is approved. We'll refund {{amount}} within 3–5 business days.",
+      "Your return is approved. We'll refund {{amount}} in about 3 to 5 business days.",
     returnNumber: 'Return',
     statusLabel: 'Status',
     statusValue: 'Approved',
     description:
-      "You'll usually see the amount back on your account within 3–5 business days. Depending on your bank this can take slightly longer.",
+      "You should see the money within 3 to 5 business days. Some banks need an extra day.",
     refundProcessing: 'Refund · Processing',
     refundLabel: 'Refund',
     refundAmount: 'Amount',
     refundMethod:
-      'Back to the original payment method within 3–5 business days.',
+      'Back to the same card or account, usually within 3 to 5 business days.',
     refundSoon: 'Refunded automatically',
     nextStepsTitle: "What's next",
     nextSteps:
@@ -781,7 +781,7 @@ export const modularEn: ModularDict = {
     methodLabel: 'Method',
     methodBody: 'Payment method: {{method}}',
     description:
-      'Depending on your bank it can take 1–3 business days before you actually see the amount appear in your account.',
+      'Your bank may need 1 to 3 more days before the amount shows up.',
     ctaButton: 'Back to shopping',
     questions: 'Questions?',
   },
@@ -798,7 +798,7 @@ export const modularEn: ModularDict = {
     statusLabel: 'Status',
     statusValue: 'Rejected',
     description:
-      "This return doesn't meet our return conditions. If you think that's wrong, let us know — we're happy to review again.",
+      "This return doesn't meet our return policy. Think we got it wrong? Reply and we'll take another look.",
     reasonTitle: 'Reason',
     phoneHint: 'Prefer to call?',
     ctaButton: 'Contact us',
@@ -809,7 +809,7 @@ export const modularEn: ModularDict = {
     badge: '▲ Still Yours',
     heroTitle: "Don't Forget.",
     subtitle:
-      "{{customerName}}, we're holding your cart — but not forever.",
+      "{{customerName}}, your cart is still here. It won't wait forever.",
     preheader:
       '{{customerName}}, your cart is still waiting for you.',
     description:
@@ -833,9 +833,9 @@ export const modularEn: ModularDict = {
     subtitle:
       "The item you were waiting for is back. But not for long.",
     preheader:
-      '{{productName}} is back in stock — claim it before it goes again.',
+      '{{productName}} is back in stock. Move fast.',
     description:
-      "Limited stock — move fast so you don't have to hop back on the waitlist.",
+      "Limited stock. Don't end up on the waitlist again.",
     limitedStockTitle: 'Limited stock',
     limitedStock:
       'When it\u2019s gone, it\u2019s gone. No guarantees this restock sticks around.',
@@ -863,7 +863,7 @@ export const modularEn: ModularDict = {
     subtitle:
       'A new review is waiting for moderation. Review and approve in the dashboard.',
     preheader:
-      'New review ({{rating}}/5) from {{reviewerName}} — ready for moderation.',
+      'New review ({{rating}}/5) from {{reviewerName}}. Waiting in the dashboard.',
     detailsTitle: 'Review details',
     product: 'Product',
     reviewer: 'Reviewer',
@@ -883,12 +883,12 @@ export const modularEn: ModularDict = {
     heroText:
       "You're on the list. From now on you'll get the latest drops first.",
     preheader:
-      'Welcome to MOSE — first to know about drops, restocks and insider-only pieces.',
+      'Welcome to MOSE. You hear about drops, restocks and insider-only pieces first.',
     promoTitle: 'Your welcome code',
     promoSubtext: 'Use this code for 10% off your first order.',
     promoExpiry: 'Valid until {{date}}',
     whatYouGet:
-      "Here's what to expect from us — no spam, only relevant.",
+      "No spam. Only emails that matter.",
     benefitsTitle: 'What you get',
     benefit1Title: 'New drops',
     benefit1Text: 'First to hear when something new launches.',
@@ -909,10 +909,10 @@ export const modularEn: ModularDict = {
     heroSubtitle:
       "You're in. First to see what's coming, access to drops before everyone else, and insider-only pieces.",
     preheader:
-      "Welcome to the MOSE Insider Club — first to see what's coming.",
-    tagline: 'Made in Groningen — Dressed Worldwide',
+      "Welcome to the MOSE Insider Club. You see what's coming before everyone else.",
+    tagline: 'Made in Groningen. Dressed Worldwide.',
     intro:
-      'We approach streetwear differently — thoughtful, sustainable and in limited drops only. As an insider, you get first pick.',
+      'Streetwear without the fluff: thoughtful, sustainable, small runs. As an insider you pick first.',
     promoLabel: 'Welcome Drop Code',
     validUntil: 'Valid until {{date}}',
     perksTitle: 'What you get',
@@ -920,12 +920,12 @@ export const modularEn: ModularDict = {
     perk1Text: "First to see what's coming, 24h before everyone else.",
     perk2Title: 'Free Shipping',
     perk2Text:
-      'Always free shipping within the Netherlands — even on pre-orders.',
+      'Always free shipping within the Netherlands, even on pre-orders.',
     perk3Title: 'Insider Only Drops',
     perk3Text: 'Limited pieces only insiders can claim.',
     perk4Title: 'Behind the Scenes',
     perk4Text:
-      'The stories behind MOSE — where material, design and production meet.',
+      'How MOSE gets made: material, design and production in one story.',
     ctaButton: 'View the collection',
     emailLabel: 'Your insider email',
     questions: 'Questions?',
@@ -936,11 +936,11 @@ export const modularEn: ModularDict = {
     badge: '▲ Insider Community',
     heroTitle: 'Built Together.',
     subtitle:
-      'MOSE grows organically — because insiders share it. Thanks for being part of it.',
+      'MOSE grows because insiders spread the word. Thanks for riding with us.',
     preheader:
       "{{subscriberCount}} insiders are already in. {{daysUntilLaunch}} days until the drop.",
     intro:
-      "You're not a customer — you're an insider. That means your feedback shapes what we produce next season.",
+      "You're an insider, not a bystander. Your feedback helps decide what we make next season.",
     numbers: 'In numbers',
     stat1: '{{subscriberCount}} insiders are already in.',
     stat2: '100% delivered across the Netherlands & Belgium.',
@@ -963,7 +963,7 @@ export const modularEn: ModularDict = {
       '"Love that they produce locally. That makes the difference."',
     joinTitle: 'Join us on social',
     socialInsta: '@mosewear on Instagram',
-    ps: 'PS — {{daysUntilLaunch}} days until the official drop.',
+    ps: 'P.S. {{daysUntilLaunch}} days until the official drop.',
   },
 
   insiderBehindScenes: {
@@ -973,7 +973,7 @@ export const modularEn: ModularDict = {
     subtitle:
       'Where material, design and production meet. Insiders only.',
     preheader:
-      "Behind the scenes at MOSE — the story behind the next drop.",
+      "Behind the scenes at MOSE: the story behind the next drop.",
     intro:
       "Drops aren't made in a week. Here's the story behind what's happening in our atelier right now.",
     processTitle: 'The process',
@@ -982,7 +982,7 @@ export const modularEn: ModularDict = {
     process3: 'Small batch production in Europe.',
     limitedTitle: 'Limited edition',
     limitedText:
-      "Every drop is limited — when it's gone, it's gone. No restocks.",
+      "Every drop is small. When it's gone, it's gone. No restocks.",
     followCTA: 'Follow on Instagram',
     followSubtext: 'Daily behind-the-scenes content.',
     closing:
@@ -995,14 +995,14 @@ export const modularEn: ModularDict = {
     heroTitle: 'Launch Week.',
     subtitle: '{{daysUntilLaunch}} days left. Make sure you\u2019re ready.',
     preheader:
-      "{{daysUntilLaunch}} days until the drop — here's what you need to know.",
+      "{{daysUntilLaunch}} days until the drop. Here's what matters.",
     intro:
       "In {{daysUntilLaunch}} days we open the drop. As an insider you're up front.",
     countdownLabel: 'Days to drop',
     accessLabel: 'Early access',
     whatThisMeansTitle: 'What this means',
-    info1: "You get access first — 24 hours early.",
-    info2: "Limited stock per piece — when it's gone, it's gone.",
+    info1: "You shop 24 hours before everyone else.",
+    info2: "Limited quantity per piece. When it's gone, it's gone.",
     info3: 'No restocks, no second chances.',
     perksRemainTitle: 'Your insider perks',
     perk1: 'Early access to the drop.',
@@ -1015,6 +1015,6 @@ export const modularEn: ModularDict = {
     limitedStockTitle: 'Extra limited',
     shopNow: 'Shop the drop',
     closing: 'Be ready on time. Insider love.',
-    ps: "PS — turn on notifications so you don't miss the drop.",
+    ps: "P.S. Turn on notifications so you don't miss the drop.",
   },
 }

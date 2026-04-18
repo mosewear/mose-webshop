@@ -1120,7 +1120,7 @@
     "newsletter": {
       "title": "JOIN THE PACK",
       "description": "News about drops, restocks and the atelier.",
-      "noSpam": "No spam — only MOSE.",
+      "noSpam": "No spam. Only MOSE.",
       "placeholder": "Your email address",
       "submit": "JOIN NOW",
       "submitting": "Submitting...",
@@ -1650,7 +1650,7 @@
   "insiderWelcome": {
     "title": "WELCOME TO THE INSIDERS",
     "subtitle": "You're in. Here's what that means.",
-    "intro": "Thanks for being part of the inner circle. You're now officially a MOSE insider — one of the first to know when new drops launch, before they sell out.",
+    "intro": "Thanks for being part of the inner circle. You're officially a MOSE insider now: one of the first to know when new drops launch, before they sell out.",
     "perksTitle": "What you get as an insider:",
     "perk1Title": "Made in Groningen",
     "perk1Text": "Locally designed and made",
@@ -1675,7 +1675,7 @@
   "insiderCommunity": {
     "title": "YOU'RE NOT ALONE",
     "subtitle": "A behind-the-scenes look at our community",
-    "intro": "There are now hundreds of insiders waiting for the launch. Not just customers — people who get what MOSE stands for.",
+    "intro": "Hundreds of insiders are waiting for the launch. Not random shoppers. People who get what MOSE stands for.",
     "numbers": "The numbers:",
     "stat1": "{count}+ insiders on the list",
     "stat2": "Most popular: Hoodies (already 40% of stock reserved)",
@@ -1694,7 +1694,7 @@
   "insiderBehindScenes": {
     "title": "HOW WE MAKE THIS",
     "subtitle": "A look into the process",
-    "intro": "You asked for it. Here's what happens behind the scenes at MOSE — from idea to product.",
+    "intro": "You asked for it. Here is what happens behind the scenes at MOSE: from idea to product.",
     "processTitle": "The process:",
     "process1": "Locally designed in Groningen. Everything starts here.",
     "process2": "Made with premium materials. No cheap stuff.",
@@ -1713,7 +1713,7 @@
     "whatThisMeansTitle": "What this means:",
     "info1": "You can shop from March 1st at 00:00",
     "info2": "Everyone else waits until March 2nd",
-    "info3": "Limited items disappear fast — early access is key",
+    "info3": "Limited items disappear fast. Early access matters.",
     "perksRemainTitle": "Your insider perks remain:",
     "perk1": "24h early access (March 1st at 00:00)",
     "perk2": "Made in Groningen",

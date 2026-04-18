@@ -607,10 +607,10 @@ export async function sendReturnCreatedByAdminEmail(props: {
 
   // Subject varieert per mode
   const fallbackSubjects: Record<string, string> = {
-    customer_paid: `Retour ${returnNumber} aangemaakt – rond de labelbetaling af`,
-    customer_free: `Retour ${returnNumber} aangemaakt – gratis retourlabel klaar`,
-    in_store: `Retour ${returnNumber} aangemaakt – breng langs in de winkel`,
-    admin_generated: `Retour ${returnNumber} aangemaakt – label onderweg`,
+    customer_paid: `Retour ${returnNumber} aangemaakt: rond de labelbetaling af`,
+    customer_free: `Retour ${returnNumber} aangemaakt: gratis retourlabel klaar`,
+    in_store: `Retour ${returnNumber} aangemaakt: breng langs in de winkel`,
+    admin_generated: `Retour ${returnNumber} aangemaakt: label onderweg`,
   }
   const subjectKey = `returnCreatedByAdmin.subject_${props.labelMode}`
   let subject = t(subjectKey, { returnNumber })
@@ -1513,7 +1513,7 @@ export async function sendLoyaltyStatusUpdateEmail(props: {
   const subject =
     variant === 'tier_up'
       ? locale === 'en'
-        ? `You\u2019re now ${tierLabel} — your new MOSE perks are live`
+        ? `You\u2019re now ${tierLabel}. Your new MOSE perks are live.`
         : `Gefeliciteerd, je bent nu ${tierLabel} bij MOSE`
       : locale === 'en'
         ? `Your MOSE loyalty status: ${tierLabel}`

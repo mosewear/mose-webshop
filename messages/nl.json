@@ -1059,7 +1059,7 @@
     "newsletter": {
       "title": "JOIN THE PACK",
       "description": "Nieuws over drops, restocks en het atelier.",
-      "noSpam": "Geen spam — alleen MOSE.",
+      "noSpam": "Geen spam. Alleen MOSE.",
       "placeholder": "Jouw e-mailadres",
       "submit": "JOIN NU",
       "submitting": "Verzenden...",
@@ -1590,7 +1590,7 @@
   "insiderWelcome": {
     "title": "WELKOM BIJ DE INSIDERS",
     "subtitle": "Je bent binnen. Hier is wat dat betekent.",
-    "intro": "Bedankt dat je deel uitmaakt van de inner circle. Je bent nu officieel een MOSE insider — een van de eersten die weet wanneer nieuwe drops lanceren, voordat het uitverkocht is.",
+    "intro": "Bedankt dat je deel uitmaakt van de inner circle. Je bent nu officieel MOSE insider: een van de eersten die hoort wanneer nieuwe drops landen, voordat het uitverkocht is.",
     "perksTitle": "Wat je krijgt als insider:",
     "perk1Title": "Gemaakt in Groningen",
     "perk1Text": "Lokaal ontworpen en gemaakt",
@@ -1615,7 +1615,7 @@
   "insiderCommunity": {
     "title": "JE BENT NIET DE ENIGE",
     "subtitle": "Een blik achter de schermen van onze community",
-    "intro": "Er zijn nu honderden insiders die op de launch wachten. Niet zomaar klanten — mensen die snappen waar MOSE voor staat.",
+    "intro": "Er zijn nu honderden insiders die op de launch wachten. Geen willekeurige shoppers, maar mensen die snappen waar MOSE voor staat.",
     "numbers": "De cijfers:",
     "stat1": "{count}+ insiders op de lijst",
     "stat2": "Meest populair: Hoodies (al 40% van voorraad gereserveerd)",
@@ -1634,7 +1634,7 @@
   "insiderBehindScenes": {
     "title": "HOE WE DIT MAKEN",
     "subtitle": "Een kijkje in het proces",
-    "intro": "Je vroeg erom. Hier is wat er gebeurt achter de schermen van MOSE — van idee tot product.",
+    "intro": "Je vroeg erom. Zo gaat het achter de schermen bij MOSE: van idee tot product.",
     "processTitle": "Het proces:",
     "process1": "Lokaal ontworpen in Groningen. Alles start hier.",
     "process2": "Gemaakt met premium materialen. Geen goedkope troep.",
@@ -1653,7 +1653,7 @@
     "whatThisMeansTitle": "Wat dit betekent:",
     "info1": "Jij kunt al vanaf 1 maart 00:00 uur shoppen",
     "info2": "De rest van de wereld wacht tot 2 maart",
-    "info3": "Limited items verdwijnen snel — vroege toegang is key",
+    "info3": "Limited items verdwijnen snel. Vroege toegang telt.",
     "perksRemainTitle": "Je insider perks blijven:",
     "perk1": "24u vroege toegang (1 maart om 00:00)",
     "perk2": "Gemaakt in Groningen",

@@ -43,7 +43,7 @@ export default function BackInStockEmail({
       locale={locale}
       preview={
         t('backInStock.preheader', { product: productName }) ||
-        `${productName} is terug op voorraad — claim \u2019m voor hij weer weg is.`
+        `${productName} is weer op voorraad. Wees er snel bij.`
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('backInStock.status') || 'Back in Stock'} />
@@ -67,7 +67,7 @@ export default function BackInStockEmail({
       <EmailModule padding="20px 30px">
         <EmailParagraph align="center">
           {t('backInStock.description') ||
-            'Limited stock — ga er snel bij zodat je niet opnieuw op de wachtlijst hoeft.'}
+            'Beperkte voorraad. Geen zin in weer wachten? Schiet op.'}
         </EmailParagraph>
       </EmailModule>
 

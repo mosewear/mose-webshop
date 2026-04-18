@@ -47,7 +47,7 @@ export default function InsiderWelcomeEmail({
       locale={locale}
       preview={
         t('insiderWelcome.preheader') ||
-        'Welkom in de MOSE Insider Club — als eerste zien wat er aankomt.'
+        'Welkom in de MOSE Insider Club. Jij ziet wat er aankomt vóór de rest.'
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('insiderWelcome.status') || 'Insider Club'} />
@@ -109,7 +109,7 @@ export default function InsiderWelcomeEmail({
       <EmailModule padding="28px 30px">
         <EmailParagraph>
           {t('insiderWelcome.intro') ||
-            "We pakken streetwear anders aan — doordacht, duurzaam en alleen in beperkte drops. Als insider krijg jij de eerste pick."}
+            "Streetwear zonder poespas: doordacht, duurzaam, kleine oplages. Als insider kies jij als eerste."}
         </EmailParagraph>
       </EmailModule>
 
@@ -129,7 +129,7 @@ export default function InsiderWelcomeEmail({
                 title: t('insiderWelcome.perk2Title') || 'Gratis Verzending',
                 description:
                   t('insiderWelcome.perk2Text') ||
-                  'Altijd gratis verzending binnen Nederland — ook op pre-orders.',
+                  'Altijd gratis verzending binnen Nederland, ook op pre-orders.',
               },
               {
                 title: t('insiderWelcome.perk3Title') || 'Insider Only Drops',
@@ -141,7 +141,7 @@ export default function InsiderWelcomeEmail({
                 title: t('insiderWelcome.perk4Title') || 'Behind the Scenes',
                 description:
                   t('insiderWelcome.perk4Text') ||
-                  'De verhalen achter MOSE — waar materiaal, design en productie samenkomen.',
+                  'Hoe MOSE tot stand komt: materiaal, design en productie in één verhaal.',
               },
             ]}
           />
@@ -175,7 +175,7 @@ export default function InsiderWelcomeEmail({
         contactEmail={contactEmail}
         contactPhone={contactPhone}
         contactAddress={contactAddress}
-        tagline={t('insiderWelcome.tagline') || 'Made in Groningen — Dressed Worldwide'}
+        tagline={t('insiderWelcome.tagline') || 'Made in Groningen. Dressed Worldwide.'}
       />
     </EmailShell>
   )

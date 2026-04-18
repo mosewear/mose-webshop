@@ -40,7 +40,7 @@ export default function InsiderLaunchWeekEmail({
       locale={locale}
       preview={
         t('insiderLaunchWeek.preheader', { days: daysUntilLaunch }) ||
-        `Nog ${daysUntilLaunch} dagen tot de drop — dit is wat je moet weten.`
+        `Nog ${daysUntilLaunch} dagen tot de drop. Dit moet je weten.`
       }
     >
       <EmailHeader siteUrl={siteUrl} status={t('insiderLaunchWeek.status') || 'Launch Week'} />
@@ -82,8 +82,8 @@ export default function InsiderLaunchWeekEmail({
           <EmailSteps
             variant="bullet"
             steps={[
-              t('insiderLaunchWeek.info1') || 'Jij krijgt als eerste toegang — 24 uur eerder.',
-              t('insiderLaunchWeek.info2') || 'Limited stock per stuk — op = op.',
+              t('insiderLaunchWeek.info1') || 'Jij shopt 24 uur eerder dan de rest.',
+              t('insiderLaunchWeek.info2') || 'Per stuk beperkte voorraad. Op is op.',
               t('insiderLaunchWeek.info3') || 'Geen restocks, geen tweede kansen.',
             ]}
           />
@@ -158,7 +158,7 @@ export default function InsiderLaunchWeekEmail({
       <EmailModule padding="18px 24px" background={EMAIL_COLORS.sectionAlt} align="center">
         <EmailParagraph tone="muted" size={12} align="center" mb={0}>
           {t('insiderLaunchWeek.ps') ||
-            'PS — zet je notifications aan zodat je de drop niet mist.'}
+            'P.S. Zet je notificaties aan, dan mis je de drop niet.'}
         </EmailParagraph>
       </EmailModule>
 
