@@ -60,6 +60,7 @@ export default function EmailBreakdown({ title, rows }: EmailBreakdownProps) {
           fontFamily: EMAIL_FONTS.body,
           fontSize: '14px',
           color: EMAIL_COLORS.text,
+          tableLayout: 'fixed',
         }}
       >
         <tbody>
@@ -69,29 +70,36 @@ export default function EmailBreakdown({ title, rows }: EmailBreakdownProps) {
             return (
               <tr key={idx}>
                 <td
+                  width="48%"
+                  valign="top"
+                  className="mose-breakdown-label"
                   style={{
-                    padding: '5px 0',
+                    padding: '5px 8px 5px 0',
                     color: row.tone === 'muted' ? EMAIL_COLORS.textMuted : EMAIL_COLORS.text,
                     fontSize: row.tone === 'muted' ? '13px' : '14px',
                     fontWeight: row.strong ? 800 : 500,
                     letterSpacing: isHighlight ? '0.12em' : undefined,
                     textTransform: isHighlight ? 'uppercase' : undefined,
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
                   }}
                 >
                   {row.label}
                 </td>
                 <td
+                  width="52%"
                   align="right"
+                  valign="top"
                   className="mose-breakdown-value"
                   style={{
-                    padding: '5px 0',
+                    padding: '5px 0 5px 8px',
                     color,
                     fontWeight: row.strong || isHighlight ? 800 : 500,
                     fontSize: row.tone === 'muted' ? '13px' : '14px',
                     letterSpacing: isHighlight ? '0.12em' : undefined,
                     textTransform: isHighlight ? 'uppercase' : undefined,
-                    whiteSpace: 'nowrap',
                     wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
                   }}
                 >
                   {row.value}

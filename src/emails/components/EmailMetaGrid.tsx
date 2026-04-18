@@ -82,6 +82,8 @@ export default function EmailMetaGrid({
                       color: EMAIL_COLORS.ink,
                       letterSpacing: '0.06em',
                       lineHeight: 1.05,
+                      wordBreak: 'break-word',
+                      overflowWrap: 'anywhere',
                     }}
                   >
                     {pair.value}

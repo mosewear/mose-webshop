@@ -129,7 +129,7 @@ export default function ContactFormEmail({
       </EmailModule>
 
       <EmailCallout tone="info">
-        {t('contact.replyInfo') ||
+        {t('contact.replyInfo', { email: customerEmail }) ||
           `Reageer direct door te antwoorden naar ${customerEmail}.`}
       </EmailCallout>
 

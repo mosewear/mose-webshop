@@ -95,6 +95,8 @@ export default function EmailSplitHighlight({
                   fontSize: '14px',
                   lineHeight: 1.7,
                   color: L.body,
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {left.body}
@@ -152,6 +154,8 @@ export default function EmailSplitHighlight({
                   fontSize: '14px',
                   lineHeight: 1.7,
                   color: R.body,
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {right.body}

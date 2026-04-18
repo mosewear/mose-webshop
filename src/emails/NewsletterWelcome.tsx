@@ -157,7 +157,10 @@ export default function NewsletterWelcomeEmail({
         href={`${siteUrl}/${locale}/shop`}
         label={`${t('newsletterWelcome.discoverCollection') || 'Ontdek de collectie'}  →`}
         variant="teal"
-        footnote={t('newsletterWelcome.receivedBecause') || `Je ontvangt deze mail omdat je je aanmeldde met ${email}.`}
+        footnote={
+          t('newsletterWelcome.receivedBecause', { email }) ||
+          `Je ontvangt deze mail omdat je je aanmeldde met ${email}.`
+        }
       />
 
       <EmailShopMore siteUrl={siteUrl} locale={locale} />

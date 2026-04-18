@@ -1,3 +1,5 @@
+import { modularEn, modularNl } from './email-i18n-modular'
+
 // Type definitions for translations.
 // NOTE: We keep the (optional) strict shape below for documentation purposes
 // and gate the actual dictionaries with a loose index signature so that
@@ -1306,14 +1308,6 @@ const resources = {
 }
 
 /**
- * Get translation function for a specific locale
- * Simple, direct approach without i18next complexity
- * @param locale - Language code ('nl' or 'en')
- * @returns Translation function
- */
-import { modularEn, modularNl } from './email-i18n-modular'
-
-/**
  * If a resolved string still looks like the requested i18n key (or a variant
  * such as ORDERCONFIRMATION.FREE vs orderConfirmation.free), treat it as a
  * miss so template-level `|| 'fallback'` can run. Prevents raw keys leaking
@@ -1331,6 +1325,11 @@ function translationLooksLikeRawKey(requestedKey: string, output: string): boole
   return false
 }
 
+/**
+ * Get translation function for a specific locale.
+ * Simple, direct approach without i18next complexity.
+ * @param locale - Language code ('nl' or 'en')
+ */
 export async function getEmailT(locale: string = 'nl') {
   // Lookup order (per locale): modular dict → legacy dict → Dutch modular →
   // Dutch legacy → empty string. This guarantees that:
@@ -1389,7 +1388,11 @@ export async function getEmailT(locale: string = 'nl') {
  * @returns Interpolated text
  */
 export function interpolate(text: string, vars: Record<string, string | number>): string {
-  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => String(vars[key] || ''))
+  return text.replace(/\{\{(\w+)\}\}/g, (_, varKey) => {
+    const v = vars[varKey]
+    if (v === undefined || v === null) return ''
+    return String(v)
+  })
 }
 
 // Export translation objects for direct access if needed

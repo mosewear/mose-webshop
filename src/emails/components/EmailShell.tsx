@@ -30,10 +30,11 @@ const bodyStyle = {
 } as const
 
 const containerStyle = {
-  width: '600px',
+  width: '100%',
   maxWidth: '600px',
   margin: '0 auto',
   padding: '24px 12px 32px 12px',
+  boxSizing: 'border-box' as const,
 }
 
 /**
@@ -52,12 +53,12 @@ const globalStyles = `
   .mose-hero-sub { max-width:100% !important; box-sizing:border-box !important; }
 
   @media only screen and (max-width: 620px) {
-    .mose-container { width:100% !important; max-width:100% !important; padding:16px 8px 24px 8px !important; }
+    .mose-container { width:100% !important; max-width:100% !important; padding:16px 8px 24px 8px !important; box-sizing:border-box !important; }
     .mose-pad { padding:20px !important; }
     .mose-pad-lg { padding:28px 22px !important; }
-    .mose-hero-title { font-size:56px !important; line-height:0.9 !important; }
-    .mose-hero-title-lg { font-size:64px !important; line-height:0.88 !important; }
-    .mose-total-value { font-size:40px !important; }
+    .mose-hero-title { font-size:56px !important; line-height:0.9 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
+    .mose-hero-title-lg { font-size:64px !important; line-height:0.88 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
+    .mose-total-value { font-size:40px !important; overflow-wrap:anywhere !important; }
     .mose-section-title { font-size:22px !important; }
     .mose-product-img { width:96px !important; height:64px !important; }
     .mose-product-col { width:112px !important; padding-right:14px !important; }
@@ -68,7 +69,7 @@ const globalStyles = `
     .mose-gutter { display:none !important; width:0 !important; font-size:0 !important; line-height:0 !important; height:0 !important; overflow:hidden !important; }
     .mose-hide-mobile { display:none !important; }
     .mose-btn { display:block !important; width:100% !important; box-sizing:border-box !important; }
-    .mose-breakdown-value { white-space:normal !important; word-break:break-word !important; max-width:52% !important; }
+    .mose-breakdown-value { white-space:normal !important; word-break:break-word !important; overflow-wrap:anywhere !important; }
   }
 
   @media (prefers-color-scheme: dark) {

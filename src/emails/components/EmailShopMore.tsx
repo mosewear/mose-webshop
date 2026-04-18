@@ -50,6 +50,8 @@ export default function EmailShopMore({
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   color: EMAIL_COLORS.paper,
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {title}
