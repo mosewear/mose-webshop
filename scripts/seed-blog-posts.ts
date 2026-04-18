@@ -31,14 +31,14 @@ interface BlogPost {
 
 const posts: BlogPost[] = [
   // ============================================================
-  // ARTICLE 1 — December 5, 2025
+  // ARTICLE 1, December 5, 2025
   // ============================================================
   {
     slug: 'waarom-fast-fashion-kapot-is',
     title_nl: 'Waarom Fast Fashion Kapot Is (En Wat Jij Eraan Kunt Doen)',
     title_en: 'Why Fast Fashion Is Broken (And What You Can Do About It)',
-    excerpt_nl: 'Elke seconde wordt een vrachtwagen aan kleding verbrand of gedumpt. Dit is het verhaal achter de kleding die je draagt — en hoe je betere keuzes kunt maken.',
-    excerpt_en: 'Every second, a truckload of clothing is burned or dumped. This is the story behind the clothes you wear — and how you can make better choices.',
+    excerpt_nl: 'Elke seconde wordt een vrachtwagen aan kleding verbrand of gedumpt. Dit is het verhaal achter de kleding die je draagt, en hoe je betere keuzes kunt maken.',
+    excerpt_en: 'Every second, a truckload of clothing is burned or dumped. This is the story behind the clothes you wear, and how you can make better choices.',
     category: 'sustainability',
     tags: ['fast fashion', 'duurzaamheid', 'bewust kopen', 'kledingverspilling'],
     author: 'MOSE',
@@ -50,17 +50,17 @@ const posts: BlogPost[] = [
     seo_title_en: 'Why Fast Fashion Is Broken and What You Can Do | MOSE Blog',
     seo_description_nl: 'Ontdek waarom fast fashion niet alleen slecht is voor het milieu, maar ook voor jouw portemonnee. Leer hoe je bewuster kleding koopt die langer meegaat.',
     seo_description_en: 'Discover why fast fashion is bad for the environment and your wallet. Learn how to buy clothes more consciously that last longer.',
-    content_nl: `De cijfers liegen er niet om. De kledingindustrie is verantwoordelijk voor 10% van alle mondiale CO2-uitstoot — meer dan alle internationale vluchten en scheepvaart samen. En het wordt alleen maar erger.
+    content_nl: `De cijfers liegen er niet om. De kledingindustrie is verantwoordelijk voor 10% van alle mondiale CO2-uitstoot, meer dan alle internationale vluchten en scheepvaart samen. En het wordt alleen maar erger.
 
 ## Het probleem in cijfers
 
 Elke seconde wordt het equivalent van een vrachtwagen aan kleding verbrand of gestort. De gemiddelde Nederlander koopt 46 kledingstukken per jaar, draagt ze gemiddeld zeven keer, en gooit ze dan weg. Laten die cijfers even bezinken.
 
-In 2000 produceerden we wereldwijd 50 miljard kledingstukken per jaar. In 2025 zijn dat er meer dan 150 miljard. De wereldbevolking is in die tijd niet verdrievoudigd — onze consumptie wel.
+In 2000 produceerden we wereldwijd 50 miljard kledingstukken per jaar. In 2025 zijn dat er meer dan 150 miljard. De wereldbevolking is in die tijd niet verdrievoudigd, onze consumptie wel.
 
 ## Waarom is kleding zo goedkoop geworden?
 
-De reden dat je een T-shirt kunt kopen voor vijf euro is simpel: iemand anders betaalt de werkelijke prijs. Dat zijn de arbeiders in fabrieken in Bangladesh, Myanmar of Ethiopië die voor hongerloontjes werken. Dat is het milieu dat de chemische verfstoffen en microplastics absorbeert. En uiteindelijk ben jij het zelf — want goedkope kleding gaat niet lang mee, dus koop je steeds opnieuw.
+De reden dat je een T-shirt kunt kopen voor vijf euro is simpel: iemand anders betaalt de werkelijke prijs. Dat zijn de arbeiders in fabrieken in Bangladesh, Myanmar of Ethiopië die voor hongerloontjes werken. Dat is het milieu dat de chemische verfstoffen en microplastics absorbeert. En uiteindelijk ben jij het zelf, want goedkope kleding gaat niet lang mee, dus koop je steeds opnieuw.
 
 Fast fashion merken brengen wekelijks nieuwe collecties uit. Het doel is niet om kleding te maken die je lang draagt. Het doel is om je zo snel mogelijk terug in de winkel te krijgen. Het is een verdienmodel gebouwd op wegwerpcultuur.
 
@@ -92,23 +92,23 @@ Het goede nieuws: je hoeft je garderobe niet van de ene op de andere dag te vera
 
 ## Waarom wij dit anders doen
 
-Bij MOSE produceren we lokaal in Groningen. Niet omdat het goedkoper is — dat is het absoluut niet. Maar omdat we willen weten wie onze kleding maakt, onder welke omstandigheden, en met welke materialen.
+Bij MOSE produceren we lokaal in Groningen. Niet omdat het goedkoper is. Dat is het absoluut niet. Maar omdat we willen weten wie onze kleding maakt, onder welke omstandigheden, en met welke materialen.
 
 Onze hoodies, T-shirts en caps zijn ontworpen om jarenlang mee te gaan. Geen seizoenscollecties die je na drie maanden vergeten bent. Geen kunstmatige schaarste om je onder druk te zetten. Gewoon eerlijke kleding die goed zit, goed eruitziet, en lang meegaat.
 
 Het is niet de goedkoopste optie. Maar het is wel de eerlijkste.`,
 
-    content_en: `The numbers don't lie. The clothing industry is responsible for 10% of all global CO2 emissions — more than all international flights and shipping combined. And it's only getting worse.
+    content_en: `The numbers don't lie. The clothing industry is responsible for 10% of all global CO2 emissions, more than all international flights and shipping combined. And it's only getting worse.
 
 ## The Problem in Numbers
 
 Every second, the equivalent of a garbage truck of clothing is burned or dumped. The average European buys 26 kilograms of textiles per year and discards 11 kilograms. Let those numbers sink in.
 
-In 2000, we produced 50 billion garments worldwide per year. In 2025, that number exceeds 150 billion. The world population hasn't tripled in that time — our consumption has.
+In 2000, we produced 50 billion garments worldwide per year. In 2025, that number exceeds 150 billion. The world population hasn't tripled in that time, our consumption has.
 
 ## Why Has Clothing Become So Cheap?
 
-The reason you can buy a T-shirt for five euros is simple: someone else is paying the real price. That's the workers in factories in Bangladesh, Myanmar, or Ethiopia earning starvation wages. It's the environment absorbing chemical dyes and microplastics. And ultimately, it's you — because cheap clothing doesn't last, so you keep buying again.
+The reason you can buy a T-shirt for five euros is simple: someone else is paying the real price. That's the workers in factories in Bangladesh, Myanmar, or Ethiopia earning starvation wages. It's the environment absorbing chemical dyes and microplastics. And ultimately, it's you, because cheap clothing doesn't last, so you keep buying again.
 
 Fast fashion brands release new collections weekly. The goal isn't to make clothing you'll wear for years. The goal is to get you back in the store as quickly as possible. It's a business model built on throwaway culture.
 
@@ -140,7 +140,7 @@ The good news: you don't have to change your wardrobe overnight. Small, consciou
 
 ## Why We Do Things Differently
 
-At MOSE, we produce locally in Groningen. Not because it's cheaper — it absolutely isn't. But because we want to know who makes our clothing, under what conditions, and with what materials.
+At MOSE, we produce locally in Groningen. Not because it's cheaper, it absolutely isn't. But because we want to know who makes our clothing, under what conditions, and with what materials.
 
 Our hoodies, T-shirts, and caps are designed to last for years. No seasonal collections you'll forget after three months. No artificial scarcity to pressure you. Just honest clothing that fits well, looks good, and lasts.
 
@@ -148,14 +148,14 @@ It's not the cheapest option. But it is the most honest one.`,
   },
 
   // ============================================================
-  // ARTICLE 2 — December 19, 2025
+  // ARTICLE 2, December 19, 2025
   // ============================================================
   {
     slug: 'de-perfecte-winter-hoodie-koopgids',
     title_nl: 'De Perfecte Winter Hoodie: Hier Moet Je Op Letten',
     title_en: 'The Perfect Winter Hoodie: What to Look For',
-    excerpt_nl: 'Niet elke hoodie is geschikt voor de Nederlandse winter. Van stofkeuze tot pasvorm — dit is waar je op moet letten als je investeert in een hoodie die echt warm houdt.',
-    excerpt_en: 'Not every hoodie is suitable for a Dutch winter. From fabric choice to fit — here\'s what to look for when investing in a hoodie that actually keeps you warm.',
+    excerpt_nl: 'Niet elke hoodie is geschikt voor de Nederlandse winter. Van stofkeuze tot pasvorm, dit is waar je op moet letten als je investeert in een hoodie die echt warm houdt.',
+    excerpt_en: 'Not every hoodie is suitable for a Dutch winter. From fabric choice to fit, here\'s what to look for when investing in a hoodie that actually keeps you warm.',
     category: 'style',
     tags: ['hoodie', 'winter', 'koopgids', 'pasvorm', 'stof'],
     author: 'MOSE',
@@ -165,9 +165,9 @@ It's not the cheapest option. But it is the most honest one.`,
     status: 'published',
     seo_title_nl: 'De Perfecte Winter Hoodie Koopgids | MOSE Blog',
     seo_title_en: 'The Perfect Winter Hoodie Buying Guide | MOSE Blog',
-    seo_description_nl: 'Leer waar je op moet letten bij het kopen van een winter hoodie. Stofkeuze, pasvorm, gewicht en kwaliteit — alles wat je moet weten.',
-    seo_description_en: 'Learn what to look for when buying a winter hoodie. Fabric choice, fit, weight and quality — everything you need to know.',
-    content_nl: `Een hoodie is het meest gedragen kledingstuk in de garderobe van de moderne man — en steeds vaker ook van de moderne vrouw. Maar niet elke hoodie is gelijk gemaakt, vooral niet als de Nederlandse winter toeslaat.
+    seo_description_nl: 'Leer waar je op moet letten bij het kopen van een winter hoodie. Stofkeuze, pasvorm, gewicht en kwaliteit, alles wat je moet weten.',
+    seo_description_en: 'Learn what to look for when buying a winter hoodie. Fabric choice, fit, weight and quality, everything you need to know.',
+    content_nl: `Een hoodie is het meest gedragen kledingstuk in de garderobe van de moderne man, en steeds vaker ook van de moderne vrouw. Maar niet elke hoodie is gelijk gemaakt, vooral niet als de Nederlandse winter toeslaat.
 
 ## Het gewicht maakt het verschil
 
@@ -193,15 +193,15 @@ Er zijn enorme kwaliteitsverschillen in katoen. Goedkoop katoen voelt aanvankeli
 
 ## De pasvorm: relaxed vs. oversized vs. regular
 
-De pasvorm van je hoodie bepaalt je hele look. Er is geen objectief "beste" pasvorm — het hangt af van je stijl en je lichaam.
+De pasvorm van je hoodie bepaalt je hele look. Er is geen objectief "beste" pasvorm, het hangt af van je stijl en je lichaam.
 
 **Regular fit** volgt je lichaamscontour zonder strak te zitten. Klassiek, clean, werkt altijd. Dit is de pasvorm die je kunt dragen naar een casual vrijdagmiddagborrel zonder dat iemand denkt dat je net uit bed komt.
 
 **Relaxed fit** zit iets ruimer in de schouders en het lijf. Comfortabeler, casualer, en vergeeft meer. Perfect voor weekenddagen en chill sesies.
 
-**Oversized** is bewust te groot. Het is een statement, niet een ongelukje. Een goede oversized hoodie heeft nog steeds structuur in de schouders en zit niet als een zak. Dit is een stijlkeuze — niet een "ik heb de verkeerde maat gepakt" keuze.
+**Oversized** is bewust te groot. Het is een statement, niet een ongelukje. Een goede oversized hoodie heeft nog steeds structuur in de schouders en zit niet als een zak. Dit is een stijlkeuze, niet een "ik heb de verkeerde maat gepakt" keuze.
 
-MOSE hoodies hebben een relaxed fit. Ruim genoeg om comfortabel te zijn, gestructureerd genoeg om er goed uit te zien. Zowel mannen als vrouwen dragen ze — de fit werkt universeel.
+MOSE hoodies hebben een relaxed fit. Ruim genoeg om comfortabel te zijn, gestructureerd genoeg om er goed uit te zien. Zowel mannen als vrouwen dragen ze, de fit werkt universeel.
 
 ## De details die je over het hoofd ziet
 
@@ -221,9 +221,9 @@ Een goede winterhoodie kost tussen de €70 en €120. Dat voelt als veel als je
 
 Een hoodie van €25 die je één seizoen draagt voordat hij pilt, krimpt en zijn vorm verliest: €25 per seizoen. Een hoodie van €89 die je vier winters draagt: €22 per seizoen. En die voelt elke keer dat je hem aantrekt beter dan dat fast fashion alternatief.
 
-Investeer in minder stukken van betere kwaliteit. Je garderobe — en je portemonnee — zullen je dankbaar zijn.`,
+Investeer in minder stukken van betere kwaliteit. Je garderobe, en je portemonnee, zullen je dankbaar zijn.`,
 
-    content_en: `A hoodie is the most-worn garment in the modern man's wardrobe — and increasingly in the modern woman's too. But not every hoodie is made equal, especially when the Dutch winter hits.
+    content_en: `A hoodie is the most-worn garment in the modern man's wardrobe, and increasingly in the modern woman's too. But not every hoodie is made equal, especially when the Dutch winter hits.
 
 ## Weight Makes the Difference
 
@@ -249,15 +249,15 @@ There are enormous quality differences in cotton. Cheap cotton initially feels s
 
 ## The Fit: Relaxed vs. Oversized vs. Regular
 
-Your hoodie's fit determines your entire look. There's no objectively "best" fit — it depends on your style and body.
+Your hoodie's fit determines your entire look. There's no objectively "best" fit, it depends on your style and body.
 
 **Regular fit** follows your body contour without being tight. Classic, clean, always works.
 
 **Relaxed fit** sits slightly looser in the shoulders and body. More comfortable, more casual, and more forgiving. Perfect for weekend days.
 
-**Oversized** is intentionally too large. It's a statement, not an accident. A good oversized hoodie still has structure in the shoulders. This is a style choice — not a "I grabbed the wrong size" choice.
+**Oversized** is intentionally too large. It's a statement, not an accident. A good oversized hoodie still has structure in the shoulders. This is a style choice, not a "I grabbed the wrong size" choice.
 
-MOSE hoodies have a relaxed fit. Spacious enough to be comfortable, structured enough to look good. Both men and women wear them — the fit works universally.
+MOSE hoodies have a relaxed fit. Spacious enough to be comfortable, structured enough to look good. Both men and women wear them, the fit works universally.
 
 ## The Details You Overlook
 
@@ -277,11 +277,11 @@ A good winter hoodie costs between €70 and €120. That feels like a lot if yo
 
 A €25 hoodie you wear for one season before it pills, shrinks, and loses shape: €25 per season. A €89 hoodie you wear for four winters: €22 per season. And it feels better every time you put it on.
 
-Invest in fewer pieces of better quality. Your wardrobe — and your wallet — will thank you.`,
+Invest in fewer pieces of better quality. Your wardrobe, and your wallet, will thank you.`,
   },
 
   // ============================================================
-  // ARTICLE 3 — January 8, 2026
+  // ARTICLE 3, January 8, 2026
   // ============================================================
   {
     slug: 'capsule-wardrobe-mannen-minder-kleding-meer-stijl',
@@ -316,7 +316,7 @@ Het idee is niet nieuw. De term werd in de jaren '70 bedacht door Susie Faux, ei
 
 ## De basis: wat heb je nodig?
 
-Hier is een realistische capsule wardrobe voor mannen. Dit is geen theoretische lijst — dit zijn stukken die je echt elke week zult dragen.
+Hier is een realistische capsule wardrobe voor mannen. Dit is geen theoretische lijst, dit zijn stukken die je echt elke week zult dragen.
 
 ### Bovenkleding (8-10 stukken)
 
@@ -356,9 +356,9 @@ Met deze strategie kun je letterlijk blind in je kast grijpen en een werkende ou
 
 "Kwaliteitskleding is te duur." Dit hoor je vaak, maar het is een misvatting. Laten we rekenen.
 
-**Scenario A — Fast fashion:** Je koopt jaarlijks 46 kledingstukken (het Nederlandse gemiddelde) voor gemiddeld €15. Totaal: €690 per jaar. Na twee jaar heb je €1.380 uitgegeven en een kast vol versleten kleding.
+**Scenario A, Fast fashion:** Je koopt jaarlijks 46 kledingstukken (het Nederlandse gemiddelde) voor gemiddeld €15. Totaal: €690 per jaar. Na twee jaar heb je €1.380 uitgegeven en een kast vol versleten kleding.
 
-**Scenario B — Capsule wardrobe:** Je investeert €2.000 in 25 kwalitatieve stukken. Na drie jaar zijn de meeste stukken nog in prima staat. Kosten per jaar: €667 — en je hebt een kast vol kleding die er nog steeds goed uitziet.
+**Scenario B, Capsule wardrobe:** Je investeert €2.000 in 25 kwalitatieve stukken. Na drie jaar zijn de meeste stukken nog in prima staat. Kosten per jaar: €667, en je hebt een kast vol kleding die er nog steeds goed uitziet.
 
 Over vijf jaar bespaar je met een capsule wardrobe gemiddeld 30-40% ten opzichte van fast fashion. En je draagt elke dag kleding waar je je goed in voelt.
 
@@ -386,7 +386,7 @@ Voor elk nieuw stuk dat erin komt, gaat er een oud stuk uit. Dit houdt je garder
 
 ## Het resultaat
 
-Een capsule wardrobe is meer dan een kledingkast. Het is een mindset. Het is de beslissing om minder maar beter te kiezen. Om je niet te laten leiden door trends die over drie maanden vergeten zijn. Om te investeren in stukken die bij jou passen — niet bij de mode van het moment.
+Een capsule wardrobe is meer dan een kledingkast. Het is een mindset. Het is de beslissing om minder maar beter te kiezen. Om je niet te laten leiden door trends die over drie maanden vergeten zijn. Om te investeren in stukken die bij jou passen, niet bij de mode van het moment.
 
 Bij MOSE ontwerpen we onze hoodies, T-shirts en caps met precies dit in gedachten. Tijdloze basics in neutrale kleuren en sterke silhouetten die jaren meegaan. Geen seizoenscollecties, geen vluchtige trends. Stukken die de kern vormen van je garderobe, seizoen na seizoen.`,
 
@@ -404,7 +404,7 @@ A capsule wardrobe consists of 20 to 35 core pieces (excluding underwear, sports
 
 ## The Foundation: What Do You Need?
 
-Here's a realistic capsule wardrobe for men. This isn't a theoretical list — these are pieces you'll actually wear every week.
+Here's a realistic capsule wardrobe for men. This isn't a theoretical list, these are pieces you'll actually wear every week.
 
 ### Tops (8-10 pieces)
 
@@ -444,9 +444,9 @@ With this strategy, you can literally grab blindly into your closet and put toge
 
 "Quality clothing is too expensive." You hear this often, but it's a misconception. Let's do the math.
 
-**Scenario A — Fast fashion:** You buy 46 garments annually (the Dutch average) at an average of €15. Total: €690 per year. After two years, you've spent €1,380 and have a closet full of worn-out clothes.
+**Scenario A, Fast fashion:** You buy 46 garments annually (the Dutch average) at an average of €15. Total: €690 per year. After two years, you've spent €1,380 and have a closet full of worn-out clothes.
 
-**Scenario B — Capsule wardrobe:** You invest €2,000 in 25 quality pieces. After three years, most pieces are still in great condition. Cost per year: €667 — and you have a closet full of clothes that still look good.
+**Scenario B, Capsule wardrobe:** You invest €2,000 in 25 quality pieces. After three years, most pieces are still in great condition. Cost per year: €667, and you have a closet full of clothes that still look good.
 
 Over five years, a capsule wardrobe saves you 30-40% compared to fast fashion on average. And you wear clothing you feel good in every day.
 
@@ -474,7 +474,7 @@ A capsule wardrobe is more than a closet. It's a mindset. The decision to choose
   },
 
   // ============================================================
-  // ARTICLE 4 — January 22, 2026
+  // ARTICLE 4, January 22, 2026
   // ============================================================
   {
     slug: 'lokaal-produceren-waarom-mose-kiest-voor-groningen',
@@ -495,7 +495,7 @@ A capsule wardrobe is more than a closet. It's a mindset. The decision to choose
     seo_description_en: 'Discover why MOSE chooses to produce all clothing locally in Groningen. Transparency, quality, and fair production.',
     content_nl: `97% van alle kleding die in Europa wordt verkocht, wordt buiten Europa geproduceerd. Het overgrote deel in Azië, waar arbeidsomstandigheden en milieunormen vaak ver onder de Europese standaard liggen.
 
-Bij MOSE doen we het anders. Alles wat we maken — elke hoodie, elk T-shirt, elke cap — wordt geproduceerd in Groningen. Dit is het verhaal waarom.
+Bij MOSE doen we het anders. Alles wat we maken, elke hoodie, elk T-shirt, elke cap, wordt geproduceerd in Groningen. Dit is het verhaal waarom.
 
 ## De lange reis van een gemiddeld kledingstuk
 
@@ -543,7 +543,7 @@ Groningen is een stad met lef. Een studentenstad met een ondernemersgeest die je
 
 Dat past bij MOSE. We zijn hier begonnen omdat dit onze stad is. Omdat de mentaliteit hier aansluit bij wat we willen zijn: geen poespas, wel karakter.
 
-Maar er zijn ook praktische redenen. Groningen heeft een groeiende creatieve industrie. Er is talent, er is energie, en er is ruimte om te experimenteren. Het is niet Amsterdam of Rotterdam — en dat is precies het punt. We hoeven niet in de Randstad te zitten om goede kleding te maken.
+Maar er zijn ook praktische redenen. Groningen heeft een groeiende creatieve industrie. Er is talent, er is energie, en er is ruimte om te experimenteren. Het is niet Amsterdam of Rotterdam, en dat is precies het punt. We hoeven niet in de Randstad te zitten om goede kleding te maken.
 
 ## De toekomst
 
@@ -553,7 +553,7 @@ Wij geloven dat de toekomst van mode lokaal, transparant en eerlijk is. Niet gro
 
     content_en: `97% of all clothing sold in Europe is produced outside Europe. The vast majority in Asia, where labor conditions and environmental standards often fall far below European standards.
 
-At MOSE, we do it differently. Everything we make — every hoodie, every T-shirt, every cap — is produced in Groningen. This is the story of why.
+At MOSE, we do it differently. Everything we make, every hoodie, every T-shirt, every cap, is produced in Groningen. This is the story of why.
 
 ## The Long Journey of an Average Garment
 
@@ -601,7 +601,7 @@ Groningen is a city with guts. A student city with an entrepreneurial spirit you
 
 That fits MOSE. We started here because this is our city. Because the mentality here aligns with what we want to be: no fuss, just character.
 
-But there are practical reasons too. Groningen has a growing creative industry. There's talent, energy, and room to experiment. It's not Amsterdam or Rotterdam — and that's exactly the point.
+But there are practical reasons too. Groningen has a growing creative industry. There's talent, energy, and room to experiment. It's not Amsterdam or Rotterdam, and that's exactly the point.
 
 ## The Future
 
@@ -611,14 +611,14 @@ We believe the future of fashion is local, transparent, and fair. Not large-scal
   },
 
   // ============================================================
-  // ARTICLE 5 — February 5, 2026
+  // ARTICLE 5, February 5, 2026
   // ============================================================
   {
     slug: 'kwaliteit-vs-kwantiteit-echte-kosten-kleding',
     title_nl: 'Kwaliteit vs. Kwantiteit: De Echte Kosten van Je Kleding',
     title_en: 'Quality vs. Quantity: The Real Cost of Your Clothing',
-    excerpt_nl: 'Een goedkoop T-shirt is nooit goedkoop. Zo bereken je de werkelijke kosten van je kleding — en waarom investeren in kwaliteit je geld bespaart.',
-    excerpt_en: 'A cheap T-shirt is never cheap. Here\'s how to calculate the real cost of your clothing — and why investing in quality saves you money.',
+    excerpt_nl: 'Een goedkoop T-shirt is nooit goedkoop. Zo bereken je de werkelijke kosten van je kleding, en waarom investeren in kwaliteit je geld bespaart.',
+    excerpt_en: 'A cheap T-shirt is never cheap. Here\'s how to calculate the real cost of your clothing, and why investing in quality saves you money.',
     category: 'sustainability',
     tags: ['kwaliteit', 'cost-per-wear', 'investering', 'bewust kopen'],
     author: 'MOSE',
@@ -644,7 +644,7 @@ Laten we twee T-shirts vergelijken:
 
 **T-shirt B:** €45, gedragen 120 keer over drie jaar. CPW: €0,38 per keer.
 
-Het "dure" T-shirt is meer dan drie keer goedkoper per draagbeurt. Dit is geen hypothetisch voorbeeld — dit is de realiteit van kwaliteitsverschillen in kleding.
+Het "dure" T-shirt is meer dan drie keer goedkoper per draagbeurt. Dit is geen hypothetisch voorbeeld, dit is de realiteit van kwaliteitsverschillen in kleding.
 
 ## Waarom goedkope kleding snel verslijt
 
@@ -666,7 +666,7 @@ Er zijn ook kosten die niet in euro's te meten zijn.
 
 **De "ik heb niets om aan te trekken" paradox:** Een volle kast vol middelmatige kleding voelt leger dan een kleine collectie stukken waar je van houdt.
 
-**Milieugeweten:** Steeds meer mensen voelen een ongemak bij het kopen van wegwerpkleding. Dat ongemak is terecht — en het verdwijnt wanneer je bewust koopt.
+**Milieugeweten:** Steeds meer mensen voelen een ongemak bij het kopen van wegwerpkleding. Dat ongemak is terecht, en het verdwijnt wanneer je bewust koopt.
 
 ## Hoe herken je kwaliteit?
 
@@ -723,13 +723,13 @@ You don't need to be a textile expert. Watch for these five things:
 
 ## Reframing the Investment
 
-Stop seeing clothing as an expense. Start seeing it as an investment. A €89 hoodie worn hundreds of times, getting softer with every wash, still looking good after three years — that's what you're paying for.
+Stop seeing clothing as an expense. Start seeing it as an investment. A €89 hoodie worn hundreds of times, getting softer with every wash, still looking good after three years, that's what you're paying for.
 
 The cheapest clothing is the clothing you don't have to replace.`,
   },
 
   // ============================================================
-  // ARTICLE 6 — February 19, 2026
+  // ARTICLE 6, February 19, 2026
   // ============================================================
   {
     slug: '5-tijdloze-basics-die-iedereen-nodig-heeft',
@@ -750,7 +750,7 @@ The cheapest clothing is the clothing you don't have to replace.`,
     seo_description_en: 'Discover the 5 timeless basics every man and woman should have. From the perfect hoodie to the ideal T-shirt.',
     content_nl: `Mode verandert elke zes maanden. Stijl niet. De meest stijlvolle mensen die je kent hebben één ding gemeen: een sterke basis van tijdloze basics die ze seizoen na seizoen dragen.
 
-Dit zijn geen saaie stukken die je draagt omdat je "niets anders hebt." Dit zijn bewuste keuzes. Stukken die zo goed zijn dat je ze elke week wilt dragen. Ongeacht of je een man of vrouw bent — goede basics zijn universeel.
+Dit zijn geen saaie stukken die je draagt omdat je "niets anders hebt." Dit zijn bewuste keuzes. Stukken die zo goed zijn dat je ze elke week wilt dragen. Ongeacht of je een man of vrouw bent, goede basics zijn universeel.
 
 ## 1. De Heavyweight Hoodie
 
@@ -784,7 +784,7 @@ Een cap is het accessoire dat het zwaarst onderschat wordt. Het maakt of breekt 
 
 **Vergeet trucker caps en snapbacks met grote logo's.** Een tijdloze cap is simpel: ongestructureerd of licht gestructureerd, subtiel logo of helemaal niets, in een kleur die bij je garderobe past.
 
-De juiste cap voegt diepte toe aan een simpele outfit. Hoodie, jeans, clean sneakers, en een cap — dat is een look die altijd werkt.
+De juiste cap voegt diepte toe aan een simpele outfit. Hoodie, jeans, clean sneakers, en een cap, dat is een look die altijd werkt.
 
 ## 4. De Donkere Jeans
 
@@ -815,7 +815,7 @@ Een goede werkjas of denim jacket is tijdloos. Het wordt mooier met de jaren en 
 
 ## Het grote plaatje
 
-Deze vijf stukken vormen de basis van je garderobe. Met deze vijf items — aangevuld met een paar seizoensgebonden accessoires — kom je verder dan met een kast vol fast fashion.
+Deze vijf stukken vormen de basis van je garderobe. Met deze vijf items, aangevuld met een paar seizoensgebonden accessoires, kom je verder dan met een kast vol fast fashion.
 
 Het gaat niet om minimalisme als lifestyle-trend. Het gaat om bewust kiezen. Weten wat bij je past, investeren in kwaliteit, en niet meegaan in de eindeloze cyclus van kopen-dragen-weggooien.
 
@@ -823,7 +823,7 @@ Bij MOSE maken we drie van deze vijf essentials: hoodies, T-shirts en caps. Niet
 
     content_en: `Fashion changes every six months. Style doesn't. The most stylish people you know have one thing in common: a strong foundation of timeless basics they wear season after season.
 
-These aren't boring pieces you wear because you "have nothing else." These are conscious choices. Pieces so good you want to wear them every week. Regardless of whether you're a man or woman — good basics are universal.
+These aren't boring pieces you wear because you "have nothing else." These are conscious choices. Pieces so good you want to wear them every week. Regardless of whether you're a man or woman, good basics are universal.
 
 ## 1. The Heavyweight Hoodie
 
@@ -855,7 +855,7 @@ These five pieces form the foundation of your wardrobe. At MOSE, we make three o
   },
 
   // ============================================================
-  // ARTICLE 7 — March 5, 2026
+  // ARTICLE 7, March 5, 2026
   // ============================================================
   {
     slug: 'van-schets-tot-product-hoe-een-mose-hoodie-ontstaat',
@@ -872,15 +872,15 @@ These five pieces form the foundation of your wardrobe. At MOSE, we make three o
     status: 'published',
     seo_title_nl: 'Hoe Een MOSE Hoodie Wordt Gemaakt: Van Schets tot Product | MOSE Blog',
     seo_title_en: 'How a MOSE Hoodie Is Made: From Sketch to Product | MOSE Blog',
-    seo_description_nl: 'Volg het complete productieproces van een MOSE hoodie. Van eerste schets tot afgewerkt product — alles lokaal in Groningen.',
-    seo_description_en: 'Follow the complete production process of a MOSE hoodie. From first sketch to finished product — all local in Groningen.',
+    seo_description_nl: 'Volg het complete productieproces van een MOSE hoodie. Van eerste schets tot afgewerkt product, alles lokaal in Groningen.',
+    seo_description_en: 'Follow the complete production process of a MOSE hoodie. From first sketch to finished product, all local in Groningen.',
     content_nl: `Elke MOSE hoodie begint als een idee. Soms als een schets op een servet, soms als een gevoel dat we willen vertalen naar stof en stiksels. Van dat moment tot het moment dat jij hem uit de verpakking haalt, zitten gemiddeld acht weken. Dit is wat er in die acht weken gebeurt.
 
 ## Week 1-2: Concept en ontwerp
 
 Alles begint met de vraag: wat willen we maken en waarom? Bij MOSE ontwerpen we geen kleding om seizoenscollecties te vullen. We ontwerpen iets wanneer we geloven dat het iets toevoegt.
 
-De eerste stap is research. We kijken naar materialen, silhouetten en details. We schetsen. Veel. De meeste schetsen belanden in de prullenbak — en dat is precies de bedoeling. We zoeken naar die ene versie die simpel, sterk en tijdloos aanvoelt.
+De eerste stap is research. We kijken naar materialen, silhouetten en details. We schetsen. Veel. De meeste schetsen belanden in de prullenbak, en dat is precies de bedoeling. We zoeken naar die ene versie die simpel, sterk en tijdloos aanvoelt.
 
 Elke ontwerp beslissing wordt getoetst aan onze kernvraag: zou ik dit over vijf jaar nog steeds willen dragen? Als het antwoord nee is, gaan we terug naar de tekentafel.
 
@@ -900,7 +900,7 @@ We bestellen meerdere stofmonsters en testen ze weken voordat we een keuze maken
 
 Met het ontwerp en de stof vastgesteld, gaan we patronen maken. Dit is een ambacht op zich. De pasvorm van een kledingstuk wordt volledig bepaald door het patroon.
 
-We maken een eerste prototype — in de mode-industrie een "toile" of "muslin" genoemd. Dit is een testversie in goedkopere stof om de pasvorm te beoordelen.
+We maken een eerste prototype, in de mode-industrie een "toile" of "muslin" genoemd. Dit is een testversie in goedkopere stof om de pasvorm te beoordelen.
 
 Dit prototype wordt gepast door meerdere mensen met verschillende lichaamstypes. We kijken naar:
 
@@ -916,7 +916,7 @@ Na de eerste fitting volgen aanpassingen. Soms kleine tweaks van een centimeter,
 
 Zodra het patroon is goedgekeurd, bereiden we de productie voor. De stof wordt besteld in de juiste hoeveelheid, met extra marge voor fouten. Alle bijmaterialen worden gecontroleerd: ritssluitingen, koorden, labels, verpakkingsmateriaal.
 
-We maken een gedetailleerde productiebrief voor ons atelier. Elke stap wordt beschreven: welke naad, welke steek, welke afwerking, en in welke volgorde. Er is geen ruimte voor interpretatie — consistentie is cruciaal.
+We maken een gedetailleerde productiebrief voor ons atelier. Elke stap wordt beschreven: welke naad, welke steek, welke afwerking, en in welke volgorde. Er is geen ruimte voor interpretatie, consistentie is cruciaal.
 
 ## Week 5-7: Productie
 
@@ -924,7 +924,7 @@ Dan begint het echte werk. In ons atelier in Groningen wordt de stof uitgerold, 
 
 Het naaien van één hoodie kost gemiddeld anderhalf tot twee uur handwerk. Dat is geen druk op een knop in een fabriek. Dat zijn getrainde handen die elke naad controleren, elke steek plaatsen, en elk detail afwerken.
 
-Tijdens de productie controleren we steekproeven. Als er een afwijking is — een naad die niet recht is, een kleurverschil in de stof, een koordje dat niet goed zit — wordt het stuk apart gelegd en gerepareerd of afgekeurd.
+Tijdens de productie controleren we steekproeven. Als er een afwijking is, een naad die niet recht is, een kleurverschil in de stof, een koordje dat niet goed zit, wordt het stuk apart gelegd en gerepareerd of afgekeurd.
 
 ## Week 7-8: Kwaliteitscontrole en verpakking
 
@@ -961,7 +961,7 @@ We test fabrics on multiple criteria: weight (400 GSM for our hoodies), composit
 
 ## Week 3-4: Patterns and Prototyping
 
-We make a first prototype — a test version to evaluate fit. This prototype is tried on by multiple people with different body types. After fitting, adjustments follow. We repeat this process until it's perfect.
+We make a first prototype, a test version to evaluate fit. This prototype is tried on by multiple people with different body types. After fitting, adjustments follow. We repeat this process until it's perfect.
 
 ## Week 5-7: Production
 
@@ -977,14 +977,14 @@ Eight weeks for one hoodie. We choose slow. Careful. Local. The result is a hood
   },
 
   // ============================================================
-  // ARTICLE 8 — March 19, 2026
+  // ARTICLE 8, March 19, 2026
   // ============================================================
   {
     slug: 'streetwear-trends-2026-wat-blijft-wat-verdwijnt',
     title_nl: 'Streetwear in 2026: Welke Trends Blijven en Welke Verdwijnen',
     title_en: 'Streetwear in 2026: Which Trends Stay and Which Fade',
-    excerpt_nl: 'De streetwear-wereld evolueert continu. Van quiet luxury tot workwear invloeden — dit zijn de bewegingen die 2026 definiëren.',
-    excerpt_en: 'The streetwear world evolves continuously. From quiet luxury to workwear influences — these are the movements defining 2026.',
+    excerpt_nl: 'De streetwear-wereld evolueert continu. Van quiet luxury tot workwear invloeden, dit zijn de bewegingen die 2026 definiëren.',
+    excerpt_en: 'The streetwear world evolves continuously. From quiet luxury to workwear influences, these are the movements defining 2026.',
     category: 'style',
     tags: ['streetwear', 'trends', '2026', 'mode', 'stijl'],
     author: 'MOSE',
@@ -996,13 +996,13 @@ Eight weeks for one hoodie. We choose slow. Careful. Local. The result is a hood
     seo_title_en: 'Streetwear Trends 2026: What Stays and What Fades | MOSE Blog',
     seo_description_nl: 'De streetwear trends van 2026 geanalyseerd. Ontdek welke bewegingen blijven en welke verdwijnen, en hoe je je stijl toekomstbestendig maakt.',
     seo_description_en: 'The streetwear trends of 2026 analyzed. Discover which movements stay and which fade, and how to future-proof your style.',
-    content_nl: `Streetwear was ooit een subcultuur. Skateparken, graffiti, underground hiphop — dat was het ecosysteem waar de eerste Supreme hoodies en Stüssy tees hun thuis vonden. In 2026 is streetwear de dominante kracht in de mode-industrie. Maar dat betekent niet dat alles in streetwear het waard is om te volgen.
+    content_nl: `Streetwear was ooit een subcultuur. Skateparken, graffiti, underground hiphop, dat was het ecosysteem waar de eerste Supreme hoodies en Stüssy tees hun thuis vonden. In 2026 is streetwear de dominante kracht in de mode-industrie. Maar dat betekent niet dat alles in streetwear het waard is om te volgen.
 
 ## Trends die blijven
 
 ### De Heavyweight Revival
 
-De tijd van dunne, doorzichtige basics is voorbij. Consumenten willen gewicht. Ze willen stof die ze kunnen voelen. Heavyweight hoodies (350+ GSM) en dikke tees zijn geen niche meer — ze zijn de standaard geworden voor merken die kwaliteit serieus nemen.
+De tijd van dunne, doorzichtige basics is voorbij. Consumenten willen gewicht. Ze willen stof die ze kunnen voelen. Heavyweight hoodies (350+ GSM) en dikke tees zijn geen niche meer, ze zijn de standaard geworden voor merken die kwaliteit serieus nemen.
 
 Dit is geen trend die verdwijnt. Het is een correctie. Jarenlang was de mode-industrie bezig om kleding steeds dunner en goedkoper te maken. Nu slaat de slinger terug. Mensen zijn bereid meer te betalen voor stof die echt wat voorstelt.
 
@@ -1010,19 +1010,19 @@ Dit is geen trend die verdwijnt. Het is een correctie. Jarenlang was de mode-ind
 
 Het grote, in-your-face logo is aan het verdwijnen. De shift naar subtielere branding begon al in 2023 met de "quiet luxury" beweging, maar heeft nu ook streetwear bereikt.
 
-Steeds meer merken — van high-end tot startups — kiezen voor minimale branding. Een klein label, een subtiele tag, of helemaal niets. Het product moet voor zichzelf spreken, niet het logo.
+Steeds meer merken, van high-end tot startups, kiezen voor minimale branding. Een klein label, een subtiele tag, of helemaal niets. Het product moet voor zichzelf spreken, niet het logo.
 
 Bij MOSE geloven we hier al in sinds dag één. Onze hoodies hebben geen enorm logo op de borst. De kwaliteit en het silhouet zijn het statement.
 
 ### Workwear Invloeden
 
-Dickies, Carhartt, werkbroeken en overshirts — workwear-elementen zijn overal in streetwear. En met goede reden: werkkleding is ontworpen om mee te gaan. De functionaliteit, de duurzaamheid, en de no-nonsense esthetiek passen perfect bij de huidige zeitgeist.
+Dickies, Carhartt, werkbroeken en overshirts, workwear-elementen zijn overal in streetwear. En met goede reden: werkkleding is ontworpen om mee te gaan. De functionaliteit, de duurzaamheid, en de no-nonsense esthetiek passen perfect bij de huidige zeitgeist.
 
 Dit gaat verder dan alleen de look. Het is een waardeverandering. Mensen willen kleding die iets kan hebben. Die niet breekt bij het eerste contact met de realiteit.
 
 ### Lokaal en Transparant
 
-De bewuste consument is geen niche meer. Steeds meer mensen willen weten waar hun kleding vandaan komt. Merken die transparant zijn over hun productieproces — die laten zien waar, hoe, en door wie hun kleding wordt gemaakt — hebben een voorsprong.
+De bewuste consument is geen niche meer. Steeds meer mensen willen weten waar hun kleding vandaan komt. Merken die transparant zijn over hun productieproces, die laten zien waar, hoe, en door wie hun kleding wordt gemaakt, hebben een voorsprong.
 
 ## Trends die verdwijnen
 
@@ -1034,7 +1034,7 @@ De extreem oversized silhouetten van 2023-2024 maken plaats voor meer gecontrole
 
 Het model van "300 stuks, alles uitverkocht in 8 seconden" verliest zijn aantrekkingskracht. Consumenten zijn moe van de FOMO-marketing en de resellers die producten onbereikbaar maken.
 
-Merken die bouwen op werkelijke waarde in plaats van kunstmatige hype zien betere klantloyaliteit op de lange termijn. Schaarste moet echt zijn — gebaseerd op productiecapaciteit en kwaliteitseisen, niet op marketingstrategieën.
+Merken die bouwen op werkelijke waarde in plaats van kunstmatige hype zien betere klantloyaliteit op de lange termijn. Schaarste moet echt zijn, gebaseerd op productiecapaciteit en kwaliteitseisen, niet op marketingstrategieën.
 
 ### Fast Fashion Streetwear
 
@@ -1052,9 +1052,9 @@ De beste bescherming tegen verdwijnende trends is investeren in stukken die er b
 
 **Kies kwaliteit boven kwantiteit.** Vijf goede stukken verslaan vijftien middelmatige stukken. Altijd.
 
-**Kies authenticiteit.** Draag wat bij je past, niet wat trending is op TikTok. Stijl is persoonlijk — en de sterkste stijl is degene die niet elke zes maanden verandert.
+**Kies authenticiteit.** Draag wat bij je past, niet wat trending is op TikTok. Stijl is persoonlijk, en de sterkste stijl is degene die niet elke zes maanden verandert.
 
-De trends van 2026 bevestigen wat we bij MOSE altijd al geloofden: de toekomst van streetwear is niet harder schreeuwen, maar beter maken. Heavyweight, logoloze, lokaal geproduceerde basics zijn niet trendy — ze zijn tijdloos.`,
+De trends van 2026 bevestigen wat we bij MOSE altijd al geloofden: de toekomst van streetwear is niet harder schreeuwen, maar beter maken. Heavyweight, logoloze, lokaal geproduceerde basics zijn niet trendy, ze zijn tijdloos.`,
 
     content_en: `Streetwear was once a subculture. In 2026, it's the dominant force in the fashion industry. But that doesn't mean everything in streetwear is worth following.
 
@@ -1089,7 +1089,7 @@ Choose neutral colors. Choose clean silhouettes. Choose quality over quantity. C
   },
 
   // ============================================================
-  // ARTICLE 9 — April 3, 2026
+  // ARTICLE 9, April 3, 2026
   // ============================================================
   {
     slug: 'duurzame-mode-hoeft-niet-duur-te-zijn',
@@ -1141,11 +1141,11 @@ Platforms zoals Vinted, Marktplaats, en lokale kringloopwinkels zijn goudmijnen.
 - Check altijd de stof-samenstelling op het label
 - Inspecteer naden, ritssluitingen en elastiek
 - Was alles op 40 graden voor het eerste gebruik
-- Wees geduldig — de perfecte vondst komt als je het niet verwacht
+- Wees geduldig, de perfecte vondst komt als je het niet verwacht
 
 ## Principe 3: Investeer waar het telt
 
-Niet elk kledingstuk hoeft duurzaam geproduceerd te zijn. Maar de stukken die je het vaakst draagt — je dagelijkse hoodies, T-shirts, en jeans — verdienen een hogere investering.
+Niet elk kledingstuk hoeft duurzaam geproduceerd te zijn. Maar de stukken die je het vaakst draagt, je dagelijkse hoodies, T-shirts, en jeans, verdienen een hogere investering.
 
 Dit is waar de kosten-per-draagbeurt logica werkt. Je dagelijkse hoodie draag je misschien 100+ keer per jaar. De investering in een kwalitatief exemplaar betaalt zichzelf dubbel en dwars terug.
 
@@ -1157,10 +1157,10 @@ De meest onderschatte factor in duurzame mode is onderhoud. Hoe je voor je kledi
 - Was zo min mogelijk (draag je kleding vaker tussen wasbeurten)
 - Was op 30 graden tenzij het echt nodig is
 - Draai kleding binnenstebuiten voordat het in de wasmachine gaat
-- Vermijd de droger — hang je kleding op
+- Vermijd de droger, hang je kleding op
 - Repareer kleine scheurtjes en losse knopen direct
 
-Met deze simpele gewoontes gaat je kleding twee tot drie keer zo lang mee. Dat is geen overdrijving — het is textielwetenschap.
+Met deze simpele gewoontes gaat je kleding twee tot drie keer zo lang mee. Dat is geen overdrijving, het is textielwetenschap.
 
 ## Het eerlijke midden
 
@@ -1182,7 +1182,7 @@ Second-hand clothing is the most sustainable and affordable option. Platforms li
 
 ## Principle 3: Invest Where It Counts
 
-The pieces you wear most often — your daily hoodies, T-shirts, and jeans — deserve a higher investment. This is where cost-per-wear logic works.
+The pieces you wear most often, your daily hoodies, T-shirts, and jeans, deserve a higher investment. This is where cost-per-wear logic works.
 
 ## The Role of Maintenance
 
@@ -1196,7 +1196,7 @@ Sustainable fashion doesn't have to be expensive. It starts with a different way
   },
 
   // ============================================================
-  // ARTICLE 10 — April 14, 2026
+  // ARTICLE 10, April 14, 2026
   // ============================================================
   {
     slug: 'groningse-streetwear-scene-van-underground-tot-mainstream',
@@ -1213,8 +1213,8 @@ Sustainable fashion doesn't have to be expensive. It starts with a different way
     status: 'published',
     seo_title_nl: 'De Groningse Streetwear Scene | MOSE Blog',
     seo_title_en: 'The Groningen Streetwear Scene | MOSE Blog',
-    seo_description_nl: 'Ontdek de bruisende streetwear en creatieve scene in Groningen. Van skatecultuur tot lokale merken — het noorden maakt naam.',
-    seo_description_en: 'Discover the vibrant streetwear and creative scene in Groningen. From skate culture to local brands — the north is making its name.',
+    seo_description_nl: 'Ontdek de bruisende streetwear en creatieve scene in Groningen. Van skatecultuur tot lokale merken, het noorden maakt naam.',
+    seo_description_en: 'Discover the vibrant streetwear and creative scene in Groningen. From skate culture to local brands, the north is making its name.',
     content_nl: `Als je aan Nederlandse mode denkt, denk je aan Amsterdam. Misschien Rotterdam. Groningen? Dat staat niet bovenaan de lijst. Maar dat is precies wat de stad zo interessant maakt.
 
 Terwijl de Randstad de schijnwerpers trekt, bouwt Groningen stilletjes aan een creatieve scene die authentiek, eigenzinnig en onafhankelijk is. Streetwear speelt daar een centrale rol in.
@@ -1223,13 +1223,13 @@ Terwijl de Randstad de schijnwerpers trekt, bouwt Groningen stilletjes aan een c
 
 Groningen is een studentenstad. Een op de vier inwoners studeert. Dat zorgt voor een constant instroom van jonge, creatieve energie. Maar anders dan andere studentensteden vertrekken veel creatieven niet na hun studie. De huren zijn betaalbaar, de gemeenschap is hecht, en er is ruimte om te experimenteren.
 
-Die combinatie — jong talent, betaalbare ruimte, en een nuchter-maar-ambitieus klimaat — is de perfecte voedingsbodem voor creatief ondernemerschap.
+Die combinatie, jong talent, betaalbare ruimte, en een nuchter-maar-ambitieus klimaat, is de perfecte voedingsbodem voor creatief ondernemerschap.
 
 ## Skatecultuur als fundament
 
 De basis van elke streetwear-scene is subcultuur. In Groningen is dat skatecultuur. Het Noorderplantsoen is al jaren een verzamelplaats voor skaters, en rondom die scene zijn communities ontstaan die mode, muziek en kunst met elkaar verbinden.
 
-Het is geen toeval dat veel Groningse streetwear-initiatieven roots hebben in de skatescene. De waarden van skaten — authenticiteit, doe-het-zelf mentaliteit, functionaliteit boven opsmuk — vertalen zich direct naar hoe we over kleding denken.
+Het is geen toeval dat veel Groningse streetwear-initiatieven roots hebben in de skatescene. De waarden van skaten, authenticiteit, doe-het-zelf mentaliteit, functionaliteit boven opsmuk, vertalen zich direct naar hoe we over kleding denken.
 
 ## De nieuwe generatie
 
@@ -1245,17 +1245,17 @@ De Groningse mentaliteit is fundamenteel anders dan die in de Randstad. Er is mi
 
 Die nuchterheid sijpelt door in de producten. Groningse streetwear is niet schreeuwerig. Het hoeft niet op te vallen met gouden logo's of overdreven designs. Het valt op door kwaliteit, door eerlijkheid, en door een duidelijk verhaal.
 
-Er is ook een sterk gemeenschapsgevoel. Groningse merken concurreren niet met elkaar — ze ondersteunen elkaar. Ze delen tips, connecties, en zelfs productieruimte. Dat is niet naïef. Het is slim. Een sterkere scene trekt meer aandacht dan een verzameling individuen.
+Er is ook een sterk gemeenschapsgevoel. Groningse merken concurreren niet met elkaar, ze ondersteunen elkaar. Ze delen tips, connecties, en zelfs productieruimte. Dat is niet naïef. Het is slim. Een sterkere scene trekt meer aandacht dan een verzameling individuen.
 
 ## MOSE en Groningen
 
-MOSE is onlosmakelijk verbonden met Groningen. Het is niet alleen waar we produceren — het is wie we zijn.
+MOSE is onlosmakelijk verbonden met Groningen. Het is niet alleen waar we produceren, het is wie we zijn.
 
 De directheid van onze communicatie? Gronings. De weigering om mee te gaan in hypes? Gronings. De focus op kwaliteit boven kwantiteit? Gronings.
 
 Ons atelier staat in Groningen. Onze eerste klanten kwamen uit Groningen. En elke hoodie die we maken draagt een stukje van deze stad in zich.
 
-Maar we zijn niet alleen een Gronings merk. We zijn een merk dat toevallig uit Groningen komt en de wereld wil laten zien dat goede kleding niet uit de Randstad hoeft te komen. Dat je vanuit het noorden net zo goed — zo niet beter — premium basics kunt maken als welk merk dan ook.
+Maar we zijn niet alleen een Gronings merk. We zijn een merk dat toevallig uit Groningen komt en de wereld wil laten zien dat goede kleding niet uit de Randstad hoeft te komen. Dat je vanuit het noorden net zo goed, zo niet beter, premium basics kunt maken als welk merk dan ook.
 
 ## De toekomst
 
@@ -1263,7 +1263,7 @@ De Groningse creatieve scene groeit. Elk jaar komen er nieuwe initiatieven bij. 
 
 Wij geloven dat Groningen pas aan het begin staat. De ingrediënten zijn er: talent, ruimte, mentaliteit, en een groeiend netwerk. De komende jaren gaat het noorden van zich laten horen.
 
-En MOSE? Wij zijn er trots op om deel uit te maken van dat verhaal. Om vanuit de Stavangerweg in Groningen kleding te maken die in heel Nederland — en daarbuiten — wordt gedragen. Zonder poespas. Met karakter. Precies zoals deze stad.`,
+En MOSE? Wij zijn er trots op om deel uit te maken van dat verhaal. Om vanuit de Stavangerweg in Groningen kleding te maken die in heel Nederland, en daarbuiten, wordt gedragen. Zonder poespas. Met karakter. Precies zoals deze stad.`,
 
     content_en: `When you think of Dutch fashion, you think of Amsterdam. Maybe Rotterdam. Groningen? That's not top of the list. But that's exactly what makes the city so interesting.
 
@@ -1275,7 +1275,7 @@ Groningen is a student city. One in four residents studies. This creates a const
 
 ## Skate Culture as Foundation
 
-The basis of every streetwear scene is subculture. In Groningen, that's skate culture. The values — authenticity, DIY mentality, functionality over decoration — translate directly into how we think about clothing.
+The basis of every streetwear scene is subculture. In Groningen, that's skate culture. The values, authenticity, DIY mentality, functionality over decoration, translate directly into how we think about clothing.
 
 ## The New Generation
 
@@ -1291,7 +1291,7 @@ The Groningen mentality is fundamentally different from the Randstad. Less hype,
 
 MOSE is inseparable from Groningen. The directness of our communication? Groningen. The refusal to follow hypes? Groningen. The focus on quality over quantity? Groningen.
 
-We're proud to be part of this story. Making clothing from the north that's worn throughout the Netherlands — and beyond. No fuss. Just character. Exactly like this city.`,
+We're proud to be part of this story. Making clothing from the north that's worn throughout the Netherlands, and beyond. No fuss. Just character. Exactly like this city.`,
   },
 ]
 
