@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/admin'
 
 // GET /api/returns/[id] - Haal specifieke retour op
 export async function GET(
@@ -38,21 +39,14 @@ export async function GET(
       return NextResponse.json({ error: 'Return not found' }, { status: 404 })
     }
 
-    // Check of gebruiker eigenaar is of admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-
-    const isAdmin = profile?.is_admin === true
+    const { authorized: isStaff } = await requireAdmin(['admin', 'manager', 'viewer'])
     const ownerByUserId = returnRecord.user_id === user.id
     const ownerByEmail =
       !!user.email &&
       (returnRecord as any).orders?.email?.toLowerCase() ===
         user.email.toLowerCase()
 
-    if (!isAdmin && !ownerByUserId && !ownerByEmail) {
+    if (!isStaff && !ownerByUserId && !ownerByEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

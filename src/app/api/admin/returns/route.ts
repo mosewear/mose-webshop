@@ -16,6 +16,63 @@ import {
 import { processReturnRefund } from '@/lib/process-return-refund'
 
 /**
+ * GET /api/admin/returns — volledige retourlijst voor ingelogde staff (service role).
+ * Klanten gebruiken GET /api/returns (alleen eigen orders).
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const { authorized } = await requireAdmin(['admin', 'manager', 'viewer'])
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const supabase = createServiceClient()
+    const { searchParams } = new URL(req.url)
+    const orderId = searchParams.get('order_id')
+    const status = searchParams.get('status')
+
+    let query = supabase
+      .from('returns')
+      .select(`
+        *,
+        orders!inner(
+          id,
+          email,
+          total,
+          status,
+          created_at,
+          delivered_at,
+          shipping_address
+        )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (orderId) {
+      query = query.eq('order_id', orderId)
+    }
+
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    const { data: returns, error } = await query
+
+    if (error) {
+      console.error('GET /api/admin/returns', error)
+      return NextResponse.json({ error: 'Failed to fetch returns' }, { status: 500 })
+    }
+
+    return NextResponse.json({ returns: returns || [] })
+  } catch (error: unknown) {
+    console.error('GET /api/admin/returns', error)
+    return NextResponse.json(
+      { error: 'Er is een fout opgetreden' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
  * POST /api/admin/returns
  *
  * Admin creates a return manually on behalf of a customer.

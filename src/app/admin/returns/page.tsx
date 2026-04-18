@@ -77,7 +77,10 @@ export default function AdminReturnsPage() {
     try {
       setLoading(true)
       setRefreshing(true)
-      const response = await fetch('/api/returns?' + (filter !== 'all' ? `status=${filter}` : ''))
+      const response = await fetch(
+        '/api/admin/returns?' + (filter !== 'all' ? `status=${filter}` : ''),
+        { credentials: 'include' }
+      )
       const data = await response.json()
 
       if (!response.ok) {

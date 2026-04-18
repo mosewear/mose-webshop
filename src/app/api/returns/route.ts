@@ -5,28 +5,43 @@ import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import Stripe from 'stripe'
 import { calculateReturnRefundWithDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
-// GET /api/returns - Haal alle retouren op voor ingelogde gebruiker of admin
+// GET /api/returns — alleen retouren gekoppeld aan orders van deze gebruiker.
+// (Geen admin-lijst hier: die staat op GET /api/admin/returns i.v.m. veiligheid.)
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-
-    const isAdmin = profile?.is_admin === true
-
     const { searchParams } = new URL(req.url)
-    const orderId = searchParams.get('order_id')
+    const orderIdFilter = searchParams.get('order_id')
     const status = searchParams.get('status')
+
+    const orFilter = user.email
+      ? `user_id.eq.${user.id},email.eq.${user.email}`
+      : `user_id.eq.${user.id}`
+
+    const { data: myOrders, error: ordersError } = await supabase
+      .from('orders')
+      .select('id')
+      .or(orFilter)
+
+    if (ordersError) {
+      console.error('GET /api/returns: orders scope', ordersError)
+      return NextResponse.json({ error: 'Failed to fetch returns' }, { status: 500 })
+    }
+
+    const orderIds = (myOrders ?? []).map((o) => o.id)
+    if (orderIds.length === 0) {
+      return NextResponse.json({ returns: [] })
+    }
+
+    if (orderIdFilter && !orderIds.includes(orderIdFilter)) {
+      return NextResponse.json({ returns: [] })
+    }
 
     let query = supabase
       .from('returns')
@@ -42,17 +57,11 @@ export async function GET(req: NextRequest) {
           shipping_address
         )
       `)
+      .in('order_id', orderIds)
       .order('created_at', { ascending: false })
 
-    // If not admin, only show own returns. We link manual/admin-created
-    // returns to the matching profile during creation, so filtering on
-    // user_id covers both self-service and admin-created returns.
-    if (!isAdmin) {
-      query = query.eq('user_id', user.id)
-    }
-
-    if (orderId) {
-      query = query.eq('order_id', orderId)
+    if (orderIdFilter) {
+      query = query.eq('order_id', orderIdFilter)
     }
 
     if (status) {
