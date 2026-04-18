@@ -644,10 +644,15 @@
     "loading": "Laden...",
     "orderStatus": {
       "pending": "In behandeling",
+      "paid": "Betaald",
       "processing": "Wordt verwerkt",
       "shipped": "Verzonden",
       "delivered": "Afgeleverd",
-      "cancelled": "Geannuleerd"
+      "cancelled": "Geannuleerd",
+      "return_requested": "Retour bezig",
+      "return_in_transit": "Retour onderweg",
+      "return_received": "Retour ontvangen",
+      "return_completed": "Retour afgerond"
     },
     "returnStatuses": {
       "return_requested": "Aangevraagd",
@@ -657,8 +662,9 @@
       "return_label_generated": "Label Beschikbaar",
       "return_in_transit": "Onderweg",
       "return_received": "Ontvangen",
-      "refund_processing": "Refund Bezig",
+      "refund_processing": "Terugbetaling bezig",
       "refunded": "Terugbetaald",
+      "refund_completed": "Terugbetaald",
       "return_rejected": "Afgewezen"
     },
     "returnLabels": {

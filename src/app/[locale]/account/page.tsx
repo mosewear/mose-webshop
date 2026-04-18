@@ -467,25 +467,39 @@ export default function AccountPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const s = (status || '').toLowerCase()
+    switch (s) {
       case 'pending':
       case 'processing':
         return 'bg-yellow-400 text-black'
+      case 'paid':
+        return 'bg-blue-500 text-white'
       case 'shipped':
         return 'bg-brand-primary text-white'
       case 'delivered':
         return 'bg-gray-800 text-white'
       case 'cancelled':
         return 'bg-red-600 text-white'
+      case 'return_requested':
+        return 'bg-amber-500 text-black'
+      case 'return_in_transit':
+        return 'bg-indigo-500 text-white'
+      case 'return_received':
+        return 'bg-gray-600 text-white'
+      case 'return_completed':
+        return 'bg-teal-700 text-white'
       default:
         return 'bg-gray-400 text-white'
     }
   }
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    const s = (status || '').toLowerCase()
+    switch (s) {
       case 'pending':
         return t('orderStatus.pending')
+      case 'paid':
+        return t('orderStatus.paid')
       case 'processing':
         return t('orderStatus.processing')
       case 'shipped':
@@ -494,9 +508,39 @@ export default function AccountPage() {
         return t('orderStatus.delivered')
       case 'cancelled':
         return t('orderStatus.cancelled')
+      case 'return_requested':
+        return t('orderStatus.return_requested')
+      case 'return_in_transit':
+        return t('orderStatus.return_in_transit')
+      case 'return_received':
+        return t('orderStatus.return_received')
+      case 'return_completed':
+        return t('orderStatus.return_completed')
       default:
-        return status
+        return s.replace(/_/g, ' ')
     }
+  }
+
+  const RETURN_FLOW_STATUSES = [
+    'return_requested',
+    'return_approved',
+    'return_label_payment_pending',
+    'return_label_payment_completed',
+    'return_label_generated',
+    'return_in_transit',
+    'return_received',
+    'refund_processing',
+    'refunded',
+    'refund_completed',
+    'return_rejected',
+  ] as const
+
+  function translateReturnStatus(raw: string): string {
+    const s = (raw || '').toLowerCase()
+    if ((RETURN_FLOW_STATUSES as readonly string[]).includes(s)) {
+      return t(`returnStatuses.${s}` as 'returnStatuses.return_requested')
+    }
+    return s.replace(/_/g, ' ')
   }
 
   if (loading) {
@@ -675,22 +719,11 @@ export default function AccountPage() {
                               </span>
                               {orderIdToReturn[order.id] && (
                                 <span className="px-3 py-1 text-xs font-bold uppercase bg-purple-600 text-white">
-                                  Retour: {(() => {
-                                    const s = orderIdToReturn[order.id].status
-                                    const labels: Record<string, string> = {
-                                      return_requested: 'Aangevraagd',
-                                      return_approved: 'Goedgekeurd',
-                                      return_label_payment_pending: 'Betaling Label',
-                                      return_label_payment_completed: 'Label Betaald',
-                                      return_label_generated: 'Label',
-                                      return_in_transit: 'Onderweg',
-                                      return_received: 'Ontvangen',
-                                      refund_processing: 'Refund',
-                                      refunded: 'Terugbetaald',
-                                      return_rejected: 'Afgewezen',
-                                    }
-                                    return labels[s] || s
-                                  })()}
+                                  {t('returnStatus', {
+                                    status: translateReturnStatus(
+                                      orderIdToReturn[order.id].status
+                                    ),
+                                  })}
                                 </span>
                               )}
                             </div>
@@ -1117,7 +1150,8 @@ export default function AccountPage() {
                   <div className="space-y-4">
                     {returns.map((returnItem) => {
                       const getStatusColor = (status: string) => {
-                        switch (status) {
+                        const s = (status || '').toLowerCase()
+                        switch (s) {
                           case 'return_requested':
                             return 'bg-yellow-400 text-black'
                           case 'return_approved':
@@ -1135,6 +1169,7 @@ export default function AccountPage() {
                           case 'refund_processing':
                             return 'bg-indigo-500 text-white'
                           case 'refunded':
+                          case 'refund_completed':
                             return 'bg-gray-800 text-white'
                           case 'return_rejected':
                             return 'bg-red-600 text-white'
@@ -1144,6 +1179,7 @@ export default function AccountPage() {
                       }
 
                       const getStatusText = (status: string) => {
+                        const s = (status || '').toLowerCase()
                         const statusMap: Record<string, string> = {
                           return_requested: t('returnStatuses.return_requested'),
                           return_approved: t('returnStatuses.return_approved'),
@@ -1154,9 +1190,10 @@ export default function AccountPage() {
                           return_received: t('returnStatuses.return_received'),
                           refund_processing: t('returnStatuses.refund_processing'),
                           refunded: t('returnStatuses.refunded'),
+                          refund_completed: t('returnStatuses.refund_completed'),
                           return_rejected: t('returnStatuses.return_rejected'),
                         }
-                        return statusMap[status] || status
+                        return statusMap[s] || s.replace(/_/g, ' ')
                       }
 
                       return (

@@ -656,10 +656,15 @@
     "loading": "Loading...",
     "orderStatus": {
       "pending": "Pending",
+      "paid": "Paid",
       "processing": "Processing",
       "shipped": "Shipped",
       "delivered": "Delivered",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "return_requested": "Return in progress",
+      "return_in_transit": "Return in transit",
+      "return_received": "Return received",
+      "return_completed": "Return completed"
     },
     "returnStatuses": {
       "return_requested": "Requested",
@@ -671,6 +676,7 @@
       "return_received": "Received",
       "refund_processing": "Refund Processing",
       "refunded": "Refunded",
+      "refund_completed": "Refunded",
       "return_rejected": "Rejected"
     },
     "returnLabels": {
