@@ -18,7 +18,7 @@ interface EmailFooterProps {
 
 const footerSection = {
   backgroundColor: EMAIL_COLORS.black,
-  padding: '30px 24px',
+  padding: '52px 24px 56px 24px',
   textAlign: 'center' as const,
 }
 
@@ -49,7 +49,9 @@ const linkStyle = {
 
 const metaBlock = {
   marginTop: '16px',
+  marginBottom: '0',
   paddingTop: '14px',
+  paddingBottom: '4px',
   borderTop: `1px solid ${EMAIL_COLORS.dark700}`,
   fontFamily: EMAIL_FONTS.body,
   fontSize: '10px',

@@ -45,7 +45,9 @@ const containerStyle = {
 const globalStyles = `
   body, table, td, p, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
   table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse; }
-  img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; display:block; max-width:100% !important; height:auto !important; }
+  img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; display:block; }
+  /* Laat product-thumbnails hun eigen aspect (object-fit) behouden; niet forceren naar height:auto */
+  img:not(.mose-product-img) { max-width:100% !important; height:auto !important; }
   body { margin:0 !important; padding:0 !important; width:100% !important; background-color:${EMAIL_COLORS.surface} !important; }
   a { color:inherit; }
   a[x-apple-data-detectors] { color:inherit !important; text-decoration:none !important; }
@@ -60,8 +62,9 @@ const globalStyles = `
     .mose-hero-title-lg { font-size:64px !important; line-height:0.88 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
     .mose-total-value { font-size:40px !important; overflow-wrap:anywhere !important; }
     .mose-section-title { font-size:22px !important; }
-    .mose-product-img { width:96px !important; height:64px !important; }
-    .mose-product-col { width:112px !important; padding-right:14px !important; }
+    .mose-product-frame { width:88px !important; height:88px !important; max-width:88px !important; }
+    .mose-product-img { width:88px !important; height:88px !important; max-width:none !important; object-fit:cover !important; object-position:center !important; }
+    .mose-product-col { width:108px !important; padding-right:12px !important; }
     .mose-logo-nav { width:108px !important; height:auto !important; }
     .mose-logo-footer { width:100px !important; height:auto !important; }
     .mose-mobile-stack { display:block !important; width:100% !important; max-width:100% !important; box-sizing:border-box !important; border-right:none !important; border-bottom:1px solid ${EMAIL_COLORS.borderStrong} !important; }

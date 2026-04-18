@@ -17,9 +17,8 @@ interface EmailItemRowProps {
 const PLACEHOLDER = '/logomose.png'
 
 /**
- * Product-rij met landscape 3:2 afbeelding (124x83), Anton titel
- * + kleine meta-regel en een Anton prijs rechts. Op mobiel schaalt
- * de afbeelding naar 96x64 via .mose-product-img.
+ * Product-rij met vierkante thumbnail; foto wordt bijgesneden (object-fit: cover)
+ * zodat portret/landscape niet uit verhouding raakt. Mobiel: 88×88 via EmailShell.
  */
 export default function EmailItemRow({
   name,
@@ -50,29 +49,49 @@ export default function EmailItemRow({
           <tr>
             <td
               className="mose-product-col"
-              width="140"
+              width="132"
               valign="middle"
-              style={{ width: '140px', paddingRight: '20px' }}
+              style={{ width: '132px', paddingRight: '16px' }}
             >
               <table
                 role="presentation"
+                className="mose-product-frame"
+                width={108}
                 cellPadding={0}
                 cellSpacing={0}
                 border={0}
-                style={{ backgroundColor: EMAIL_COLORS.productBg }}
+                style={{
+                  width: '108px',
+                  height: '108px',
+                  maxWidth: '108px',
+                  backgroundColor: EMAIL_COLORS.productBg,
+                }}
               >
                 <tbody>
                   <tr>
-                    <td style={{ padding: '8px' }}>
+                    <td
+                      style={{
+                        width: '108px',
+                        height: '108px',
+                        padding: 0,
+                        verticalAlign: 'middle',
+                        textAlign: 'center',
+                        lineHeight: 0,
+                        backgroundColor: EMAIL_COLORS.productBg,
+                      }}
+                    >
                       <Img
                         className="mose-product-img"
                         src={resolvedImage}
                         alt={name}
-                        width="124"
-                        height="83"
+                        width={108}
+                        height={108}
                         style={{
-                          width: '124px',
-                          height: '83px',
+                          width: '108px',
+                          height: '108px',
+                          maxWidth: 'none',
+                          objectFit: 'cover',
+                          objectPosition: 'center',
                           display: 'block',
                           border: '0',
                           outline: 'none',
