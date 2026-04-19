@@ -27,6 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '@/lib/supabase/service'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import { sendReturnRefundedEmail } from '@/lib/email'
+import { reverseLoyaltyForReturn } from '@/lib/reverse-loyalty-for-return'
 
 export type RefundOutcome =
   | { ok: true; status: 'refunded' | 'refund_processing'; refundId: string }
@@ -199,6 +200,42 @@ export async function processReturnRefund(
       ok: true,
       status: refundSucceeded ? 'refunded' : 'refund_processing',
       refundId: refund.id,
+    }
+  }
+
+  // Loyalty: claw back points proportional to refund (only when money actually refunded).
+  if (refundSucceeded) {
+    const order = returnRecord.orders as {
+      email?: string
+      user_id?: string | null
+    }
+    const email = order?.email
+    if (email) {
+      try {
+        const loyaltyResult = await reverseLoyaltyForReturn(supabase, {
+          returnId,
+          orderId: returnRecord.order_id,
+          refundAmount,
+          customerEmail: email,
+          userId: order?.user_id ?? null,
+        })
+        if (loyaltyResult.ok && 'pointsDeducted' in loyaltyResult) {
+          console.log(
+            `[processReturnRefund] Loyalty reversed ${loyaltyResult.pointsDeducted} pts for return ${returnId}`
+          )
+        } else if (loyaltyResult.ok && 'skipped' in loyaltyResult) {
+          console.log(
+            `[processReturnRefund] Loyalty reversal skipped (${loyaltyResult.skipped}) return ${returnId}`
+          )
+        } else if (!loyaltyResult.ok) {
+          console.error(
+            `[processReturnRefund] Loyalty reversal failed:`,
+            loyaltyResult.error
+          )
+        }
+      } catch (loyaltyErr) {
+        console.error('[processReturnRefund] Loyalty reversal error:', loyaltyErr)
+      }
     }
   }
 
