@@ -610,7 +610,10 @@ export async function POST(req: NextRequest) {
                 }
               } else {
                 // Decrement REGULAR stock
-                const newStock = Math.max(0, variant.stock_quantity - item.quantity)
+                const newStock = Math.max(
+                  0,
+                  (variant.stock_quantity ?? 0) - item.quantity
+                )
                 console.log(`   → 🔄 Decrementing REGULAR stock to: ${newStock}`)
                 
                 const { error: updateError } = await supabase
@@ -881,14 +884,18 @@ export async function POST(req: NextRequest) {
                   .single()
                 
                 if (!stockError && variant) {
+                  const before = variant.stock_quantity ?? 0
+                  const after = Math.max(0, before - item.quantity)
                   await supabase
                     .from('product_variants')
-                    .update({ 
-                      stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
+                    .update({
+                      stock_quantity: after,
                     })
                     .eq('id', item.variant_id)
-                  
-                  console.log(`✅ Stock decremented for ${item.product_name}: ${variant.stock_quantity - item.quantity} remaining`)
+
+                  console.log(
+                    `✅ Stock decremented for ${item.product_name}: ${after} remaining`
+                  )
                 } else {
                   console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
                 }
@@ -1107,8 +1114,9 @@ export async function POST(req: NextRequest) {
                   if (!fetchError && currentVariant) {
                     const { data: variant, error: stockError } = await supabase
                       .from('product_variants')
-                      .update({ 
-                        stock_quantity: currentVariant.stock_quantity + item.quantity
+                      .update({
+                        stock_quantity:
+                          (currentVariant.stock_quantity ?? 0) + item.quantity,
                       })
                       .eq('id', item.variant_id)
                       .select('id, stock_quantity')

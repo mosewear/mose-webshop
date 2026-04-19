@@ -80,8 +80,10 @@ export async function POST(request: Request) {
       }
 
       // DUAL INVENTORY CHECK: Check total available stock (regular + presale)
-      const totalAvailable = variant.stock_quantity + variant.presale_stock_quantity
-      
+      const regular = variant.stock_quantity ?? 0
+      const presale = variant.presale_stock_quantity ?? 0
+      const totalAvailable = regular + presale
+
       if (totalAvailable < item.quantity) {
         console.error('❌ Insufficient total stock:', item.product_name, 'Available:', totalAvailable, 'Requested:', item.quantity)
         return NextResponse.json(

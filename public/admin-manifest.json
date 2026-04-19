@@ -58,6 +58,20 @@
       "description": "View orders",
       "url": "/admin/orders",
       "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "Voorraad",
+      "short_name": "Voorraad",
+      "description": "Voorraad beheer",
+      "url": "/admin/inventory",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
+    },
+    {
+      "name": "Levering",
+      "short_name": "Levering",
+      "description": "Bulk levering invoeren",
+      "url": "/admin/inventory/receiving",
+      "icons": [{ "src": "/favicon-32x32.png", "sizes": "32x32" }]
     }
   ]
 }

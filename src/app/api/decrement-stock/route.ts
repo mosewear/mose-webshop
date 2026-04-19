@@ -68,8 +68,11 @@ export async function POST(request: Request) {
           continue
         }
 
+        const regQty = currentVariant.stock_quantity ?? 0
+        const preQty = currentVariant.presale_stock_quantity ?? 0
+
         // Calculate total available stock
-        const totalAvailable = currentVariant.stock_quantity + currentVariant.presale_stock_quantity
+        const totalAvailable = regQty + preQty
 
         // Check if enough total stock
         if (totalAvailable < item.quantity) {
@@ -85,22 +88,22 @@ export async function POST(request: Request) {
 
         // DUAL INVENTORY LOGIC: Decrement regular stock first, then presale
         let remainingToDecrement = item.quantity
-        let newRegularStock = currentVariant.stock_quantity
-        let newPresaleStock = currentVariant.presale_stock_quantity
+        let newRegularStock = regQty
+        let newPresaleStock = preQty
         let usedRegular = 0
         let usedPresale = 0
 
         // Step 1: Use regular stock first
-        if (currentVariant.stock_quantity > 0) {
-          const fromRegular = Math.min(remainingToDecrement, currentVariant.stock_quantity)
+        if (regQty > 0) {
+          const fromRegular = Math.min(remainingToDecrement, regQty)
           newRegularStock -= fromRegular
           remainingToDecrement -= fromRegular
           usedRegular = fromRegular
         }
 
         // Step 2: Use presale stock if needed
-        if (remainingToDecrement > 0 && currentVariant.presale_stock_quantity > 0) {
-          const fromPresale = Math.min(remainingToDecrement, currentVariant.presale_stock_quantity)
+        if (remainingToDecrement > 0 && preQty > 0) {
+          const fromPresale = Math.min(remainingToDecrement, preQty)
           newPresaleStock -= fromPresale
           remainingToDecrement -= fromPresale
           usedPresale = fromPresale

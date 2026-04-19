@@ -173,7 +173,6 @@ export type Database = {
       }
       inventory_logs: {
         Row: {
-          admin_user_id: string | null
           change_amount: number
           created_at: string | null
           id: string
@@ -181,23 +180,25 @@ export type Database = {
           new_stock: number
           notes: string | null
           previous_stock: number
+          profile_id: string | null
           reason: string
-          variant_id: string | null
+          receipt_id: string | null
+          variant_id: string
         }
         Insert: {
-          admin_user_id?: string | null
           change_amount: number
           created_at?: string | null
           id?: string
-          inventory_type?: 'regular' | 'presale'
+          inventory_type: 'regular' | 'presale'
           new_stock: number
           notes?: string | null
           previous_stock: number
+          profile_id?: string | null
           reason: string
-          variant_id?: string | null
+          receipt_id?: string | null
+          variant_id: string
         }
         Update: {
-          admin_user_id?: string | null
           change_amount?: number
           created_at?: string | null
           id?: string
@@ -205,15 +206,17 @@ export type Database = {
           new_stock?: number
           notes?: string | null
           previous_stock?: number
+          profile_id?: string | null
           reason?: string
-          variant_id?: string | null
+          receipt_id?: string | null
+          variant_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "inventory_logs_admin_user_id_fkey"
-            columns: ["admin_user_id"]
+            foreignKeyName: "inventory_logs_receipt_id_fkey"
+            columns: ["receipt_id"]
             isOneToOne: false
-            referencedRelation: "admin_users"
+            referencedRelation: "stock_receipts"
             referencedColumns: ["id"]
           },
           {
@@ -718,6 +721,75 @@ export type Database = {
           },
         ]
       }
+      stock_receipt_lines: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_type: string
+          quantity_added: number
+          receipt_id: string
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_type: string
+          quantity_added: number
+          receipt_id: string
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_type?: string
+          quantity_added?: number
+          receipt_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_receipt_lines_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "stock_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_receipt_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_receipts: {
+        Row: {
+          created_at: string
+          created_by: string
+          expected_total: number | null
+          id: string
+          notes: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expected_total?: number | null
+          id?: string
+          notes?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expected_total?: number | null
+          id?: string
+          notes?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       wishlists: {
         Row: {
           created_at: string | null
@@ -771,15 +843,34 @@ export type Database = {
         }
         Returns: undefined
       }
-      update_product_stock: {
+      inventory_apply_presale_delta: {
         Args: {
-          p_admin_user_id?: string
-          p_change_amount: number
-          p_notes?: string
+          p_delta: number
+          p_notes?: string | null
           p_reason: string
+          p_receipt_id?: string | null
           p_variant_id: string
         }
-        Returns: undefined
+        Returns: Json
+      }
+      inventory_apply_regular_delta: {
+        Args: {
+          p_delta: number
+          p_notes?: string | null
+          p_reason: string
+          p_receipt_id?: string | null
+          p_variant_id: string
+        }
+        Returns: Json
+      }
+      inventory_commit_receipt: {
+        Args: {
+          p_expected_total?: number | null
+          p_lines: Json
+          p_notes?: string | null
+          p_title: string
+        }
+        Returns: Json
       }
     }
     Enums: {

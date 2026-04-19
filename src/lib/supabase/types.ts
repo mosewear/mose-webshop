@@ -208,6 +208,47 @@ export interface Database {
           paid_at?: string | null
         }
       }
+      inventory_logs: {
+        Row: {
+          id: string
+          variant_id: string
+          profile_id: string | null
+          change_amount: number
+          previous_stock: number
+          new_stock: number
+          inventory_type: string
+          reason: string
+          notes: string | null
+          receipt_id: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          variant_id: string
+          profile_id?: string | null
+          change_amount: number
+          previous_stock: number
+          new_stock: number
+          inventory_type: string
+          reason: string
+          notes?: string | null
+          receipt_id?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          variant_id?: string
+          profile_id?: string | null
+          change_amount?: number
+          previous_stock?: number
+          new_stock?: number
+          inventory_type?: string
+          reason?: string
+          notes?: string | null
+          receipt_id?: string | null
+          created_at?: string | null
+        }
+      }
       order_items: {
         Row: {
           id: string
@@ -248,7 +289,35 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      inventory_apply_regular_delta: {
+        Args: {
+          p_variant_id: string
+          p_delta: number
+          p_reason: string
+          p_notes: string | null
+          p_receipt_id: string | null
+        }
+        Returns: Json
+      }
+      inventory_apply_presale_delta: {
+        Args: {
+          p_variant_id: string
+          p_delta: number
+          p_reason: string
+          p_notes: string | null
+          p_receipt_id: string | null
+        }
+        Returns: Json
+      }
+      inventory_commit_receipt: {
+        Args: {
+          p_title: string
+          p_lines: Json
+          p_notes: string | null
+          p_expected_total: number | null
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

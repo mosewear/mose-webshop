@@ -10,6 +10,7 @@ const PAGES = [
   { name: 'Producten', href: '/admin/products', icon: 'box' },
   { name: 'Klanten', href: '/admin/customers', icon: 'users' },
   { name: 'Voorraad', href: '/admin/inventory', icon: 'clipboard' },
+  { name: 'Levering invoeren', href: '/admin/inventory/receiving', icon: 'clipboard' },
   { name: 'Analytics', href: '/admin/analytics', icon: 'chart' },
   { name: 'Retouren', href: '/admin/returns', icon: 'refresh' },
   { name: 'Reviews', href: '/admin/reviews', icon: 'star' },
