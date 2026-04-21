@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer, MessageCircle } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer, MessageCircle, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProductPerformance {
@@ -28,6 +28,19 @@ interface RecentEvent {
   event_name: string
   event_properties: any
   device_type: string | null
+  country_code?: string | null
+}
+
+function countryLabel(code: string | null | undefined): string {
+  if (!code || typeof code !== 'string') return '—'
+  const upper = code.trim().toUpperCase()
+  if (upper.length !== 2 || !/^[A-Z]{2}$/.test(upper)) return '—'
+  try {
+    const name = new Intl.DisplayNames(['nl'], { type: 'region' }).of(upper)
+    return name ? `${upper} · ${name}` : upper
+  } catch {
+    return upper
+  }
 }
 
 interface ChatStats {
@@ -225,7 +238,62 @@ export default function BehaviorAnalyticsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6">
-        
+        {/* Live Event Feed — bovenaan */}
+        <div className="bg-white border-2 border-gray-200 p-6">
+          <h2 className="text-xl font-bold mb-1 flex flex-wrap items-center gap-2">
+            Live Event Feed
+            <span className="text-xs font-normal text-gray-500 font-sans">(land o.a. via Vercel edge)</span>
+          </h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Land verschijnt voor nieuwe events na DB-migratie. Lokaal of zonder edge-headers: —.
+          </p>
+          {recentEvents && recentEvents.length > 0 ? (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="hidden md:flex items-center gap-3 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                <div className="w-32 shrink-0">Tijd</div>
+                <div className="w-40 shrink-0">Event</div>
+                <div className="flex-1 min-w-[120px]">Detail</div>
+                <div className="w-44 shrink-0 flex items-center gap-1">
+                  <MapPin size={12} aria-hidden />
+                  Land
+                </div>
+                <div className="w-20 shrink-0">Device</div>
+              </div>
+              {recentEvents.slice(0, 20).map((event) => (
+                <div
+                  key={event.id}
+                  className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-3 bg-gray-50 border border-gray-200 text-xs"
+                >
+                  <div className="w-full md:w-32 font-mono text-gray-500 shrink-0">
+                    {new Date(event.created_at).toLocaleString('nl-NL', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })}
+                  </div>
+                  <div className="w-full md:w-40 font-bold text-brand-primary shrink-0 break-words">
+                    {event.event_name}
+                  </div>
+                  <div className="flex-1 text-gray-600 min-w-0 break-words md:truncate">
+                    {event.event_properties?.product_name || event.event_properties?.page_url || '-'}
+                  </div>
+                  <div
+                    className="w-full md:w-44 text-gray-700 shrink-0 text-[11px] leading-snug"
+                    title={event.country_code || undefined}
+                  >
+                    {countryLabel(event.country_code)}
+                  </div>
+                  <div className="w-full md:w-20 text-gray-500 shrink-0">{event.device_type || 'unknown'}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">Nog geen events getrackt. Start met shoppen om data te zien!</p>
+          )}
+        </div>
+
         {/* Quick Actions - PostHog Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
@@ -455,29 +523,6 @@ export default function BehaviorAnalyticsPage() {
             </div>
           </div>
         )}
-
-        {/* Recent Events Live Feed */}
-        <div className="bg-white border-2 border-gray-200 p-6">
-          <h2 className="text-xl font-bold mb-4">Live Event Feed</h2>
-          {recentEvents && recentEvents.length > 0 ? (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {recentEvents.slice(0, 20).map((event) => (
-                <div key={event.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 text-xs flex-wrap">
-                  <div className="w-full md:w-32 font-mono text-gray-500">
-                    {new Date(event.created_at).toLocaleTimeString('nl-NL')}
-                  </div>
-                  <div className="w-full md:w-40 font-bold text-brand-primary">{event.event_name}</div>
-                  <div className="flex-1 text-gray-600 truncate min-w-[200px]">
-                    {event.event_properties?.product_name || event.event_properties?.page_url || '-'}
-                  </div>
-                  <div className="w-20 text-gray-500">{event.device_type || 'unknown'}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm">Nog geen events getrackt. Start met shoppen om data te zien!</p>
-          )}
-        </div>
 
         {/* Setup Instructions (if no data) */}
         {(!conversionFunnel || conversionFunnel.length === 0) && (!productPerformance || productPerformance.length === 0) && (

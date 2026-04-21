@@ -6,7 +6,6 @@
 'use client'
 
 import posthog from '@/lib/posthog-client'
-import { createClient } from '@/lib/supabase/client'
 
 // Get or create session ID
 function getSessionId(): string {
@@ -72,21 +71,26 @@ export async function trackEvent({ event_name, properties = {}, user_id }: Track
       })
     }
     
-    // 2. Track in Supabase (for custom analytics queries)
-    const supabase = createClient()
-    const { error } = await supabase.from('analytics_events').insert({
-      event_name,
-      event_properties: properties,
-      session_id: sessionId,
-      user_id: user_id || null,
-      page_url: window.location.href,
-      page_title: document.title,
-      referrer: document.referrer || null,
-      ...deviceInfo,
+    // 2. Track in Supabase via API (country from edge headers: x-vercel-ip-country, etc.)
+    const res = await fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        event_name,
+        event_properties: properties,
+        session_id: sessionId,
+        user_id: user_id || null,
+        page_url: window.location.href,
+        page_title: document.title,
+        referrer: document.referrer || null,
+        ...deviceInfo,
+      }),
     })
-    
-    if (error) {
-      console.error('[Analytics] Supabase error:', error)
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      console.error('[Analytics] Supabase track API error:', res.status, text)
     }
   } catch (error) {
     console.error(`[Analytics] Error tracking ${event_name}:`, error)
