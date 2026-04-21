@@ -13,12 +13,13 @@ import {
   sendBackInStockEmail,
   sendContactFormEmail
 } from './src/lib/email'
+import { getPublicSiteUrl } from './src/lib/site-url'
 
 const testEmail = 'h.schlimback@gmail.com'
 const testName = 'Rick Schlimback'
 const testOrderId = 'test-order-12345678'
 const testTrackingCode = 'TEST123456789'
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+const siteUrl = getPublicSiteUrl()
 
 async function sendTestEmails() {
   console.log('📧 Starting to send test emails...\n')

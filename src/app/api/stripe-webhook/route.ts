@@ -6,6 +6,7 @@ import { createReturnLabelSimple } from '@/lib/sendcloud-return-simple'
 import { sendReturnLabelGeneratedEmail } from '@/lib/email'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import { sendOrderNotificationToAdmins } from '@/lib/push-notifications'
+import { getPublicSiteUrl } from '@/lib/site-url'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -650,7 +651,7 @@ export async function POST(req: NextRequest) {
             console.log('📧 [WEBHOOK] PREPARING ORDER CONFIRMATION EMAIL')
             console.log('═════════════════════════════════════════')
             const shippingAddress = updatedOrder.shipping_address as any
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+            const siteUrl = getPublicSiteUrl()
             
             console.log(`📧 Recipient: ${updatedOrder.email}`)
             console.log(`📧 Order ID: ${updatedOrder.id}`)
@@ -911,7 +912,7 @@ export async function POST(req: NextRequest) {
               try {
                 console.log('📧 [WEBHOOK LEGACY] Preparing to send order confirmation email...')
                 const shippingAddress = updatedOrder.shipping_address as any
-                const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+                const siteUrl = getPublicSiteUrl()
                 
                 console.log(`📧 [WEBHOOK LEGACY] Sending to: ${session.customer_email}`)
                 console.log(`📧 [WEBHOOK LEGACY] Order ID: ${updatedOrder.id}`)

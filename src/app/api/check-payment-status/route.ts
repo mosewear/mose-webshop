@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
+import { getPublicSiteUrl } from '@/lib/site-url'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
         try {
           console.log('📧 [FALLBACK] Preparing to send confirmation email...')
           const shippingAddress = updatedOrder.shipping_address as any
-          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mose-webshop.vercel.app'
+          const siteUrl = getPublicSiteUrl()
           
           console.log(`📧 [FALLBACK] Sending to: ${updatedOrder.email}`)
           console.log(`📧 [FALLBACK] Order ID: ${updatedOrder.id}`)

@@ -1,10 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import {
+  checkSlidingWindowRateLimit,
+  getClientIp,
+  type SlidingWindowEntry,
+} from '@/lib/rate-limit-ip'
 
-/**
- * Public order tracking: match email + order number prefix without client-side PostgREST id::text filters.
- */
+/** Public order tracking: match email + order number prefix without client-side PostgREST id::text filters. */
+
+const TRACK_ORDER_WINDOW_MS = 10 * 60 * 1000
+const TRACK_ORDER_MAX_PER_WINDOW = 45
+
+const trackOrderRateLimitMap = new Map<string, SlidingWindowEntry>()
+
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request)
+  if (
+    !checkSlidingWindowRateLimit(
+      trackOrderRateLimitMap,
+      ip,
+      TRACK_ORDER_MAX_PER_WINDOW,
+      TRACK_ORDER_WINDOW_MS
+    )
+  ) {
+    return NextResponse.json(
+      { error: 'rate_limited' },
+      { status: 429, headers: { 'Retry-After': '600' } }
+    )
+  }
+
   let body: { email?: string; orderNumber?: string }
   try {
     body = await request.json()

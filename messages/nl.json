@@ -943,6 +943,7 @@
     "errorFillFields": "Vul alle velden in",
     "errorNotFound": "Order niet gevonden. Controleer je order nummer en email.",
     "errorGeneric": "Er ging iets fout. Probeer het opnieuw.",
+    "errorRateLimited": "Te veel pogingen. Probeer het over een paar minuten opnieuw.",
     "orderDetails": "Order #{id}",
     "placedOn": "Geplaatst op",
     "newSearch": "Nieuwe zoekopdracht",
@@ -975,6 +976,7 @@
     "items": {
       "title": "Je Items",
       "size": "Maat",
+      "line": "Maat {size} • {color} • {quantity}x",
       "total": "Totaal"
     },
     "help": {

@@ -32,21 +32,21 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     },
     description: t('description'),
     keywords: t('keywords').split(', '),
-    authors: [{ name: 'MOSE', url: 'https://mosewear.com' }],
+    authors: [{ name: 'MOSE', url: 'https://www.mosewear.com' }],
     creator: 'MOSE',
     publisher: 'MOSE',
-    metadataBase: new URL('https://mosewear.com'),
+    metadataBase: new URL('https://www.mosewear.com'),
     alternates: {
       canonical: `/${locale}`,
       languages: {
-        'nl': 'https://mosewear.com/nl',
-        'en': 'https://mosewear.com/en',
+        'nl': 'https://www.mosewear.com/nl',
+        'en': 'https://www.mosewear.com/en',
       }
     },
     openGraph: {
       type: 'website',
       locale: locale === 'nl' ? 'nl_NL' : 'en_GB',
-      url: `https://mosewear.com/${locale}`,
+      url: `https://www.mosewear.com/${locale}`,
       title: t('title'),
       description: t('description'),
       siteName: 'MOSE',

@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/'],
       },
     ],
-    sitemap: 'https://mosewear.com/sitemap.xml',
+    sitemap: 'https://www.mosewear.com/sitemap.xml',
   }
 }
 

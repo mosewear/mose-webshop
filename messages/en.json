@@ -560,18 +560,26 @@
     "title": "Shop",
     "filters": {
       "title": "Filters",
-      "clear": "Clear Filters",
+      "clear": "Clear all",
+      "show": "Show {count}",
+      "search": "Search",
+      "searchPlaceholder": "Search products...",
       "category": "Category",
+      "allProducts": "All Products",
       "size": "Size",
       "color": "Color",
-      "price": "Price"
+      "price": "Price Range",
+      "inStockOnly": "In Stock Only",
+      "active": "Active Filters",
+      "close": "Close filters"
     },
     "sort": {
-      "title": "Sort by",
+      "title": "Sort",
       "relevance": "Relevance",
-      "priceAsc": "Price: Low to High",
-      "priceDesc": "Price: High to Low",
-      "newest": "Newest"
+      "newest": "Newest",
+      "priceAsc": "Price: Low - High",
+      "priceDesc": "Price: High - Low",
+      "name": "Name: A - Z"
     },
     "results": "{count} {count, plural, =1 {product} other {products}} found",
     "noResults": "No products found",
@@ -580,26 +588,6 @@
     "inCategory": "in {category}",
     "lastItems": "LAST ITEMS",
     "discount": "OFF",
-    "filters": {
-      "title": "Filters",
-      "clear": "Clear all",
-      "show": "Show {count}",
-      "search": "Search",
-      "searchPlaceholder": "Search products...",
-      "category": "Category",
-      "allProducts": "All Products",
-      "price": "Price Range",
-      "inStockOnly": "In Stock Only",
-      "active": "Active Filters",
-      "close": "Close filters"
-    },
-    "sort": {
-      "title": "Sort",
-      "newest": "Newest",
-      "priceAsc": "Price: Low - High",
-      "priceDesc": "Price: High - Low",
-      "name": "Name: A - Z"
-    },
     "outOfStock": "OUT OF STOCK"
   },
   "errors": {
@@ -972,6 +960,7 @@
     "errorFillFields": "Please fill in all fields",
     "errorNotFound": "Order not found. Please check your order number and email.",
     "errorGeneric": "Something went wrong. Please try again.",
+    "errorRateLimited": "Too many attempts. Please try again in a few minutes.",
     "orderDetails": "Order #{id}",
     "placedOn": "Placed on",
     "newSearch": "New search",
@@ -1004,6 +993,7 @@
     "items": {
       "title": "Your Items",
       "size": "Size",
+      "line": "Size {size} • {color} • {quantity}x",
       "total": "Total"
     },
     "help": {

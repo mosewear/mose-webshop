@@ -153,9 +153,11 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# App
+# App (local: http://localhost:3000 — production: https://www.mosewear.com)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
+
+On Vercel production, set `NEXT_PUBLIC_SITE_URL` to the canonical storefront URL (`https://www.mosewear.com`). If unset, the app falls back to that URL for emails and payment flows.
 
 ### Commands
 
