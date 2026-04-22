@@ -7,6 +7,10 @@
     {
       "path": "/api/back-in-stock/check",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/gift-cards/cron",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

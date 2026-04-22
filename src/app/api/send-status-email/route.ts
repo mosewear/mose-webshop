@@ -115,6 +115,14 @@ export async function POST(req: NextRequest) {
           cancellationReason: order.internal_notes || undefined,
           locale,
         })
+        // Return any spent gift-card balance back to its card so the
+        // customer can use it on a new order.
+        try {
+          const { reverseGiftCardsForOrder } = await import('@/lib/gift-card-processing')
+          await reverseGiftCardsForOrder(supabase as any, order.id)
+        } catch (gcErr) {
+          console.error('[send-status-email cancelled] gift-card reverse failed:', gcErr)
+        }
         break
 
       case 'return_requested':

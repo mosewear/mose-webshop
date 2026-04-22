@@ -1,6 +1,15 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+export interface GiftCardRecipient {
+  recipientName?: string
+  recipientEmail?: string
+  senderName?: string
+  personalMessage?: string
+  /** ISO date when the card should be delivered; empty = immediately */
+  scheduledSendAt?: string
+}
+
 export interface CartItem {
   productId: string
   variantId: string
@@ -17,6 +26,12 @@ export interface CartItem {
   isPresale?: boolean
   presaleExpectedDate?: string
   presaleStock?: number
+  /** TRUE when this line represents a digital gift card (no shipping, no stock). */
+  isGiftCard?: boolean
+  /** Denomination amount in EUR; for custom-amount lines equals price. */
+  giftCardAmount?: number
+  /** Optional recipient payload for personalised gift delivery. */
+  giftCardRecipient?: GiftCardRecipient | null
 }
 
 interface CartStore {
@@ -51,16 +66,25 @@ export const useCart = create<CartStore>()(
           let newItems: CartItem[]
           
           if (existingItem) {
-            // Determine stock limit based on presale status
-            const maxStock = existingItem.isPresale 
-              ? (existingItem.presaleStock || 0) 
-              : existingItem.stock
-            
-            newItems = state.items.map((i) =>
-              i.variantId === item.variantId
-                ? { ...i, quantity: Math.min(i.quantity + item.quantity, maxStock) }
-                : i
-            )
+            if (existingItem.isGiftCard) {
+              // Gift cards have no stock cap; just increment quantity
+              newItems = state.items.map((i) =>
+                i.variantId === item.variantId
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
+              )
+            } else {
+              // Determine stock limit based on presale status
+              const maxStock = existingItem.isPresale
+                ? (existingItem.presaleStock || 0)
+                : existingItem.stock
+
+              newItems = state.items.map((i) =>
+                i.variantId === item.variantId
+                  ? { ...i, quantity: Math.min(i.quantity + item.quantity, maxStock) }
+                  : i
+              )
+            }
           } else {
             newItems = [...state.items, item]
           }
@@ -91,11 +115,14 @@ export const useCart = create<CartStore>()(
         set((state) => {
           const newItems = state.items.map((item) => {
             if (item.variantId === variantId) {
+              if (item.isGiftCard) {
+                return { ...item, quantity: Math.max(1, quantity) }
+              }
               // Determine stock limit based on presale status
-              const maxStock = item.isPresale 
-                ? (item.presaleStock || 0) 
+              const maxStock = item.isPresale
+                ? (item.presaleStock || 0)
                 : item.stock
-              
+
               return {
                 ...item,
                 quantity: Math.max(1, Math.min(quantity, maxStock))

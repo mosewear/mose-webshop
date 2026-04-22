@@ -234,6 +234,16 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
     previewSlug: 'new-review',
     from: 'MOSE Reviews <info@mosewear.com>',
   },
+  {
+    key: 'gift_card_delivery',
+    name: 'Cadeaubon',
+    description:
+      'Sent to the recipient of a purchased or admin-created gift card with the redeem code.',
+    category: 'order',
+    accent: '#00A676',
+    previewSlug: 'gift-card-delivery',
+    from: 'MOSE Gift Cards <orders@mosewear.com>',
+  },
 ]
 
 export const EMAIL_TEMPLATES_BY_KEY: Record<string, EmailTemplateDefinition> =

@@ -22,6 +22,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
+import GiftCardProductView from '@/components/product/GiftCardProductView'
 
 const supabase = createClient()
 
@@ -39,6 +40,11 @@ interface Product {
   meta_description: string
   size_guide_content?: any | null
   size_guide_content_en?: any | null
+  is_gift_card?: boolean
+  allows_custom_amount?: boolean
+  gift_card_min_amount?: number | null
+  gift_card_max_amount?: number | null
+  gift_card_default_validity_months?: number | null
   product_images: ProductImage[]
   product_variants: ProductVariant[]
   product_quantity_discounts?: { id: string; min_quantity: number; discount_type: string; discount_value: number; is_active: boolean }[]
@@ -848,6 +854,46 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </LocaleLink>
         </div>
       </div>
+    )
+  }
+
+  if (product.is_gift_card) {
+    return (
+      <GiftCardProductView
+        product={{
+          id: product.id,
+          name: product.name,
+          name_en: product.name_en ?? null,
+          slug: product.slug,
+          description: product.description,
+          description_en: product.description_en ?? null,
+          base_price: product.base_price,
+          sale_price: product.sale_price,
+          allows_custom_amount: !!product.allows_custom_amount,
+          gift_card_min_amount: product.gift_card_min_amount ?? null,
+          gift_card_max_amount: product.gift_card_max_amount ?? null,
+          gift_card_default_validity_months:
+            product.gift_card_default_validity_months ?? null,
+          product_images: product.product_images,
+          product_variants: product.product_variants.map((v) => ({
+            id: v.id,
+            size: v.size,
+            color: v.color,
+            color_hex: v.color_hex ?? null,
+            sku: v.sku,
+            price_adjustment: v.price_adjustment || 0,
+            is_available: v.is_available,
+            display_order: v.display_order,
+          })),
+          categories: product.categories
+            ? {
+                name: product.categories.name,
+                name_en: product.categories.name_en ?? null,
+                slug: product.categories.slug,
+              }
+            : null,
+        }}
+      />
     )
   }
 

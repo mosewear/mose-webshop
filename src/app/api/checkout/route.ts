@@ -5,6 +5,12 @@ import { capitalizeName } from '@/lib/utils'
 import { calculateQuantityDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
 import { createClient as createServerSupabaseClient } from '@/lib/supabase/server'
 import { calculateTier, calculateTierDiscount, type LoyaltyTier } from '@/lib/loyalty'
+import {
+  findActiveGiftCardByCode,
+  reserveGiftCardBalance,
+  clampRedeemAmount,
+  maskFromLast4,
+} from '@/lib/gift-cards'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
@@ -48,8 +54,11 @@ export async function POST(request: Request) {
     // STEP 1: VALIDATE STOCK AVAILABILITY (DUAL INVENTORY)
     // ============================================
     console.log('📦 Validating stock for', items.length, 'items...')
-    
+
     for (const item of items) {
+      // Gift cards are digital: no stock to check, no variant required.
+      if (item.is_gift_card) continue
+
       const { data: variant, error: variantError } = await supabase
         .from('product_variants')
         .select('stock_quantity, presale_stock_quantity, presale_enabled, is_available')
@@ -103,9 +112,11 @@ export async function POST(request: Request) {
     // ============================================
     console.log('📊 Calculating quantity discounts...')
 
-    // Group items by product_id and count total quantity per product
+    // Group items by product_id and count total quantity per product.
+    // Gift card lines are excluded: staffelkorting never applies to gift cards.
     const productQuantities: Record<string, { totalQty: number; itemIndices: number[] }> = {}
     for (let i = 0; i < items.length; i++) {
+      if (items[i].is_gift_card) continue
       const pid = items[i].product_id
       if (!productQuantities[pid]) productQuantities[pid] = { totalQty: 0, itemIndices: [] }
       productQuantities[pid].totalQty += items[i].quantity
@@ -260,6 +271,13 @@ export async function POST(request: Request) {
       let subtotalWithExistingDiscount = 0
       
       for (const item of items) {
+        // Gift cards are excluded from promo-code eligibility and not
+        // counted as "has existing discount" either — the code simply
+        // doesn't apply to them.
+        if (item.is_gift_card) {
+          continue
+        }
+
         // Fetch product to check if it has a sale_price
         const { data: product, error: productError } = await supabase
           .from('products')
@@ -430,13 +448,24 @@ export async function POST(request: Request) {
       }
     }
 
+    // Digital-only order (all gift cards) → no shipping needed.
+    const isDigitalOnly =
+      items.length > 0 && items.every((it: any) => !!it.is_gift_card)
+    if (isDigitalOnly) {
+      finalDeliveryMethod = 'shipping' // keep type consistent but skip cost
+      pickupEligible = false
+      pickupDistanceKm = null
+    }
+
     order.delivery_method = finalDeliveryMethod
     order.pickup_eligible = pickupEligible
     order.pickup_distance_km = pickupDistanceKm
     order.pickup_location_name = finalDeliveryMethod === 'pickup' ? pickupLocationName : null
     order.pickup_location_address = finalDeliveryMethod === 'pickup' ? pickupLocationAddress : null
-    order.shipping_cost =
-      finalDeliveryMethod === 'pickup'
+    order.is_digital_only = isDigitalOnly
+    order.shipping_cost = isDigitalOnly
+      ? 0
+      : finalDeliveryMethod === 'pickup'
         ? 0
         : subtotalAfterDiscount >= freeShippingThreshold
           ? 0
@@ -552,7 +581,8 @@ export async function POST(request: Request) {
       return {
         order_id: orderData.id,
         product_id: item.product_id ?? null,
-        variant_id: item.variant_id ?? null,
+        // Gift card lines don't reference a real variant row.
+        variant_id: item.is_gift_card ? null : item.variant_id ?? null,
         product_name: item.product_name,
         size: item.size,
         color: item.color,
@@ -569,6 +599,10 @@ export async function POST(request: Request) {
           typeof item.quantity_discount_amount === 'number'
             ? item.quantity_discount_amount
             : 0,
+        is_gift_card: !!item.is_gift_card,
+        gift_card_metadata: item.is_gift_card
+          ? item.gift_card_metadata ?? { amount: priceAtPurchase }
+          : null,
       }
     })
 
@@ -603,15 +637,115 @@ export async function POST(request: Request) {
     console.log('✅ SERVER: Order items created')
 
     // ============================================
-    // STEP 5: UPDATE CUSTOMER STATS (will be updated again after payment)
+    // STEP 5: APPLY GIFT CARD REDEMPTIONS (atomic reservation)
+    // ============================================
+    // Gift cards reduce the final payable amount AFTER all other
+    // discounts/shipping. Each code is reserved on its row via the
+    // `reserve_gift_card_balance` RPC, so concurrent checkouts can't
+    // double-spend. On successful payment the webhook calls
+    // `commit_gift_card_redemptions_for_order`; on failure/refund we
+    // call `reverse_gift_card_redemptions_for_order`.
+    const requestedCodes: string[] = Array.isArray(order.gift_card_codes)
+      ? order.gift_card_codes.map((c: unknown) => String(c || '').trim()).filter(Boolean)
+      : []
+
+    let giftCardDiscount = 0
+    const appliedMasks: string[] = []
+
+    if (requestedCodes.length > 0) {
+      const orderTotalBeforeGiftCards = Number(order.total) || 0
+      let remaining = orderTotalBeforeGiftCards
+
+      for (const code of requestedCodes) {
+        if (remaining <= 0) break
+
+        const lookup = await findActiveGiftCardByCode(supabase as any, code)
+        if (!lookup.ok) {
+          console.warn('[checkout] gift card lookup failed', {
+            code_last4: code.slice(-4),
+            reason: lookup.reason,
+          })
+          continue
+        }
+
+        const card = lookup.card
+        const redeem = clampRedeemAmount(Number(card.balance), remaining)
+        if (redeem <= 0) continue
+
+        const reservation = await reserveGiftCardBalance(supabase as any, {
+          cardId: card.id,
+          orderId: orderData.id,
+          amount: redeem,
+        })
+
+        if (!reservation.ok) {
+          console.warn('[checkout] gift card reserve failed', reservation.error)
+          continue
+        }
+
+        giftCardDiscount = Math.round((giftCardDiscount + redeem) * 100) / 100
+        remaining = Math.round((remaining - redeem) * 100) / 100
+        appliedMasks.push(maskFromLast4(card.code_last4))
+      }
+
+      const newTotal = Math.max(
+        0,
+        Math.round(((Number(order.total) || 0) - giftCardDiscount) * 100) / 100
+      )
+
+      const { data: patched } = await supabase
+        .from('orders')
+        .update({
+          gift_card_discount: giftCardDiscount,
+          gift_card_codes: appliedMasks,
+          total: newTotal,
+          // Zero-payment path: when gift cards cover the whole order
+          // there is nothing left for Stripe. Mark it paid immediately so
+          // the webhook idempotency path takes over issuing + stock.
+          payment_status: newTotal === 0 ? 'paid' : order.payment_status,
+          paid_at: newTotal === 0 ? new Date().toISOString() : null,
+        })
+        .eq('id', orderData.id)
+        .select()
+        .single()
+
+      if (patched) {
+        Object.assign(orderData, patched)
+      }
+
+      // If this order is now fully covered, kick off stock + gift-card
+      // issuance synchronously so the confirmation page has everything it
+      // needs without relying on a Stripe webhook.
+      if (newTotal === 0) {
+        try {
+          const { applyInventoryDecrementForPaidOrder } = await import('@/lib/order-stock')
+          await applyInventoryDecrementForPaidOrder(supabase as any, orderData.id)
+        } catch (e) {
+          console.error('[checkout] zero-payment inventory error:', e)
+        }
+        try {
+          const { processGiftCardsForPaidOrder } = await import('@/lib/gift-card-processing')
+          await processGiftCardsForPaidOrder(
+            supabase as any,
+            orderData.id,
+            (order as any).locale || 'nl'
+          )
+        } catch (e) {
+          console.error('[checkout] zero-payment gift card issuance error:', e)
+        }
+      }
+    }
+
+    // ============================================
+    // STEP 6: UPDATE CUSTOMER STATS (will be updated again after payment)
     // ============================================
     // Note: This will be called again by webhook after successful payment
     // to ensure accurate paid order counts
-    if (order.payment_status === 'paid') {
+    if (orderData.payment_status === 'paid') {
       console.log('💰 Updating customer stats for:', order.email)
       await supabase.rpc('update_customer_stats', {
         p_email: order.email,
-        p_order_total: order.total,
+        p_order_total: orderData.total,
         p_order_date: orderData.created_at
       })
       console.log('✅ Customer stats updated')

@@ -1,4 +1,28 @@
 {
+  "giftCard": {
+    "badge": "Cadeaubon",
+    "category": "Cadeaubon",
+    "addedToCart": "Cadeaubon toegevoegd",
+    "chooseAmount": "Kies een bedrag",
+    "customAmount": "Eigen bedrag",
+    "customAmountLabel": "Zelf kiezen tussen €{min} en €{max}",
+    "customAmountInvalid": "Bedrag moet tussen €{min} en €{max} liggen",
+    "valueLabel": "Waarde",
+    "validityNote": "Geldig {months} maanden na aankoop",
+    "sendAsGift": "Verstuur als cadeau naar iemand anders",
+    "sendAsGiftHelp": "De code wordt rechtstreeks naar de ontvanger gestuurd met jouw persoonlijke bericht.",
+    "recipientName": "Naam ontvanger",
+    "recipientEmail": "E-mail ontvanger",
+    "senderName": "Van",
+    "message": "Persoonlijk bericht",
+    "scheduleDelivery": "Verstuur op een specifieke datum",
+    "scheduleInvalid": "Kies een datum en tijd in de toekomst.",
+    "addToCart": "Voeg toe aan winkelmand",
+    "perkDigital": "Direct per e-mail bezorgd",
+    "perkCombine": "Ook te gebruiken op afgeprijsde items",
+    "perkValidity": "Geldig {months} maanden",
+    "perkValidityFallback": "Saldo blijft op de bon"
+  },
   "payment": {
     "chooseMethod": "Kies je betaalmethode",
     "methods": {
@@ -89,6 +113,16 @@
       "applied": "toegepast",
       "remove": "Code verwijderen",
       "discountLabel": "Korting"
+    },
+    "giftCard": {
+      "title": "Cadeaubon toevoegen",
+      "label": "Cadeaubon",
+      "placeholder": "XXXX-XXXX-XXXX-XXXX",
+      "balance": "Saldo",
+      "applied": "Cadeaubon toegepast",
+      "alreadyApplied": "Deze cadeaubon is al toegevoegd.",
+      "invalid": "Code ongeldig of verlopen.",
+      "validationFailed": "Validatie mislukt. Probeer opnieuw."
     },
     "mode": {
       "guest": "Gast Checkout",
@@ -260,6 +294,12 @@
       "applied": "toegepast",
       "remove": "Code verwijderen",
       "discountLabel": "Korting"
+    },
+    "giftCard": {
+      "value": "Waarde",
+      "for": "Voor",
+      "selfDelivery": "Code wordt naar jou verstuurd",
+      "scheduled": "Verzending op"
     },
     "placeholder": {
       "promoCode": "CODE"

@@ -45,6 +45,7 @@ import {
   InsiderBehindScenesEmail,
   InsiderLaunchWeekEmail,
   LoyaltyStatusUpdateEmail,
+  GiftCardDeliveryEmail,
 } from '@/emails'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -1538,5 +1539,85 @@ export async function sendLoyaltyStatusUpdateEmail(props: {
       },
     }
   )
+}
+
+/**
+ * Send a gift card delivery email to the recipient (or purchaser when no
+ * separate recipient was specified).
+ */
+export async function sendGiftCardDeliveryEmail(props: {
+  toEmail: string
+  code: string
+  amount: number
+  currency?: string
+  expiresAt?: string | null
+  recipientName?: string | null
+  senderName?: string | null
+  personalMessage?: string | null
+  locale?: string
+  orderId?: string | null
+}) {
+  const locale = props.locale || 'nl'
+  const t = await getEmailT(locale)
+  const settings = await getSiteSettings()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+
+  try {
+    const html = await render(
+      GiftCardDeliveryEmail({
+        code: props.code,
+        amount: props.amount,
+        currency: props.currency || 'EUR',
+        expiresAt: props.expiresAt ?? null,
+        recipientName: props.recipientName ?? null,
+        senderName: props.senderName ?? null,
+        personalMessage: props.personalMessage ?? null,
+        t,
+        locale,
+        siteUrl,
+        contactEmail: settings.contact_email,
+        contactPhone: settings.contact_phone,
+        contactAddress: settings.contact_address,
+      })
+    )
+
+    const amountText = (() => {
+      try {
+        return new Intl.NumberFormat(locale === 'en' ? 'en-GB' : 'nl-NL', {
+          style: 'currency',
+          currency: props.currency || 'EUR',
+        }).format(props.amount)
+      } catch {
+        return `€${props.amount.toFixed(2)}`
+      }
+    })()
+
+    const subject =
+      t('giftCardDelivery.subject', { amount: amountText }) ||
+      `Je MOSE cadeaubon van ${amountText}`
+
+    return await sendAndLog(
+      {
+        from: 'MOSE Gift Cards <orders@mosewear.com>',
+        to: [props.toEmail],
+        subject,
+        html,
+      },
+      {
+        templateKey: 'gift_card_delivery',
+        orderId: props.orderId ?? null,
+        locale,
+        metadata: {
+          amount: props.amount,
+          currency: props.currency || 'EUR',
+          expiresAt: props.expiresAt ?? null,
+          hasRecipient: !!props.recipientName,
+        },
+      }
+    )
+  } catch (error) {
+    console.error('❌ Error sending gift card delivery email:', error)
+    return { success: false, error }
+  }
 }
 

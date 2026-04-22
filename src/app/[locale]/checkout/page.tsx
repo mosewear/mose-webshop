@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
-import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock } from 'lucide-react'
+import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock, Gift as GiftIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { capitalizeName } from '@/lib/utils'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -139,6 +139,21 @@ export default function CheckoutPage() {
   // Staffelkorting state
   const [staffelSavings, setStaffelSavings] = useState(0)
 
+  // Gift card redemption state
+  type GiftCardEntry = {
+    cardId: string
+    code: string
+    maskedCode: string
+    balance: number
+    currency: string
+    expiresAt: string | null
+  }
+  const [giftCardInput, setGiftCardInput] = useState('')
+  const [giftCardEntries, setGiftCardEntries] = useState<GiftCardEntry[]>([])
+  const [giftCardError, setGiftCardError] = useState('')
+  const [giftCardLoading, setGiftCardLoading] = useState(false)
+  const [giftCardExpanded, setGiftCardExpanded] = useState(false)
+
   // Loyalty points state
   const [loyaltyPointsBalance, setLoyaltyPointsBalance] = useState(0)
   const [loyaltyRedeemPoints, setLoyaltyRedeemPoints] = useState(0)
@@ -230,16 +245,32 @@ export default function CheckoutPage() {
   const loyaltyTierDiscountPct = isLoggedIn ? getTierDiscountPercent(loyaltyTier) : 0
   const subtotalAfterDiscount = subtotal - promoDiscount - staffelSavings - loyaltyDiscount - loyaltyTierDiscount
   const baseShipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
-  const shipping = deliveryMethod === 'pickup' ? 0 : baseShipping
-  
+  // Gift cards don't ship (digital only). When the whole cart is gift
+  // cards, shipping is skipped entirely.
+  const isDigitalOnlyCart = items.length > 0 && items.every((i) => i.isGiftCard)
+  const shipping = isDigitalOnlyCart
+    ? 0
+    : deliveryMethod === 'pickup'
+      ? 0
+      : baseShipping
+
   // BTW berekening (21% is al inbegrepen in de prijzen)
   const subtotalExclBtw = subtotalAfterDiscount / 1.21
   const btwAmount = subtotalAfterDiscount - subtotalExclBtw
   const shippingExclBtw = shipping / 1.21
   const shippingBtw = shipping - shippingExclBtw
   const totalBtw = btwAmount + shippingBtw
-  
-  const total = subtotalAfterDiscount + shipping
+
+  const totalBeforeGiftCards = subtotalAfterDiscount + shipping
+  const availableGiftCardBalance = giftCardEntries.reduce(
+    (sum, c) => sum + (Number(c.balance) || 0),
+    0
+  )
+  const giftCardDiscount = Math.min(
+    Math.max(0, Math.round(totalBeforeGiftCards * 100) / 100),
+    Math.max(0, Math.round(availableGiftCardBalance * 100) / 100)
+  )
+  const total = Math.max(0, Math.round((totalBeforeGiftCards - giftCardDiscount) * 100) / 100)
 
   // Staffel (same model as cart + validate-promo-code)
   useEffect(() => {
@@ -1094,33 +1125,42 @@ export default function CheckoutPage() {
             .delete()
             .eq('user_id', data.user!.id)
           
-          // Insert merged cart items
-          const cartItemsToSave = mergedItems.map(item => ({
-            user_id: data.user!.id,
-            variant_id: item.variantId,
-            quantity: item.quantity,
-            price_at_add: item.price,
-          }))
+          // Insert merged cart items (skip gift cards: synthetic variant ids
+          // don't satisfy the product_variants FK).
+          const cartItemsToSave = mergedItems
+            .filter((item) => !item.isGiftCard)
+            .map(item => ({
+              user_id: data.user!.id,
+              variant_id: item.variantId,
+              quantity: item.quantity,
+              price_at_add: item.price,
+            }))
           
-          await supabase
-            .from('cart_items')
-            .insert(cartItemsToSave)
+          if (cartItemsToSave.length > 0) {
+            await supabase
+              .from('cart_items')
+              .insert(cartItemsToSave)
+          }
           
           console.log('✅ Cart merged and saved to database')
         } else {
           console.log('   No saved cart, keeping guest cart')
           
-          // Save guest cart to database
-          const cartItemsToSave = guestCartItems.map(item => ({
-            user_id: data.user!.id,
-            variant_id: item.variantId,
-            quantity: item.quantity,
-            price_at_add: item.price,
-          }))
+          // Save guest cart to database (skip gift cards: synthetic variant ids)
+          const cartItemsToSave = guestCartItems
+            .filter((item) => !item.isGiftCard)
+            .map(item => ({
+              user_id: data.user!.id,
+              variant_id: item.variantId,
+              quantity: item.quantity,
+              price_at_add: item.price,
+            }))
           
-          await supabase
-            .from('cart_items')
-            .insert(cartItemsToSave)
+          if (cartItemsToSave.length > 0) {
+            await supabase
+              .from('cart_items')
+              .insert(cartItemsToSave)
+          }
           
           console.log('✅ Guest cart saved to database')
         }
@@ -1202,6 +1242,61 @@ export default function CheckoutPage() {
     localStorage.removeItem('mose_promo_value')
   }
 
+  const handleApplyGiftCard = async () => {
+    const raw = giftCardInput.trim()
+    if (!raw) return
+    const normalized = raw.toUpperCase().replace(/\s+/g, '')
+    if (giftCardEntries.some((e) => e.code === normalized)) {
+      setGiftCardError(
+        t('giftCard.alreadyApplied', { defaultValue: 'Deze cadeaubon is al toegevoegd.' })
+      )
+      return
+    }
+    setGiftCardError('')
+    setGiftCardLoading(true)
+    try {
+      const res = await fetch('/api/gift-cards/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: normalized }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.valid) {
+        setGiftCardError(
+          data?.error ||
+            t('giftCard.invalid', { defaultValue: 'Code ongeldig of verlopen.' })
+        )
+        setGiftCardLoading(false)
+        return
+      }
+      setGiftCardEntries((prev) => [
+        ...prev,
+        {
+          cardId: data.cardId,
+          code: normalized,
+          maskedCode: data.maskedCode,
+          balance: Number(data.balance),
+          currency: data.currency || 'EUR',
+          expiresAt: data.expiresAt || null,
+        },
+      ])
+      setGiftCardInput('')
+      setGiftCardExpanded(false)
+    } catch (err) {
+      console.error('gift card validate error:', err)
+      setGiftCardError(
+        t('giftCard.validationFailed', { defaultValue: 'Validatie mislukt. Probeer opnieuw.' })
+      )
+    } finally {
+      setGiftCardLoading(false)
+    }
+  }
+
+  const handleRemoveGiftCard = (code: string) => {
+    setGiftCardEntries((prev) => prev.filter((e) => e.code !== code))
+    setGiftCardError('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -1249,6 +1344,8 @@ export default function CheckoutPage() {
         promo_code: promoCode || null,
         discount_amount: promoDiscount + loyaltyDiscount,
         loyalty_tier_discount: loyaltyTierDiscount,
+        gift_card_codes: giftCardEntries.map((c) => c.code),
+        gift_card_discount: giftCardDiscount,
         locale: locale, // Save customer's language preference for emails
         shipping_address: {
           name: capitalizeName(`${form.firstName.trim()} ${form.lastName.trim()}`),
@@ -1302,7 +1399,7 @@ export default function CheckoutPage() {
           product_name: item.name,
           size: item.size,
           color: item.color,
-          sku: `${item.productId}-${item.size}-${item.color}`,
+          sku: item.sku || `${item.productId}-${item.size}-${item.color}`,
           quantity: item.quantity,
           unit_price: item.price,
           price_at_purchase: item.price,
@@ -1310,6 +1407,22 @@ export default function CheckoutPage() {
           image_url: item.image,
           is_presale: item.isPresale || false,
           presale_expected_date: item.presaleExpectedDate || null,
+          is_gift_card: !!item.isGiftCard,
+          gift_card_amount:
+            typeof item.giftCardAmount === 'number' ? item.giftCardAmount : item.price,
+          gift_card_metadata: item.isGiftCard
+            ? {
+                amount:
+                  typeof item.giftCardAmount === 'number'
+                    ? item.giftCardAmount
+                    : item.price,
+                recipientName: item.giftCardRecipient?.recipientName || null,
+                recipientEmail: item.giftCardRecipient?.recipientEmail || null,
+                senderName: item.giftCardRecipient?.senderName || null,
+                personalMessage: item.giftCardRecipient?.personalMessage || null,
+                scheduledSendAt: item.giftCardRecipient?.scheduledSendAt || null,
+              }
+            : null,
         }
       })
 
@@ -1337,6 +1450,16 @@ export default function CheckoutPage() {
       // Subscribe to newsletter if opted in (async, non-blocking)
       if (newsletterOptIn) {
         subscribeToNewsletter(form.email.trim())
+      }
+
+      // Zero-payment path: gift cards covered the entire order. The
+      // checkout route already flipped payment_status to 'paid' and
+      // kicked off stock + gift-card issuance, so jump straight to the
+      // confirmation page without creating a Stripe PaymentIntent.
+      if (order.payment_status === 'paid' || Number(order.total) === 0) {
+        clearCart()
+        router.push(`/order-confirmation?order=${order.id}`)
+        return
       }
 
       // Go to payment step - Payment Intent will be created when user selects method
@@ -2808,6 +2931,113 @@ export default function CheckoutPage() {
                     )}
                   </div>
                 ) : null}
+
+                {/* Gift Card Redemption Section */}
+                {giftCardEntries.length > 0 && (
+                  <div className="space-y-2 border-t border-gray-200 pt-3">
+                    {giftCardEntries.map((gc) => (
+                      <div
+                        key={gc.code}
+                        className="flex justify-between items-center py-2 px-3 bg-emerald-50 border-l-2 border-emerald-600 -mx-3"
+                      >
+                        <div>
+                          <div className="font-semibold text-emerald-800 uppercase tracking-wide text-sm flex items-center gap-1.5">
+                            <GiftIcon size={14} />
+                            {t('giftCard.label', { defaultValue: 'Cadeaubon' })} {gc.maskedCode}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {t('giftCard.balance', { defaultValue: 'Saldo' })}: €{gc.balance.toFixed(2)}
+                            {' • '}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGiftCard(gc.code)}
+                              className="text-gray-500 hover:text-black font-semibold underline"
+                            >
+                              {t('promo.remove', { ns: 'cart' })}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {giftCardDiscount > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-emerald-700">
+                        <span className="uppercase tracking-wide">
+                          {t('giftCard.applied', { defaultValue: 'Cadeaubon toegepast' })}
+                        </span>
+                        <span>-€{giftCardDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!giftCardExpanded ? (
+                  <button
+                    type="button"
+                    onClick={() => setGiftCardExpanded(true)}
+                    className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors border-t border-gray-200 pt-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <GiftIcon size={16} />
+                      <span>
+                        {t('giftCard.title', { defaultValue: 'Cadeaubon toevoegen' })}
+                      </span>
+                    </div>
+                    <ChevronDown size={16} />
+                  </button>
+                ) : (
+                  <div className="space-y-2 border-t border-gray-200 pt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <GiftIcon size={16} />
+                        <span>{t('giftCard.title', { defaultValue: 'Cadeaubon toevoegen' })}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGiftCardExpanded(false)
+                          setGiftCardError('')
+                          setGiftCardInput('')
+                        }}
+                        className="p-1 hover:bg-gray-200 transition-colors rounded"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={giftCardInput}
+                        onChange={(e) => {
+                          setGiftCardInput(e.target.value.toUpperCase())
+                          setGiftCardError('')
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleApplyGiftCard()
+                          }
+                        }}
+                        placeholder={t('giftCard.placeholder', {
+                          defaultValue: 'XXXX-XXXX-XXXX-XXXX',
+                        })}
+                        className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyGiftCard}
+                        disabled={!giftCardInput || giftCardLoading}
+                        className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        {giftCardLoading
+                          ? '...'
+                          : t('promo.apply')}
+                      </button>
+                    </div>
+                    {giftCardError && (
+                      <p className="text-xs text-red-600 font-semibold">{giftCardError}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Loyalty Points Redemption Section */}
                 {isLoggedIn && loyaltyPointsBalance >= 100 && loyaltyDiscount === 0 && (

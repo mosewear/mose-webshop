@@ -8,6 +8,10 @@ import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import { sendOrderNotificationToAdmins } from '@/lib/push-notifications'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
+import {
+  processGiftCardsForPaidOrder,
+  reverseGiftCardsForOrder,
+} from '@/lib/gift-card-processing'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -361,6 +365,11 @@ export async function POST(req: NextRequest) {
         if (order.payment_status === 'paid') {
           console.log(`⚡ Webhook: Order ${order.id} already paid — verifying inventory stamp`)
           await applyInventoryDecrementForPaidOrder(supabase, order.id)
+          try {
+            await processGiftCardsForPaidOrder(supabase, order.id, (order as any).locale || 'nl')
+          } catch (gcErr) {
+            console.error('[WEBHOOK] gift-card processing (idempotent) failed:', gcErr)
+          }
           return NextResponse.json({
             received: true,
             message: 'Order already processed',
@@ -571,7 +580,25 @@ export async function POST(req: NextRequest) {
         } catch (stockError) {
           console.error('❌ Error during stock decrement:', stockError)
         }
-        
+
+        // ============================================
+        // ISSUE GIFT CARDS + SEND DELIVERY EMAILS (idempotent)
+        // ============================================
+        try {
+          const gcRes = await processGiftCardsForPaidOrder(
+            supabase,
+            order.id,
+            (updatedOrder as any)?.locale || (order as any).locale || 'nl'
+          )
+          if (gcRes.issued > 0) {
+            console.log(
+              `🎁 [WEBHOOK] Gift cards issued: ${gcRes.issued}, delivered: ${gcRes.delivered}`
+            )
+          }
+        } catch (gcError) {
+          console.error('[WEBHOOK] gift-card processing failed:', gcError)
+        }
+
         // Send order confirmation email
         if (updatedOrder && !updatedOrder.last_email_sent_at) {
           try {
@@ -757,6 +784,11 @@ export async function POST(req: NextRequest) {
 
         if (order.payment_status === 'paid') {
           await applyInventoryDecrementForPaidOrder(supabase, order.id)
+          try {
+            await processGiftCardsForPaidOrder(supabase, order.id, (order as any).locale || 'nl')
+          } catch (gcErr) {
+            console.error('[WEBHOOK LEGACY] gift-card processing failed:', gcErr)
+          }
           return NextResponse.json({
             received: true,
             message: 'Legacy session: order already paid',
@@ -813,6 +845,16 @@ export async function POST(req: NextRequest) {
               }
             } catch (stockError) {
               console.error('❌ Error during stock decrement (legacy):', stockError)
+            }
+
+            try {
+              await processGiftCardsForPaidOrder(
+                supabase,
+                orderId,
+                (updatedOrder as any)?.locale || 'nl'
+              )
+            } catch (gcError) {
+              console.error('[WEBHOOK LEGACY] gift-card processing failed:', gcError)
             }
             
             // Send order confirmation email
@@ -942,6 +984,14 @@ export async function POST(req: NextRequest) {
               },
             })
             .eq('id', order.id)
+
+          // Release any gift card reservations that were made at checkout
+          // so the balance becomes spendable again.
+          try {
+            await reverseGiftCardsForOrder(supabase, order.id)
+          } catch (gcErr) {
+            console.error('[WEBHOOK payment_failed] gift-card reverse failed:', gcErr)
+          }
 
           console.error(`❌ Payment failed for order ${order.id}: ${paymentIntent.last_payment_error?.message}`)
         }
@@ -1089,6 +1139,14 @@ export async function POST(req: NextRequest) {
                 },
               })
               .eq('id', order.id)
+
+            // On a full refund, restore any gift-card balance that was
+            // spent on this order so the customer can use it again.
+            try {
+              await reverseGiftCardsForOrder(supabase, order.id)
+            } catch (gcErr) {
+              console.error('[WEBHOOK charge.refunded] gift-card reverse failed:', gcErr)
+            }
 
             console.log(`💰 Refund processed for order ${order.id}: €${(charge.amount_refunded / 100).toFixed(2)}`)
           }

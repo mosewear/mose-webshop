@@ -20,6 +20,11 @@ export interface Database {
           category_id: string | null
           is_featured: boolean
           is_active: boolean
+          is_gift_card: boolean
+          allows_custom_amount: boolean
+          gift_card_min_amount: number | null
+          gift_card_max_amount: number | null
+          gift_card_default_validity_months: number | null
         }
         Insert: {
           id?: string
@@ -31,6 +36,11 @@ export interface Database {
           category_id?: string | null
           is_featured?: boolean
           is_active?: boolean
+          is_gift_card?: boolean
+          allows_custom_amount?: boolean
+          gift_card_min_amount?: number | null
+          gift_card_max_amount?: number | null
+          gift_card_default_validity_months?: number | null
         }
         Update: {
           id?: string
@@ -42,6 +52,11 @@ export interface Database {
           category_id?: string | null
           is_featured?: boolean
           is_active?: boolean
+          is_gift_card?: boolean
+          allows_custom_amount?: boolean
+          gift_card_min_amount?: number | null
+          gift_card_max_amount?: number | null
+          gift_card_default_validity_months?: number | null
         }
       }
       product_variants: {
@@ -155,6 +170,10 @@ export interface Database {
           updated_at: string
           paid_at: string | null
           stock_decremented_at: string | null
+          gift_card_discount: number
+          gift_card_codes: string[] | null
+          is_digital_only: boolean
+          gift_cards_issued_at: string | null
         }
         Insert: {
           id?: string
@@ -182,6 +201,10 @@ export interface Database {
           updated_at?: string
           paid_at?: string | null
           stock_decremented_at?: string | null
+          gift_card_discount?: number
+          gift_card_codes?: string[] | null
+          is_digital_only?: boolean
+          gift_cards_issued_at?: string | null
         }
         Update: {
           id?: string
@@ -209,6 +232,10 @@ export interface Database {
           updated_at?: string
           paid_at?: string | null
           stock_decremented_at?: string | null
+          gift_card_discount?: number
+          gift_card_codes?: string[] | null
+          is_digital_only?: boolean
+          gift_cards_issued_at?: string | null
         }
       }
       inventory_logs: {
@@ -263,6 +290,8 @@ export interface Database {
           quantity: number
           price_at_purchase: number
           sku: string
+          is_gift_card: boolean
+          gift_card_metadata: Json | null
         }
         Insert: {
           id?: string
@@ -274,6 +303,8 @@ export interface Database {
           quantity: number
           price_at_purchase: number
           sku: string
+          is_gift_card?: boolean
+          gift_card_metadata?: Json | null
         }
         Update: {
           id?: string
@@ -285,6 +316,120 @@ export interface Database {
           quantity?: number
           price_at_purchase?: number
           sku?: string
+          is_gift_card?: boolean
+          gift_card_metadata?: Json | null
+        }
+      }
+      gift_cards: {
+        Row: {
+          id: string
+          code_hash: string
+          code_last4: string
+          pending_delivery_code: string | null
+          initial_amount: number
+          balance: number
+          currency: string
+          status: 'active' | 'depleted' | 'expired' | 'cancelled'
+          expires_at: string | null
+          source: 'purchase' | 'admin' | 'refund'
+          purchased_by_email: string | null
+          purchased_by_order_id: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          sender_name: string | null
+          personal_message: string | null
+          scheduled_send_at: string | null
+          delivered_at: string | null
+          delivery_attempts: number
+          last_delivery_error: string | null
+          created_by: string | null
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code_hash: string
+          code_last4: string
+          pending_delivery_code?: string | null
+          initial_amount: number
+          balance: number
+          currency?: string
+          status?: 'active' | 'depleted' | 'expired' | 'cancelled'
+          expires_at?: string | null
+          source?: 'purchase' | 'admin' | 'refund'
+          purchased_by_email?: string | null
+          purchased_by_order_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sender_name?: string | null
+          personal_message?: string | null
+          scheduled_send_at?: string | null
+          delivered_at?: string | null
+          delivery_attempts?: number
+          last_delivery_error?: string | null
+          created_by?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code_hash?: string
+          code_last4?: string
+          pending_delivery_code?: string | null
+          initial_amount?: number
+          balance?: number
+          currency?: string
+          status?: 'active' | 'depleted' | 'expired' | 'cancelled'
+          expires_at?: string | null
+          source?: 'purchase' | 'admin' | 'refund'
+          purchased_by_email?: string | null
+          purchased_by_order_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sender_name?: string | null
+          personal_message?: string | null
+          scheduled_send_at?: string | null
+          delivered_at?: string | null
+          delivery_attempts?: number
+          last_delivery_error?: string | null
+          created_by?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      gift_card_redemptions: {
+        Row: {
+          id: string
+          gift_card_id: string
+          order_id: string
+          amount: number
+          status: 'reserved' | 'committed' | 'reversed'
+          created_at: string
+          committed_at: string | null
+          reversed_at: string | null
+        }
+        Insert: {
+          id?: string
+          gift_card_id: string
+          order_id: string
+          amount: number
+          status?: 'reserved' | 'committed' | 'reversed'
+          created_at?: string
+          committed_at?: string | null
+          reversed_at?: string | null
+        }
+        Update: {
+          id?: string
+          gift_card_id?: string
+          order_id?: string
+          amount?: number
+          status?: 'reserved' | 'committed' | 'reversed'
+          created_at?: string
+          committed_at?: string | null
+          reversed_at?: string | null
         }
       }
     }
@@ -320,6 +465,22 @@ export interface Database {
           p_expected_total: number | null
         }
         Returns: Json
+      }
+      reserve_gift_card_balance: {
+        Args: {
+          p_card_id: string
+          p_order_id: string
+          p_amount: number
+        }
+        Returns: string
+      }
+      commit_gift_card_redemptions_for_order: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
+      reverse_gift_card_redemptions_for_order: {
+        Args: { p_order_id: string }
+        Returns: number
       }
     }
     Enums: {

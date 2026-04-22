@@ -16,8 +16,14 @@ export function normalizePromoCartLine(raw: unknown): {
   const quantity = Math.floor(Number(o.quantity))
   const variantId = String(o.variant_id ?? o.variantId ?? '').trim() || `synthetic-${productId}`
   const name = String(o.product_name ?? o.name ?? 'Product').trim() || 'Product'
+  const isGiftCard = Boolean(o.is_gift_card ?? (o as any).isGiftCard)
 
   if (!productId || !Number.isFinite(unitPrice) || !Number.isFinite(quantity) || quantity < 1) {
+    return null
+  }
+
+  // Gift cards are excluded from staffel and promo eligibility calculations.
+  if (isGiftCard) {
     return null
   }
 

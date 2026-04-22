@@ -1,4 +1,28 @@
 {
+  "giftCard": {
+    "badge": "Gift card",
+    "category": "Gift card",
+    "addedToCart": "Gift card added",
+    "chooseAmount": "Choose an amount",
+    "customAmount": "Custom amount",
+    "customAmountLabel": "Choose between €{min} and €{max}",
+    "customAmountInvalid": "Amount must be between €{min} and €{max}",
+    "valueLabel": "Value",
+    "validityNote": "Valid for {months} months after purchase",
+    "sendAsGift": "Send as a gift to someone else",
+    "sendAsGiftHelp": "The code is emailed directly to the recipient with your personal message.",
+    "recipientName": "Recipient name",
+    "recipientEmail": "Recipient email",
+    "senderName": "From",
+    "message": "Personal message",
+    "scheduleDelivery": "Send on a specific date",
+    "scheduleInvalid": "Pick a date and time in the future.",
+    "addToCart": "Add to cart",
+    "perkDigital": "Delivered instantly by email",
+    "perkCombine": "Also works on sale items",
+    "perkValidity": "Valid for {months} months",
+    "perkValidityFallback": "Balance stays on the card"
+  },
   "payment": {
     "chooseMethod": "Choose your payment method",
     "methods": {
@@ -89,6 +113,16 @@
       "applied": "applied",
       "remove": "Remove code",
       "discountLabel": "Discount"
+    },
+    "giftCard": {
+      "title": "Add gift card",
+      "label": "Gift card",
+      "placeholder": "XXXX-XXXX-XXXX-XXXX",
+      "balance": "Balance",
+      "applied": "Gift card applied",
+      "alreadyApplied": "This gift card is already added.",
+      "invalid": "Code invalid or expired.",
+      "validationFailed": "Validation failed. Please try again."
     },
     "mode": {
       "guest": "Guest Checkout",
@@ -260,6 +294,12 @@
       "applied": "applied",
       "remove": "Remove code",
       "discountLabel": "Discount"
+    },
+    "giftCard": {
+      "value": "Value",
+      "for": "For",
+      "selfDelivery": "Code will be sent to you",
+      "scheduled": "Delivery on"
     },
     "placeholder": {
       "promoCode": "CODE"

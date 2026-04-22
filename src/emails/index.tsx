@@ -21,6 +21,7 @@ export { default as ReturnRefundedEmail } from './ReturnRefunded'
 export { default as ReturnRejectedEmail } from './ReturnRejected'
 export { default as AbandonedCartEmail } from './AbandonedCart'
 export { default as LoyaltyStatusUpdateEmail } from './LoyaltyStatusUpdate'
+export { default as GiftCardDeliveryEmail } from './GiftCardDelivery'
 export { default as ContactFormEmail } from './ContactForm'
 export { default as NewReviewNotificationEmail } from './NewReviewNotification'
 

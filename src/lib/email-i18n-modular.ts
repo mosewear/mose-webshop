@@ -527,6 +527,26 @@ export const modularNl: ModularDict = {
     closing: 'Zorg dat je op tijd bent. Insider love.',
     ps: 'P.S. Zet je notificaties aan, dan mis je de drop niet.',
   },
+
+  // ────────────────────────────────────────────────────────────────
+  // Gift Card Delivery
+  // ────────────────────────────────────────────────────────────────
+  giftCardDelivery: {
+    status: 'Cadeaubon',
+    badge: '▲ Cadeaubon',
+    heroTitle: '{{amount}}\u000ategoed',
+    heroSubtitle: 'Jouw persoonlijke MOSE-cadeaubon. Direct in te lossen bij afrekenen.',
+    heroSubtitleNamed: 'Voor {{name}} — geniet ervan.',
+    preheader: 'Je MOSE cadeaubon van {{amount}} is klaar voor gebruik.',
+    subject: 'Je MOSE cadeaubon van {{amount}}',
+    messageTitle: 'Persoonlijk bericht',
+    codeLabel: 'Jouw cadeaubon-code',
+    amountLabel: 'Saldo',
+    expiryLabel: 'Geldig t/m',
+    bodyIntro:
+      'Gebruik deze code tijdens het afrekenen om je bestelling geheel of gedeeltelijk te betalen. Het resterende saldo blijft op de bon staan voor een volgende keer.',
+    cta: 'Shop nu',
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -1016,5 +1036,25 @@ export const modularEn: ModularDict = {
     shopNow: 'Shop the drop',
     closing: 'Be ready on time. Insider love.',
     ps: "P.S. Turn on notifications so you don't miss the drop.",
+  },
+
+  // ────────────────────────────────────────────────────────────────
+  // Gift Card Delivery
+  // ────────────────────────────────────────────────────────────────
+  giftCardDelivery: {
+    status: 'Gift Card',
+    badge: '▲ Gift Card',
+    heroTitle: '{{amount}}\u000acredit',
+    heroSubtitle: 'Your personal MOSE gift card. Redeem it directly at checkout.',
+    heroSubtitleNamed: 'For {{name}} — enjoy.',
+    preheader: 'Your MOSE gift card of {{amount}} is ready to use.',
+    subject: 'Your MOSE gift card of {{amount}}',
+    messageTitle: 'A personal note',
+    codeLabel: 'Your gift card code',
+    amountLabel: 'Balance',
+    expiryLabel: 'Valid until',
+    bodyIntro:
+      'Use this code at checkout to pay for your order in full or in part. Any remaining balance stays on the card for your next purchase.',
+    cta: 'Shop now',
   },
 }

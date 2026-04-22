@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
+import { processGiftCardsForPaidOrder } from '@/lib/gift-card-processing'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -152,6 +153,16 @@ export async function GET(req: NextRequest) {
       const inv = await applyInventoryDecrementForPaidOrder(supabase, order.id)
       if (!inv.ok && !inv.skipped) {
         console.error('[check-payment-status] Inventory stamp:', inv.reason)
+      }
+      // Also issue + deliver gift cards (idempotent via orders.gift_cards_issued_at).
+      try {
+        await processGiftCardsForPaidOrder(
+          supabase,
+          order.id,
+          (order as any).locale || 'nl'
+        )
+      } catch (gcErr) {
+        console.error('[check-payment-status] gift-card processing failed:', gcErr)
       }
     }
 

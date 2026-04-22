@@ -546,11 +546,42 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 <X size={16} />
                               </button>
                             </div>
-                            <div className="text-gray-600 text-sm space-x-2">
-                              <span>{getTranslatedColor(item.color)}</span>
-                              <span>•</span>
-                              <span>{t('size')} {item.size}</span>
-                            </div>
+                            {item.isGiftCard ? (
+                              <div className="text-gray-600 text-sm space-y-0.5">
+                                <div>
+                                  <span className="uppercase tracking-[0.15em] text-[11px] text-gray-500 mr-1.5">
+                                    {t('giftCard.value', { defaultValue: 'Waarde' })}
+                                  </span>
+                                  <span className="font-medium">€{Number(item.giftCardAmount ?? item.price).toFixed(2)}</span>
+                                </div>
+                                {item.giftCardRecipient?.recipientName ? (
+                                  <div className="text-xs text-gray-600">
+                                    {t('giftCard.for', { defaultValue: 'Voor' })}{' '}
+                                    <span className="font-medium">{item.giftCardRecipient.recipientName}</span>
+                                    {item.giftCardRecipient.recipientEmail ? ` · ${item.giftCardRecipient.recipientEmail}` : ''}
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-gray-500">
+                                    {t('giftCard.selfDelivery', { defaultValue: 'Code wordt naar jou verstuurd' })}
+                                  </div>
+                                )}
+                                {item.giftCardRecipient?.scheduledSendAt ? (
+                                  <div className="text-[11px] text-gray-500">
+                                    {t('giftCard.scheduled', { defaultValue: 'Verzending op' })}{' '}
+                                    {new Date(item.giftCardRecipient.scheduledSendAt).toLocaleString(
+                                      undefined,
+                                      { dateStyle: 'medium', timeStyle: 'short' }
+                                    )}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <div className="text-gray-600 text-sm space-x-2">
+                                <span>{getTranslatedColor(item.color)}</span>
+                                <span>•</span>
+                                <span>{t('size')} {item.size}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Bottom Section - Quantity & Price */}
