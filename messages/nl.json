@@ -342,6 +342,11 @@
     "showMore": "Lees meer",
     "showLess": "Toon minder",
     "inclVat": "Incl. BTW",
+    "quantityDiscount": {
+      "title": "Meer kopen = meer korting",
+      "tier": "{count}+ stuks",
+      "perPiece": "{price} p/s"
+    },
     "presale": {
       "badge": "Presale",
       "expected": "Verwacht",

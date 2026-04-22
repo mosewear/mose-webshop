@@ -342,6 +342,11 @@
     "showMore": "Read more",
     "showLess": "Show less",
     "inclVat": "Incl. VAT",
+    "quantityDiscount": {
+      "title": "Buy more, save more",
+      "tier": "{count}+ pieces",
+      "perPiece": "{price} ea"
+    },
     "presale": {
       "badge": "Presale",
       "expected": "Expected",

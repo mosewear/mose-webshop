@@ -1151,7 +1151,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   return (
                     <div className="border-2 border-black mt-3">
                       <div className="px-3 md:px-4 py-2 bg-black text-white">
-                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Meer kopen = meer korting</p>
+                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider">
+                          {t('quantityDiscount.title')}
+                        </p>
                       </div>
                       <div className="divide-y-2 divide-black">
                         {activeTiers.map((tier) => {
@@ -1162,11 +1164,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           return (
                             <div key={tier.id} className="px-3 md:px-4 py-2 flex items-center justify-between">
                               <span className="text-xs md:text-sm font-bold uppercase tracking-wider">
-                                {tier.min_quantity}+ stuks
+                                {t('quantityDiscount.tier', { count: tier.min_quantity })}
                               </span>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs md:text-sm font-bold">
-                                  €{finalPrice.toFixed(2)} p/s
+                                  {t('quantityDiscount.perPiece', { price: `€${finalPrice.toFixed(2)}` })}
                                 </span>
                                 <span className="inline-flex items-center px-2 py-0.5 bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-wide">
                                   {tier.discount_type === 'percentage'
