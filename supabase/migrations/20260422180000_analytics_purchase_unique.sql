@@ -4,9 +4,28 @@
 -- resulting 23505 (unique_violation) and returns a benign "deduped" success
 -- so the client never sees an error.
 --
--- Partial + expression index: only constrains purchase events that actually
--- carry an order_id, leaving every other event_name unaffected.
+-- Step 1 (cleanup): pre-existing duplicate purchase rows are deleted, keeping
+--                   the earliest event per order_id as the canonical one.
+--                   This is a no-op on fresh databases.
+-- Step 2 (index):   partial + expression index that only constrains purchase
+--                   events carrying a non-null order_id, leaving all other
+--                   event types unaffected.
 
+-- Step 1: collapse duplicates to the oldest row per order_id.
+WITH ranked AS (
+  SELECT id,
+         row_number() OVER (
+           PARTITION BY event_properties->>'order_id'
+           ORDER BY created_at ASC, id ASC
+         ) AS rn
+  FROM analytics_events
+  WHERE event_name = 'purchase'
+    AND (event_properties->>'order_id') IS NOT NULL
+)
+DELETE FROM analytics_events
+WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
+
+-- Step 2: enforce one purchase event per order_id going forward.
 CREATE UNIQUE INDEX IF NOT EXISTS analytics_events_purchase_order_unique
   ON analytics_events ((event_properties->>'order_id'))
   WHERE event_name = 'purchase'

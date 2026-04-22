@@ -27,10 +27,6 @@ CREATE TABLE IF NOT EXISTS gift_cards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code_hash TEXT NOT NULL UNIQUE,
   code_last4 TEXT NOT NULL,
-  -- Plaintext code, only kept for scheduled deliveries. Cleared once the
-  -- delivery email has been successfully sent so the DB never stores
-  -- unnecessary plaintext codes long-term.
-  pending_delivery_code TEXT,
   initial_amount NUMERIC(10,2) NOT NULL CHECK (initial_amount > 0),
   balance NUMERIC(10,2) NOT NULL CHECK (balance >= 0),
   currency TEXT NOT NULL DEFAULT 'EUR',
