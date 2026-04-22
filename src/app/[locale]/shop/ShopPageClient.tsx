@@ -377,25 +377,29 @@ export default function ShopPageClient() {
           <>
             {/* Backdrop */}
             <div
-              className="lg:hidden fixed inset-0 bg-black/80 z-40 transition-opacity"
+              className="lg:hidden fixed inset-0 bg-black/80 z-[60] transition-opacity"
               onClick={() => setMobileFiltersOpen(false)}
               aria-hidden="true"
             />
 
-            {/* Drawer */}
+            {/* Drawer — z-index sits above the announcement banner (z-50) and
+                fixed header (z-40) so the filter overlays the entire top
+                chrome on mobile instead of starting below it. */}
             <div 
               data-filter-drawer
-              className="lg:hidden fixed top-0 bottom-0 right-0 w-[90%] max-w-sm bg-white z-50 border-l-4 border-black flex flex-col animate-slideInRight"
+              className="lg:hidden fixed top-0 bottom-0 right-0 w-[92%] max-w-sm bg-white z-[70] border-l-4 border-black flex flex-col animate-slideInRight shadow-2xl"
             >
               {/* Header - Fixed */}
-              <div className="flex-shrink-0 flex items-center justify-between p-6 border-b-2 border-black bg-white">
-                <h2 className="font-display text-xl uppercase tracking-wide">{t('filters.title')} & {t('sort.title')}</h2>
+              <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 py-4 md:p-6 border-b-2 border-black bg-white">
+                <h2 className="font-display text-lg md:text-xl uppercase tracking-wide truncate">
+                  {t('filters.title')} & {t('sort.title')}
+                </h2>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="p-2 hover:bg-gray-100 transition-colors rounded-sm border-2 border-transparent hover:border-gray-300"
+                  className="flex-shrink-0 w-11 h-11 flex items-center justify-center border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors active:scale-95"
                   aria-label={t('filters.close')}
                 >
-                  <X className="w-7 h-7" strokeWidth={2.5} />
+                  <X className="w-5 h-5" strokeWidth={2.5} />
                 </button>
               </div>
 
