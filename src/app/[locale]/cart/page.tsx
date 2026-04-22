@@ -5,7 +5,10 @@ import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
-import { calculateQuantityDiscount } from '@/lib/quantity-discount'
+import {
+  computeCartStaffelBreakdown,
+  type StaffelHint,
+} from '@/lib/cart-staffel-display'
 import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -20,6 +23,8 @@ export default function CartPage() {
   const [returnDays, setReturnDays] = useState(14)
   const [showMobileSummary, setShowMobileSummary] = useState(false)
   const [staffelSavings, setStaffelSavings] = useState(0)
+  const [lineStaffelByVariant, setLineStaffelByVariant] = useState<Record<string, number>>({})
+  const [staffelHints, setStaffelHints] = useState<StaffelHint[]>([])
   
   const subtotal = getTotal()
   const subtotalAfterStaffel = subtotal - staffelSavings
@@ -43,36 +48,38 @@ export default function CartPage() {
   }, [])
 
   useEffect(() => {
-    if (items.length === 0) { setStaffelSavings(0); return }
+    if (items.length === 0) {
+      setStaffelSavings(0)
+      setLineStaffelByVariant({})
+      setStaffelHints([])
+      return
+    }
     const calc = async () => {
       const supabase = createClient()
-      const productIds = [...new Set(items.map(i => i.productId))]
+      const productIds = [...new Set(items.map((i) => i.productId))]
       const { data: tiers } = await supabase
         .from('product_quantity_discounts')
-        .select('*')
+        .select('product_id, min_quantity, discount_type, discount_value, is_active')
         .in('product_id', productIds)
         .eq('is_active', true)
       const { data: products } = await supabase
         .from('products')
         .select('id, sale_price, base_price')
         .in('id', productIds)
-      if (!tiers || tiers.length === 0) { setStaffelSavings(0); return }
-      const salePriceMap: Record<string, boolean> = {}
-      products?.forEach(p => { salePriceMap[p.id] = !!(p.sale_price && p.sale_price < p.base_price) })
-      const groups: Record<string, { qty: number; price: number }> = {}
-      items.forEach(item => {
-        if (!groups[item.productId]) groups[item.productId] = { qty: 0, price: item.price }
-        groups[item.productId].qty += item.quantity
+      if (!tiers || tiers.length === 0) {
+        setStaffelSavings(0)
+        setLineStaffelByVariant({})
+        setStaffelHints([])
+        return
+      }
+      const saleByProductId: Record<string, boolean> = {}
+      products?.forEach((p) => {
+        if (p.sale_price && p.sale_price < p.base_price) saleByProductId[p.id] = true
       })
-      let savings = 0
-      Object.entries(groups).forEach(([pid, g]) => {
-        if (salePriceMap[pid]) return
-        const productTiers = tiers.filter(t => t.product_id === pid)
-        if (productTiers.length === 0) return
-        const result = calculateQuantityDiscount(g.price, g.qty, productTiers)
-        savings += result.discountPerItem * g.qty
-      })
-      setStaffelSavings(Math.round(savings * 100) / 100)
+      const breakdown = computeCartStaffelBreakdown(items, tiers, saleByProductId)
+      setStaffelSavings(breakdown.totalSavings)
+      setLineStaffelByVariant(breakdown.lineSavingByVariantId)
+      setStaffelHints(breakdown.hints)
     }
     calc()
   }, [items])
@@ -210,6 +217,13 @@ export default function CartPage() {
                       {/* Price */}
                       <div className="text-right">
                         <div className="font-bold text-xl md:text-2xl">€{(item.price * item.quantity).toFixed(2)}</div>
+                        {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
+                          <p className="text-xs text-gray-600 mt-1 max-w-[220px] ml-auto leading-snug">
+                            {t('staffel.lineSaving', {
+                              amount: lineStaffelByVariant[item.variantId].toFixed(2),
+                            })}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -231,6 +245,25 @@ export default function CartPage() {
                 <span className="text-gray-600 uppercase tracking-wider">{t('subtotal')}</span>
                 <span className="font-semibold">€{subtotal.toFixed(2)}</span>
               </div>
+              {staffelSavings > 0 && (
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-600 uppercase tracking-wider">{t('staffel.label')}</span>
+                  <span className="font-semibold">−€{staffelSavings.toFixed(2)}</span>
+                </div>
+              )}
+              {staffelHints.length > 0 && (
+                <div className="text-sm text-gray-600 space-y-1 border-l-2 border-gray-300 pl-3 py-1">
+                  {staffelHints.map((h, i) => (
+                    <p key={`${h.productId}-d-${i}`} className="leading-snug">
+                      {t('staffel.nextTier', {
+                        product: h.productName,
+                        needed: h.needed,
+                        discount: h.discountLabel,
+                      })}
+                    </p>
+                  ))}
+                </div>
+              )}
               <div className="flex justify-between text-base">
                 <span className="text-gray-500 uppercase tracking-wider">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
                 <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
@@ -248,10 +281,12 @@ export default function CartPage() {
             </div>
 
             {/* Progress to Free Shipping */}
-            {subtotal < freeShippingThreshold && (
+            {subtotalAfterStaffel < freeShippingThreshold && (
               <div className="bg-white border-l-4 border-brand-primary px-4 py-3">
                 <p className="text-sm text-gray-600">
-                  {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotal).toFixed(2) })}
+                  {t('freeShippingProgress', {
+                    amount: (freeShippingThreshold - subtotalAfterStaffel).toFixed(2),
+                  })}
                 </p>
               </div>
             )}
@@ -337,6 +372,25 @@ export default function CartPage() {
                   <span className="text-gray-600">{t('subtotal')}</span>
                   <span className="font-semibold">€{subtotal.toFixed(2)}</span>
                 </div>
+                {staffelSavings > 0 && (
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600">{t('staffel.label')}</span>
+                    <span className="font-semibold">−€{staffelSavings.toFixed(2)}</span>
+                  </div>
+                )}
+                {staffelHints.length > 0 && (
+                  <div className="text-xs text-gray-600 space-y-1 border-l-2 border-gray-300 pl-3">
+                    {staffelHints.map((h, i) => (
+                      <p key={`${h.productId}-m-${i}`} className="leading-snug">
+                        {t('staffel.nextTier', {
+                          product: h.productName,
+                          needed: h.needed,
+                          discount: h.discountLabel,
+                        })}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
                   <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
@@ -352,10 +406,12 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                {subtotal < freeShippingThreshold && (
+                {subtotalAfterStaffel < freeShippingThreshold && (
                   <div className="bg-gray-50 border-l-4 border-brand-primary px-4 py-3">
                     <p className="text-sm text-gray-600">
-                      {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotal).toFixed(2) })}
+                      {t('freeShippingProgress', {
+                        amount: (freeShippingThreshold - subtotalAfterStaffel).toFixed(2),
+                      })}
                     </p>
                   </div>
                 )}

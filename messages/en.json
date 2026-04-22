@@ -275,6 +275,11 @@
       "completeLook": "Complete your look",
       "quickAdd": "Add",
       "adding": "Adding..."
+    },
+    "staffel": {
+      "label": "Volume discount",
+      "lineSaving": "Volume discount on this line: −€{amount}",
+      "nextTier": "{product}: add {needed} more for {discount} volume pricing"
     }
   },
   "product": {

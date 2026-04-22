@@ -275,6 +275,11 @@
       "completeLook": "Maak je look compleet",
       "quickAdd": "Toevoegen",
       "adding": "Toevoegen..."
+    },
+    "staffel": {
+      "label": "Staffelkorting",
+      "lineSaving": "Staffel op dit item: −€{amount}",
+      "nextTier": "{product}: nog {needed} voor {discount} staffelkorting"
     }
   },
   "product": {

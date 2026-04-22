@@ -245,15 +245,9 @@ export default function ExpressCheckout({
               }
             })
 
-            // Update order total if staffelkorting applied
             const newSubtotal = orderItems.reduce((sum, item) => sum + (item.subtotal || 0), 0)
-            if (Math.abs(newSubtotal - (subtotal - discount - staffelSavings)) > 0.01) {
-              const newTotal = newSubtotal + shippingCost
-              await supabase
-                .from('orders')
-                .update({ subtotal: newSubtotal, total: newTotal })
-                .eq('id', order.id)
-            }
+            const newTotal =
+              Math.round((newSubtotal - discount + shippingCost) * 100) / 100
 
             const { error: itemsError } = await supabase
               .from('order_items')
@@ -267,26 +261,59 @@ export default function ExpressCheckout({
               return
             }
 
-            // Create payment intent
+            const { error: orderUpdateError } = await supabase
+              .from('orders')
+              .update({ subtotal: newSubtotal, total: newTotal })
+              .eq('id', order.id)
+
+            if (orderUpdateError) {
+              console.error('❌ [Express Checkout] Order total sync failed:', orderUpdateError)
+              e.complete('fail')
+              toast.error(tErrors('generic'))
+              setIsProcessing(false)
+              return
+            }
+
+            const { data: orderForPayment } = await supabase
+              .from('orders')
+              .select('total')
+              .eq('id', order.id)
+              .single()
+
+            const expectedTotal = Math.round(Number(orderForPayment?.total ?? newTotal) * 100) / 100
+
+            // Create payment intent (server validates against persisted order total)
             const response = await fetch('/api/create-payment-intent', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 orderId: order.id,
-                amount: Math.round((subtotal - discount - staffelSavings + shippingCost) * 100),
-                paymentMethodId: e.paymentMethod.id,
+                expectedTotal,
+                customerEmail: e.payerEmail || '',
+                customerName: capitalizeName(e.payerName || ''),
+                shippingAddress: {
+                  name: capitalizeName(e.payerName || ''),
+                  address: e.shippingAddress?.addressLine?.[0] || '',
+                  city: e.shippingAddress?.city || '',
+                  postalCode: e.shippingAddress?.postalCode || '',
+                  country: e.shippingAddress?.country || 'NL',
+                  phone: e.payerPhone || '',
+                },
+                deliveryMethod: 'shipping',
               }),
             })
 
-            const { clientSecret, error: intentError } = await response.json()
+            const intentPayload = await response.json()
 
-            if (intentError || !clientSecret) {
-              console.error('❌ [Express Checkout] Payment intent creation failed:', intentError)
+            if (!response.ok || !intentPayload.clientSecret) {
+              console.error('❌ [Express Checkout] Payment intent creation failed:', intentPayload)
               e.complete('fail')
               toast.error('Fout bij het verwerken van de betaling')
               setIsProcessing(false)
               return
             }
+
+            const { clientSecret } = intentPayload
 
             // Confirm payment
             if (!stripe) {
@@ -318,7 +345,7 @@ export default function ExpressCheckout({
               content_ids: cartItems.map(item => item.productId),
               content_name: cartItems.map(item => item.name).join(', '),
               content_type: 'product',
-              value: subtotal - discount - staffelSavings + shippingCost,
+              value: expectedTotal,
               currency: 'EUR',
               num_items: cartItems.reduce((sum, item) => sum + item.quantity, 0),
             })

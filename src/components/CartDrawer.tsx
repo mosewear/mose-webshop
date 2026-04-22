@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { X, Minus, Plus, Trash2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
@@ -9,6 +9,10 @@ import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import {
+  computeCartStaffelBreakdown,
+  type ProductQtyTierRow,
+} from '@/lib/cart-staffel-display'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -66,7 +70,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [upsellProducts, setUpsellProducts] = useState<any[]>([])
   const [addingProduct, setAddingProduct] = useState<string | null>(null)
   const [selectedUpsellSizes, setSelectedUpsellSizes] = useState<Record<string, string>>({})
-  const [quantityDiscountTiers, setQuantityDiscountTiers] = useState<Record<string, { min_quantity: number; discount_type: string; discount_value: number }[]>>({})
+  const [quantityDiscountTiers, setQuantityDiscountTiers] = useState<
+    Record<string, ProductQtyTierRow[]>
+  >({})
   const [productSalePrices, setProductSalePrices] = useState<Record<string, number | null>>({})
 
   // Load promo from localStorage and revalidate on mount
@@ -83,49 +89,20 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
   }, [])
 
-  const getStaffelInfo = () => {
-    const productGroups: Record<string, { totalQty: number; price: number; productId: string }> = {}
-    items.forEach(item => {
-      if (!productGroups[item.productId]) {
-        productGroups[item.productId] = { totalQty: 0, price: item.price, productId: item.productId }
-      }
-      productGroups[item.productId].totalQty += item.quantity
-    })
-
-    let totalSavings = 0
-    const hints: { productId: string; message: string }[] = []
-
-    Object.entries(productGroups).forEach(([productId, group]) => {
-      if (productSalePrices[productId]) return
-      const tiers = quantityDiscountTiers[productId]
-      if (!tiers || tiers.length === 0) return
-
-      const activeTiers = tiers.filter(t => group.totalQty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)
-      const currentTier = activeTiers[0]
-
-      if (currentTier) {
-        const discountPerItem = currentTier.discount_type === 'percentage'
-          ? group.price * (currentTier.discount_value / 100)
-          : Math.min(currentTier.discount_value, group.price)
-        totalSavings += discountPerItem * group.totalQty
-      }
-
-      const nextTier = tiers.find(t => t.min_quantity > group.totalQty)
-      if (nextTier) {
-        const needed = nextTier.min_quantity - group.totalQty
-        const label = nextTier.discount_type === 'percentage'
-          ? `${nextTier.discount_value}%`
-          : `€${nextTier.discount_value.toFixed(2)}`
-        hints.push({ productId, message: `Nog ${needed} stuk${needed > 1 ? 's' : ''} voor ${label} korting!` })
-      }
-    })
-
-    return { totalSavings: Math.round(totalSavings * 100) / 100, hints }
-  }
-
   const subtotal = getTotal()
-  const staffelInfo = items.length > 0 ? getStaffelInfo() : { totalSavings: 0, hints: [] }
-  const subtotalAfterDiscount = subtotal - promoDiscount - staffelInfo.totalSavings
+  const staffelBreakdown = useMemo(() => {
+    if (items.length === 0) {
+      return { totalSavings: 0, lineSavingByVariantId: {} as Record<string, number>, hints: [] }
+    }
+    const flatTiers = Object.values(quantityDiscountTiers).flat()
+    const saleByProductId: Record<string, boolean> = {}
+    Object.entries(productSalePrices).forEach(([pid, sp]) => {
+      if (sp != null) saleByProductId[pid] = true
+    })
+    return computeCartStaffelBreakdown(items, flatTiers, saleByProductId)
+  }, [items, quantityDiscountTiers, productSalePrices])
+
+  const subtotalAfterDiscount = subtotal - promoDiscount - staffelBreakdown.totalSavings
   const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
   // BTW berekening (21% is al inbegrepen in de prijzen)
@@ -307,7 +284,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
       const { data: tiers } = await supabase
         .from('product_quantity_discounts')
-        .select('product_id, min_quantity, discount_type, discount_value')
+        .select('product_id, min_quantity, discount_type, discount_value, is_active')
         .in('product_id', productIds)
         .eq('is_active', true)
         .order('min_quantity')
@@ -318,10 +295,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         .in('id', productIds)
 
       if (tiers) {
-        const grouped: Record<string, typeof tiers> = {}
-        tiers.forEach(t => {
+        const grouped: Record<string, ProductQtyTierRow[]> = {}
+        tiers.forEach((t) => {
           if (!grouped[t.product_id]) grouped[t.product_id] = []
-          grouped[t.product_id].push(t)
+          grouped[t.product_id].push({
+            product_id: t.product_id,
+            min_quantity: t.min_quantity,
+            discount_type: t.discount_type,
+            discount_value: t.discount_value,
+            is_active: t.is_active,
+          })
         })
         setQuantityDiscountTiers(grouped)
       }
@@ -594,6 +577,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             {/* Price */}
                             <div className="text-right">
                               <div className="font-bold text-lg">€{(item.price * item.quantity).toFixed(2)}</div>
+                              {(staffelBreakdown.lineSavingByVariantId[item.variantId] ?? 0) > 0 && (
+                                <p className="text-xs text-gray-600 mt-1 max-w-[200px] ml-auto leading-snug">
+                                  {t('staffel.lineSaving', {
+                                    amount: staffelBreakdown.lineSavingByVariantId[item.variantId].toFixed(2),
+                                  })}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -842,17 +832,25 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </div>
 
                   {/* Staffelkorting */}
-                  {staffelInfo.totalSavings > 0 && (
+                  {staffelBreakdown.totalSavings > 0 && (
                     <div className="flex justify-between items-center text-sm px-2 py-1.5 bg-gray-50 border-l-2 border-black">
-                      <span className="font-semibold text-gray-800 uppercase tracking-wide text-xs">Staffelkorting</span>
-                      <span className="font-bold text-black">-€{staffelInfo.totalSavings.toFixed(2)}</span>
+                      <span className="font-semibold text-gray-800 uppercase tracking-wide text-xs">{t('staffel.label')}</span>
+                      <span className="font-bold text-black">-€{staffelBreakdown.totalSavings.toFixed(2)}</span>
                     </div>
                   )}
 
                   {/* Staffelkorting hint */}
-                  {staffelInfo.hints.length > 0 && (
-                    <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 border-l-2 border-gray-300">
-                      {staffelInfo.hints.map((h, i) => <p key={i} className="font-medium">{h.message}</p>)}
+                  {staffelBreakdown.hints.length > 0 && (
+                    <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 border-l-2 border-gray-300 space-y-1">
+                      {staffelBreakdown.hints.map((h, i) => (
+                        <p key={`${h.productId}-${i}`} className="font-medium leading-snug">
+                          {t('staffel.nextTier', {
+                            product: h.productName,
+                            needed: h.needed,
+                            discount: h.discountLabel,
+                          })}
+                        </p>
+                      ))}
                     </div>
                   )}
 
@@ -1003,16 +1001,24 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
 
                 {/* Staffelkorting hint - Mobile */}
-                {staffelInfo.hints.length > 0 && (
-                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-                    {staffelInfo.hints.map((h, i) => <p key={i} className="text-xs text-gray-600 font-medium">{h.message}</p>)}
+                {staffelBreakdown.hints.length > 0 && (
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 space-y-1">
+                    {staffelBreakdown.hints.map((h, i) => (
+                      <p key={`${h.productId}-m-${i}`} className="text-xs text-gray-600 font-medium leading-snug">
+                        {t('staffel.nextTier', {
+                          product: h.productName,
+                          needed: h.needed,
+                          discount: h.discountLabel,
+                        })}
+                      </p>
+                    ))}
                   </div>
                 )}
 
-                {staffelInfo.totalSavings > 0 && (
+                {staffelBreakdown.totalSavings > 0 && (
                   <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                    <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
-                    <span className="text-xs font-bold text-black">-€{staffelInfo.totalSavings.toFixed(2)}</span>
+                    <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{t('staffel.label')}</span>
+                    <span className="text-xs font-bold text-black">-€{staffelBreakdown.totalSavings.toFixed(2)}</span>
                   </div>
                 )}
 
