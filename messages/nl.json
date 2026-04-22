@@ -131,7 +131,8 @@
       "addition": "Toevoeging",
       "address": "Straat en huisnummer",
       "city": "Plaats",
-      "phone": "Telefoon"
+      "phone": "Telefoon",
+      "optional": "optioneel"
     },
     "placeholder": {
       "email": "jouw@email.nl",

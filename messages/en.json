@@ -131,7 +131,8 @@
       "addition": "Addition",
       "address": "Street and house number",
       "city": "City",
-      "phone": "Phone"
+      "phone": "Phone",
+      "optional": "optional"
     },
     "placeholder": {
       "email": "your@email.com",

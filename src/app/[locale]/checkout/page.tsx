@@ -971,8 +971,9 @@ export default function CheckoutPage() {
         if (value.length > 10) return 'Maximaal 10 tekens'
         return undefined
       case 'phone': {
-        if (!value.trim()) return tErrors('phone.required')
-        const digits = value.replace(/[\s\-\(\)\.]/g, '')
+        const trimmed = value.trim()
+        if (!trimmed) return undefined
+        const digits = trimmed.replace(/[\s\-\(\)\.]/g, '')
         if (digits.length < 10) return tErrors('phone.invalid')
         return undefined
       }
@@ -2408,7 +2409,10 @@ export default function CheckoutPage() {
                     {/* Phone */}
                     <div>
                       <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
-                        {t('field.phone')} <span className="text-red-600 ml-0.5">*</span>
+                        {t('field.phone')}
+                        <span className="ml-1.5 text-[10px] font-medium normal-case tracking-normal text-gray-400">
+                          ({t('field.optional')})
+                        </span>
                       </label>
                       <input
                         type="tel"
