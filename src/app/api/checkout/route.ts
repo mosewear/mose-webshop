@@ -193,7 +193,19 @@ export async function POST(request: Request) {
     
     if (order.promo_code) {
       console.log('🎟️ Validating promo code:', order.promo_code)
-      
+
+      if (totalQuantityDiscount > 0.005) {
+        console.error('❌ Promo blocked: staffelkorting is actief op deze bestelling')
+        return NextResponse.json(
+          {
+            error: 'Kortingscode niet combineerbaar',
+            details:
+              'Deze kortingscode is niet combineerbaar met staffelkorting. Pas het aantal stuks per product aan of verwijder de kortingscode.',
+          },
+          { status: 400 }
+        )
+      }
+
       const { data: promoCode, error: promoError } = await supabase
         .from('promo_codes')
         .select('*')

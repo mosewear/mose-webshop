@@ -20,6 +20,7 @@ import ExpressCheckout from '@/components/ExpressCheckout'
 import { calculateTierDiscount, getTierDiscountPercent, type LoyaltyTier } from '@/lib/loyalty'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import { computeCartStaffelBreakdown } from '@/lib/cart-staffel-display'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -240,53 +241,33 @@ export default function CheckoutPage() {
   
   const total = subtotalAfterDiscount + shipping
 
-  // Calculate staffelkorting for display on checkout page
+  // Staffel (same model as cart + validate-promo-code)
   useEffect(() => {
-    if (items.length === 0) { setStaffelSavings(0); return }
+    if (items.length === 0) {
+      setStaffelSavings(0)
+      return
+    }
     const calcStaffel = async () => {
-      const supabase = createClient()
-      const productIds = [...new Set(items.map(i => i.productId))]
-
+      const productIds = [...new Set(items.map((i) => i.productId))]
       const { data: tiers } = await supabase
         .from('product_quantity_discounts')
-        .select('product_id, min_quantity, discount_type, discount_value')
+        .select('product_id, min_quantity, discount_type, discount_value, is_active')
         .in('product_id', productIds)
         .eq('is_active', true)
-
       const { data: products } = await supabase
         .from('products')
         .select('id, base_price, sale_price')
         .in('id', productIds)
-
-      if (!tiers || tiers.length === 0) { setStaffelSavings(0); return }
-
-      const salePrices: Record<string, boolean> = {}
-      products?.forEach(p => { salePrices[p.id] = !!(p.sale_price && p.sale_price < p.base_price) })
-
-      const grouped: Record<string, { totalQty: number; items: typeof items }> = {}
-      items.forEach(item => {
-        if (!grouped[item.productId]) grouped[item.productId] = { totalQty: 0, items: [] }
-        grouped[item.productId].totalQty += item.quantity
-        grouped[item.productId].items.push(item)
+      if (!tiers?.length) {
+        setStaffelSavings(0)
+        return
+      }
+      const saleByProductId: Record<string, boolean> = {}
+      products?.forEach((p) => {
+        if (p.sale_price && p.sale_price < p.base_price) saleByProductId[p.id] = true
       })
-
-      let savings = 0
-      Object.entries(grouped).forEach(([productId, group]) => {
-        if (salePrices[productId]) return
-        const productTiers = tiers.filter(t => t.product_id === productId)
-        const applicable = productTiers.filter(t => group.totalQty >= t.min_quantity).sort((a, b) => b.min_quantity - a.min_quantity)
-        const tier = applicable[0]
-        if (!tier) return
-
-        group.items.forEach(item => {
-          const disc = tier.discount_type === 'percentage'
-            ? item.price * (tier.discount_value / 100)
-            : Math.min(tier.discount_value, item.price)
-          savings += disc * item.quantity
-        })
-      })
-
-      setStaffelSavings(Math.round(savings * 100) / 100)
+      const breakdown = computeCartStaffelBreakdown(items, tiers, saleByProductId)
+      setStaffelSavings(breakdown.totalSavings)
     }
     calcStaffel()
   }, [items])
@@ -330,7 +311,17 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             code: savedPromo,
             orderTotal: subtotal,
-            items: items, // ✅ NEW: Send items for no-stacking discount check
+            items: items.map((item) => ({
+              product_id: item.productId,
+              variant_id: item.variantId,
+              unit_price: item.price,
+              quantity: item.quantity,
+              product_name: item.name,
+              slug: item.slug,
+              size: item.size,
+              color: item.color,
+              is_presale: item.isPresale,
+            })),
           }),
         })
 
@@ -368,9 +359,9 @@ export default function CheckoutPage() {
       }
     }
 
-    // Revalidate on mount and when subtotal/items change
+    // Revalidate on mount and when cart lines or subtotal change (qty per line affects staffel)
     revalidatePromo()
-  }, [subtotal, items.length]) // Revalidate when subtotal or item count changes
+  }, [subtotal, items])
 
   useEffect(() => {
     // Check for cancelled payment
@@ -1157,6 +1148,17 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           code: promoCode.toUpperCase(),
           orderTotal: subtotal,
+          items: items.map((item) => ({
+            product_id: item.productId,
+            variant_id: item.variantId,
+            unit_price: item.price,
+            quantity: item.quantity,
+            product_name: item.name,
+            slug: item.slug,
+            size: item.size,
+            color: item.color,
+            is_presale: item.isPresale,
+          })),
         }),
       })
 

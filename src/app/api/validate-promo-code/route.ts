@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createBrowserClient } from '@supabase/supabase-js'
+import {
+  computeActiveStaffelSavingsEuros,
+  normalizePromoCartLine,
+} from '@/lib/promo-staffel-eligibility'
+
+const STAFFEL_PROMO_ERROR =
+  'Deze kortingscode is niet combineerbaar met staffelkorting. Voeg minder stuks toe, of verwijder de staffelkorting door het aantal per product aan te passen.'
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,37 +76,55 @@ export async function POST(req: NextRequest) {
     }
 
     // ============================================
-    // NO-STACKING DISCOUNT LOGIC (same as checkout API)
+    // NO-STACKING: staffel only when it actually reduces the price (qty tiers)
+    // + sale price vs promo (same as checkout API)
     // ============================================
     console.log('🔍 [VALIDATE-PROMO] Checking for existing discounts on items...')
-    
-    // Calculate subtotal of items WITHOUT discount (eligible for promo code)
+
+    if (Array.isArray(items) && items.length > 0) {
+      const staffelSavings = await computeActiveStaffelSavingsEuros(supabaseAdmin, items)
+      if (staffelSavings > 0.005) {
+        console.log('❌ [VALIDATE-PROMO] Staffel active (€' + staffelSavings.toFixed(2) + ') — promo blocked')
+        return NextResponse.json(
+          { valid: false, error: STAFFEL_PROMO_ERROR },
+          { status: 200 }
+        )
+      }
+    }
+
+    // Calculate subtotal of items WITHOUT sale discount (eligible for promo code)
     let subtotalEligibleForPromo = 0
     let subtotalWithExistingDiscount = 0
-    
+
     if (items && items.length > 0) {
       for (const item of items) {
-        // Fetch product to check if it has a sale_price
+        const norm = normalizePromoCartLine(item)
+        const productId = norm?.cartLine.productId
+        if (!productId) {
+          console.error('❌ [VALIDATE-PROMO] Bad line item:', item)
+          continue
+        }
+
         const { data: product, error: productError } = await supabaseAdmin
           .from('products')
           .select('base_price, sale_price')
-          .eq('id', item.product_id)
+          .eq('id', productId)
           .single()
-        
+
         if (productError || !product) {
-          console.error('❌ Product not found:', item.product_id)
+          console.error('❌ Product not found:', productId)
           continue
         }
-        
+
         const hasDiscount = product.sale_price && product.sale_price < product.base_price
-        const itemTotal = item.quantity * item.unit_price
-        
+        const itemTotal = norm.cartLine.quantity * norm.cartLine.price
+
         if (hasDiscount) {
           subtotalWithExistingDiscount += itemTotal
-          console.log(`  ❌ [VALIDATE-PROMO] "${item.product_name}" has discount - NOT eligible`)
+          console.log(`  ❌ [VALIDATE-PROMO] "${norm.cartLine.name}" has sale - NOT eligible`)
         } else {
           subtotalEligibleForPromo += itemTotal
-          console.log(`  ✅ [VALIDATE-PROMO] "${item.product_name}" no discount - eligible`)
+          console.log(`  ✅ [VALIDATE-PROMO] "${norm.cartLine.name}" no sale - eligible`)
         }
       }
       
