@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { RefreshCw, Plus, Search, Printer, Tag } from 'lucide-react'
+import { RefreshCw, Plus, Search, Printer, Tag, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Order {
@@ -40,6 +40,8 @@ export default function AdminOrdersPage() {
   const [showBulkConfirm, setShowBulkConfirm] = useState(false)
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [batchLabelsLoading, setBatchLabelsLoading] = useState(false)
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[] | null>(null)
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false)
   const router = useRouter()
   const supabase = createClient()
   const [page, setPage] = useState(1)
@@ -293,7 +295,37 @@ export default function AdminOrdersPage() {
       return
     }
 
+    if (bulkAction === '__delete__') {
+      setDeleteTargetIds([...selectedOrders])
+      return
+    }
+
     setShowBulkConfirm(true)
+  }
+
+  const confirmDeleteOrders = async () => {
+    if (!deleteTargetIds?.length) return
+    setDeleteSubmitting(true)
+    try {
+      const res = await fetch('/api/admin/orders/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: deleteTargetIds }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Verwijderen mislukt')
+      toast.success(`${data.deleted} order(s) verwijderd`)
+      setDeleteTargetIds(null)
+      setSelectedOrders([])
+      setBulkAction('')
+      fetchOrders()
+      fetchStatusCounts()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Verwijderen mislukt'
+      toast.error(msg)
+    } finally {
+      setDeleteSubmitting(false)
+    }
   }
 
   const executeBulkAction = async () => {
@@ -523,6 +555,33 @@ export default function AdminOrdersPage() {
 
       {/* Orders Table */}
       {/* Bulk Confirmation */}
+      {deleteTargetIds && deleteTargetIds.length > 0 && (
+        <div className="bg-red-50 border-2 border-red-600 p-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <p className="font-bold text-red-900 text-sm md:text-base">
+            <strong>{deleteTargetIds.length}</strong> order(s) permanent verwijderen? Dit kan niet ongedaan worden
+            gemaakt (inclusief orderregels en gekoppelde retourdata).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={confirmDeleteOrders}
+              disabled={deleteSubmitting}
+              className="bg-red-700 text-white font-bold py-2 px-6 uppercase tracking-wider text-sm hover:bg-red-800 transition-colors disabled:opacity-50"
+            >
+              {deleteSubmitting ? 'Bezig…' : 'Definitief verwijderen'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteTargetIds(null)}
+              disabled={deleteSubmitting}
+              className="border-2 border-gray-400 text-gray-800 font-bold py-2 px-6 uppercase tracking-wider text-sm hover:bg-gray-100 transition-colors disabled:opacity-50"
+            >
+              Annuleren
+            </button>
+          </div>
+        </div>
+      )}
+
       {showBulkConfirm && (
         <div className="bg-yellow-50 border-2 border-yellow-400 p-4 mb-4 flex flex-col md:flex-row md:items-center gap-3">
           <span className="font-bold text-yellow-800">
@@ -580,6 +639,7 @@ export default function AdminOrdersPage() {
                   <option value="shipped">Markeer als: Verzonden</option>
                   <option value="delivered">Markeer als: Afgeleverd</option>
                   <option value="cancelled">Markeer als: Geannuleerd</option>
+                  <option value="__delete__">Verwijderen (definitief)…</option>
                 </select>
                 <button
                   onClick={handleBulkAction}
@@ -652,13 +712,23 @@ export default function AdminOrdersPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/admin/orders/${order.id}`}
-                    onClick={saveScrollPosition}
-                    className="mt-3 block w-full text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
-                  >
-                    Details
-                  </Link>
+                  <div className="mt-3 flex gap-2">
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      onClick={saveScrollPosition}
+                      className="flex-1 text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
+                    >
+                      Details
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTargetIds([order.id])}
+                      className="flex-shrink-0 px-3 py-2 border-2 border-red-300 text-red-700 hover:bg-red-50 text-sm font-semibold"
+                      title="Order verwijderen"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -751,13 +821,24 @@ export default function AdminOrdersPage() {
                       {new Date(order.created_at).toLocaleDateString('nl-NL')}
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        onClick={saveScrollPosition}
-                        className="text-brand-primary hover:text-brand-primary-hover font-semibold"
-                      >
-                        Details
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          onClick={saveScrollPosition}
+                          className="text-brand-primary hover:text-brand-primary-hover font-semibold"
+                        >
+                          Details
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTargetIds([order.id])}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          title="Order verwijderen"
+                          aria-label="Order verwijderen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

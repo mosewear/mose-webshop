@@ -7,6 +7,7 @@ import { sendReturnLabelGeneratedEmail } from '@/lib/email'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import { sendOrderNotificationToAdmins } from '@/lib/push-notifications'
 import { getPublicSiteUrl } from '@/lib/site-url'
+import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -356,12 +357,13 @@ export async function POST(req: NextRequest) {
         
         console.log('✅ Webhook: Order found:', order.id)
         
-        // Idempotency: skip if order is already paid
+        // Idempotency: duplicate Stripe events — still ensure inventory was applied
         if (order.payment_status === 'paid') {
-          console.log(`⚡ Webhook: Order ${order.id} already paid - skipping duplicate event`)
-          return NextResponse.json({ 
-            received: true, 
-            message: 'Order already processed' 
+          console.log(`⚡ Webhook: Order ${order.id} already paid — verifying inventory stamp`)
+          await applyInventoryDecrementForPaidOrder(supabase, order.id)
+          return NextResponse.json({
+            received: true,
+            message: 'Order already processed',
           })
         }
         
@@ -557,91 +559,17 @@ export async function POST(req: NextRequest) {
         }
         
         // ============================================
-        // DECREMENT STOCK AFTER PAYMENT SUCCESS
+        // DECREMENT STOCK (idempotent via orders.stock_decremented_at)
         // ============================================
         try {
-          console.log('═════════════════════════════════════════')
-          console.log('📦 [WEBHOOK] STOCK DECREMENT STARTING')
-          console.log('═════════════════════════════════════════')
-          console.log('Order ID:', order.id)
-          console.log('Total items:', updatedOrder.order_items.length)
-          console.log('═════════════════════════════════════════')
-          
-          for (const item of updatedOrder.order_items) {
-            try {
-              // Fetch variant with both regular and presale stock
-              const { data: variant, error: fetchError } = await supabase
-                .from('product_variants')
-                .select('id, stock_quantity, presale_enabled, presale_stock_quantity')
-                .eq('id', item.variant_id)
-                .single()
-              
-              if (fetchError || !variant) {
-                console.error(`⚠️ Could not fetch variant for ${item.product_name}:`, fetchError)
-                continue
-              }
-
-              // Determine if this was a presale purchase
-              const isPresalePurchase = item.is_presale === true
-              
-              console.log(`\n📦 Item: ${item.product_name}`)
-              console.log(`   - Order item is_presale: ${item.is_presale}`)
-              console.log(`   - Calculated isPresalePurchase: ${isPresalePurchase}`)
-              console.log(`   - Variant presale_enabled: ${variant.presale_enabled}`)
-              console.log(`   - Regular stock (before): ${variant.stock_quantity}`)
-              console.log(`   - Presale stock (before): ${variant.presale_stock_quantity}`)
-              console.log(`   - Quantity ordered: ${item.quantity}`)
-
-              if (isPresalePurchase) {
-                // Decrement PRESALE stock
-                const newPresaleStock = Math.max(0, (variant.presale_stock_quantity || 0) - item.quantity)
-                console.log(`   → 🔄 Decrementing PRESALE stock to: ${newPresaleStock}`)
-                
-                const { error: updateError } = await supabase
-                  .from('product_variants')
-                  .update({ 
-                    presale_stock_quantity: newPresaleStock
-                  })
-                  .eq('id', item.variant_id)
-                
-                if (updateError) {
-                  console.error(`   → ❌ Failed to decrement presale stock:`, updateError)
-                } else {
-                  console.log(`   → ✅ Presale stock updated! ${newPresaleStock} remaining`)
-                }
-              } else {
-                // Decrement REGULAR stock
-                const newStock = Math.max(
-                  0,
-                  (variant.stock_quantity ?? 0) - item.quantity
-                )
-                console.log(`   → 🔄 Decrementing REGULAR stock to: ${newStock}`)
-                
-                const { error: updateError } = await supabase
-                  .from('product_variants')
-                  .update({ 
-                    stock_quantity: newStock
-                  })
-                  .eq('id', item.variant_id)
-                
-                if (updateError) {
-                  console.error(`   → ❌ Failed to decrement regular stock:`, updateError)
-                } else {
-                  console.log(`   → ✅ Regular stock updated! ${newStock} remaining`)
-                }
-              }
-            } catch (itemError) {
-              console.error(`❌ Error processing stock for item:`, itemError)
-              // Continue with next item
-            }
+          const inv = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+          if (!inv.ok) {
+            console.error('[WEBHOOK] Inventory decrement failed:', inv.reason)
+          } else if (!inv.skipped) {
+            console.log(`✅ [WEBHOOK] Inventory applied for order ${order.id}`)
           }
-          
-          console.log('═════════════════════════════════════════')
-          console.log('✅ [WEBHOOK] STOCK DECREMENT COMPLETED')
-          console.log('═════════════════════════════════════════')
         } catch (stockError) {
           console.error('❌ Error during stock decrement:', stockError)
-          // Don't fail webhook - order is already paid, stock can be adjusted manually
         }
         
         // Send order confirmation email
@@ -826,6 +754,14 @@ export async function POST(req: NextRequest) {
             session_id: session.id 
           }, { status: 200 })
         }
+
+        if (order.payment_status === 'paid') {
+          await applyInventoryDecrementForPaidOrder(supabase, order.id)
+          return NextResponse.json({
+            received: true,
+            message: 'Legacy session: order already paid',
+          })
+        }
         
         // Update order with payment success
         console.log('💳 Webhook: Updating order to PAID:', orderId)
@@ -870,41 +806,13 @@ export async function POST(req: NextRequest) {
               // Don't fail the webhook, just log the error
             }
             
-            // ============================================
-            // DECREMENT STOCK AFTER PAYMENT SUCCESS
-            // ============================================
             try {
-              console.log('📦 Decrementing stock for order:', orderId)
-              
-              for (const item of updatedOrder.order_items) {
-                const { data: variant, error: stockError } = await supabase
-                  .from('product_variants')
-                  .select('stock_quantity')
-                  .eq('id', item.variant_id)
-                  .gte('stock_quantity', item.quantity)
-                  .single()
-                
-                if (!stockError && variant) {
-                  const before = variant.stock_quantity ?? 0
-                  const after = Math.max(0, before - item.quantity)
-                  await supabase
-                    .from('product_variants')
-                    .update({
-                      stock_quantity: after,
-                    })
-                    .eq('id', item.variant_id)
-
-                  console.log(
-                    `✅ Stock decremented for ${item.product_name}: ${after} remaining`
-                  )
-                } else {
-                  console.error(`⚠️ Could not decrement stock for ${item.product_name}:`, stockError)
-                }
+              const inv = await applyInventoryDecrementForPaidOrder(supabase, orderId)
+              if (!inv.ok) {
+                console.error('[WEBHOOK LEGACY] Inventory decrement failed:', inv.reason)
               }
-              
-              console.log('✅ Stock decrement completed for all items')
             } catch (stockError) {
-              console.error('❌ Error during stock decrement:', stockError)
+              console.error('❌ Error during stock decrement (legacy):', stockError)
             }
             
             // Send order confirmation email

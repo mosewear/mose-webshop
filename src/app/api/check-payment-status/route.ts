@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 import { getPublicSiteUrl } from '@/lib/site-url'
+import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -38,6 +39,8 @@ export async function GET(req: NextRequest) {
       .eq('stripe_payment_intent_id', paymentIntentId)
       .single()
 
+    let fallbackApplied = false
+
     // FALLBACK: If payment succeeded but order is still pending, update it
     // IMPORTANT: Also check if email was already sent to prevent duplicates!
     if (order && paymentIntent.status === 'succeeded' && order.payment_status !== 'paid' && !order.last_email_sent_at) {
@@ -63,6 +66,7 @@ export async function GET(req: NextRequest) {
         .single()
       
       if (!updateError && updatedOrder) {
+        fallbackApplied = true
         console.log('✅ Order updated to PAID via fallback')
         
         // Send confirmation email
@@ -119,8 +123,8 @@ export async function GET(req: NextRequest) {
                 .eq('id', updatedOrder.id)
               
               console.log('✅ [FALLBACK] Email timestamp updated in database')
-            } catch (updateError) {
-              console.error('❌ [FALLBACK] Failed to update email timestamp:', updateError)
+            } catch (emailTsErr) {
+              console.error('❌ [FALLBACK] Failed to update email timestamp:', emailTsErr)
               // Don't fail if timestamp update fails
             }
           } else {
@@ -143,13 +147,31 @@ export async function GET(req: NextRequest) {
       console.log('⚠️ FALLBACK: This should be handled by get-order API')
     }
 
+    // Ensure inventory is applied whenever Stripe says succeeded (idempotent)
+    if (order?.id && paymentIntent.status === 'succeeded') {
+      const inv = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+      if (!inv.ok && !inv.skipped) {
+        console.error('[check-payment-status] Inventory stamp:', inv.reason)
+      }
+    }
+
+    let latestPaymentStatus = order?.payment_status ?? null
+    if (order?.id) {
+      const { data: snap } = await supabase
+        .from('orders')
+        .select('payment_status')
+        .eq('id', order.id)
+        .maybeSingle()
+      if (snap?.payment_status != null) latestPaymentStatus = snap.payment_status
+    }
+
     return NextResponse.json({
       status: paymentIntent.status,
       orderId: order?.id || null,
-      payment_status: order?.payment_status || null,
+      payment_status: latestPaymentStatus,
       amount: paymentIntent.amount,
       currency: paymentIntent.currency,
-      fallback_applied: paymentIntent.status === 'succeeded' && order?.payment_status !== 'paid',
+      fallback_applied: fallbackApplied,
     })
   } catch (error: any) {
     console.error('❌ Error checking payment status:', error)

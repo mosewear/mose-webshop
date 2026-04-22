@@ -154,6 +154,7 @@ export interface Database {
           estimated_delivery_date: string | null
           updated_at: string
           paid_at: string | null
+          stock_decremented_at: string | null
         }
         Insert: {
           id?: string
@@ -180,6 +181,7 @@ export interface Database {
           estimated_delivery_date?: string | null
           updated_at?: string
           paid_at?: string | null
+          stock_decremented_at?: string | null
         }
         Update: {
           id?: string
@@ -206,6 +208,7 @@ export interface Database {
           estimated_delivery_date?: string | null
           updated_at?: string
           paid_at?: string | null
+          stock_decremented_at?: string | null
         }
       }
       inventory_logs: {
