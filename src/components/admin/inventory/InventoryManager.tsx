@@ -10,6 +10,10 @@ import {
   type InventoryLogRow,
 } from '@/lib/admin/inventory-api'
 import { InventorySkuScan } from '@/components/admin/inventory/InventorySkuScan'
+import {
+  sortVariantsByColorSize,
+  sortVariantsByProductColorSize,
+} from '@/lib/variant-sort'
 
 export interface VariantWithProduct {
   id: string
@@ -79,10 +83,10 @@ export default function InventoryManager() {
           product:products(id, name, base_price)
         `
         )
-        .order('stock_quantity', { ascending: true })
 
       if (fetchError) throw fetchError
-      setVariants((data as VariantWithProduct[]) || [])
+      const rows = (data as VariantWithProduct[]) || []
+      setVariants(sortVariantsByProductColorSize(rows))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Fout bij laden')
     } finally {
@@ -377,6 +381,9 @@ export default function InventoryManager() {
       const arr = map.get(pid) ?? []
       arr.push(v)
       map.set(pid, arr)
+    }
+    for (const [pid, arr] of map) {
+      map.set(pid, sortVariantsByColorSize(arr))
     }
     return map
   }, [filteredVariants])

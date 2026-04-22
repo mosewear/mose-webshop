@@ -6,6 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { postInventoryReceive } from '@/lib/admin/inventory-api'
 import type { VariantWithProduct } from '@/components/admin/inventory/InventoryManager'
+import {
+  sortVariantsByColorSize,
+  sortVariantsByProductColorSize,
+} from '@/lib/variant-sort'
 
 type Line = {
   variantId: string
@@ -46,11 +50,13 @@ export default function ReceivingWizard() {
           product:products(id, name, base_price)
         `
         )
-        .order('product_id', { ascending: true })
 
       if (error) throw error
-      setVariants((data as VariantWithProduct[]) || [])
-      const firstPid = (data as VariantWithProduct[])?.[0]?.product?.id
+      const rows = sortVariantsByProductColorSize(
+        (data as VariantWithProduct[]) || []
+      )
+      setVariants(rows)
+      const firstPid = rows[0]?.product?.id
       if (firstPid) setMatrixProductId(firstPid)
     } catch (e) {
       console.error(e)
@@ -74,7 +80,9 @@ export default function ReceivingWizard() {
 
   const matrixVariants = useMemo(() => {
     if (!matrixProductId) return []
-    return variants.filter((v) => v.product.id === matrixProductId)
+    return sortVariantsByColorSize(
+      variants.filter((v) => v.product.id === matrixProductId)
+    )
   }, [variants, matrixProductId])
 
   const skuToVariant = useMemo(() => {
