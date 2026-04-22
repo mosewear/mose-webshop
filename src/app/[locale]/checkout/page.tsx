@@ -2075,7 +2075,7 @@ export default function CheckoutPage() {
                       <div className="space-y-3">
                         {/* Desktop: Grid layout */}
                         <div className="hidden md:grid md:grid-cols-12 gap-3">
-                        <div className="col-span-2 flex flex-col">
+                        <div className="col-span-3 flex flex-col">
                           <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center whitespace-nowrap">
                             {t('field.postalCode')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
@@ -2182,7 +2182,7 @@ export default function CheckoutPage() {
                         </div>
                         {/* Lookup button - ALLEEN voor Nederland */}
                         {form.country === 'NL' && (
-                          <div className="col-span-6 flex flex-col">
+                          <div className="col-span-5 flex flex-col">
                             <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide text-gray-700 h-5 flex items-center opacity-0 pointer-events-none">
                               &nbsp;
                             </label>
