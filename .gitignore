@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# one-shot exports that may contain customer PII
+trustpilot-invitations-*.csv

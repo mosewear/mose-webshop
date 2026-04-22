@@ -32,6 +32,9 @@ import { config } from 'dotenv'
 import path from 'path'
 
 config({ path: path.resolve(process.cwd(), '.env.local') })
+// Fall back to .env.vercel for vars like NEXT_PUBLIC_SUPABASE_URL or
+// RESEND_API_KEY that only live there on developer machines.
+config({ path: path.resolve(process.cwd(), '.env.vercel') })
 
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderDeliveredEmail } from '../src/lib/email'
