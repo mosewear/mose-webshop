@@ -5,14 +5,41 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
-type DateRange = 'today' | '7d' | '30d' | '90d'
+type DateRange = 'today' | '7d' | '30d' | '90d' | 'year' | 'all'
 
-const DATE_RANGE_OPTIONS: { value: DateRange; label: string; days: number }[] = [
-  { value: 'today', label: 'Vandaag', days: 1 },
-  { value: '7d', label: '7 dagen', days: 7 },
-  { value: '30d', label: '30 dagen', days: 30 },
-  { value: '90d', label: '90 dagen', days: 90 },
+const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: 'today', label: 'Vandaag' },
+  { value: '7d', label: '7 dagen' },
+  { value: '30d', label: '30 dagen' },
+  { value: '90d', label: '90 dagen' },
+  { value: 'year', label: 'Dit jaar' },
+  { value: 'all', label: 'Altijd' },
 ]
+
+// Resolve the active + previous comparison windows for a given range.
+// For rolling day windows we use a symmetric previous window of the same
+// length. For "Dit jaar" we compare against the same-length slice of the
+// previous calendar year. For "Altijd" we include every order ever placed
+// and use an empty previous window so delta badges don't render nonsense.
+function resolveDateWindow(range: DateRange): { currentStart: Date; prevStart: Date } {
+  const now = new Date()
+
+  if (range === 'year') {
+    const currentStart = new Date(now.getFullYear(), 0, 1)
+    const prevStart = new Date(now.getFullYear() - 1, 0, 1)
+    return { currentStart, prevStart }
+  }
+
+  if (range === 'all') {
+    const epoch = new Date(0)
+    return { currentStart: epoch, prevStart: epoch }
+  }
+
+  const days = range === 'today' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 90
+  const currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+  const prevStart = new Date(now.getTime() - 2 * days * 24 * 60 * 60 * 1000)
+  return { currentStart, prevStart }
+}
 
 interface OrderRow {
   status: string
@@ -90,7 +117,8 @@ function computePeriodStats(orders: OrderRow[]): PeriodStats {
   }
 }
 
-function DeltaBadge({ current, previous }: { current: number; previous: number }) {
+function DeltaBadge({ current, previous, disabled }: { current: number; previous: number; disabled?: boolean }) {
+  if (disabled) return null
   if (previous === 0 && current === 0) return null
   const pct = previous === 0 ? 100 : ((current - previous) / previous) * 100
   const positive = pct >= 0
@@ -124,10 +152,9 @@ export default function AdminDashboard() {
     if (isInitial) setLoading(true)
 
     try {
-      const rangeDays = DATE_RANGE_OPTIONS.find(o => o.value === range)!.days
-      const now = new Date()
-      const currentStart = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000)
-      const prevStart = new Date(now.getTime() - 2 * rangeDays * 24 * 60 * 60 * 1000)
+      const { currentStart, prevStart } = resolveDateWindow(range)
+      const ordersQuery = supabase.from('orders')
+        .select('status, payment_status, total, checkout_started_at, created_at')
 
       const [
         productsRes,
@@ -140,9 +167,9 @@ export default function AdminDashboard() {
         supabase.from('products').select('id', { count: 'exact', head: true }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
         supabase.from('product_variants').select('stock_quantity'),
-        supabase.from('orders')
-          .select('status, payment_status, total, checkout_started_at, created_at')
-          .gte('created_at', prevStart.toISOString()),
+        range === 'all'
+          ? ordersQuery
+          : ordersQuery.gte('created_at', prevStart.toISOString()),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('orders')
           .select('id', { count: 'exact', head: true })
@@ -161,11 +188,17 @@ export default function AdminDashboard() {
       const totalCustomers = customersRes.count || 0
 
       const allOrders: OrderRow[] = ordersRes.data || []
-      const currentOrders = allOrders.filter(o => new Date(o.created_at) >= currentStart)
-      const prevOrders = allOrders.filter(o => {
-        const d = new Date(o.created_at)
-        return d >= prevStart && d < currentStart
-      })
+      const currentOrders = range === 'all'
+        ? allOrders
+        : allOrders.filter(o => new Date(o.created_at) >= currentStart)
+      // For "all time" there is no sensible previous window to compare against,
+      // so we intentionally leave prevOrders empty which suppresses delta badges.
+      const prevOrders = range === 'all'
+        ? []
+        : allOrders.filter(o => {
+            const d = new Date(o.created_at)
+            return d >= prevStart && d < currentStart
+          })
 
       const currentPeriod = computePeriodStats(currentOrders)
       const previousPeriod = computePeriodStats(prevOrders)
@@ -287,7 +320,7 @@ export default function AdminDashboard() {
               <div className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display group-hover:scale-105 transition-transform truncate">
                 €{stats.totalRevenue.toFixed(2)}
               </div>
-              <DeltaBadge current={stats.totalRevenue} previous={prevStats.totalRevenue} />
+              <DeltaBadge current={stats.totalRevenue} previous={prevStats.totalRevenue} disabled={dateRange === 'all'} />
             </div>
           </div>
           <div className="text-lg md:text-xl uppercase tracking-wider font-bold flex items-center justify-between">
@@ -386,7 +419,7 @@ export default function AdminDashboard() {
             </div>
             <div className="text-right">
               <div className="text-3xl md:text-4xl font-bold text-green-600">{stats.totalOrders}</div>
-              <DeltaBadge current={stats.totalOrders} previous={prevStats.totalOrders} />
+              <DeltaBadge current={stats.totalOrders} previous={prevStats.totalOrders} disabled={dateRange === 'all'} />
             </div>
           </div>
           <div className="text-sm md:text-base text-gray-600 uppercase tracking-wide font-semibold">Orders</div>
@@ -404,7 +437,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Conversie</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-brand-primary">{stats.conversionRate.toFixed(1)}%</span>
-              <DeltaBadge current={stats.conversionRate} previous={prevStats.conversionRate} />
+              <DeltaBadge current={stats.conversionRate} previous={prevStats.conversionRate} disabled={dateRange === 'all'} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Checkout → betaald</div>
           </div>
@@ -413,7 +446,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Gem. Orderwaarde</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-brand-primary">€{stats.avgOrderValue.toFixed(2)}</span>
-              <DeltaBadge current={stats.avgOrderValue} previous={prevStats.avgOrderValue} />
+              <DeltaBadge current={stats.avgOrderValue} previous={prevStats.avgOrderValue} disabled={dateRange === 'all'} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Per betaalde order</div>
           </div>
@@ -422,7 +455,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten Mandjes</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-amber-600">{stats.abandonedCarts}</span>
-              <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} />
+              <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} disabled={dateRange === 'all'} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Checkout gestart, niet betaald</div>
           </div>
@@ -431,7 +464,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Onbetaalde Orders</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-red-600">{stats.unpaidOrders}</span>
-              <DeltaBadge current={stats.unpaidOrders} previous={prevStats.unpaidOrders} />
+              <DeltaBadge current={stats.unpaidOrders} previous={prevStats.unpaidOrders} disabled={dateRange === 'all'} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Geen betaling ontvangen</div>
           </div>
@@ -440,7 +473,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Betalingen Pending</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-orange-600">{stats.pendingPayments}</span>
-              <DeltaBadge current={stats.pendingPayments} previous={prevStats.pendingPayments} />
+              <DeltaBadge current={stats.pendingPayments} previous={prevStats.pendingPayments} disabled={dateRange === 'all'} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Wachten op verwerking</div>
           </div>
