@@ -4,11 +4,13 @@ import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { ChevronUp, ChevronDown } from 'lucide-react'
+import GiftCardDenominationsManager from '@/components/admin/GiftCardDenominationsManager'
 
 interface Product {
   id: string
   name: string
   base_price: number
+  is_gift_card?: boolean
 }
 
 interface ProductVariant {
@@ -65,7 +67,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, base_price')
+        .select('id, name, base_price, is_gift_card')
         .eq('id', id)
         .single()
 
@@ -351,10 +353,18 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             </svg>
           </Link>
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1 md:mb-2">Product Varianten</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1 md:mb-2">
+              {product?.is_gift_card ? 'Cadeaubon Coupures' : 'Product Varianten'}
+            </h1>
             {product ? (
               <p className="text-sm md:text-base text-gray-600">
-                {product.name} <span className="text-brand-primary">€{product.base_price.toFixed(2)}</span>
+                {product.name}{' '}
+                <span className="text-brand-primary">€{product.base_price.toFixed(2)}</span>
+                {product.is_gift_card && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20 uppercase tracking-wider">
+                    Cadeaubon
+                  </span>
+                )}
               </p>
             ) : (
               <p className="text-sm md:text-base text-gray-500">Product laden...</p>
@@ -362,7 +372,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
         <div className="flex gap-2">
-          {pendingCount > 0 && (
+          {pendingCount > 0 && !product?.is_gift_card && (
             <button
               onClick={handleSaveAll}
               className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 uppercase tracking-wider transition-colors text-sm md:text-base flex items-center gap-2"
@@ -373,12 +383,14 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
               </span>
             </button>
           )}
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 uppercase tracking-wider transition-colors text-sm md:text-base"
-          >
-            {showAddForm ? 'Annuleren' : '+ Variant'}
-          </button>
+          {!product?.is_gift_card && (
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 md:py-3 px-4 md:px-6 uppercase tracking-wider transition-colors text-sm md:text-base"
+            >
+              {showAddForm ? 'Annuleren' : '+ Variant'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -389,6 +401,18 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         </div>
       )}
 
+      {/* Gift card mode: dedicated denominations manager */}
+      {product?.is_gift_card && (
+        <GiftCardDenominationsManager
+          productId={id}
+          productName={product.name}
+          basePrice={product.base_price}
+        />
+      )}
+
+      {/* Standard variants UI (hidden for gift cards) */}
+      {!product?.is_gift_card && (
+      <>
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
@@ -1036,9 +1060,11 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
           </>
         )}
       </div>
+      </>
+      )}
 
       {/* Sticky Save Button (Mobile) */}
-      {pendingCount > 0 && (
+      {pendingCount > 0 && !product?.is_gift_card && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-lg md:hidden z-50">
           <button
             onClick={handleSaveAll}

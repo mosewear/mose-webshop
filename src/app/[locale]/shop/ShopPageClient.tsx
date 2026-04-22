@@ -25,6 +25,7 @@ interface Product {
   base_price: number
   sale_price: number | null
   category_id: string | null
+  is_gift_card?: boolean
   created_at: string
   category?: {
     name: string
@@ -267,6 +268,7 @@ export default function ShopPageClient() {
     // Filter by stock availability
     if (showInStockOnly) {
       filtered = filtered.filter(p => {
+        if (p.is_gift_card) return true
         const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
         return totalStock > 0
       })
@@ -310,10 +312,12 @@ export default function ShopPageClient() {
   }, [products, selectedCategory, searchQuery, priceRange, minPrice, maxPrice, showInStockOnly, sortBy])
 
   const getTotalStock = (product: Product) => {
+    if (product.is_gift_card) return Number.MAX_SAFE_INTEGER
     return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
   }
 
   const isInStock = (product: Product) => {
+    if (product.is_gift_card) return true
     return getTotalStock(product) > 0
   }
 

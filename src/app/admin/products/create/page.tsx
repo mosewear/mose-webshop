@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import LanguageTabs from '@/components/admin/LanguageTabs'
+import GiftCardFields, { type GiftCardFieldsValue } from '@/components/admin/GiftCardFields'
 
 interface Category {
   id: string
@@ -30,6 +31,14 @@ export default function CreateProductPage() {
     category_id: '',
     meta_title: '',
     meta_description: '',
+  })
+
+  const [giftCard, setGiftCard] = useState<GiftCardFieldsValue>({
+    is_gift_card: false,
+    allows_custom_amount: false,
+    gift_card_min_amount: '',
+    gift_card_max_amount: '',
+    gift_card_default_validity_months: '24',
   })
 
   useEffect(() => {
@@ -85,6 +94,29 @@ export default function CreateProductPage() {
         }
       }
 
+      let giftCardMin: number | null = null
+      let giftCardMax: number | null = null
+      let giftCardValidity: number | null = null
+      if (giftCard.is_gift_card) {
+        if (giftCard.allows_custom_amount) {
+          giftCardMin = parseFloat(giftCard.gift_card_min_amount)
+          giftCardMax = parseFloat(giftCard.gift_card_max_amount)
+          if (!Number.isFinite(giftCardMin) || giftCardMin <= 0) {
+            throw new Error('Vul een geldig minimum bedrag in voor de cadeaubon')
+          }
+          if (!Number.isFinite(giftCardMax) || giftCardMax <= giftCardMin) {
+            throw new Error('Maximum bedrag moet groter zijn dan het minimum')
+          }
+        }
+        if (giftCard.gift_card_default_validity_months) {
+          const months = parseInt(giftCard.gift_card_default_validity_months, 10)
+          if (!Number.isFinite(months) || months <= 0) {
+            throw new Error('Standaard geldigheid moet een positief getal zijn')
+          }
+          giftCardValidity = months
+        }
+      }
+
       // Insert product
       const { data, error: insertError } = await supabase
         .from('products')
@@ -100,6 +132,11 @@ export default function CreateProductPage() {
             category_id: formData.category_id || null,
             meta_title: formData.meta_title || null,
             meta_description: formData.meta_description || null,
+            is_gift_card: giftCard.is_gift_card,
+            allows_custom_amount: giftCard.is_gift_card ? giftCard.allows_custom_amount : false,
+            gift_card_min_amount: giftCard.is_gift_card ? giftCardMin : null,
+            gift_card_max_amount: giftCard.is_gift_card ? giftCardMax : null,
+            gift_card_default_validity_months: giftCard.is_gift_card ? giftCardValidity : null,
           },
         ])
         .select()
@@ -107,8 +144,12 @@ export default function CreateProductPage() {
 
       if (insertError) throw insertError
 
-      // Redirect naar products overzicht
-      router.push('/admin/products')
+      // Cadeaubon → direct naar varianten zodat coupures ingevuld kunnen worden.
+      if (giftCard.is_gift_card && data?.id) {
+        router.push(`/admin/products/${data.id}/variants`)
+      } else {
+        router.push('/admin/products')
+      }
       router.refresh()
     } catch (err: any) {
       setError(err.message)
@@ -297,6 +338,9 @@ export default function CreateProductPage() {
               ))}
             </select>
           </div>
+
+          {/* Gift Card Section */}
+          <GiftCardFields value={giftCard} onChange={setGiftCard} />
 
           {/* SEO Section */}
           <div className="border-t-2 border-gray-200 pt-6">

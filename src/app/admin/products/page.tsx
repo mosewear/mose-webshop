@@ -17,6 +17,7 @@ interface Product {
   sale_price: number | null
   category_id: string | null
   is_active?: boolean
+  is_gift_card?: boolean
   created_at: string
   updated_at: string
   category?: {
@@ -394,7 +395,14 @@ export default function AdminProductsPage() {
                       })()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold text-gray-900 truncate">{product.name}</div>
+                      <div className="text-sm font-bold text-gray-900 truncate flex items-center gap-2">
+                        <span className="truncate">{product.name}</span>
+                        {product.is_gift_card && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-brand-primary text-white uppercase tracking-wider flex-shrink-0">
+                            Cadeaubon
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500 truncate">{product.slug}</div>
                       <div className="mt-2">
                         {product.category ? (
@@ -530,7 +538,14 @@ export default function AdminProductsPage() {
                           })()}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-bold text-gray-900">{product.name}</div>
+                          <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <span>{product.name}</span>
+                            {product.is_gift_card && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-brand-primary text-white uppercase tracking-wider">
+                                Cadeaubon
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-500">{product.slug}</div>
                         </div>
                       </div>

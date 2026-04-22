@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import LanguageTabs from '@/components/admin/LanguageTabs'
+import GiftCardFields, { type GiftCardFieldsValue } from '@/components/admin/GiftCardFields'
 import { Trash2, Plus } from 'lucide-react'
 
 interface Category {
@@ -62,6 +63,14 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     meta_description: '',
   })
 
+  const [giftCard, setGiftCard] = useState<GiftCardFieldsValue>({
+    is_gift_card: false,
+    allows_custom_amount: false,
+    gift_card_min_amount: '',
+    gift_card_max_amount: '',
+    gift_card_default_validity_months: '',
+  })
+
   useEffect(() => {
     fetchCategories()
     if (id) {
@@ -90,17 +99,36 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       if (error) throw error
 
       if (data) {
+        const product = data as Product & {
+          is_gift_card?: boolean | null
+          allows_custom_amount?: boolean | null
+          gift_card_min_amount?: number | string | null
+          gift_card_max_amount?: number | string | null
+          gift_card_default_validity_months?: number | string | null
+        }
         setFormData({
-          name: data.name,
-          name_en: data.name_en || '',
-          slug: data.slug,
-          description: data.description || '',
-          description_en: data.description_en || '',
-          base_price: data.base_price.toString(),
-          sale_price: data.sale_price?.toString() || '',
-          category_id: data.category_id || '',
-          meta_title: data.meta_title || '',
-          meta_description: data.meta_description || '',
+          name: product.name,
+          name_en: product.name_en || '',
+          slug: product.slug,
+          description: product.description || '',
+          description_en: product.description_en || '',
+          base_price: product.base_price.toString(),
+          sale_price: product.sale_price?.toString() || '',
+          category_id: product.category_id || '',
+          meta_title: product.meta_title || '',
+          meta_description: product.meta_description || '',
+        })
+        setGiftCard({
+          is_gift_card: Boolean(product.is_gift_card),
+          allows_custom_amount: Boolean(product.allows_custom_amount),
+          gift_card_min_amount:
+            product.gift_card_min_amount != null ? String(product.gift_card_min_amount) : '',
+          gift_card_max_amount:
+            product.gift_card_max_amount != null ? String(product.gift_card_max_amount) : '',
+          gift_card_default_validity_months:
+            product.gift_card_default_validity_months != null
+              ? String(product.gift_card_default_validity_months)
+              : '',
         })
       }
     } catch (err: any) {
@@ -180,6 +208,29 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         }
       }
 
+      let giftCardMin: number | null = null
+      let giftCardMax: number | null = null
+      let giftCardValidity: number | null = null
+      if (giftCard.is_gift_card) {
+        if (giftCard.allows_custom_amount) {
+          giftCardMin = parseFloat(giftCard.gift_card_min_amount)
+          giftCardMax = parseFloat(giftCard.gift_card_max_amount)
+          if (!Number.isFinite(giftCardMin) || giftCardMin <= 0) {
+            throw new Error('Vul een geldig minimum bedrag in voor de cadeaubon')
+          }
+          if (!Number.isFinite(giftCardMax) || giftCardMax <= giftCardMin) {
+            throw new Error('Maximum bedrag moet groter zijn dan het minimum')
+          }
+        }
+        if (giftCard.gift_card_default_validity_months) {
+          const months = parseInt(giftCard.gift_card_default_validity_months, 10)
+          if (!Number.isFinite(months) || months <= 0) {
+            throw new Error('Standaard geldigheid moet een positief getal zijn')
+          }
+          giftCardValidity = months
+        }
+      }
+
       // Update product
       const { error: updateError } = await supabase
         .from('products')
@@ -194,6 +245,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           category_id: formData.category_id || null,
           meta_title: formData.meta_title || null,
           meta_description: formData.meta_description || null,
+          is_gift_card: giftCard.is_gift_card,
+          allows_custom_amount: giftCard.is_gift_card ? giftCard.allows_custom_amount : false,
+          gift_card_min_amount: giftCard.is_gift_card ? giftCardMin : null,
+          gift_card_max_amount: giftCard.is_gift_card ? giftCardMax : null,
+          gift_card_default_validity_months: giftCard.is_gift_card ? giftCardValidity : null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -500,6 +556,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               ))}
             </select>
           </div>
+
+          {/* Gift Card Section */}
+          <GiftCardFields
+            value={giftCard}
+            onChange={setGiftCard}
+            variantsHref={`/admin/products/${id}/variants`}
+          />
 
           {/* SEO Section */}
           <div className="border-t-2 border-gray-200 pt-6">
