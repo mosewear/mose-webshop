@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { X, SlidersHorizontal, Search } from 'lucide-react'
@@ -82,8 +83,15 @@ export default function ShopPageClient() {
   const [showInStockOnly, setShowInStockOnly] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+  // Tracks whether we are mounted on the client so the mobile drawer portal
+  // can safely target document.body without breaking SSR.
+  const [isMounted, setIsMounted] = useState(false)
   const supabase = createClient()
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Body scroll lock when drawer is open
   useEffect(() => {
@@ -372,8 +380,11 @@ export default function ShopPageClient() {
           )}
         </button>
 
-        {/* Mobile Filter Drawer */}
-        {mobileFiltersOpen && (
+        {/* Mobile Filter Drawer — rendered via a portal on <body> so it is
+            never trapped inside a parent stacking context (the surrounding
+            page wrapper uses `relative z-10`, which would otherwise keep the
+            drawer below the fixed announcement banner + site header). */}
+        {mobileFiltersOpen && isMounted && createPortal(
           <>
             {/* Backdrop */}
             <div
@@ -586,7 +597,8 @@ export default function ShopPageClient() {
                 </div>
               </div>
             </div>
-          </>
+          </>,
+          document.body
         )}
 
         <div className="flex flex-col lg:flex-row gap-8">
