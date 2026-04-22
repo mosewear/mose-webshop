@@ -356,6 +356,7 @@ export type Database = {
           ip_address: string | null
           notes: string | null
           payment_method: string | null
+          review_invitation_sent_at: string | null
           shipped_at: string | null
           shipping_address: Json
           shipping_cost: number | null
@@ -383,6 +384,7 @@ export type Database = {
           ip_address?: string | null
           notes?: string | null
           payment_method?: string | null
+          review_invitation_sent_at?: string | null
           shipped_at?: string | null
           shipping_address: Json
           shipping_cost?: number | null
@@ -410,6 +412,7 @@ export type Database = {
           ip_address?: string | null
           notes?: string | null
           payment_method?: string | null
+          review_invitation_sent_at?: string | null
           shipped_at?: string | null
           shipping_address?: Json
           shipping_cost?: number | null

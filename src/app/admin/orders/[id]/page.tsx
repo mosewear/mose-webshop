@@ -36,6 +36,8 @@ interface Order {
   internal_notes: string | null
   last_email_sent_at: string | null
   last_email_type: string | null
+  review_invitation_sent_at: string | null
+  delivered_at: string | null
   created_at: string
   updated_at: string
 }
@@ -423,6 +425,47 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       alert('✅ Verzend-email verzonden!')
     } catch (err: any) {
       alert(`Fout bij versturen email: ${err.message}`)
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
+  const handleResendReviewInvitation = async (alreadySent: boolean) => {
+    if (!order) return
+    const confirmMsg = alreadySent
+      ? 'Deze review invitation is al verstuurd. Weet je zeker dat je de delivered-email nogmaals wil versturen (klant krijgt dan een dubbele email)?'
+      : 'De delivered-email wordt verstuurd en Trustpilot AFS wordt geBCC\'d voor een review invitation. Doorgaan?'
+    if (!confirm(confirmMsg)) return
+
+    try {
+      setSendingEmail(true)
+      const response = await fetch('/api/admin/trigger-delivered-emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: [order.id], force: alreadySent }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Versturen mislukt')
+      }
+
+      const result = data.results?.[0]
+      if (result?.success && !result?.skipped) {
+        alert(
+          data.trustpilotConfigured
+            ? '✅ Delivered-email verstuurd en Trustpilot AFS geBCC\'d.'
+            : '✅ Delivered-email verstuurd. Waarschuwing: TRUSTPILOT_AFS_BCC_EMAIL is niet geconfigureerd, dus er is geen review invitation naar Trustpilot gestuurd.'
+        )
+        await fetchOrder()
+      } else if (result?.skipped) {
+        alert(`ℹ️ Overgeslagen: ${result.error}`)
+      } else {
+        throw new Error(result?.error || 'Onbekende fout')
+      }
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
     } finally {
       setSendingEmail(false)
     }
@@ -902,6 +945,48 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <strong>Laatste email:</strong> {order.last_email_type} verzonden op {' '}
             {new Date(order.last_email_sent_at).toLocaleString('nl-NL')}
           </div>
+        </div>
+      )}
+
+      {/* Trustpilot Review Invitation Status */}
+      {order.payment_status === 'paid' && (
+        <div
+          className={`border-2 p-4 rounded flex flex-col sm:flex-row sm:items-center gap-3 ${
+            order.review_invitation_sent_at
+              ? 'bg-green-50 border-green-200'
+              : 'bg-amber-50 border-amber-200'
+          }`}
+        >
+          <div className="flex items-center gap-3 flex-1">
+            <CheckCircle2
+              className={`w-5 h-5 shrink-0 ${
+                order.review_invitation_sent_at ? 'text-green-600' : 'text-amber-600'
+              }`}
+            />
+            <div className="text-sm">
+              <strong>Trustpilot review invitation:</strong>{' '}
+              {order.review_invitation_sent_at ? (
+                <>
+                  verstuurd op{' '}
+                  {new Date(order.review_invitation_sent_at).toLocaleString('nl-NL')}
+                </>
+              ) : order.status === 'delivered' ? (
+                <>nog niet verstuurd</>
+              ) : (
+                <>wordt automatisch verstuurd zodra de bestelling &quot;delivered&quot; is</>
+              )}
+            </div>
+          </div>
+          {order.status === 'delivered' && (
+            <button
+              onClick={() => handleResendReviewInvitation(Boolean(order.review_invitation_sent_at))}
+              disabled={sendingEmail}
+              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider border-2 border-current hover:bg-current hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              {order.review_invitation_sent_at ? 'Opnieuw versturen' : 'Nu versturen'}
+            </button>
+          )}
         </div>
       )}
 

@@ -3,7 +3,6 @@
 import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import Script from 'next/script'
 import { MessageCircle, CalendarClock } from 'lucide-react'
 import { useCart } from '@/store/cart'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -285,36 +284,6 @@ export default function OrderConfirmationPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Trustpilot Invitation Script - Exact zoals Trustpilot vereist */}
-      {order && (
-        <Script
-          id="trustpilot-invitation"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              document.addEventListener('DOMContentLoaded', function() {
-                const recipientName = ${JSON.stringify(
-                  order.shipping_address?.name || 
-                  `${order.shipping_address?.firstName || ''} ${order.shipping_address?.lastName || ''}`.trim() ||
-                  'Customer'
-                )};
-                const trustpilot_invitation = {
-                  recipientEmail: ${JSON.stringify(order.email)},
-                  recipientName: recipientName,
-                  referenceId: ${JSON.stringify(order.id)},
-                  source: 'InvitationScript',
-                };
-                if (typeof tp !== 'undefined' && typeof tp === 'function') {
-                  tp('createInvitation', trustpilot_invitation);
-                  console.log('✅ [TRUSTPILOT] Invitation sent:', trustpilot_invitation);
-                } else {
-                  console.warn('⚠️ [TRUSTPILOT] tp function not available yet');
-                }
-              });
-            `,
-          }}
-        />
-      )}
       {/* HERO SECTION - Full Screen Success */}
       <div className="min-h-screen flex flex-col items-center justify-center px-4 pb-32 pt-24 md:pt-32">
         <div className="text-center max-w-3xl mx-auto">

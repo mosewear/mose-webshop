@@ -11,14 +11,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 401 })
     }
 
-    const { orderIds } = await req.json()
+    const { orderIds, force } = await req.json()
 
     if (!Array.isArray(orderIds) || orderIds.length === 0) {
       return NextResponse.json({ error: 'Geen order IDs opgegeven' }, { status: 400 })
     }
 
     const supabase = createServiceRoleClient()
-    const results: { orderId: string; success: boolean; error?: string }[] = []
+    const results: { orderId: string; success: boolean; error?: string; skipped?: boolean }[] = []
+    const trustpilotConfigured = Boolean(process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim())
 
     for (const orderId of orderIds) {
       try {
@@ -38,9 +39,20 @@ export async function POST(req: Request) {
           continue
         }
 
+        if ((order as any).review_invitation_sent_at && !force) {
+          results.push({
+            orderId,
+            success: true,
+            skipped: true,
+            error: `Review invitation al verstuurd op ${(order as any).review_invitation_sent_at}`,
+          })
+          continue
+        }
+
         const customerName = (order.shipping_address as any)?.name || 'Klant'
         const customerEmail = order.email
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+        const locale = (order as any).locale || 'nl'
 
         const orderItems = (order.order_items || []).map((item: any) => ({
           product_id: item.product_id || '',
@@ -57,6 +69,7 @@ export async function POST(req: Request) {
           orderItems,
           shippingAddress: order.shipping_address,
           deliveryDate: new Date().toISOString(),
+          locale,
         })
 
         if (result.success) {
@@ -68,11 +81,13 @@ export async function POST(req: Request) {
             status: 'sent',
           })
 
+          const nowIso = new Date().toISOString()
           await supabase
             .from('orders')
             .update({
-              last_email_sent_at: new Date().toISOString(),
+              last_email_sent_at: nowIso,
               last_email_type: 'delivered',
+              ...(trustpilotConfigured ? { review_invitation_sent_at: nowIso } : {}),
             })
             .eq('id', order.id)
 
@@ -85,7 +100,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ results })
+    return NextResponse.json({ results, trustpilotConfigured })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

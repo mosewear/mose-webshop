@@ -19,6 +19,12 @@ interface OrderDeliveredEmailProps {
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
+  /**
+   * Full order UUID. Rendered as a hidden marker so the Trustpilot AFS
+   * parser (or any other automated system) always has a stable, unambiguous
+   * reference even if the short orderNumber format ever changes.
+   */
+  orderReferenceId?: string
 }
 
 export default function OrderDeliveredEmail({
@@ -30,6 +36,7 @@ export default function OrderDeliveredEmail({
   contactEmail = EMAIL_DEFAULT_CONTACT.email,
   contactPhone = EMAIL_DEFAULT_CONTACT.phone,
   contactAddress = EMAIL_DEFAULT_CONTACT.address,
+  orderReferenceId,
 }: OrderDeliveredEmailProps) {
   const firstName = customerName.split(' ')[0] || customerName
 
@@ -103,6 +110,23 @@ export default function OrderDeliveredEmail({
         contactPhone={contactPhone}
         contactAddress={contactAddress}
       />
+
+      {/* Hidden machine-readable reference for the Trustpilot AFS parser.
+          Never shown to the customer thanks to display:none + zero-sized
+          styles that survive most email clients. */}
+      <div
+        style={{
+          display: 'none',
+          maxHeight: 0,
+          overflow: 'hidden',
+          opacity: 0,
+          color: 'transparent',
+          fontSize: '1px',
+          lineHeight: '1px',
+        }}
+      >
+        Order reference: {orderReferenceId || orderNumber}
+      </div>
     </EmailShell>
   )
 }

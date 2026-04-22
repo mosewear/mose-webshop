@@ -247,9 +247,21 @@ async function handleParcelCreated(payload: SendcloudWebhookPayload) {
 
 async function sendDeliveredEmailForOrder(order: any) {
   try {
+    // Idempotency guard: if we already BCC'd Trustpilot AFS for this order
+    // (e.g. due to a webhook retry or a manual resend), skip re-sending so
+    // the customer doesn't get a duplicate delivered email and Trustpilot
+    // doesn't receive a duplicate invitation trigger.
+    if (order.review_invitation_sent_at) {
+      console.log(
+        `[Sendcloud Webhook] Skipping delivered email for order ${order.id.slice(0, 8)} — review invitation already dispatched at ${order.review_invitation_sent_at}`
+      )
+      return
+    }
+
     const customerName = (order.shipping_address as any)?.name || 'Klant'
     const customerEmail = order.email
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    const locale = (order.locale as string) || 'nl'
 
     const orderItems = (order.order_items || []).map((item: any) => ({
       product_id: item.product_id || '',
@@ -266,6 +278,7 @@ async function sendDeliveredEmailForOrder(order: any) {
       orderItems,
       shippingAddress: order.shipping_address,
       deliveryDate: new Date().toISOString(),
+      locale,
     })
 
     if (result.success) {
@@ -278,15 +291,28 @@ async function sendDeliveredEmailForOrder(order: any) {
       })
 
       const supabase = getSupabase()
-      await supabase
+      const trustpilotConfigured = Boolean(process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim())
+      const nowIso = new Date().toISOString()
+
+      const { error: updateError } = await supabase
         .from('orders')
         .update({
-          last_email_sent_at: new Date().toISOString(),
+          last_email_sent_at: nowIso,
           last_email_type: 'delivered',
+          ...(trustpilotConfigured ? { review_invitation_sent_at: nowIso } : {}),
         })
         .eq('id', order.id)
 
-      console.log(`[Sendcloud Webhook] Delivered email sent for order ${order.id.slice(0, 8)}`)
+      if (updateError) {
+        console.error(
+          `[Sendcloud Webhook] Failed to mark delivered/invitation timestamps for order ${order.id.slice(0, 8)}:`,
+          updateError.message
+        )
+      }
+
+      console.log(
+        `[Sendcloud Webhook] Delivered email sent for order ${order.id.slice(0, 8)} (trustpilot_bcc=${trustpilotConfigured})`
+      )
     } else {
       console.error(`[Sendcloud Webhook] Failed to send delivered email for order ${order.id.slice(0, 8)}`)
     }

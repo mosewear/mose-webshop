@@ -407,8 +407,10 @@ export async function sendOrderDeliveredEmail(props: {
   const html = await render(
     OrderDeliveredEmail({
       orderNumber: props.orderId.slice(0, 8).toUpperCase(),
+      orderReferenceId: props.orderId,
       customerName: props.customerName,
       t,
+      locale,
       siteUrl,
       contactEmail,
       contactPhone,
@@ -416,19 +418,33 @@ export async function sendOrderDeliveredEmail(props: {
     })
   )
 
+  // Trustpilot Automatic Feedback Service — BCC a unique AFS address on the
+  // delivered email so Trustpilot sends a review invitation with the delay
+  // configured in the Trustpilot Business portal. This is 100% server-side
+  // and does NOT depend on cookie consent or third-party JS on the client.
+  const trustpilotBcc = process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim()
+  const bcc = trustpilotBcc ? [trustpilotBcc] : undefined
+
   return await sendAndLog(
     {
       from: 'MOSE Webshop <orders@mosewear.com>',
       to: [props.customerEmail],
+      ...(bcc ? { bcc } : {}),
       subject: t('delivered.subject', {
         orderNumber: props.orderId.slice(0, 8).toUpperCase(),
       }),
       html,
+      headers: {
+        'X-Trustpilot-Reference-Id': props.orderId,
+      },
     },
     {
       templateKey: 'order_delivered',
       orderId: props.orderId,
       locale,
+      metadata: {
+        trustpilot_bcc: Boolean(bcc),
+      },
     }
   )
 }

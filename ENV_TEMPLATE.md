@@ -28,6 +28,20 @@ SENDCLOUD_SECRET_KEY=your_sendcloud_secret_key
 SENDCLOUD_WEBHOOK_SECRET=your_webhook_secret
 ```
 
+## ⭐ **Trustpilot (Review Invitations)**
+```bash
+# Unique AFS BCC address from Trustpilot Business portal
+# (Get reviews → Invitation settings → BCC method). When set, our server-side
+# "order delivered" e-mail BCCs this address so Trustpilot fires the review
+# invitation itself using the delay configured in your Trustpilot portal.
+TRUSTPILOT_AFS_BCC_EMAIL=yourhash.example@invitations.trustpilot.com
+
+# Optional: drive the footer Trustpilot badge visibility. The widget only
+# shows once review count >= min reviews.
+TRUSTPILOT_REVIEW_COUNT=0
+TRUSTPILOT_MIN_REVIEWS=30
+```
+
 ## 🌐 **App Configuration**
 ```bash
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -57,6 +71,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - **Stripe**: [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys)
 - **Resend**: [resend.com/api-keys](https://resend.com/api-keys)
 - **Sendcloud**: [panel.sendcloud.sc](https://panel.sendcloud.sc) → Settings → Integrations → API
+- **Trustpilot**: [business.trustpilot.com](https://business.trustpilot.com) → Get reviews → Invitation settings → BCC method
 
 ---
 

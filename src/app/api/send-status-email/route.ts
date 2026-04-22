@@ -89,6 +89,17 @@ export async function POST(req: NextRequest) {
         break
 
       case 'delivered':
+        // Idempotency guard: if we already dispatched the review-invitation
+        // BCC to Trustpilot AFS, don't re-send the delivered mail (would
+        // both spam the customer and double-trigger the review invitation).
+        if (order.review_invitation_sent_at) {
+          return NextResponse.json({
+            success: true,
+            message: 'Delivered email already sent and review invitation dispatched — skipping duplicate.',
+            alreadySent: true,
+          })
+        }
+
         emailSubject = `Je pakket is bezorgd #${order.id.slice(0, 8).toUpperCase()}`
         result = await sendOrderDeliveredEmail({
           customerEmail,
@@ -103,6 +114,13 @@ export async function POST(req: NextRequest) {
           deliveryDate: new Date().toISOString(),
           locale,
         })
+
+        if (result.success && process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim()) {
+          await supabase
+            .from('orders')
+            .update({ review_invitation_sent_at: new Date().toISOString() })
+            .eq('id', order.id)
+        }
         break
 
       case 'cancelled':

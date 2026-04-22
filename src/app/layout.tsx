@@ -143,30 +143,6 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
-        {/* Trustpilot JavaScript Integration - Only load after cookie consent */}
-        <Script
-          id="trustpilot-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              function initTrustpilot() {
-                (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
-                    a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
-                    f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
-                    tp('register', 'AAbEsaY7hRnD5xEZ');
-              }
-
-              if (typeof window !== 'undefined') {
-                var consent = localStorage.getItem('mose_cookie_consent');
-                if (consent === 'all') {
-                  initTrustpilot();
-                } else {
-                  window.addEventListener('mose-tracking-enabled', initTrustpilot);
-                }
-              }
-            `,
-          }}
-        />
       </head>
       <body className="antialiased font-sans">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">
