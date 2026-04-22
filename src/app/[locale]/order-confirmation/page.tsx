@@ -170,39 +170,62 @@ export default function OrderConfirmationPage({
       setLoading(false)
       
       console.log('🎯 [STEP 3] Tracking analytics...')
-      
-      // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
-      // Dual tracking: Client + Server (CAPI) with user data
-      trackPixelEvent('Purchase', {
-        content_ids: data.items.map((item: OrderItem) => item.id),
-        value: data.order.total,
-        currency: 'EUR',
-        num_items: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
-        transaction_id: data.order.id
-      }, {
-        email: data.order.email,
-        firstName: data.order.shipping_address?.firstName,
-        lastName: data.order.shipping_address?.lastName,
-        phone: data.order.shipping_address?.phone,
-        city: data.order.shipping_address?.city,
-        zip: data.order.shipping_address?.postalCode,
-        country: data.order.shipping_address?.country || 'NL'
-      })
-      
-      // Track custom analytics purchase event
-      trackPurchase({
-        id: data.order.id,
-        total: data.order.total,
-        items_count: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
-        items: data.items.map((item: OrderItem) => ({
-          id: item.id,
-          name: item.product_name,
-          quantity: item.quantity,
-          price: item.price_at_purchase,
-        })),
-      })
-      
-      console.log('✅ [STEP 3] Analytics tracked!')
+
+      // Only fire Purchase analytics when the order is actually paid AND we
+      // haven't already tracked it for this order on this device. This guards
+      // against: unpaid / pending orders reaching the confirmation URL, React
+      // Strict Mode double mount, page refresh, back-navigation and shared
+      // order URLs. Without this, the Live Event Feed shows phantom purchase
+      // events for the same order.
+      const trackKey = `mose_tracked_purchase_${data.order.id}`
+      const alreadyTracked = typeof window !== 'undefined'
+        ? Boolean(window.localStorage.getItem(trackKey))
+        : false
+
+      if (data.order.payment_status === 'paid' && !alreadyTracked) {
+        try {
+          window.localStorage.setItem(trackKey, String(Date.now()))
+        } catch {
+          // localStorage may be unavailable (private mode, quota); fall through.
+        }
+
+        // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
+        // Dual tracking: Client + Server (CAPI) with user data
+        trackPixelEvent('Purchase', {
+          content_ids: data.items.map((item: OrderItem) => item.id),
+          value: data.order.total,
+          currency: 'EUR',
+          num_items: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
+          transaction_id: data.order.id
+        }, {
+          email: data.order.email,
+          firstName: data.order.shipping_address?.firstName,
+          lastName: data.order.shipping_address?.lastName,
+          phone: data.order.shipping_address?.phone,
+          city: data.order.shipping_address?.city,
+          zip: data.order.shipping_address?.postalCode,
+          country: data.order.shipping_address?.country || 'NL'
+        })
+
+        // Track custom analytics purchase event
+        trackPurchase({
+          id: data.order.id,
+          total: data.order.total,
+          items_count: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
+          items: data.items.map((item: OrderItem) => ({
+            id: item.id,
+            name: item.product_name,
+            quantity: item.quantity,
+            price: item.price_at_purchase,
+          })),
+        })
+
+        console.log('✅ [STEP 3] Analytics tracked!')
+      } else {
+        console.log(
+          `⏭️  [STEP 3] Skipping purchase tracking (paid=${data.order.payment_status === 'paid'}, alreadyTracked=${alreadyTracked})`
+        )
+      }
       console.log('═══════════════════════════════════════════')
       console.log('✅ ORDER CONFIRMATION - FETCH ORDER COMPLETE')
       console.log('═══════════════════════════════════════════')

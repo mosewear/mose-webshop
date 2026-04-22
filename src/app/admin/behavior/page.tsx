@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer, MessageCircle, MapPin } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer, MessageCircle, MapPin, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProductPerformance {
@@ -43,6 +43,76 @@ function countryLabel(code: string | null | undefined): string {
   }
 }
 
+const CURRENCY_FMT = new Intl.NumberFormat('nl-NL', {
+  style: 'currency',
+  currency: 'EUR',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+function shortenUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw) return null
+  try {
+    const u = new URL(raw)
+    const path = u.pathname + (u.search || '')
+    return path.length > 60 ? path.slice(0, 57) + '…' : path
+  } catch {
+    return raw.length > 60 ? raw.slice(0, 57) + '…' : raw
+  }
+}
+
+/**
+ * Render a meaningful detail string per event type. Purchase events in
+ * particular used to show '-' because their payload doesn't carry
+ * `product_name` / `page_url`; now admins immediately see order ref + value.
+ */
+function formatEventDetail(event: RecentEvent): string {
+  const props = (event.event_properties ?? {}) as Record<string, unknown>
+  switch (event.event_name) {
+    case 'purchase': {
+      const orderId = typeof props.order_id === 'string' ? props.order_id : ''
+      const ref = orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : null
+      const value = typeof props.value === 'number' ? CURRENCY_FMT.format(props.value) : null
+      const items = typeof props.items_count === 'number' ? `${props.items_count} items` : null
+      const parts = [ref, value, items].filter(Boolean) as string[]
+      return parts.length ? parts.join(' · ') : '—'
+    }
+    case 'add_to_cart': {
+      const name = typeof props.product_name === 'string' ? props.product_name : null
+      const qty = typeof props.quantity === 'number' ? `×${props.quantity}` : null
+      const price = typeof props.price === 'number' ? CURRENCY_FMT.format(props.price) : null
+      const parts = [name, qty, price].filter(Boolean) as string[]
+      return parts.length ? parts.join(' · ') : '—'
+    }
+    case 'product_view':
+      return typeof props.product_name === 'string' && props.product_name ? props.product_name : '—'
+    case 'checkout_started': {
+      const value = typeof props.value === 'number' ? CURRENCY_FMT.format(props.value) : null
+      const items = typeof props.items_count === 'number' ? `${props.items_count} items` : null
+      const parts = [value, items].filter(Boolean) as string[]
+      return parts.length ? parts.join(' · ') : '—'
+    }
+    case 'chat_opened':
+    case 'chat_closed':
+      return shortenUrl(props.page_url) ?? '—'
+    default:
+      return shortenUrl(props.page_url) ?? '—'
+  }
+}
+
+const EVENT_FILTERS: Array<{ value: 'all' | string; label: string }> = [
+  { value: 'all', label: 'Alle events' },
+  { value: 'purchase', label: 'purchase' },
+  { value: 'checkout_started', label: 'checkout_started' },
+  { value: 'add_to_cart', label: 'add_to_cart' },
+  { value: 'product_view', label: 'product_view' },
+  { value: 'chat_opened', label: 'chat_opened' },
+  { value: 'chat_closed', label: 'chat_closed' },
+]
+
+const FEED_LIMIT = 50
+const FEED_REFRESH_MS = 15_000
+
 interface ChatStats {
   opens_today: number
   opens_7d: number
@@ -59,11 +129,48 @@ export default function BehaviorAnalyticsPage() {
   const [conversionFunnel, setConversionFunnel] = useState<FunnelStep[]>([])
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([])
   const [chatStats, setChatStats] = useState<ChatStats | null>(null)
+  const [eventFilter, setEventFilter] = useState<string>('all')
+  const [feedRefreshing, setFeedRefreshing] = useState(false)
+  const [feedLastUpdate, setFeedLastUpdate] = useState<Date | null>(null)
   const supabase = createClient()
+  const feedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     fetchAnalytics()
   }, [timeRange])
+
+  // Poll only the lightweight "recent events" query — no need to re-run the
+  // expensive funnel / performance RPCs every 15 seconds.
+  const refreshFeed = async () => {
+    setFeedRefreshing(true)
+    try {
+      const { data: events, error: eventsError } = await supabase
+        .from('analytics_events')
+        .select('id, created_at, event_name, event_properties, device_type, country_code')
+        .order('created_at', { ascending: false })
+        .limit(FEED_LIMIT)
+      if (eventsError) {
+        console.error('Error refreshing feed:', eventsError)
+      } else {
+        setRecentEvents(events || [])
+        setFeedLastUpdate(new Date())
+      }
+    } finally {
+      setFeedRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    feedIntervalRef.current = setInterval(refreshFeed, FEED_REFRESH_MS)
+    return () => {
+      if (feedIntervalRef.current) clearInterval(feedIntervalRef.current)
+    }
+  }, [])
+
+  const filteredEvents = useMemo(() => {
+    if (eventFilter === 'all') return recentEvents
+    return recentEvents.filter((e) => e.event_name === eventFilter)
+  }, [recentEvents, eventFilter])
 
   const fetchAnalytics = async () => {
     setLoading(true)
@@ -98,14 +205,15 @@ export default function BehaviorAnalyticsPage() {
       // 3. Get recent events (for live feed)
       const { data: events, error: eventsError} = await supabase
         .from('analytics_events')
-        .select('id, created_at, event_name, event_properties, device_type')
+        .select('id, created_at, event_name, event_properties, device_type, country_code')
         .order('created_at', { ascending: false })
-        .limit(50)
-      
+        .limit(FEED_LIMIT)
+
       if (eventsError) {
         console.error('Error fetching recent events:', eventsError)
       } else {
         setRecentEvents(events || [])
+        setFeedLastUpdate(new Date())
       }
       
       // 4. Get chat statistics
@@ -240,16 +348,40 @@ export default function BehaviorAnalyticsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6">
         {/* Live Event Feed — bovenaan */}
         <div className="bg-white border-2 border-gray-200 p-6">
-          <h2 className="text-xl font-bold mb-1 flex flex-wrap items-center gap-2">
-            Live Event Feed
-            <span className="text-xs font-normal text-gray-500 font-sans">(land o.a. via Vercel edge)</span>
-          </h2>
-          <p className="text-xs text-gray-500 mb-4">
-            Land verschijnt voor nieuwe events na DB-migratie. Lokaal of zonder edge-headers: —.
-          </p>
-          {recentEvents && recentEvents.length > 0 ? (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              <div className="hidden md:flex items-center gap-3 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-gray-500 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-xl font-bold">Live Event Feed</h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Laatste {FEED_LIMIT} events · ververst elke {Math.round(FEED_REFRESH_MS / 1000)}s
+                {feedLastUpdate ? ` · laatst ${feedLastUpdate.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : ''}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={eventFilter}
+                onChange={(e) => setEventFilter(e.target.value)}
+                className="text-xs md:text-sm px-3 py-2 border-2 border-gray-300 bg-white font-semibold focus:border-brand-primary focus:outline-none"
+                aria-label="Filter op event-type"
+              >
+                {EVENT_FILTERS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={refreshFeed}
+                disabled={feedRefreshing}
+                className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm font-bold border-2 border-gray-300 hover:border-brand-primary hover:text-brand-primary transition-colors disabled:opacity-50"
+                aria-label="Ververs feed"
+              >
+                <RefreshCw size={14} className={feedRefreshing ? 'animate-spin' : ''} />
+                Ververs
+              </button>
+            </div>
+          </div>
+
+          {filteredEvents && filteredEvents.length > 0 ? (
+            <div className="space-y-2 max-h-[30rem] overflow-y-auto">
+              <div className="hidden md:flex items-center gap-3 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-gray-500 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <div className="w-32 shrink-0">Tijd</div>
                 <div className="w-40 shrink-0">Event</div>
                 <div className="flex-1 min-w-[120px]">Detail</div>
@@ -259,7 +391,7 @@ export default function BehaviorAnalyticsPage() {
                 </div>
                 <div className="w-20 shrink-0">Device</div>
               </div>
-              {recentEvents.slice(0, 20).map((event) => (
+              {filteredEvents.map((event) => (
                 <div
                   key={event.id}
                   className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-3 bg-gray-50 border border-gray-200 text-xs"
@@ -276,8 +408,8 @@ export default function BehaviorAnalyticsPage() {
                   <div className="w-full md:w-40 font-bold text-brand-primary shrink-0 break-words">
                     {event.event_name}
                   </div>
-                  <div className="flex-1 text-gray-600 min-w-0 break-words md:truncate">
-                    {event.event_properties?.product_name || event.event_properties?.page_url || '-'}
+                  <div className="flex-1 text-gray-600 min-w-0 break-words md:truncate" title={formatEventDetail(event)}>
+                    {formatEventDetail(event)}
                   </div>
                   <div
                     className="w-full md:w-44 text-gray-700 shrink-0 text-[11px] leading-snug"
@@ -290,7 +422,11 @@ export default function BehaviorAnalyticsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">Nog geen events getrackt. Start met shoppen om data te zien!</p>
+            <p className="text-gray-500 text-sm">
+              {recentEvents.length === 0
+                ? 'Nog geen events getrackt. Start met shoppen om data te zien!'
+                : `Geen events van type "${eventFilter}" in de laatste ${FEED_LIMIT}.`}
+            </p>
           )}
         </div>
 
