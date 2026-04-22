@@ -78,8 +78,11 @@ export default function HomePageClient({
         return
       }
 
-      // Success!
-      toast.success(t('newsletter.success'))
+      if (data.alreadySubscribed) {
+        toast.success(t('newsletter.alreadySubscribed'))
+      } else {
+        toast.success(t('newsletter.success'))
+      }
       setNewsletterSuccess(true)
       setNewsletterEmail('')
 

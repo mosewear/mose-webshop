@@ -1067,6 +1067,7 @@
       "submitting": "Verzenden...",
       "subscribed": "Ingeschreven!",
       "success": "Je bent ingeschreven! Check je inbox.",
+      "alreadySubscribed": "Je stond al op de lijst — geen actie nodig.",
       "error": "Er ging iets mis. Probeer het opnieuw.",
       "submitAria": "Schrijf je in voor de MOSE nieuwsbrief",
       "privacy": "We respecteren je privacy. Uitschrijven kan altijd."

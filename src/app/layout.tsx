@@ -13,8 +13,8 @@ const anton = Anton({
   display: 'swap',
 })
 
+// Variable font = one file / fewer link preloads (reduces Chrome “preloaded but not used” noise on routes like checkout).
 const montserrat = Montserrat({
-  weight: ['400', '500', '600', '700', '800'],
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',

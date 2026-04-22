@@ -1116,6 +1116,7 @@
       "submitting": "Submitting...",
       "subscribed": "Subscribed!",
       "success": "You're subscribed! Check your inbox.",
+      "alreadySubscribed": "You're already on the list — all good.",
       "error": "Something went wrong. Please try again.",
       "submitAria": "Subscribe to the MOSE newsletter",
       "privacy": "We respect your privacy. You can unsubscribe anytime."

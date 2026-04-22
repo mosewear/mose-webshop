@@ -116,10 +116,12 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       if (existing.status === 'active') {
-        return NextResponse.json(
-          { success: false, error: 'Dit email adres is al ingeschreven' },
-          { status: 409 }
-        )
+        // 200 + flag: avoids red "failed fetch" in DevTools during checkout when opt-in is on but email is already subscribed
+        return NextResponse.json({
+          success: true,
+          alreadySubscribed: true,
+          message: 'Dit email adres is al ingeschreven',
+        })
       } else if (existing.status === 'unsubscribed') {
         // Resubscribe: update status back to active
         const { error: updateError } = await supabase
