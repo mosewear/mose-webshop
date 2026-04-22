@@ -546,6 +546,7 @@ export const modularNl: ModularDict = {
     bodyIntro:
       'Gebruik deze code tijdens het afrekenen om je bestelling geheel of gedeeltelijk te betalen. Het resterende saldo blijft op de bon staan voor een volgende keer.',
     cta: 'Shop nu',
+    footnote: 'Vragen? Mail ons op {{email}} — we helpen je graag.',
   },
 }
 
@@ -1056,5 +1057,6 @@ export const modularEn: ModularDict = {
     bodyIntro:
       'Use this code at checkout to pay for your order in full or in part. Any remaining balance stays on the card for your next purchase.',
     cta: 'Shop now',
+    footnote: 'Questions? Email us at {{email}} — we are happy to help.',
   },
 }

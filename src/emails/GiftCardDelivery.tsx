@@ -189,6 +189,10 @@ export default function GiftCardDeliveryEmail({
       <EmailCta
         href={`${siteUrl}/${locale}/shop`}
         label={t('giftCardDelivery.cta') || 'Shop nu'}
+        footnote={
+          t('giftCardDelivery.footnote', { email: contactEmail }) ||
+          `Vragen? Mail ${contactEmail}`
+        }
       />
 
       <EmailFooter

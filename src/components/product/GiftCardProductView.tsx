@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import toast from 'react-hot-toast'
-import { Gift, Mail, Calendar, Sparkles } from 'lucide-react'
+import { Gift, Mail, Calendar, Sparkles, Check } from 'lucide-react'
 import { useCart, type GiftCardRecipient } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import { formatPrice } from '@/lib/format-price'
@@ -55,6 +55,17 @@ function parseAmount(value: string): number {
   return Math.round(n * 100) / 100
 }
 
+function safeT(t: ReturnType<typeof useTranslations>, key: string, fallback: string, values?: Record<string, any>): string {
+  try {
+    const v = values ? (t as any)(key, values) : t(key)
+    // next-intl returns key path when missing in production; treat that as missing.
+    if (!v || v === key || v.endsWith(`.${key}`)) return fallback
+    return v as string
+  } catch {
+    return fallback
+  }
+}
+
 export default function GiftCardProductView({ product }: GiftCardProductViewProps) {
   const locale = useLocale()
   const t = useTranslations('giftCard')
@@ -69,8 +80,6 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     locale === 'en' && product.categories?.name_en
       ? product.categories?.name_en
       : product.categories?.name
-
-  const basePrice = product.sale_price ?? product.base_price
 
   // Denominations are stored as product_variants where `size` is the label
   // (e.g. "€50") and the amount = base_price + price_adjustment. Only
@@ -108,6 +117,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const [message, setMessage] = useState('')
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduleDate, setScheduleDate] = useState('')
+  const [justAdded, setJustAdded] = useState(false)
 
   const activeDenomination = denominations.find((d) => d.variantId === selectedVariantId)
   const customAmount = parseAmount(customAmountText)
@@ -137,6 +147,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const primaryImage =
     product.product_images.find((i) => i.is_primary) || product.product_images[0]
   const imageUrl = primaryImage?.url || '/placeholder-product.svg'
+
+  const validityMonths = product.gift_card_default_validity_months
 
   function handleAdd() {
     if (!canAdd || !resolvedVariantId) return
@@ -188,21 +200,52 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
       giftCardRecipient: recipient,
     })
 
-    toast.success(t('addedToCart') || 'Cadeaubon toegevoegd')
+    toast.success(safeT(t, 'addedToCart', locale === 'en' ? 'Gift card added' : 'Cadeaubon toegevoegd'))
+    setJustAdded(true)
+    setTimeout(() => setJustAdded(false), 1500)
     openDrawer()
   }
 
+  // Strings
+  const sBadge = safeT(t, 'badge', locale === 'en' ? 'Gift card' : 'Cadeaubon')
+  const sCategory = categoryName || safeT(t, 'category', locale === 'en' ? 'Gift card' : 'Cadeaubon')
+  const sChooseAmount = safeT(t, 'chooseAmount', locale === 'en' ? 'Choose an amount' : 'Kies een bedrag')
+  const sCustomAmount = safeT(t, 'customAmount', locale === 'en' ? 'Custom' : 'Eigen bedrag')
+  const sCustomLabel = safeT(t, 'customAmountLabel', locale === 'en' ? `Choose between €${minCustom} and €${maxCustom}` : `Zelf kiezen tussen €${minCustom} en €${maxCustom}`, { min: minCustom, max: maxCustom })
+  const sCustomInvalid = safeT(t, 'customAmountInvalid', locale === 'en' ? `Amount must be between €${minCustom} and €${maxCustom}` : `Bedrag moet tussen €${minCustom} en €${maxCustom} liggen`, { min: minCustom, max: maxCustom })
+  const sValue = safeT(t, 'valueLabel', locale === 'en' ? 'Value' : 'Waarde')
+  const sValidity = validityMonths
+    ? safeT(t, 'validityNote', locale === 'en' ? `Valid for ${validityMonths} months` : `Geldig ${validityMonths} maanden`, { months: validityMonths })
+    : null
+  const sSendAsGift = safeT(t, 'sendAsGift', locale === 'en' ? 'Send as a gift to someone' : 'Verstuur als cadeau naar iemand anders')
+  const sSendAsGiftHelp = safeT(t, 'sendAsGiftHelp', locale === 'en'
+    ? 'The code is emailed directly to the recipient with your personal message.'
+    : 'De code wordt rechtstreeks naar de ontvanger gemaild, met jouw persoonlijke bericht.')
+  const sRecipientName = safeT(t, 'recipientName', locale === 'en' ? 'Recipient name' : 'Naam ontvanger')
+  const sRecipientEmail = safeT(t, 'recipientEmail', locale === 'en' ? 'Recipient email' : 'E-mail ontvanger')
+  const sSenderName = safeT(t, 'senderName', locale === 'en' ? 'From' : 'Van')
+  const sMessage = safeT(t, 'message', locale === 'en' ? 'Personal message' : 'Persoonlijk bericht')
+  const sSchedule = safeT(t, 'scheduleDelivery', locale === 'en' ? 'Send on a specific date' : 'Verstuur op een specifieke datum')
+  const sScheduleInvalid = safeT(t, 'scheduleInvalid', locale === 'en' ? 'Pick a date and time in the future.' : 'Kies een datum en tijd in de toekomst.')
+  const sAddToCart = safeT(t, 'addToCart', locale === 'en' ? 'Add to cart' : 'Toevoegen aan winkelmand')
+  const sAdded = safeT(t, 'addedToCart', locale === 'en' ? 'Added' : 'Toegevoegd')
+  const sPerkDigital = safeT(t, 'perkDigital', locale === 'en' ? 'Delivered instantly by email' : 'Direct per e-mail bezorgd')
+  const sPerkCombine = safeT(t, 'perkCombine', locale === 'en' ? 'Works on sale items too' : 'Ook te gebruiken op afgeprijsde items')
+  const sPerkValidity = validityMonths
+    ? safeT(t, 'perkValidity', locale === 'en' ? `Valid for ${validityMonths} months` : `${validityMonths} maanden geldig`, { months: validityMonths })
+    : safeT(t, 'perkValidityFallback', locale === 'en' ? 'Balance stays on the card' : 'Saldo blijft op de bon')
+
   return (
-    <div className="min-h-screen pt-20 md:pt-24 px-4 pb-24 md:pb-16">
+    <div className="min-h-screen pt-20 md:pt-24 px-4 pb-24 md:pb-16 bg-[#f4f1ea]/40">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <div className="mb-6 md:mb-8 text-sm">
+        <div className="mb-6 md:mb-8 text-xs md:text-sm">
           <LocaleLink href="/" className="text-gray-600 hover:text-brand-primary transition-colors">
-            {tCommon('breadcrumb.home') || 'Home'}
+            {safeT(tCommon, 'breadcrumb.home', locale === 'en' ? 'Home' : 'Home')}
           </LocaleLink>
           <span className="mx-2 text-gray-400">/</span>
           <LocaleLink href="/shop" className="text-gray-600 hover:text-brand-primary transition-colors">
-            {tCommon('breadcrumb.shop') || 'Shop'}
+            {safeT(tCommon, 'breadcrumb.shop', locale === 'en' ? 'Shop' : 'Shop')}
           </LocaleLink>
           {categoryName ? (
             <>
@@ -219,9 +262,9 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
           <span className="text-black">{displayName}</span>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 lg:gap-16 items-start">
           {/* Visual */}
-          <div className="relative aspect-square w-full bg-[#f4f1ea] overflow-hidden border border-black/10">
+          <div className="relative aspect-square w-full bg-gradient-to-br from-black to-neutral-900 overflow-hidden border-2 border-black">
             <Image
               src={imageUrl}
               alt={primaryImage?.alt_text || displayName}
@@ -232,32 +275,48 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               blurDataURL={BLUR_DATA_URL}
               priority
             />
-            <div className="absolute top-4 left-4 bg-black text-white text-[11px] tracking-[0.2em] uppercase px-3 py-1.5 flex items-center gap-2">
-              <Gift className="h-3.5 w-3.5" />
-              {t('badge') || 'Cadeaubon'}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute top-4 left-4 bg-brand-primary text-white text-[10px] md:text-[11px] font-bold tracking-[0.25em] uppercase px-3 py-2 flex items-center gap-2 shadow-lg">
+              <Gift className="h-3.5 w-3.5" strokeWidth={2.5} />
+              {sBadge}
             </div>
+            {hasAmount ? (
+              <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-auto bg-black text-white px-4 py-3 md:px-5 md:py-4 border-2 border-white/20">
+                <div className="text-[10px] tracking-[0.3em] uppercase text-white/70 font-bold">
+                  {sValue}
+                </div>
+                <div className="font-display text-3xl md:text-4xl mt-1 leading-none">
+                  {formatPrice(resolvedAmount)}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Form */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5 md:gap-6">
             <div>
-              <div className="text-xs tracking-[0.25em] uppercase text-gray-500 mb-2">
-                {categoryName || (t('category') || 'Cadeaubon')}
+              <div className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-gray-500 mb-2 font-bold">
+                {sCategory}
               </div>
-              <h1 className="font-display text-4xl md:text-5xl tracking-tight uppercase leading-[0.95]">
+              <h1 className="font-display text-3xl md:text-5xl lg:text-6xl tracking-tight uppercase leading-[0.95]">
                 {displayName}
               </h1>
               {displayDescription ? (
-                <p className="mt-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                <p className="mt-4 text-sm md:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {displayDescription}
                 </p>
               ) : null}
             </div>
 
             {/* Amount selector */}
-            <div className="border border-black/10 p-5 bg-white">
-              <div className="text-[11px] tracking-[0.25em] uppercase font-semibold mb-3">
-                {t('chooseAmount') || 'Kies een bedrag'}
+            <div className="border-2 border-black p-4 md:p-5 bg-white">
+              <div className="text-[11px] md:text-xs tracking-[0.25em] uppercase font-bold mb-3 md:mb-4 flex items-center justify-between">
+                <span>{sChooseAmount}</span>
+                {sValidity ? (
+                  <span className="hidden md:inline text-[10px] text-gray-500 tracking-[0.15em]">
+                    {sValidity}
+                  </span>
+                ) : null}
               </div>
 
               {denominations.length > 0 ? (
@@ -270,26 +329,26 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
                         setMode('preset')
                         setSelectedVariantId(d.variantId)
                       }}
-                      className={`py-3 px-2 text-sm border transition-colors ${
+                      className={`py-3 md:py-4 px-2 text-sm md:text-base font-bold border-2 transition-all active:scale-95 ${
                         mode === 'preset' && selectedVariantId === d.variantId
                           ? 'border-black bg-black text-white'
-                          : 'border-black/15 hover:border-black/40'
+                          : 'border-gray-200 hover:border-black bg-white'
                       }`}
                     >
-                      <div className="font-medium">{d.label || formatPrice(d.amount)}</div>
+                      {d.label || formatPrice(d.amount)}
                     </button>
                   ))}
                   {allowCustom ? (
                     <button
                       type="button"
                       onClick={() => setMode('custom')}
-                      className={`py-3 px-2 text-sm border transition-colors ${
+                      className={`py-3 md:py-4 px-2 text-xs md:text-sm font-bold uppercase tracking-wider border-2 transition-all active:scale-95 ${
                         mode === 'custom'
                           ? 'border-black bg-black text-white'
-                          : 'border-black/15 hover:border-black/40'
+                          : 'border-gray-200 hover:border-black bg-white'
                       }`}
                     >
-                      {t('customAmount') || 'Eigen bedrag'}
+                      {sCustomAmount}
                     </button>
                   ) : null}
                 </div>
@@ -297,131 +356,118 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
 
               {mode === 'custom' && allowCustom ? (
                 <div className="mt-4">
-                  <label className="text-[11px] tracking-[0.2em] uppercase text-gray-600 block mb-2">
-                    {t('customAmountLabel', { min: minCustom, max: maxCustom }) ||
-                      `Bedrag (€${minCustom}–€${maxCustom})`}
+                  <label className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-gray-700 font-bold block mb-2">
+                    {sCustomLabel}
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base">€</span>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={customAmountText}
                       onChange={(e) => setCustomAmountText(e.target.value)}
                       placeholder="50.00"
-                      className="w-full border border-black/15 pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-black"
+                      className="w-full border-2 border-gray-200 pl-7 pr-3 py-2.5 md:py-3 text-base font-bold focus:outline-none focus:border-brand-primary transition-colors"
                     />
                   </div>
                   {!validCustom && customAmountText.length > 0 ? (
-                    <p className="text-xs text-red-600 mt-2">
-                      {t('customAmountInvalid', { min: minCustom, max: maxCustom }) ||
-                        `Kies een bedrag tussen €${minCustom} en €${maxCustom}.`}
+                    <p className="text-xs text-red-600 mt-2 font-semibold">
+                      {sCustomInvalid}
                     </p>
                   ) : null}
                 </div>
               ) : null}
 
-              <div className="mt-4 flex items-end justify-between">
-                <div>
-                  <div className="text-[10px] tracking-[0.25em] uppercase text-gray-500">
-                    {t('valueLabel') || 'Waarde'}
-                  </div>
-                  <div className="font-display text-3xl">
-                    {hasAmount ? formatPrice(resolvedAmount) : '—'}
-                  </div>
+              {sValidity ? (
+                <div className="md:hidden mt-3 text-[10px] text-gray-500 tracking-[0.15em] uppercase font-semibold">
+                  {sValidity}
                 </div>
-                {product.gift_card_default_validity_months ? (
-                  <div className="text-xs text-gray-600 max-w-[180px] text-right">
-                    {t('validityNote', { months: product.gift_card_default_validity_months }) ||
-                      `Geldig ${product.gift_card_default_validity_months} maanden na uitgifte.`}
-                  </div>
-                ) : null}
-              </div>
+              ) : null}
             </div>
 
             {/* Gift toggle */}
-            <div className="border border-black/10 p-5 bg-white">
+            <div className="border-2 border-black p-4 md:p-5 bg-white">
               <label className="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={isGift}
                   onChange={(e) => setIsGift(e.target.checked)}
-                  className="mt-1 h-4 w-4 accent-black"
+                  className="mt-1 h-4 w-4 accent-brand-primary"
                 />
                 <div>
-                  <div className="text-sm font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    {t('sendAsGift') || 'Verstuur als cadeau naar iemand anders'}
+                  <div className="text-sm md:text-base font-bold uppercase tracking-wide flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-brand-primary" strokeWidth={2.5} />
+                    {sSendAsGift}
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {t('sendAsGiftHelp') ||
-                      'We sturen de code per e-mail naar de ontvanger. Laat leeg om de code zelf te ontvangen.'}
+                  <p className="text-xs md:text-sm text-gray-600 mt-1 leading-relaxed">
+                    {sSendAsGiftHelp}
                   </p>
                 </div>
               </label>
 
               {isGift ? (
-                <div className="mt-5 space-y-3">
+                <div className="mt-5 space-y-4 pt-5 border-t-2 border-gray-100">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[11px] tracking-[0.2em] uppercase text-gray-600 block mb-1.5">
-                        {t('recipientName') || 'Naam ontvanger'} *
+                      <label className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-gray-700 font-bold block mb-1.5">
+                        {sRecipientName} *
                       </label>
                       <input
                         type="text"
                         value={recipientName}
                         onChange={(e) => setRecipientName(e.target.value)}
-                        className="w-full border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-black"
+                        className="w-full border-2 border-gray-200 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] tracking-[0.2em] uppercase text-gray-600 block mb-1.5">
-                        {t('recipientEmail') || 'E-mail ontvanger'} *
+                      <label className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-gray-700 font-bold block mb-1.5">
+                        {sRecipientEmail} *
                       </label>
                       <input
                         type="email"
                         value={recipientEmail}
                         onChange={(e) => setRecipientEmail(e.target.value)}
-                        className="w-full border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-black"
+                        className="w-full border-2 border-gray-200 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[11px] tracking-[0.2em] uppercase text-gray-600 block mb-1.5">
-                      {t('senderName') || 'Van'}
+                    <label className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-gray-700 font-bold block mb-1.5">
+                      {sSenderName}
                     </label>
                     <input
                       type="text"
                       value={senderName}
                       onChange={(e) => setSenderName(e.target.value)}
-                      className="w-full border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-black"
+                      placeholder={locale === 'en' ? 'Your name' : 'Jouw naam'}
+                      className="w-full border-2 border-gray-200 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] tracking-[0.2em] uppercase text-gray-600 block mb-1.5">
-                      {t('message') || 'Persoonlijk bericht'}
+                    <label className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-gray-700 font-bold block mb-1.5">
+                      {sMessage}
                     </label>
                     <textarea
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       maxLength={500}
                       rows={3}
-                      className="w-full border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-black resize-none"
+                      className="w-full border-2 border-gray-200 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors resize-none"
                     />
-                    <div className="text-[10px] text-gray-500 mt-1 text-right">
+                    <div className="text-[10px] text-gray-500 mt-1 text-right font-medium">
                       {message.length}/500
                     </div>
                   </div>
 
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm md:text-base font-semibold cursor-pointer pt-2">
                     <input
                       type="checkbox"
                       checked={scheduleEnabled}
                       onChange={(e) => setScheduleEnabled(e.target.checked)}
-                      className="h-4 w-4 accent-black"
+                      className="h-4 w-4 accent-brand-primary"
                     />
-                    <Calendar className="h-4 w-4" />
-                    {t('scheduleDelivery') || 'Verstuur op een specifieke datum'}
+                    <Calendar className="h-4 w-4 text-brand-primary" strokeWidth={2.5} />
+                    {sSchedule}
                   </label>
                   {scheduleEnabled ? (
                     <div>
@@ -430,11 +476,11 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
                         value={scheduleDate}
                         min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
                         onChange={(e) => setScheduleDate(e.target.value)}
-                        className="w-full border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-black"
+                        className="w-full border-2 border-gray-200 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"
                       />
                       {!scheduleValid ? (
-                        <p className="text-xs text-red-600 mt-2">
-                          {t('scheduleInvalid') || 'Kies een datum en tijd in de toekomst.'}
+                        <p className="text-xs text-red-600 mt-2 font-semibold">
+                          {sScheduleInvalid}
                         </p>
                       ) : null}
                     </div>
@@ -443,22 +489,34 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               ) : null}
             </div>
 
-            {/* Quantity + CTA */}
-            <div className="flex items-stretch gap-3">
-              <div className="flex items-center border border-black/15">
+            {/* Quantity + CTA (brutalist MOSE style) */}
+            <div className="flex gap-2 md:gap-3">
+              <div className="flex border-2 border-black">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="px-3 h-full hover:bg-black/5"
+                  disabled={quantity <= 1}
+                  className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                    quantity <= 1
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-black text-white hover:bg-gray-800'
+                  }`}
                   aria-label="decrease"
                 >
                   −
                 </button>
-                <span className="px-4 text-sm min-w-[2ch] text-center">{quantity}</span>
+                <div className="w-10 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
+                  {quantity}
+                </div>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-                  className="px-3 h-full hover:bg-black/5"
+                  disabled={quantity >= 50}
+                  className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                    quantity >= 50
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-black text-white hover:bg-gray-800'
+                  }`}
                   aria-label="increase"
                 >
                   +
@@ -467,33 +525,45 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               <button
                 type="button"
                 onClick={handleAdd}
-                disabled={!canAdd}
-                className="flex-1 bg-black text-white font-medium text-sm tracking-[0.15em] uppercase py-3 px-5 hover:bg-gray-900 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={!canAdd || justAdded}
+                className={`flex-1 py-3 md:py-4 text-sm md:text-base font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  justAdded
+                    ? 'bg-black text-white cursor-default'
+                    : canAdd
+                      ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                <Gift className="h-4 w-4" />
-                {t('addToCart') || 'Voeg toe aan winkelmand'}
-                {hasAmount ? ` · ${formatPrice(resolvedAmount * quantity)}` : ''}
+                {justAdded ? (
+                  <>
+                    <Check className="h-4 w-4 md:h-5 md:w-5" strokeWidth={3} />
+                    {sAdded}
+                  </>
+                ) : (
+                  <>
+                    <Gift className="h-4 w-4 md:h-5 md:w-5" strokeWidth={2.5} />
+                    <span className="truncate">
+                      {sAddToCart}
+                      {hasAmount ? ` · ${formatPrice(resolvedAmount * quantity)}` : ''}
+                    </span>
+                  </>
+                )}
               </button>
             </div>
 
             {/* Perks */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-gray-600">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t-2 border-black/10 text-xs md:text-sm">
               <div className="flex items-start gap-2">
-                <Mail className="h-4 w-4 mt-0.5" />
-                <span>{t('perkDigital') || 'Direct per e-mail bezorgd'}</span>
+                <Mail className="h-4 w-4 mt-0.5 text-brand-primary shrink-0" strokeWidth={2.5} />
+                <span className="text-gray-700 font-medium">{sPerkDigital}</span>
               </div>
               <div className="flex items-start gap-2">
-                <Sparkles className="h-4 w-4 mt-0.5" />
-                <span>{t('perkCombine') || 'Ook te gebruiken op afgeprijsde items'}</span>
+                <Sparkles className="h-4 w-4 mt-0.5 text-brand-primary shrink-0" strokeWidth={2.5} />
+                <span className="text-gray-700 font-medium">{sPerkCombine}</span>
               </div>
               <div className="flex items-start gap-2">
-                <Calendar className="h-4 w-4 mt-0.5" />
-                <span>
-                  {product.gift_card_default_validity_months
-                    ? t('perkValidity', { months: product.gift_card_default_validity_months }) ||
-                      `${product.gift_card_default_validity_months} maanden geldig`
-                    : t('perkValidityFallback') || 'Saldo blijft op de bon'}
-                </span>
+                <Calendar className="h-4 w-4 mt-0.5 text-brand-primary shrink-0" strokeWidth={2.5} />
+                <span className="text-gray-700 font-medium">{sPerkValidity}</span>
               </div>
             </div>
           </div>

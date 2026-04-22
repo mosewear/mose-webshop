@@ -172,6 +172,24 @@ export async function deliverDueScheduledGiftCards(
     const toEmail: string = card.recipient_email || ''
     if (!toEmail || !card.pending_delivery_code) continue
 
+    // Resolve the locale for this card: prefer the originating order's
+    // locale so recipients always see the language the purchaser used.
+    let cardLocale = locale
+    if (card.purchased_by_order_id) {
+      try {
+        const { data: order } = await supabase
+          .from('orders')
+          .select('locale')
+          .eq('id', card.purchased_by_order_id)
+          .maybeSingle()
+        if (order && typeof (order as any).locale === 'string' && (order as any).locale) {
+          cardLocale = (order as any).locale
+        }
+      } catch {
+        /* swallow — fall back to default locale */
+      }
+    }
+
     const payload: IssuedGiftCardEmailPayload = {
       code: card.pending_delivery_code,
       amount: Number(card.initial_amount),
@@ -186,7 +204,7 @@ export async function deliverDueScheduledGiftCards(
     }
 
     try {
-      const result = await sendCardEmail(payload, locale, card.purchased_by_order_id)
+      const result = await sendCardEmail(payload, cardLocale, card.purchased_by_order_id)
       if (result?.success) {
         await markDelivered(supabase, card.id)
         sent += 1

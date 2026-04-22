@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Mail, Save, Ban, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Mail, Save, Ban, RotateCcw, Gift } from 'lucide-react'
 
 interface GiftCardDetail {
   id: string
@@ -38,6 +38,13 @@ interface Redemption {
   created_at: string
   committed_at: string | null
   reversed_at: string | null
+}
+
+const STATUS_LABELS: Record<GiftCardDetail['status'], { text: string; cls: string }> = {
+  active: { text: 'Actief', cls: 'bg-green-100 text-green-800 border-green-200' },
+  depleted: { text: 'Leeg', cls: 'bg-gray-100 text-gray-600 border-gray-200' },
+  expired: { text: 'Verlopen', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+  cancelled: { text: 'Geannuleerd', cls: 'bg-red-100 text-red-700 border-red-200' },
 }
 
 function fmtMoney(v: number, c: string = 'EUR') {
@@ -215,64 +222,98 @@ export default function AdminGiftCardDetailPage() {
 
   if (loading || !card) {
     return (
-      <div className="p-6 md:p-8 max-w-5xl mx-auto">
-        <div className="text-gray-500">Laden...</div>
+      <div className="p-4 md:p-8 max-w-5xl mx-auto">
+        <div className="text-gray-500 text-sm">Laden...</div>
       </div>
     )
   }
 
+  const s = STATUS_LABELS[card.status]
+
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
       <button
         onClick={() => router.push('/admin/gift-cards')}
-        className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider mb-4 hover:underline"
+        className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold uppercase tracking-wider mb-4 text-gray-600 hover:text-black transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Terug
+        <ArrowLeft className="w-4 h-4" /> Terug naar overzicht
       </button>
 
-      <div className="bg-black text-white p-5 md:p-6 mb-6">
-        <div className="text-[11px] tracking-[0.3em] uppercase text-emerald-400 font-bold">
-          Cadeaubon
+      {/* Hero card */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-black to-neutral-900 text-white p-5 md:p-8 mb-5 md:mb-6 border-2 border-black">
+        <div className="absolute top-4 right-4 opacity-10">
+          <Gift className="w-24 h-24 md:w-40 md:h-40" strokeWidth={1.5} />
         </div>
-        <div className="font-display text-2xl md:text-4xl tracking-wide mt-1">
-          MOSE-····-····-{card.code_last4}
-        </div>
-        <div className="mt-3 text-sm">
-          Saldo: <strong>{fmtMoney(Number(card.balance), card.currency)}</strong>
-          <span className="opacity-60"> / {fmtMoney(Number(card.initial_amount), card.currency)}</span>
-          {totalSpent > 0 ? (
-            <span className="ml-4 opacity-80">
-              Uitgegeven: {fmtMoney(totalSpent, card.currency)}
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <div className="text-[10px] md:text-[11px] tracking-[0.3em] uppercase text-brand-primary font-bold">
+              Cadeaubon
+            </div>
+            <span
+              className={`inline-block border px-2 py-0.5 text-[10px] md:text-[11px] uppercase tracking-wide font-bold ${s.cls}`}
+            >
+              {s.text}
             </span>
-          ) : null}
+          </div>
+          <div className="font-mono text-lg md:text-3xl tracking-[0.15em] md:tracking-wide mt-1 break-all">
+            MOSE-····-····-{card.code_last4}
+          </div>
+          <div className="mt-4 md:mt-5 grid grid-cols-3 gap-3 md:gap-6 max-w-xl">
+            <div>
+              <div className="text-[9px] md:text-[11px] tracking-[0.2em] uppercase text-white/60 font-bold">
+                Saldo
+              </div>
+              <div className="font-bold text-lg md:text-2xl mt-1 text-brand-primary truncate">
+                {fmtMoney(Number(card.balance), card.currency)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[9px] md:text-[11px] tracking-[0.2em] uppercase text-white/60 font-bold">
+                Start
+              </div>
+              <div className="font-bold text-base md:text-xl mt-1 truncate">
+                {fmtMoney(Number(card.initial_amount), card.currency)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[9px] md:text-[11px] tracking-[0.2em] uppercase text-white/60 font-bold">
+                Uitgegeven
+              </div>
+              <div className="font-bold text-base md:text-xl mt-1 truncate">
+                {fmtMoney(totalSpent, card.currency)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="border border-black/10 bg-white p-5">
-          <h2 className="font-display text-lg uppercase tracking-tight mb-4">Details</h2>
+      {/* Two columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-5 md:mb-6">
+        {/* Details */}
+        <div className="border-2 border-gray-200 bg-white p-4 md:p-5">
+          <h2 className="font-bold text-sm md:text-base uppercase tracking-wider mb-3 md:mb-4">
+            Details
+          </h2>
           <dl className="text-sm divide-y divide-gray-100">
-            <div className="py-2 flex justify-between gap-3">
-              <dt className="text-gray-500">Status</dt>
-              <dd className="font-medium uppercase">{card.status}</dd>
-            </div>
             <div className="py-2 flex justify-between gap-3">
               <dt className="text-gray-500">Bron</dt>
               <dd className="font-medium">{card.source}</dd>
             </div>
-            <div className="py-2 flex justify-between gap-3">
-              <dt className="text-gray-500">Koper</dt>
-              <dd className="font-medium text-right">{card.purchased_by_email || '—'}</dd>
-            </div>
+            {card.purchased_by_email ? (
+              <div className="py-2 flex justify-between gap-3">
+                <dt className="text-gray-500 shrink-0">Koper</dt>
+                <dd className="font-medium text-right break-all">{card.purchased_by_email}</dd>
+              </div>
+            ) : null}
             {card.purchased_by_order_id ? (
               <div className="py-2 flex justify-between gap-3">
                 <dt className="text-gray-500">Bestelling</dt>
                 <dd className="font-medium text-right">
                   <Link
                     href={`/admin/orders/${card.purchased_by_order_id}`}
-                    className="hover:underline"
+                    className="text-brand-primary hover:underline"
                   >
-                    {card.purchased_by_order_id.slice(0, 8).toUpperCase()}
+                    #{card.purchased_by_order_id.slice(0, 8).toUpperCase()}
                   </Link>
                 </dd>
               </div>
@@ -304,58 +345,61 @@ export default function AdminGiftCardDetailPage() {
           </dl>
         </div>
 
-        <div className="border border-black/10 bg-white p-5">
-          <h2 className="font-display text-lg uppercase tracking-tight mb-4">Bijwerken</h2>
+        {/* Edit form */}
+        <div className="border-2 border-gray-200 bg-white p-4 md:p-5">
+          <h2 className="font-bold text-sm md:text-base uppercase tracking-wider mb-3 md:mb-4">
+            Bijwerken
+          </h2>
           <div className="space-y-3 text-sm">
             <label className="block">
-              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-600">
+              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-700">
                 Vervaldatum
               </span>
               <input
                 type="date"
                 value={form.expires_at}
                 onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))}
-                className="mt-1 w-full border-2 border-gray-300 focus:border-black px-3 py-2 focus:outline-none"
+                className="mt-1 w-full border-2 border-gray-200 focus:border-brand-primary px-3 py-2 focus:outline-none transition-colors"
               />
             </label>
             <label className="block">
-              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-600">
+              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-700">
                 Naam ontvanger
               </span>
               <input
                 type="text"
                 value={form.recipient_name}
                 onChange={(e) => setForm((f) => ({ ...f, recipient_name: e.target.value }))}
-                className="mt-1 w-full border-2 border-gray-300 focus:border-black px-3 py-2 focus:outline-none"
+                className="mt-1 w-full border-2 border-gray-200 focus:border-brand-primary px-3 py-2 focus:outline-none transition-colors"
               />
             </label>
             <label className="block">
-              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-600">
+              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-700">
                 E-mail ontvanger
               </span>
               <input
                 type="email"
                 value={form.recipient_email}
                 onChange={(e) => setForm((f) => ({ ...f, recipient_email: e.target.value }))}
-                className="mt-1 w-full border-2 border-gray-300 focus:border-black px-3 py-2 focus:outline-none"
+                className="mt-1 w-full border-2 border-gray-200 focus:border-brand-primary px-3 py-2 focus:outline-none transition-colors"
               />
             </label>
             <label className="block">
-              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-600">
+              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-gray-700">
                 Interne notities
               </span>
               <textarea
                 rows={3}
                 value={form.admin_notes}
                 onChange={(e) => setForm((f) => ({ ...f, admin_notes: e.target.value }))}
-                className="mt-1 w-full border-2 border-gray-300 focus:border-black px-3 py-2 focus:outline-none resize-none"
+                className="mt-1 w-full border-2 border-gray-200 focus:border-brand-primary px-3 py-2 focus:outline-none resize-none transition-colors"
               />
             </label>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 pt-2">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 bg-black text-white px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 bg-brand-primary hover:bg-brand-primary-hover text-white px-4 py-2 font-bold uppercase text-xs tracking-wider transition-colors active:scale-95 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Opslaan...' : 'Opslaan'}
@@ -364,7 +408,7 @@ export default function AdminGiftCardDetailPage() {
                 <button
                   onClick={handleResend}
                   disabled={resending}
-                  className="inline-flex items-center gap-1.5 border-2 border-black px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 border-2 border-black px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-black hover:text-white transition-colors active:scale-95 disabled:opacity-50"
                 >
                   <Mail className="w-4 h-4" />
                   {resending ? 'Verzenden...' : 'Opnieuw versturen'}
@@ -373,14 +417,14 @@ export default function AdminGiftCardDetailPage() {
               {card.status === 'active' ? (
                 <button
                   onClick={handleCancel}
-                  className="inline-flex items-center gap-1.5 border-2 border-red-600 text-red-600 px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-red-600 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 border-2 border-red-600 text-red-600 px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-red-600 hover:text-white transition-colors active:scale-95"
                 >
                   <Ban className="w-4 h-4" /> Annuleren
                 </button>
               ) : card.status === 'cancelled' ? (
                 <button
                   onClick={handleReactivate}
-                  className="inline-flex items-center gap-1.5 border-2 border-emerald-600 text-emerald-700 px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-emerald-600 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 border-2 border-brand-primary text-brand-primary px-4 py-2 font-bold uppercase text-xs tracking-wider hover:bg-brand-primary hover:text-white transition-colors active:scale-95"
                 >
                   <RotateCcw className="w-4 h-4" /> Heractiveren
                 </button>
@@ -390,57 +434,88 @@ export default function AdminGiftCardDetailPage() {
         </div>
       </div>
 
-      {/* Redemptions table */}
-      <div className="border border-black/10 bg-white">
-        <div className="p-5 border-b border-black/10 flex items-center justify-between">
-          <h2 className="font-display text-lg uppercase tracking-tight">Gebruik</h2>
-          <span className="text-xs text-gray-500">{redemptions.length} transacties</span>
+      {/* Redemptions */}
+      <div className="border-2 border-gray-200 bg-white">
+        <div className="p-4 md:p-5 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="font-bold text-sm md:text-base uppercase tracking-wider">Gebruik</h2>
+          <span className="text-[11px] md:text-xs text-gray-500 font-semibold">
+            {redemptions.length} transacties
+          </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left uppercase text-[11px] tracking-[0.15em] text-gray-600">
-              <tr>
-                <th className="px-3 py-3">Bestelling</th>
-                <th className="px-3 py-3">Bedrag</th>
-                <th className="px-3 py-3">Status</th>
-                <th className="px-3 py-3">Gemaakt</th>
-                <th className="px-3 py-3">Vastgezet</th>
-                <th className="px-3 py-3">Teruggedraaid</th>
-              </tr>
-            </thead>
-            <tbody>
-              {redemptions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-6 text-center text-gray-500">
-                    Deze bon is nog niet gebruikt.
-                  </td>
-                </tr>
-              ) : (
-                redemptions.map((r) => (
-                  <tr key={r.id} className="border-t border-gray-200">
-                    <td className="px-3 py-3 font-mono">
+
+        {redemptions.length === 0 ? (
+          <div className="p-6 md:p-8 text-center text-gray-500 text-sm">
+            Deze bon is nog niet gebruikt.
+          </div>
+        ) : (
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {redemptions.map((r) => (
+                <div key={r.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
                       <Link
                         href={`/admin/orders/${r.order_id}`}
-                        className="hover:underline"
+                        className="font-mono text-sm font-bold text-brand-primary hover:underline"
                       >
-                        {r.order_id.slice(0, 8).toUpperCase()}
+                        #{r.order_id.slice(0, 8).toUpperCase()}
                       </Link>
-                    </td>
-                    <td className="px-3 py-3 font-semibold">
+                      <div className="text-[11px] uppercase tracking-wider font-bold mt-1">
+                        {r.status}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {fmtDateTime(r.created_at)}
+                      </div>
+                    </div>
+                    <div className="font-bold text-base shrink-0">
                       {fmtMoney(Number(r.amount), card.currency)}
-                    </td>
-                    <td className="px-3 py-3 uppercase text-[11px] tracking-wider font-bold">
-                      {r.status}
-                    </td>
-                    <td className="px-3 py-3 text-xs">{fmtDateTime(r.created_at)}</td>
-                    <td className="px-3 py-3 text-xs">{fmtDateTime(r.committed_at)}</td>
-                    <td className="px-3 py-3 text-xs">{fmtDateTime(r.reversed_at)}</td>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left uppercase text-[11px] tracking-[0.15em] text-gray-600">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">Bestelling</th>
+                    <th className="px-4 py-3 font-bold">Bedrag</th>
+                    <th className="px-4 py-3 font-bold">Status</th>
+                    <th className="px-4 py-3 font-bold">Gemaakt</th>
+                    <th className="px-4 py-3 font-bold">Vastgezet</th>
+                    <th className="px-4 py-3 font-bold">Teruggedraaid</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {redemptions.map((r) => (
+                    <tr key={r.id} className="border-t border-gray-100">
+                      <td className="px-4 py-3 font-mono">
+                        <Link
+                          href={`/admin/orders/${r.order_id}`}
+                          className="text-brand-primary hover:underline"
+                        >
+                          #{r.order_id.slice(0, 8).toUpperCase()}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 font-bold">
+                        {fmtMoney(Number(r.amount), card.currency)}
+                      </td>
+                      <td className="px-4 py-3 uppercase text-[11px] tracking-wider font-bold">
+                        {r.status}
+                      </td>
+                      <td className="px-4 py-3 text-xs">{fmtDateTime(r.created_at)}</td>
+                      <td className="px-4 py-3 text-xs">{fmtDateTime(r.committed_at)}</td>
+                      <td className="px-4 py-3 text-xs">{fmtDateTime(r.reversed_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

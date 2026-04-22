@@ -2938,31 +2938,33 @@ export default function CheckoutPage() {
                     {giftCardEntries.map((gc) => (
                       <div
                         key={gc.code}
-                        className="flex justify-between items-center py-2 px-3 bg-emerald-50 border-l-2 border-emerald-600 -mx-3"
+                        className="flex justify-between items-center py-2 px-3 bg-emerald-50 border-l-2 border-brand-primary -mx-3"
                       >
-                        <div>
-                          <div className="font-semibold text-emerald-800 uppercase tracking-wide text-sm flex items-center gap-1.5">
-                            <GiftIcon size={14} />
-                            {t('giftCard.label', { defaultValue: 'Cadeaubon' })} {gc.maskedCode}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-brand-primary uppercase tracking-wide text-xs md:text-sm flex items-center gap-1.5">
+                            <GiftIcon size={14} strokeWidth={2.5} />
+                            <span className="truncate">
+                              {t('giftCard.label')} {gc.maskedCode}
+                            </span>
                           </div>
-                          <div className="text-xs text-gray-600">
-                            {t('giftCard.balance', { defaultValue: 'Saldo' })}: €{gc.balance.toFixed(2)}
+                          <div className="text-[11px] md:text-xs text-gray-600 mt-0.5">
+                            {t('giftCard.balance')}: €{gc.balance.toFixed(2)}
                             {' • '}
                             <button
                               type="button"
                               onClick={() => handleRemoveGiftCard(gc.code)}
                               className="text-gray-500 hover:text-black font-semibold underline"
                             >
-                              {t('promo.remove', { ns: 'cart' })}
+                              {tCart('promo.remove')}
                             </button>
                           </div>
                         </div>
                       </div>
                     ))}
                     {giftCardDiscount > 0 && (
-                      <div className="flex justify-between text-sm font-semibold text-emerald-700">
+                      <div className="flex justify-between text-sm font-bold text-brand-primary">
                         <span className="uppercase tracking-wide">
-                          {t('giftCard.applied', { defaultValue: 'Cadeaubon toegepast' })}
+                          {t('giftCard.applied')}
                         </span>
                         <span>-€{giftCardDiscount.toFixed(2)}</span>
                       </div>
@@ -2977,10 +2979,8 @@ export default function CheckoutPage() {
                     className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors border-t border-gray-200 pt-3"
                   >
                     <div className="flex items-center gap-2">
-                      <GiftIcon size={16} />
-                      <span>
-                        {t('giftCard.title', { defaultValue: 'Cadeaubon toevoegen' })}
-                      </span>
+                      <GiftIcon size={16} strokeWidth={2.5} />
+                      <span>{t('giftCard.title')}</span>
                     </div>
                     <ChevronDown size={16} />
                   </button>
@@ -2988,8 +2988,8 @@ export default function CheckoutPage() {
                   <div className="space-y-2 border-t border-gray-200 pt-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-sm font-semibold">
-                        <GiftIcon size={16} />
-                        <span>{t('giftCard.title', { defaultValue: 'Cadeaubon toevoegen' })}</span>
+                        <GiftIcon size={16} strokeWidth={2.5} />
+                        <span>{t('giftCard.title')}</span>
                       </div>
                       <button
                         type="button"
@@ -2999,6 +2999,7 @@ export default function CheckoutPage() {
                           setGiftCardInput('')
                         }}
                         className="p-1 hover:bg-gray-200 transition-colors rounded"
+                        aria-label={tCommon('close')}
                       >
                         <ChevronUp size={16} />
                       </button>
@@ -3017,20 +3018,16 @@ export default function CheckoutPage() {
                             handleApplyGiftCard()
                           }
                         }}
-                        placeholder={t('giftCard.placeholder', {
-                          defaultValue: 'XXXX-XXXX-XXXX-XXXX',
-                        })}
+                        placeholder={t('giftCard.placeholder')}
                         className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
                       />
                       <button
                         type="button"
                         onClick={handleApplyGiftCard}
                         disabled={!giftCardInput || giftCardLoading}
-                        className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95"
                       >
-                        {giftCardLoading
-                          ? '...'
-                          : t('promo.apply')}
+                        {giftCardLoading ? '...' : t('promo.apply')}
                       </button>
                     </div>
                     {giftCardError && (
