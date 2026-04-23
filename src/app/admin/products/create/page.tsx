@@ -41,6 +41,8 @@ export default function CreateProductPage() {
     gift_card_default_validity_months: '24',
   })
 
+  const isGift = giftCard.is_gift_card
+
   useEffect(() => {
     fetchCategories()
   }, [])
@@ -76,14 +78,16 @@ export default function CreateProductPage() {
     setError('')
 
     try {
-      // Validatie
       if (!formData.name || !formData.slug || !formData.base_price) {
         throw new Error('Vul alle verplichte velden in')
       }
 
-      // Valideer sale price
-      if (formData.sale_price) {
-        const salePrice = parseFloat(formData.sale_price)
+      // Gift cards never have a sale price — silently clear it so admin
+      // doesn't accidentally persist a stale value after toggling on.
+      const effectiveSalePrice = isGift ? '' : formData.sale_price
+
+      if (effectiveSalePrice) {
+        const salePrice = parseFloat(effectiveSalePrice)
         const basePrice = parseFloat(formData.base_price)
         
         if (salePrice < 0) {
@@ -97,7 +101,7 @@ export default function CreateProductPage() {
       let giftCardMin: number | null = null
       let giftCardMax: number | null = null
       let giftCardValidity: number | null = null
-      if (giftCard.is_gift_card) {
+      if (isGift) {
         if (giftCard.allows_custom_amount) {
           giftCardMin = parseFloat(giftCard.gift_card_min_amount)
           giftCardMax = parseFloat(giftCard.gift_card_max_amount)
@@ -117,7 +121,6 @@ export default function CreateProductPage() {
         }
       }
 
-      // Insert product
       const { data, error: insertError } = await supabase
         .from('products')
         .insert([
@@ -128,15 +131,15 @@ export default function CreateProductPage() {
             description: formData.description || null,
             description_en: formData.description_en || null,
             base_price: parseFloat(formData.base_price),
-            sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
+            sale_price: effectiveSalePrice ? parseFloat(effectiveSalePrice) : null,
             category_id: formData.category_id || null,
             meta_title: formData.meta_title || null,
             meta_description: formData.meta_description || null,
-            is_gift_card: giftCard.is_gift_card,
-            allows_custom_amount: giftCard.is_gift_card ? giftCard.allows_custom_amount : false,
-            gift_card_min_amount: giftCard.is_gift_card ? giftCardMin : null,
-            gift_card_max_amount: giftCard.is_gift_card ? giftCardMax : null,
-            gift_card_default_validity_months: giftCard.is_gift_card ? giftCardValidity : null,
+            is_gift_card: isGift,
+            allows_custom_amount: isGift ? giftCard.allows_custom_amount : false,
+            gift_card_min_amount: isGift ? giftCardMin : null,
+            gift_card_max_amount: isGift ? giftCardMax : null,
+            gift_card_default_validity_months: isGift ? giftCardValidity : null,
           },
         ])
         .select()
@@ -144,8 +147,8 @@ export default function CreateProductPage() {
 
       if (insertError) throw insertError
 
-      // Cadeaubon → direct naar varianten zodat coupures ingevuld kunnen worden.
-      if (giftCard.is_gift_card && data?.id) {
+      // Cadeaubon → direct naar coupures zodat ze meteen beheerd kunnen worden.
+      if (isGift && data?.id) {
         router.push(`/admin/products/${data.id}/variants`)
       } else {
         router.push('/admin/products')
@@ -160,22 +163,27 @@ export default function CreateProductPage() {
   return (
     <div className="max-w-4xl">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-6 sm:mb-8">
         <Link
           href="/admin/products"
-          className="p-2 hover:bg-gray-100 transition-colors"
+          className="p-2 hover:bg-gray-100 transition-colors flex-shrink-0"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </Link>
-        <div>
-          <h1 className="text-3xl font-display font-bold mb-2">Nieuw Product</h1>
-          <p className="text-gray-600">Voeg een nieuw product toe aan je webshop</p>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold mb-1 sm:mb-2">
+            {isGift ? 'Nieuwe Cadeaubon' : 'Nieuw Product'}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            {isGift
+              ? 'Maak een cadeaubon aan. Na opslaan kun je de coupures (bedragen) instellen.'
+              : 'Voeg een nieuw product toe aan je webshop'}
+          </p>
         </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
@@ -183,8 +191,13 @@ export default function CreateProductPage() {
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-200 p-8">
-        {/* Language Tabs */}
+      <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-200 p-5 sm:p-8">
+        {/* Product type selector — always at the top so admin sees immediately
+            which mode the product is in and can flip it before filling out fields. */}
+        <div className="mb-6">
+          <GiftCardFields value={giftCard} onChange={setGiftCard} />
+        </div>
+
         <LanguageTabs 
           activeLanguage={activeLanguage}
           onLanguageChange={setActiveLanguage}
@@ -194,7 +207,8 @@ export default function CreateProductPage() {
           {/* Product Name */}
           <div>
             <label htmlFor={`name_${activeLanguage}`} className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Productnaam ({activeLanguage === 'nl' ? 'Nederlands' : 'Engels'}) {activeLanguage === 'nl' && '*'}
+              {isGift ? 'Naam cadeaubon' : 'Productnaam'}{' '}
+              ({activeLanguage === 'nl' ? 'Nederlands' : 'Engels'}) {activeLanguage === 'nl' && '*'}
             </label>
             <input
               type="text"
@@ -203,7 +217,11 @@ export default function CreateProductPage() {
               value={activeLanguage === 'nl' ? formData.name : formData.name_en}
               onChange={activeLanguage === 'nl' ? handleNameChange : handleNameEnChange}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-              placeholder={activeLanguage === 'nl' ? 'Bijv. MOSE Classic Hoodie' : 'E.g. MOSE Classic Hoodie - Black'}
+              placeholder={
+                isGift
+                  ? activeLanguage === 'nl' ? 'Bijv. MOSE Cadeaubon' : 'E.g. MOSE Gift Card'
+                  : activeLanguage === 'nl' ? 'Bijv. MOSE Classic Hoodie' : 'E.g. MOSE Classic Hoodie'
+              }
             />
           </div>
 
@@ -220,7 +238,7 @@ export default function CreateProductPage() {
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-mono text-sm"
-              placeholder="mose-classic-hoodie"
+              placeholder={isGift ? 'mose-cadeaubon' : 'mose-classic-hoodie'}
             />
             <p className="mt-2 text-sm text-gray-500">
               Automatisch gegenereerd, maar je kunt het aanpassen
@@ -242,7 +260,15 @@ export default function CreateProductPage() {
                 [activeLanguage === 'nl' ? 'description' : 'description_en']: e.target.value 
               })}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none"
-              placeholder={activeLanguage === 'nl' ? 'Uitgebreide productbeschrijving...' : 'Detailed product description...'}
+              placeholder={
+                isGift
+                  ? activeLanguage === 'nl'
+                    ? 'Korte beschrijving van de cadeaubon...'
+                    : 'Short description of the gift card...'
+                  : activeLanguage === 'nl'
+                    ? 'Uitgebreide productbeschrijving...'
+                    : 'Detailed product description...'
+              }
             />
             <p className="text-sm text-gray-500 mt-1">
               💡 Tip: Gebruik ** om tekst <strong>bold</strong> te maken (bijvoorbeeld: **premium materials**)
@@ -252,11 +278,11 @@ export default function CreateProductPage() {
           {/* Price & Category - Only in NL mode */}
           {activeLanguage === 'nl' && (
             <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Base Price */}
+            {/* Prijs-blok: voor cadeaubonnen alleen de basisprijs, geen sale. */}
+            <div className={isGift ? '' : 'grid grid-cols-1 md:grid-cols-2 gap-6'}>
             <div>
               <label htmlFor="base_price" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                Normale Prijs (€) *
+                {isGift ? 'Basisprijs / laagste coupure (€) *' : 'Normale Prijs (€) *'}
               </label>
               <input
                 type="number"
@@ -267,33 +293,40 @@ export default function CreateProductPage() {
                 value={formData.base_price}
                 onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                placeholder="79.99"
+                placeholder={isGift ? '25.00' : '79.99'}
               />
+              {isGift && (
+                <p className="text-xs text-gray-500 mt-1 leading-snug">
+                  Dit is de laagste coupure. Hogere coupures komen erbij als varianten met een
+                  positieve prijs-aanpassing.
+                </p>
+              )}
             </div>
 
-            {/* Sale Price */}
-            <div>
-              <label htmlFor="sale_price" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
-                Sale Prijs (€)
-              </label>
-              <input
-                type="number"
-                id="sale_price"
-                step="0.01"
-                min="0"
-                value={formData.sale_price}
-                onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                placeholder="59.99"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Laat leeg voor geen korting
-              </p>
-            </div>
+            {!isGift && (
+              <div>
+                <label htmlFor="sale_price" className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                  Sale Prijs (€)
+                </label>
+                <input
+                  type="number"
+                  id="sale_price"
+                  step="0.01"
+                  min="0"
+                  value={formData.sale_price}
+                  onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                  placeholder="59.99"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Laat leeg voor geen korting
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Sale Preview */}
-          {formData.sale_price && formData.base_price && parseFloat(formData.sale_price) < parseFloat(formData.base_price) && parseFloat(formData.sale_price) > 0 && (
+          {/* Sale Preview — alleen voor standaard producten */}
+          {!isGift && formData.sale_price && formData.base_price && parseFloat(formData.sale_price) < parseFloat(formData.base_price) && parseFloat(formData.sale_price) > 0 && (
             <div className="bg-green-50 border-2 border-green-200 p-4">
               <div className="flex items-start gap-3">
                 <div className="bg-red-600 text-white px-3 py-1 text-sm font-bold uppercase tracking-wider">
@@ -339,9 +372,6 @@ export default function CreateProductPage() {
             </select>
           </div>
 
-          {/* Gift Card Section */}
-          <GiftCardFields value={giftCard} onChange={setGiftCard} />
-
           {/* SEO Section */}
           <div className="border-t-2 border-gray-200 pt-6">
             <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide mb-4">
@@ -360,7 +390,7 @@ export default function CreateProductPage() {
                 value={formData.meta_title}
                 onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                placeholder="Bijv. MOSE Classic Hoodie - Lokaal Gemaakt"
+                placeholder={isGift ? 'Bijv. MOSE Cadeaubon — Altijd een goed idee' : 'Bijv. MOSE Classic Hoodie - Lokaal Gemaakt'}
               />
               <p className="mt-2 text-sm text-gray-500">
                 {formData.meta_title.length}/60 karakters
@@ -391,25 +421,24 @@ export default function CreateProductPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-4 mt-8 pt-6 border-t-2 border-gray-200">
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Product Aanmaken...' : 'Product Aanmaken'}
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-8 pt-6 border-t-2 border-gray-200">
           <Link
             href="/admin/products"
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 uppercase tracking-wider transition-colors"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 sm:px-8 uppercase tracking-wider transition-colors text-center"
           >
             Annuleren
           </Link>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 sm:px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading
+              ? isGift ? 'Cadeaubon Aanmaken...' : 'Product Aanmaken...'
+              : isGift ? 'Cadeaubon Aanmaken' : 'Product Aanmaken'}
+          </button>
         </div>
       </form>
     </div>
   )
 }
-
-
-
