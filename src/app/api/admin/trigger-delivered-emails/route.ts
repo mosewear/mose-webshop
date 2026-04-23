@@ -4,6 +4,15 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { sendOrderDeliveredEmail } from '@/lib/email'
 import { logEmail } from '@/lib/email-logger'
 
+/**
+ * Admin endpoint: (re)send the "delivered" email for one or more orders,
+ * with Trustpilot AFS BCC piggy-backed when configured.
+ *
+ * Idempotency: the review-invitation claim is applied atomically via
+ * `.is('review_invitation_sent_at', null)` so a parallel Sendcloud webhook
+ * retry cannot cause duplicate Trustpilot triggers. Pass `force: true` to
+ * deliberately re-send even when a claim was already made.
+ */
 export async function POST(req: Request) {
   try {
     const { authorized } = await requireAdmin(['admin'])
@@ -18,8 +27,15 @@ export async function POST(req: Request) {
     }
 
     const supabase = createServiceRoleClient()
-    const results: { orderId: string; success: boolean; error?: string; skipped?: boolean }[] = []
     const trustpilotConfigured = Boolean(process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim())
+
+    const results: {
+      orderId: string
+      success: boolean
+      skipped?: boolean
+      info?: string
+      error?: string
+    }[] = []
 
     for (const orderId of orderIds) {
       try {
@@ -35,7 +51,11 @@ export async function POST(req: Request) {
         }
 
         if (order.status !== 'delivered') {
-          results.push({ orderId, success: false, error: `Status is ${order.status}, niet delivered` })
+          results.push({
+            orderId,
+            success: false,
+            error: `Status is ${order.status}, niet delivered`,
+          })
           continue
         }
 
@@ -44,7 +64,7 @@ export async function POST(req: Request) {
             orderId,
             success: true,
             skipped: true,
-            error: `Review invitation al verstuurd op ${(order as any).review_invitation_sent_at}`,
+            info: `Review invitation al verstuurd op ${(order as any).review_invitation_sent_at}`,
           })
           continue
         }
@@ -68,7 +88,7 @@ export async function POST(req: Request) {
           orderId: order.id,
           orderItems,
           shippingAddress: order.shipping_address,
-          deliveryDate: new Date().toISOString(),
+          deliveryDate: (order as any).delivered_at || new Date().toISOString(),
           locale,
         })
 
@@ -79,17 +99,37 @@ export async function POST(req: Request) {
             recipientEmail: customerEmail,
             subject: 'Je MOSE pakket is aangekomen!',
             status: 'sent',
+            metadata: { source: 'admin-trigger', force: Boolean(force) },
           })
 
           const nowIso = new Date().toISOString()
-          await supabase
-            .from('orders')
-            .update({
-              last_email_sent_at: nowIso,
-              last_email_type: 'delivered',
-              ...(trustpilotConfigured ? { review_invitation_sent_at: nowIso } : {}),
-            })
-            .eq('id', order.id)
+          const updatePayload: Record<string, unknown> = {
+            last_email_sent_at: nowIso,
+            last_email_type: 'delivered',
+          }
+          // Backfill delivered_at if we never captured it.
+          if (!(order as any).delivered_at) {
+            updatePayload.delivered_at = nowIso
+          }
+
+          await supabase.from('orders').update(updatePayload).eq('id', order.id)
+
+          // Atomic claim — only stamp review_invitation_sent_at if nothing
+          // has claimed it yet, OR when admin passed force: true.
+          if (trustpilotConfigured) {
+            if (force) {
+              await supabase
+                .from('orders')
+                .update({ review_invitation_sent_at: nowIso })
+                .eq('id', order.id)
+            } else {
+              await supabase
+                .from('orders')
+                .update({ review_invitation_sent_at: nowIso })
+                .eq('id', order.id)
+                .is('review_invitation_sent_at', null)
+            }
+          }
 
           results.push({ orderId, success: true })
         } else {

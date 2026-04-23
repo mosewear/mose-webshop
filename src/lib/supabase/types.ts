@@ -175,6 +175,8 @@ export interface Database {
           is_digital_only: boolean
           gift_cards_issued_at: string | null
           review_invitation_sent_at: string | null
+          delivered_at: string | null
+          shipped_at: string | null
         }
         Insert: {
           id?: string
@@ -207,6 +209,8 @@ export interface Database {
           is_digital_only?: boolean
           gift_cards_issued_at?: string | null
           review_invitation_sent_at?: string | null
+          delivered_at?: string | null
+          shipped_at?: string | null
         }
         Update: {
           id?: string
@@ -239,6 +243,8 @@ export interface Database {
           is_digital_only?: boolean
           gift_cards_issued_at?: string | null
           review_invitation_sent_at?: string | null
+          delivered_at?: string | null
+          shipped_at?: string | null
         }
       }
       inventory_logs: {

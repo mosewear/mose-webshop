@@ -460,7 +460,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         )
         await fetchOrder()
       } else if (result?.skipped) {
-        alert(`ℹ️ Overgeslagen: ${result.error}`)
+        alert(`ℹ️ Overgeslagen: ${result.info || result.error || 'Already sent'}`)
       } else {
         throw new Error(result?.error || 'Onbekende fout')
       }
@@ -974,6 +974,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <>nog niet verstuurd</>
               ) : (
                 <>wordt automatisch verstuurd zodra de bestelling &quot;delivered&quot; is</>
+              )}
+              {order.delivered_at && (
+                <span className="block text-xs text-gray-600 mt-0.5">
+                  Pakket afgeleverd op{' '}
+                  {new Date(order.delivered_at).toLocaleString('nl-NL')}
+                </span>
               )}
             </div>
           </div>

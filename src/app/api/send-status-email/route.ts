@@ -111,15 +111,30 @@ export async function POST(req: NextRequest) {
             image_url: item.image_url,
           })),
           shippingAddress: order.shipping_address,
-          deliveryDate: new Date().toISOString(),
+          deliveryDate: (order as any).delivered_at || new Date().toISOString(),
           locale,
         })
 
-        if (result.success && process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim()) {
-          await supabase
-            .from('orders')
-            .update({ review_invitation_sent_at: new Date().toISOString() })
-            .eq('id', order.id)
+        if (result.success) {
+          const nowIso = new Date().toISOString()
+
+          // Backfill delivered_at if we never stamped it.
+          if (!(order as any).delivered_at) {
+            await supabase
+              .from('orders')
+              .update({ delivered_at: nowIso })
+              .eq('id', order.id)
+          }
+
+          // Atomic review-invitation claim — protects against duplicate
+          // Trustpilot BCCs when webhook + manual trigger race.
+          if (process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim()) {
+            await supabase
+              .from('orders')
+              .update({ review_invitation_sent_at: nowIso })
+              .eq('id', order.id)
+              .is('review_invitation_sent_at', null)
+          }
         }
         break
 

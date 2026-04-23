@@ -132,15 +132,28 @@ async function handleStatusChange(payload: SendcloudWebhookPayload) {
     return
   }
 
+  const nowIso = new Date().toISOString()
+  const statusUpdate: Record<string, unknown> = {
+    tracking_code: parcel.tracking_number,
+    tracking_url: parcel.tracking_url,
+    carrier: parcel.carrier.name,
+    status: newStatus,
+    updated_at: nowIso,
+  }
+
+  // Stamp shipped_at / delivered_at the first time we see each transition,
+  // so returns-deadline enforcement and review-invitation scheduling have
+  // reliable timestamps to work with.
+  if (newStatus === 'shipped' && !(order as any).shipped_at) {
+    statusUpdate.shipped_at = nowIso
+  }
+  if (newStatus === 'delivered' && !(order as any).delivered_at) {
+    statusUpdate.delivered_at = nowIso
+  }
+
   const { error: updateError } = await supabase
     .from('orders')
-    .update({
-      tracking_code: parcel.tracking_number,
-      tracking_url: parcel.tracking_url,
-      carrier: parcel.carrier.name,
-      status: newStatus,
-      updated_at: new Date().toISOString(),
-    })
+    .update(statusUpdate)
     .eq('id', orderNumberOrReturnId)
 
   if (updateError) {
@@ -151,7 +164,10 @@ async function handleStatusChange(payload: SendcloudWebhookPayload) {
   console.log(`[Sendcloud Webhook] Order ${orderNumberOrReturnId.slice(0, 8)}: ${oldStatus} → ${newStatus}`)
 
   if (newStatus === 'delivered' && oldStatus !== 'delivered') {
-    await sendDeliveredEmailForOrder(order)
+    await sendDeliveredEmailForOrder({
+      ...order,
+      delivered_at: (order as any).delivered_at || nowIso,
+    })
   }
 }
 
@@ -294,20 +310,38 @@ async function sendDeliveredEmailForOrder(order: any) {
       const trustpilotConfigured = Boolean(process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim())
       const nowIso = new Date().toISOString()
 
-      const { error: updateError } = await supabase
+      // Always refresh last_email_* markers.
+      await supabase
         .from('orders')
         .update({
           last_email_sent_at: nowIso,
           last_email_type: 'delivered',
-          ...(trustpilotConfigured ? { review_invitation_sent_at: nowIso } : {}),
         })
         .eq('id', order.id)
 
-      if (updateError) {
-        console.error(
-          `[Sendcloud Webhook] Failed to mark delivered/invitation timestamps for order ${order.id.slice(0, 8)}:`,
-          updateError.message
-        )
+      // Claim the review-invitation slot ATOMICALLY: only mark it as sent
+      // if no parallel worker has already claimed it. This protects us from
+      // duplicate Trustpilot triggers if Sendcloud retries the webhook or
+      // an admin clicks "resend" at the same time.
+      if (trustpilotConfigured) {
+        const { data: claimed, error: claimError } = await supabase
+          .from('orders')
+          .update({ review_invitation_sent_at: nowIso })
+          .eq('id', order.id)
+          .is('review_invitation_sent_at', null)
+          .select('id')
+          .maybeSingle()
+
+        if (claimError) {
+          console.error(
+            `[Sendcloud Webhook] Failed to claim review_invitation_sent_at for order ${order.id.slice(0, 8)}:`,
+            claimError.message
+          )
+        } else if (!claimed) {
+          console.log(
+            `[Sendcloud Webhook] Review invitation for order ${order.id.slice(0, 8)} was already claimed by a parallel run.`
+          )
+        }
       }
 
       console.log(

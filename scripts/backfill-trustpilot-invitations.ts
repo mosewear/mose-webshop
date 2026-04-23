@@ -94,7 +94,7 @@ function sleep(ms: number) {
 async function fetchCandidates() {
   const query = supabase
     .from('orders')
-    .select('id, email, shipping_address, locale, status, payment_status, delivered_at, created_at, order_items(*)')
+    .select('id, email, shipping_address, locale, status, payment_status, delivered_at, paid_at, created_at, order_items(*)')
     .eq('payment_status', 'paid')
     .is('review_invitation_sent_at', null)
     .order('created_at', { ascending: true })
@@ -163,13 +163,23 @@ async function processOrder(order: any): Promise<{ ok: boolean; reason?: string 
   })
 
   const nowIso = new Date().toISOString()
+  const updatePayload: Record<string, unknown> = {
+    last_email_sent_at: nowIso,
+    last_email_type: 'delivered',
+    review_invitation_sent_at: nowIso,
+  }
+  // Backfill delivered_at too — many historical rows have it as null
+  // because nothing stamped it before this patch. Use the existing
+  // `delivered_at` when present, otherwise `paid_at`/`created_at` as
+  // reasonable fallbacks so the partial index stays meaningful and the
+  // returns-deadline check keeps working.
+  if (!order.delivered_at) {
+    updatePayload.delivered_at = order.paid_at || order.created_at || nowIso
+  }
+
   const { error: updateError } = await supabase
     .from('orders')
-    .update({
-      last_email_sent_at: nowIso,
-      last_email_type: 'delivered',
-      review_invitation_sent_at: nowIso,
-    })
+    .update(updatePayload)
     .eq('id', order.id)
 
   if (updateError) {
@@ -230,8 +240,11 @@ async function main() {
         failures.push({ id: order.id, reason: err?.message || 'throw' })
         console.error(`  ✗ ${order.id.slice(0, 8)} — ${err?.message || err}`)
       }
-      // Small delay to stay well under Resend rate limit.
-      await sleep(150)
+      // Stay well under Resend's default 2 req/s rate limit even on a cold
+      // plan: 500 ms = 2 req/s. Customer waits longer on a big backfill but
+      // we never get 429'd and Trustpilot also rate-limits invitation
+      // triggers per sender address.
+      await sleep(500)
     }
   }
 

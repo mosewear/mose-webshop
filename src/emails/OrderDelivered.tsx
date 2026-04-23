@@ -113,7 +113,9 @@ export default function OrderDeliveredEmail({
 
       {/* Hidden machine-readable reference for the Trustpilot AFS parser.
           Never shown to the customer thanks to display:none + zero-sized
-          styles that survive most email clients. */}
+          styles that survive most email clients. Intentionally kept in
+          English: Trustpilot AFS is language-agnostic and only needs the
+          "Order reference:" prefix to extract the ID reliably. */}
       <div
         style={{
           display: 'none',
