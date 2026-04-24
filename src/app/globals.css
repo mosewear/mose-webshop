@@ -21,20 +21,37 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Fixed heights - banner heeft py-2 mobile, py-3 desktop + single line content */
+  /* Fixed top chrome heights — SSR defaults, kept in sync at runtime by
+     AnnouncementBannerClient (banner) and MainContentWrapper (header). */
   --announcement-banner-height: 40px; /* Mobile: py-2 (16px) + content (24px) */
-  --header-total-height: 0px;
+  --header-total-height: 82px;        /* Mobile: py-4 (32px) + h-12 logo (48px) + 2px border */
 }
 
 @media (min-width: 768px) {
   :root {
     --announcement-banner-height: 48px; /* Desktop: py-3 (24px) + content (24px) */
+    --header-total-height: 90px;        /* Desktop: py-4 (32px) + h-14 logo (56px) + 2px border */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Single source of truth: every page automatically sits below the fixed
+   banner + header. Reacts live to banner dismissal and header resize
+   (MainContentWrapper keeps --header-total-height in sync). Individual
+   pages MUST NOT add their own top padding for header clearance. */
+#main-content {
+  padding-top: calc(var(--announcement-banner-height, 0px) + var(--header-total-height, 0px));
+}
+
+/* Opt-out for pages that intentionally want full-bleed content behind the
+   fixed chrome (e.g. the homepage hero video). Usage: add
+   `data-full-bleed-top` to the page's root element. */
+#main-content:has(> [data-full-bleed-top]) {
+  padding-top: 0;
 }
 
 /* Hide scrollbar for scroll-snap gallery (mobile only) */

@@ -285,7 +285,7 @@ export default function OrderConfirmationPage({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* HERO SECTION - Full Screen Success */}
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 pb-32 pt-24 md:pt-32">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 pb-32">
         <div className="text-center max-w-3xl mx-auto">
           {/* Animated Check Icon */}
           <div className="relative mb-8 animate-fadeIn">

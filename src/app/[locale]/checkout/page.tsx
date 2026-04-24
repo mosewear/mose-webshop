@@ -1746,7 +1746,7 @@ export default function CheckoutPage() {
   // Show loading state while recovering
   if (isRecovering) {
     return (
-      <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16 bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen px-4 pb-16 bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600">{tCommon('loading')}</p>
@@ -1757,7 +1757,7 @@ export default function CheckoutPage() {
 
   return (
     <Elements stripe={stripePromise}>
-      <div className="min-h-screen pt-20 md:pt-24 px-4 pb-16 bg-gray-50">
+      <div className="min-h-screen px-4 pb-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">

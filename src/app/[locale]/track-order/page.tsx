@@ -146,7 +146,7 @@ export default function TrackOrderPage() {
   const statusInfo = orderData ? getStatusInfo(orderData.status) : null
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4 bg-gray-50">
+    <div className="min-h-screen pb-16 px-4 bg-gray-50">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">

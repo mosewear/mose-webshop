@@ -236,7 +236,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     : safeT(t, 'perkValidityFallback', locale === 'en' ? 'Balance stays on the card' : 'Saldo blijft op de bon')
 
   return (
-    <div className="min-h-screen pt-20 md:pt-24 px-4 pb-24 md:pb-16 bg-[#f4f1ea]/40">
+    <div className="min-h-screen px-4 pb-24 md:pb-16 bg-[#f4f1ea]/40">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="mb-6 md:mb-8 text-xs md:text-sm">

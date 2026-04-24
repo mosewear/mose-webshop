@@ -100,7 +100,7 @@ export default function HomePageClient({
 
   return (
     <>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white" data-full-bleed-top>
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
         {/* Background Image with Parallax Effect */}

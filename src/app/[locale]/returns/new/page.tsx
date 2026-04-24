@@ -449,7 +449,7 @@ export default function NewReturnPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 px-4 flex items-center justify-center">
+      <div className="min-h-screen px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Laden...</p>
@@ -509,7 +509,7 @@ export default function NewReturnPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen pt-24 px-4">
+      <div className="min-h-screen px-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
             <p className="text-gray-600 mb-6 text-lg">Order niet gevonden</p>
