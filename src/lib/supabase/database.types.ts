@@ -70,8 +70,10 @@ export type Database = {
           id: string
           banner_id: string
           text: string
+          text_en: string | null
           link_url: string | null
           cta_text: string | null
+          cta_text_en: string | null
           icon: string | null
           is_active: boolean
           sort_order: number
@@ -82,8 +84,10 @@ export type Database = {
           id?: string
           banner_id: string
           text: string
+          text_en?: string | null
           link_url?: string | null
           cta_text?: string | null
+          cta_text_en?: string | null
           icon?: string | null
           is_active?: boolean
           sort_order?: number
@@ -94,8 +98,10 @@ export type Database = {
           id?: string
           banner_id?: string
           text?: string
+          text_en?: string | null
           link_url?: string | null
           cta_text?: string | null
+          cta_text_en?: string | null
           icon?: string | null
           is_active?: boolean
           sort_order?: number

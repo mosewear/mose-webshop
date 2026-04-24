@@ -1,4 +1,10 @@
 {
+  "announcementBanner": {
+    "previous": "Previous message",
+    "next": "Next message",
+    "dismiss": "Dismiss banner",
+    "goTo": "Go to message {index}"
+  },
   "giftCard": {
     "badge": "Gift card",
     "category": "Gift card",
@@ -1638,7 +1644,7 @@
     "subtitle": "A new contact form message has been received",
     "from": "From",
     "email": "Email",
-    "subject": "Subject",
+    "subjectLabel": "Subject",
     "message": "Message",
     "replyInfo": "Reply to this message as soon as possible by responding to the customer's email address"
   },

@@ -7,8 +7,10 @@ import { Plus, Trash2, GripVertical, Save, Eye, EyeOff, Settings } from 'lucide-
 interface AnnouncementMessage {
   id: string
   text: string
+  text_en: string | null
   link_url: string | null
   cta_text: string | null
+  cta_text_en: string | null
   icon: string | null
   is_active: boolean
   sort_order: number
@@ -156,8 +158,10 @@ export default function AnnouncementBannerAdmin() {
         .insert({
           banner_id: config.id,
           text: 'NIEUW BERICHT',
+          text_en: 'NEW MESSAGE',
           link_url: null,
           cta_text: null,
+          cta_text_en: null,
           icon: null,
           is_active: false,
           sort_order: messages.length
@@ -371,72 +375,118 @@ export default function AnnouncementBannerAdmin() {
 
                   {/* Content */}
                   <div className="flex-1 space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                          Tekst *
-                        </label>
-                        <input
-                          type="text"
-                          value={message.text}
-                          onChange={(e) => {
-                            const updated = [...messages]
-                            updated[index].text = e.target.value
-                            setMessages(updated)
-                          }}
-                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                          placeholder="GRATIS VERZENDING BOVEN €150"
-                        />
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase flex items-center gap-2">
+                            <span className="px-1.5 py-0.5 bg-brand-primary text-white text-[10px] rounded">NL</span>
+                            Tekst *
+                          </label>
+                          <input
+                            type="text"
+                            value={message.text}
+                            onChange={(e) => {
+                              const updated = [...messages]
+                              updated[index].text = e.target.value
+                              setMessages(updated)
+                            }}
+                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                            placeholder="GRATIS VERZENDING BOVEN €150"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase flex items-center gap-2">
+                            <span className="px-1.5 py-0.5 bg-gray-700 text-white text-[10px] rounded">EN</span>
+                            Text
+                          </label>
+                          <input
+                            type="text"
+                            value={message.text_en || ''}
+                            onChange={(e) => {
+                              const updated = [...messages]
+                              updated[index].text_en = e.target.value || null
+                              setMessages(updated)
+                            }}
+                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                            placeholder="FREE SHIPPING OVER €150"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Leeg = valt terug op NL tekst</p>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                          Icon (optioneel)
-                        </label>
-                        <input
-                          type="text"
-                          value={message.icon || ''}
-                          onChange={(e) => {
-                            const updated = [...messages]
-                            updated[index].icon = e.target.value || null
-                            setMessages(updated)
-                          }}
-                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                          placeholder="Laat leeg"
-                          maxLength={50}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Emoji's worden niet getoond in banner</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase flex items-center gap-2">
+                            <span className="px-1.5 py-0.5 bg-brand-primary text-white text-[10px] rounded">NL</span>
+                            CTA Tekst
+                          </label>
+                          <input
+                            type="text"
+                            value={message.cta_text || ''}
+                            onChange={(e) => {
+                              const updated = [...messages]
+                              updated[index].cta_text = e.target.value || null
+                              setMessages(updated)
+                            }}
+                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                            placeholder="SHOP NU"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase flex items-center gap-2">
+                            <span className="px-1.5 py-0.5 bg-gray-700 text-white text-[10px] rounded">EN</span>
+                            CTA Text
+                          </label>
+                          <input
+                            type="text"
+                            value={message.cta_text_en || ''}
+                            onChange={(e) => {
+                              const updated = [...messages]
+                              updated[index].cta_text_en = e.target.value || null
+                              setMessages(updated)
+                            }}
+                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                            placeholder="SHOP NOW"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                          Link URL
-                        </label>
-                        <input
-                          type="text"
-                          value={message.link_url || ''}
-                          onChange={(e) => {
-                            const updated = [...messages]
-                            updated[index].link_url = e.target.value || null
-                            setMessages(updated)
-                          }}
-                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                          placeholder="/nl/shop"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                          CTA Tekst
-                        </label>
-                        <input
-                          type="text"
-                          value={message.cta_text || ''}
-                          onChange={(e) => {
-                            const updated = [...messages]
-                            updated[index].cta_text = e.target.value || null
-                            setMessages(updated)
-                          }}
-                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                          placeholder="SHOP NU"
-                        />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                            Link URL
+                          </label>
+                          <input
+                            type="text"
+                            value={message.link_url || ''}
+                            onChange={(e) => {
+                              const updated = [...messages]
+                              updated[index].link_url = e.target.value || null
+                              setMessages(updated)
+                            }}
+                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                            placeholder="/shop"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Zonder /nl of /en — de juiste taal wordt automatisch toegevoegd</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                            Icon (optioneel)
+                          </label>
+                          <input
+                            type="text"
+                            value={message.icon || ''}
+                            onChange={(e) => {
+                              const updated = [...messages]
+                              updated[index].icon = e.target.value || null
+                              setMessages(updated)
+                            }}
+                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
+                            placeholder="Laat leeg"
+                            maxLength={50}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Emoji's worden niet getoond in banner</p>
+                        </div>
                       </div>
                     </div>
 

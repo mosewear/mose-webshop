@@ -1,79 +1,83 @@
+import { getLocale } from 'next-intl/server'
 import { createAnonClient } from '@/lib/supabase/server'
 import AnnouncementBannerClient from './AnnouncementBannerClient'
 
-interface AnnouncementMessage {
-  id: string
-  text: string
-  link_url: string | null
-  cta_text: string | null
-  icon: string | null
-  sort_order: number
-  is_active: boolean
-}
-
-interface BannerConfig {
-  id: string
+interface ClientConfig {
   enabled: boolean
   rotation_interval: number
   dismissable: boolean
   dismiss_cookie_days: number
 }
 
-export default async function AnnouncementBanner() {
+interface ClientMessage {
+  id: string
+  text: string
+  link_url: string | null
+  cta_text: string | null
+  icon: string | null
+  sort_order: number
+}
+
+async function loadBannerData(locale: string): Promise<{
+  enabled: boolean
+  config: ClientConfig | null
+  messages: ClientMessage[]
+}> {
   const supabase = createAnonClient()
+  const empty = { enabled: false, config: null, messages: [] as ClientMessage[] }
 
   try {
-    // Fetch banner config
     const { data: configData } = await supabase
       .from('announcement_banner')
       .select('*')
       .single()
 
-    // If config doesn't exist, render empty client (manages CSS var)
-    if (!configData) {
-      return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
-    }
+    if (!configData || !configData.enabled) return empty
 
-    // If banner is disabled, render empty client (manages CSS var)
-    if (!configData.enabled) {
-      return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
-    }
-
-    // Fetch active messages
     const { data: messagesData } = await supabase
       .from('announcement_messages')
-      .select('*')
+      .select('id, text, text_en, link_url, cta_text, cta_text_en, icon, sort_order')
       .eq('banner_id', configData.id)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
-    // If no active messages, render empty client (manages CSS var)
-    if (!messagesData || messagesData.length === 0) {
-      return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
-    }
+    if (!messagesData || messagesData.length === 0) return empty
 
-    // Pass data to client component for interactivity
-    return (
-      <AnnouncementBannerClient
-        enabled={true}
-        config={{
-          enabled: configData.enabled,
-          rotation_interval: configData.rotation_interval,
-          dismissable: configData.dismissable,
-          dismiss_cookie_days: configData.dismiss_cookie_days
-        }}
-        messages={messagesData.map(msg => ({
-          id: msg.id,
-          text: msg.text,
-          link_url: msg.link_url,
-          cta_text: msg.cta_text,
-          icon: msg.icon,
-          sort_order: msg.sort_order
-        }))}
-      />
-    )
+    const isEnglish = locale === 'en'
+    return {
+      enabled: true,
+      config: {
+        enabled: configData.enabled,
+        rotation_interval: configData.rotation_interval,
+        dismissable: configData.dismissable,
+        dismiss_cookie_days: configData.dismiss_cookie_days,
+      },
+      messages: messagesData.map(msg => ({
+        id: msg.id,
+        text: isEnglish ? (msg.text_en?.trim() || msg.text) : msg.text,
+        link_url: normalizeBannerLink(msg.link_url),
+        cta_text: isEnglish ? (msg.cta_text_en?.trim() || msg.cta_text) : msg.cta_text,
+        icon: msg.icon,
+        sort_order: msg.sort_order,
+      })),
+    }
   } catch (error) {
     console.error('Error fetching announcement banner:', error)
-    return <AnnouncementBannerClient enabled={false} config={null} messages={[]} />
+    return empty
   }
+}
+
+export default async function AnnouncementBanner() {
+  const locale = await getLocale()
+  const { enabled, config, messages } = await loadBannerData(locale)
+
+  return <AnnouncementBannerClient enabled={enabled} config={config} messages={messages} />
+}
+
+// Strip a leading locale segment so the locale-aware Link in the client
+// can inject the visitor's current locale. Keeps external URLs intact.
+function normalizeBannerLink(raw: string | null): string | null {
+  if (!raw) return raw
+  if (/^https?:\/\//i.test(raw)) return raw
+  return raw.replace(/^\/(nl|en)(?=\/|$)/i, '') || '/'
 }

@@ -1,4 +1,10 @@
 {
+  "announcementBanner": {
+    "previous": "Vorig bericht",
+    "next": "Volgend bericht",
+    "dismiss": "Banner sluiten",
+    "goTo": "Ga naar bericht {index}"
+  },
   "giftCard": {
     "badge": "Cadeaubon",
     "category": "Cadeaubon",
@@ -1590,7 +1596,7 @@
     "subtitle": "Er is een nieuw contactformulier bericht ontvangen",
     "from": "Van",
     "email": "E-mail",
-    "subject": "Onderwerp",
+    "subjectLabel": "Onderwerp",
     "message": "Bericht",
     "replyInfo": "Beantwoord dit bericht zo snel mogelijk door te reageren op het e-mailadres van de klant"
   },

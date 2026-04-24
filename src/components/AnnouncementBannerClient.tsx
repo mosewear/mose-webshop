@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 
 interface AnnouncementMessage {
   id: string
@@ -30,6 +31,7 @@ interface AnnouncementBannerClientProps {
 const DISMISS_COOKIE_NAME = 'mose_banner_dismissed'
 
 export default function AnnouncementBannerClient({ enabled, config, messages }: AnnouncementBannerClientProps) {
+  const t = useTranslations('announcementBanner')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDismissed, setIsDismissed] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -132,7 +134,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
             <button
               onClick={handlePrev}
               className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded hidden lg:flex items-center justify-center"
-              aria-label="Previous message"
+              aria-label={t('previous')}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -191,7 +193,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
                         ? 'bg-white w-6'
                         : 'bg-white/40 hover:bg-white/60 w-2'
                     }`}
-                    aria-label={`Go to message ${index + 1}`}
+                    aria-label={t('goTo', { index: index + 1 })}
                   />
                 ))}
               </div>
@@ -202,7 +204,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
               <button
                 onClick={handleNext}
                 className="flex-shrink-0 p-1.5 hover:bg-white/10 transition-colors rounded hidden lg:flex items-center justify-center"
-                aria-label="Next message"
+                aria-label={t('next')}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -213,7 +215,7 @@ export default function AnnouncementBannerClient({ enabled, config, messages }: 
               <button
                 onClick={handleDismiss}
                 className="flex-shrink-0 p-1 md:p-1.5 hover:bg-white/10 transition-colors rounded"
-                aria-label="Dismiss banner"
+                aria-label={t('dismiss')}
               >
                 <X className="w-4 h-4" />
               </button>
