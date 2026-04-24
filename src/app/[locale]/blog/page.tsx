@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import BlogListClient from './BlogListClient'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
@@ -103,7 +104,9 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <BlogListClient posts={posts} categories={categories} />
+      <Suspense fallback={null}>
+        <BlogListClient posts={posts} categories={categories} />
+      </Suspense>
     </>
   )
 }
