@@ -1830,6 +1830,11 @@
     "backToBlog": "Terug naar blog",
     "shareArticle": "Deel dit artikel",
     "linkCopied": "Link gekopieerd!",
+    "linkCopyFailed": "Kon link niet kopiëren",
+    "copyLink": "Kopieer link",
+    "share": "Delen",
+    "loadMore": "Meer laden",
+    "englishFallback": "Dit artikel is momenteel alleen in het Nederlands beschikbaar.",
     "relatedPosts": "Gerelateerde artikelen",
     "noPosts": "Nog geen artikelen gepubliceerd.",
     "categories": {

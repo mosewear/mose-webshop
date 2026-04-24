@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import BlogListClient from './BlogListClient'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
+import { getBlogPosts } from '@/lib/blog'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
@@ -42,6 +43,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         nl: '/nl/blog',
         en: '/en/blog',
       },
+      types: {
+        'application/rss+xml': 'https://www.mosewear.com/blog/feed.xml',
+      },
     },
   }
 }
@@ -55,6 +59,11 @@ export async function generateStaticParams() {
 export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
+
+  const posts = await getBlogPosts()
+  const categories = Array.from(
+    new Set(posts.map((p) => p.category).filter((c): c is string => Boolean(c)))
+  ).sort()
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -94,7 +103,7 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <BlogListClient />
+      <BlogListClient posts={posts} categories={categories} />
     </>
   )
 }

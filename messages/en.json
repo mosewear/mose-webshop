@@ -1878,6 +1878,11 @@
     "backToBlog": "Back to blog",
     "shareArticle": "Share this article",
     "linkCopied": "Link copied!",
+    "linkCopyFailed": "Could not copy link",
+    "copyLink": "Copy link",
+    "share": "Share",
+    "loadMore": "Load more",
+    "englishFallback": "This article is currently only available in Dutch.",
     "relatedPosts": "Related articles",
     "noPosts": "No articles published yet.",
     "categories": {
