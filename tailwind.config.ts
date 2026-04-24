@@ -31,11 +31,17 @@ const config: Config = {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0)' },
         },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.2s ease-out',
         slideUp: 'slideUp 0.3s ease-out',
         slideInRight: 'slideInRight 0.3s ease-out',
+        marquee: 'marquee 40s linear infinite',
+        'marquee-fast': 'marquee 24s linear infinite',
       },
     },
   },

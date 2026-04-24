@@ -1,515 +1,275 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { BookOpen, Settings as SettingsIcon, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Camera, Type } from 'lucide-react'
-import MediaPicker from '@/components/admin/MediaPicker'
+import LanguageTabs from '@/components/admin/LanguageTabs'
+import type {
+  ChapterMeta,
+  ChapterProduct,
+  LookbookChapterWithProducts,
+  LookbookLayoutVariant,
+} from '@/lib/lookbook'
+import ChapterList from './ChapterList'
+import GlobalSettings, { type GlobalLookbookSettings } from './GlobalSettings'
 
-interface LookbookSettings {
+interface CatalogProduct {
   id: string
-  header_title: string
-  header_subtitle: string
-  hero_image_url: string
-  hero_title: string
-  hero_subtitle: string
-  section1_image_url: string
-  section1_title: string
-  section1_text: string
-  section1_cta_text: string
-  section1_cta_link: string
-  section2_image_url: string
-  section2_title: string
-  section2_text: string
-  section2_cta_text: string
-  section2_cta_link: string
-  quote_text: string
-  quote_subtext: string
-  triple1_image_url: string
-  triple1_title: string
-  triple2_image_url: string
-  triple2_title: string
-  triple3_image_url: string
-  triple3_title: string
-  wide_image_url: string
-  wide_title: string
-  wide_cta_text: string
-  wide_cta_link: string
-  final_cta_title: string
-  final_cta_text: string
-  final_cta_button_text: string
-  final_cta_button_link: string
+  slug: string
+  name: string
+  base_price: number
+  primary_image_url: string | null
+  status: string
+  is_active: boolean
 }
 
-export default function LookbookAdminPage() {
-  const [settings, setSettings] = useState<LookbookSettings | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
+type Tab = 'chapters' | 'global'
 
-  const supabase = createClient()
+/**
+ * MOSE Lookbook Admin — brand-new editor for the re-designed editorial
+ * lookbook page.
+ *
+ * Structure
+ *  - Tab 1 "Chapters": full CRUD over `lookbook_chapters` + reorder +
+ *    product linking. This is where 99% of editorial work happens.
+ *  - Tab 2 "Globale instellingen": header copy, default marquee ticker,
+ *    final CTA panel — everything that sits outside of a chapter.
+ *
+ * The public page reads the same tables with ISR so edits appear after
+ * the next revalidation window (or immediately via the manual revalidate
+ * button). Admin RLS is enforced by the layout's requireAdmin guard and
+ * the Supabase policies created in 20260425120000_lookbook_chapters.sql.
+ */
+export default function LookbookAdminPage() {
+  const [tab, setTab] = useState<Tab>('chapters')
+  const [activeLanguage, setActiveLanguage] = useState<'nl' | 'en'>('nl')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [chapters, setChapters] = useState<LookbookChapterWithProducts[]>([])
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [settings, setSettings] = useState<GlobalLookbookSettings | null>(null)
 
   useEffect(() => {
-    fetchSettings()
-  }, [])
+    const supabase = createClient()
+    ;(async () => {
+      try {
+        // 1. Global settings row (singleton)
+        const { data: ls, error: lsError } = await supabase
+          .from('lookbook_settings')
+          .select(
+            'id, header_title, header_title_en, header_subtitle, header_subtitle_en, ticker_text_nl, ticker_text_en, final_cta_title, final_cta_title_en, final_cta_text, final_cta_text_en, final_cta_button_text, final_cta_button_text_en, final_cta_button_link',
+          )
+          .single()
+        if (lsError) throw lsError
 
-  const fetchSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('lookbook_settings')
-        .select('*')
-        .single()
+        // 2. Chapters with product links
+        const { data: rawChapters, error: chErr } = await supabase
+          .from('lookbook_chapters')
+          .select('*')
+          .order('sort_order', { ascending: true })
+        if (chErr) throw chErr
 
-      if (error) throw error
-      setSettings(data)
-    } catch (error) {
-      console.error('Error fetching lookbook settings:', error)
-      setMessage('❌ Error bij laden van settings')
-    } finally {
-      setLoading(false)
-    }
-  }
+        const { data: links, error: linkErr } = await supabase
+          .from('lookbook_chapter_products')
+          .select('chapter_id, product_id, sort_order')
+          .order('sort_order', { ascending: true })
+        if (linkErr) throw linkErr
 
-  const handleSave = async () => {
-    if (!settings) return
+        // 3. Catalog (active products) + primary image in one shot
+        const { data: products, error: pErr } = await supabase
+          .from('products')
+          .select(
+            `id, slug, name, base_price, status, is_active,
+             product_images ( url, is_primary, position )`,
+          )
+          .eq('is_active', true)
+          .order('name')
+        if (pErr) throw pErr
 
-    setSaving(true)
-    setMessage('')
-
-    try {
-      const { error } = await supabase
-        .from('lookbook_settings')
-        .update({
-          ...settings,
-          updated_at: new Date().toISOString()
+        const catalogProducts: CatalogProduct[] = (products ?? []).map((p) => {
+          const imgs = (p.product_images ?? []).slice().sort((a: { is_primary: boolean; position: number }, b: { is_primary: boolean; position: number }) => {
+            if (a.is_primary === b.is_primary) {
+              return (a.position ?? 0) - (b.position ?? 0)
+            }
+            return a.is_primary ? -1 : 1
+          })
+          return {
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            base_price: p.base_price,
+            status: p.status,
+            is_active: p.is_active,
+            primary_image_url: imgs[0]?.url ?? null,
+          }
         })
-        .eq('id', settings.id)
 
-      if (error) throw error
+        // Build chapter+products tree
+        const catalogById = new Map(catalogProducts.map((p) => [p.id, p]))
+        const linksByChapter = new Map<string, typeof links>()
+        for (const l of links ?? []) {
+          const list = linksByChapter.get(l.chapter_id) ?? []
+          list.push(l)
+          linksByChapter.set(l.chapter_id, list)
+        }
 
-      setMessage('✅ Lookbook opgeslagen!')
-      setTimeout(() => setMessage(''), 5000)
-    } catch (error) {
-      console.error('Error saving:', error)
-      setMessage('❌ Error bij opslaan')
-    } finally {
-      setSaving(false)
-    }
-  }
+        const mergedChapters: LookbookChapterWithProducts[] = (rawChapters ?? []).map(
+          (row) => {
+            const myLinks = linksByChapter.get(row.id) ?? []
+            const products: ChapterProduct[] = myLinks
+              .map((l, idx): ChapterProduct | null => {
+                const cat = catalogById.get(l.product_id)
+                if (!cat) return null
+                return {
+                  id: cat.id,
+                  slug: cat.slug,
+                  name: cat.name,
+                  name_en: null,
+                  base_price: cat.base_price,
+                  sale_price: null,
+                  primary_image_url: cat.primary_image_url,
+                  secondary_image_url: null,
+                  variant_colors: [],
+                  sort_order: l.sort_order ?? idx * 10,
+                  is_active: cat.is_active,
+                  status: cat.status,
+                }
+              })
+              .filter((p): p is ChapterProduct => p !== null)
+
+            // Parse meta (stored as JSONB)
+            let meta: ChapterMeta[] = []
+            if (Array.isArray(row.meta)) {
+              meta = row.meta
+                .map((m: Record<string, unknown>) => ({
+                  label_nl: typeof m.label_nl === 'string' ? m.label_nl : '',
+                  label_en: typeof m.label_en === 'string' ? m.label_en : '',
+                  value_nl: typeof m.value_nl === 'string' ? m.value_nl : '',
+                  value_en: typeof m.value_en === 'string' ? m.value_en : '',
+                }))
+                .slice(0, 3)
+            }
+
+            return {
+              id: row.id,
+              sort_order: row.sort_order,
+              eyebrow_nl: row.eyebrow_nl,
+              eyebrow_en: row.eyebrow_en,
+              title_nl: row.title_nl,
+              title_en: row.title_en,
+              caption_nl: row.caption_nl,
+              caption_en: row.caption_en,
+              hero_image_url: row.hero_image_url,
+              image_focal_x: row.image_focal_x,
+              image_focal_y: row.image_focal_y,
+              layout_variant: row.layout_variant as LookbookLayoutVariant,
+              ticker_text_nl: row.ticker_text_nl,
+              ticker_text_en: row.ticker_text_en,
+              meta,
+              is_active: row.is_active,
+              created_at: row.created_at,
+              updated_at: row.updated_at,
+              products,
+            }
+          },
+        )
+
+        setSettings(ls as GlobalLookbookSettings)
+        setCatalog(catalogProducts)
+        setChapters(mergedChapters)
+      } catch (err) {
+        console.error(err)
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p>Laden...</p>
-        </div>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-primary" />
       </div>
     )
   }
 
-  if (!settings) {
+  if (error || !settings) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600">Error: Kon lookbook settings niet laden</p>
-        </div>
+      <div className="border-2 border-red-500 bg-red-50 p-4 text-sm text-red-800">
+        <p className="font-bold">Kon de lookbook-data niet laden.</p>
+        <p>{error ?? 'Lookbook settings row ontbreekt.'}</p>
       </div>
     )
   }
+
+  const tabs: { id: Tab; label: string; icon: typeof BookOpen }[] = [
+    { id: 'chapters', label: 'Chapters', icon: BookOpen },
+    { id: 'global', label: 'Globale instellingen', icon: SettingsIcon },
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">📸 Lookbook Beheer</h1>
-          <p className="text-gray-600">Pas alle teksten en foto's van de lookbook pagina aan</p>
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-6 md:mb-8 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-1">
+            Lookbook
+          </h1>
+          <p className="text-sm md:text-base text-gray-600">
+            Editorial chapters, ticker en slot-CTA voor de lookbook-pagina.
+          </p>
         </div>
-
-        <div className="space-y-8">
-          {/* HEADER */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black flex items-center gap-2">
-              <Type size={20} /> Header
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Hoofdtitel</label>
-                <input
-                  type="text"
-                  value={settings.header_title}
-                  onChange={(e) => setSettings({ ...settings, header_title: e.target.value })}
-                  className="w-full px-4 py-2 text-2xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Subtitel</label>
-                <input
-                  type="text"
-                  value={settings.header_subtitle}
-                  onChange={(e) => setSettings({ ...settings, header_subtitle: e.target.value })}
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* HERO */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black flex items-center gap-2">
-              <Camera size={20} /> Hero Sectie
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Hero Afbeelding</label>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.hero_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, hero_image_url: url })}
-                  accept="images"
-                  folder="lookbook/hero"
-                  bucket="images"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Hero Titel</label>
-                <input
-                  type="text"
-                  value={settings.hero_title}
-                  onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })}
-                  className="w-full px-4 py-2 text-xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Hero Subtitel</label>
-                <input
-                  type="text"
-                  value={settings.hero_subtitle}
-                  onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })}
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 1 */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Sectie 1: Urban Essentials</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Afbeelding</label>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.section1_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, section1_image_url: url })}
-                  accept="images"
-                  folder="lookbook/section1"
-                  bucket="images"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Titel</label>
-                <input
-                  type="text"
-                  value={settings.section1_title}
-                  onChange={(e) => setSettings({ ...settings, section1_title: e.target.value })}
-                  className="w-full px-4 py-2 text-xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Tekst</label>
-                <textarea
-                  value={settings.section1_text}
-                  onChange={(e) => setSettings({ ...settings, section1_text: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">CTA Button Tekst</label>
-                  <input
-                    type="text"
-                    value={settings.section1_cta_text}
-                    onChange={(e) => setSettings({ ...settings, section1_cta_text: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">CTA Button Link</label>
-                  <input
-                    type="text"
-                    value={settings.section1_cta_link}
-                    onChange={(e) => setSettings({ ...settings, section1_cta_link: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 2 */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Sectie 2: Clean & Simple</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Afbeelding</label>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.section2_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, section2_image_url: url })}
-                  accept="images"
-                  folder="lookbook/section2"
-                  bucket="images"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Titel</label>
-                <input
-                  type="text"
-                  value={settings.section2_title}
-                  onChange={(e) => setSettings({ ...settings, section2_title: e.target.value })}
-                  className="w-full px-4 py-2 text-xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Tekst</label>
-                <textarea
-                  value={settings.section2_text}
-                  onChange={(e) => setSettings({ ...settings, section2_text: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">CTA Button Tekst</label>
-                  <input
-                    type="text"
-                    value={settings.section2_cta_text}
-                    onChange={(e) => setSettings({ ...settings, section2_cta_text: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">CTA Button Link</label>
-                  <input
-                    type="text"
-                    value={settings.section2_cta_link}
-                    onChange={(e) => setSettings({ ...settings, section2_cta_link: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* QUOTE */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Quote Blok</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Quote Tekst</label>
-                <input
-                  type="text"
-                  value={settings.quote_text}
-                  onChange={(e) => setSettings({ ...settings, quote_text: e.target.value })}
-                  className="w-full px-4 py-2 text-xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Quote Subtekst</label>
-                <textarea
-                  value={settings.quote_subtext}
-                  onChange={(e) => setSettings({ ...settings, quote_subtext: e.target.value })}
-                  rows={2}
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* TRIPLE SPLIT */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Triple Split (3 Producten)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <h3 className="font-bold text-brand-primary">Product 1</h3>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.triple1_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, triple1_image_url: url })}
-                  accept="images"
-                  folder="lookbook/triple"
-                  bucket="images"
-                  buttonText="Afbeelding 1"
-                />
-                <div>
-                  <label className="block text-sm font-bold mb-2">Titel 1</label>
-                  <input
-                    type="text"
-                    value={settings.triple1_title}
-                    onChange={(e) => setSettings({ ...settings, triple1_title: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                  />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h3 className="font-bold text-brand-primary">Product 2</h3>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.triple2_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, triple2_image_url: url })}
-                  accept="images"
-                  folder="lookbook/triple"
-                  bucket="images"
-                  buttonText="Afbeelding 2"
-                />
-                <div>
-                  <label className="block text-sm font-bold mb-2">Titel 2</label>
-                  <input
-                    type="text"
-                    value={settings.triple2_title}
-                    onChange={(e) => setSettings({ ...settings, triple2_title: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                  />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h3 className="font-bold text-brand-primary">Product 3</h3>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.triple3_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, triple3_image_url: url })}
-                  accept="images"
-                  folder="lookbook/triple"
-                  bucket="images"
-                  buttonText="Afbeelding 3"
-                />
-                <div>
-                  <label className="block text-sm font-bold mb-2">Titel 3</label>
-                  <input
-                    type="text"
-                    value={settings.triple3_title}
-                    onChange={(e) => setSettings({ ...settings, triple3_title: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* WIDE PHOTO */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Wide Lifestyle Photo</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Wide Afbeelding</label>
-                <MediaPicker
-                  mode="single"
-                  currentImageUrl={settings.wide_image_url}
-                  onImageSelected={(url) => setSettings({ ...settings, wide_image_url: url })}
-                  accept="images"
-                  folder="lookbook/wide"
-                  bucket="images"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Titel</label>
-                <input
-                  type="text"
-                  value={settings.wide_title}
-                  onChange={(e) => setSettings({ ...settings, wide_title: e.target.value })}
-                  className="w-full px-4 py-2 text-xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">CTA Button Tekst</label>
-                  <input
-                    type="text"
-                    value={settings.wide_cta_text}
-                    onChange={(e) => setSettings({ ...settings, wide_cta_text: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">CTA Button Link</label>
-                  <input
-                    type="text"
-                    value={settings.wide_cta_link}
-                    onChange={(e) => setSettings({ ...settings, wide_cta_link: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* FINAL CTA */}
-          <div className="bg-white border-2 border-black p-6">
-            <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Final Green CTA</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Titel</label>
-                <input
-                  type="text"
-                  value={settings.final_cta_title}
-                  onChange={(e) => setSettings({ ...settings, final_cta_title: e.target.value })}
-                  className="w-full px-4 py-2 text-xl border-2 border-gray-300 focus:border-black focus:outline-none font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Tekst</label>
-                <textarea
-                  value={settings.final_cta_text}
-                  onChange={(e) => setSettings({ ...settings, final_cta_text: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">Button Tekst</label>
-                  <input
-                    type="text"
-                    value={settings.final_cta_button_text}
-                    onChange={(e) => setSettings({ ...settings, final_cta_button_text: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Button Link</label>
-                  <input
-                    type="text"
-                    value={settings.final_cta_button_link}
-                    onChange={(e) => setSettings({ ...settings, final_cta_button_link: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sticky Save Button */}
-        <div className="sticky bottom-0 bg-white border-t-2 border-black p-4 mt-8 flex items-center justify-between">
-          {message && (
-            <p className={`font-bold ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
-              {message}
-            </p>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="ml-auto px-8 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed border-2 border-black"
+        <div className="flex items-center gap-2">
+          <a
+            href="/lookbook"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold uppercase tracking-wider border-2 border-black bg-white px-3 py-2 hover:bg-black hover:text-white transition-colors"
           >
-            {saving ? 'Opslaan...' : '💾 Opslaan'}
-          </button>
+            <ExternalLink size={14} />
+            <span className="hidden sm:inline">Bekijk pagina</span>
+            <span className="sm:hidden">Preview</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white border-2 border-black">
+        <div className="flex border-b-2 border-black overflow-x-auto scrollbar-hide">
+          {tabs.map((t) => {
+            const Icon = t.icon
+            const active = tab === t.id
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-6 py-3 md:py-4 font-bold uppercase tracking-wider text-xs md:text-sm whitespace-nowrap transition-colors ${
+                  active ? 'bg-black text-white' : 'hover:bg-gray-100 active:bg-gray-200'
+                }`}
+              >
+                <Icon size={16} />
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="p-4 md:p-6">
+          <LanguageTabs activeLanguage={activeLanguage} onLanguageChange={setActiveLanguage} />
+
+          {tab === 'chapters' ? (
+            <ChapterList
+              initialChapters={chapters}
+              catalog={catalog}
+              activeLanguage={activeLanguage}
+            />
+          ) : (
+            <GlobalSettings initial={settings} activeLanguage={activeLanguage} />
+          )}
         </div>
       </div>
     </div>
   )
 }
-
-
-

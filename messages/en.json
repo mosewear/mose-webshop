@@ -999,6 +999,11 @@
       "description": "Discover our collection of premium basics. Timeless clothing and accessories for men. Made locally in Groningen. Free shipping from €75.",
       "keywords": "MOSE shop, premium basics, hoodies, t-shirts, menswear, Groningen, locally made, streetwear"
     },
+    "lookbook": {
+      "title": "Lookbook",
+      "description": "Editorial chapters full of MOSE outfits, story and inspiration. Shop the looks straight from our campaign.",
+      "keywords": "MOSE lookbook, editorial, outfit inspiration, premium basics, Groningen, streetwear"
+    },
     "product": {
       "notFound": "Product not found",
       "notFoundDesc": "The product you are looking for no longer exists."
