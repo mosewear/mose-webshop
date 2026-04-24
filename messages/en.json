@@ -1899,6 +1899,44 @@
       "groningen": "Groningen"
     }
   },
+  "lookbook": {
+    "eyebrow": "MOSE · Editorial",
+    "chapterLabel": "CHAPTER",
+    "emptyState": {
+      "title": "The next chapter is coming soon.",
+      "body": "In the meantime, explore the full collection.",
+      "cta": "Shop the collection"
+    },
+    "finalCta": {
+      "defaultButton": "Shop the collection"
+    },
+    "principles": {
+      "ariaLabel": "MOSE principles"
+    },
+    "shopModule": {
+      "piece": {
+        "label": "THE PIECE",
+        "cta": "Shop this piece",
+        "crossSell": "Match it with →"
+      },
+      "outfit": {
+        "label": "THE OUTFIT",
+        "cta": "View"
+      },
+      "look": {
+        "label": "SHOP THE LOOK",
+        "countItems": "{count} pieces",
+        "prev": "Previous",
+        "next": "Next"
+      },
+      "fallbackMeta": {
+        "materialLabel": "MATERIAL",
+        "materialValue": "Premium essentials",
+        "madeInLabel": "MADE IN",
+        "madeInValue": "Groningen, NL"
+      }
+    }
+  },
   "loyalty": {
     "title": "Loyalty",
     "points": "Points",

@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useCallback, useRef } from 'react'
 import { ArrowRight, ArrowLeft, ShoppingBag } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import type { ChapterMeta, ChapterProduct } from '@/lib/lookbook'
 import { pickLocalized, resolveShopModuleVariant } from '@/lib/lookbook'
@@ -103,6 +104,7 @@ function ThePiece({
   locale: 'nl' | 'en'
   inverted: boolean
 }) {
+  const t = useTranslations('lookbook.shopModule')
   const trackClick = useTrackProductClick('piece')
   const palette = inverted
     ? {
@@ -125,23 +127,26 @@ function ThePiece({
       }
 
   const name = productName(product, locale)
-  const tLabel = locale === 'en' ? 'THE PIECE' : 'THE PIECE'
-  const ctaLabel = locale === 'en' ? 'Shop this piece' : 'Shop dit item'
+  const tLabel = t('piece.label')
+  const ctaLabel = t('piece.cta')
+  // Fallback meta: localised via next-intl so we don't hardcode NL/EN
+  // rows in the TS source. Admin-authored meta (non-empty `meta` prop)
+  // always wins — this only fills the slot when nothing is configured.
   const fallbackMeta: ChapterMeta[] =
     meta.length > 0
       ? meta
       : [
           {
-            label_nl: 'MATERIAAL',
-            label_en: 'MATERIAL',
-            value_nl: 'Premium essentials',
-            value_en: 'Premium essentials',
+            label_nl: t('fallbackMeta.materialLabel'),
+            label_en: t('fallbackMeta.materialLabel'),
+            value_nl: t('fallbackMeta.materialValue'),
+            value_en: t('fallbackMeta.materialValue'),
           },
           {
-            label_nl: 'GEMAAKT IN',
-            label_en: 'MADE IN',
-            value_nl: 'Groningen, NL',
-            value_en: 'Groningen, NL',
+            label_nl: t('fallbackMeta.madeInLabel'),
+            label_en: t('fallbackMeta.madeInLabel'),
+            value_nl: t('fallbackMeta.madeInValue'),
+            value_en: t('fallbackMeta.madeInValue'),
           },
         ]
 
@@ -216,7 +221,7 @@ function ThePiece({
             href="/shop"
             className={`text-xs font-bold uppercase tracking-widest underline-offset-4 hover:underline ${palette.cross}`}
           >
-            {locale === 'en' ? 'Match it with →' : 'Combineer met →'}
+            {t('piece.crossSell')}
           </Link>
         </div>
       </div>
@@ -239,9 +244,10 @@ function TheOutfit({
   locale: 'nl' | 'en'
   inverted: boolean
 }) {
+  const t = useTranslations('lookbook.shopModule')
   const trackClick = useTrackProductClick('outfit')
-  const label = locale === 'en' ? 'THE OUTFIT' : 'THE OUTFIT'
-  const cta = locale === 'en' ? 'Add' : 'Bekijk'
+  const label = t('outfit.label')
+  const cta = t('outfit.cta')
   const palette = inverted
     ? {
         label: 'text-white',
@@ -346,9 +352,10 @@ function ShopTheLook({
   locale: 'nl' | 'en'
   inverted: boolean
 }) {
+  const t = useTranslations('lookbook.shopModule')
   const trackClick = useTrackProductClick('look')
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  const label = locale === 'en' ? 'SHOP THE LOOK' : 'SHOP THE LOOK'
+  const label = t('look.label')
 
   const palette = inverted
     ? {
@@ -376,15 +383,14 @@ function ShopTheLook({
         <p
           className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] opacity-60 ${palette.label}`}
         >
-          {label} · {products.length}{' '}
-          {locale === 'en' ? 'pieces' : 'items'}
+          {label} · {t('look.countItems', { count: products.length })}
         </p>
         <div className="hidden md:flex items-center gap-2">
           <button
             type="button"
             onClick={() => nudge('left')}
             className={`p-2 border-2 transition-colors ${palette.arrow}`}
-            aria-label={locale === 'en' ? 'Previous' : 'Vorige'}
+            aria-label={t('look.prev')}
           >
             <ArrowLeft size={16} />
           </button>
@@ -392,7 +398,7 @@ function ShopTheLook({
             type="button"
             onClick={() => nudge('right')}
             className={`p-2 border-2 transition-colors ${palette.arrow}`}
-            aria-label={locale === 'en' ? 'Next' : 'Volgende'}
+            aria-label={t('look.next')}
           >
             <ArrowRight size={16} />
           </button>

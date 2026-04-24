@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import type { LookbookChapterWithProducts } from '@/lib/lookbook'
 import { pickLocalized } from '@/lib/lookbook'
 import ShopModule from './ShopModule'
@@ -21,8 +22,9 @@ interface LookbookChapterProps {
  *   3. Motion primitives with reduced-motion support (motion.tsx)
  *
  * The chapter number is formatted two digits (01, 02, …) and used as a
- * fallback eyebrow when the admin doesn't set one, giving the lookbook
- * its "book" rhythm for free.
+ * fallback eyebrow when the admin doesn't set one. Label ("HOOFDSTUK"
+ * / "CHAPTER") resolves via the `lookbook.chapterLabel` i18n key so
+ * the fallback renders in the active locale instead of always English.
  *
  * The first chapter (`index === 0`) always hydrates its hero with
  * `priority` so the LCP image loads fast regardless of layout variant —
@@ -30,11 +32,12 @@ interface LookbookChapterProps {
  * that only the wide variant got before.
  */
 export default function LookbookChapter({ chapter, index, locale }: LookbookChapterProps) {
+  const t = useTranslations('lookbook')
   const title = pickLocalized(chapter.title_nl, chapter.title_en, locale)
   const caption = pickLocalized(chapter.caption_nl, chapter.caption_en, locale)
   const eyebrowLocalized = pickLocalized(chapter.eyebrow_nl, chapter.eyebrow_en, locale)
   const chapterNumber = String(index + 1).padStart(2, '0')
-  const eyebrow = eyebrowLocalized || `CHAPTER ${chapterNumber}`
+  const eyebrow = eyebrowLocalized || `${t('chapterLabel')} ${chapterNumber}`
 
   const objectPosition = `${chapter.image_focal_x}% ${chapter.image_focal_y}%`
 

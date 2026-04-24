@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import type { LookbookChapterWithProducts } from '@/lib/lookbook'
 import { pickLocalized } from '@/lib/lookbook'
@@ -17,15 +18,17 @@ interface LookbookClientProps {
 
 /**
  * Composes the full public lookbook experience: intro header, the
- * ordered list of chapters (with a marquee ticker woven between them),
- * and the closing green CTA.
+ * ordered list of chapters (with a slim editorial divider woven
+ * between them), and the closing CTA panel.
  *
- * The ticker slot after each chapter falls back to the globally set
- * ticker text if the chapter itself doesn't override it, so admins can
- * set a single default and only customize when they need a campaign
- * flourish.
+ * All UI strings resolve through the `lookbook` next-intl namespace
+ * so NL and EN render identical markup from a single source of truth.
+ * Admin-authored content (titles, captions, ticker text, final CTA
+ * copy) still comes from the DB via `pickLocalized`.
  */
 export default function LookbookClient({ settings, chapters, locale }: LookbookClientProps) {
+  const t = useTranslations('lookbook')
+
   const headerTitle = pickLocalized(
     settings?.header_title ?? 'THE LOOKBOOK',
     settings?.header_title_en ?? null,
@@ -54,7 +57,7 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
     locale,
   )
   const finalCtaButton = pickLocalized(
-    settings?.final_cta_button_text ?? (locale === 'en' ? 'Shop the collection' : 'Shop de collectie'),
+    settings?.final_cta_button_text ?? t('finalCta.defaultButton'),
     settings?.final_cta_button_text_en ?? null,
     locale,
   )
@@ -78,7 +81,7 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
             as="p"
             className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-gray-500 mb-4"
           >
-            MOSE · Editorial
+            {t('eyebrow')}
           </MotionStaggerItem>
           <MotionStaggerItem
             as="h1"
@@ -101,20 +104,14 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
       {chapters.length === 0 ? (
         <div className="max-w-3xl mx-auto p-10 md:p-16 text-center border-b-2 border-black">
           <p className="text-lg font-bold uppercase tracking-wider text-gray-700 mb-2">
-            {locale === 'en'
-              ? 'The next chapter is coming soon.'
-              : 'Het volgende hoofdstuk komt eraan.'}
+            {t('emptyState.title')}
           </p>
-          <p className="text-gray-500 mb-6">
-            {locale === 'en'
-              ? 'In the meantime, explore the full collection.'
-              : 'Bekijk ondertussen de volledige collectie.'}
-          </p>
+          <p className="text-gray-500 mb-6">{t('emptyState.body')}</p>
           <Link
             href="/shop"
             className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 font-bold uppercase tracking-wider hover:bg-brand-primary transition-colors"
           >
-            {locale === 'en' ? 'Shop the collection' : 'Shop de collectie'}
+            {t('emptyState.cta')}
             <ArrowRight size={16} />
           </Link>
         </div>
@@ -131,14 +128,14 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
           return (
             <div key={chapter.id}>
               <LookbookChapter chapter={chapter} index={index} locale={locale} />
-              {/* Static editorial principles-strip between chapters.
-                  Inverts (white on black ↔ black on white) so the strip
-                  always contrasts with the chapter above it — which is
-                  what gives the scroll its section-by-section rhythm. */}
+              {/* Slim editorial rule between chapters — single-line
+                  small caps, flips colour scheme on dark chapters so
+                  each chapter transition keeps its contrast. */}
               {!isLast && tickerText && (
                 <LookbookDivider
                   text={tickerText}
                   inverted={chapter.layout_variant === 'dark'}
+                  ariaLabel={t('principles.ariaLabel')}
                 />
               )}
             </div>
