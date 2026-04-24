@@ -294,20 +294,20 @@ export default function ChapterEditor({
         />
       </div>
 
-      {/* TICKER OVERRIDE */}
+      {/* PRINCIPLES-STRIP OVERRIDE */}
       <div>
         <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider">
-          Ticker-tekst {activeLanguage === 'en' ? '(EN — optioneel)' : '(NL — optioneel)'}
+          Tussentekst {activeLanguage === 'en' ? '(EN — optioneel)' : '(NL — optioneel)'}
         </label>
         <input
           type="text"
           value={ticker}
           onChange={(e) => setLocalized('ticker_text', e.target.value)}
-          placeholder="Leeg = de globale ticker-tekst gebruiken"
+          placeholder="Leeg = de globale tussentekst gebruiken"
           className="w-full px-3 py-2 text-sm border-2 border-gray-300 focus:border-black focus:outline-none"
         />
         <p className="text-xs text-gray-500 mt-1">
-          De horizontale loopteksten onder dit chapter. Gebruik <code>•</code> als scheidingsteken.
+          Statische strip onder dit chapter met MOSE-principes. Gebruik <code>•</code> als scheidingsteken tussen items.
         </p>
       </div>
 

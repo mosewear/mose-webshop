@@ -6,7 +6,7 @@ import type { LookbookChapterWithProducts } from '@/lib/lookbook'
 import { pickLocalized } from '@/lib/lookbook'
 import type { LookbookGlobalSettings } from '@/lib/lookbook-data'
 import LookbookChapter from './LookbookChapter'
-import LookbookMarquee from './LookbookMarquee'
+import LookbookDivider from './LookbookDivider'
 import { MotionFadeIn, MotionStaggerItem } from './motion'
 
 interface LookbookClientProps {
@@ -131,11 +131,12 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
           return (
             <div key={chapter.id}>
               <LookbookChapter chapter={chapter} index={index} locale={locale} />
-              {/* Marquee after every chapter except the last; invert the
-                  theme on chapters that aren't themselves dark so the
-                  baton-pass between sections keeps its visual rhythm. */}
+              {/* Static editorial principles-strip between chapters.
+                  Inverts (white on black ↔ black on white) so the strip
+                  always contrasts with the chapter above it — which is
+                  what gives the scroll its section-by-section rhythm. */}
               {!isLast && tickerText && (
-                <LookbookMarquee
+                <LookbookDivider
                   text={tickerText}
                   inverted={chapter.layout_variant === 'dark'}
                 />

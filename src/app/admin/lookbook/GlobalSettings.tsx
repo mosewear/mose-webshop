@@ -142,18 +142,19 @@ export default function GlobalSettings({ initial, activeLanguage }: GlobalSettin
         </div>
       </section>
 
-      {/* GLOBAL TICKER */}
+      {/* GLOBAL PRINCIPLES-STRIP */}
       <section>
         <h3 className="text-lg font-bold mb-3 pb-2 border-b-2 border-black">
-          Globale ticker (marquee)
+          Tussentekst tussen chapters
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Deze loopteksten verschijnen tussen de chapters. Individuele chapters
-          kunnen deze overschrijven. Gebruik <code>•</code> als scheidingsteken.
+          Statische strip met MOSE-principes die tussen de chapters verschijnt.
+          Individuele chapters kunnen deze overschrijven. Gebruik <code>•</code>{' '}
+          als scheidingsteken tussen items (max 5 aanbevolen voor leesbaarheid).
         </p>
         <div className="grid grid-cols-1 gap-4">
           <BiField
-            label="Ticker-tekst"
+            label="Tussentekst"
             nlKey="ticker_text_nl"
             enKey="ticker_text_en"
             placeholder="NO FAST FASHION • MADE IN GRONINGEN • PREMIUM ESSENTIALS"
