@@ -61,13 +61,18 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
   const finalCtaLink = settings?.final_cta_button_link?.trim() || '/shop'
 
   return (
-    <div data-full-bleed-top className="min-h-screen bg-white">
+    // No `data-full-bleed-top` here: the lookbook has a regular white
+    // header (not a full-viewport hero behind the chrome), so it must
+    // respect the global #main-content top-offset that compensates for
+    // the fixed announcement banner + header. Only the homepage opts
+    // out of that rule because its hero intentionally sits behind it.
+    <div className="min-h-screen bg-white">
       {/* HEADER ------------------------------------------------------- */}
       <header className="relative bg-white text-black border-b-2 border-black">
         <MotionFadeIn
           stagger
           rootMargin="0px"
-          className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-14 md:pt-20 lg:pt-28 pb-10 md:pb-16 lg:pb-20"
+          className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-10 md:pt-14 lg:pt-20 pb-10 md:pb-16 lg:pb-20"
         >
           <MotionStaggerItem
             as="p"
