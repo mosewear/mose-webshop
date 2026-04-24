@@ -108,7 +108,8 @@ function ThePiece({
     ? {
         panel: 'bg-black text-white border-white',
         border: 'border-white',
-        button: 'bg-brand-primary text-white hover:bg-white hover:text-black border-white',
+        button:
+          'bg-brand-primary text-white border-brand-primary hover:bg-white hover:text-black hover:border-white',
         cross: 'text-white/80 hover:text-white',
         divider: 'border-white/20',
         meta: 'text-white/80',
@@ -116,7 +117,8 @@ function ThePiece({
     : {
         panel: 'bg-white text-black border-black',
         border: 'border-black',
-        button: 'bg-black text-white hover:bg-brand-primary hover:text-white border-black',
+        button:
+          'bg-black text-white border-black hover:bg-brand-primary hover:border-brand-primary',
         cross: 'text-gray-700 hover:text-black',
         divider: 'border-gray-200',
         meta: 'text-gray-700',
@@ -244,12 +246,12 @@ function TheOutfit({
     ? {
         label: 'text-white',
         card: 'bg-black border-white text-white',
-        btn: 'bg-white text-black hover:bg-brand-primary hover:text-white',
+        btn: 'bg-white text-black border-white hover:bg-brand-primary hover:text-white hover:border-brand-primary',
       }
     : {
         label: 'text-black',
         card: 'bg-white border-black text-black',
-        btn: 'bg-black text-white hover:bg-brand-primary',
+        btn: 'bg-black text-white border-black hover:bg-brand-primary hover:border-brand-primary',
       }
 
   const gridClass =
@@ -270,7 +272,7 @@ function TheOutfit({
           return (
             <article
               key={p.id}
-              className={`border-2 ${palette.card} transition-colors group`}
+              className={`border-2 ${palette.card} group transition-all duration-300 md:hover:-translate-y-1 md:hover:shadow-2xl`}
             >
               <Link
                 href={`/product/${p.slug}`}
@@ -315,7 +317,7 @@ function TheOutfit({
                 <Link
                   href={`/product/${p.slug}`}
                   onClick={() => trackClick(p.id, p.slug, name)}
-                  className={`inline-flex items-center gap-1 border-2 border-current px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider flex-shrink-0 transition-colors ${palette.btn}`}
+                  className={`inline-flex items-center gap-1 border-2 px-4 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider flex-shrink-0 transition-colors ${palette.btn}`}
                 >
                   + {cta}
                 </Link>
@@ -408,7 +410,7 @@ function ShopTheLook({
               href={`/product/${p.slug}`}
               key={p.id}
               onClick={() => trackClick(p.id, p.slug, name)}
-              className={`group snap-start flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[280px] lg:w-[320px] border-2 ${palette.card} transition-colors`}
+              className={`group snap-start flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[280px] lg:w-[320px] border-2 ${palette.card} transition-all duration-300 md:hover:-translate-y-1 md:hover:shadow-2xl`}
             >
               <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
                 {p.primary_image_url ? (

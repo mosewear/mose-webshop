@@ -23,6 +23,11 @@ interface LookbookChapterProps {
  * The chapter number is formatted two digits (01, 02, …) and used as a
  * fallback eyebrow when the admin doesn't set one, giving the lookbook
  * its "book" rhythm for free.
+ *
+ * The first chapter (`index === 0`) always hydrates its hero with
+ * `priority` so the LCP image loads fast regardless of layout variant —
+ * without this, dark/split first chapters lost out on the LCP boost
+ * that only the wide variant got before.
  */
 export default function LookbookChapter({ chapter, index, locale }: LookbookChapterProps) {
   const title = pickLocalized(chapter.title_nl, chapter.title_en, locale)
@@ -36,6 +41,7 @@ export default function LookbookChapter({ chapter, index, locale }: LookbookChap
   const isDark = chapter.layout_variant === 'dark'
   const bgClass = isDark ? 'bg-black text-white' : 'bg-white text-black'
   const borderClass = isDark ? 'border-white' : 'border-black'
+  const isFirst = index === 0
 
   return (
     <section
@@ -52,7 +58,7 @@ export default function LookbookChapter({ chapter, index, locale }: LookbookChap
             objectPosition={objectPosition}
             borderClass={borderClass}
             isDark={isDark}
-            priority={index === 0}
+            priority={isFirst}
           />
         )}
         {chapter.layout_variant === 'split-right' && (
@@ -65,6 +71,7 @@ export default function LookbookChapter({ chapter, index, locale }: LookbookChap
             objectPosition={objectPosition}
             borderClass={borderClass}
             isDark={isDark}
+            priority={isFirst}
           />
         )}
         {chapter.layout_variant === 'split-left' && (
@@ -77,6 +84,7 @@ export default function LookbookChapter({ chapter, index, locale }: LookbookChap
             objectPosition={objectPosition}
             borderClass={borderClass}
             isDark={isDark}
+            priority={isFirst}
           />
         )}
         {chapter.layout_variant === 'dark' && (
@@ -86,6 +94,7 @@ export default function LookbookChapter({ chapter, index, locale }: LookbookChap
             caption={caption}
             imageUrl={chapter.hero_image_url}
             objectPosition={objectPosition}
+            priority={isFirst}
           />
         )}
 
@@ -177,6 +186,9 @@ function WideLayout({
 
 // ---------------------------------------------------------------------------
 // SPLIT — asymmetric 7:5 grid. When mirrored, image swaps sides.
+// The sticky text block respects the actual top-chrome height via the
+// same CSS vars the global layout already maintains, so it never tucks
+// behind the fixed announcement banner + header.
 // ---------------------------------------------------------------------------
 
 function SplitLayout({
@@ -188,6 +200,7 @@ function SplitLayout({
   objectPosition,
   borderClass,
   isDark,
+  priority,
 }: {
   mirrored: boolean
   eyebrow: string
@@ -197,22 +210,39 @@ function SplitLayout({
   objectPosition: string
   borderClass: string
   isDark: boolean
+  priority: boolean
 }) {
   const imageBlock = (
     <div className={`relative aspect-[3/4] md:aspect-[4/5] border-2 ${borderClass} overflow-hidden bg-gray-100`}>
       {imageUrl ? (
-        <ParallaxImage
-          src={imageUrl}
-          alt={title}
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          objectPosition={objectPosition}
-        />
+        priority ? (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            style={{ objectPosition }}
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <ParallaxImage
+            src={imageUrl}
+            alt={title}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            objectPosition={objectPosition}
+          />
+        )
       ) : null}
     </div>
   )
 
   const textBlock = (
-    <MotionFadeIn stagger rootMargin="-10% 0px" className="flex flex-col justify-center py-4 md:py-8 md:sticky md:top-28 self-start">
+    <MotionFadeIn
+      stagger
+      rootMargin="-10% 0px"
+      className="flex flex-col justify-center py-4 md:py-8 md:sticky md:top-[calc(var(--announcement-banner-height,0px)+var(--header-total-height,0px)+1.5rem)] self-start"
+    >
       <MotionStaggerItem
         as="p"
         className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] opacity-60 mb-3"
@@ -256,7 +286,9 @@ function SplitLayout({
 }
 
 // ---------------------------------------------------------------------------
-// DARK — inverted scheme with full-bleed image and overlaid editorial
+// DARK — inverted scheme with full-bleed image and overlaid editorial.
+// Title carries a drop-shadow so the heading stays readable against
+// busy photography without needing a darker gradient.
 // ---------------------------------------------------------------------------
 
 function DarkLayout({
@@ -265,22 +297,36 @@ function DarkLayout({
   caption,
   imageUrl,
   objectPosition,
+  priority,
 }: {
   eyebrow: string
   title: string
   caption: string
   imageUrl: string
   objectPosition: string
+  priority: boolean
 }) {
   return (
     <div className="relative w-full aspect-[4/5] md:aspect-[16/10] lg:aspect-[16/9] border-2 border-white overflow-hidden">
       {imageUrl ? (
-        <ParallaxImage
-          src={imageUrl}
-          alt={title}
-          sizes="(max-width: 1280px) 100vw, 1280px"
-          objectPosition={objectPosition}
-        />
+        priority ? (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            style={{ objectPosition }}
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <ParallaxImage
+            src={imageUrl}
+            alt={title}
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            objectPosition={objectPosition}
+          />
+        )
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
       <div className="absolute inset-0 flex items-end pointer-events-none">
@@ -293,14 +339,14 @@ function DarkLayout({
           </MotionStaggerItem>
           <MotionStaggerItem
             as="h2"
-            className="text-white text-4xl md:text-6xl lg:text-7xl font-display uppercase tracking-tight leading-[0.95] mb-4"
+            className="text-white text-4xl md:text-6xl lg:text-7xl font-display uppercase tracking-tight leading-[0.95] mb-4 drop-shadow-2xl"
           >
             {title}
           </MotionStaggerItem>
           {caption && (
             <MotionStaggerItem
               as="p"
-              className="text-white/85 text-base md:text-lg leading-relaxed"
+              className="text-white/85 text-base md:text-lg leading-relaxed drop-shadow-md"
             >
               {caption}
             </MotionStaggerItem>

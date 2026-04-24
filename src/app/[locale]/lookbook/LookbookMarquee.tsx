@@ -13,8 +13,16 @@ interface LookbookMarqueeProps {
  * motion runs off a CSS `@keyframes marquee` defined in tailwind.config.ts
  * so it survives both SSR and users with JS disabled.
  *
+ * Style notes (MOSE editorial):
+ *   - Separator is a minimal `•` in the current text colour at 40%
+ *     opacity — same character the admin uses in the source string, so
+ *     the rendered rhythm matches the input and stays typographic
+ *     rather than decorative. No accent colours — the brand green is
+ *     reserved for CTAs and emphasis elsewhere on the page.
+ *   - Pauses on hover (desktop) so the headline can actually be read.
+ *
  * Respects `prefers-reduced-motion: reduce` by halting the animation,
- * keeping the headline readable and static.
+ * keeping the headline static and readable.
  */
 export default function LookbookMarquee({
   text,
@@ -45,19 +53,19 @@ export default function LookbookMarquee({
 
   return (
     <div
-      className={`relative overflow-hidden select-none ${themeClass}`}
+      className={`group relative overflow-hidden select-none ${themeClass}`}
       role="presentation"
       aria-hidden="true"
     >
-      <div className="flex items-center animate-marquee motion-reduce:animate-none whitespace-nowrap will-change-transform">
+      <div className="flex items-center animate-marquee motion-reduce:animate-none group-hover:[animation-play-state:paused] whitespace-nowrap will-change-transform">
         {doubled.map((item, idx) => (
           <span
             key={idx}
             className={`font-display uppercase tracking-tight flex items-center gap-6 md:gap-10 pr-6 md:pr-10 ${sizeClass}`}
           >
             {item}
-            <span aria-hidden="true" className="text-brand-primary font-normal">
-              ★
+            <span aria-hidden="true" className="opacity-40 font-normal">
+              •
             </span>
           </span>
         ))}

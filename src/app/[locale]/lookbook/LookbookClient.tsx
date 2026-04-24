@@ -73,7 +73,7 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
             as="p"
             className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-gray-500 mb-4"
           >
-            MOSE · {locale === 'en' ? 'Editorial' : 'Editorial'}
+            MOSE · Editorial
           </MotionStaggerItem>
           <MotionStaggerItem
             as="h1"
