@@ -30,6 +30,11 @@ export default function MainContentWrapper({ children }: { children: React.React
     }
   }, [])
 
-  return <main id="main-content">{children}</main>
+  // `data-site-chrome` marks this <main> as sitting under the public-site
+  // fixed banner + header stack. The global #main-content padding rule in
+  // globals.css is scoped to this attribute so the admin's own <main> (at
+  // /admin/*) — which has no announcement banner and no public header —
+  // is not affected by the offset calculation.
+  return <main id="main-content" data-site-chrome>{children}</main>
 }
 
