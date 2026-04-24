@@ -231,9 +231,6 @@ export function Header() {
         </nav>
       </div>
 
-      {/* Spacer */}
-      <div className="h-20" />
-
       {/* Cart Drawer */}
       <CartDrawer isOpen={isOpen} onClose={closeDrawer} />
 
