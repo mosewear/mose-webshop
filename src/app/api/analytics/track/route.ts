@@ -5,6 +5,7 @@ import {
   getClientIp,
   type SlidingWindowEntry,
 } from '@/lib/rate-limit-ip'
+import { isLikelyBotRequest } from '@/lib/bot-detection'
 
 /**
  * ISO 3166-1 alpha-2 from common CDN / host headers (Vercel, CloudFront, Cloudflare).
@@ -92,6 +93,26 @@ export async function POST(request: NextRequest) {
   }
 
   const country_code = countryFromRequest(request)
+
+  // Drop bot / crawler / headless-Chromium traffic before it ever touches
+  // the events table. We prefer the edge `user-agent` header (ground
+  // truth set by the browser / bot itself) and fall back to whatever the
+  // client reported in the payload. Purchase events are exempted because
+  // they are authoritative against the `orders` table and we'd rather
+  // log a weird UA than silently drop a real sale.
+  const uaFromHeader = request.headers.get('user-agent')
+  const uaFromBody = typeof body.user_agent === 'string' ? body.user_agent : null
+  const effectiveUa = uaFromHeader || uaFromBody
+
+  if (
+    event_name !== 'purchase' &&
+    isLikelyBotRequest({ userAgent: effectiveUa, countryCode: country_code })
+  ) {
+    // Return 200 OK so the (possibly-real) client doesn't see an error
+    // in devtools and doesn't retry. Bots get dropped silently.
+    return NextResponse.json({ ok: true, filtered: 'bot' })
+  }
+
   const supabase = createServiceRoleClient()
 
   // Purchase events get two extra gates:

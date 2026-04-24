@@ -6,6 +6,7 @@
 'use client'
 
 import posthog from '@/lib/posthog-client'
+import { isClientAutomationBrowser } from '@/lib/bot-detection'
 
 // Get or create session ID
 function getSessionId(): string {
@@ -59,6 +60,14 @@ interface TrackEventParams {
  */
 export async function trackEvent({ event_name, properties = {}, user_id }: TrackEventParams) {
   try {
+    // First line of defense: never fire tracking requests from automation
+    // browsers (Selenium / Puppeteer / Playwright / headless Chrome) or
+    // from obvious bot UAs. The server filters the same traffic again as
+    // a safety net, but stopping here also saves the network round-trip.
+    if (typeof window !== 'undefined' && isClientAutomationBrowser()) {
+      return
+    }
+
     const sessionId = getSessionId()
     const deviceInfo = getDeviceInfo()
     
