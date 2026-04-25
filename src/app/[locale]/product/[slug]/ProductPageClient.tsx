@@ -1771,8 +1771,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           )
                         ) : (
                           <>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Material:' : 'Materiaal:'}</span> {locale === 'en' ? '100% organic cotton, 300gsm' : '100% biologisch katoen, 300gsm'}</p>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Washing instructions:' : 'Was instructies:'}</span> {locale === 'en' ? 'Machine washable at 30°C' : 'Machinewasbaar op 30°C'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Material:' : 'Materiaal:'}</span> {locale === 'en' ? 'OEKO-Tex certified cotton, regular fit' : 'OEKO-Tex gecertificeerd katoen, regular fit'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Washing instructions:' : 'Was instructies:'}</span> {locale === 'en' ? 'Machine washable at 30°C, inside out' : 'Machinewasbaar op 30°C, binnenstebuiten'}</p>
                             <p><span className="font-semibold">{locale === 'en' ? 'Ironing:' : 'Strijken:'}</span> {locale === 'en' ? 'Low temperature, inside out' : 'Op lage temperatuur, binnenstebuiten'}</p>
                             <p><span className="font-semibold">{locale === 'en' ? 'Drying:' : 'Drogen:'}</span> {locale === 'en' ? 'Do not tumble dry, hang to dry' : 'Niet in de droger, ophangen'}</p>
                           </>

@@ -17,7 +17,7 @@ INSERT INTO products (name, slug, description, base_price, category_id, is_featu
 (
   'MOSE Basic Hoodie',
   'mose-basic-hoodie',
-  'De ultieme no-nonsense hoodie. Gemaakt van premium katoen, lokaal geproduceerd. Deze hoodie gaat jaren mee en wordt alleen maar beter. Perfect voor die koude Groningse dagen.',
+  'De ultieme no-nonsense hoodie. 300 GSM OEKO-Tex joggingfleece katoen, regular fit. Lokaal geproduceerd. Deze hoodie gaat jaren mee en wordt alleen maar beter. Perfect voor die koude Groningse dagen.',
   79.99,
   (SELECT id FROM cat_ids WHERE slug = 'hoodies'),
   true,
@@ -26,7 +26,7 @@ INSERT INTO products (name, slug, description, base_price, category_id, is_featu
 (
   'MOSE Signature Hoodie',
   'mose-signature-hoodie',
-  'Onze signature hoodie met subtiel MOSE logo. Extra dikke stof (400gsm) voor maximale warmte. Verstevigde naden en premium YKK ritsen. Dit is kwaliteit die je voelt.',
+  'Onze signature hoodie met subtiel MOSE logo. 300 GSM OEKO-Tex joggingfleece katoen, regular fit. Verstevigde naden en premium afwerking. Dit is kwaliteit die je voelt.',
   89.99,
   (SELECT id FROM cat_ids WHERE slug = 'hoodies'),
   true,
@@ -37,7 +37,7 @@ INSERT INTO products (name, slug, description, base_price, category_id, is_featu
 (
   'MOSE Basic Tee',
   'mose-basic-tee',
-  'Het perfecte basic shirt. 100% organisch katoen, regular fit. Geen fratsen, alleen degelijke kwaliteit. Beschikbaar in zwart, wit en jadegroen.',
+  'Het perfecte basic shirt. 240 GSM OEKO-Tex jersey, regular fit. Geen fratsen, alleen degelijke kwaliteit. Beschikbaar in zwart, wit en jadegroen.',
   34.99,
   (SELECT id FROM cat_ids WHERE slug = 't-shirts'),
   true,

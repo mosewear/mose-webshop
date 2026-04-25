@@ -240,7 +240,7 @@ export default function CreateCategoryPage() {
               value={formData.default_materials_care}
               onChange={(e) => setFormData({ ...formData, default_materials_care: e.target.value })}
               className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors resize-none font-mono text-sm"
-              placeholder="**Materiaal:** 100% biologisch katoen, 300gsm&#10;**Was instructies:** Machinewasbaar op 30°C&#10;**Strijken:** Op lage temperatuur, binnenstebuiten&#10;**Drogen:** Niet in de droger, ophangen"
+              placeholder="**Materiaal:** 300 GSM OEKO-Tex joggingfleece katoen (hoodies/sweaters) of 240 GSM OEKO-Tex jersey (tees)&#10;**Fit:** Regular fit&#10;**Was instructies:** Machinewasbaar op 30°C, binnenstebuiten&#10;**Strijken:** Op lage temperatuur, binnenstebuiten&#10;**Drogen:** Niet in de droger, ophangen"
             />
           </div>
         </div>

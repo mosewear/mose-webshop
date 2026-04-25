@@ -136,9 +136,9 @@ async function reseedLookbookChapters() {
       image_focal_y: 30,
       layout_variant: 'wide',
       meta: [
-        { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '420gr katoen-fleece', value_en: '420gsm cotton fleece' },
+        { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '300 GSM OEKO-Tex joggingfleece katoen', value_en: '300 GSM OEKO-Tex jogging fleece cotton' },
+        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Regular fit', value_en: 'Regular fit' },
         { label_nl: 'GEMAAKT IN', label_en: 'MADE IN', value_nl: 'Groningen, NL', value_en: 'Groningen, NL' },
-        { label_nl: 'COLORWAYS', label_en: 'COLORWAYS', value_nl: 'Bruin · Zwart · Olive', value_en: 'Brown · Black · Olive' },
       ],
       is_active: true,
     })
@@ -164,9 +164,9 @@ async function reseedLookbookChapters() {
       image_focal_y: 40,
       layout_variant: 'split-right',
       meta: [
-        { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '180gr peached katoen', value_en: '180gsm peached cotton' },
-        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Relaxed boxy', value_en: 'Relaxed boxy' },
-        { label_nl: 'COLORWAYS', label_en: 'COLORWAYS', value_nl: 'Wit · Zwart · Beige', value_en: 'White · Black · Sand' },
+        { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '240 GSM OEKO-Tex jersey', value_en: '240 GSM OEKO-Tex jersey' },
+        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Regular fit', value_en: 'Regular fit' },
+        { label_nl: 'GEMAAKT IN', label_en: 'MADE IN', value_nl: 'Groningen, NL', value_en: 'Groningen, NL' },
       ],
       is_active: true,
     })
@@ -192,9 +192,9 @@ async function reseedLookbookChapters() {
       image_focal_y: 50,
       layout_variant: 'wide',
       meta: [
-        { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '380gr brushed fleece', value_en: '380gsm brushed fleece' },
-        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Boxy crewneck', value_en: 'Boxy crewneck' },
-        { label_nl: 'COLORWAYS', label_en: 'COLORWAYS', value_nl: 'Off-white · Zwart', value_en: 'Off-white · Black' },
+        { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '300 GSM OEKO-Tex joggingfleece katoen', value_en: '300 GSM OEKO-Tex jogging fleece cotton' },
+        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Regular fit', value_en: 'Regular fit' },
+        { label_nl: 'GEMAAKT IN', label_en: 'MADE IN', value_nl: 'Groningen, NL', value_en: 'Groningen, NL' },
       ],
       is_active: true,
     })
