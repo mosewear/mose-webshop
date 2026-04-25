@@ -135,6 +135,13 @@ export default function CreateProductPage() {
             category_id: formData.category_id || null,
             meta_title: formData.meta_title || null,
             meta_description: formData.meta_description || null,
+            // The admin UI uses `is_active` as the single publish
+            // toggle. The legacy `status` column isn't surfaced
+            // anywhere, so we default it to 'active' on insert to
+            // prevent newly-created products (incl. gift cards) from
+            // being silently hidden behind a `status='draft'` filter
+            // on the storefront / sitemap / feeds.
+            status: 'active',
             is_gift_card: isGift,
             allows_custom_amount: isGift ? giftCard.allows_custom_amount : false,
             gift_card_min_amount: isGift ? giftCardMin : null,
