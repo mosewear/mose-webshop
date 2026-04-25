@@ -68,7 +68,12 @@ export default function GlobalSettings({ initial, activeLanguage }: GlobalSettin
         })
         .eq('id', settings.id)
       if (error) throw error
-      setMessage({ kind: 'ok', text: 'Instellingen opgeslagen' })
+      try {
+        await fetch('/api/revalidate-lookbook', { method: 'POST' })
+      } catch (revalidateError) {
+        console.warn('Failed to revalidate /lookbook:', revalidateError)
+      }
+      setMessage({ kind: 'ok', text: 'Instellingen opgeslagen — live binnen enkele seconden' })
     } catch (e) {
       console.error(e)
       setMessage({ kind: 'err', text: 'Opslaan mislukt' })

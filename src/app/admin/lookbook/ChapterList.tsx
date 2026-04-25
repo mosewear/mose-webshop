@@ -41,6 +41,19 @@ interface ChapterListProps {
 }
 
 /**
+ * Clears the public /lookbook ISR cache so admin edits become visible
+ * immediately. Fire-and-forget: a revalidate failure must never block
+ * the underlying mutation, so we swallow errors and just log them.
+ */
+async function revalidatePublicLookbook(): Promise<void> {
+  try {
+    await fetch('/api/revalidate-lookbook', { method: 'POST' })
+  } catch (err) {
+    console.warn('Failed to revalidate /lookbook:', err)
+  }
+}
+
+/**
  * Manages the entire chapter list on the client.
  *
  *  - Local state is the source of truth while editing; each chapter has
@@ -91,6 +104,7 @@ export default function ChapterList({
       for (const c of renumbered) {
         await supabase.from('lookbook_chapters').update({ sort_order: c.sort_order }).eq('id', c.id)
       }
+      await revalidatePublicLookbook()
       setMessage({ kind: 'ok', text: 'Volgorde opgeslagen' })
     } catch (e) {
       setMessage({ kind: 'err', text: 'Kon volgorde niet opslaan' })
@@ -130,7 +144,8 @@ export default function ChapterList({
         next.delete(id)
         return next
       })
-      setMessage({ kind: 'ok', text: 'Chapter opgeslagen' })
+      await revalidatePublicLookbook()
+      setMessage({ kind: 'ok', text: 'Chapter opgeslagen — live binnen enkele seconden' })
     } catch (e) {
       setMessage({ kind: 'err', text: 'Opslaan mislukt' })
       console.error(e)
@@ -174,6 +189,7 @@ export default function ChapterList({
       }
       setChapters((prev) => [...prev, newChapter])
       setExpanded((prev) => new Set([...prev, data.id]))
+      await revalidatePublicLookbook()
       setMessage({ kind: 'ok', text: 'Chapter toegevoegd' })
     } catch (e) {
       setMessage({ kind: 'err', text: 'Toevoegen mislukt' })
@@ -199,6 +215,7 @@ export default function ChapterList({
         next.delete(id)
         return next
       })
+      await revalidatePublicLookbook()
       setMessage({ kind: 'ok', text: 'Chapter verwijderd' })
     } catch (e) {
       setMessage({ kind: 'err', text: 'Verwijderen mislukt' })
@@ -260,6 +277,7 @@ export default function ChapterList({
           c.id === chapterId ? { ...c, products: orderedProducts } : c,
         ),
       )
+      await revalidatePublicLookbook()
       setMessage({ kind: 'ok', text: 'Producten bijgewerkt' })
     } catch (e) {
       setMessage({ kind: 'err', text: 'Producten bijwerken mislukt' })
