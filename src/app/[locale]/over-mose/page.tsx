@@ -1,46 +1,95 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { getSiteSettings } from '@/lib/settings'
-import { useTranslations } from 'next-intl'
+import { setRequestLocale } from 'next-intl/server'
+import { routing } from '@/i18n/routing'
 import { Link } from '@/i18n/routing'
+import { createAnonClient } from '@/lib/supabase/server'
+import { getAboutSettings, renderNoHassleText } from '@/lib/about'
 
-export default function AboutPage() {
-  const t = useTranslations('about')
-  const [settings, setSettings] = useState({
-    free_shipping_threshold: 100,
-    return_days: 14,
-  })
+export const revalidate = 1800
 
-  useEffect(() => {
-    getSiteSettings().then((s) => {
-      setSettings({
-        free_shipping_threshold: s.free_shipping_threshold,
-        return_days: s.return_days,
-      })
+export async function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }))
+}
+
+async function getReturnsAndShipping(): Promise<{
+  return_days: number
+  free_shipping_threshold: number
+}> {
+  try {
+    const supabase = createAnonClient()
+    const { data } = await supabase
+      .from('site_settings')
+      .select('key, value')
+      .in('key', ['return_days', 'free_shipping_threshold'])
+
+    const map: Record<string, string | undefined> = {}
+    ;(data ?? []).forEach((row: { key: string; value: string }) => {
+      map[row.key] = row.value
     })
-  }, [])
+
+    return {
+      return_days: parseInt(map.return_days || '14', 10) || 14,
+      free_shipping_threshold:
+        parseFloat(map.free_shipping_threshold || '100') || 100,
+    }
+  } catch {
+    return { return_days: 14, free_shipping_threshold: 100 }
+  }
+}
+
+export default async function AboutPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
+  const [about, shipping] = await Promise.all([
+    getAboutSettings(locale),
+    getReturnsAndShipping(),
+  ])
+
+  const focal = `${about.image_focal_x}% ${about.image_focal_y}%`
+  const noHassleText = renderNoHassleText(
+    about.value_no_hassle_text,
+    shipping.return_days,
+    shipping.free_shipping_threshold,
+  )
 
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-6">{t('hero.title')}</h1>
+          <h1 className="text-5xl md:text-7xl font-display mb-6">
+            {about.hero_title}
+          </h1>
           <p className="text-xl md:text-2xl text-gray-700">
-            {t('hero.subtitle')}
+            {about.hero_subtitle}
           </p>
         </div>
 
-        {/* Story Image */}
+        {/* Story Image — art-directed: portrait on mobile, landscape on desktop */}
         <div className="relative aspect-[4/5] md:aspect-[3/2] mb-12 border-2 border-black overflow-hidden">
+          {/* Mobile / portrait */}
           <Image
-            src="https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/hero-desktop.webp"
-            alt="MOSE — gedragen in het echte leven, gemaakt in Groningen"
+            src={about.hero_image_url_mobile || about.hero_image_url}
+            alt={about.hero_alt}
             fill
-            sizes="(max-width: 896px) 100vw, 896px"
-            className="object-cover object-[center_30%]"
+            sizes="(max-width: 768px) 100vw, 0px"
+            className="md:hidden object-cover"
+            style={{ objectPosition: focal }}
+            priority
+          />
+          {/* Desktop / landscape */}
+          <Image
+            src={about.hero_image_url}
+            alt={about.hero_alt}
+            fill
+            sizes="(min-width: 768px) 896px, 0px"
+            className="hidden md:block object-cover"
+            style={{ objectPosition: focal }}
             priority
           />
         </div>
@@ -48,74 +97,72 @@ export default function AboutPage() {
         {/* Story Content */}
         <div className="prose prose-lg max-w-none space-y-8">
           <div>
-            <h2 className="text-3xl font-display mb-4">{t('story.title')}</h2>
+            <h2 className="text-3xl font-display mb-4">{about.story_title}</h2>
             <p className="text-gray-700 leading-relaxed">
-              {t('story.paragraph1')}
+              {about.story_paragraph1}
             </p>
             <p className="text-gray-700 leading-relaxed">
-              {t('story.paragraph2')}
+              {about.story_paragraph2}
             </p>
           </div>
 
           <div className="bg-brand-primary/10 border-2 border-brand-primary p-8">
-            <h3 className="text-2xl font-display mb-4">{t('local.title')}</h3>
-            <p className="text-gray-800 leading-relaxed">
-              {t('local.text')}
-            </p>
+            <h3 className="text-2xl font-display mb-4">{about.local_title}</h3>
+            <p className="text-gray-800 leading-relaxed">{about.local_text}</p>
           </div>
 
           <div>
-            <h2 className="text-3xl font-display mb-4">{t('values.title')}</h2>
+            <h2 className="text-3xl font-display mb-4">{about.values_title}</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">{t('values.quality.title')}</h3>
-                <p className="text-gray-700">
-                  {t('values.quality.text')}
-                </p>
+                <h3 className="text-xl font-bold mb-3">
+                  {about.value_quality_title}
+                </h3>
+                <p className="text-gray-700">{about.value_quality_text}</p>
               </div>
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">{t('values.localMade.title')}</h3>
-                <p className="text-gray-700">
-                  {t('values.localMade.text')}
-                </p>
+                <h3 className="text-xl font-bold mb-3">
+                  {about.value_local_made_title}
+                </h3>
+                <p className="text-gray-700">{about.value_local_made_text}</p>
               </div>
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">{t('values.fairPricing.title')}</h3>
-                <p className="text-gray-700">
-                  {t('values.fairPricing.text')}
-                </p>
+                <h3 className="text-xl font-bold mb-3">
+                  {about.value_fair_pricing_title}
+                </h3>
+                <p className="text-gray-700">{about.value_fair_pricing_text}</p>
               </div>
               <div className="border-2 border-gray-300 p-6">
-                <h3 className="text-xl font-bold mb-3">{t('values.noHassle.title')}</h3>
-                <p className="text-gray-700">
-                  {t('values.noHassle.text', { 
-                    days: settings.return_days, 
-                    threshold: settings.free_shipping_threshold 
-                  })}
-                </p>
+                <h3 className="text-xl font-bold mb-3">
+                  {about.value_no_hassle_title}
+                </h3>
+                <p className="text-gray-700">{noHassleText}</p>
               </div>
             </div>
           </div>
 
           <div>
-            <h2 className="text-3xl font-display mb-4">{t('why.title')}</h2>
+            <h2 className="text-3xl font-display mb-4">{about.why_title}</h2>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="text-brand-primary text-2xl font-bold">•</span>
                 <span className="text-gray-700">
-                  <strong>{t('why.sustainable.title')}:</strong> {t('why.sustainable.text')}
+                  <strong>{about.why_sustainable_title}:</strong>{' '}
+                  {about.why_sustainable_text}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-brand-primary text-2xl font-bold">•</span>
                 <span className="text-gray-700">
-                  <strong>{t('why.stylish.title')}:</strong> {t('why.stylish.text')}
+                  <strong>{about.why_stylish_title}:</strong>{' '}
+                  {about.why_stylish_text}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-brand-primary text-2xl font-bold">•</span>
                 <span className="text-gray-700">
-                  <strong>{t('why.local.title')}:</strong> {t('why.local.text')}
+                  <strong>{about.why_local_title}:</strong>{' '}
+                  {about.why_local_text}
                 </span>
               </li>
             </ul>
@@ -128,7 +175,7 @@ export default function AboutPage() {
             href="/shop"
             className="inline-block px-12 py-5 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-lg"
           >
-            {t('cta')}
+            {about.cta_text}
           </Link>
         </div>
       </div>
