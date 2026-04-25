@@ -41,6 +41,10 @@ export default function CreateProductPage() {
     gift_card_default_validity_months: '24',
   })
 
+  // Single publish state. Mirrors onto both `products.status` and
+  // `products.is_active` on insert so the storefront stays in sync.
+  const [status, setStatus] = useState<'active' | 'draft'>('active')
+
   const isGift = giftCard.is_gift_card
 
   useEffect(() => {
@@ -135,13 +139,11 @@ export default function CreateProductPage() {
             category_id: formData.category_id || null,
             meta_title: formData.meta_title || null,
             meta_description: formData.meta_description || null,
-            // The admin UI uses `is_active` as the single publish
-            // toggle. The legacy `status` column isn't surfaced
-            // anywhere, so we default it to 'active' on insert to
-            // prevent newly-created products (incl. gift cards) from
-            // being silently hidden behind a `status='draft'` filter
-            // on the storefront / sitemap / feeds.
-            status: 'active',
+            // Single publish toggle — write both columns so the
+            // storefront, sitemap and feeds remain consistent
+            // regardless of which one they happen to filter on.
+            status,
+            is_active: status === 'active',
             is_gift_card: isGift,
             allows_custom_amount: isGift ? giftCard.allows_custom_amount : false,
             gift_card_min_amount: isGift ? giftCardMin : null,
@@ -199,6 +201,54 @@ export default function CreateProductPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white border-2 border-gray-200 p-5 sm:p-8">
+        {/* Publish status — single source of truth for storefront visibility. */}
+        <div className="mb-6 border-2 border-gray-200 p-4 sm:p-5 bg-gray-50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                Status
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {status === 'active'
+                  ? 'Direct zichtbaar in de shop, sitemap en productfeeds.'
+                  : 'Verborgen voor klanten — alleen zichtbaar in de admin.'}
+              </p>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Productstatus"
+              className="inline-flex border-2 border-black bg-white self-start"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={status === 'draft'}
+                onClick={() => setStatus('draft')}
+                className={`px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors ${
+                  status === 'draft'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Concept
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={status === 'active'}
+                onClick={() => setStatus('active')}
+                className={`px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-wider border-l-2 border-black transition-colors ${
+                  status === 'active'
+                    ? 'bg-brand-primary text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Actief
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Product type selector — always at the top so admin sees immediately
             which mode the product is in and can flip it before filling out fields. */}
         <div className="mb-6">

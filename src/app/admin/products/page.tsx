@@ -17,6 +17,7 @@ interface Product {
   sale_price: number | null
   category_id: string | null
   is_active?: boolean
+  status?: 'active' | 'draft' | string | null
   is_gift_card?: boolean
   created_at: string
   updated_at: string
@@ -32,6 +33,17 @@ interface Product {
   }>
 }
 
+/**
+ * Resolves the displayable publish state from a product row.
+ *
+ * The merchant only ever interacts with one status field, but the DB
+ * keeps two columns in sync (`status` + `is_active`). We treat the row
+ * as "draft" when either signal says so, which makes the UI honest
+ * even on legacy rows that haven't been re-saved yet.
+ */
+const resolveStatus = (p: Product): 'active' | 'draft' =>
+  p.status === 'draft' || p.is_active === false ? 'draft' : 'active'
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,10 +51,11 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
-  const [bulkAction, setBulkAction] = useState('')
+  const [bulkAction, setBulkAction] = useState<'' | 'activate' | 'draft'>('')
   const [bulkUpdating, setBulkUpdating] = useState(false)
   const [showBulkConfirm, setShowBulkConfirm] = useState(false)
   const [duplicating, setDuplicating] = useState<string | null>(null)
+  const [togglingStatus, setTogglingStatus] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
   const PAGE_SIZE = 25
   const supabase = createClient()
@@ -147,14 +160,20 @@ export default function AdminProductsPage() {
     setShowBulkConfirm(false)
     try {
       setBulkUpdating(true)
-      const isActive = bulkAction === 'activate'
+      const newStatus: 'active' | 'draft' = bulkAction === 'activate' ? 'active' : 'draft'
       const { error } = await supabase
         .from('products')
-        .update({ is_active: isActive, updated_at: new Date().toISOString() })
+        .update({
+          status: newStatus,
+          is_active: newStatus === 'active',
+          updated_at: new Date().toISOString(),
+        })
         .in('id', selectedProducts)
 
       if (error) throw error
-      toast.success(`${selectedProducts.length} product(en) ${isActive ? 'geactiveerd' : 'gedeactiveerd'}`)
+      toast.success(
+        `${selectedProducts.length} product(en) ${newStatus === 'active' ? 'op actief gezet' : 'op concept gezet'}`,
+      )
       setSelectedProducts([])
       setBulkAction('')
       fetchProducts()
@@ -162,6 +181,33 @@ export default function AdminProductsPage() {
       toast.error(`Fout: ${err.message}`)
     } finally {
       setBulkUpdating(false)
+    }
+  }
+
+  const handleToggleStatus = async (product: Product) => {
+    const current = resolveStatus(product)
+    const next: 'active' | 'draft' = current === 'active' ? 'draft' : 'active'
+    setTogglingStatus(product.id)
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          status: next,
+          is_active: next === 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', product.id)
+      if (error) throw error
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id ? { ...p, status: next, is_active: next === 'active' } : p,
+        ),
+      )
+      toast.success(next === 'active' ? 'Op actief gezet' : 'Op concept gezet')
+    } catch (err: any) {
+      toast.error(`Fout: ${err.message}`)
+    } finally {
+      setTogglingStatus(null)
     }
   }
 
@@ -194,7 +240,7 @@ export default function AdminProductsPage() {
             p.sale_price ? `€${Number(p.sale_price).toFixed(2)}` : '',
             cat,
             totalStock.toString(),
-            p.is_active ? 'Actief' : 'Inactief',
+            resolveStatus(p as Product) === 'active' ? 'Actief' : 'Concept',
           ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',')
         }),
       ]
@@ -285,7 +331,7 @@ export default function AdminProductsPage() {
       {showBulkConfirm && (
         <div className="bg-yellow-50 border-2 border-yellow-400 p-4 mb-4 flex flex-col md:flex-row md:items-center gap-3">
           <span className="font-bold text-yellow-800">
-            Weet je zeker dat je {selectedProducts.length} product(en) wilt {bulkAction === 'activate' ? 'activeren' : 'deactiveren'}?
+            Weet je zeker dat je {selectedProducts.length} product(en) op {bulkAction === 'activate' ? 'actief' : 'concept'} wilt zetten?
           </span>
           <div className="flex gap-2">
             <button
@@ -329,12 +375,12 @@ export default function AdminProductsPage() {
               <span className="font-bold">{selectedProducts.length} product(en) geselecteerd</span>
               <select
                 value={bulkAction}
-                onChange={(e) => setBulkAction(e.target.value)}
+                onChange={(e) => setBulkAction(e.target.value as '' | 'activate' | 'draft')}
                 className="w-full md:w-auto px-4 py-2 bg-white text-gray-800 border-2 border-white font-bold"
               >
-                <option value="">Kies actie...</option>
-                <option value="activate">Activeren</option>
-                <option value="deactivate">Deactiveren</option>
+                <option value="">Status wijzigen...</option>
+                <option value="activate">Op actief zetten</option>
+                <option value="draft">Op concept zetten</option>
               </select>
               <button
                 onClick={handleBulkAction}
@@ -404,7 +450,7 @@ export default function AdminProductsPage() {
                         )}
                       </div>
                       <div className="text-xs text-gray-500 truncate">{product.slug}</div>
-                      <div className="mt-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         {product.category ? (
                           <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
                             {product.category.name}
@@ -414,6 +460,24 @@ export default function AdminProductsPage() {
                             Geen categorie
                           </span>
                         )}
+                        {(() => {
+                          const s = resolveStatus(product)
+                          const isToggling = togglingStatus === product.id
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(product)}
+                              disabled={isToggling}
+                              className={`px-2 py-1 text-[11px] font-bold uppercase tracking-wider border-2 transition-colors disabled:opacity-50 ${
+                                s === 'active'
+                                  ? 'bg-green-50 text-green-700 border-green-600'
+                                  : 'bg-gray-50 text-gray-600 border-gray-400'
+                              }`}
+                            >
+                              {isToggling ? '…' : s === 'active' ? 'Actief' : 'Concept'}
+                            </button>
+                          )
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -594,13 +658,29 @@ export default function AdminProductsPage() {
                       })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold border inline-block ${
-                        product.is_active !== false
-                          ? 'bg-green-100 text-green-700 border-green-200'
-                          : 'bg-gray-100 text-gray-500 border-gray-200'
-                      }`}>
-                        {product.is_active !== false ? 'Actief' : 'Inactief'}
-                      </span>
+                      {(() => {
+                        const s = resolveStatus(product)
+                        const isToggling = togglingStatus === product.id
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(product)}
+                            disabled={isToggling}
+                            title={
+                              s === 'active'
+                                ? 'Klik om op concept te zetten'
+                                : 'Klik om op actief te zetten'
+                            }
+                            className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border-2 inline-block transition-colors disabled:opacity-50 ${
+                              s === 'active'
+                                ? 'bg-green-50 text-green-700 border-green-600 hover:bg-green-100'
+                                : 'bg-gray-50 text-gray-600 border-gray-400 hover:bg-gray-100'
+                            }`}
+                          >
+                            {isToggling ? '…' : s === 'active' ? 'Actief' : 'Concept'}
+                          </button>
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(product.created_at).toLocaleDateString('nl-NL')}
