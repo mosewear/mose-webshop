@@ -57,6 +57,12 @@ export default async function AboutPage({
     shipping.free_shipping_threshold,
   )
 
+  const whyBullets = [
+    { title: about.why_sustainable_title, text: about.why_sustainable_text },
+    { title: about.why_stylish_title, text: about.why_stylish_text },
+    { title: about.why_local_title, text: about.why_local_text },
+  ]
+
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
@@ -77,7 +83,7 @@ export default async function AboutPage({
             src={about.hero_image_url_mobile || about.hero_image_url}
             alt={about.hero_alt}
             fill
-            sizes="(max-width: 768px) 100vw, 0px"
+            sizes="(min-width: 768px) 1px, 100vw"
             className="md:hidden object-cover"
             style={{ objectPosition: focal }}
             priority
@@ -87,7 +93,7 @@ export default async function AboutPage({
             src={about.hero_image_url}
             alt={about.hero_alt}
             fill
-            sizes="(min-width: 768px) 896px, 0px"
+            sizes="(min-width: 768px) 896px, 1px"
             className="hidden md:block object-cover"
             style={{ objectPosition: focal }}
             priority
@@ -95,85 +101,95 @@ export default async function AboutPage({
         </div>
 
         {/* Story Content */}
-        <div className="prose prose-lg max-w-none space-y-8">
-          <div>
-            <h2 className="text-3xl font-display mb-4">{about.story_title}</h2>
-            <p className="text-gray-700 leading-relaxed">
+        <div className="space-y-12">
+          <section>
+            <h2 className="text-3xl md:text-4xl font-display mb-4">
+              {about.story_title}
+            </h2>
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-4">
               {about.story_paragraph1}
             </p>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed">
               {about.story_paragraph2}
             </p>
-          </div>
+          </section>
 
-          <div className="bg-brand-primary/10 border-2 border-brand-primary p-8">
-            <h3 className="text-2xl font-display mb-4">{about.local_title}</h3>
-            <p className="text-gray-800 leading-relaxed">{about.local_text}</p>
-          </div>
+          <section className="bg-brand-primary/10 border-2 border-brand-primary p-6 md:p-8">
+            <h3 className="text-2xl md:text-3xl font-display mb-4">
+              {about.local_title}
+            </h3>
+            <p className="text-base md:text-lg text-gray-800 leading-relaxed">
+              {about.local_text}
+            </p>
+          </section>
 
-          <div>
-            <h2 className="text-3xl font-display mb-4">{about.values_title}</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="border-2 border-gray-300 p-6">
+          <section>
+            <h2 className="text-3xl md:text-4xl font-display mb-6">
+              {about.values_title}
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+              <div className="border-2 border-gray-300 p-5 md:p-6">
                 <h3 className="text-xl font-bold mb-3">
                   {about.value_quality_title}
                 </h3>
-                <p className="text-gray-700">{about.value_quality_text}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {about.value_quality_text}
+                </p>
               </div>
-              <div className="border-2 border-gray-300 p-6">
+              <div className="border-2 border-gray-300 p-5 md:p-6">
                 <h3 className="text-xl font-bold mb-3">
                   {about.value_local_made_title}
                 </h3>
-                <p className="text-gray-700">{about.value_local_made_text}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {about.value_local_made_text}
+                </p>
               </div>
-              <div className="border-2 border-gray-300 p-6">
+              <div className="border-2 border-gray-300 p-5 md:p-6">
                 <h3 className="text-xl font-bold mb-3">
                   {about.value_fair_pricing_title}
                 </h3>
-                <p className="text-gray-700">{about.value_fair_pricing_text}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {about.value_fair_pricing_text}
+                </p>
               </div>
-              <div className="border-2 border-gray-300 p-6">
+              <div className="border-2 border-gray-300 p-5 md:p-6">
                 <h3 className="text-xl font-bold mb-3">
                   {about.value_no_hassle_title}
                 </h3>
-                <p className="text-gray-700">{noHassleText}</p>
+                <p className="text-gray-700 leading-relaxed">{noHassleText}</p>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div>
-            <h2 className="text-3xl font-display mb-4">{about.why_title}</h2>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <span className="text-brand-primary text-2xl font-bold">•</span>
-                <span className="text-gray-700">
-                  <strong>{about.why_sustainable_title}:</strong>{' '}
-                  {about.why_sustainable_text}
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-brand-primary text-2xl font-bold">•</span>
-                <span className="text-gray-700">
-                  <strong>{about.why_stylish_title}:</strong>{' '}
-                  {about.why_stylish_text}
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-brand-primary text-2xl font-bold">•</span>
-                <span className="text-gray-700">
-                  <strong>{about.why_local_title}:</strong>{' '}
-                  {about.why_local_text}
-                </span>
-              </li>
+          <section>
+            <h2 className="text-3xl md:text-4xl font-display mb-6">
+              {about.why_title}
+            </h2>
+            <ul className="space-y-4">
+              {whyBullets.map((bullet) => (
+                <li
+                  key={bullet.title}
+                  className="flex items-start gap-3 md:gap-4"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 inline-block w-3 h-3 bg-brand-primary shrink-0"
+                  />
+                  <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+                    <strong className="text-black">{bullet.title}:</strong>{' '}
+                    {bullet.text}
+                  </p>
+                </li>
+              ))}
             </ul>
-          </div>
+          </section>
         </div>
 
         {/* CTA */}
         <div className="mt-16 text-center">
           <Link
             href="/shop"
-            className="inline-block px-12 py-5 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-lg"
+            className="inline-block px-10 md:px-12 py-4 md:py-5 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-base md:text-lg border-2 border-black"
           >
             {about.cta_text}
           </Link>

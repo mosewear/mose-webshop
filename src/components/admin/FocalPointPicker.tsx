@@ -10,23 +10,33 @@ interface FocalPointPickerProps {
   focalY: number
   onChange: (x: number, y: number) => void
   alt?: string
+  /** Aspect ratio used for the preview frame. Defaults to 16:9 (lookbook) */
+  aspectRatio?: '16/9' | '4/5' | '3/2' | '1/1'
+  /** Optional helper text shown next to the coordinates row. */
+  helperText?: string
 }
 
 /**
- * Click-on-image focal-point picker used in the lookbook chapter editor.
+ * Click-on-image focal-point picker, shared across admin editors that
+ * need to set `object-position: X% Y%` on a public-site `<Image>`.
  *
- * The picker stores focal coordinates as integer percentages 0-100, which
- * the public renderer feeds straight into `object-position: X% Y%` on the
- * hero `<Image>`. This keeps image cropping predictable on every
- * aspect ratio (wide / split / mobile 4:5).
+ * Storage contract
+ * - Coordinates are integer percentages 0-100, matching CSS units.
+ * - The public renderer feeds them straight into `object-position`,
+ *   so cropping is predictable on every aspect ratio (wide hero,
+ *   split, mobile 4:5, square).
  *
- * UX notes
- * - Single-tap/click anywhere on the image to move the crosshair to that
- *   spot. Preview is immediate; parent commits the value via onChange.
+ * UX
+ * - Single-tap/click anywhere on the image to move the crosshair.
+ *   Drag works too. Preview is immediate; parent commits via onChange.
  * - Reset button snaps back to the traditional 50/50 center crop.
  * - Touch-target friendly: the marker is 32px regardless of zoom.
- * - Respects MOSE's brutalist style: 2px black border, solid black/white
+ * - Brutalist MOSE styling: 2px black border, solid black/white
  *   crosshair, no shadows or gradients.
+ *
+ * Used by
+ * - /admin/lookbook (chapter hero)
+ * - /admin/about    (over-mose hero)
  */
 export default function FocalPointPicker({
   imageUrl,
@@ -34,13 +44,24 @@ export default function FocalPointPicker({
   focalY,
   onChange,
   alt = 'Hero',
+  aspectRatio = '16/9',
+  helperText,
 }: FocalPointPickerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [dragging, setDragging] = useState(false)
 
+  const aspectClass = {
+    '16/9': 'aspect-[16/9]',
+    '4/5': 'aspect-[4/5]',
+    '3/2': 'aspect-[3/2]',
+    '1/1': 'aspect-square',
+  }[aspectRatio]
+
   if (!imageUrl) {
     return (
-      <div className="aspect-[16/9] border-2 border-dashed border-gray-300 flex items-center justify-center text-sm text-gray-500 bg-gray-50">
+      <div
+        className={`${aspectClass} border-2 border-dashed border-gray-300 flex items-center justify-center text-sm text-gray-500 bg-gray-50`}
+      >
         Selecteer eerst een afbeelding om het focuspunt te bepalen
       </div>
     )
@@ -60,7 +81,7 @@ export default function FocalPointPicker({
     <div className="space-y-3">
       <div
         ref={containerRef}
-        className="relative aspect-[16/9] border-2 border-black overflow-hidden bg-black cursor-crosshair select-none touch-none"
+        className={`relative ${aspectClass} border-2 border-black overflow-hidden bg-black cursor-crosshair select-none touch-none`}
         onMouseDown={(e) => {
           setDragging(true)
           pickFromEvent(e.clientX, e.clientY)
@@ -110,8 +131,10 @@ export default function FocalPointPicker({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-xs text-gray-600 flex items-center gap-1.5">
           <Crosshair size={14} />
-          Klik of sleep om het focuspunt te kiezen (<span className="font-bold">{focalX}</span>
-          % / <span className="font-bold">{focalY}</span>%)
+          {helperText ?? 'Klik of sleep om het focuspunt te kiezen'} (
+          <span className="font-bold">{focalX}</span>%
+          {' / '}
+          <span className="font-bold">{focalY}</span>%)
         </p>
         <button
           type="button"

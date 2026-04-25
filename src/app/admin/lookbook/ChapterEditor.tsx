@@ -10,7 +10,7 @@ import type {
   LookbookLayoutVariant,
 } from '@/lib/lookbook'
 import { LAYOUT_VARIANT_OPTIONS } from '@/lib/lookbook'
-import FocalPointPicker from './FocalPointPicker'
+import FocalPointPicker from '@/components/admin/FocalPointPicker'
 import ProductPicker from './ProductPicker'
 
 interface CatalogProduct {

@@ -166,12 +166,20 @@ export async function getAboutSettings(
 
     if (error || !data) throw error ?? new Error('No about_settings row')
 
+    // Keep an absolute fallback for hero_alt — it's nullable in the schema
+    // for editors who haven't filled it yet, but the public <Image> still
+    // needs a string for a11y.
+    const altFallback =
+      lang === 'en'
+        ? 'MOSE — worn in real life, made in Groningen'
+        : 'MOSE — gedragen in het echte leven, gemaakt in Groningen'
+
     return {
       hero_image_url: data.hero_image_url || DEFAULT_HERO_DESKTOP,
       hero_image_url_mobile: data.hero_image_url_mobile ?? null,
       image_focal_x: typeof data.image_focal_x === 'number' ? data.image_focal_x : 50,
       image_focal_y: typeof data.image_focal_y === 'number' ? data.image_focal_y : 30,
-      hero_alt: pick(data.hero_alt_en, data.hero_alt_nl ?? '', lang),
+      hero_alt: pick(data.hero_alt_en, data.hero_alt_nl ?? altFallback, lang),
       hero_title: pick(data.hero_title_en, data.hero_title_nl, lang),
       hero_subtitle: pick(data.hero_subtitle_en, data.hero_subtitle_nl, lang),
       story_title: pick(data.story_title_en, data.story_title_nl, lang),
