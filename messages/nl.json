@@ -1865,6 +1865,10 @@
     "principles": {
       "ariaLabel": "MOSE-principes"
     },
+    "stamp": {
+      "next": "VOLGEND",
+      "ariaLabel": "Hoofdstuk-overgang"
+    },
     "shopModule": {
       "piece": {
         "label": "HET ITEM",

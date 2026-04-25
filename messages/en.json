@@ -1913,6 +1913,10 @@
     "principles": {
       "ariaLabel": "MOSE principles"
     },
+    "stamp": {
+      "next": "NEXT",
+      "ariaLabel": "Chapter transition"
+    },
     "shopModule": {
       "piece": {
         "label": "THE PIECE",

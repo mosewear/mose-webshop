@@ -12,6 +12,8 @@ export interface GlobalLookbookSettings {
   header_subtitle_en: string | null
   ticker_text_nl: string | null
   ticker_text_en: string | null
+  stamp_left_nl: string | null
+  stamp_left_en: string | null
   final_cta_title: string | null
   final_cta_title_en: string | null
   final_cta_text: string | null
@@ -56,8 +58,8 @@ export default function GlobalSettings({ initial, activeLanguage }: GlobalSettin
           header_title_en: settings.header_title_en,
           header_subtitle: settings.header_subtitle,
           header_subtitle_en: settings.header_subtitle_en,
-          ticker_text_nl: settings.ticker_text_nl,
-          ticker_text_en: settings.ticker_text_en,
+          stamp_left_nl: settings.stamp_left_nl,
+          stamp_left_en: settings.stamp_left_en,
           final_cta_title: settings.final_cta_title,
           final_cta_title_en: settings.final_cta_title_en,
           final_cta_text: settings.final_cta_text,
@@ -147,22 +149,29 @@ export default function GlobalSettings({ initial, activeLanguage }: GlobalSettin
         </div>
       </section>
 
-      {/* GLOBAL PRINCIPLES-STRIP */}
+      {/* EDITORIAL STAMP BETWEEN CHAPTERS */}
       <section>
         <h3 className="text-lg font-bold mb-3 pb-2 border-b-2 border-black">
-          Tussentekst tussen chapters
+          Stempel tussen hoofdstukken
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Statische strip met MOSE-principes die tussen de chapters verschijnt.
-          Individuele chapters kunnen deze overschrijven. Gebruik <code>•</code>{' '}
-          als scheidingsteken tussen items (max 5 aanbevolen voor leesbaarheid).
+          Een dunne editorial regel die tussen elk hoofdstuk verschijnt:
+          <br />
+          <span className="font-mono text-[11px] text-black">
+            {`{stempel}    ─────    VOLGEND — 02 / 04 · {volgende titel}`}
+          </span>
+          <br />
+          De rechterkant wordt automatisch gegenereerd op basis van het
+          volgende hoofdstuk — daar hoef je niets voor in te stellen.
+          Hieronder bepaal je alleen de linkerkant (meestal locatie en
+          coördinaten).
         </p>
         <div className="grid grid-cols-1 gap-4">
           <BiField
-            label="Tussentekst"
-            nlKey="ticker_text_nl"
-            enKey="ticker_text_en"
-            placeholder="NO FAST FASHION • MADE IN GRONINGEN • PREMIUM ESSENTIALS"
+            label="Stempel (links)"
+            nlKey="stamp_left_nl"
+            enKey="stamp_left_en"
+            placeholder="GRONINGEN · 53.21°N 6.57°E"
           />
         </div>
       </section>

@@ -57,7 +57,7 @@ export default function LookbookAdminPage() {
         const { data: ls, error: lsError } = await supabase
           .from('lookbook_settings')
           .select(
-            'id, header_title, header_title_en, header_subtitle, header_subtitle_en, ticker_text_nl, ticker_text_en, final_cta_title, final_cta_title_en, final_cta_text, final_cta_text_en, final_cta_button_text, final_cta_button_text_en, final_cta_button_link',
+            'id, header_title, header_title_en, header_subtitle, header_subtitle_en, ticker_text_nl, ticker_text_en, stamp_left_nl, stamp_left_en, final_cta_title, final_cta_title_en, final_cta_text, final_cta_text_en, final_cta_button_text, final_cta_button_text_en, final_cta_button_link',
           )
           .single()
         if (lsError) throw lsError

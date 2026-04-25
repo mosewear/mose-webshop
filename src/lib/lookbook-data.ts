@@ -22,8 +22,20 @@ export interface LookbookGlobalSettings {
   header_title_en: string | null
   header_subtitle: string | null
   header_subtitle_en: string | null
+  /**
+   * Legacy ticker text. Kept on the row for back-compat / audit but no
+   * longer rendered on the public lookbook — superseded by the
+   * editorial stamp (`stamp_left_*`).
+   */
   ticker_text_nl: string | null
   ticker_text_en: string | null
+  /**
+   * Left side of the editorial stamp shown between chapters
+   * (e.g. "GRONINGEN · 53.21°N 6.57°E"). The right side is generated
+   * client-side from the next chapter's title.
+   */
+  stamp_left_nl: string | null
+  stamp_left_en: string | null
   final_cta_title: string | null
   final_cta_title_en: string | null
   final_cta_text: string | null
@@ -62,7 +74,7 @@ export const getLookbookPageData = cache(async (): Promise<LookbookPageData> => 
   const { data: settingsRow } = await supabase
     .from('lookbook_settings')
     .select(
-      'id, header_title, header_title_en, header_subtitle, header_subtitle_en, ticker_text_nl, ticker_text_en, final_cta_title, final_cta_title_en, final_cta_text, final_cta_text_en, final_cta_button_text, final_cta_button_text_en, final_cta_button_link',
+      'id, header_title, header_title_en, header_subtitle, header_subtitle_en, ticker_text_nl, ticker_text_en, stamp_left_nl, stamp_left_en, final_cta_title, final_cta_title_en, final_cta_text, final_cta_text_en, final_cta_button_text, final_cta_button_text_en, final_cta_button_link',
     )
     .limit(1)
     .maybeSingle()

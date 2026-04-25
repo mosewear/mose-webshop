@@ -7,7 +7,7 @@ import type { LookbookChapterWithProducts } from '@/lib/lookbook'
 import { pickLocalized } from '@/lib/lookbook'
 import type { LookbookGlobalSettings } from '@/lib/lookbook-data'
 import LookbookChapter from './LookbookChapter'
-import LookbookDivider from './LookbookDivider'
+import LookbookStamp from './LookbookStamp'
 import { MotionFadeIn, MotionStaggerItem } from './motion'
 
 interface LookbookClientProps {
@@ -40,11 +40,18 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
     locale,
   )
 
-  const globalTicker = pickLocalized(
-    settings?.ticker_text_nl ?? '',
-    settings?.ticker_text_en ?? null,
+  // Editorial stamp left side (e.g. "GRONINGEN · 53.21°N 6.57°E").
+  // Falls back to the canonical Groningen coordinates so the stamp
+  // never collapses to "blank" if an editor accidentally clears it.
+  const stampLeft = pickLocalized(
+    settings?.stamp_left_nl ?? 'GRONINGEN · 53.21°N 6.57°E',
+    settings?.stamp_left_en ?? null,
     locale,
   )
+
+  const totalChapters = chapters.length
+  const totalLabel = String(totalChapters).padStart(2, '0')
+  const nextLabel = t('stamp.next')
 
   const finalCtaTitle = pickLocalized(
     settings?.final_cta_title ?? '',
@@ -118,24 +125,29 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
       ) : (
         /* CHAPTERS -------------------------------------------------- */
         chapters.map((chapter, index) => {
-          const perChapterTicker = pickLocalized(
-            chapter.ticker_text_nl,
-            chapter.ticker_text_en,
-            locale,
-          )
-          const tickerText = perChapterTicker || globalTicker
           const isLast = index === chapters.length - 1
+          const nextChapter = isLast ? null : chapters[index + 1]
+          const nextTitle = nextChapter
+            ? pickLocalized(nextChapter.title_nl, nextChapter.title_en, locale)
+            : ''
+          const nextNumber = String(index + 2).padStart(2, '0')
+          const stampRight = nextChapter
+            ? `${nextLabel} — ${nextNumber} / ${totalLabel} · ${nextTitle}`
+            : ''
+
           return (
             <div key={chapter.id}>
               <LookbookChapter chapter={chapter} index={index} locale={locale} />
-              {/* Slim editorial rule between chapters — single-line
-                  small caps, flips colour scheme on dark chapters so
-                  each chapter transition keeps its contrast. */}
-              {!isLast && tickerText && (
-                <LookbookDivider
-                  text={tickerText}
+              {/* Editorial stamp between chapters: location on the
+                  left, hairline ruling, "next chapter" cue on the
+                  right. Theme flips on dark chapters so contrast is
+                  preserved against whatever sits directly above. */}
+              {!isLast && (
+                <LookbookStamp
+                  leftText={stampLeft}
+                  rightText={stampRight}
                   inverted={chapter.layout_variant === 'dark'}
-                  ariaLabel={t('principles.ariaLabel')}
+                  ariaLabel={t('stamp.ariaLabel')}
                 />
               )}
             </div>
