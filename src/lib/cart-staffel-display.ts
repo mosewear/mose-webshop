@@ -56,6 +56,10 @@ export function computeCartStaffelBreakdown(
 
   const grouped: Record<string, { totalQty: number; indices: number[] }> = {}
   items.forEach((item, index) => {
+    // Gift cards never participate in staffel discounts — the checkout
+    // route excludes them as well, so the cart drawer should not be
+    // teasing tiers/savings the API will not honour.
+    if (item.isGiftCard) return
     if (!grouped[item.productId]) grouped[item.productId] = { totalQty: 0, indices: [] }
     grouped[item.productId].totalQty += item.quantity
     grouped[item.productId].indices.push(index)

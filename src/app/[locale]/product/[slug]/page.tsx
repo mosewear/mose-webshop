@@ -219,36 +219,42 @@ export default async function ProductPage({
       category: category?.name,
     }
 
-    // Add breadcrumbs
+    // Add breadcrumbs — only emit a category step if the product
+    // actually has one (gift cards & uncategorised products skip it
+    // instead of pointing at a broken `/shop/` URL).
+    const crumbs: Array<{ '@type': 'ListItem'; position: number; name: string; item: string }> = [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: localeParam === 'en' ? 'Home' : 'Home',
+        item: `https://mosewear.com/${localeParam}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Shop',
+        item: `https://mosewear.com/${localeParam}/shop`,
+      },
+    ]
+    if (localizedCategory && category?.slug) {
+      crumbs.push({
+        '@type': 'ListItem',
+        position: crumbs.length + 1,
+        name: localizedCategory.name,
+        item: `https://mosewear.com/${localeParam}/shop/${category.slug}`,
+      })
+    }
+    crumbs.push({
+      '@type': 'ListItem',
+      position: crumbs.length + 1,
+      name: localizedProduct.name as string,
+      item: `https://mosewear.com/${localeParam}/product/${slug}`,
+    })
+
     const breadcrumbStructuredData = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Home',
-          item: `https://mosewear.com/${localeParam}`,
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Shop',
-          item: `https://mosewear.com/${localeParam}/shop`,
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: category?.name || 'Producten',
-          item: `https://mosewear.com/${localeParam}/shop/${category?.slug || ''}`,
-        },
-        {
-          '@type': 'ListItem',
-          position: 4,
-          name: product.name,
-          item: `https://mosewear.com/${localeParam}/product/${slug}`,
-        },
-      ],
+      itemListElement: crumbs,
     }
 
     structuredData = [structuredData, breadcrumbStructuredData]

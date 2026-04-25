@@ -124,16 +124,18 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
 
   const resolvedAmount =
     mode === 'preset' ? activeDenomination?.amount ?? 0 : customAmount
-  const resolvedVariantId =
-    mode === 'preset'
-      ? activeDenomination?.variantId ?? null
-      : denominations[0]?.variantId ?? null // fall back to any variant for FK
 
   const validCustom =
     mode === 'custom'
       ? customAmount >= minCustom && customAmount <= maxCustom
       : true
   const hasAmount = resolvedAmount > 0
+  // In preset mode we still need a denomination row picked, otherwise
+  // the user has done nothing yet. In custom mode the amount is
+  // independent — gift cards never persist a real `variant_id` server
+  // side (checkout forces it to NULL for `is_gift_card` lines), so we
+  // do NOT require a denomination row to be present.
+  const presetSelected = mode !== 'preset' || !!activeDenomination
   const recipientValid =
     !isGift ||
     (recipientEmail.trim().length > 3 &&
@@ -142,7 +144,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const scheduleValid =
     !isGift || !scheduleEnabled || (!!scheduleDate && new Date(scheduleDate).getTime() > Date.now())
 
-  const canAdd = hasAmount && validCustom && recipientValid && scheduleValid
+  const canAdd = hasAmount && validCustom && presetSelected && recipientValid && scheduleValid
 
   const primaryImage =
     product.product_images.find((i) => i.is_primary) || product.product_images[0]
@@ -151,7 +153,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const validityMonths = product.gift_card_default_validity_months
 
   function handleAdd() {
-    if (!canAdd || !resolvedVariantId) return
+    if (!canAdd) return
 
     const recipient: GiftCardRecipient | null = isGift
       ? {

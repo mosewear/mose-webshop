@@ -1,12 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type OrderItemLine = {
-  variant_id: string
+  variant_id: string | null
   quantity: number
   product_name: string
   size: string
   color: string
   is_presale?: boolean | null
+  is_gift_card?: boolean | null
 }
 
 /**
@@ -36,7 +37,7 @@ export async function applyInventoryDecrementForPaidOrder(
 
   const { data: items, error: itemsErr } = await supabase
     .from('order_items')
-    .select('variant_id, quantity, product_name, size, color, is_presale')
+    .select('variant_id, quantity, product_name, size, color, is_presale, is_gift_card')
     .eq('order_id', orderId)
 
   if (itemsErr) {
@@ -46,8 +47,17 @@ export async function applyInventoryDecrementForPaidOrder(
     return { ok: false, reason: 'no_order_items' }
   }
 
+  // Gift cards (and any other digital line without a real variant FK)
+  // have no physical stock to decrement. Skipping them here is what
+  // lets `stock_decremented_at` actually get stamped on gift-only or
+  // mixed orders — otherwise we silently leave the order "un-stamped"
+  // and any webhook retry would decrement physical stock a second time.
+  const physicalItems = (items as OrderItemLine[]).filter(
+    (i) => !i.is_gift_card && !!i.variant_id
+  )
+
   let anyLineFailed = false
-  for (const item of items as OrderItemLine[]) {
+  for (const item of physicalItems) {
     const lineResult = await decrementOneLine(supabase, item)
     if (!lineResult.ok) {
       anyLineFailed = true
@@ -80,6 +90,11 @@ async function decrementOneLine(
   supabase: SupabaseClient,
   item: OrderItemLine
 ): Promise<{ ok: boolean; reason?: string }> {
+  if (!item.variant_id) {
+    // Defensive: should already be filtered out by the caller, but if
+    // a digital/gift line ever sneaks through we no-op gracefully.
+    return { ok: true }
+  }
   const { data: variant, error: fetchError } = await supabase
     .from('product_variants')
     .select('id, stock_quantity, presale_enabled, presale_stock_quantity')
