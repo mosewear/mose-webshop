@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       url: `https://mosewear.com/${locale}/shop`,
       images: [
         {
-          url: 'https://mosewear.com/hero_mose.png',
+          url: 'https://mosewear.com/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE Shop',
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: 'summary_large_image',
       title: `${t('shop.title')} - MOSE`,
       description: t('shop.description'),
-      images: ['https://mosewear.com/hero_mose.png'],
+      images: ['https://mosewear.com/og-default.jpg'],
     },
     alternates: {
       canonical: `/${locale}/shop`,
@@ -56,7 +56,7 @@ export default async function ShopPage({ params }: { params: Promise<{ locale: s
     name: 'MOSE Shop',
     description: t('shop.description'),
     url: `https://www.mosewear.com/${locale}/shop`,
-    image: 'https://www.mosewear.com/hero_mose.png',
+    image: 'https://www.mosewear.com/og-default.jpg',
     isPartOf: {
       '@type': 'WebSite',
       name: 'MOSE',

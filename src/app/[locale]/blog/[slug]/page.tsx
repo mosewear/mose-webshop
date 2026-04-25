@@ -51,7 +51,7 @@ export async function generateMetadata({
           ]
         : [
             {
-              url: 'https://www.mosewear.com/hero_mose.png',
+              url: 'https://www.mosewear.com/og-default.jpg',
               width: 1200,
               height: 630,
               alt: 'MOSE Blog',
@@ -67,7 +67,7 @@ export async function generateMetadata({
       creator: '@mosewear',
       images: post.featured_image_url
         ? [post.featured_image_url]
-        : ['https://www.mosewear.com/hero_mose.png'],
+        : ['https://www.mosewear.com/og-default.jpg'],
     },
     alternates: {
       canonical: `/${locale}/blog/${slug}`,
@@ -110,7 +110,7 @@ export default async function BlogDetailPage({
     description: locale === 'en'
       ? (post.excerpt_en || post.excerpt_nl || '')
       : (post.excerpt_nl || ''),
-    image: post.featured_image_url || 'https://www.mosewear.com/hero_mose.png',
+    image: post.featured_image_url || 'https://www.mosewear.com/og-default.jpg',
     author: {
       '@type': 'Person',
       name: post.author,

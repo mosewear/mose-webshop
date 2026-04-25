@@ -20,6 +20,7 @@ interface HomepageSettings {
   hero_cta2_text: string
   hero_cta2_link: string
   hero_image_url: string
+  hero_image_url_mobile: string | null
   // Stats
   stats_1_number: string
   stats_1_text: string
@@ -272,18 +273,40 @@ export default function HomepageSettingsPage() {
                       />
                     </div>
                     {activeLanguage === 'nl' && (
-                      <div>
-                        <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">Hero Afbeelding</label>
-                        <MediaPicker
-                          mode="single"
-                          currentImageUrl={settings.hero_image_url}
-                          onImageSelected={(url) => setSettings({ ...settings, hero_image_url: url })}
-                          accept="images"
-                          folder="homepage/hero"
-                          bucket="images"
-                          buttonText="Selecteer hero afbeelding"
-                        />
-                      </div>
+                      <>
+                        <div>
+                          <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                            Hero Afbeelding (desktop, landscape)
+                          </label>
+                          <MediaPicker
+                            mode="single"
+                            currentImageUrl={settings.hero_image_url}
+                            onImageSelected={(url) => setSettings({ ...settings, hero_image_url: url })}
+                            accept="images"
+                            folder="homepage/hero"
+                            bucket="images"
+                            buttonText="Selecteer desktop hero"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Tip: gebruik een liggende foto (bv. 2400×1600).</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">
+                            Hero Afbeelding (mobiel, portrait)
+                          </label>
+                          <MediaPicker
+                            mode="single"
+                            currentImageUrl={settings.hero_image_url_mobile || ''}
+                            onImageSelected={(url) => setSettings({ ...settings, hero_image_url_mobile: url })}
+                            accept="images"
+                            folder="homepage/hero"
+                            bucket="images"
+                            buttonText="Selecteer mobiel hero"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Optioneel — laat leeg om de desktop foto ook op mobiel te tonen. Tip: portrait (bv. 1200×1600).
+                          </p>
+                        </div>
+                      </>
                     )}
                     <div className="md:col-span-2">
                       <label className="block text-xs md:text-sm font-bold mb-1.5 md:mb-2">

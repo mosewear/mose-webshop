@@ -1,0 +1,93 @@
+{
+  "homepage.hero.desktop": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/homepage/hero-desktop-desktop.webp"
+  },
+  "homepage.hero.mobile": {
+    "mobile": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/homepage/hero-mobile-mobile.webp",
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/homepage/hero-mobile-desktop.webp"
+  },
+  "homepage.story": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/homepage/story-desktop.webp",
+    "mobile": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/homepage/story-mobile.webp"
+  },
+  "category.hoodies": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/categories/hoodies-desktop.webp"
+  },
+  "category.sweaters": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/categories/sweaters-desktop.webp"
+  },
+  "category.tees": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/categories/tees-desktop.webp"
+  },
+  "lookbook.01.city": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp"
+  },
+  "lookbook.02.spring": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/02-spring-desktop.webp"
+  },
+  "lookbook.03.stone": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/03-stone-desktop.webp"
+  },
+  "lookbook.03.closing": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/03-closing-desktop.webp"
+  },
+  "about.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/hero-desktop.webp",
+    "mobile": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/hero-mobile.webp"
+  },
+  "about.story": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/story-desktop.webp"
+  },
+  "about.groningen": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/groningen-desktop.webp"
+  },
+  "og.default": {
+    "og": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/og/default-og.jpg",
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/og/default-desktop.webp"
+  },
+  "product.hoodie.bruin.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-desktop.webp"
+  },
+  "product.hoodie.bruin.detail": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/detail-desktop.webp"
+  },
+  "product.hoodie.zwart.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-desktop.webp"
+  },
+  "product.hoodie.groen.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-desktop.webp"
+  },
+  "product.hoodie.groen.detail": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-desktop.webp"
+  },
+  "product.hoodie.lifestyle.pair": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/lifestyle-pair-desktop.webp"
+  },
+  "product.hoodie.lineup": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/lineup-desktop.webp"
+  },
+  "product.sweater.offwhite.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/hero-desktop.webp"
+  },
+  "product.sweater.quartet": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/quartet-desktop.webp"
+  },
+  "product.sweater.couple-walk": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/couple-walk-desktop.webp"
+  },
+  "product.tee.zwart.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp"
+  },
+  "product.tee.wit.editorial": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/editorial-desktop.webp"
+  },
+  "product.tee.wit.detail": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/detail-desktop.webp"
+  },
+  "product.tee.beige.lifestyle": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/lifestyle-desktop.webp"
+  },
+  "product.tee.beige.detail": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/detail-desktop.webp"
+  }
+}

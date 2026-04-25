@@ -103,14 +103,29 @@ export default function HomePageClient({
       <div className="min-h-screen bg-white" data-full-bleed-top>
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
-        {/* Background Image with Parallax Effect */}
+        {/* Background Image with art-directed mobile/desktop split */}
         <div className="absolute inset-0">
-        <Image
-            src={homepageSettings?.hero_image_url || '/hero-mose-new.png'}
-            alt="MOSE Hero"
+          {/* Desktop / tablet: landscape group shot */}
+          <Image
+            src={homepageSettings?.hero_image_url || '/hero-desktop.webp'}
+            alt="MOSE — gemaakt in Groningen, gedragen in de stad"
             fill
-            className="object-cover object-center scale-105"
-          priority
+            sizes="(max-width: 767px) 0px, 100vw"
+            className="hidden md:block object-cover object-center scale-105"
+            priority
+          />
+          {/* Mobile: portrait crop with the trio in frame */}
+          <Image
+            src={
+              homepageSettings?.hero_image_url_mobile ||
+              homepageSettings?.hero_image_url ||
+              '/hero-mobile.webp'
+            }
+            alt="MOSE — gemaakt in Groningen, gedragen in de stad"
+            fill
+            sizes="(min-width: 768px) 0px, 100vw"
+            className="block md:hidden object-cover object-center scale-105"
+            priority
           />
           {/* Improved Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
@@ -488,7 +503,7 @@ export default function HomePageClient({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {categories.length > 0 ? (
               categories.map((category: any) => {
-                const categoryImage = category.image_url || '/hoodieblack.png'
+                const categoryImage = category.image_url || '/og-default.jpg'
                 const categoryHref = `/shop?category=${category.slug}`
                 
                 return (
@@ -622,8 +637,8 @@ export default function HomePageClient({
             <div className="relative">
               <div className="relative aspect-square overflow-hidden shadow-2xl border-2 border-white">
                 <Image
-                  src="/cordless-over-mose.png"
-                  alt="MOSE Atelier Groningen"
+                  src={homepageSettings?.story_image_url || '/og-default.jpg'}
+                  alt="MOSE — gedragen in het echte leven"
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"

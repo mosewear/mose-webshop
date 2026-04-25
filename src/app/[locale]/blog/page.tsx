@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       url: `https://www.mosewear.com/${locale}/blog`,
       images: [
         {
-          url: 'https://www.mosewear.com/hero_mose.png',
+          url: 'https://www.mosewear.com/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE Blog',
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://www.mosewear.com/hero_mose.png'],
+      images: ['https://www.mosewear.com/og-default.jpg'],
     },
     alternates: {
       canonical: `/${locale}/blog`,

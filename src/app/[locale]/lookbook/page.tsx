@@ -40,7 +40,7 @@ export async function generateMetadata({
       url: `https://mosewear.com/${locale}/lookbook`,
       images: [
         {
-          url: 'https://mosewear.com/hero_mose.png',
+          url: 'https://mosewear.com/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE Lookbook',
@@ -52,7 +52,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title: `${t('lookbook.title')} - MOSE`,
       description: t('lookbook.description'),
-      images: ['https://mosewear.com/hero_mose.png'],
+      images: ['https://mosewear.com/og-default.jpg'],
     },
     alternates: {
       canonical: `/${locale}/lookbook`,

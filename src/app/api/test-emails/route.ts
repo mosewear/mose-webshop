@@ -44,7 +44,7 @@ export async function GET() {
           color: 'Zwart',
           quantity: 1,
           price: 79.99,
-          imageUrl: '/hoodieblack.png'
+          imageUrl: '/og-default.jpg'
         }
       ],
       shippingAddress: {
@@ -93,7 +93,7 @@ export async function GET() {
         {
           product_id: 'test-product-1',
           product_name: 'MOSE Classic Hoodie Zwart',
-          image_url: '/hoodieblack.png'
+          image_url: '/og-default.jpg'
         }
       ],
       deliveryDate: new Date().toISOString()
@@ -125,7 +125,7 @@ export async function GET() {
           color: 'Zwart',
           quantity: 1,
           price: 79.99,
-          imageUrl: '/hoodieblack.png'
+          imageUrl: '/og-default.jpg'
         }
       ],
       checkoutUrl: `${siteUrl}/checkout?recover=${testOrderId}`,
@@ -141,7 +141,7 @@ export async function GET() {
       customerEmail: testEmail,
       productName: 'MOSE Classic Hoodie Zwart',
       productSlug: 'mose-classic-hoodie-zwart',
-      productImageUrl: '/hoodieblack.png',
+      productImageUrl: '/og-default.jpg',
       productPrice: 79.99,
       variantInfo: {
         size: 'M',

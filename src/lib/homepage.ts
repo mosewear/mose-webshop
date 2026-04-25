@@ -11,6 +11,7 @@ export interface HomepageSettings {
   hero_cta2_text: string
   hero_cta2_link: string
   hero_image_url: string
+  hero_image_url_mobile: string | null
   // Stats
   stats_1_number: string
   stats_1_text: string
@@ -85,6 +86,7 @@ export async function getHomepageSettings(locale: string = 'nl'): Promise<Homepa
         hero_cta2_text: data.hero_cta2_text_en || data.hero_cta2_text,
         hero_cta2_link: data.hero_cta2_link,
         hero_image_url: data.hero_image_url,
+        hero_image_url_mobile: data.hero_image_url_mobile ?? null,
         stats_1_number: data.stats_1_number,
         stats_1_text: data.stats_1_text_en || data.stats_1_text,
         stats_2_text: data.stats_2_text_en || data.stats_2_text,
@@ -145,7 +147,8 @@ export async function getHomepageSettings(locale: string = 'nl'): Promise<Homepa
         hero_cta1_link: '/shop',
         hero_cta2_text: 'View Lookbook',
         hero_cta2_link: '/lookbook',
-        hero_image_url: '/hero_mose.png',
+        hero_image_url: '/hero-desktop.webp',
+        hero_image_url_mobile: '/hero-mobile.webp',
         stats_1_number: '100%',
         stats_1_text: 'Locally produced',
         stats_2_text: 'Days return',
@@ -181,7 +184,7 @@ export async function getHomepageSettings(locale: string = 'nl'): Promise<Homepa
         story_stat3_sublabel: 'Materials',
         story_cta_text: 'Read our story',
         story_cta_link: '/over-mose',
-        story_image_url: '/hoodieblack.png',
+        story_image_url: '/og-default.jpg',
         story_founded_year: '2020',
         newsletter_title: 'JOIN THE PACK',
         newsletter_description1: 'News about drops, restocks and the workshop.',
@@ -202,7 +205,8 @@ export async function getHomepageSettings(locale: string = 'nl'): Promise<Homepa
       hero_cta1_link: '/shop',
       hero_cta2_text: 'Bekijk Lookbook',
       hero_cta2_link: '/lookbook',
-      hero_image_url: '/hero_mose.png',
+      hero_image_url: '/hero-desktop.webp',
+      hero_image_url_mobile: '/hero-mobile.webp',
       stats_1_number: '100%',
       stats_1_text: 'Lokaal geproduceerd',
       stats_2_text: 'Dagen retourrecht',
@@ -238,7 +242,7 @@ export async function getHomepageSettings(locale: string = 'nl'): Promise<Homepa
       story_stat3_sublabel: 'Materialen',
       story_cta_text: 'Lees ons verhaal',
       story_cta_link: '/over-mose',
-      story_image_url: '/hoodieblack.png',
+      story_image_url: '/og-default.jpg',
       story_founded_year: '2020',
       newsletter_title: 'JOIN THE PACK',
       newsletter_description1: 'Nieuws over drops, restocks en het atelier.',

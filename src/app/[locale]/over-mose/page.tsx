@@ -34,13 +34,14 @@ export default function AboutPage() {
         </div>
 
         {/* Story Image */}
-        <div className="relative aspect-[16/9] mb-12 border-2 border-black overflow-hidden">
+        <div className="relative aspect-[4/5] md:aspect-[3/2] mb-12 border-2 border-black overflow-hidden">
           <Image
-            src="/hero-mose-new.png"
-            alt="MOSE Groningen"
+            src="https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/hero-desktop.webp"
+            alt="MOSE — gedragen in het echte leven, gemaakt in Groningen"
             fill
             sizes="(max-width: 896px) 100vw, 896px"
-            className="object-cover object-center"
+            className="object-cover object-[center_30%]"
+            priority
           />
         </div>
 

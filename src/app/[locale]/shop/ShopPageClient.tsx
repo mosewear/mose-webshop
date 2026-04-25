@@ -354,11 +354,11 @@ export default function ShopPageClient() {
       <section className="relative h-48 md:h-80 overflow-hidden border-b-4 border-brand-primary">
         {/* Background Image */}
         <Image
-          src="/hero_mose.png"
+          src="/hero-desktop.webp"
           alt="MOSE Shop"
           fill
           sizes="100vw"
-          className="object-cover"
+          className="object-cover object-[center_30%]"
           priority
         />
         {/* Gradient Overlay */}

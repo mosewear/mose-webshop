@@ -90,11 +90,11 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
     <div className="bg-white">
       <section className="relative h-48 md:h-80 overflow-hidden border-b-4 border-brand-primary">
         <Image
-          src="/hero_mose.png"
+          src="/hero-desktop.webp"
           alt="MOSE Blog"
           fill
           sizes="100vw"
-          className="object-cover"
+          className="object-cover object-[center_30%]"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />

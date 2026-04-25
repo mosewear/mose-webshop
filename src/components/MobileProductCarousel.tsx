@@ -42,8 +42,8 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
       slug: 'mose-classic-hoodie-zwart',
       base_price: 79.99,
       price: 79.99,
-      image_url: '/hoodieblack.png',
-      product_images: [{ url: '/hoodieblack.png' }],
+      image_url: '/og-default.jpg',
+      product_images: [{ url: '/og-default.jpg' }],
     },
     {
       id: '2',
@@ -51,8 +51,8 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
       slug: 'mose-essential-tee-zwart',
       base_price: 34.99,
       price: 34.99,
-      image_url: '/blacktee.png',
-      product_images: [{ url: '/blacktee.png' }],
+      image_url: '/og-default.jpg',
+      product_images: [{ url: '/og-default.jpg' }],
     },
     {
       id: '3',
@@ -60,8 +60,8 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
       slug: 'mose-classic-cap-zwart',
       base_price: 29.99,
       price: 29.99,
-      image_url: '/hoodie_cap.png',
-      product_images: [{ url: '/hoodie_cap.png' }],
+      image_url: '/og-default.jpg',
+      product_images: [{ url: '/og-default.jpg' }],
     },
   ]
 
@@ -112,7 +112,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
           const primaryImage = product.image_url 
             || product.images?.[0]?.url 
             || product.product_images?.[0]?.url 
-            || '/hoodieblack.png'
+            || '/og-default.jpg'
           const isWishlisted = isInWishlist(product.id)
           
           return (
