@@ -36,7 +36,7 @@ export async function generateMetadata({
         is_primary,
         position
       ),
-      categories!inner (
+      categories (
         name,
         name_en,
         slug
@@ -60,9 +60,12 @@ export async function generateMetadata({
 
   // Map localized fields
   const localizedProduct = mapLocalizedProduct(product, locale)
-  // Type assertion: categories!inner returns single object, not array
-  const category = product.categories as any as { name: string; name_en?: string; slug: string }
-  const localizedCategory = category 
+  // Categories is now a LEFT join — gift cards & uncategorised items
+  // come back with `null` here, so we always treat it optionally.
+  const category = product.categories as any as
+    | { name: string; name_en?: string; slug: string }
+    | null
+  const localizedCategory = category
     ? { ...category, name: locale === 'en' && category.name_en ? category.name_en : category.name }
     : null
 
@@ -70,10 +73,18 @@ export async function generateMetadata({
   const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
   const imageUrl = primaryImage?.url || 'https://mosewear.com/logomose.png'
 
-  // Use custom meta or generate from product data
-  const title = product.meta_title || `${localizedProduct.name} - MOSE`
-  const description = product.meta_description || 
-    `${localizedProduct.description?.substring(0, 155)}${localizedProduct.description?.length > 155 ? '...' : ''}`
+  // Use custom meta or generate from product data. We avoid appending
+  // "- MOSE" when the localized name already starts with the brand
+  // (e.g. "MOSE Giftcard") to prevent ugly "MOSE Giftcard - MOSE" titles.
+  const localizedName = localizedProduct.name as string | undefined
+  const fallbackTitle = localizedName
+    ? localizedName.toLowerCase().startsWith('mose')
+      ? localizedName
+      : `${localizedName} | MOSE`
+    : 'MOSE'
+  const title = product.meta_title || fallbackTitle
+  const description = product.meta_description ||
+    `${localizedProduct.description?.substring(0, 155) ?? ''}${(localizedProduct.description?.length ?? 0) > 155 ? '...' : ''}`
   
   return {
     title,
@@ -145,7 +156,7 @@ export default async function ProductPage({
         presale_stock_quantity,
         presale_expected_date
       ),
-      categories!inner (
+      categories (
         name,
         name_en,
         slug
@@ -165,9 +176,12 @@ export default async function ProductPage({
   if (product) {
     // Map localized fields
     const localizedProduct = mapLocalizedProduct(product, localeParam)
-    // Type assertion: categories!inner returns single object, not array
-    const category = product.categories as any as { name: string; name_en?: string; slug: string }
-    const localizedCategory = category 
+    // Categories is now LEFT-joined; gift cards & uncategorised products
+    // arrive without one. Treat it as optional for breadcrumbs / schema.
+    const category = product.categories as any as
+      | { name: string; name_en?: string; slug: string }
+      | null
+    const localizedCategory = category
       ? { ...category, name: localeParam === 'en' && category.name_en ? category.name_en : category.name }
       : null
     
