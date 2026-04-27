@@ -757,7 +757,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         type="button"
         onClick={handleAdd}
         disabled={!canAdd || justAdded}
-        className={`flex-1 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+        className={`flex-1 min-w-0 py-3 md:py-4 text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
           justAdded
             ? 'bg-black text-white cursor-default'
             : canAdd
@@ -767,15 +767,20 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
       >
         {justAdded ? (
           <>
-            <Check className="h-5 w-5" strokeWidth={3} />
+            <Check className="h-4 w-4 md:h-5 md:w-5 shrink-0" strokeWidth={3} />
             <span className="truncate">{sAdded}</span>
           </>
         ) : (
           <>
-            <Gift className="h-5 w-5" strokeWidth={2.5} />
+            <Gift className="h-4 w-4 md:h-5 md:w-5 shrink-0" strokeWidth={2.5} />
             <span className="truncate">
               {sAddToCart}
-              {hasAmount ? ` · ${formatPrice(resolvedAmount * quantity)}` : ''}
+              {hasAmount ? (
+                <span className="hidden md:inline">
+                  {' · '}
+                  {formatPrice(resolvedAmount * quantity)}
+                </span>
+              ) : null}
             </span>
           </>
         )}
@@ -1223,7 +1228,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               type="button"
               onClick={handleAdd}
               disabled={!canAdd || justAdded}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3.5 border-2 font-bold uppercase tracking-wide text-sm transition-colors ${
+              className={`w-full flex items-center justify-center gap-2 px-3 py-3.5 border-2 font-bold uppercase tracking-wide text-sm transition-colors ${
                 justAdded
                   ? 'bg-white text-black border-white'
                   : canAdd
@@ -1233,19 +1238,19 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
             >
               {justAdded ? (
                 <>
-                  <Check className="w-5 h-5" strokeWidth={3} />
-                  <span>{sAdded}</span>
+                  <Check className="w-5 h-5 shrink-0" strokeWidth={3} />
+                  <span className="truncate">{sAdded}</span>
                 </>
               ) : (
                 <>
-                  <ShoppingCart className="w-5 h-5" />
-                  <span className="truncate">
+                  <ShoppingCart className="w-5 h-5 shrink-0" />
+                  <span className="truncate min-w-0">
                     {canAdd
-                      ? `${sStickyAddToCart}${
-                          hasAmount
-                            ? ` · ${formatPrice(resolvedAmount * quantity)}`
-                            : ''
-                        }`
+                      ? hasAmount
+                        ? `${sStickyAddToCart} · ${formatPrice(
+                            resolvedAmount * quantity
+                          )}`
+                        : sStickyAddToCart
                       : ctaDisabledReason || sStickyChoose}
                   </span>
                 </>
