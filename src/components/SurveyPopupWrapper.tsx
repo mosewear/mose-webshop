@@ -1,7 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
 import SurveyPopup from './SurveyPopup'
+import {
+  isCampaignPopupActive,
+  useActiveCampaignClient,
+} from './campaign/useActiveCampaignClient'
 
 interface PopupSettings {
   popup_enabled: boolean
@@ -13,6 +18,8 @@ interface PopupSettings {
 }
 
 export default function SurveyPopupWrapper() {
+  const locale = useLocale()
+  const campaign = useActiveCampaignClient(locale)
   const [settings, setSettings] = useState<PopupSettings | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -41,6 +48,9 @@ export default function SurveyPopupWrapper() {
 
     loadSettings()
   }, [])
+
+  if (campaign === undefined) return null
+  if (isCampaignPopupActive(campaign)) return null
 
   if (loading || !settings || !settings.popup_enabled) {
     return null

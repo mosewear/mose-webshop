@@ -1,7 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
 import NewsletterPopup from './NewsletterPopup'
+import {
+  isCampaignPopupActive,
+  useActiveCampaignClient,
+} from './campaign/useActiveCampaignClient'
 
 interface PopupSettings {
   popup_enabled: boolean
@@ -14,6 +19,8 @@ interface PopupSettings {
 }
 
 export default function NewsletterPopupWrapper() {
+  const locale = useLocale()
+  const campaign = useActiveCampaignClient(locale)
   const [settings, setSettings] = useState<PopupSettings | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -44,6 +51,11 @@ export default function NewsletterPopupWrapper() {
 
     loadSettings()
   }, [])
+
+  // Wait for the campaign check to resolve before rendering — otherwise
+  // we'd briefly stack two popups while the campaign endpoint is loading.
+  if (campaign === undefined) return null
+  if (isCampaignPopupActive(campaign)) return null
 
   if (loading || !settings || !settings.popup_enabled) {
     return null

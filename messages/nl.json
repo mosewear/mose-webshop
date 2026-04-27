@@ -1945,5 +1945,17 @@
     "redeemed": "Ingewisseld",
     "adjusted": "Aangepast",
     "noHistory": "Nog geen punten activiteit."
+  },
+  "campaignPopup": {
+    "closeAria": "Sluit campagne-popup",
+    "codeLabel": "Code",
+    "codeChipAria": "Klik om kortingscode {code} te kopiëren",
+    "codeCopied": "Code {code} gekopieerd",
+    "codeCopyFailed": "Kopiëren van de code is mislukt",
+    "dontShowAgain": "Niet meer tonen"
+  },
+  "campaignAutoApply": {
+    "appliedToast": "Code {code} toegepast — geldt automatisch in je winkelmand",
+    "replacedToast": "Code {code} toegepast (vervangt {previous})"
   }
 }

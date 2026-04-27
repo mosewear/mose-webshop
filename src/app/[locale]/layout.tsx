@@ -11,6 +11,13 @@ import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 import SurveyPopupWrapper from '@/components/SurveyPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
 import ChatButtonWrapper from '@/components/ChatButtonWrapper'
+import CampaignPopupWrapper from '@/components/campaign/CampaignPopupWrapper'
+import CampaignAutoApply from '@/components/campaign/CampaignAutoApply'
+import CampaignThemeProvider from '@/components/campaign/CampaignThemeProvider'
+import {
+  getActiveMarketingCampaign,
+  sanitizeHexColor,
+} from '@/lib/marketing-campaign'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -102,12 +109,22 @@ export default async function LocaleLayout({
   // side is the easiest way to get started
   const messages = await getMessages()
 
+  // Pre-resolve the active campaign so we can inject its theme color as
+  // a CSS variable on the server (no flash of wrong theme).
+  const resolved = await getActiveMarketingCampaign()
+  const campaignThemeColor = resolved
+    ? sanitizeHexColor(resolved.campaign.theme_color)
+    : null
+
   return (
     <NextIntlClientProvider messages={messages}>
+      <CampaignThemeProvider color={campaignThemeColor} />
+      <CampaignAutoApply />
       <AnnouncementBanner />
       <Header />
       <MainContentWrapper>{children}</MainContentWrapper>
       <Footer />
+      <CampaignPopupWrapper />
       <NewsletterPopupWrapper />
       <SurveyPopupWrapper />
       <CookieConsent />

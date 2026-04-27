@@ -1,6 +1,17 @@
 import { getLocale } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { createAnonClient } from '@/lib/supabase/server'
+import {
+  campaignHasBannerCopy,
+  computeContrastingTextColor,
+  getActiveMarketingCampaign,
+  normalizeCampaignLink,
+  pickLocalized,
+  sanitizeHexColor,
+  withCampaignParam,
+} from '@/lib/marketing-campaign'
 import AnnouncementBannerClient from './AnnouncementBannerClient'
+import CampaignBannerClient from './CampaignBannerClient'
 
 interface ClientConfig {
   enabled: boolean
@@ -52,7 +63,7 @@ async function loadBannerData(locale: string): Promise<{
         dismissable: configData.dismissable,
         dismiss_cookie_days: configData.dismiss_cookie_days,
       },
-      messages: messagesData.map(msg => ({
+      messages: messagesData.map((msg) => ({
         id: msg.id,
         text: isEnglish ? (msg.text_en?.trim() || msg.text) : msg.text,
         link_url: normalizeBannerLink(msg.link_url),
@@ -69,13 +80,58 @@ async function loadBannerData(locale: string): Promise<{
 
 export default async function AnnouncementBanner() {
   const locale = await getLocale()
-  const { enabled, config, messages } = await loadBannerData(locale)
 
-  return <AnnouncementBannerClient enabled={enabled} config={config} messages={messages} />
+  // Campaign override takes precedence whenever a campaign is active and
+  // explicitly opted in to a banner. This intentionally overrides the
+  // global enabled-flag of the regular banner — campaigns are deliberate
+  // marketing moments.
+  const resolved = await getActiveMarketingCampaign()
+  if (resolved && campaignHasBannerCopy(resolved.campaign, locale)) {
+    const { campaign, promoCode } = resolved
+    const t = await getTranslations({ locale, namespace: 'announcementBanner' })
+
+    const themeColor =
+      (campaign.override_banner_color
+        ? sanitizeHexColor(campaign.theme_color)
+        : null) ?? '#00A676'
+    const textColor =
+      sanitizeHexColor(campaign.theme_text_color) ??
+      computeContrastingTextColor(themeColor)
+
+    const message =
+      pickLocalized(campaign.banner_message_nl, campaign.banner_message_en, locale) ?? ''
+    const ctaText = pickLocalized(campaign.banner_cta_nl, campaign.banner_cta_en, locale)
+    const baseHref = normalizeCampaignLink(campaign.banner_link_url)
+    const href =
+      baseHref && campaign.auto_apply_via_url
+        ? withCampaignParam(baseHref, campaign.slug, true)
+        : baseHref
+
+    const showCode =
+      campaign.show_code_in_banner && Boolean(promoCode?.code) && Boolean(promoCode?.is_active)
+
+    return (
+      <CampaignBannerClient
+        slug={campaign.slug}
+        message={message}
+        ctaText={ctaText}
+        href={href}
+        code={showCode ? (promoCode?.code ?? null) : null}
+        themeColor={themeColor}
+        textColor={textColor}
+        dismissable={campaign.banner_dismissable}
+        showCode={showCode}
+        closeLabel={t('dismiss')}
+      />
+    )
+  }
+
+  const { enabled, config, messages } = await loadBannerData(locale)
+  return (
+    <AnnouncementBannerClient enabled={enabled} config={config} messages={messages} />
+  )
 }
 
-// Strip a leading locale segment so the locale-aware Link in the client
-// can inject the visitor's current locale. Keeps external URLs intact.
 function normalizeBannerLink(raw: string | null): string | null {
   if (!raw) return raw
   if (/^https?:\/\//i.test(raw)) return raw

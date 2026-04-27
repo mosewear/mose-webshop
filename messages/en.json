@@ -1993,5 +1993,17 @@
     "redeemed": "Redeemed",
     "adjusted": "Adjusted",
     "noHistory": "No points activity yet."
+  },
+  "campaignPopup": {
+    "closeAria": "Close campaign popup",
+    "codeLabel": "Code",
+    "codeChipAria": "Click to copy discount code {code}",
+    "codeCopied": "Code {code} copied",
+    "codeCopyFailed": "Couldn't copy the code",
+    "dontShowAgain": "Don't show again"
+  },
+  "campaignAutoApply": {
+    "appliedToast": "Code {code} applied — added to your cart automatically",
+    "replacedToast": "Code {code} applied (replaces {previous})"
   }
 }
