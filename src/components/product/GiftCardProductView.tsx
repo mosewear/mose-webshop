@@ -357,8 +357,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     t,
     'howItWorksStep1Desc',
     locale === 'en'
-      ? `Grab a fixed amount or set your own — from €${minCustom} to €${maxCustom}.`
-      : `Pak een vast bedrag of bepaal zelf het exacte bedrag — van €${minCustom} tot €${maxCustom}.`,
+      ? `Pick a fixed amount or set your own, anywhere between €${minCustom} and €${maxCustom}.`
+      : `Pak een vast bedrag of bepaal zelf het exacte bedrag, tussen €${minCustom} en €${maxCustom}.`,
     { min: minCustom, max: maxCustom }
   )
   const sStep2Title = safeT(
@@ -382,8 +382,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     t,
     'howItWorksStep3Desc',
     locale === 'en'
-      ? 'Once paid, the unique code lands by email — ready to spend on anything in the collection.'
-      : 'Na betaling komt de unieke code per mail binnen — klaar om te besteden op alles in de collectie.'
+      ? 'Once paid, the unique code lands by email, ready to spend on anything in the collection.'
+      : 'Na betaling komt de unieke code direct per mail binnen, klaar om te besteden op alles uit de collectie.'
   )
   const sFaqTitle = safeT(
     t,
@@ -403,8 +403,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         t,
         'faq1A',
         locale === 'en'
-          ? 'Anything on mosewear.com — basics, hoodies, tees and sweaters. Sale items included.'
-          : 'Op alles op mosewear.com — basics, hoodies, tees en sweaters. Ook op afgeprijsde items.'
+          ? 'Anything on mosewear.com: basics, hoodies, tees and sweaters. Sale items included.'
+          : 'Op alles wat je vindt op mosewear.com: basics, hoodies, tees en sweaters. Ook op afgeprijsde items.'
       ),
     },
     {
@@ -440,7 +440,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         t,
         'faq3A',
         locale === 'en'
-          ? "Yes — the balance can be spent across multiple orders until it's used up."
+          ? "Yes, the balance can be spent across multiple orders until it's used up."
           : 'Ja, je kunt de bon over meerdere bestellingen verdelen tot het saldo op is.'
       ),
     },
@@ -456,8 +456,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         t,
         'faq4A',
         locale === 'en'
-          ? "The card always works on sale prices. Stacking with promo codes depends on the campaign — you'll see it during checkout."
-          : 'De bon is altijd geldig op sale prijzen. Combineren met losse kortingscodes is afhankelijk van de actie — dat zie je tijdens het afrekenen.'
+          ? "The card always works on sale prices. Stacking with promo codes depends on the campaign. You'll see it during checkout."
+          : 'De bon is altijd geldig op sale prijzen. Of je hem kunt combineren met losse kortingscodes hangt af van de actie. Dat zie je tijdens het afrekenen.'
       ),
     },
   ]
@@ -884,7 +884,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
                             ? `Valid for ${validityMonths} months from purchase. Unspent balance stays on the card.`
                             : `Geldig ${validityMonths} maanden vanaf aankoop. Saldo dat je niet besteedt blijft op de bon staan.`
                           : locale === 'en'
-                            ? "Spend whenever — the balance stays on the card until it's used up."
+                            ? "Spend whenever. The balance stays on the card until it's used up."
                             : 'Het saldo blijft op de bon staan totdat je het volledig hebt besteed.'}
                       </p>
                     </div>
@@ -899,8 +899,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
                       </p>
                       <p className="text-gray-700">
                         {locale === 'en'
-                          ? 'Use it across multiple orders and on sale prices — the balance keeps until empty.'
-                          : 'Inzetbaar over meerdere bestellingen en op sale prijzen — saldo blijft staan tot op.'}
+                          ? 'Use it across multiple orders and on sale prices. The balance keeps until empty.'
+                          : 'Inzetbaar over meerdere bestellingen en op sale prijzen. Het saldo blijft staan tot het volledig is besteed.'}
                       </p>
                     </div>
                   </div>

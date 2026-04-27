@@ -33,12 +33,12 @@ const updates = {
   description: [
     'Even geen inspiratie voor (alweer) een cadeau? Met de MOSE Giftcard zit je altijd goed.',
     '',
-    'Laat hem of haar zelf het favoriete piece kiezen uit de collectie — premium basics, gemaakt in Groningen, gedragen met intentie.',
+    'Laat hem of haar zelf het favoriete piece kiezen uit de collectie. Premium basics, gemaakt in Groningen, gedragen met intentie.',
   ].join('\n'),
   description_en: [
-    "Stuck for gift ideas — again? The MOSE Gift Card never misses.",
+    'Out of gift ideas, again? The MOSE Gift Card never misses.',
     '',
-    'Let them pick their own favourite from the collection — premium basics, made in Groningen, worn with intention.',
+    'Let them pick their own favourite from the collection. Premium basics, made in Groningen, worn with intention.',
   ].join('\n'),
   meta_title: 'MOSE Giftcard',
   // Cleared on purpose: the metadata generator falls back to the
