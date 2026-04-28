@@ -1235,7 +1235,7 @@
       },
       {
         "question": "What are the shipping costs and delivery time?",
-        "answer": "Shipping within the Netherlands and Belgium is free from €{freeShipping}. Below that you pay €{shippingCost}. Orders are processed and shipped within 1-2 business days. Delivery then takes 1-3 business days via DHL."
+        "answer": "Shipping within the Netherlands and Belgium is always free, regardless of order amount. Orders are processed and shipped within 1-2 business days. Delivery then takes 1-3 business days via DHL."
       },
       {
         "question": "Can I return my order?",
