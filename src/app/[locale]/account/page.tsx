@@ -1251,7 +1251,7 @@ export default function AccountPage() {
                             )}
                             {returnItem.status === 'return_label_generated' && returnItem.return_label_url && (
                               <a
-                                href={returnItem.return_label_url}
+                                href={`/api/returns/${returnItem.id}/download-label`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"

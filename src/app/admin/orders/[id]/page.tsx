@@ -102,7 +102,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [showTimeline, setShowTimeline] = useState(true)
   const [creatingLabel, setCreatingLabel] = useState(false)
   const [labelSuccess, setLabelSuccess] = useState(false)
-  const [labelUrl, setLabelUrl] = useState('')
+  // Tracks whether a freshly-created Sendcloud label is available for the
+  // current order. We never expose the raw Sendcloud URL to the browser
+  // (that endpoint is HTTP-Basic-protected and would 401 on the client) —
+  // downloads always go through `/api/get-label-pdf` which proxies the
+  // PDF server-side using the stored API credentials.
+  const [labelReady, setLabelReady] = useState(false)
   const [refreshingReturns, setRefreshingReturns] = useState(false)
 
   // Customer info edit states
@@ -495,10 +500,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       }
 
       const result = await response.json()
-      
+
       setLabelSuccess(true)
-      setLabelUrl(result.data.labelUrl)
-      
+      setLabelReady(Boolean(result.data.labelUrl))
+
       // Update local state
       setTrackingCode(result.data.trackingNumber)
       setTrackingUrl(result.data.trackingUrl)
@@ -510,9 +515,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       alert('✅ Label aangemaakt en klant gemaild!')
 
-      // Open label in new tab
+      // Open the PDF via our authenticated proxy. Sendcloud's
+      // `panel.sendcloud.sc/api/v2/labels/...` URL needs HTTP Basic
+      // Auth and will return 401 if opened directly from the browser.
       if (result.data.labelUrl) {
-        window.open(result.data.labelUrl, '_blank')
+        window.open(`/api/get-label-pdf?order_id=${id}`, '_blank')
       }
     } catch (err: any) {
       alert(`Fout bij aanmaken label: ${err.message}`)
@@ -1870,9 +1877,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="flex-1">
                         Label aangemaakt! {trackingCode}
                       </div>
-                      {labelUrl && (
+                      {labelReady && (
                         <a
-                          href={labelUrl}
+                          href={`/api/get-label-pdf?order_id=${id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-2 py-1 text-xs font-bold uppercase transition-colors rounded"

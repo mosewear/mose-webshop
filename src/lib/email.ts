@@ -678,11 +678,55 @@ export async function sendReturnLabelGeneratedEmail(props: {
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
+  // The CTA button must NEVER point to the raw Sendcloud URL — that
+  // endpoint requires HTTP Basic Auth and would 401 in the customer's
+  // browser. Instead we link to the return detail page where the
+  // customer can download the PDF through the authenticated proxy.
+  const returnPageUrl = `${siteUrl}/${locale}/returns/${props.returnId}`
+
+  // For the actual PDF attachment we fetch the file server-side using
+  // the Sendcloud API credentials and embed it as a base64 buffer.
+  // Resend's `path` option fetches the URL anonymously (no auth
+  // headers), so passing a Sendcloud URL there silently produces an
+  // empty attachment.
+  let pdfAttachment: { filename: string; content: string } | null = null
+  if (props.labelUrl) {
+    try {
+      const sendcloudKey = process.env.SENDCLOUD_PUBLIC_KEY
+      const sendcloudSecret = process.env.SENDCLOUD_SECRET_KEY
+      if (sendcloudKey && sendcloudSecret) {
+        const auth = Buffer.from(`${sendcloudKey}:${sendcloudSecret}`).toString('base64')
+        const pdfRes = await fetch(props.labelUrl, {
+          headers: { Authorization: `Basic ${auth}` },
+        })
+        if (pdfRes.ok) {
+          const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer())
+          pdfAttachment = {
+            filename: `retourlabel-${props.returnId.slice(0, 8)}.pdf`,
+            content: pdfBuffer.toString('base64'),
+          }
+        } else {
+          console.error(
+            '[sendReturnLabelGeneratedEmail] Sendcloud PDF fetch failed:',
+            pdfRes.status,
+            pdfRes.statusText
+          )
+        }
+      } else {
+        console.error(
+          '[sendReturnLabelGeneratedEmail] Missing SENDCLOUD_PUBLIC_KEY / SENDCLOUD_SECRET_KEY; sending email without PDF attachment.'
+        )
+      }
+    } catch (attachErr) {
+      console.error('[sendReturnLabelGeneratedEmail] Failed to attach label PDF:', attachErr)
+    }
+  }
+
   const html = await render(
     ReturnLabelGeneratedEmail({
       returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       customerName: props.customerName,
-      returnLabelUrl: props.labelUrl || '',
+      returnLabelUrl: returnPageUrl,
       t,
       siteUrl,
       contactEmail,
@@ -699,14 +743,7 @@ export async function sendReturnLabelGeneratedEmail(props: {
         returnNumber: props.returnId.slice(0, 8).toUpperCase(),
       }),
       html,
-      attachments: props.labelUrl
-        ? [
-            {
-              filename: `retourlabel-${props.returnId.slice(0, 8)}.pdf`,
-              path: props.labelUrl,
-            },
-          ]
-        : [],
+      attachments: pdfAttachment ? [pdfAttachment] : [],
     },
     {
       templateKey: 'return_label_generated',

@@ -684,7 +684,7 @@ export default function AdminReturnDetailsPage() {
 
               {returnData.return_label_url && (
                 <a
-                  href={returnData.return_label_url}
+                  href={`/api/returns/${returnData.id}/download-label`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full px-4 py-3 bg-gray-800 text-white font-bold uppercase text-sm hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
