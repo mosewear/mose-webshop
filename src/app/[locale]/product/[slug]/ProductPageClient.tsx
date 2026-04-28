@@ -498,10 +498,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       // Set page title
       document.title = `${data.name} - MOSE`
 
-      // Track Facebook Pixel ViewContent event
+      // Track Facebook Pixel ViewContent event. `content_ids` is the
+      // product_id (matches the Meta catalogue feed) and `contents`
+      // declares a single line so DPA / Catalogue Sales remarketing
+      // pools see the right SKU.
       const price = data.sale_price || data.base_price
       trackPixelEvent('ViewContent', {
         content_ids: [data.id],
+        contents: [{ id: data.id, quantity: 1, item_price: price }],
         content_name: data.name,
         content_type: 'product',
         content_category: data.categories?.name,
@@ -742,15 +746,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     try {
       const { data: { user } } = await supabase.auth.getUser()
       
-      trackPixelEvent('AddToCart', {
-        content_ids: [selectedVariant.id],
+      // Use product_id for catalog-matched content_ids (consistent with
+      // ViewContent and the Purchase event). `contents` carries the per-
+      // line payload Meta uses for revenue attribution.
+      const addToCartParams = {
+        content_ids: [product.id],
+        contents: [{ id: product.id, quantity, item_price: finalPrice }],
         content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
         content_type: 'product',
         content_category: product.categories?.name,
         value: finalPrice * quantity,
         currency: 'EUR',
-        num_items: quantity
-      }, user ? {
+        num_items: quantity,
+      }
+
+      trackPixelEvent('AddToCart', addToCartParams, user ? {
         email: user.email || undefined,
         firstName: user.user_metadata?.first_name || undefined,
         lastName: user.user_metadata?.last_name || undefined,
@@ -759,7 +769,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     } catch (error) {
       // If user check fails, still track without userData
       trackPixelEvent('AddToCart', {
-        content_ids: [selectedVariant.id],
+        content_ids: [product.id],
+        contents: [{ id: product.id, quantity, item_price: finalPrice }],
         content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
         content_type: 'product',
         content_category: product.categories?.name,

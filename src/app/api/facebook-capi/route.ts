@@ -15,7 +15,11 @@ import crypto from 'crypto'
  */
 
 const PIXEL_ID = '1447430483627328'
-const API_VERSION = 'v18.0'
+// Keep this in sync with the Pixel base script in `src/app/layout.tsx`.
+// Meta only guarantees stability for the latest two Graph API versions,
+// so bump this together with the public fbevents.js version when Meta
+// publishes a new release.
+const API_VERSION = 'v22.0'
 const FB_API_URL = `https://graph.facebook.com/${API_VERSION}/${PIXEL_ID}/events`
 
 interface FacebookEvent {
@@ -42,12 +46,14 @@ interface FacebookEvent {
     currency?: string
     value?: number
     content_ids?: string[]
+    contents?: Array<{ id: string; quantity: number; item_price?: number }>
     content_name?: string
     content_type?: string
     content_category?: string
     num_items?: number
     search_string?: string
     transaction_id?: string
+    predicted_ltv?: number
   }
 }
 

@@ -5,7 +5,6 @@ import { PaymentRequest, PaymentRequestPaymentMethodEvent } from '@stripe/stripe
 import { PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from '@/i18n/routing'
-import { trackPixelEvent } from '@/lib/facebook-pixel'
 import toast from 'react-hot-toast'
 import { capitalizeName } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
@@ -340,15 +339,12 @@ export default function ExpressCheckout({
             e.complete('success')
             console.log('✅ [Express Checkout] Payment successful!')
 
-            // Track conversion
-            trackPixelEvent('Purchase', {
-              content_ids: cartItems.map(item => item.productId),
-              content_name: cartItems.map(item => item.name).join(', '),
-              content_type: 'product',
-              value: expectedTotal,
-              currency: 'EUR',
-              num_items: cartItems.reduce((sum, item) => sum + item.quantity, 0),
-            })
+            // Purchase tracking is handled by /order-confirmation so the
+            // event fires exactly once per order with the full server
+            // payload: catalog-matched product_ids, hashed user data
+            // (enhanced matching), `transaction_id` for CAPI dedup and
+            // the localStorage guard that prevents double counting on
+            // refresh / back-navigation.
 
             // Clear cart and redirect
             toast.success('Betaling geslaagd!')

@@ -603,8 +603,16 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Only track once and only if we have items
     if (!hasTrackedCheckout && items.length > 0 && total > 0) {
+      // Use product_id (catalog match) for content_ids and a per-line
+      // contents array so Meta can attribute revenue at SKU level.
       trackPixelEvent('InitiateCheckout', {
-        content_ids: items.map(item => item.variantId),
+        content_ids: items.map(item => item.productId),
+        contents: items.map(item => ({
+          id: item.productId,
+          quantity: item.quantity,
+          item_price: item.price,
+        })),
+        content_type: 'product',
         value: total,
         currency: 'EUR',
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
@@ -1467,6 +1475,13 @@ export default function CheckoutPage() {
       
       // Track Facebook Pixel AddPaymentInfo event (with user data for CAPI)
       trackPixelEvent('AddPaymentInfo', {
+        content_ids: items.map(item => item.productId),
+        contents: items.map(item => ({
+          id: item.productId,
+          quantity: item.quantity,
+          item_price: item.price,
+        })),
+        content_type: 'product',
         value: total,
         currency: 'EUR',
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)

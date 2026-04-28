@@ -14,8 +14,20 @@ type PixelEvent =
   | 'Lead'
   | 'Subscribe'
 
+/**
+ * Per-line item payload Meta uses for accurate revenue & catalog
+ * attribution. `id` MUST match the product feed (Pixel matches against
+ * Catalogue Sales / DPA on this field).
+ */
+export interface PixelContentItem {
+  id: string
+  quantity: number
+  item_price?: number
+}
+
 interface PixelParams {
   content_ids?: string[]
+  contents?: PixelContentItem[]
   content_name?: string
   content_type?: string
   content_category?: string
@@ -125,16 +137,18 @@ export function trackPixelEvent(
       currency: params?.currency || 'EUR',
     }
 
-    // Add all provided parameters
-    if (params?.content_ids) eventParams.content_ids = params.content_ids
+    // Add all provided parameters. Use type-aware checks so that legitimate
+    // zero-values (e.g. a 100% discounted order) aren't silently dropped.
+    if (params?.content_ids?.length) eventParams.content_ids = params.content_ids
+    if (params?.contents?.length) eventParams.contents = params.contents
     if (params?.content_name) eventParams.content_name = params.content_name
     if (params?.content_type) eventParams.content_type = params.content_type
     if (params?.content_category) eventParams.content_category = params.content_category
-    if (params?.value) eventParams.value = params.value
-    if (params?.num_items) eventParams.num_items = params.num_items
+    if (typeof params?.value === 'number') eventParams.value = params.value
+    if (typeof params?.num_items === 'number') eventParams.num_items = params.num_items
     if (params?.search_string) eventParams.search_string = params.search_string
     if (params?.transaction_id) eventParams.transaction_id = params.transaction_id
-    if (params?.predicted_ltv) eventParams.predicted_ltv = params.predicted_ltv
+    if (typeof params?.predicted_ltv === 'number') eventParams.predicted_ltv = params.predicted_ltv
     
     // Add event_id for deduplication
     eventParams.eventID = eventId

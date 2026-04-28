@@ -32,6 +32,8 @@ interface Order {
 
 interface OrderItem {
   id: string
+  product_id: string | null
+  variant_id: string | null
   product_name: string
   size: string
   color: string
@@ -189,10 +191,28 @@ export default function OrderConfirmationPage({
         }
 
         // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
-        // Dual tracking: Client + Server (CAPI) with user data
+        // Dual tracking: Client + Server (CAPI) with user data.
+        //
+        // `content_ids` and `contents[].id` MUST match the IDs in the
+        // Meta product catalogue feed so Catalogue Sales / DPA can
+        // attribute revenue. We use `product_id` (consistent with
+        // ViewContent) and fall back to `variant_id` / `sku` for the
+        // rare case where a legacy line is missing the snapshot.
+        const purchaseContents = (data.items as OrderItem[])
+          .map((item) => ({
+            id: item.product_id || item.variant_id || item.sku,
+            quantity: item.quantity,
+            item_price: Number(item.price_at_purchase) || 0,
+          }))
+          .filter((c) => Boolean(c.id))
+
+        const purchaseContentIds = purchaseContents.map((c) => c.id as string)
+
         trackPixelEvent('Purchase', {
-          content_ids: data.items.map((item: OrderItem) => item.id),
-          value: data.order.total,
+          content_ids: purchaseContentIds,
+          contents: purchaseContents as Array<{ id: string; quantity: number; item_price: number }>,
+          content_type: 'product',
+          value: Number(data.order.total) || 0,
           currency: 'EUR',
           num_items: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
           transaction_id: data.order.id

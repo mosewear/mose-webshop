@@ -131,11 +131,13 @@ export default function StickyBuyNow({
       })
 
       trackPixelEvent('AddToCart', {
-        content_ids: [selectedVariant.id],
+        content_ids: [product.id],
+        contents: [{ id: product.id, quantity, item_price: finalPrice }],
         content_name: `${product.name} - ${selectedVariant.size} - ${selectedVariant.color}`,
         content_type: 'product',
         value: finalPrice * quantity,
         currency: 'EUR',
+        num_items: quantity,
       })
 
       // Open cart drawer automatically (consistent met desktop)
