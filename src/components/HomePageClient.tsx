@@ -22,6 +22,7 @@ interface HomePageClientProps {
   homepageSettings: HomepageSettings
   featuredProducts: any[]
   categories: any[]
+  instagramSlot?: React.ReactNode
 }
 
 export default function HomePageClient({
@@ -29,6 +30,7 @@ export default function HomePageClient({
   homepageSettings: initialHomepageSettings,
   featuredProducts: initialFeaturedProducts,
   categories: initialCategories,
+  instagramSlot,
 }: HomePageClientProps) {
   const t = useTranslations('homepage')
   const tProduct = useTranslations('product')
@@ -664,6 +666,9 @@ export default function HomePageClient({
           </div>
         </div>
       </section>
+
+      {/* Instagram Feed (server slot, returns null when disabled) */}
+      {instagramSlot}
 
       {/* FAQ Accordion */}
       <FAQAccordion />

@@ -1269,6 +1269,16 @@
       "error": "Something went wrong. Please try again.",
       "submitAria": "Subscribe to the MOSE newsletter",
       "privacy": "We respect your privacy. You can unsubscribe anytime."
+    },
+    "instagram": {
+      "sectionTitle": "@mosewearcom",
+      "sectionSubtitle": "MOSE worn in the wild",
+      "ctaText": "Follow us on Instagram",
+      "ctaAria": "Open our Instagram profile in a new tab",
+      "viewPost": "View on Instagram",
+      "videoLabel": "Video",
+      "carouselLabel": "Multiple photos",
+      "likes": "{count} likes"
     }
   },
   "searchOverlay": {

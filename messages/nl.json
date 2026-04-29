@@ -1220,6 +1220,16 @@
       "error": "Er ging iets mis. Probeer het opnieuw.",
       "submitAria": "Schrijf je in voor de MOSE nieuwsbrief",
       "privacy": "We respecteren je privacy. Uitschrijven kan altijd."
+    },
+    "instagram": {
+      "sectionTitle": "@mosewearcom",
+      "sectionSubtitle": "Zo wordt MOSE in het echt gedragen",
+      "ctaText": "Volg ons op Instagram",
+      "ctaAria": "Open ons Instagram-profiel in een nieuw tabblad",
+      "viewPost": "Bekijk op Instagram",
+      "videoLabel": "Video",
+      "carouselLabel": "Meerdere foto's",
+      "likes": "{count} likes"
     }
   },
   "searchOverlay": {

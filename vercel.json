@@ -11,6 +11,14 @@
     {
       "path": "/api/gift-cards/cron",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/instagram/sync",
+      "schedule": "15 */6 * * *"
+    },
+    {
+      "path": "/api/instagram/refresh-token",
+      "schedule": "0 5 1 * *"
     }
   ]
 }

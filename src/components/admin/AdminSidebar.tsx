@@ -283,6 +283,18 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
+      name: 'Instagram Feed',
+      href: '/admin/instagram',
+      allowedRoles: ['admin', 'manager'],
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="5" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="12" cy="12" r="4" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" />
+        </svg>
+      ),
+    },
+    {
       name: 'Marketing Banner',
       href: '/admin/announcement-banner',
       allowedRoles: ['admin', 'manager'],

@@ -27,6 +27,21 @@ const nextConfig: NextConfig = {
         hostname: '*.supabase.co',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.cdninstagram.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.fbcdn.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'scontent.cdninstagram.com',
+        pathname: '/**',
+      },
     ],
     qualities: [75, 90],
     dangerouslyAllowSVG: true,

@@ -32,6 +32,30 @@
   animation: pulseSubtle 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Edge-to-edge horizontal marquee (Instagram feed).
+   Track bevat 2x dezelfde post-set, animeert -50% voor naadloze loop.
+   Snelheid wordt per instance ingesteld via --marquee-duration. */
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 60s) linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee[data-paused='true'] {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+    transform: none;
+  }
+}
+
 
 :root {
   --background: #ffffff;
