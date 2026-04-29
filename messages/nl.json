@@ -574,9 +574,12 @@
     "sticky": {
       "addToCart": "In winkelwagen",
       "addToCartWithPrice": "Voeg toe — {price}",
+      "addToCartFull": "Voeg toe aan winkelmand",
       "adding": "Toevoegen...",
       "pickColor": "Kies kleur",
-      "pickSize": "Kies maat"
+      "pickSize": "Kies maat",
+      "colorLabel": "Kleur",
+      "sizeLabel": "Maat"
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",

@@ -574,9 +574,12 @@
     "sticky": {
       "addToCart": "Add to Cart",
       "addToCartWithPrice": "Add to bag — {price}",
+      "addToCartFull": "Add to cart",
       "adding": "Adding...",
       "pickColor": "Pick a color",
-      "pickSize": "Pick a size"
+      "pickSize": "Pick a size",
+      "colorLabel": "Color",
+      "sizeLabel": "Size"
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
