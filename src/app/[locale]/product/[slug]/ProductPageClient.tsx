@@ -8,8 +8,12 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
-import StickyBuyNow from '@/components/StickyBuyNow'
-import TrustpilotWidget from '@/components/TrustpilotWidget'
+import StickyVariantPicker from '@/components/product/StickyVariantPicker'
+import PdpTrustStrip from '@/components/product/PdpTrustStrip'
+import KlarnaInstallmentLine from '@/components/product/KlarnaInstallmentLine'
+import ProductReviewSnippet from '@/components/product/ProductReviewSnippet'
+import ProductActivityStrip from '@/components/product/ProductActivityStrip'
+import PdpFaq from '@/components/product/PdpFaq'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
@@ -59,6 +63,8 @@ interface Product {
     default_product_details_en?: string | null
     default_materials_care?: string | null
     default_materials_care_en?: string | null
+    pdp_signature_specs?: string | null
+    pdp_signature_specs_en?: string | null
   }
 }
 
@@ -379,6 +385,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   // Ref for scroll container (CSS scroll-snap)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  // Ref for the main Add-to-Cart button - StickyVariantPicker observes
+  // this so the sticky strip only appears once the in-page button has
+  // scrolled out of view.
+  const mainAtcRef = useRef<HTMLButtonElement | null>(null)
 
   const addItem = useCart((state) => state.addItem)
   const { openDrawer } = useCartDrawer()
@@ -476,7 +486,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           display_order,
           created_at
         ),
-        categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en),
+        categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en, pdp_signature_specs, pdp_signature_specs_en),
         product_quantity_discounts(id, min_quantity, discount_type, discount_value, is_active)
       `)
       .eq('slug', slug)
@@ -954,6 +964,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <span className="text-black font-semibold">{product && getLocalizedName(product)}</span>
           </div>
 
+          {/* Sentinel for the mobile sticky variant-picker. Sits at the very
+              top of the layout grid so the sticky strip only kicks in once
+              the user has scrolled past the hero gallery. */}
+          <div data-sticky-picker-sentinel aria-hidden className="h-px w-full" />
+
           <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
             {/* LEFT: Image Gallery (55% width) */}
             <div className="space-y-4">
@@ -1095,18 +1110,26 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
             {/* RIGHT: Product Info (45% width, sticky) */}
             <div className="space-y-4 md:sticky md:top-24 md:self-start">
-              {/* Title & Trustpilot */}
+              {/* Title & social proof */}
               <div>
-                {/* Trustpilot Widget (replaces category) */}
+                {/* Review snippet replaces the (often invisible) Trustpilot
+                    widget so first-time visitors always see something
+                    above the title. Falls back to a brand line when no
+                    reviews exist yet. */}
                 <div className="mb-1 md:mb-2">
-                  <TrustpilotWidget variant="product" />
+                  <ProductReviewSnippet productId={product.id} />
                 </div>
-                <h1 className="text-2xl md:text-3xl font-display mb-2 md:mb-3 transition-all duration-300">
-                  {product && getLocalizedName(product)}
-                  {selectedVariant && selectedColor && (
-                    <span className="text-brand-primary"> - {getTranslatedColor(selectedColor)}</span>
-                  )}
-                </h1>
+                <div className="flex items-start justify-between gap-3 mb-2 md:mb-3">
+                  <h1 className="text-2xl md:text-3xl font-display transition-all duration-300">
+                    {product && getLocalizedName(product)}
+                    {selectedVariant && selectedColor && (
+                      <span className="text-brand-primary"> - {getTranslatedColor(selectedColor)}</span>
+                    )}
+                  </h1>
+                  <span className="hidden md:inline-flex shrink-0 items-center px-2 py-0.5 bg-black text-white text-[10px] font-bold uppercase tracking-wider whitespace-nowrap mt-1">
+                    {t('madeInGroningenBadge')}
+                  </span>
+                </div>
                 
                 {/* Price Display met Korting */}
                 <div className="mb-2">
@@ -1138,6 +1161,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             </p>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{t('inclVat')}</p>
+                          <KlarnaInstallmentLine price={salePrice} />
                         </>
                       )
                     }
@@ -1146,10 +1170,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       <>
                         <p className="text-xl md:text-2xl font-bold">{formatPrice(basePrice, locale)}</p>
                         <p className="text-xs text-gray-500">{t('inclVat')}</p>
+                        <KlarnaInstallmentLine price={basePrice} />
                       </>
                     )
                   })()}
                 </div>
+                {/* Mobile-only Made-in-Groningen badge sits beneath the price
+                    so the title row stays uncluttered on narrow screens. */}
+                <span className="md:hidden inline-flex items-center px-2 py-0.5 bg-black text-white text-[10px] font-bold uppercase tracking-wider mb-1">
+                  {t('madeInGroningenBadge')}
+                </span>
 
                 {/* Staffelkorting badge */}
                 {product.product_quantity_discounts && product.product_quantity_discounts.length > 0
@@ -1296,7 +1326,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* Color Selector - Enhanced (Minimal) */}
               {availableColors.length > 0 && (
-                <div>
+                <div data-color-section>
                   <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
                     {t('color')}: <span className="text-brand-primary font-bold">{getTranslatedColor(selectedColor)}</span>
                   </label>
@@ -1440,6 +1470,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
+              {/* Trust + fit anchor - the four most common conversion
+                  blockers handled in 4 lines, RIGHT before the ATC. */}
+              {hasAnyStock && (
+                <div className="border-2 border-black p-3 md:p-4">
+                  <PdpTrustStrip
+                    signatureSpecs={
+                      locale === 'en'
+                        ? product.categories.pdp_signature_specs_en || product.categories.pdp_signature_specs || null
+                        : product.categories.pdp_signature_specs || null
+                    }
+                  />
+                </div>
+              )}
+
+              {/* Live activity - only renders when thresholds are met */}
+              {hasAnyStock && <ProductActivityStrip productId={product.id} />}
+
               {/* Add to Cart Buttons - Mobile & Desktop */}
               <div className="flex gap-2 md:gap-3">
                 {/* QUANTITY SELECTOR - Brutalist Stepper (MOSE Style) */}
@@ -1480,6 +1527,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                 {/* IN WINKELWAGEN button - primary action */}
                 <button
+                  ref={mainAtcRef}
                   onClick={handleAddToCart}
                   disabled={!hasAnyStock || !selectedVariant || addedToCart}
                   className={`flex-1 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
@@ -1490,7 +1538,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {addedToCart ? t('added') : hasAnyStock ? t('addToCart') : t('outOfStock')}
+                  {addedToCart ? t('added') : hasAnyStock ? t('addToCartCTA') : t('outOfStock')}
                 </button>
                 
                 {/* Wishlist button - secondary - MOSE Brutalist - Hidden on mobile */}
@@ -1887,6 +1935,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           {/* Product Reviews */}
           <ProductReviews productId={product.id} />
+
+          {/* PDP-specific FAQ - addresses the five most common conversion
+              blockers (fit, delivery, exchanges, authenticity, payment). */}
+          <PdpFaq />
         </div>
       </div>
 
@@ -2044,15 +2096,39 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         )
       })()}
 
-      {/* Sticky Buy Now Bar */}
+      {/* Smart hybrid sticky variant-picker
+          Shares the same selectedColor/selectedSize/handleAddToCart state
+          as the in-page surface so picking a colour or size from the
+          sticky strip mirrors the rest of the PDP and vice-versa. */}
       {product && (
-        <StickyBuyNow
-          product={product}
-          selectedVariant={selectedVariant}
-          quantity={quantity}
-          cartImage={displayImages.find(img => img.media_type === 'image')?.url || displayImages[0]?.url || '/placeholder-product.svg'}
-          inStock={hasAnyStock}
-          onVariantRequired={handleVariantRequired}
+        <StickyVariantPicker
+          productId={product.id}
+          availableColors={availableColors}
+          availableSizes={availableSizes}
+          selectedColor={selectedColor}
+          selectedSize={selectedSize}
+          onSelectColor={(color) => {
+            setSelectedColor(color)
+            setSelectedImage(0)
+            setQuantity(1)
+          }}
+          onSelectSize={(size) => {
+            setSelectedSize(size)
+            setQuantity(1)
+          }}
+          variants={product.product_variants}
+          finalPrice={finalPrice}
+          basePrice={product.base_price + (selectedVariant?.price_adjustment || 0)}
+          hasDiscount={Boolean(
+            product.sale_price &&
+              product.sale_price < product.base_price
+          )}
+          hasAnyStock={hasAnyStock}
+          isAdding={addedToCart}
+          hasVariantSelected={Boolean(selectedVariant)}
+          onAddToCart={handleAddToCart}
+          mainAtcRef={mainAtcRef}
+          translateColor={getTranslatedColor}
         />
       )}
     </>

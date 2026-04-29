@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
+interface ReviewImage {
+  id: string
+  storage_path: string
+  position: number
+  is_approved: boolean
+  url: string
+}
+
 interface Review {
   id: string
   product_id: string
@@ -19,6 +27,7 @@ interface Review {
     name: string
     slug: string
   }
+  product_review_images?: ReviewImage[]
 }
 
 export default function AdminReviewsPage() {
@@ -98,6 +107,24 @@ export default function AdminReviewsPage() {
       toast.success('Review verwijderd')
       fetchReviews()
       fetchCounts()
+    }
+  }
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!confirm('Foto verwijderen?')) return
+
+    const res = await fetch('/api/admin/reviews', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageId }),
+    })
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      toast.error(`Fout: ${errData.error || 'Onbekende fout'}`)
+    } else {
+      toast.success('Foto verwijderd')
+      fetchReviews()
     }
   }
 
@@ -201,6 +228,30 @@ export default function AdminReviewsPage() {
 
                 {review.comment && <p className="text-sm text-gray-700 mb-3 line-clamp-2">{review.comment}</p>}
 
+                {review.product_review_images && review.product_review_images.length > 0 && (
+                  <div className="flex gap-2 mb-3 overflow-x-auto">
+                    {review.product_review_images.map((img) => (
+                      <div key={img.id} className="relative shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.url}
+                          alt="Review foto"
+                          className={`w-16 h-16 object-cover border-2 ${
+                            img.is_approved ? 'border-green-500' : 'border-yellow-500'
+                          }`}
+                        />
+                        <button
+                          onClick={() => handleDeleteImage(img.id)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs flex items-center justify-center border border-white"
+                          aria-label="Foto verwijderen"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="text-xs text-gray-600 space-y-1 mb-3">
                   <div><span className="font-semibold">Product:</span> {review.products?.name || 'Onbekend'}</div>
                   <div><span className="font-semibold">Door:</span> {review.reviewer_name}</div>
@@ -243,12 +294,36 @@ export default function AdminReviewsPage() {
                 {reviews.map((review) => (
                   <tr key={review.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <div>
                           {renderStars(review.rating)}
                           {review.title && <div className="font-bold text-sm mt-1">{review.title}</div>}
                           {review.comment && <div className="text-xs text-gray-600 mt-1 line-clamp-1 max-w-[300px]">{review.comment}</div>}
                           <div className="text-xs text-gray-500 mt-1">{review.reviewer_name} ({review.reviewer_email})</div>
+                          {review.product_review_images && review.product_review_images.length > 0 && (
+                            <div className="flex gap-1.5 mt-2">
+                              {review.product_review_images.map((img) => (
+                                <div key={img.id} className="relative">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={img.url}
+                                    alt="Review foto"
+                                    className={`w-12 h-12 object-cover border-2 ${
+                                      img.is_approved ? 'border-green-500' : 'border-yellow-500'
+                                    }`}
+                                  />
+                                  <button
+                                    onClick={() => handleDeleteImage(img.id)}
+                                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[10px] flex items-center justify-center border border-white"
+                                    aria-label="Foto verwijderen"
+                                    title="Foto verwijderen"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

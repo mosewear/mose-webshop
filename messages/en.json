@@ -366,6 +366,7 @@
       "shop": "Shop"
     },
     "addToCart": "Add to Cart",
+    "addToCartCTA": "Add to bag — free shipping",
     "added": "✓ Added",
     "buyNow": "Buy Now",
     "outOfStock": "Out of stock",
@@ -558,11 +559,69 @@
       "basedOn": "Based on {count} {count, plural, =1 {review} other {reviews}}",
       "noReviews": "No reviews for this product yet.",
       "optional": "(optional)",
-      "required": "*"
+      "required": "*",
+      "stars": "{count, plural, =1 {star} other {stars}}",
+      "verifiedPurchase": "Verified purchase",
+      "addPhotos": "Add photos",
+      "addPhotosShort": "Photo",
+      "photosHelp": "Up to {count} photos. JPG, PNG or WebP, max 8 MB each.",
+      "imagesMax": "Up to {count} photos per review",
+      "imagesTooLarge": "Photo too large. Try a smaller image (max 8 MB).",
+      "fillRequired": "Please fill in all required fields",
+      "submitError": "Something went wrong while submitting your review",
+      "submitSuccess": "Thanks for your review! It will be approved within 24 hours."
     },
     "sticky": {
       "addToCart": "Add to Cart",
-      "adding": "Adding..."
+      "addToCartWithPrice": "Add to bag — {price}",
+      "adding": "Adding...",
+      "pickColor": "Pick a color",
+      "pickSize": "Pick a size"
+    },
+    "reviewSnippet": {
+      "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
+      "fallback": "Made in Groningen — first batch 2026"
+    },
+    "trustAnchor": {
+      "shippingBeforeCutoff": "Free shipping NL & BE — order before 5 PM today, delivered tomorrow (DHL)",
+      "shippingAfterCutoff": "Free shipping NL & BE — order today, at your door the day after tomorrow (DHL)",
+      "returns": "14-day returns — full refund, no questions asked",
+      "madeInWithSpec": "Made in Groningen — {spec}",
+      "madeInBare": "Made in Groningen — premium cotton, regular fit",
+      "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card"
+    },
+    "klarna": {
+      "installment": "or 3× {amount} with Klarna, interest-free"
+    },
+    "madeInGroningenBadge": "Made in Groningen",
+    "activity": {
+      "viewing": "{count} people viewing now",
+      "sold24h": "{count, plural, =1 {1 order} other {{count} orders}} in the last 24h"
+    },
+    "pdpFaq": {
+      "title": "Frequently asked questions",
+      "items": [
+        {
+          "question": "How does the fit run?",
+          "answer": "True to size — pick your usual size. Between two sizes? Go up for a slightly more relaxed silhouette. The size chart is right next to the size selector."
+        },
+        {
+          "question": "When will I receive my order?",
+          "answer": "Order before 5 PM and we ship the same day with DHL — at your door tomorrow in NL & BE, 1-3 business days afterwards. No minimum order — shipping is always free."
+        },
+        {
+          "question": "What if the size doesn't fit?",
+          "answer": "No worries. Return or exchange within 14 days. Sign in to your account, register the return and we'll email you a return label."
+        },
+        {
+          "question": "Is this really made in Groningen?",
+          "answer": "Yes, 100%. We work with a single local atelier in Groningen where every piece is hand-finished. No sweatshops, no long supply chains."
+        },
+        {
+          "question": "Can I pay in installments?",
+          "answer": "Yes. With Klarna you can split your purchase into 3 interest-free payments or pay later within 14 days. Both options appear at checkout."
+        }
+      ]
     }
   },
   "shipping": {

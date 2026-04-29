@@ -168,8 +168,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
   const [stickyVisible, setStickyVisible] = useState(false)
 
-  // Sticky mobile CTA mirrors the StickyBuyNow component on regular
-  // PDPs — visible <768px, hidden when the cart drawer is open or on
+  // Sticky mobile CTA mirrors the StickyVariantPicker on regular PDPs:
+  // visible <768px, hidden when the cart drawer is open or on
   // cart/checkout routes.
   useEffect(() => {
     const onResize = () => setStickyVisible(window.innerWidth < 768)
@@ -1220,7 +1220,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         </div>
       </div>
 
-      {/* Sticky mobile bottom CTA — mirrors StickyBuyNow on regular PDPs */}
+      {/* Sticky mobile bottom CTA — mirrors StickyVariantPicker on regular PDPs */}
       {stickyVisible && !isCartDrawerOpen ? (
         <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white z-40 shadow-2xl md:hidden">
           <div className="max-w-7xl mx-auto px-4 py-3">

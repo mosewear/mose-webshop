@@ -17,6 +17,21 @@
   animation: fadeInUp 1s ease-out;
 }
 
+/* Subtle attention-pulse for CTAs that need a nudge (e.g. "Pick a size").
+   Uses box-shadow rather than opacity so the label stays fully readable. */
+@keyframes pulseSubtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 
 :root {
   --background: #ffffff;
