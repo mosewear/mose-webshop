@@ -1498,7 +1498,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       disabled={quantity <= 1 || !hasAnyStock || !selectedVariant}
-                      className={`w-9 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                      className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
                         quantity <= 1 || !hasAnyStock || !selectedVariant
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-black text-white hover:bg-gray-800'
@@ -1507,7 +1507,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     >
                       −
                     </button>
-                    <div className="w-9 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
+                    <div className="w-10 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
                       {quantity}
                     </div>
                     <button
@@ -1518,7 +1518,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         setQuantity(Math.min(maxQty, quantity + 1))
                       }}
                       disabled={!hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)}
-                      className={`w-9 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                      className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
                         !hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-black text-white hover:bg-gray-800'
@@ -1581,8 +1581,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
 
                 {/* Benefit microcopy - mobile only. Desktop already shows
-                    the full trust-strip above the ATC, so we don't repeat. */}
-                {hasAnyStock && (
+                    the full trust-strip above the ATC, so we don't repeat.
+                    Hidden for presale items because "morgen in huis" would
+                    be misleading - presale shipping windows differ. */}
+                {hasAnyStock && !isPresale && (
                   <div className="md:hidden">
                     <ShippingMicrocopy />
                   </div>

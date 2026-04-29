@@ -522,10 +522,10 @@
       "info": "€{cost} • Free from €{threshold}",
       "label": "Shipping",
       "deliveryTime": "Delivery time",
-      "deliveryTimeValue": "2-3 business days within Netherlands"
+      "deliveryTimeValue": "2 to 3 business days within The Netherlands"
     },
     "returns": {
-      "info": "{days} days hassle-free returns",
+      "info": "{days} days to return, no hassle",
       "label": "Returns",
       "cost": "Return costs",
       "costValue": "€6.95 (excl. VAT)"
@@ -582,23 +582,23 @@
       "sizeLabel": "Size"
     },
     "shippingMicro": {
-      "beforeCutoff": "Order before 5 PM and it arrives tomorrow. Always free shipping.",
-      "afterCutoff": "Order today and it arrives the day after tomorrow. Always free shipping."
+      "beforeCutoff": "Order before 5 PM, at your door tomorrow. Always free shipping.",
+      "afterCutoff": "Order today, at your door the day after tomorrow. Always free shipping."
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
       "fallback": "Made in Groningen, first batch 2026."
     },
     "trustAnchor": {
-      "shippingBeforeCutoff": "Order before 5 PM today and it arrives tomorrow with free shipping via DHL (NL and BE).",
-      "shippingAfterCutoff": "Order today and it arrives the day after tomorrow with free shipping via DHL (NL and BE).",
-      "returns": "14 day returns. Full refund, no questions asked.",
+      "shippingBeforeCutoff": "Order before 5 PM today? At your door tomorrow with free shipping via DHL in NL and BE.",
+      "shippingAfterCutoff": "Order today, at your door the day after tomorrow with free shipping via DHL in NL and BE.",
+      "returns": "Returns within 14 days. Full refund, no questions asked.",
       "madeInWithSpec": "Made in Groningen. {spec}.",
-      "madeInBare": "Made in Groningen with premium cotton in a regular fit.",
+      "madeInBare": "Made in Groningen. Premium cotton, regular fit.",
       "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card."
     },
     "klarna": {
-      "installment": "or 3× {amount} with Klarna, interest-free"
+      "installment": "or 3× {amount} with Klarna, no interest"
     },
     "madeInGroningenBadge": "Made in Groningen",
     "activity": {
@@ -622,11 +622,11 @@
         },
         {
           "question": "Is this really made in Groningen?",
-          "answer": "Yes, 100%. We work with a single local atelier in Groningen where every piece is hand-finished. No sweatshops, no long supply chains."
+          "answer": "Yes, 100%. We work with a single local atelier in Groningen where every piece is finished by hand. No sweatshops, no long supply chains."
         },
         {
           "question": "Can I pay in installments?",
-          "answer": "Yes. With Klarna you can split your purchase into 3 interest-free payments or pay later within 14 days. Both options appear at checkout."
+          "answer": "Yes. With Klarna you can split your purchase into 3 payments at zero interest, or pay later within 14 days. Both options appear at checkout."
         }
       ]
     }

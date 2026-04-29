@@ -522,7 +522,7 @@
       "info": "€{cost} • Gratis vanaf €{threshold}",
       "label": "Verzending",
       "deliveryTime": "Levertijd",
-      "deliveryTimeValue": "2-3 werkdagen binnen Nederland"
+      "deliveryTimeValue": "2 tot 3 werkdagen binnen Nederland"
     },
     "returns": {
       "info": "{days} dagen retour zonder gedoe",
@@ -590,11 +590,11 @@
       "fallback": "Made in Groningen, première batch 2026."
     },
     "trustAnchor": {
-      "shippingBeforeCutoff": "Vandaag besteld voor 17:00? Morgen in huis met gratis bezorging via DHL (NL en BE).",
-      "shippingAfterCutoff": "Bestel vandaag en je hebt het overmorgen in huis met gratis bezorging via DHL (NL en BE).",
+      "shippingBeforeCutoff": "Voor 17:00 besteld? Morgen in huis met gratis bezorging via DHL in NL en BE.",
+      "shippingAfterCutoff": "Bestel vandaag, overmorgen in huis met gratis bezorging via DHL in NL en BE.",
       "returns": "14 dagen bedenktijd. Geld terug bij retour, zonder gedoe.",
       "madeInWithSpec": "Made in Groningen. {spec}.",
-      "madeInBare": "Made in Groningen van premium katoen met regular fit.",
+      "madeInBare": "Made in Groningen. Premium katoen, regular fit.",
       "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard."
     },
     "klarna": {
@@ -618,7 +618,7 @@
         },
         {
           "question": "Wat als de maat niet past?",
-          "answer": "Geen punt. Binnen 14 dagen retourneren of omruilen voor een andere maat. We sturen je een retourlabel zodra je je retour aanmeldt op de account-pagina."
+          "answer": "Geen punt. Binnen 14 dagen retourneren of omruilen voor een andere maat. We mailen je het retourlabel zodra je de retour aanmeldt op je accountpagina."
         },
         {
           "question": "Is dit echt in Groningen gemaakt?",
