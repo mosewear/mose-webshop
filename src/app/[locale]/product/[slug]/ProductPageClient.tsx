@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import ProductReviews from '@/components/ProductReviews'
 import StickyVariantPicker from '@/components/product/StickyVariantPicker'
 import PdpTrustStrip from '@/components/product/PdpTrustStrip'
+import ShippingMicrocopy from '@/components/product/ShippingMicrocopy'
 import KlarnaInstallmentLine from '@/components/product/KlarnaInstallmentLine'
 import ProductReviewSnippet from '@/components/product/ProductReviewSnippet'
 import ProductActivityStrip from '@/components/product/ProductActivityStrip'
@@ -1487,93 +1488,105 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               {/* Live activity - only renders when thresholds are met */}
               {hasAnyStock && <ProductActivityStrip productId={product.id} />}
 
-              {/* Add to Cart Buttons - Mobile & Desktop */}
-              <div className="flex gap-2 md:gap-3">
-                {/* QUANTITY SELECTOR - Brutalist Stepper (MOSE Style) */}
-                <div className="flex border-2 border-black">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1 || !hasAnyStock || !selectedVariant}
-                    className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
-                      quantity <= 1 || !hasAnyStock || !selectedVariant
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-black text-white hover:bg-gray-800'
-                    }`}
-                    aria-label="Decrease quantity"
-                  >
-                    −
-                  </button>
-                  <div className="w-10 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
-                    {quantity}
+              {/* Add to Cart row + benefit microcopy (mobile only).
+                  Stacked so the microcopy can sit directly under the
+                  qty + CTA line without breaking desktop layout. */}
+              <div className="space-y-2">
+                <div className="flex gap-2 md:gap-3">
+                  {/* QUANTITY SELECTOR - Brutalist Stepper (MOSE Style) */}
+                  <div className="flex border-2 border-black shrink-0">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1 || !hasAnyStock || !selectedVariant}
+                      className={`w-9 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                        quantity <= 1 || !hasAnyStock || !selectedVariant
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-black text-white hover:bg-gray-800'
+                      }`}
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+                    <div className="w-9 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
+                      {quantity}
+                    </div>
+                    <button
+                      onClick={() => {
+                        const maxQty = selectedVariant?.presale_enabled
+                          ? selectedVariant.presale_stock_quantity
+                          : selectedVariant?.stock_quantity || 10
+                        setQuantity(Math.min(maxQty, quantity + 1))
+                      }}
+                      disabled={!hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)}
+                      className={`w-9 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
+                        !hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-black text-white hover:bg-gray-800'
+                      }`}
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
                   </div>
+
+                  {/* IN WINKELMAND button - primary action */}
                   <button
-                    onClick={() => {
-                      const maxQty = selectedVariant?.presale_enabled 
-                        ? selectedVariant.presale_stock_quantity 
-                        : selectedVariant?.stock_quantity || 10
-                      setQuantity(Math.min(maxQty, quantity + 1))
-                    }}
-                    disabled={!hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)}
-                    className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
-                      !hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-black text-white hover:bg-gray-800'
+                    ref={mainAtcRef}
+                    onClick={handleAddToCart}
+                    disabled={!hasAnyStock || !selectedVariant || addedToCart}
+                    className={`flex-1 min-w-0 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
+                      addedToCart
+                        ? 'bg-black text-white cursor-default animate-success'
+                        : hasAnyStock && selectedVariant
+                        ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
-                    aria-label="Increase quantity"
                   >
-                    +
+                    {addedToCart ? t('added') : hasAnyStock ? t('addToCartCTA') : t('outOfStock')}
+                  </button>
+
+                  {/* Wishlist button - secondary - MOSE Brutalist - Hidden on mobile */}
+                  <button
+                    onClick={async () => {
+                      if (!product) return
+                      const wasWishlisted = isInWishlist(product.id)
+
+                      if (wasWishlisted) {
+                        await removeFromWishlist(product.id)
+                      } else {
+                        await addToWishlist(product.id)
+                      }
+
+                      const nowWishlisted = isInWishlist(product.id)
+                      setIsWishlisted(nowWishlisted)
+
+                      if (!wasWishlisted && nowWishlisted) {
+                        toast.success(t('wishlist.added'))
+                      } else if (wasWishlisted && !nowWishlisted) {
+                        toast.success(t('wishlist.removed'))
+                      }
+                    }}
+                    className={`hidden md:flex md:w-auto md:p-4 border-2 border-black transition-all items-center justify-center ${
+                      isWishlisted
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-white text-black hover:bg-brand-primary hover:text-white'
+                    }`}
+                    title={isWishlisted ? t('wishlist.remove') : t('wishlist.add')}
+                    aria-label={isWishlisted ? t('wishlist.remove') : t('wishlist.add')}
+                  >
+                    <svg className="w-5 h-5 md:w-6 md:h-6" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
                   </button>
                 </div>
 
-                {/* IN WINKELWAGEN button - primary action */}
-                <button
-                  ref={mainAtcRef}
-                  onClick={handleAddToCart}
-                  disabled={!hasAnyStock || !selectedVariant || addedToCart}
-                  className={`flex-1 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
-                    addedToCart
-                      ? 'bg-black text-white cursor-default animate-success'
-                      : hasAnyStock && selectedVariant
-                      ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  {addedToCart ? t('added') : hasAnyStock ? t('addToCartCTA') : t('outOfStock')}
-                </button>
-                
-                {/* Wishlist button - secondary - MOSE Brutalist - Hidden on mobile */}
-                <button
-                  onClick={async () => {
-                    if (!product) return
-                    const wasWishlisted = isInWishlist(product.id)
-
-                    if (wasWishlisted) {
-                      await removeFromWishlist(product.id)
-                    } else {
-                      await addToWishlist(product.id)
-                    }
-
-                    const nowWishlisted = isInWishlist(product.id)
-                    setIsWishlisted(nowWishlisted)
-
-                    if (!wasWishlisted && nowWishlisted) {
-                      toast.success(t('wishlist.added'))
-                    } else if (wasWishlisted && !nowWishlisted) {
-                      toast.success(t('wishlist.removed'))
-                    }
-                  }}
-                  className={`hidden md:flex md:w-auto md:p-4 border-2 border-black transition-all items-center justify-center ${
-                    isWishlisted
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-white text-black hover:bg-brand-primary hover:text-white'
-                  }`}
-                  title={isWishlisted ? t('wishlist.remove') : t('wishlist.add')}
-                  aria-label={isWishlisted ? t('wishlist.remove') : t('wishlist.add')}
-                >
-                  <svg className="w-5 h-5 md:w-6 md:h-6" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
+                {/* Benefit microcopy - mobile only. Desktop already shows
+                    the full trust-strip above the ATC, so we don't repeat. */}
+                {hasAnyStock && (
+                  <div className="md:hidden">
+                    <ShippingMicrocopy />
+                  </div>
+                )}
               </div>
 
               {/* AVAILABILITY & TRUST - Mobile */}

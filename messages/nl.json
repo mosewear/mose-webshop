@@ -366,7 +366,7 @@
       "shop": "Shop"
     },
     "addToCart": "In winkelwagen",
-    "addToCartCTA": "Voeg toe — gratis bezorging",
+    "addToCartCTA": "In winkelmand",
     "added": "✓ Toegevoegd",
     "buyNow": "Nu kopen",
     "outOfStock": "Uitverkocht",
@@ -573,7 +573,7 @@
     },
     "sticky": {
       "addToCart": "In winkelwagen",
-      "addToCartWithPrice": "Voeg toe — {price}",
+      "addToCartWithPrice": "Voeg toe · {price}",
       "addToCartFull": "Voeg toe aan winkelmand",
       "adding": "Toevoegen...",
       "pickColor": "Kies kleur",
@@ -581,17 +581,21 @@
       "colorLabel": "Kleur",
       "sizeLabel": "Maat"
     },
+    "shippingMicro": {
+      "beforeCutoff": "Voor 17:00 besteld? Morgen in huis. Altijd gratis bezorging.",
+      "afterCutoff": "Bestel vandaag, overmorgen in huis. Altijd gratis bezorging."
+    },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
-      "fallback": "Made in Groningen — première batch 2026"
+      "fallback": "Made in Groningen, première batch 2026."
     },
     "trustAnchor": {
-      "shippingBeforeCutoff": "Gratis bezorging NL & BE — vandaag besteld vóór 17:00 = morgen in huis (DHL)",
-      "shippingAfterCutoff": "Gratis bezorging NL & BE — vandaag besteld = overmorgen in huis (DHL)",
-      "returns": "14 dagen bedenktijd — geld terug bij retour, geen gedoe",
-      "madeInWithSpec": "Made in Groningen — {spec}",
-      "madeInBare": "Made in Groningen — premium katoen, regular fit",
-      "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard"
+      "shippingBeforeCutoff": "Vandaag besteld voor 17:00? Morgen in huis met gratis bezorging via DHL (NL en BE).",
+      "shippingAfterCutoff": "Bestel vandaag en je hebt het overmorgen in huis met gratis bezorging via DHL (NL en BE).",
+      "returns": "14 dagen bedenktijd. Geld terug bij retour, zonder gedoe.",
+      "madeInWithSpec": "Made in Groningen. {spec}.",
+      "madeInBare": "Made in Groningen van premium katoen met regular fit.",
+      "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard."
     },
     "klarna": {
       "installment": "of 3× {amount} met Klarna, geen rente"
@@ -606,11 +610,11 @@
       "items": [
         {
           "question": "Hoe valt de maat?",
-          "answer": "True to size — kies gewoon je gebruikelijke maat. Twijfel je tussen twee maten? Ga voor de grotere voor een wat relaxter silhouet. Onze maattabel staat naast de maat-selector."
+          "answer": "True to size, kies gewoon je gebruikelijke maat. Twijfel je tussen twee maten? Ga voor de grotere voor een wat relaxter silhouet. Onze maattabel staat naast de maatselector."
         },
         {
           "question": "Wanneer is mijn bestelling in huis?",
-          "answer": "Bestel vandaag vóór 17:00 en je hebt 'm morgen al in huis (NL & BE) via DHL. Daarna 1-3 werkdagen. Geen mininum bestelbedrag — verzending is altijd gratis."
+          "answer": "Bestel vandaag voor 17:00 en je hebt 'm morgen al in huis in NL en BE via DHL. Daarna 1 tot 3 werkdagen. Geen minimum bestelbedrag, verzending is altijd gratis."
         },
         {
           "question": "Wat als de maat niet past?",
@@ -1219,7 +1223,7 @@
       "submitting": "Verzenden...",
       "subscribed": "Ingeschreven!",
       "success": "Je bent ingeschreven! Check je inbox.",
-      "alreadySubscribed": "Je stond al op de lijst — geen actie nodig.",
+      "alreadySubscribed": "Je stond al op de lijst, geen actie nodig.",
       "error": "Er ging iets mis. Probeer het opnieuw.",
       "submitAria": "Schrijf je in voor de MOSE nieuwsbrief",
       "privacy": "We respecteren je privacy. Uitschrijven kan altijd."
@@ -2027,7 +2031,7 @@
     "dontShowAgain": "Niet meer tonen"
   },
   "campaignAutoApply": {
-    "appliedToast": "Code {code} toegepast — geldt automatisch in je winkelmand",
+    "appliedToast": "Code {code} toegepast, geldt automatisch in je winkelmand",
     "replacedToast": "Code {code} toegepast (vervangt {previous})"
   }
 }
