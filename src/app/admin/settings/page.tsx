@@ -53,6 +53,10 @@ export default function SettingsPage() {
   // het scherm zodra de hoofd-CTA uit beeld scrolt. Default true voor
   // backwards-compat met de huidige PDP.
   const [pdpStickyPickerEnabled, setPdpStickyPickerEnabled] = useState(true)
+  // Brand-discovery pill bottom-left ("WIE ZIJN WIJ?" met roterende IG-
+  // thumbnail). Self-hides als er geen IG-posts zijn, dus deze toggle is
+  // alleen om de widget actief uit te zetten.
+  const [pdpBrandWidgetEnabled, setPdpBrandWidgetEnabled] = useState(true)
 
   // AI Chat
   const [aiChatEnabled, setAiChatEnabled] = useState(true)
@@ -188,6 +192,11 @@ export default function SettingsPage() {
                 !(setting.value === 'false' || setting.value === false)
               )
               break
+            case 'pdp_brand_widget_enabled':
+              setPdpBrandWidgetEnabled(
+                !(setting.value === 'false' || setting.value === false)
+              )
+              break
           }
         })
       }
@@ -238,6 +247,7 @@ export default function SettingsPage() {
         { key: 'pickup_latitude', value: pickupLatitude },
         { key: 'pickup_longitude', value: pickupLongitude },
         { key: 'pdp_sticky_picker_enabled', value: pdpStickyPickerEnabled },
+        { key: 'pdp_brand_widget_enabled', value: pdpBrandWidgetEnabled },
       ]
 
       for (const setting of settingsToSave) {
@@ -787,6 +797,53 @@ export default function SettingsPage() {
                 Aan laten staan, vooral op mobiel. Het halveert effectief de
                 afstand tussen kijken en kopen op lange productpagina&apos;s.
               </p>
+            </div>
+
+            {/* Brand-discovery widget toggle */}
+            <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <input
+                  type="checkbox"
+                  id="pdp_brand_widget_enabled"
+                  checked={pdpBrandWidgetEnabled}
+                  onChange={(e) => setPdpBrandWidgetEnabled(e.target.checked)}
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                />
+                <label
+                  htmlFor="pdp_brand_widget_enabled"
+                  className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer"
+                >
+                  Brand-discovery pill tonen (&quot;WIE ZIJN WIJ?&quot; met
+                  Instagram-thumbnail)
+                </label>
+              </div>
+
+              <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900 mt-3">
+                <p className="font-bold mb-1">ℹ️ Wat doet dit?</p>
+                <p className="mb-2">
+                  <strong>Ingeschakeld:</strong> Een kleine sticky pill links
+                  onderin de productpagina toont de allernieuwste Instagram-
+                  post als roterende thumbnail met de tekst
+                  &quot;WIE ZIJN WIJ?&quot; en &quot;Ontdek ons op Instagram&quot;.
+                  Bij klik opent een modal met het MOSE-verhaal en de 9
+                  laatste IG-posts in een grid.
+                </p>
+                <p>
+                  <strong>Uitgeschakeld:</strong> De pill verschijnt nooit op
+                  de productpagina. De widget verbergt zich sowieso
+                  automatisch wanneer er geen Instagram-posts beschikbaar
+                  zijn.
+                </p>
+              </div>
+
+              <div className="bg-green-50 border-l-3 border-green-400 p-3 sm:p-4 text-xs sm:text-sm text-green-900 mt-3">
+                <p className="font-bold mb-1">✅ Aanbevolen</p>
+                <p>
+                  Aan laten staan zolang Instagram actief is. Helpt bezoekers
+                  die het merk nog niet kennen om vertrouwen op te bouwen
+                  voordat ze kopen.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createAnonClient } from '@/lib/supabase/server'
 import ProductPageClient from './ProductPageClient'
+import BrandDiscoveryFetcher from '@/components/product/BrandDiscoveryFetcher'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
@@ -269,6 +270,12 @@ export default async function ProductPage({
         />
       )}
       <ProductPageClient params={Promise.resolve({ slug, locale: localeParam })} />
+      {/* Sticky brand-discovery pill bottom-left. Server-fetcht IG-feed
+          + about-content + admin-toggle; rendert null als één daarvan
+          afwezig is. Zit als sibling buiten ProductPageClient zodat we
+          de PDP-bundel niet vergroten en de data al klaarstaat bij de
+          eerste paint. */}
+      <BrandDiscoveryFetcher locale={localeParam} />
     </>
   )
 }

@@ -35,6 +35,10 @@ interface SiteSettings {
   // PDP sticky variant-picker (mobile + desktop) toggle. Default true,
   // admin kan in /admin/settings de balk volledig uitschakelen.
   pdp_sticky_picker_enabled?: boolean
+  // PDP brand-discovery widget (sticky bottom-left "WIE ZIJN WIJ?" pill
+  // met roterende IG-thumbnail). Default true. Self-hides als er geen
+  // Instagram-posts beschikbaar zijn, los van deze admin-toggle.
+  pdp_brand_widget_enabled?: boolean
   updated_at?: string
 }
 
@@ -111,6 +115,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
               settings.pdp_sticky_picker_enabled === 'false' ||
               settings.pdp_sticky_picker_enabled === false
             ),
+      // Default true, identiek patroon als de sticky-picker toggle:
+      // alleen expliciet "false" zet de widget uit.
+      pdp_brand_widget_enabled:
+        settings.pdp_brand_widget_enabled === undefined
+          ? true
+          : !(
+              settings.pdp_brand_widget_enabled === 'false' ||
+              settings.pdp_brand_widget_enabled === false
+            ),
       updated_at: latestUpdate,
     }
 
@@ -146,6 +159,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       pickup_latitude: 53.2194,
       pickup_longitude: 6.5665,
       pdp_sticky_picker_enabled: true,
+      pdp_brand_widget_enabled: true,
       updated_at: undefined,
     }
   }

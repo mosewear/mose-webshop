@@ -383,6 +383,19 @@
       "build": "Bouw",
       "wears": "Draagt"
     },
+    "brandWidget": {
+      "headline": "WIE ZIJN WIJ?",
+      "subline": "Ontdek ons op Instagram",
+      "aria": "Open MOSE merk-introductie",
+      "viewPost": "Bekijk post"
+    },
+    "brandModal": {
+      "eyebrow": "INSTAGRAM",
+      "latestPosts": "RECENT OP INSTAGRAM",
+      "igCta": "Volg ons op Instagram",
+      "aboutCta": "Lees ons hele verhaal",
+      "closeAria": "Sluiten"
+    },
     "quantityDiscount": {
       "title": "Meer kopen = meer korting",
       "tier": "{count}+ stuks",

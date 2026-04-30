@@ -1562,9 +1562,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </button>
                   </div>
 
-                  {/* IN WINKELMAND button - primary action */}
+                  {/* IN WINKELMAND button - primary action.
+                      data-pdp-main-atc: door BrandDiscoveryWidget gequery'd
+                      via DOM zodat de widget weet wanneer de sticky variant-
+                      picker actief wordt en zichzelf moet verbergen. */}
                   <button
                     ref={mainAtcRef}
+                    data-pdp-main-atc
                     onClick={handleAddToCart}
                     disabled={!hasAnyStock || !selectedVariant || addedToCart}
                     className={`flex-1 min-w-0 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${

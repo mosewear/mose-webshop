@@ -383,6 +383,19 @@
       "build": "Build",
       "wears": "Wears"
     },
+    "brandWidget": {
+      "headline": "WHO ARE WE?",
+      "subline": "Find us on Instagram",
+      "aria": "Open MOSE brand introduction",
+      "viewPost": "View post"
+    },
+    "brandModal": {
+      "eyebrow": "INSTAGRAM",
+      "latestPosts": "RECENT ON INSTAGRAM",
+      "igCta": "Follow us on Instagram",
+      "aboutCta": "Read our full story",
+      "closeAria": "Close"
+    },
     "quantityDiscount": {
       "title": "Buy more, save more",
       "tier": "{count}+ pieces",
