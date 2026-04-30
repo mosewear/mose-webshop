@@ -10,16 +10,17 @@
  * modal met een gecondenseerde brand-story (`about_settings`) en de
  * 9 laatste IG-posts in een grid.
  *
- * Visibility-regels:
- *   * Verborgen tot 600ms na mount (rustige entry).
- *   * Verborgen wanneer de cart drawer open is.
- *   * Verborgen wanneer de sticky variant-picker zichtbaar is. We
- *     observeren dezelfde elementen als StickyVariantPicker:
+ * Visibility-strategie:
+ *   * Eerste 600ms na mount: opacity 0 + translate-y (rustige entry).
+ *   * Cart drawer open: volledig verborgen (geen overlap met drawer).
+ *   * Sticky variant-picker zichtbaar: pill SCHUIFT OMHOOG bovenop de
+ *     picker zodat hij altijd in beeld blijft, net zoals de gebruiker
+ *     verwachtte ("altijd in beeld"). De picker-detectie spiegelt
+ *     StickyVariantPicker exact:
  *       - mobile: [data-sticky-picker-sentinel]
  *       - desktop: [data-pdp-main-atc]
- *     zodat de twee elementen elkaar nooit in de weg zitten.
- *   * Animatie wordt overgeslagen wanneer de gebruiker
- *     prefers-reduced-motion heeft.
+ *   * prefers-reduced-motion: thumbnail-rotatie en hover-lift uit.
+ *   * print: hidden — niet meeprinten op een product-aankoopbewijs.
  */
 
 import {
@@ -32,7 +33,15 @@ import {
 } from 'react'
 import Image from 'next/image'
 import { useTranslations, useLocale } from 'next-intl'
-import { Instagram, X, ArrowRight, ExternalLink, Heart, Film, Layers } from 'lucide-react'
+import {
+  Instagram,
+  X,
+  ArrowRight,
+  ExternalLink,
+  Heart,
+  Film,
+  Layers,
+} from 'lucide-react'
 import { useCartDrawer } from '@/store/cartDrawer'
 import { Link as LocaleLink } from '@/i18n/routing'
 import type { InstagramPost } from '@/lib/instagram/types'
@@ -54,6 +63,13 @@ interface BrandDiscoveryWidgetProps {
 const ROTATION_INTERVAL_MS = 7000
 const MOUNT_DELAY_MS = 600
 const STORY_TRUNCATE = 280
+// Hardcoded shift-up afstanden. De StickyVariantPicker heeft een
+// voorspelbare layout: desktop ~64-72px (één rij), mobile ~104-110px
+// (twee rijen + CTA). Deze waarden geven daar een nette ~16-18px
+// gap boven, en de transition vangt eventuele paar pixels verschil
+// tussen producten op.
+const SHIFT_UP_MOBILE_PX = 124
+const SHIFT_UP_DESKTOP_PX = 88
 
 function localizedCaption(post: InstagramPost, locale: string): string | null {
   if (locale === 'en' && post.caption_en) return post.caption_en
@@ -101,7 +117,6 @@ export default function BrandDiscoveryWidget({
   const locale = useLocale()
   const { isOpen: cartOpen } = useCartDrawer()
 
-  // Mount-delay zodat we de eerste paint en LCP niet stoort.
   const [mounted, setMounted] = useState(false)
   // Picker-detectie spiegelt StickyVariantPicker exact.
   const [sentinelInView, setSentinelInView] = useState(true)
@@ -112,9 +127,9 @@ export default function BrandDiscoveryWidget({
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const [currentIdx, setCurrentIdx] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
 
-  // Eerst 3 posts voor de rotatie. Bij <3 posts laten we wat er is
-  // gewoon op zijn plek staan (geen flits van een lege laag).
+  // Eerste 3 posts voor de rotatie, eerste 9 voor het grid.
   const rotationPosts = useMemo(() => posts.slice(0, 3), [posts])
   const gridPosts = useMemo(() => posts.slice(0, 9), [posts])
 
@@ -124,8 +139,8 @@ export default function BrandDiscoveryWidget({
   }, [])
 
   // Mobile: observe de sentinel die StickyVariantPicker ook gebruikt.
-  // De sentinel zit boven de gallery; zodra hij uit beeld is, weten
-  // we dat de picker actief wordt en moeten wij verbergen.
+  // De sentinel zit boven de gallery; zodra hij uit beeld is weten we
+  // dat de picker actief wordt en moeten wij omhoog schuiven.
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -158,7 +173,7 @@ export default function BrandDiscoveryWidget({
   }, [])
 
   // Desktop: observe de hoofd-ATC. Wanneer hij uit beeld is, toont
-  // StickyVariantPicker zichzelf en moeten wij wegduiken.
+  // StickyVariantPicker zichzelf en moet de pill omhoog schuiven.
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -202,11 +217,13 @@ export default function BrandDiscoveryWidget({
     return () => window.clearInterval(interval)
   }, [rotationPosts.length, modalOpen, reducedMotion])
 
-  // Esc-toets sluit modal. Body-scroll-lock voorkomt dat de pagina
-  // achter de modal mee-scrollt; restore on cleanup.
+  // Esc-toets sluit modal + body-scroll-lock + focus restoration. We
+  // onthouden welk element focus had voor de modal opende, zodat we
+  // bij sluiten netjes terug-focussen (default = onze trigger pill).
   useEffect(() => {
     if (!modalOpen) return
 
+    const previousActive = document.activeElement as HTMLElement | null
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
@@ -218,6 +235,10 @@ export default function BrandDiscoveryWidget({
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', onKey)
+      // Focus terug naar trigger als de pill bestaat (vrijwel altijd),
+      // anders naar het element dat focus had voor de modal.
+      const target = triggerRef.current ?? previousActive
+      target?.focus({ preventScroll: true })
     }
   }, [modalOpen])
 
@@ -228,20 +249,37 @@ export default function BrandDiscoveryWidget({
   // hoort dat al af te vangen) renderen we niets.
   if (rotationPosts.length === 0) return null
 
-  const visible = mounted && !cartOpen && !pickerVisible
+  // Twee onafhankelijke gedragingen:
+  //   visible        — gebruikt voor opacity/translate/pointer-events.
+  //                    Verbergt pill volledig wanneer cart drawer open
+  //                    is of we nog in de mount-delay zitten.
+  //   shifted        — gebruikt voor het verticaal positioneren van de
+  //                    pill (default vs. bovenop de variant-picker).
+  const visible = mounted && !cartOpen
+  const shifted = pickerVisible
+
+  const bottomPx = shifted
+    ? isDesktop
+      ? SHIFT_UP_DESKTOP_PX
+      : SHIFT_UP_MOBILE_PX
+    : isDesktop
+      ? 16 // bottom-4
+      : 12 // bottom-3
 
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         aria-label={t('aria')}
         aria-haspopup="dialog"
         aria-expanded={modalOpen}
+        tabIndex={visible ? 0 : -1}
         onClick={handleOpen}
-        data-visible={visible ? 'true' : 'false'}
-        className={`group fixed bottom-3 left-3 md:bottom-4 md:left-4 z-30 flex items-center gap-3 bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] pl-1.5 pr-3.5 py-1.5 md:pl-2 md:pr-4 md:py-2 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 ${
+        style={{ bottom: `${bottomPx}px` }}
+        className={`group fixed left-3 md:left-4 z-30 flex items-center gap-3 bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] pl-1.5 pr-3.5 py-1.5 md:pl-2 md:pr-4 md:py-2 transition-[transform,opacity,bottom,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 print:hidden ${
           visible
-            ? 'translate-y-0 opacity-100 pointer-events-auto'
+            ? 'translate-y-0 opacity-100 pointer-events-auto hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.22)] motion-reduce:hover:translate-y-0'
             : 'translate-y-3 opacity-0 pointer-events-none'
         }`}
       >
@@ -264,8 +302,8 @@ export default function BrandDiscoveryWidget({
                 fill
                 sizes="56px"
                 unoptimized={!src.includes('supabase')}
-                priority={idx === 0}
-                className={`object-cover transition-opacity duration-700 ${
+                priority
+                className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                   active ? 'opacity-100' : 'opacity-0'
                 }`}
               />
@@ -280,15 +318,15 @@ export default function BrandDiscoveryWidget({
 
         {/* Twee-regelige tekst */}
         <span className="flex flex-col items-start leading-tight text-left min-w-0">
-          <span className="font-bold text-[11px] md:text-xs uppercase tracking-[0.12em] text-black">
+          <span className="font-bold text-[11px] md:text-xs uppercase tracking-[0.12em] text-black whitespace-nowrap">
             {t('headline')}
           </span>
-          <span className="flex items-center gap-1 text-[11px] md:text-xs text-gray-700 mt-0.5">
+          <span className="flex items-center gap-1 text-[11px] md:text-xs text-gray-700 mt-0.5 whitespace-nowrap">
             <span>{t('subline')}</span>
             <ArrowRight
               size={12}
               aria-hidden="true"
-              className="text-brand-primary transition-transform duration-200 group-hover:translate-x-0.5"
+              className="text-brand-primary transition-transform duration-200 motion-reduce:transition-none group-hover:translate-x-0.5"
             />
           </span>
         </span>
@@ -300,6 +338,7 @@ export default function BrandDiscoveryWidget({
           posts={gridPosts}
           igUrl={igUrl}
           locale={locale}
+          isDesktop={isDesktop}
           onClose={handleClose}
           tModalEyebrow={tModal('eyebrow')}
           tModalLatestPosts={tModal('latestPosts')}
@@ -318,6 +357,7 @@ interface BrandDiscoveryModalProps {
   posts: InstagramPost[]
   igUrl: string
   locale: string
+  isDesktop: boolean
   onClose: () => void
   tModalEyebrow: string
   tModalLatestPosts: string
@@ -332,6 +372,7 @@ function BrandDiscoveryModal({
   posts,
   igUrl,
   locale,
+  isDesktop,
   onClose,
   tModalEyebrow,
   tModalLatestPosts,
@@ -343,36 +384,81 @@ function BrandDiscoveryModal({
   const cardRef = useRef<HTMLDivElement | null>(null)
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
 
-  // Focus-management: focus de close-knop bij open zodat keyboard-
-  // gebruikers meteen weten waar ze terecht zijn gekomen.
+  // Focus de close-knop bij open zodat keyboard- en schermlezer-
+  // gebruikers meteen weten waar ze zijn.
   useEffect(() => {
-    closeBtnRef.current?.focus()
+    closeBtnRef.current?.focus({ preventScroll: true })
   }, [])
 
-  // Mobile geeft een aparte hero-image als die er is, anders fallback
-  // op de desktop-versie. Op desktop pakken we altijd de desktop hero.
-  const heroSrc = about.hero_image_url
-  const heroSrcMobile = about.hero_image_url_mobile || about.hero_image_url
+  // Focus-trap binnen de modal-card. Tab vanaf laatst → eerst, en
+  // Shift+Tab vanaf eerst → laatst, zodat focus nooit ontsnapt naar
+  // de pagina achter de modal.
+  useEffect(() => {
+    const card = cardRef.current
+    if (!card) return
+
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const focusables = card.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && active === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    card.addEventListener('keydown', handler)
+    return () => card.removeEventListener('keydown', handler)
+  }, [])
+
+  // Mobile gebruikt de mobiele hero (portrait crop) wanneer beschikbaar,
+  // desktop pakt altijd de landscape hero.
+  const heroSrc = isDesktop
+    ? about.hero_image_url
+    : about.hero_image_url_mobile || about.hero_image_url
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="brand-discovery-modal-title"
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn print:hidden"
       onClick={onClose}
     >
       <div
         ref={cardRef}
-        className="bg-white border-4 border-black w-full max-w-2xl max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto"
+        className="relative bg-white border-4 border-black w-full max-w-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Hero met overlay-titel; close-knop in de rechterbovenhoek */}
-        <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-gray-200">
-          <picture>
-            <source media="(min-width: 640px)" srcSet={heroSrc} />
+        {/* Close-knop zit OP de modal-card (relative parent), niet in
+            de scrollende inner. Zo blijft hij altijd in beeld als de
+            gebruiker door de modal-content scrolt. */}
+        <button
+          ref={closeBtnRef}
+          type="button"
+          onClick={onClose}
+          aria-label={tModalCloseAria}
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-10 h-10 flex items-center justify-center bg-white border-2 border-black hover:bg-black hover:text-white transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40"
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+
+        {/* Inner scroll-container — alle inhoud die kan scrollen.
+            We gebruiken dynamic viewport units (dvh) zodat de modal
+            niet "jojoot" wanneer iOS Safari z'n address-bar in/uit
+            laat klappen tijdens scroll. */}
+        <div className="max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto overscroll-contain">
+          {/* Hero met overlay-titel */}
+          <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full bg-gray-200">
             <Image
-              src={heroSrcMobile}
+              src={heroSrc}
               alt={about.hero_alt || ''}
               fill
               sizes="(min-width: 768px) 672px, 100vw"
@@ -380,124 +466,115 @@ function BrandDiscoveryModal({
               priority
               className="object-cover"
             />
-          </picture>
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10"
-          />
-          <button
-            ref={closeBtnRef}
-            type="button"
-            onClick={onClose}
-            aria-label={tModalCloseAria}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 flex items-center justify-center bg-white border-2 border-black hover:bg-black hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40"
-          >
-            <X size={20} aria-hidden="true" />
-          </button>
-          <div className="absolute inset-x-0 bottom-0 px-4 sm:px-6 pb-4 sm:pb-6">
-            <p className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/80 mb-2">
-              <Instagram size={12} aria-hidden="true" />
-              <span>{tModalEyebrow}</span>
-            </p>
-            <h2
-              id="brand-discovery-modal-title"
-              className="font-display text-3xl sm:text-4xl md:text-5xl uppercase leading-[0.95] text-white"
-            >
-              {about.story_title}
-            </h2>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="px-4 sm:px-6 md:px-8 py-5 sm:py-6 md:py-8 space-y-6 sm:space-y-8">
-          <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-            {truncate(about.story_paragraph1, STORY_TRUNCATE)}
-          </p>
-
-          {posts.length > 0 && (
-            <div>
-              <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-3 sm:mb-4 flex items-center gap-2">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10"
+            />
+            <div className="absolute inset-x-0 bottom-0 px-4 sm:px-6 pb-4 sm:pb-6 pr-16 sm:pr-20">
+              <p className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white/85 mb-2">
                 <Instagram size={12} aria-hidden="true" />
-                <span>{tModalLatestPosts}</span>
-              </h3>
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                {posts.map((post) => {
-                  const caption = localizedCaption(post, locale)
-                  const ariaLabel = caption
-                    ? `${tIgViewPost} — ${caption.slice(0, 80)}`
-                    : tIgViewPost
-                  const src =
-                    post.media_type === 'VIDEO' && post.thumbnail_url
-                      ? post.thumbnail_url
-                      : post.media_url
-                  return (
-                    <a
-                      key={post.id}
-                      href={post.permalink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={ariaLabel}
-                      className="group relative aspect-square border-2 border-black overflow-hidden bg-gray-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40"
-                    >
-                      <Image
-                        src={src}
-                        alt=""
-                        fill
-                        sizes="(min-width: 768px) 200px, 33vw"
-                        unoptimized={!src.includes('supabase')}
-                        loading="lazy"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      {post.media_type !== 'IMAGE' && (
-                        <span
-                          aria-hidden="true"
-                          className="absolute top-1 right-1 bg-white border-2 border-black p-0.5 leading-none"
-                        >
-                          {post.media_type === 'VIDEO' ? (
-                            <Film size={10} />
-                          ) : (
-                            <Layers size={10} />
-                          )}
-                        </span>
-                      )}
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between gap-1 p-1.5 text-white text-[10px] font-bold"
+                <span>{tModalEyebrow}</span>
+              </p>
+              <h2
+                id="brand-discovery-modal-title"
+                className="font-display text-3xl sm:text-4xl md:text-5xl uppercase leading-[0.95] text-white"
+              >
+                {about.story_title}
+              </h2>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="px-4 sm:px-6 md:px-8 py-5 sm:py-6 md:py-8 space-y-6 sm:space-y-8">
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+              {truncate(about.story_paragraph1, STORY_TRUNCATE)}
+            </p>
+
+            {posts.length > 0 && (
+              <div>
+                <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-3 sm:mb-4 flex items-center gap-2">
+                  <Instagram size={12} aria-hidden="true" />
+                  <span>{tModalLatestPosts}</span>
+                </h3>
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  {posts.map((post) => {
+                    const caption = localizedCaption(post, locale)
+                    const ariaLabel = caption
+                      ? `${tIgViewPost} — ${caption.slice(0, 80)}`
+                      : tIgViewPost
+                    const src =
+                      post.media_type === 'VIDEO' && post.thumbnail_url
+                        ? post.thumbnail_url
+                        : post.media_url
+                    return (
+                      <a
+                        key={post.id}
+                        href={post.permalink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={ariaLabel}
+                        className="group relative aspect-square border-2 border-black overflow-hidden bg-gray-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40"
                       >
-                        <Instagram size={12} aria-hidden="true" />
-                        {typeof post.like_count === 'number' && post.like_count > 0 && (
-                          <span className="flex items-center gap-0.5">
-                            <Heart size={10} className="fill-current" />
-                            {post.like_count.toLocaleString(locale)}
+                        <Image
+                          src={src}
+                          alt=""
+                          fill
+                          sizes="(min-width: 768px) 200px, 33vw"
+                          unoptimized={!src.includes('supabase')}
+                          loading="lazy"
+                          className="object-cover transition-transform duration-500 motion-reduce:transition-none group-hover:scale-105"
+                        />
+                        {post.media_type !== 'IMAGE' && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute top-1 right-1 bg-white border-2 border-black p-0.5 leading-none"
+                          >
+                            {post.media_type === 'VIDEO' ? (
+                              <Film size={10} />
+                            ) : (
+                              <Layers size={10} />
+                            )}
                           </span>
                         )}
-                      </span>
-                    </a>
-                  )
-                })}
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:transition-none flex items-end justify-between gap-1 p-1.5 text-white text-[10px] font-bold"
+                        >
+                          <Instagram size={12} aria-hidden="true" />
+                          {typeof post.like_count === 'number' && post.like_count > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Heart size={10} className="fill-current" />
+                              {post.like_count.toLocaleString(locale)}
+                            </span>
+                          )}
+                        </span>
+                      </a>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-            <a
-              href={igUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black"
-            >
-              <Instagram size={18} aria-hidden="true" />
-              <span>{tModalIgCta}</span>
-              <ExternalLink size={14} aria-hidden="true" />
-            </a>
-            <LocaleLink
-              href="/over-mose"
-              onClick={onClose}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-black font-bold text-sm uppercase tracking-wider border-2 border-black hover:bg-black hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40"
-            >
-              <span>{tModalAboutCta}</span>
-              <ArrowRight size={16} aria-hidden="true" />
-            </LocaleLink>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
+              <a
+                href={igUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black"
+              >
+                <Instagram size={18} aria-hidden="true" />
+                <span>{tModalIgCta}</span>
+                <ExternalLink size={14} aria-hidden="true" />
+              </a>
+              <LocaleLink
+                href="/over-mose"
+                onClick={onClose}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-black font-bold text-sm uppercase tracking-wider border-2 border-black hover:bg-black hover:text-white transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40"
+              >
+                <span>{tModalAboutCta}</span>
+                <ArrowRight size={16} aria-hidden="true" />
+              </LocaleLink>
+            </div>
           </div>
         </div>
       </div>
