@@ -107,6 +107,10 @@ function reasonToMessage(reason: string): string {
       return 'Long-lived token kon niet worden aangemaakt.'
     case 'pages_fetch_failed':
       return 'Pages konden niet worden opgehaald.'
+    case 'permissions_missing':
+      return 'Niet alle benodigde permissies gegeven. Probeer opnieuw en laat alle vinkjes aan staan.'
+    case 'no_pages':
+      return 'Je Facebook-account beheert geen Pages. Maak eerst een Facebook Page aan en koppel daar je Instagram aan.'
     case 'no_ig_account':
       return 'Geen Instagram Business Account gekoppeld aan een van je pages.'
     case 'save_failed':
@@ -125,6 +129,8 @@ interface ConnectionPanelProps {
   disconnecting: boolean
   syncing: boolean
   refreshing: boolean
+  connectError: string
+  onDismissError: () => void
   onConnect: () => void
   onPick: (pageId: string) => void
   onDisconnect: () => void
@@ -139,6 +145,8 @@ function ConnectionPanel({
   disconnecting,
   syncing,
   refreshing,
+  connectError,
+  onDismissError,
   onConnect,
   onPick,
   onDisconnect,
@@ -147,6 +155,26 @@ function ConnectionPanel({
 }: ConnectionPanelProps) {
   const isConnected = !!credentials?.has_token
   const showPicker = pendingCandidates.length > 0
+
+  const errorBanner = connectError ? (
+    <div className="border-2 border-red-600 bg-red-50 p-4 flex items-start gap-3">
+      <AlertCircle
+        size={18}
+        className="text-red-700 flex-shrink-0 mt-0.5"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="font-bold text-red-700 mb-1">Connectie mislukt</p>
+        <p className="text-sm text-red-700 break-words">{connectError}</p>
+      </div>
+      <button
+        onClick={onDismissError}
+        className="text-red-700 text-2xl leading-none flex-shrink-0 -mt-1"
+        aria-label="Sluit melding"
+      >
+        ×
+      </button>
+    </div>
+  ) : null
 
   // PICKER STATE: meerdere FB-pages, admin moet kiezen.
   if (showPicker) {
@@ -301,6 +329,7 @@ function ConnectionPanel({
   // DISCONNECTED STATE: nog geen account gekoppeld, toon connect-CTA.
   return (
     <div className="space-y-5">
+      {errorBanner}
       <div className="border-2 border-black p-6 md:p-8 bg-white text-center">
         <div className="mx-auto mb-4 inline-flex p-3 border-2 border-black bg-brand-primary">
           <Instagram size={28} className="text-black" />
@@ -329,23 +358,71 @@ function ConnectionPanel({
 
       <details className="border-2 border-gray-200 bg-gray-50 p-4 text-sm">
         <summary className="font-bold cursor-pointer">
-          Wat moet ik vooraf in Meta klaarzetten?
+          Lukt het niet? Veelvoorkomende oorzaken
         </summary>
-        <ol className="list-decimal pl-5 mt-3 space-y-1.5 text-gray-700">
-          <li>Je MOSE Instagram-account moet een Business-account zijn.</li>
+        <ul className="list-disc pl-5 mt-3 space-y-2 text-gray-700">
           <li>
-            Het Instagram-account is gekoppeld aan een Facebook-page die
-            jouw Facebook-gebruiker beheert.
+            <strong>Instagram is niet Business of Maker.</strong> Open de
+            Instagram-app, ga naar Profiel → Menu → Type account → schakel
+            naar &quot;Bedrijf&quot; of &quot;Maker&quot;.
           </li>
           <li>
-            In Meta for Developers staat onze redirect URI in
-            &quot;Valid OAuth Redirect URIs&quot;:
+            <strong>Instagram is niet aan een Facebook Page gekoppeld.</strong>{' '}
+            Ga naar{' '}
+            <a
+              href="https://business.facebook.com/settings/instagram-accounts"
+              target="_blank"
+              rel="noreferrer"
+              className="underline font-bold"
+            >
+              Meta Business Suite → Instagram-accounts
+            </a>{' '}
+            en koppel je Instagram aan de juiste Facebook Page (niet aan een
+            persoonlijk profiel).
+          </li>
+          <li>
+            <strong>Geen Facebook Page.</strong> Maak er één aan via{' '}
+            <a
+              href="https://www.facebook.com/pages/create"
+              target="_blank"
+              rel="noreferrer"
+              className="underline font-bold"
+            >
+              facebook.com/pages/create
+            </a>{' '}
+            en koppel daarna je Instagram er via Meta Business Suite aan.
+          </li>
+          <li>
+            <strong>Permissies uitgevinkt tijdens login.</strong> Op het
+            Facebook-toestemmingsscherm moeten alle vinkjes (Pages,
+            Instagram, Bedrijven) aan blijven staan.
+          </li>
+          <li>
+            <strong>Verkeerd Facebook-account.</strong> Log eerst uit op
+            facebook.com en dan via deze knop opnieuw in met het account
+            dat de MOSE Page beheert.
+          </li>
+        </ul>
+      </details>
+
+      <details className="border-2 border-gray-200 bg-gray-50 p-4 text-sm">
+        <summary className="font-bold cursor-pointer">
+          Vereisten in Meta for Developers
+        </summary>
+        <ol className="list-decimal pl-5 mt-3 space-y-1.5 text-gray-700">
+          <li>
+            Onze redirect URI staat in &quot;Valid OAuth Redirect URIs&quot;:
             <br />
             <code className="break-all text-xs">
               https://www.mosewear.com/api/instagram/oauth/callback
             </code>
           </li>
           <li>De Meta App staat op &quot;Live&quot;.</li>
+          <li>
+            App heeft de permissies <code>instagram_basic</code>,{' '}
+            <code>pages_show_list</code> en <code>pages_read_engagement</code>{' '}
+            actief.
+          </li>
         </ol>
       </details>
     </div>
@@ -369,6 +446,9 @@ export default function AdminInstagramPage() {
   const [messageVariant, setMessageVariant] = useState<'success' | 'error'>(
     'success'
   )
+  // Long-form OAuth callback errors worden als banner getoond ipv toast,
+  // omdat ze meerdere zinnen kunnen zijn (zie callback diagnostics).
+  const [connectError, setConnectError] = useState('')
 
   const [settings, setSettings] = useState<SettingsRow | null>(null)
   const [credentials, setCredentials] = useState<CredentialsRow | null>(null)
@@ -437,9 +517,10 @@ export default function AdminInstagramPage() {
     loadAll()
   }, [loadAll])
 
-  // OAuth callback geeft via query-params een status door. We laten dat
-  // zien als toast en strippen daarna de params zodat refresh niet
-  // dezelfde toast opnieuw laat zien.
+  // OAuth callback geeft via query-params een status door. Korte success
+  // gaat naar de toast, fouten gaan naar een banner in het connection-
+  // panel zelf zodat lange foutmeldingen niet over de menu-knop heen
+  // op mobiel komen te liggen.
   useEffect(() => {
     const status = searchParams.get('oauth')
     if (!status) return
@@ -451,9 +532,9 @@ export default function AdminInstagramPage() {
       flashMessage('Kies welke Facebook-page je wilt koppelen.', 'success')
     } else if (status === 'error') {
       const human = detail || reasonToMessage(reason)
-      flashMessage(`Connectie mislukt: ${human}`, 'error')
+      setConnectError(human)
+      setActiveTab('connection')
     }
-    // Strip de OAuth-params uit de URL maar laat de tab-state staan.
     const next = new URL(window.location.href)
     next.searchParams.delete('oauth')
     next.searchParams.delete('reason')
@@ -778,6 +859,8 @@ export default function AdminInstagramPage() {
                 disconnecting={disconnecting}
                 syncing={syncing}
                 refreshing={refreshing}
+                connectError={connectError}
+                onDismissError={() => setConnectError('')}
                 onConnect={startOAuth}
                 onPick={finalizeOAuth}
                 onDisconnect={disconnectOAuth}
@@ -1117,7 +1200,7 @@ export default function AdminInstagramPage() {
 
         {message && activeTab !== 'display' && (
           <div
-            className={`fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 border-2 text-sm font-bold z-50 ${
+            className={`fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:max-w-md px-4 py-2 border-2 text-sm font-bold z-50 ${
               messageVariant === 'error'
                 ? 'bg-red-600 text-white border-black'
                 : 'bg-black text-white border-brand-primary'

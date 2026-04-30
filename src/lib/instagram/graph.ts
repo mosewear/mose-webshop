@@ -168,6 +168,18 @@ export interface FacebookPageWithInstagram {
   ig_username: string
 }
 
+export interface PagesDiagnostics {
+  // Alle pages die een gekoppeld Instagram Business Account hebben.
+  candidates: FacebookPageWithInstagram[]
+  // Aantal pages dat /me/accounts überhaupt teruggaf.
+  totalPages: number
+  // Pages zonder IG-koppeling, voor een betere foutmelding.
+  pagesWithoutIg: { id: string; name: string }[]
+  // Permissies die de user wél/niet gaf tijdens de OAuth-dialog.
+  grantedScopes: string[]
+  declinedScopes: string[]
+}
+
 interface MeAccountsRow {
   id: string
   name?: string
@@ -183,17 +195,47 @@ interface PageWithIgRow {
   } | null
 }
 
+interface PermissionRow {
+  permission: string
+  status: 'granted' | 'declined' | 'expired'
+}
+
+async function fetchUserPermissions(userToken: string): Promise<{
+  granted: string[]
+  declined: string[]
+}> {
+  try {
+    const url =
+      `${GRAPH_HOST}/me/permissions` +
+      `?access_token=${encodeURIComponent(userToken)}`
+    const result = await fetchJson<{ data: PermissionRow[] }>(url)
+    const rows = Array.isArray(result?.data) ? result.data : []
+    return {
+      granted: rows.filter((r) => r.status === 'granted').map((r) => r.permission),
+      declined: rows
+        .filter((r) => r.status === 'declined' || r.status === 'expired')
+        .map((r) => r.permission),
+    }
+  } catch {
+    return { granted: [], declined: [] }
+  }
+}
+
 // Haal alle Facebook-pages op die de ingelogde user beheert + per page
-// het direct meegegeven (al long-lived) Page Access Token. We gebruiken
-// daarna per page een follow-up call naar `/{page_id}?fields=instagram_business_account{id,username}`
-// om alleen pages mee te nemen die ook daadwerkelijk een gekoppeld
-// Instagram Business Account hebben.
+// het direct meegegeven (al long-lived) Page Access Token. We krijgen
+// een diagnostisch object terug zodat de callback bij 0 kandidaten
+// precies kan vertellen waarom (geen pages, geen IG, of permissies
+// uitgevinkt).
 export async function fetchUserPagesWithInstagram(
   userToken: string
-): Promise<FacebookPageWithInstagram[]> {
+): Promise<PagesDiagnostics> {
   if (!userToken) {
     throw new InstagramGraphError('Missing user access token', 400)
   }
+
+  // Permissies parallel ophalen - verwerken we pas als er 0 kandidaten
+  // zijn, maar we doen het meteen om geen extra round-trip te krijgen.
+  const permissionsPromise = fetchUserPermissions(userToken)
 
   const accountsUrl =
     `${GRAPH_HOST}/me/accounts` +
@@ -204,8 +246,13 @@ export async function fetchUserPagesWithInstagram(
   const rows = Array.isArray(accounts?.data) ? accounts.data : []
 
   const candidates: FacebookPageWithInstagram[] = []
+  const pagesWithoutIg: { id: string; name: string }[] = []
+
   for (const row of rows) {
-    if (!row.instagram_business_account?.id) continue
+    if (!row.instagram_business_account?.id) {
+      pagesWithoutIg.push({ id: row.id, name: row.name || row.id })
+      continue
+    }
     // Detail-call om username erbij te halen (handig voor de admin-UI).
     const detailUrl =
       `${GRAPH_HOST}/${encodeURIComponent(row.id)}` +
@@ -226,5 +273,14 @@ export async function fetchUserPagesWithInstagram(
       ig_username: username,
     })
   }
-  return candidates
+
+  const permissions = await permissionsPromise
+
+  return {
+    candidates,
+    totalPages: rows.length,
+    pagesWithoutIg,
+    grantedScopes: permissions.granted,
+    declinedScopes: permissions.declined,
+  }
 }

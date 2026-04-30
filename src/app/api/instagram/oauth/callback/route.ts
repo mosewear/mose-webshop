@@ -108,10 +108,10 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // Haal pages + IG Business Accounts op.
-  let candidates
+  // Haal pages + IG Business Accounts op (mét diagnose-info).
+  let diagnostics
   try {
-    candidates = await fetchUserPagesWithInstagram(longLivedUserToken)
+    diagnostics = await fetchUserPagesWithInstagram(longLivedUserToken)
   } catch (err) {
     return redirectAdmin(req, {
       status: 'error',
@@ -120,18 +120,14 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  if (candidates.length === 0) {
-    return redirectAdmin(req, {
-      status: 'error',
-      reason: 'no_ig_account',
-      message:
-        'Geen Instagram Business Account gevonden op je Facebook-pages. Koppel je Instagram in Meta Business Suite.',
-    })
+  if (diagnostics.candidates.length === 0) {
+    const { reason, message } = diagnoseEmptyResult(diagnostics)
+    return redirectAdmin(req, { status: 'error', reason, message })
   }
 
   // Eén kandidaat -> direct opslaan, geen picker.
-  if (candidates.length === 1) {
-    const choice = candidates[0]
+  if (diagnostics.candidates.length === 1) {
+    const choice = diagnostics.candidates[0]
     const saveError = await saveOAuthCredentials(choice)
     const res = redirectAdmin(req, {
       status: saveError ? 'error' : 'connected',
@@ -145,7 +141,7 @@ export async function GET(req: NextRequest) {
   // Multi-page: pending cookie zetten en naar picker redirecten.
   const pending = createPendingPayload({
     longLivedUserToken,
-    candidates,
+    candidates: diagnostics.candidates,
     adminUserId: statePayload.adminUserId,
   })
   const res = redirectAdmin(req, { status: 'pick' })
@@ -174,4 +170,53 @@ function graphMessage(err: unknown, fallback: string): string {
   if (err instanceof InstagramGraphError) return err.message
   if (err instanceof Error) return err.message
   return fallback
+}
+
+// Bouwt een specifieke foutmelding voor het geval er 0 IG-kandidaten
+// zijn. We onderscheiden:
+//   - permissies geweigerd (pages_show_list / instagram_basic)
+//   - geen Facebook Pages
+//   - wel pages, maar geen IG eraan gekoppeld
+function diagnoseEmptyResult(diagnostics: {
+  totalPages: number
+  pagesWithoutIg: { id: string; name: string }[]
+  grantedScopes: string[]
+  declinedScopes: string[]
+}): { reason: string; message: string } {
+  const required = ['pages_show_list', 'instagram_basic']
+  const missing = required.filter(
+    (scope) => !diagnostics.grantedScopes.includes(scope)
+  )
+
+  if (missing.length > 0) {
+    return {
+      reason: 'permissions_missing',
+      message: `Niet alle benodigde permissies gegeven (mist: ${missing.join(
+        ', '
+      )}). Klik opnieuw op verbinden en laat alle vinkjes aan staan.`,
+    }
+  }
+
+  if (diagnostics.totalPages === 0) {
+    return {
+      reason: 'no_pages',
+      message:
+        'Je Facebook-account beheert geen Pages. Maak eerst een Facebook Page aan via business.facebook.com en koppel daar je Instagram aan.',
+    }
+  }
+
+  // Pages wel gevonden, maar geen daarvan heeft een IG.
+  const pageNames = diagnostics.pagesWithoutIg
+    .map((p) => p.name)
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(', ')
+  return {
+    reason: 'no_ig_account',
+    message:
+      `Gevonden ${diagnostics.totalPages} Facebook-page(s)${
+        pageNames ? ' (' + pageNames + ')' : ''
+      } maar geen daarvan heeft een gekoppeld Instagram Business Account. ` +
+      'Open Meta Business Suite, ga naar Instellingen → Accounts → Instagram en kies "Account toevoegen" om je Instagram aan de juiste page te koppelen. Het IG-account moet ook op type "Bedrijf" of "Maker" staan, geen "Persoonlijk".',
+  }
 }
