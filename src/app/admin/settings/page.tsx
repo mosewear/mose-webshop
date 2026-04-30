@@ -48,6 +48,12 @@ export default function SettingsPage() {
   // Category labels
   const [showCategoryLabels, setShowCategoryLabels] = useState(false)
 
+  // PDP / Productpagina
+  // Sticky variant-picker (kleur, maat, voeg toe aan winkelmand) onderin
+  // het scherm zodra de hoofd-CTA uit beeld scrolt. Default true voor
+  // backwards-compat met de huidige PDP.
+  const [pdpStickyPickerEnabled, setPdpStickyPickerEnabled] = useState(true)
+
   // AI Chat
   const [aiChatEnabled, setAiChatEnabled] = useState(true)
   const [pickupEnabled, setPickupEnabled] = useState(true)
@@ -175,6 +181,13 @@ export default function SettingsPage() {
             case 'pickup_longitude':
               setPickupLongitude(String(setting.value))
               break
+            case 'pdp_sticky_picker_enabled':
+              // Default true: alleen expliciet "false" zet 'm uit. Zo
+              // blijft een lege/onbekende waarde het standaardgedrag.
+              setPdpStickyPickerEnabled(
+                !(setting.value === 'false' || setting.value === false)
+              )
+              break
           }
         })
       }
@@ -224,6 +237,7 @@ export default function SettingsPage() {
         { key: 'pickup_location_address', value: pickupLocationAddress },
         { key: 'pickup_latitude', value: pickupLatitude },
         { key: 'pickup_longitude', value: pickupLongitude },
+        { key: 'pdp_sticky_picker_enabled', value: pdpStickyPickerEnabled },
       ]
 
       for (const setting of settingsToSave) {
@@ -726,6 +740,53 @@ export default function SettingsPage() {
                   <strong>💡 Tip:</strong> Zet dit uit zodra je echte product foto's hebt ge-upload.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Productpagina (PDP) Settings */}
+        <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Productpagina</h2>
+
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <input
+                type="checkbox"
+                id="pdp_sticky_picker_enabled"
+                checked={pdpStickyPickerEnabled}
+                onChange={(e) => setPdpStickyPickerEnabled(e.target.checked)}
+                className="w-4 h-4 sm:w-5 sm:h-5"
+              />
+              <label
+                htmlFor="pdp_sticky_picker_enabled"
+                className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide cursor-pointer"
+              >
+                Sticky variant-picker tonen (kleur, maat, voeg toe aan winkelmand)
+              </label>
+            </div>
+
+            <div className="bg-blue-50 border-l-3 border-blue-400 p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
+              <p className="font-bold mb-1">ℹ️ Wat doet dit?</p>
+              <p className="mb-2">
+                <strong>Ingeschakeld:</strong> Op de productpagina verschijnt een
+                sticky balk onderin het scherm zodra de klant voorbij de hoofd
+                &quot;Voeg toe aan winkelmand&quot;-knop scrollt. De balk bevat
+                de kleur- en maatkiezer plus een ATC-knop, zodat de klant in
+                één klik kan toevoegen ongeacht waar hij op de pagina is.
+              </p>
+              <p>
+                <strong>Uitgeschakeld:</strong> De sticky balk wordt nooit
+                getoond. Alle conversie-acties verlopen via de normale
+                in-page elementen.
+              </p>
+            </div>
+
+            <div className="bg-green-50 border-l-3 border-green-400 p-3 sm:p-4 text-xs sm:text-sm text-green-900">
+              <p className="font-bold mb-1">✅ Aanbevolen</p>
+              <p>
+                Aan laten staan, vooral op mobiel. Het halveert effectief de
+                afstand tussen kijken en kopen op lange productpagina&apos;s.
+              </p>
             </div>
           </div>
         </div>

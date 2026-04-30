@@ -32,6 +32,9 @@ interface SiteSettings {
   pickup_location_address?: string
   pickup_latitude?: number
   pickup_longitude?: number
+  // PDP sticky variant-picker (mobile + desktop) toggle. Default true,
+  // admin kan in /admin/settings de balk volledig uitschakelen.
+  pdp_sticky_picker_enabled?: boolean
   updated_at?: string
 }
 
@@ -99,6 +102,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       pickup_location_address: settings.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen',
       pickup_latitude: parseFloat(settings.pickup_latitude) || 53.2194,
       pickup_longitude: parseFloat(settings.pickup_longitude) || 6.5665,
+      // Default true: alleen expliciet false uitzetten verbergt de
+      // sticky balk. Onbekend / undefined behoudt het huidige gedrag.
+      pdp_sticky_picker_enabled:
+        settings.pdp_sticky_picker_enabled === undefined
+          ? true
+          : !(
+              settings.pdp_sticky_picker_enabled === 'false' ||
+              settings.pdp_sticky_picker_enabled === false
+            ),
       updated_at: latestUpdate,
     }
 
@@ -133,6 +145,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       pickup_location_address: 'Stavangerweg 13, 9723 JC Groningen',
       pickup_latitude: 53.2194,
       pickup_longitude: 6.5665,
+      pdp_sticky_picker_enabled: true,
       updated_at: undefined,
     }
   }

@@ -25,6 +25,12 @@ interface Product {
   category_id: string | null
   meta_title: string | null
   meta_description: string | null
+  // Pasvorm-referentie. Optionele velden die op de PDP verschijnen
+  // onder de maatkiezer wanneer ingevuld.
+  model_height: string | null
+  model_build: string | null
+  model_build_en: string | null
+  model_size_worn: string | null
 }
 
 interface QuantityDiscountTier {
@@ -61,6 +67,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     category_id: '',
     meta_title: '',
     meta_description: '',
+    model_height: '',
+    model_build: '',
+    model_build_en: '',
+    model_size_worn: '',
   })
 
   // Single publish state for the merchant. Maps onto BOTH the
@@ -128,6 +138,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           category_id: product.category_id || '',
           meta_title: product.meta_title || '',
           meta_description: product.meta_description || '',
+          model_height: product.model_height || '',
+          model_build: product.model_build || '',
+          model_build_en: product.model_build_en || '',
+          model_size_worn: product.model_size_worn || '',
         })
         setGiftCard({
           is_gift_card: Boolean(product.is_gift_card),
@@ -258,6 +272,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           category_id: formData.category_id || null,
           meta_title: formData.meta_title || null,
           meta_description: formData.meta_description || null,
+          // Pasvorm-referentie velden. Lege strings normaliseren naar
+          // null zodat de PDP geen halflege strip rendert.
+          model_height: formData.model_height.trim() || null,
+          model_build: formData.model_build.trim() || null,
+          model_build_en: formData.model_build_en.trim() || null,
+          model_size_worn: formData.model_size_worn.trim() || null,
           is_gift_card: isGift,
           allows_custom_amount: isGift ? giftCard.allows_custom_amount : false,
           gift_card_min_amount: isGift ? giftCardMin : null,
@@ -647,6 +667,103 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               ))}
             </select>
           </div>
+
+          {/* Model Fit Section: pasvorm-referentie voor de klant. Komt
+              op de PDP onder de maatkiezer te staan. Niet voor cadeau-
+              bonnen, want die hebben geen draagmodel. */}
+          {!isGift && (
+            <div className="border-t-2 border-gray-200 pt-6">
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide mb-1">
+                Modelinfo (Pasvorm-referentie)
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Optioneel. Helpt klanten hun maat kiezen op basis van
+                het model in de productfoto&apos;s. Laat velden leeg om
+                ze te verbergen op de productpagina.
+              </p>
+
+              {/* Lengte: universeel (geen vertaling), volledige breedte */}
+              <div className="mb-4">
+                <label
+                  htmlFor="model_height"
+                  className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2"
+                >
+                  Lengte van het model
+                </label>
+                <input
+                  type="text"
+                  id="model_height"
+                  maxLength={32}
+                  value={formData.model_height}
+                  onChange={(e) =>
+                    setFormData({ ...formData, model_height: e.target.value })
+                  }
+                  placeholder="Bijv. 1,85 m"
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                />
+              </div>
+
+              {/* Bouw NL/EN volgt active language tab, net als description */}
+              <div className="mb-4">
+                <label
+                  htmlFor={`model_build_${activeLanguage}`}
+                  className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2"
+                >
+                  Bouw{' '}
+                  <span className="text-gray-400 font-normal">
+                    ({activeLanguage.toUpperCase()})
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  id={`model_build_${activeLanguage}`}
+                  maxLength={48}
+                  value={
+                    activeLanguage === 'nl'
+                      ? formData.model_build
+                      : formData.model_build_en
+                  }
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      [activeLanguage === 'nl' ? 'model_build' : 'model_build_en']:
+                        e.target.value,
+                    })
+                  }
+                  placeholder={
+                    activeLanguage === 'nl'
+                      ? 'Bijv. atletisch, slank, stevig'
+                      : 'E.g. athletic, slim, stocky'
+                  }
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                />
+              </div>
+
+              {/* Maat: universeel (M, L, 42, 7,5 etc.) */}
+              <div>
+                <label
+                  htmlFor="model_size_worn"
+                  className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2"
+                >
+                  Maat die het model draagt
+                </label>
+                <input
+                  type="text"
+                  id="model_size_worn"
+                  maxLength={16}
+                  value={formData.model_size_worn}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      model_size_worn: e.target.value,
+                    })
+                  }
+                  placeholder="Bijv. M"
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+          )}
 
           {/* SEO Section */}
           <div className="border-t-2 border-gray-200 pt-6">

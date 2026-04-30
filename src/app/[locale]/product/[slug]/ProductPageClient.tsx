@@ -14,6 +14,7 @@ import ShippingMicrocopy from '@/components/product/ShippingMicrocopy'
 import KlarnaInstallmentLine from '@/components/product/KlarnaInstallmentLine'
 import ProductReviewSnippet from '@/components/product/ProductReviewSnippet'
 import ProductActivityStrip from '@/components/product/ProductActivityStrip'
+import ModelFitInfo from '@/components/product/ModelFitInfo'
 import PdpFaq from '@/components/product/PdpFaq'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
@@ -50,6 +51,12 @@ interface Product {
   gift_card_min_amount?: number | null
   gift_card_max_amount?: number | null
   gift_card_default_validity_months?: number | null
+  // Pasvorm-referentie: helpt klanten hun eigen maat kiezen op basis
+  // van het model in de productfoto's. Alle velden zijn optioneel.
+  model_height?: string | null
+  model_build?: string | null
+  model_build_en?: string | null
+  model_size_worn?: string | null
   product_images: ProductImage[]
   product_variants: ProductVariant[]
   product_quantity_discounts?: { id: string; min_quantity: number; discount_type: string; discount_value: number; is_active: boolean }[]
@@ -381,6 +388,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     return_days: number
     shipping_cost: number
     show_preview_images_notice: boolean
+    pdp_sticky_picker_enabled: boolean
   } | null>(null)
   const [settingsLoading, setSettingsLoading] = useState(true)
 
@@ -409,6 +417,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         return_days: siteSettings.return_days,
         shipping_cost: siteSettings.shipping_cost,
         show_preview_images_notice: siteSettings.show_preview_images_notice || false,
+        // Default true: alleen wanneer admin de toggle expliciet uitzet
+        // wordt de sticky balk verborgen op de PDP.
+        pdp_sticky_picker_enabled:
+          siteSettings.pdp_sticky_picker_enabled !== false,
       })
       setSettingsLoading(false)
     } catch (error) {
@@ -1436,6 +1448,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       )
                     })}
                   </div>
+
+                  {/* Pasvorm-referentie. Renders alleen als minstens één
+                      van de model-velden is ingevuld in de admin. Direct
+                      onder de maatkiezer zodat de klant z'n eigen maat
+                      kan referencen aan het model. */}
+                  {(product.model_height ||
+                    product.model_build ||
+                    product.model_build_en ||
+                    product.model_size_worn) && (
+                    <div className="mt-3 md:mt-4">
+                      <ModelFitInfo
+                        height={product.model_height}
+                        build={
+                          locale === 'en' && product.model_build_en
+                            ? product.model_build_en
+                            : product.model_build
+                        }
+                        sizeWorn={product.model_size_worn}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2114,8 +2147,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       {/* Smart hybrid sticky variant-picker
           Shares the same selectedColor/selectedSize/handleAddToCart state
           as the in-page surface so picking a colour or size from the
-          sticky strip mirrors the rest of the PDP and vice-versa. */}
-      {product && (
+          sticky strip mirrors the rest of the PDP and vice-versa.
+          Admin kan dit globaal uitzetten via /admin/settings. We wachten
+          tot settings geladen zijn voordat we renderen om geen flits van
+          de sticky balk te krijgen wanneer deze uit hoort te staan. */}
+      {product && !settingsLoading && settings?.pdp_sticky_picker_enabled && (
         <StickyVariantPicker
           productId={product.id}
           availableColors={availableColors}

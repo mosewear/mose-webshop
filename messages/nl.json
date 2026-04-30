@@ -377,6 +377,12 @@
     "showMore": "Lees meer",
     "showLess": "Toon minder",
     "inclVat": "Incl. BTW",
+    "modelFit": {
+      "label": "Pasvorm-referentie",
+      "height": "Lengte",
+      "build": "Bouw",
+      "wears": "Draagt"
+    },
     "quantityDiscount": {
       "title": "Meer kopen = meer korting",
       "tier": "{count}+ stuks",

@@ -377,6 +377,12 @@
     "showMore": "Read more",
     "showLess": "Show less",
     "inclVat": "Incl. VAT",
+    "modelFit": {
+      "label": "Fit reference",
+      "height": "Height",
+      "build": "Build",
+      "wears": "Wears"
+    },
     "quantityDiscount": {
       "title": "Buy more, save more",
       "tier": "{count}+ pieces",
