@@ -40,7 +40,9 @@ export async function GET() {
       .maybeSingle(),
     supabase
       .from('instagram_credentials')
-      .select('id, business_account_id, token_expires_at, last_synced_at, last_sync_status, last_sync_error, long_lived_token')
+      .select(
+        'id, business_account_id, token_expires_at, last_synced_at, last_sync_status, last_sync_error, long_lived_token, page_id, page_name, ig_username'
+      )
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle(),
@@ -62,6 +64,9 @@ export async function GET() {
         last_synced_at: credsResult.data.last_synced_at,
         last_sync_status: credsResult.data.last_sync_status,
         last_sync_error: credsResult.data.last_sync_error,
+        page_id: credsResult.data.page_id,
+        page_name: credsResult.data.page_name,
+        ig_username: credsResult.data.ig_username,
         has_token: !!credsResult.data.long_lived_token,
       }
     : null

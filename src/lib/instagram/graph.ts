@@ -5,6 +5,10 @@ import type { InstagramGraphMedia } from './types'
 const GRAPH_VERSION = 'v22.0'
 const GRAPH_HOST = `https://graph.facebook.com/${GRAPH_VERSION}`
 
+export const FACEBOOK_GRAPH_VERSION = GRAPH_VERSION
+export const FACEBOOK_GRAPH_HOST = GRAPH_HOST
+export const FACEBOOK_OAUTH_DIALOG = `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`
+
 const MEDIA_FIELDS = [
   'id',
   'permalink',
@@ -121,4 +125,106 @@ export async function exchangeForLongLivedFacebookToken(
     `&client_secret=${encodeURIComponent(appSecret)}` +
     `&fb_exchange_token=${encodeURIComponent(token)}`
   return fetchJson<RefreshedToken>(url)
+}
+
+// =====================================================
+// OAuth helpers (Connect with Instagram knop)
+// =====================================================
+
+export interface OAuthCodeExchangeResponse {
+  access_token: string
+  token_type: string
+  expires_in?: number
+}
+
+// Wissel de `?code=...` van de OAuth callback in voor een short-lived
+// User Access Token. Vereist exact dezelfde redirect_uri als bij /start.
+export async function exchangeOAuthCodeForUserToken(
+  code: string,
+  redirectUri: string
+): Promise<OAuthCodeExchangeResponse> {
+  const appId = process.env.META_APP_ID
+  const appSecret = process.env.META_APP_SECRET
+  if (!appId || !appSecret) {
+    throw new InstagramGraphError(
+      'META_APP_ID / META_APP_SECRET not configured',
+      503
+    )
+  }
+  const url =
+    `${GRAPH_HOST}/oauth/access_token` +
+    `?client_id=${encodeURIComponent(appId)}` +
+    `&client_secret=${encodeURIComponent(appSecret)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&code=${encodeURIComponent(code)}`
+  return fetchJson<OAuthCodeExchangeResponse>(url)
+}
+
+export interface FacebookPageWithInstagram {
+  page_id: string
+  page_name: string
+  page_access_token: string
+  ig_business_account_id: string
+  ig_username: string
+}
+
+interface MeAccountsRow {
+  id: string
+  name?: string
+  access_token: string
+  instagram_business_account?: { id: string }
+}
+
+interface PageWithIgRow {
+  instagram_business_account?: {
+    id: string
+    username?: string
+    name?: string
+  } | null
+}
+
+// Haal alle Facebook-pages op die de ingelogde user beheert + per page
+// het direct meegegeven (al long-lived) Page Access Token. We gebruiken
+// daarna per page een follow-up call naar `/{page_id}?fields=instagram_business_account{id,username}`
+// om alleen pages mee te nemen die ook daadwerkelijk een gekoppeld
+// Instagram Business Account hebben.
+export async function fetchUserPagesWithInstagram(
+  userToken: string
+): Promise<FacebookPageWithInstagram[]> {
+  if (!userToken) {
+    throw new InstagramGraphError('Missing user access token', 400)
+  }
+
+  const accountsUrl =
+    `${GRAPH_HOST}/me/accounts` +
+    `?fields=${encodeURIComponent('id,name,access_token,instagram_business_account')}` +
+    `&limit=100` +
+    `&access_token=${encodeURIComponent(userToken)}`
+  const accounts = await fetchJson<{ data: MeAccountsRow[] }>(accountsUrl)
+  const rows = Array.isArray(accounts?.data) ? accounts.data : []
+
+  const candidates: FacebookPageWithInstagram[] = []
+  for (const row of rows) {
+    if (!row.instagram_business_account?.id) continue
+    // Detail-call om username erbij te halen (handig voor de admin-UI).
+    const detailUrl =
+      `${GRAPH_HOST}/${encodeURIComponent(row.id)}` +
+      `?fields=${encodeURIComponent('instagram_business_account{id,username,name}')}` +
+      `&access_token=${encodeURIComponent(row.access_token)}`
+    let username = ''
+    try {
+      const detail = await fetchJson<PageWithIgRow>(detailUrl)
+      username = detail?.instagram_business_account?.username || ''
+    } catch {
+      // detail-fetch mag falen, we hebben tenminste de basis-id
+    }
+    candidates.push({
+      page_id: row.id,
+      page_name: row.name || row.id,
+      page_access_token: row.access_token,
+      ig_business_account_id: row.instagram_business_account.id,
+      ig_username: username,
+    })
+  }
+  return candidates
 }

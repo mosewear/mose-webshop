@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
   Instagram,
@@ -15,6 +16,9 @@ import {
   AlertCircle,
   CheckCircle,
   Film,
+  Link2,
+  Unlink,
+  ChevronRight,
 } from 'lucide-react'
 import LanguageTabs from '@/components/admin/LanguageTabs'
 import MediaPicker from '@/components/admin/MediaPicker'
@@ -43,7 +47,17 @@ interface CredentialsRow {
   last_synced_at: string | null
   last_sync_status: 'idle' | 'success' | 'error' | null
   last_sync_error: string | null
+  page_id: string | null
+  page_name: string | null
+  ig_username: string | null
   has_token: boolean
+}
+
+interface PendingCandidate {
+  page_id: string
+  page_name: string
+  ig_business_account_id: string
+  ig_username: string
 }
 
 interface AdminPostRow {
@@ -80,7 +94,268 @@ function formatDate(value: string | null): string {
   }
 }
 
+function reasonToMessage(reason: string): string {
+  switch (reason) {
+    case 'state_mismatch':
+    case 'invalid_state':
+      return 'Sessie verlopen of beveiligingscontrole faalde. Probeer opnieuw.'
+    case 'missing_params':
+      return 'Facebook stuurde een onvolledige callback terug.'
+    case 'code_exchange_failed':
+      return 'Facebook gaf geen geldig token terug.'
+    case 'token_extension_failed':
+      return 'Long-lived token kon niet worden aangemaakt.'
+    case 'pages_fetch_failed':
+      return 'Pages konden niet worden opgehaald.'
+    case 'no_ig_account':
+      return 'Geen Instagram Business Account gekoppeld aan een van je pages.'
+    case 'save_failed':
+      return 'Opslaan in de database mislukte.'
+    case 'access_denied':
+      return 'Je hebt geweigerd toegang te geven op Facebook.'
+    default:
+      return reason || 'Onbekende fout.'
+  }
+}
+
+interface ConnectionPanelProps {
+  credentials: CredentialsRow | null
+  pendingCandidates: PendingCandidate[]
+  finalizing: boolean
+  disconnecting: boolean
+  syncing: boolean
+  refreshing: boolean
+  onConnect: () => void
+  onPick: (pageId: string) => void
+  onDisconnect: () => void
+  onSync: () => void
+  onRefresh: () => void
+}
+
+function ConnectionPanel({
+  credentials,
+  pendingCandidates,
+  finalizing,
+  disconnecting,
+  syncing,
+  refreshing,
+  onConnect,
+  onPick,
+  onDisconnect,
+  onSync,
+  onRefresh,
+}: ConnectionPanelProps) {
+  const isConnected = !!credentials?.has_token
+  const showPicker = pendingCandidates.length > 0
+
+  // PICKER STATE: meerdere FB-pages, admin moet kiezen.
+  if (showPicker) {
+    return (
+      <div className="space-y-5">
+        <div className="bg-yellow-50 border-2 border-yellow-300 p-4">
+          <h2 className="text-lg font-bold mb-1.5 flex items-center gap-2">
+            <ChevronRight size={18} />
+            Kies welke page je wilt koppelen
+          </h2>
+          <p className="text-sm text-gray-700">
+            We vonden meerdere Facebook-pages met een gekoppeld Instagram
+            Business Account. Selecteer welk account je wilt verbinden met
+            de webshop.
+          </p>
+        </div>
+        <div className="space-y-2">
+          {pendingCandidates.map((candidate) => (
+            <button
+              key={candidate.page_id}
+              onClick={() => onPick(candidate.page_id)}
+              disabled={finalizing}
+              className="w-full flex items-center justify-between gap-3 p-4 border-2 border-black bg-white hover:bg-gray-50 disabled:opacity-50 text-left transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="font-bold truncate">
+                  {candidate.ig_username
+                    ? '@' + candidate.ig_username
+                    : 'Instagram-account'}
+                </p>
+                <p className="text-xs text-gray-600 truncate">
+                  via Facebook-page: {candidate.page_name}
+                </p>
+              </div>
+              <ChevronRight
+                size={18}
+                className="flex-shrink-0 text-gray-400"
+              />
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500">
+          Verkeerd account erbij? Je kunt na het koppelen altijd weer
+          loskoppelen en opnieuw beginnen.
+        </p>
+      </div>
+    )
+  }
+
+  // CONNECTED STATE: account is gekoppeld, toon status + acties.
+  if (isConnected) {
+    return (
+      <div className="space-y-5">
+        <div className="bg-green-50 border-2 border-green-300 p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle
+              size={20}
+              className="text-green-700 flex-shrink-0 mt-0.5"
+            />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold">
+                {credentials?.ig_username
+                  ? '@' + credentials.ig_username + ' is gekoppeld'
+                  : 'Instagram is gekoppeld'}
+              </h2>
+              {credentials?.page_name && (
+                <p className="text-sm text-gray-700">
+                  via Facebook-page: <strong>{credentials.page_name}</strong>
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <dl className="bg-gray-50 border-2 border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-gray-500 font-bold">
+              Business Account ID
+            </dt>
+            <dd className="font-mono text-xs break-all">
+              {credentials?.business_account_id || '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-gray-500 font-bold">
+              Token geldig tot
+            </dt>
+            <dd>{formatDate(credentials?.token_expires_at || null)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-gray-500 font-bold">
+              Laatste sync
+            </dt>
+            <dd className="flex items-center gap-2 flex-wrap">
+              <span>{formatDate(credentials?.last_synced_at || null)}</span>
+              {credentials?.last_sync_status === 'success' && (
+                <span className="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold uppercase border border-green-300">
+                  Success
+                </span>
+              )}
+              {credentials?.last_sync_status === 'error' && (
+                <span className="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold uppercase border border-red-300">
+                  Error
+                </span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-gray-500 font-bold">
+              Cron
+            </dt>
+            <dd className="text-xs text-gray-600">
+              Automatische sync elke 6 uur. Token verlengt maandelijks.
+            </dd>
+          </div>
+          {credentials?.last_sync_error && (
+            <div className="sm:col-span-2 text-red-700 text-xs bg-red-50 border border-red-200 p-2">
+              {credentials.last_sync_error}
+            </div>
+          )}
+        </dl>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={onSync}
+            disabled={syncing}
+            className="px-5 py-2.5 bg-brand-primary text-black font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover disabled:bg-gray-200 border-2 border-black flex items-center justify-center gap-2"
+          >
+            <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Synchroniseren...' : 'Sync nu'}
+          </button>
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            className="px-5 py-2.5 bg-white text-black font-bold text-sm uppercase tracking-wider hover:bg-gray-100 disabled:bg-gray-200 border-2 border-black"
+          >
+            {refreshing ? 'Vernieuwen...' : 'Token verversen'}
+          </button>
+          <button
+            onClick={onDisconnect}
+            disabled={disconnecting}
+            className="sm:ml-auto px-5 py-2.5 bg-white text-red-700 font-bold text-sm uppercase tracking-wider hover:bg-red-50 disabled:opacity-50 border-2 border-red-700 flex items-center justify-center gap-2"
+          >
+            <Unlink size={16} />
+            {disconnecting ? 'Loskoppelen...' : 'Verbinding verbreken'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // DISCONNECTED STATE: nog geen account gekoppeld, toon connect-CTA.
+  return (
+    <div className="space-y-5">
+      <div className="border-2 border-black p-6 md:p-8 bg-white text-center">
+        <div className="mx-auto mb-4 inline-flex p-3 border-2 border-black bg-brand-primary">
+          <Instagram size={28} className="text-black" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold mb-2">
+          Koppel je Instagram-account
+        </h2>
+        <p className="text-sm md:text-base text-gray-600 mb-6 max-w-md mx-auto">
+          Eén klik en je MOSE Instagram Business Account staat in de
+          marquee op de homepage. We synchroniseren daarna automatisch
+          elke 6 uur.
+        </p>
+        <button
+          onClick={onConnect}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-bold uppercase tracking-wider text-sm hover:bg-gray-800 border-2 border-black"
+        >
+          <Link2 size={18} />
+          Connect with Instagram
+        </button>
+        <p className="text-xs text-gray-500 mt-4">
+          Je logt in met je Facebook-account dat de MOSE Page beheert.
+          We slaan alleen het long-lived Page Access Token en het
+          Instagram Business Account ID op.
+        </p>
+      </div>
+
+      <details className="border-2 border-gray-200 bg-gray-50 p-4 text-sm">
+        <summary className="font-bold cursor-pointer">
+          Wat moet ik vooraf in Meta klaarzetten?
+        </summary>
+        <ol className="list-decimal pl-5 mt-3 space-y-1.5 text-gray-700">
+          <li>Je MOSE Instagram-account moet een Business-account zijn.</li>
+          <li>
+            Het Instagram-account is gekoppeld aan een Facebook-page die
+            jouw Facebook-gebruiker beheert.
+          </li>
+          <li>
+            In Meta for Developers staat onze redirect URI in
+            &quot;Valid OAuth Redirect URIs&quot;:
+            <br />
+            <code className="break-all text-xs">
+              https://www.mosewear.com/api/instagram/oauth/callback
+            </code>
+          </li>
+          <li>De Meta App staat op &quot;Live&quot;.</li>
+        </ol>
+      </details>
+    </div>
+  )
+}
+
 export default function AdminInstagramPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
   const [activeTab, setActiveTab] = useState<Tab>('connection')
   const [activeLanguage, setActiveLanguage] = useState<'nl' | 'en'>('nl')
 
@@ -88,15 +363,21 @@ export default function AdminInstagramPage() {
   const [saving, setSaving] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [disconnecting, setDisconnecting] = useState(false)
+  const [finalizing, setFinalizing] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageVariant, setMessageVariant] = useState<'success' | 'error'>(
+    'success'
+  )
 
   const [settings, setSettings] = useState<SettingsRow | null>(null)
   const [credentials, setCredentials] = useState<CredentialsRow | null>(null)
   const [posts, setPosts] = useState<AdminPostRow[]>([])
 
-  // Connection draft inputs (token wordt nooit teruggehaald van server)
-  const [tokenInput, setTokenInput] = useState('')
-  const [businessIdInput, setBusinessIdInput] = useState('')
+  // Pending OAuth state (multi-page picker).
+  const [pendingCandidates, setPendingCandidates] = useState<PendingCandidate[]>(
+    []
+  )
 
   // Manual post modal state
   const [manualOpen, setManualOpen] = useState(false)
@@ -110,32 +391,43 @@ export default function AdminInstagramPage() {
   const [manualSaving, setManualSaving] = useState(false)
   const [manualError, setManualError] = useState('')
 
-  const flashMessage = useCallback((text: string) => {
-    setMessage(text)
-    window.setTimeout(() => setMessage(''), 4500)
-  }, [])
+  const flashMessage = useCallback(
+    (text: string, variant: 'success' | 'error' = 'success') => {
+      setMessage(text)
+      setMessageVariant(variant)
+      window.setTimeout(() => setMessage(''), 4500)
+    },
+    []
+  )
 
   const loadAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [settingsRes, postsRes] = await Promise.all([
+      const [settingsRes, postsRes, pendingRes] = await Promise.all([
         fetch('/api/admin/instagram/settings', { cache: 'no-store' }),
         fetch('/api/admin/instagram/posts', { cache: 'no-store' }),
+        fetch('/api/admin/instagram/oauth/pending', { cache: 'no-store' }),
       ])
       const settingsJson = await settingsRes.json()
       const postsJson = await postsRes.json()
+      const pendingJson = await pendingRes.json().catch(() => null)
 
       if (settingsJson?.success) {
         setSettings(settingsJson.settings || null)
         setCredentials(settingsJson.credentials || null)
-        setBusinessIdInput(settingsJson.credentials?.business_account_id || '')
       }
       if (postsJson?.success) {
         setPosts(postsJson.data || [])
       }
+      if (pendingJson?.success && pendingJson.pending?.candidates) {
+        setPendingCandidates(pendingJson.pending.candidates)
+      } else {
+        setPendingCandidates([])
+      }
     } catch (err) {
       console.error('Failed to load Instagram admin data', err)
-      setMessage('Kon data niet laden — probeer opnieuw.')
+      setMessage('Kon data niet laden, probeer het opnieuw.')
+      setMessageVariant('error')
     } finally {
       setLoading(false)
     }
@@ -145,17 +437,37 @@ export default function AdminInstagramPage() {
     loadAll()
   }, [loadAll])
 
+  // OAuth callback geeft via query-params een status door. We laten dat
+  // zien als toast en strippen daarna de params zodat refresh niet
+  // dezelfde toast opnieuw laat zien.
+  useEffect(() => {
+    const status = searchParams.get('oauth')
+    if (!status) return
+    const reason = searchParams.get('reason') || ''
+    const detail = searchParams.get('message') || ''
+    if (status === 'connected') {
+      flashMessage('Instagram-account gekoppeld.', 'success')
+    } else if (status === 'pick') {
+      flashMessage('Kies welke Facebook-page je wilt koppelen.', 'success')
+    } else if (status === 'error') {
+      const human = detail || reasonToMessage(reason)
+      flashMessage(`Connectie mislukt: ${human}`, 'error')
+    }
+    // Strip de OAuth-params uit de URL maar laat de tab-state staan.
+    const next = new URL(window.location.href)
+    next.searchParams.delete('oauth')
+    next.searchParams.delete('reason')
+    next.searchParams.delete('message')
+    router.replace(next.pathname + next.search, { scroll: false })
+  }, [searchParams, router, flashMessage])
+
   const saveSettings = useCallback(
-    async (overrides?: {
-      credentials?: Record<string, unknown>
-      settings?: SettingsRow | null
-    }) => {
+    async (overrides?: { settings?: SettingsRow | null }) => {
       setSaving(true)
       setMessage('')
       try {
         const body = {
           settings: overrides?.settings ?? settings,
-          credentials: overrides?.credentials,
         }
         const res = await fetch('/api/admin/instagram/settings', {
           method: 'PATCH',
@@ -164,15 +476,18 @@ export default function AdminInstagramPage() {
         })
         const json = await res.json()
         if (!res.ok || !json?.success) {
-          flashMessage('Opslaan mislukt: ' + (json?.error || 'onbekende fout'))
+          flashMessage(
+            'Opslaan mislukt: ' + (json?.error || 'onbekende fout'),
+            'error'
+          )
           return false
         }
         await fetch('/api/revalidate-homepage', { method: 'POST' }).catch(() => {})
-        flashMessage('Opgeslagen — homepage revalidated.')
+        flashMessage('Opgeslagen, homepage opnieuw gepubliceerd.')
         return true
       } catch (err) {
         console.error(err)
-        flashMessage('Opslaan mislukt — netwerkfout.')
+        flashMessage('Opslaan mislukt door netwerkfout.', 'error')
         return false
       } finally {
         setSaving(false)
@@ -181,19 +496,74 @@ export default function AdminInstagramPage() {
     [settings, flashMessage]
   )
 
-  const saveConnection = useCallback(async () => {
-    const credPayload: Record<string, unknown> = {
-      business_account_id: businessIdInput.trim(),
+  const startOAuth = useCallback(() => {
+    // Top-level navigation -> server-side redirect chain naar Facebook.
+    window.location.href = '/api/admin/instagram/oauth/start'
+  }, [])
+
+  const finalizeOAuth = useCallback(
+    async (pageId: string) => {
+      setFinalizing(true)
+      setMessage('')
+      try {
+        const res = await fetch('/api/admin/instagram/oauth/finalize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ page_id: pageId }),
+        })
+        const json = await res.json()
+        if (!res.ok || !json?.success) {
+          flashMessage(
+            'Koppelen mislukt: ' + (json?.error || 'onbekende fout'),
+            'error'
+          )
+          return
+        }
+        flashMessage('Account gekoppeld.')
+        setPendingCandidates([])
+        await loadAll()
+      } catch (err) {
+        console.error(err)
+        flashMessage('Koppelen mislukt door netwerkfout.', 'error')
+      } finally {
+        setFinalizing(false)
+      }
+    },
+    [flashMessage, loadAll]
+  )
+
+  const disconnectOAuth = useCallback(async () => {
+    if (
+      !confirm(
+        'Weet je zeker dat je het Instagram-account wilt loskoppelen? De marquee blijft de laatst gesynchroniseerde posts tonen tot je een nieuw account koppelt.'
+      )
+    ) {
+      return
     }
-    if (tokenInput.trim()) {
-      credPayload.long_lived_token = tokenInput.trim()
-    }
-    const ok = await saveSettings({ credentials: credPayload })
-    if (ok) {
-      setTokenInput('')
+    setDisconnecting(true)
+    setMessage('')
+    try {
+      const res = await fetch('/api/admin/instagram/oauth/disconnect', {
+        method: 'POST',
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.success) {
+        flashMessage(
+          'Loskoppelen mislukt: ' + (json?.error || 'onbekende fout'),
+          'error'
+        )
+        return
+      }
+      flashMessage('Account losgekoppeld.')
+      setPendingCandidates([])
       await loadAll()
+    } catch (err) {
+      console.error(err)
+      flashMessage('Loskoppelen mislukt door netwerkfout.', 'error')
+    } finally {
+      setDisconnecting(false)
     }
-  }, [businessIdInput, tokenInput, saveSettings, loadAll])
+  }, [flashMessage, loadAll])
 
   const triggerSync = useCallback(async () => {
     setSyncing(true)
@@ -401,126 +771,19 @@ export default function AdminInstagramPage() {
           <div className="p-4 md:p-6">
             {/* TAB 1: CONNECTION */}
             {activeTab === 'connection' && (
-              <div className="space-y-6">
-                <div className="bg-gray-50 border-2 border-gray-200 p-4">
-                  <h2 className="text-lg font-bold mb-3">Status</h2>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      {credentials?.has_token ? (
-                        <CheckCircle size={16} className="text-green-600" />
-                      ) : (
-                        <AlertCircle size={16} className="text-red-600" />
-                      )}
-                      <span>
-                        Token:{' '}
-                        <strong>
-                          {credentials?.has_token ? 'ingesteld' : 'niet ingesteld'}
-                        </strong>
-                        {credentials?.token_expires_at && (
-                          <>
-                            {' '}
-                            — geldig tot{' '}
-                            <strong>
-                              {formatDate(credentials.token_expires_at)}
-                            </strong>
-                          </>
-                        )}
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      {credentials?.business_account_id ? (
-                        <CheckCircle size={16} className="text-green-600" />
-                      ) : (
-                        <AlertCircle size={16} className="text-red-600" />
-                      )}
-                      <span>
-                        Business Account ID:{' '}
-                        <strong>
-                          {credentials?.business_account_id || 'niet ingesteld'}
-                        </strong>
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span>Laatste sync: </span>
-                      <strong>{formatDate(credentials?.last_synced_at || null)}</strong>
-                      {credentials?.last_sync_status === 'success' && (
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-bold uppercase border border-green-300">
-                          Success
-                        </span>
-                      )}
-                      {credentials?.last_sync_status === 'error' && (
-                        <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold uppercase border border-red-300">
-                          Error
-                        </span>
-                      )}
-                    </li>
-                    {credentials?.last_sync_error && (
-                      <li className="text-red-700 text-xs bg-red-50 border border-red-200 p-2 mt-2">
-                        {credentials.last_sync_error}
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">
-                    Long-Lived Access Token
-                  </label>
-                  <input
-                    type="password"
-                    value={tokenInput}
-                    onChange={(e) => setTokenInput(e.target.value)}
-                    placeholder={
-                      credentials?.has_token
-                        ? '••••••••••••••••  (laat leeg om huidige token te behouden)'
-                        : 'Plak je Meta long-lived token hier'
-                    }
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Genereer een long-lived token via Meta Business Suite (Instagram
-                    Business). De cron ververst hem maandelijks automatisch.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">
-                    Instagram Business Account ID
-                  </label>
-                  <input
-                    type="text"
-                    value={businessIdInput}
-                    onChange={(e) => setBusinessIdInput(e.target.value)}
-                    placeholder="bv. 17841401234567890"
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-black focus:outline-none transition-colors"
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <button
-                    onClick={saveConnection}
-                    disabled={saving}
-                    className="px-5 py-2.5 bg-black text-white font-bold text-sm uppercase tracking-wider hover:bg-gray-800 disabled:bg-gray-400 border-2 border-black"
-                  >
-                    {saving ? 'Opslaan...' : 'Connectie opslaan'}
-                  </button>
-                  <button
-                    onClick={triggerSync}
-                    disabled={syncing || !credentials?.has_token}
-                    className="px-5 py-2.5 bg-brand-primary text-black font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover disabled:bg-gray-200 border-2 border-black flex items-center gap-2"
-                  >
-                    <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
-                    {syncing ? 'Synchroniseren...' : 'Sync nu'}
-                  </button>
-                  <button
-                    onClick={triggerTokenRefresh}
-                    disabled={refreshing || !credentials?.has_token}
-                    className="px-5 py-2.5 bg-white text-black font-bold text-sm uppercase tracking-wider hover:bg-gray-100 disabled:bg-gray-200 border-2 border-black"
-                  >
-                    {refreshing ? 'Vernieuwen...' : 'Token verversen'}
-                  </button>
-                </div>
-              </div>
+              <ConnectionPanel
+                credentials={credentials}
+                pendingCandidates={pendingCandidates}
+                finalizing={finalizing}
+                disconnecting={disconnecting}
+                syncing={syncing}
+                refreshing={refreshing}
+                onConnect={startOAuth}
+                onPick={finalizeOAuth}
+                onDisconnect={disconnectOAuth}
+                onSync={triggerSync}
+                onRefresh={triggerTokenRefresh}
+              />
             )}
 
             {/* TAB 2: POSTS */}
@@ -836,9 +1099,7 @@ export default function AdminInstagramPage() {
             {message && (
               <p
                 className={`font-bold text-sm md:text-base ${
-                  message.toLowerCase().includes('mislukt')
-                    ? 'text-red-600'
-                    : 'text-green-600'
+                  messageVariant === 'error' ? 'text-red-600' : 'text-green-600'
                 }`}
               >
                 {message}
@@ -855,7 +1116,13 @@ export default function AdminInstagramPage() {
         )}
 
         {message && activeTab !== 'display' && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 border-2 border-brand-primary text-sm font-bold z-50">
+          <div
+            className={`fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 border-2 text-sm font-bold z-50 ${
+              messageVariant === 'error'
+                ? 'bg-red-600 text-white border-black'
+                : 'bg-black text-white border-brand-primary'
+            }`}
+          >
             {message}
           </div>
         )}
