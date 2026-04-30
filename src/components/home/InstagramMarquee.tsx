@@ -191,7 +191,7 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
           target="_blank"
           rel="noopener noreferrer"
           aria-label={t('ctaAria')}
-          className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-brand-primary text-black font-bold text-sm md:text-base uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black"
+          className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-brand-primary text-white font-bold text-sm md:text-base uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black"
         >
           <Instagram size={18} aria-hidden="true" />
           <span>{ctaText}</span>
