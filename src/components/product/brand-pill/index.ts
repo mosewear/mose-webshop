@@ -14,6 +14,8 @@ import PillStoryCard from './PillStoryCard'
 import PillPolaroid from './PillPolaroid'
 import PillAvatar from './PillAvatar'
 import PillMinimal from './PillMinimal'
+import PillStrip from './PillStrip'
+import PillTicker from './PillTicker'
 
 export type { PillDesignId, PillDesignProps, PillDesignMeta } from './types'
 export { PILL_DESIGN_IDS, PILL_DESIGN_REGISTRY } from './types'
@@ -24,6 +26,8 @@ const COMPONENT_BY_ID: Record<PillDesignId, ComponentType<PillDesignProps>> = {
   polaroid: PillPolaroid,
   avatar: PillAvatar,
   minimal: PillMinimal,
+  strip: PillStrip,
+  ticker: PillTicker,
 }
 
 export function getPillComponent(

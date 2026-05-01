@@ -54,6 +54,8 @@ export const PILL_DESIGN_IDS = [
   'polaroid',
   'avatar',
   'minimal',
+  'strip',
+  'ticker',
 ] as const
 
 export type PillDesignId = (typeof PILL_DESIGN_IDS)[number]
@@ -98,5 +100,17 @@ export const PILL_DESIGN_REGISTRY: readonly PillDesignMeta[] = [
     name: 'Minimal',
     description:
       'Compact tekst-tag met IG-icoon. Voor wie de pill bewust subtiel wil houden zonder visuele afleiding.',
+  },
+  {
+    id: 'strip',
+    name: 'Strip',
+    description:
+      'Brede contact-sheet pill met 3 IG-thumbnails naast elkaar en een zwarte CTA-balk rechts. Maximum visuele content in één blik.',
+  },
+  {
+    id: 'ticker',
+    name: 'Ticker',
+    description:
+      'News-bar met thumbnail links en een zwart paneel met scrollende brand-tekst rechts. Subtiele beweging trekt de aandacht zonder opdringerig te zijn.',
   },
 ] as const

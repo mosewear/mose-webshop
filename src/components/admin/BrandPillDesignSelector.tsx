@@ -3,10 +3,11 @@
 /**
  * BrandPillDesignSelector
  *
- * Admin-UI om visueel tussen de 5 brand-pill designs te kiezen voor
- * de productpagina. Rendert ELK design met dezelfde props als op de
- * live PDP — admins zien dus exact wat ze selecteren, inclusief
- * thumbnail-rotatie, NIEUW-badge en pulse-animatie.
+ * Admin-UI om visueel tussen de brand-pill designs te kiezen voor de
+ * productpagina (registry-driven: aantal komt uit PILL_DESIGN_REGISTRY).
+ * Rendert ELK design met dezelfde props als op de live PDP — admins
+ * zien dus exact wat ze selecteren, inclusief thumbnail-rotatie,
+ * NIEUW-badge, pulse-animatie en marquee-scroll.
  *
  * Data-strategie:
  *   * Probeer client-side de IG-feed op te halen via supabase RPC

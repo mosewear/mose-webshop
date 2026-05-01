@@ -51,6 +51,8 @@ export type BrandWidgetDesign =
   | 'polaroid'
   | 'avatar'
   | 'minimal'
+  | 'strip'
+  | 'ticker'
 
 const VALID_BRAND_DESIGNS: ReadonlySet<BrandWidgetDesign> = new Set([
   'classic',
@@ -58,6 +60,8 @@ const VALID_BRAND_DESIGNS: ReadonlySet<BrandWidgetDesign> = new Set([
   'polaroid',
   'avatar',
   'minimal',
+  'strip',
+  'ticker',
 ])
 
 export function normaliseBrandDesign(value: unknown): BrandWidgetDesign {
