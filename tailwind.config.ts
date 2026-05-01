@@ -6,6 +6,15 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // Wrapt alle `hover:` utilities in `@media (hover: hover)` zodat ze
+  // alleen activeren op apparaten met echte pointer-hover (muis,
+  // trackpad). Zonder dit triggert touch-scroll op mobiel kortstondig
+  // de :hover-state, wat zichtbare kleur-/transition-flikkering geeft
+  // bij elementen met sterk contrasterende hover-styles (bv. de CTA's
+  // in BrandDiscoveryModal die white→black flippen).
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
       colors: {

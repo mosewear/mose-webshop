@@ -30,6 +30,14 @@
  *   3. One-shot speech-bubble bij eerste-scroll voorbij de hero —
  *      verschijnt naast (desktop) of boven (mobile) de pill, één keer
  *      per browser-sessie, met auto-dismiss na 5s of bij interactie.
+ *
+ * Engagement-collapse:
+ *   Zodra de gebruiker de modal voor het eerst opent in deze sessie
+ *   (`engaged` flag in sessionStorage), schakelt de pill voor de rest
+ *   van de sessie naar PillMini — een 44/48px IG-tile. De pill blijft
+ *   altijd in beeld én klikbaar (heropent de modal), maar claimt geen
+ *   aandacht meer: bewustzijn is bereikt, dus rust mag. Persistent
+ *   over PDP-navigatie binnen dezelfde tab.
  */
 
 import {
@@ -55,6 +63,7 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import { Link as LocaleLink } from '@/i18n/routing'
 import type { InstagramPost } from '@/lib/instagram/types'
 import { getPillComponent, type PillDesignId } from './brand-pill'
+import PillMini from './brand-pill/PillMini'
 
 export interface BrandDiscoveryAbout {
   hero_image_url: string
@@ -96,6 +105,15 @@ const MOUNT_DELAY_MS = 600
 const STORY_TRUNCATE = 280
 const BUBBLE_TIMEOUT_MS = 5000
 const BUBBLE_SESSION_KEY = 'mose:brand-pill-bubble-shown'
+// Sessie-flag: zodra de gebruiker de modal voor het eerst opent
+// schakelt de pill voor de rest van de sessie naar PillMini (kleine
+// IG-tile). Bewustzijn is bereikt → de pill mag visueel rusten.
+// Persistent over PDP-navigatie binnen dezelfde tab.
+const ENGAGED_SESSION_KEY = 'mose:brand-pill-engaged'
+// Custom event waarmee setEngaged() alle subscribers binnen dezelfde
+// tab on-the-fly synchroniseert (sessionStorage zelf vuurt geen
+// storage-event in dezelfde tab).
+const ENGAGED_EVENT = 'mose:brand-engaged'
 // Hardcoded shift-up afstanden. De StickyVariantPicker heeft een
 // voorspelbare layout: desktop ~64-72px (één rij), mobile ~104-110px
 // (twee rijen + CTA). Deze waarden geven daar een nette ~16-18px
@@ -141,6 +159,52 @@ function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
+/**
+ * useEngagedState — leest "heeft user de modal al geopend deze sessie"
+ * uit sessionStorage en publiceert via een custom event zodat alle
+ * widget-instances binnen dezelfde page direct mee-updaten. Zelfde
+ * SSR-veilige useSyncExternalStore-pattern als useMediaQuery zodat
+ * we geen setState-in-effect anti-pattern krijgen.
+ */
+function useEngagedState(): [boolean, () => void] {
+  const subscribe = useCallback((onChange: () => void) => {
+    if (typeof window === 'undefined') return () => undefined
+    window.addEventListener(ENGAGED_EVENT, onChange)
+    // storage-event vuurt alleen tussen tabs; voor cross-tab sync
+    // (iemand opent in een andere tab) blijven we daar ook naar luisteren.
+    window.addEventListener('storage', onChange)
+    return () => {
+      window.removeEventListener(ENGAGED_EVENT, onChange)
+      window.removeEventListener('storage', onChange)
+    }
+  }, [])
+  const getSnapshot = useCallback(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return window.sessionStorage.getItem(ENGAGED_SESSION_KEY) === '1'
+    } catch {
+      return false
+    }
+  }, [])
+  const getServerSnapshot = useCallback(() => false, [])
+  const engaged = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot
+  )
+  const setEngaged = useCallback(() => {
+    if (typeof window === 'undefined') return
+    try {
+      window.sessionStorage.setItem(ENGAGED_SESSION_KEY, '1')
+    } catch {
+      // Private mode: prima, dan blijft engaged binnen deze widget
+      // alleen via event-broadcast levend (zonder persistentie).
+    }
+    window.dispatchEvent(new Event(ENGAGED_EVENT))
+  }, [])
+  return [engaged, setEngaged]
+}
+
 export default function BrandDiscoveryWidget({
   posts,
   about,
@@ -167,6 +231,10 @@ export default function BrandDiscoveryWidget({
   const [currentIdx, setCurrentIdx] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [bubbleVisible, setBubbleVisible] = useState(false)
+  // Engaged = gebruiker heeft de modal al geopend deze sessie. Dan
+  // schakelt de pill naar PillMini (kleine IG-tile) zodat we niet
+  // langer aandacht claimen.
+  const [engaged, setEngaged] = useEngagedState()
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   // Onthoud of we de bubble in deze widget-instance al getriggerd
   // hebben, los van sessionStorage — voorkomt dubbele triggers binnen
@@ -300,6 +368,7 @@ export default function BrandDiscoveryWidget({
   //   * Modal open (cleanup van useEffect)
   useEffect(() => {
     if (!mounted) return
+    if (engaged) return
     if (sentinelInView) return
     if (cartOpen || modalOpen) return
     if (bubbleTriggeredRef.current) return
@@ -321,7 +390,7 @@ export default function BrandDiscoveryWidget({
       BUBBLE_TIMEOUT_MS
     )
     return () => window.clearTimeout(timer)
-  }, [mounted, sentinelInView, cartOpen, modalOpen])
+  }, [mounted, engaged, sentinelInView, cartOpen, modalOpen])
 
   // Veiligheidsnet: dismiss bubble proactief wanneer cart of modal
   // opent terwijl 'ie nog zichtbaar is.
@@ -332,7 +401,10 @@ export default function BrandDiscoveryWidget({
   const handleOpen = useCallback(() => {
     setBubbleVisible(false)
     setModalOpen(true)
-  }, [])
+    // Markeer de sessie als "engaged" zodat de pill na het sluiten
+    // van de modal in compact mode (PillMini) verder leeft.
+    setEngaged()
+  }, [setEngaged])
   const handleClose = useCallback(() => setModalOpen(false), [])
   const handlePillMouseEnter = useCallback(() => setBubbleVisible(false), [])
 
@@ -357,12 +429,15 @@ export default function BrandDiscoveryWidget({
       ? DEFAULT_BOTTOM_DESKTOP_PX
       : DEFAULT_BOTTOM_MOBILE_PX
 
-  const showBubble = bubbleVisible && visible && !modalOpen
+  // Bubble alleen wanneer NIET engaged — als de gebruiker de modal al
+  // heeft geopend kennen ze de pill, dan is een nudge dubbelop.
+  const showBubble = bubbleVisible && visible && !modalOpen && !engaged
   const ariaLabel = isFresh ? t('ariaFresh') : t('aria')
 
-  // Selecteer het juiste pill-component op basis van de admin-keuze.
-  // Onbekende waarden vallen via getPillComponent terug op Classic.
-  const PillComponent = getPillComponent(design)
+  // Engaged → altijd PillMini (sessie-rust). Anders: het door de
+  // admin gekozen design. Onbekende design-waarden vallen via
+  // getPillComponent terug op Classic.
+  const PillComponent = engaged ? PillMini : getPillComponent(design)
 
   return (
     <>
