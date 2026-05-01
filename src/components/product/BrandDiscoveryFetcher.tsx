@@ -61,12 +61,26 @@ export default async function BrandDiscoveryFetcher({
   // uitgezet (anders zou de pill omhoog scrollen voor "lucht").
   const pickerEnabled = settings.pdp_sticky_picker_enabled !== false
 
+  // "NIEUW"-badge: alleen wanneer er ECHT een verse post is. We pakken
+  // de jongste taken_at uit de hele set (niet posts[0], want pinned-
+  // first betekent dat posts[0] een oude favoriet kan zijn).
+  const FRESHNESS_WINDOW_MS = 48 * 60 * 60 * 1000
+  const newestTakenAtMs = igData.posts.reduce<number>((latest, p) => {
+    if (!p.taken_at) return latest
+    const ts = Date.parse(p.taken_at)
+    if (Number.isNaN(ts)) return latest
+    return ts > latest ? ts : latest
+  }, 0)
+  const isFresh =
+    newestTakenAtMs > 0 && Date.now() - newestTakenAtMs < FRESHNESS_WINDOW_MS
+
   return (
     <BrandDiscoveryWidget
       posts={igData.posts}
       about={aboutSubset}
       igUrl={igUrl}
       pickerEnabled={pickerEnabled}
+      isFresh={isFresh}
     />
   )
 }

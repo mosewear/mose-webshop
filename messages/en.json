@@ -387,7 +387,10 @@
       "headline": "WHO ARE WE?",
       "subline": "Find us on Instagram",
       "aria": "Open MOSE brand introduction",
-      "viewPost": "View post"
+      "ariaFresh": "Open MOSE brand introduction. New Instagram post.",
+      "viewPost": "View post",
+      "freshLabel": "NEW",
+      "bubble": "Want to meet us first?"
     },
     "brandModal": {
       "eyebrow": "INSTAGRAM",

@@ -13,14 +13,23 @@
  * Visibility-strategie:
  *   * Eerste 600ms na mount: opacity 0 + translate-y (rustige entry).
  *   * Cart drawer open: volledig verborgen (geen overlap met drawer).
- *   * Sticky variant-picker zichtbaar: pill SCHUIFT OMHOOG bovenop de
- *     picker zodat hij altijd in beeld blijft, net zoals de gebruiker
- *     verwachtte ("altijd in beeld"). De picker-detectie spiegelt
- *     StickyVariantPicker exact:
+ *   * Sticky variant-picker zichtbaar EN admin-toggle aan: pill
+ *     SCHUIFT OMHOOG bovenop de picker zodat hij altijd in beeld
+ *     blijft. Picker-detectie spiegelt StickyVariantPicker exact:
  *       - mobile: [data-sticky-picker-sentinel]
  *       - desktop: [data-pdp-main-atc]
- *   * prefers-reduced-motion: thumbnail-rotatie en hover-lift uit.
+ *   * prefers-reduced-motion: thumbnail-rotatie, pulse en hover-lift uit.
  *   * print: hidden — niet meeprinten op een product-aankoopbewijs.
+ *
+ * Discovery-laag (zodat bezoekers de pill ook ECHT zien):
+ *   1. Live pulse-dot rechtsboven in de thumbnail — altijd-aan, ademend
+ *      groen punt dat communiceert "deze knop leeft" (pauzeert bij
+ *      reduced-motion).
+ *   2. NIEUW-badge rechtsboven OP de pill — alleen wanneer de jongste
+ *      IG-post < 48u oud is. Echte signal, geen ruis.
+ *   3. One-shot speech-bubble bij eerste-scroll voorbij de hero —
+ *      verschijnt naast (desktop) of boven (mobile) de pill, één keer
+ *      per browser-sessie, met auto-dismiss na 5s of bij interactie.
  */
 
 import {
@@ -64,11 +73,18 @@ interface BrandDiscoveryWidgetProps {
    * omhoog schuiven, ook al is de sentinel uit beeld.
    */
   pickerEnabled: boolean
+  /**
+   * Server-bepaald: de jongste IG-post is < 48u oud. Triggert de
+   * "NIEUW"-badge en een aria-label upgrade voor screen readers.
+   */
+  isFresh: boolean
 }
 
 const ROTATION_INTERVAL_MS = 7000
 const MOUNT_DELAY_MS = 600
 const STORY_TRUNCATE = 280
+const BUBBLE_TIMEOUT_MS = 5000
+const BUBBLE_SESSION_KEY = 'mose:brand-pill-bubble-shown'
 // Hardcoded shift-up afstanden. De StickyVariantPicker heeft een
 // voorspelbare layout: desktop ~64-72px (één rij), mobile ~104-110px
 // (twee rijen + CTA). Deze waarden geven daar een nette ~16-18px
@@ -76,6 +92,8 @@ const STORY_TRUNCATE = 280
 // tussen producten op.
 const SHIFT_UP_MOBILE_PX = 124
 const SHIFT_UP_DESKTOP_PX = 88
+const DEFAULT_BOTTOM_MOBILE_PX = 12 // bottom-3
+const DEFAULT_BOTTOM_DESKTOP_PX = 16 // bottom-4
 
 function localizedCaption(post: InstagramPost, locale: string): string | null {
   if (locale === 'en' && post.caption_en) return post.caption_en
@@ -117,6 +135,7 @@ export default function BrandDiscoveryWidget({
   about,
   igUrl,
   pickerEnabled,
+  isFresh,
 }: BrandDiscoveryWidgetProps) {
   const t = useTranslations('product.brandWidget')
   const tModal = useTranslations('product.brandModal')
@@ -134,7 +153,12 @@ export default function BrandDiscoveryWidget({
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const [currentIdx, setCurrentIdx] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
+  const [bubbleVisible, setBubbleVisible] = useState(false)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  // Onthoud of we de bubble in deze widget-instance al getriggerd
+  // hebben, los van sessionStorage — voorkomt dubbele triggers binnen
+  // dezelfde page-load (bv. bij snelle scroll up/down).
+  const bubbleTriggeredRef = useRef(false)
 
   // Eerste 3 posts voor de rotatie, eerste 9 voor het grid.
   const rotationPosts = useMemo(() => posts.slice(0, 3), [posts])
@@ -147,7 +171,8 @@ export default function BrandDiscoveryWidget({
 
   // Mobile: observe de sentinel die StickyVariantPicker ook gebruikt.
   // De sentinel zit boven de gallery; zodra hij uit beeld is weten we
-  // dat de picker actief wordt en moeten wij omhoog schuiven.
+  // dat de picker actief wordt EN dat de gebruiker engaged is met
+  // het product (trigger voor de speech-bubble).
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -246,26 +271,68 @@ export default function BrandDiscoveryWidget({
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', onKey)
-      // Focus terug naar trigger als de pill bestaat (vrijwel altijd),
-      // anders naar het element dat focus had voor de modal.
       const target = triggerRef.current ?? previousActive
       target?.focus({ preventScroll: true })
     }
   }, [modalOpen])
 
-  const handleOpen = useCallback(() => setModalOpen(true), [])
+  // Speech-bubble trigger: één keer per sessie, op de eerste keer dat
+  // de gebruiker voorbij de hero scrolt (= sentinel verlaat het
+  // viewport). We checken sessionStorage zodat een refresh / nieuwe
+  // PDP geen nieuwe bubble triggert. Dismiss-mechanismen:
+  //   * 5s timer (auto)
+  //   * Pill click (handleOpen)
+  //   * Pill mouseenter (heeft de boodschap gezien)
+  //   * Cart drawer open (geen overlap met drawer)
+  //   * Modal open (cleanup van useEffect)
+  useEffect(() => {
+    if (!mounted) return
+    if (sentinelInView) return
+    if (cartOpen || modalOpen) return
+    if (bubbleTriggeredRef.current) return
+    if (typeof window === 'undefined') return
+
+    try {
+      if (window.sessionStorage.getItem(BUBBLE_SESSION_KEY) === '1') return
+      window.sessionStorage.setItem(BUBBLE_SESSION_KEY, '1')
+    } catch {
+      // Private mode of geen storage permission: stilletjes doorgaan
+      // zonder gate, zodat de bubble in elk geval één keer toont.
+    }
+
+    bubbleTriggeredRef.current = true
+    setBubbleVisible(true)
+
+    const timer = window.setTimeout(
+      () => setBubbleVisible(false),
+      BUBBLE_TIMEOUT_MS
+    )
+    return () => window.clearTimeout(timer)
+  }, [mounted, sentinelInView, cartOpen, modalOpen])
+
+  // Veiligheidsnet: dismiss bubble proactief wanneer cart of modal
+  // opent terwijl 'ie nog zichtbaar is.
+  useEffect(() => {
+    if (cartOpen || modalOpen) setBubbleVisible(false)
+  }, [cartOpen, modalOpen])
+
+  const handleOpen = useCallback(() => {
+    setBubbleVisible(false)
+    setModalOpen(true)
+  }, [])
   const handleClose = useCallback(() => setModalOpen(false), [])
+  const handlePillMouseEnter = useCallback(() => setBubbleVisible(false), [])
 
   // Veiligheidsklep: als er om wat voor reden geen posts zijn (server
   // hoort dat al af te vangen) renderen we niets.
   if (rotationPosts.length === 0) return null
 
   // Twee onafhankelijke gedragingen:
-  //   visible        — gebruikt voor opacity/translate/pointer-events.
-  //                    Verbergt pill volledig wanneer cart drawer open
-  //                    is of we nog in de mount-delay zitten.
-  //   shifted        — gebruikt voor het verticaal positioneren van de
-  //                    pill (default vs. bovenop de variant-picker).
+  //   visible — gebruikt voor opacity/translate/pointer-events op de
+  //             pill. Verbergt pill volledig wanneer cart drawer open
+  //             is of we nog in de mount-delay zitten.
+  //   shifted — gebruikt voor het verticaal positioneren van de pill
+  //             (default vs. bovenop de variant-picker).
   const visible = mounted && !cartOpen
   const shifted = pickerVisible
 
@@ -274,74 +341,130 @@ export default function BrandDiscoveryWidget({
       ? SHIFT_UP_DESKTOP_PX
       : SHIFT_UP_MOBILE_PX
     : isDesktop
-      ? 16 // bottom-4
-      : 12 // bottom-3
+      ? DEFAULT_BOTTOM_DESKTOP_PX
+      : DEFAULT_BOTTOM_MOBILE_PX
+
+  const showBubble = bubbleVisible && visible && !modalOpen
+  const ariaLabel = isFresh ? t('ariaFresh') : t('aria')
 
   return (
     <>
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-label={t('aria')}
-        aria-haspopup="dialog"
-        aria-expanded={modalOpen}
-        tabIndex={visible ? 0 : -1}
-        onClick={handleOpen}
+      <div
+        // Wrapper is fixed en verzorgt de bottom-positie + transition.
+        // Pill en bubble zitten erin als positioned children, zodat de
+        // bubble altijd correct relatief aan de pill verschijnt — ook
+        // wanneer de pill omhoog schuift bovenop de variant-picker.
+        className="fixed left-3 md:left-4 z-30 transition-[bottom] duration-300 ease-out motion-reduce:transition-none print:hidden"
         style={{ bottom: `${bottomPx}px` }}
-        className={`group fixed left-3 md:left-4 z-30 flex items-center gap-3 bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] pl-1.5 pr-3.5 py-1.5 md:pl-2 md:pr-4 md:py-2 transition-[transform,opacity,bottom,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 print:hidden ${
-          visible
-            ? 'translate-y-0 opacity-100 pointer-events-auto hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.22)] motion-reduce:hover:translate-y-0'
-            : 'translate-y-3 opacity-0 pointer-events-none'
-        }`}
       >
-        {/* Thumbnail-kolom met crossfade-rotatie */}
-        <span
-          className="relative block flex-shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-black overflow-hidden bg-gray-100"
-          aria-hidden="true"
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label={ariaLabel}
+          aria-haspopup="dialog"
+          aria-expanded={modalOpen}
+          tabIndex={visible ? 0 : -1}
+          onClick={handleOpen}
+          onMouseEnter={handlePillMouseEnter}
+          data-visible={visible ? 'true' : 'false'}
+          className={`group relative flex items-center gap-3 bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] pl-1.5 pr-3.5 py-1.5 md:pl-2 md:pr-4 md:py-2 transition-[transform,opacity,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 ${
+            visible
+              ? 'translate-y-0 opacity-100 pointer-events-auto hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.22)] motion-reduce:hover:translate-y-0'
+              : 'translate-y-3 opacity-0 pointer-events-none'
+          }`}
         >
-          {rotationPosts.map((post, idx) => {
-            const src =
-              post.media_type === 'VIDEO' && post.thumbnail_url
-                ? post.thumbnail_url
-                : post.media_url
-            const active = idx === currentIdx
-            return (
-              <Image
-                key={post.id}
-                src={src}
-                alt=""
-                fill
-                sizes="56px"
-                unoptimized={!src.includes('supabase')}
-                priority
-                className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
-                  active ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-            )
-          })}
-          {/* Klein IG-icoon overlay rechtsonder, maakt de aard van de
-              content meteen duidelijk. */}
-          <span className="absolute bottom-0 right-0 bg-black text-white p-0.5 leading-none">
-            <Instagram size={10} aria-hidden="true" />
-          </span>
-        </span>
-
-        {/* Twee-regelige tekst */}
-        <span className="flex flex-col items-start leading-tight text-left min-w-0">
-          <span className="font-bold text-[11px] md:text-xs uppercase tracking-[0.12em] text-black whitespace-nowrap">
-            {t('headline')}
-          </span>
-          <span className="flex items-center gap-1 text-[11px] md:text-xs text-gray-700 mt-0.5 whitespace-nowrap">
-            <span>{t('subline')}</span>
-            <ArrowRight
-              size={12}
+          {/* Thumbnail-kolom met crossfade-rotatie + live pulse-dot. */}
+          <span
+            className="relative block flex-shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-black overflow-hidden bg-gray-100"
+            aria-hidden="true"
+          >
+            {rotationPosts.map((post, idx) => {
+              const src =
+                post.media_type === 'VIDEO' && post.thumbnail_url
+                  ? post.thumbnail_url
+                  : post.media_url
+              const active = idx === currentIdx
+              return (
+                <Image
+                  key={post.id}
+                  src={src}
+                  alt=""
+                  fill
+                  sizes="56px"
+                  unoptimized={!src.includes('supabase')}
+                  priority
+                  className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
+                    active ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              )
+            })}
+            {/* Klein IG-icoon overlay rechtsonder, maakt de aard van
+                de content meteen duidelijk. */}
+            <span className="absolute bottom-0 right-0 bg-black text-white p-0.5 leading-none">
+              <Instagram size={10} aria-hidden="true" />
+            </span>
+            {/* Live pulse-dot rechtsboven — altijd-aan, ademend groen
+                punt dat communiceert dat deze knop "leeft". Pauzeert
+                bij prefers-reduced-motion. */}
+            <span
               aria-hidden="true"
-              className="text-brand-primary transition-transform duration-200 motion-reduce:transition-none group-hover:translate-x-0.5"
+              className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-brand-primary shadow-[0_0_0_1px_rgba(0,0,0,0.6)] motion-safe:animate-brandPulse"
             />
           </span>
-        </span>
-      </button>
+
+          {/* Twee-regelige tekst */}
+          <span className="flex flex-col items-start leading-tight text-left min-w-0">
+            <span className="font-bold text-[11px] md:text-xs uppercase tracking-[0.12em] text-black whitespace-nowrap">
+              {t('headline')}
+            </span>
+            <span className="flex items-center gap-1 text-[11px] md:text-xs text-gray-700 mt-0.5 whitespace-nowrap">
+              <span>{t('subline')}</span>
+              <ArrowRight
+                size={12}
+                aria-hidden="true"
+                className="text-brand-primary transition-transform duration-200 motion-reduce:transition-none group-hover:translate-x-0.5"
+              />
+            </span>
+          </span>
+
+          {/* NIEUW-badge — sticht uit boven-rechts. Alleen wanneer er
+              echt een verse post is (server-bepaald), nooit cosmetisch
+              "permanent NIEUW". aria-hidden zodat het niet dubbel
+              voorgelezen wordt; de pill's aria-label vermeldt het al. */}
+          {isFresh && (
+            <span
+              aria-hidden="true"
+              className="absolute -top-2 -right-2 bg-brand-primary text-white text-[9px] font-bold uppercase tracking-[0.08em] border-2 border-black px-1.5 py-0.5 leading-none shadow-[0_2px_6px_rgba(0,0,0,0.18)]"
+            >
+              {t('freshLabel')}
+            </span>
+          )}
+        </button>
+
+        {/* Speech-bubble — verschijnt boven (mobile) of rechts
+            (desktop) van de pill bij eerste-scroll voorbij de hero.
+            Klikbaar (opent modal) maar uit de tab-order zodat we de
+            keyboard-flow niet vervuilen. */}
+        {showBubble && (
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={handleOpen}
+            className="group/bubble absolute left-0 bottom-full mb-3 md:mb-0 md:bottom-auto md:left-full md:top-1/2 md:-translate-y-1/2 md:ml-3 bg-white border-2 border-black px-3 py-2 shadow-[0_4px_16px_rgba(0,0,0,0.18)] text-[11px] md:text-xs font-bold uppercase tracking-[0.08em] text-black whitespace-nowrap motion-safe:animate-bubblePop origin-bottom md:origin-left cursor-pointer hover:bg-black hover:text-white transition-colors motion-reduce:transition-none"
+          >
+            <span className="flex items-center gap-1.5">
+              <span>{t('bubble')}</span>
+              <ArrowRight
+                size={12}
+                aria-hidden="true"
+                className="text-brand-primary group-hover/bubble:text-white transition-colors motion-reduce:transition-none"
+              />
+            </span>
+          </button>
+        )}
+      </div>
 
       {modalOpen && (
         <BrandDiscoveryModal

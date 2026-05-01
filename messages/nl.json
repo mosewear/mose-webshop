@@ -387,7 +387,10 @@
       "headline": "WIE ZIJN WIJ?",
       "subline": "Ontdek ons op Instagram",
       "aria": "Open MOSE merk-introductie",
-      "viewPost": "Bekijk post"
+      "ariaFresh": "Open MOSE merk-introductie. Nieuwe Instagram-post.",
+      "viewPost": "Bekijk post",
+      "freshLabel": "NIEUW",
+      "bubble": "Eerst even kennismaken?"
     },
     "brandModal": {
       "eyebrow": "INSTAGRAM",
