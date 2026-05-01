@@ -20,7 +20,7 @@ export default function CartPage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
-  const [returnDays, setReturnDays] = useState(14)
+  const [returnDays, setReturnDays] = useState(30)
   const [showMobileSummary, setShowMobileSummary] = useState(false)
   const [staffelSavings, setStaffelSavings] = useState(0)
   const [lineStaffelByVariant, setLineStaffelByVariant] = useState<Record<string, number>>({})

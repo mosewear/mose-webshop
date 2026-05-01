@@ -105,7 +105,7 @@ export default function CheckoutPage() {
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [shippingCost, setShippingCost] = useState(5.95)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
-  const [returnDays, setReturnDays] = useState(14)
+  const [returnDays, setReturnDays] = useState(30)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('shipping')
   const [pickupEligibility, setPickupEligibility] = useState<{
     loading: boolean

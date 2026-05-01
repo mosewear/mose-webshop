@@ -131,7 +131,7 @@ export async function GET() {
       checkoutUrl: `${siteUrl}/checkout?recover=${testOrderId}`,
       hoursSinceAbandoned: 2,
       freeShippingThreshold: 100,
-      returnDays: 14
+      returnDays: 30
     })
     results.push({ email: 'Abandoned Cart', success: result6.success })
 
@@ -148,7 +148,7 @@ export async function GET() {
         color: 'Zwart'
       },
       freeShippingThreshold: 100,
-      returnDays: 14,
+      returnDays: 30,
     })
     results.push({ email: 'Back In Stock', success: result7.success })
 

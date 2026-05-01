@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
   const [contactAddress, setContactAddress] = useState('Helper Brink 27a, 9722 EG Groningen')
   const [freeShipping, setFreeShipping] = useState('100.00')
-  const [returnDays, setReturnDays] = useState('14')
+  const [returnDays, setReturnDays] = useState('30')
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [currency, setCurrency] = useState('EUR')
   const [taxRate, setTaxRate] = useState('21.00')

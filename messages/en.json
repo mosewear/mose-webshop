@@ -440,7 +440,7 @@
     "trust": {
       "guarantee": "2 year warranty",
       "warranty": "2 year warranty",
-      "returns": "14 days return",
+      "returns": "30 days return",
       "freeShipping": "Free from €{amount}",
       "secure": "Secure Payment"
     },
@@ -616,7 +616,7 @@
     "trustAnchor": {
       "shippingBeforeCutoff": "Order before 5 PM today? At your door tomorrow with free shipping via DHL in NL and BE.",
       "shippingAfterCutoff": "Order today, at your door the day after tomorrow with free shipping via DHL in NL and BE.",
-      "returns": "Returns within 14 days. Full refund, no questions asked.",
+      "returns": "Returns within 30 days. Full refund, no questions asked.",
       "madeInWithSpec": "Made in Groningen. {spec}.",
       "madeInBare": "Made in Groningen. Premium cotton, regular fit.",
       "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card."
@@ -642,7 +642,7 @@
         },
         {
           "question": "What if the size doesn't fit?",
-          "answer": "No worries. Return or exchange within 14 days. Sign in to your account, register the return and we'll email you a return label."
+          "answer": "No worries. Return or exchange within 30 days. Sign in to your account, register the return and we'll email you a return label."
         },
         {
           "question": "Is this really made in Groningen?",

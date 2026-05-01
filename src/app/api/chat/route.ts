@@ -217,7 +217,7 @@ export async function POST(req: Request) {
     contextPrompt += `\n\nLIVE SETTINGS:`
     contextPrompt += `\n- Verzendkosten: EUR ${formatEur(Number(settings.shipping_cost || 0))}`
     contextPrompt += `\n- Gratis verzending vanaf: EUR ${formatEur(Number(settings.free_shipping_threshold || 0))}`
-    contextPrompt += `\n- Retourtermijn: ${Number(settings.return_days || 14)} dagen`
+    contextPrompt += `\n- Retourtermijn: ${Number(settings.return_days || 30)} dagen`
     contextPrompt += `\n- Retourkosten: EUR ${formatEur(5.95)} (alleen gratis bij fabricagefout / verkeerde levering)`
     contextPrompt += `\n- Pickup (Groningen): ${settings.pickup_enabled ? 'aan' : 'uit'} (max ${Number(settings.pickup_max_distance_km || 50)} km)`
     contextPrompt += `\n- Pickup locatie: ${settings.pickup_location_name || 'MOSE Groningen'} — ${settings.pickup_location_address || 'Groningen'}`

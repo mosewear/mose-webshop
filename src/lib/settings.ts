@@ -120,7 +120,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       currency: settings.currency || 'EUR',
       low_stock_threshold: parseInt(settings.low_stock_threshold) || 5,
       maintenance_mode: settings.maintenance_mode === 'true' || settings.maintenance_mode === true,
-      return_days: parseInt(settings.return_days) || 14,
+      return_days: parseInt(settings.return_days) || 30,
       returns_auto_approve:
         settings.returns_auto_approve === 'true' || settings.returns_auto_approve === true || settings.returns_auto_approve === 1,
       return_label_cost_excl_btw: parseFloat(settings.return_label_cost_excl_btw) || 6.50,
@@ -176,7 +176,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       currency: 'EUR',
       low_stock_threshold: 5,
       maintenance_mode: false,
-      return_days: 14,
+      return_days: 30,
       returns_auto_approve: true,
       return_label_cost_excl_btw: 6.50,
       return_label_cost_incl_btw: 7.87,

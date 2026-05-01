@@ -299,7 +299,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Maak altijd direct een Payment Intent aan voor het retourlabel
-    // zodat de klant direct kan betalen (zolang binnen 14 dagen)
+    // zodat de klant direct kan betalen (zolang binnen het retour-window
+    // dat in site_settings.return_days staat)
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
       const amount = Math.round(returnLabelCostInclBtw * 100)

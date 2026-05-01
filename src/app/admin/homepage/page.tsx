@@ -911,7 +911,7 @@ export default function HomepageSettingsPage() {
                             [activeLanguage === 'nl' ? 'story_stat2_label' : 'story_stat2_label_en']: e.target.value 
                           })}
                           className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                          placeholder={activeLanguage === 'nl' ? '14 Dagen' : '14 Days'}
+                          placeholder={activeLanguage === 'nl' ? '30 Dagen' : '30 Days'}
                         />
                         <label className="block text-sm font-bold mb-2 mt-2">
                           Stat 2 Sublabel {activeLanguage === 'nl' ? '(NL)' : '(EN - optioneel)'}
