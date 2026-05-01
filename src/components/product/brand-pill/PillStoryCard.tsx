@@ -84,9 +84,15 @@ export default function PillStoryCard({
         <span className="absolute bottom-1 left-1 bg-black text-white p-1 leading-none">
           <Instagram size={11} aria-hidden="true" />
         </span>
+        {/* Pulse-dot — bij isFresh schuiven we 'm omlaag zodat de
+            NIEUW-badge (zit op -top-2 -right-2 van de outer button met
+            ~6px shadow) de dot niet visueel afdekt. Zonder badge mag
+            'ie netjes in de corner staan. */}
         <span
           aria-hidden="true"
-          className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-primary shadow-[0_0_0_1px_rgba(0,0,0,0.6)] motion-safe:animate-brandPulse"
+          className={`absolute right-1.5 w-2 h-2 rounded-full bg-brand-primary shadow-[0_0_0_1px_rgba(0,0,0,0.6)] motion-safe:animate-brandPulse ${
+            isFresh ? 'top-5' : 'top-1.5'
+          }`}
         />
       </span>
 
