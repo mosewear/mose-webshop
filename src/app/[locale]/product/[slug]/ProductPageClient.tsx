@@ -52,6 +52,9 @@ interface Product {
   gift_card_default_validity_months?: number | null
   // Pasvorm-referentie: helpt klanten hun eigen maat kiezen op basis
   // van het model in de productfoto's. Alle velden zijn optioneel.
+  // model_name wordt gebruikt voor een persoonlijke overlay-zin
+  // ("TYLER IS …"); zonder naam valt 'ie terug op "MODEL IS …".
+  model_name?: string | null
   model_height?: string | null
   model_build?: string | null
   model_build_en?: string | null
@@ -1052,9 +1055,28 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </div>
                   )}
 
-                  {/* Dots Indicator - Mobile only, only if multiple images */}
+                  {/* Pasvorm-referentie tag — linksonder op het beeld.
+                      Vervangt de oude bulk-card onder de maatkiezer.
+                      Renders alleen als zowel lengte als gedragen maat
+                      ingevuld zijn in de admin (dus geen lege tag). */}
+                  <ModelFitInfo
+                    name={product.model_name}
+                    height={product.model_height}
+                    sizeWorn={product.model_size_worn}
+                  />
+
+                  {/* Dots Indicator - Mobile only, only if multiple images.
+                      Worden hoger geplaatst (bottom-12) als de pasvorm-
+                      tag actief is, zodat de twee elementen niet over
+                      elkaar heen vallen op smalle schermen. */}
                   {displayImages.length > 1 && (
-                    <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none z-10">
+                    <div
+                      className={`absolute ${
+                        product.model_height?.trim() && product.model_size_worn?.trim()
+                          ? 'bottom-12'
+                          : 'bottom-3'
+                      } left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none z-10`}
+                    >
                       {displayImages.map((_, index) => (
                         <div
                           key={index}
@@ -1448,26 +1470,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     })}
                   </div>
 
-                  {/* Pasvorm-referentie. Renders alleen als minstens één
-                      van de model-velden is ingevuld in de admin. Direct
-                      onder de maatkiezer zodat de klant z'n eigen maat
-                      kan referencen aan het model. */}
-                  {(product.model_height ||
-                    product.model_build ||
-                    product.model_build_en ||
-                    product.model_size_worn) && (
-                    <div className="mt-3 md:mt-4">
-                      <ModelFitInfo
-                        height={product.model_height}
-                        build={
-                          locale === 'en' && product.model_build_en
-                            ? product.model_build_en
-                            : product.model_build
-                        }
-                        sizeWorn={product.model_size_worn}
-                      />
-                    </div>
-                  )}
+                  {/* Pasvorm-referentie verhuisd naar een compacte
+                      overlay-tag linksonder op de hoofd-product-
+                      afbeelding (zie gallery hierboven). Geeft hetzelfde
+                      signaal aan de klant zonder verticale ruimte op te
+                      eten. Zie ModelFitInfo voor de render-regels. */}
                 </div>
               )}
 

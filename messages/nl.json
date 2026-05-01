@@ -381,7 +381,9 @@
       "label": "Pasvorm-referentie",
       "height": "Lengte",
       "build": "Bouw",
-      "wears": "Draagt"
+      "wears": "Draagt",
+      "genericName": "Model",
+      "overlay": "{name} is {height} en draagt maat {size}"
     },
     "brandWidget": {
       "headline": "WIE ZIJN WIJ?",

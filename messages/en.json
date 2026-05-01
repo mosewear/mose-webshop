@@ -381,7 +381,9 @@
       "label": "Fit reference",
       "height": "Height",
       "build": "Build",
-      "wears": "Wears"
+      "wears": "Wears",
+      "genericName": "Model",
+      "overlay": "{name} is {height} and wears size {size}"
     },
     "brandWidget": {
       "headline": "WHO ARE WE?",

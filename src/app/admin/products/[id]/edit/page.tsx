@@ -27,6 +27,7 @@ interface Product {
   meta_description: string | null
   // Pasvorm-referentie. Optionele velden die op de PDP verschijnen
   // onder de maatkiezer wanneer ingevuld.
+  model_name: string | null
   model_height: string | null
   model_build: string | null
   model_build_en: string | null
@@ -67,6 +68,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     category_id: '',
     meta_title: '',
     meta_description: '',
+    model_name: '',
     model_height: '',
     model_build: '',
     model_build_en: '',
@@ -138,6 +140,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           category_id: product.category_id || '',
           meta_title: product.meta_title || '',
           meta_description: product.meta_description || '',
+          model_name: product.model_name || '',
           model_height: product.model_height || '',
           model_build: product.model_build || '',
           model_build_en: product.model_build_en || '',
@@ -274,6 +277,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           meta_description: formData.meta_description || null,
           // Pasvorm-referentie velden. Lege strings normaliseren naar
           // null zodat de PDP geen halflege strip rendert.
+          model_name: formData.model_name.trim() || null,
           model_height: formData.model_height.trim() || null,
           model_build: formData.model_build.trim() || null,
           model_build_en: formData.model_build_en.trim() || null,
@@ -677,10 +681,43 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 Modelinfo (Pasvorm-referentie)
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Optioneel. Helpt klanten hun maat kiezen op basis van
-                het model in de productfoto&apos;s. Laat velden leeg om
-                ze te verbergen op de productpagina.
+                Optioneel. Verschijnt als compacte tag linksonder op de
+                hoofd-productafbeelding (bijv.{' '}
+                <span className="font-mono bg-gray-100 px-1.5 py-0.5">
+                  TYLER IS 1,88 M EN DRAAGT MAAT XL
+                </span>
+                ). Vul minimaal lengte + maat in om de tag te activeren;
+                naam is optioneel (zonder naam zien klanten{' '}
+                <span className="font-mono bg-gray-100 px-1.5 py-0.5">
+                  MODEL IS …
+                </span>
+                ). Bouw wordt op dit moment niet op de tag getoond, maar
+                is wel opgeslagen voor toekomstig gebruik.
               </p>
+
+              {/* Naam: optioneel, voornaam van het model. Wordt
+                  geüppercased op de tag (TYLER), dus 1 woord werkt het
+                  best. Vrije tekst zodat ook initialen kunnen. */}
+              <div className="mb-4">
+                <label
+                  htmlFor="model_name"
+                  className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2"
+                >
+                  Naam van het model{' '}
+                  <span className="text-gray-400 font-normal">(optioneel)</span>
+                </label>
+                <input
+                  type="text"
+                  id="model_name"
+                  maxLength={24}
+                  value={formData.model_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, model_name: e.target.value })
+                  }
+                  placeholder="Bijv. Tyler"
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+                />
+              </div>
 
               {/* Lengte: universeel (geen vertaling), volledige breedte */}
               <div className="mb-4">
