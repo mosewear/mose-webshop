@@ -54,6 +54,7 @@ import {
 import { useCartDrawer } from '@/store/cartDrawer'
 import { Link as LocaleLink } from '@/i18n/routing'
 import type { InstagramPost } from '@/lib/instagram/types'
+import { getPillComponent, type PillDesignId } from './brand-pill'
 
 export interface BrandDiscoveryAbout {
   hero_image_url: string
@@ -78,6 +79,16 @@ interface BrandDiscoveryWidgetProps {
    * "NIEUW"-badge en een aria-label upgrade voor screen readers.
    */
   isFresh: boolean
+  /**
+   * Welk visueel design de trigger-pill rendert. Default 'classic'.
+   * Door de admin instelbaar via /admin/settings.
+   */
+  design: PillDesignId
+  /**
+   * IG-gebruikersnaam (zonder @), gebruikt door de Avatar-design
+   * voor "@username" weergave. Default valt terug op "mosewearcom".
+   */
+  username: string
 }
 
 const ROTATION_INTERVAL_MS = 7000
@@ -136,6 +147,8 @@ export default function BrandDiscoveryWidget({
   igUrl,
   pickerEnabled,
   isFresh,
+  design,
+  username,
 }: BrandDiscoveryWidgetProps) {
   const t = useTranslations('product.brandWidget')
   const tModal = useTranslations('product.brandModal')
@@ -347,6 +360,10 @@ export default function BrandDiscoveryWidget({
   const showBubble = bubbleVisible && visible && !modalOpen
   const ariaLabel = isFresh ? t('ariaFresh') : t('aria')
 
+  // Selecteer het juiste pill-component op basis van de admin-keuze.
+  // Onbekende waarden vallen via getPillComponent terug op Classic.
+  const PillComponent = getPillComponent(design)
+
   return (
     <>
       <div
@@ -357,90 +374,23 @@ export default function BrandDiscoveryWidget({
         className="fixed left-3 md:left-4 z-30 transition-[bottom] duration-300 ease-out motion-reduce:transition-none print:hidden"
         style={{ bottom: `${bottomPx}px` }}
       >
-        <button
-          ref={triggerRef}
-          type="button"
-          aria-label={ariaLabel}
-          aria-haspopup="dialog"
-          aria-expanded={modalOpen}
-          tabIndex={visible ? 0 : -1}
+        <PillComponent
+          posts={rotationPosts}
+          currentIdx={currentIdx}
+          isFresh={isFresh}
+          headline={t('headline')}
+          subline={t('subline')}
+          sublineShort={t('sublineShort')}
+          tagline={t('tagline')}
+          freshLabel={t('freshLabel')}
+          username={username}
+          ariaLabel={ariaLabel}
+          ariaExpanded={modalOpen}
           onClick={handleOpen}
           onMouseEnter={handlePillMouseEnter}
-          data-visible={visible ? 'true' : 'false'}
-          className={`group relative flex items-center gap-3 bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] pl-1.5 pr-3.5 py-1.5 md:pl-2 md:pr-4 md:py-2 transition-[transform,opacity,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 ${
-            visible
-              ? 'translate-y-0 opacity-100 pointer-events-auto hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.22)] motion-reduce:hover:translate-y-0'
-              : 'translate-y-3 opacity-0 pointer-events-none'
-          }`}
-        >
-          {/* Thumbnail-kolom met crossfade-rotatie + live pulse-dot. */}
-          <span
-            className="relative block flex-shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-black overflow-hidden bg-gray-100"
-            aria-hidden="true"
-          >
-            {rotationPosts.map((post, idx) => {
-              const src =
-                post.media_type === 'VIDEO' && post.thumbnail_url
-                  ? post.thumbnail_url
-                  : post.media_url
-              const active = idx === currentIdx
-              return (
-                <Image
-                  key={post.id}
-                  src={src}
-                  alt=""
-                  fill
-                  sizes="56px"
-                  unoptimized={!src.includes('supabase')}
-                  priority
-                  className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
-                    active ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-              )
-            })}
-            {/* Klein IG-icoon overlay rechtsonder, maakt de aard van
-                de content meteen duidelijk. */}
-            <span className="absolute bottom-0 right-0 bg-black text-white p-0.5 leading-none">
-              <Instagram size={10} aria-hidden="true" />
-            </span>
-            {/* Live pulse-dot rechtsboven — altijd-aan, ademend groen
-                punt dat communiceert dat deze knop "leeft". Pauzeert
-                bij prefers-reduced-motion. */}
-            <span
-              aria-hidden="true"
-              className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-brand-primary shadow-[0_0_0_1px_rgba(0,0,0,0.6)] motion-safe:animate-brandPulse"
-            />
-          </span>
-
-          {/* Twee-regelige tekst */}
-          <span className="flex flex-col items-start leading-tight text-left min-w-0">
-            <span className="font-bold text-[11px] md:text-xs uppercase tracking-[0.12em] text-black whitespace-nowrap">
-              {t('headline')}
-            </span>
-            <span className="flex items-center gap-1 text-[11px] md:text-xs text-gray-700 mt-0.5 whitespace-nowrap">
-              <span>{t('subline')}</span>
-              <ArrowRight
-                size={12}
-                aria-hidden="true"
-                className="text-brand-primary transition-transform duration-200 motion-reduce:transition-none group-hover:translate-x-0.5"
-              />
-            </span>
-          </span>
-
-          {/* NIEUW-badge — sticht uit boven-rechts. Alleen wanneer er
-              echt een verse post is (server-bepaald), nooit cosmetisch
-              "permanent NIEUW". aria-hidden zodat het niet dubbel
-              voorgelezen wordt; de pill's aria-label vermeldt het al. */}
-          {isFresh && (
-            <span
-              aria-hidden="true"
-              className="absolute -top-2 -right-2 bg-brand-primary text-white text-[9px] font-bold uppercase tracking-[0.08em] border-2 border-black px-1.5 py-0.5 leading-none shadow-[0_2px_6px_rgba(0,0,0,0.18)]"
-            >
-              {t('freshLabel')}
-            </span>
-          )}
-        </button>
+          triggerRef={triggerRef}
+          visible={visible}
+        />
 
         {/* Speech-bubble — verschijnt boven (mobile) of rechts
             (desktop) van de pill bij eerste-scroll voorbij de hero.

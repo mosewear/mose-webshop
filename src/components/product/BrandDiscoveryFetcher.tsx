@@ -81,6 +81,8 @@ export default async function BrandDiscoveryFetcher({
       igUrl={igUrl}
       pickerEnabled={pickerEnabled}
       isFresh={isFresh}
+      design={settings.pdp_brand_widget_design ?? 'classic'}
+      username={username}
     />
   )
 }

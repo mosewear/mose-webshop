@@ -386,6 +386,8 @@
     "brandWidget": {
       "headline": "WIE ZIJN WIJ?",
       "subline": "Ontdek ons op Instagram",
+      "sublineShort": "Op Instagram",
+      "tagline": "ONTMOET ONS",
       "aria": "Open MOSE merk-introductie",
       "ariaFresh": "Open MOSE merk-introductie. Nieuwe Instagram-post.",
       "viewPost": "Bekijk post",

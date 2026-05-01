@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { clearSettingsCache } from '@/lib/settings'
 import MediaPicker from '@/components/admin/MediaPicker'
+import BrandPillDesignSelector from '@/components/admin/BrandPillDesignSelector'
+import type { PillDesignId } from '@/components/product/brand-pill'
+import { PILL_DESIGN_IDS } from '@/components/product/brand-pill'
 
 interface SiteSetting {
   key: string
@@ -57,6 +60,9 @@ export default function SettingsPage() {
   // thumbnail). Self-hides als er geen IG-posts zijn, dus deze toggle is
   // alleen om de widget actief uit te zetten.
   const [pdpBrandWidgetEnabled, setPdpBrandWidgetEnabled] = useState(true)
+  // Welk visueel design de pill rendert (5 opties). Default 'classic'.
+  const [pdpBrandWidgetDesign, setPdpBrandWidgetDesign] =
+    useState<PillDesignId>('classic')
 
   // AI Chat
   const [aiChatEnabled, setAiChatEnabled] = useState(true)
@@ -197,6 +203,17 @@ export default function SettingsPage() {
                 !(setting.value === 'false' || setting.value === false)
               )
               break
+            case 'pdp_brand_widget_design': {
+              // Onbekende of corrupte waarden vallen terug naar 'classic'.
+              const candidate = String(setting.value)
+              const valid = (PILL_DESIGN_IDS as readonly string[]).includes(
+                candidate
+              )
+              setPdpBrandWidgetDesign(
+                valid ? (candidate as PillDesignId) : 'classic'
+              )
+              break
+            }
           }
         })
       }
@@ -248,6 +265,7 @@ export default function SettingsPage() {
         { key: 'pickup_longitude', value: pickupLongitude },
         { key: 'pdp_sticky_picker_enabled', value: pdpStickyPickerEnabled },
         { key: 'pdp_brand_widget_enabled', value: pdpBrandWidgetEnabled },
+        { key: 'pdp_brand_widget_design', value: pdpBrandWidgetDesign },
       ]
 
       for (const setting of settingsToSave) {
@@ -843,6 +861,20 @@ export default function SettingsPage() {
                   die het merk nog niet kennen om vertrouwen op te bouwen
                   voordat ze kopen.
                 </p>
+              </div>
+
+              {/* Pill design selector — alleen relevant wanneer de
+                  widget aan staat. We disablen 'm visueel als de
+                  widget uit staat zodat het verband duidelijk is. */}
+              <div className="mt-4 sm:mt-5">
+                <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                  Pill design
+                </p>
+                <BrandPillDesignSelector
+                  value={pdpBrandWidgetDesign}
+                  onChange={setPdpBrandWidgetDesign}
+                  disabled={!pdpBrandWidgetEnabled}
+                />
               </div>
             </div>
           </div>

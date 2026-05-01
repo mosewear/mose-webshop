@@ -386,6 +386,8 @@
     "brandWidget": {
       "headline": "WHO ARE WE?",
       "subline": "Find us on Instagram",
+      "sublineShort": "On Instagram",
+      "tagline": "MEET US",
       "aria": "Open MOSE brand introduction",
       "ariaFresh": "Open MOSE brand introduction. New Instagram post.",
       "viewPost": "View post",

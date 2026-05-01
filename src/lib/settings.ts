@@ -39,7 +39,32 @@ interface SiteSettings {
   // met roterende IG-thumbnail). Default true. Self-hides als er geen
   // Instagram-posts beschikbaar zijn, los van deze admin-toggle.
   pdp_brand_widget_enabled?: boolean
+  // Welk visueel design de brand-discovery pill gebruikt. Default
+  // 'classic'. Onbekende waarden vallen terug naar 'classic'.
+  pdp_brand_widget_design?: BrandWidgetDesign
   updated_at?: string
+}
+
+export type BrandWidgetDesign =
+  | 'classic'
+  | 'story-card'
+  | 'polaroid'
+  | 'avatar'
+  | 'minimal'
+
+const VALID_BRAND_DESIGNS: ReadonlySet<BrandWidgetDesign> = new Set([
+  'classic',
+  'story-card',
+  'polaroid',
+  'avatar',
+  'minimal',
+])
+
+export function normaliseBrandDesign(value: unknown): BrandWidgetDesign {
+  if (typeof value === 'string' && VALID_BRAND_DESIGNS.has(value as BrandWidgetDesign)) {
+    return value as BrandWidgetDesign
+  }
+  return 'classic'
 }
 
 let cachedSettings: SiteSettings | null = null
@@ -124,6 +149,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
               settings.pdp_brand_widget_enabled === 'false' ||
               settings.pdp_brand_widget_enabled === false
             ),
+      pdp_brand_widget_design: normaliseBrandDesign(
+        settings.pdp_brand_widget_design
+      ),
       updated_at: latestUpdate,
     }
 
@@ -160,6 +188,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       pickup_longitude: 6.5665,
       pdp_sticky_picker_enabled: true,
       pdp_brand_widget_enabled: true,
+      pdp_brand_widget_design: 'classic',
       updated_at: undefined,
     }
   }
