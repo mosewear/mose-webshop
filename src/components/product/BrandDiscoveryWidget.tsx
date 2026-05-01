@@ -58,6 +58,12 @@ interface BrandDiscoveryWidgetProps {
   posts: InstagramPost[]
   about: BrandDiscoveryAbout
   igUrl: string
+  /**
+   * Of de StickyVariantPicker via de admin AAN staat. Wanneer `false`
+   * is er geen picker om bovenop te zitten en moet de pill nooit
+   * omhoog schuiven, ook al is de sentinel uit beeld.
+   */
+  pickerEnabled: boolean
 }
 
 const ROTATION_INTERVAL_MS = 7000
@@ -110,6 +116,7 @@ export default function BrandDiscoveryWidget({
   posts,
   about,
   igUrl,
+  pickerEnabled,
 }: BrandDiscoveryWidgetProps) {
   const t = useTranslations('product.brandWidget')
   const tModal = useTranslations('product.brandModal')
@@ -203,7 +210,11 @@ export default function BrandDiscoveryWidget({
     return () => observer?.disconnect()
   }, [])
 
-  const pickerVisible = isDesktop ? !mainAtcInView : !sentinelInView
+  // De picker is alleen "in de weg" wanneer hij OOK door de admin is
+  // aangezet. Anders rendert StickyVariantPicker null en hoeft de pill
+  // dus niet omhoog te schuiven, zelfs als de sentinel uit beeld is.
+  const pickerVisible =
+    pickerEnabled && (isDesktop ? !mainAtcInView : !sentinelInView)
 
   // Rotatie van de thumbnail. Pauzeert wanneer modal open of bij
   // reduced-motion zodat we niet onnodig animeren.

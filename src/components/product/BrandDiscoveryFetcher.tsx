@@ -55,11 +55,18 @@ export default async function BrandDiscoveryFetcher({
   const igUrl =
     igData.settings?.cta_url || `https://www.instagram.com/${username}`
 
+  // Geef ook de admin-toggle voor de sticky variant-picker mee. De
+  // widget mag namelijk alleen omhoog schuiven wanneer de picker
+  // daadwerkelijk gerenderd wordt — niet wanneer 'ie via admin is
+  // uitgezet (anders zou de pill omhoog scrollen voor "lucht").
+  const pickerEnabled = settings.pdp_sticky_picker_enabled !== false
+
   return (
     <BrandDiscoveryWidget
       posts={igData.posts}
       about={aboutSubset}
       igUrl={igUrl}
+      pickerEnabled={pickerEnabled}
     />
   )
 }
