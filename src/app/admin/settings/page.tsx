@@ -283,8 +283,26 @@ export default function SettingsPage() {
         if (error) throw error
       }
 
+      // Server-side cache + ISR bust zodat changes (bv. brand-pill
+      // design) direct op alle PDP's en homepage zichtbaar zijn,
+      // niet pas na de 1-uur ISR-revalidate. clearSettingsCache()
+      // hier is de browser-context (no-op voor SSR) — de echte
+      // server-side cache wordt door het endpoint zelf gebust.
+      try {
+        const res = await fetch('/api/admin/settings/revalidate', {
+          method: 'POST',
+        })
+        if (!res.ok) {
+          console.warn('[settings] Revalidate endpoint returned non-OK:', res.status)
+        }
+      } catch (revalidateErr) {
+        // Niet blokkeren — de DB is al opgeslagen. Worst case TTL
+        // (60s in-mem) of 1 uur ISR vangt het alsnog op.
+        console.warn('[settings] Revalidate fetch failed:', revalidateErr)
+      }
+
       alert('✅ Instellingen opgeslagen!')
-      clearSettingsCache() // Clear cache so new settings are loaded
+      clearSettingsCache() // Browser-context cache (admin-zelf)
       fetchSettings()
     } catch (err: any) {
       setError(err.message)

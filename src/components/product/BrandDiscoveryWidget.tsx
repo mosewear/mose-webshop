@@ -33,11 +33,18 @@
  *
  * Engagement-collapse:
  *   Zodra de gebruiker de modal voor het eerst opent in deze sessie
- *   (`engaged` flag in sessionStorage), schakelt de pill voor de rest
- *   van de sessie naar PillMini — een 44/48px IG-tile. De pill blijft
- *   altijd in beeld én klikbaar (heropent de modal), maar claimt geen
- *   aandacht meer: bewustzijn is bereikt, dus rust mag. Persistent
- *   over PDP-navigatie binnen dezelfde tab.
+ *   (`engaged` flag in sessionStorage = het toen-actieve design),
+ *   schakelt de pill voor de rest van de sessie naar PillMini — een
+ *   44/48px IG-tile. De pill blijft altijd in beeld én klikbaar
+ *   (heropent de modal), maar claimt geen aandacht meer: bewustzijn
+ *   is bereikt, dus rust mag. Persistent over PDP-navigatie binnen
+ *   dezelfde tab.
+ *
+ *   Design-aware reset: wanneer de admin het pill-design aanpast
+ *   matcht de opgeslagen design-string niet meer met het huidige.
+ *   De engaged-status valt automatisch terug op false zodat de
+ *   bezoeker het nieuwe ontwerp ECHT te zien krijgt — pas wanneer
+ *   ze ook met de nieuwe look engagen, schakelt de pill weer mini.
  */
 
 import {
@@ -160,13 +167,26 @@ function useMediaQuery(query: string): boolean {
 }
 
 /**
- * useEngagedState — leest "heeft user de modal al geopend deze sessie"
- * uit sessionStorage en publiceert via een custom event zodat alle
- * widget-instances binnen dezelfde page direct mee-updaten. Zelfde
- * SSR-veilige useSyncExternalStore-pattern als useMediaQuery zodat
- * we geen setState-in-effect anti-pattern krijgen.
+ * useEngagedState — design-aware engagement-tracker.
+ *
+ * Slaat de design-ID op die actief was op het moment dat de gebruiker
+ * de modal voor het eerst opende (i.p.v. een dom "1"). Engaged is
+ * dan true ALLEEN wanneer het huidige (server-bepaalde) design
+ * exact matcht met de opgeslagen waarde.
+ *
+ * Reden: als de admin het pill-design aanpast, moet die nieuwe design
+ * weer als "verse discovery surface" gepresenteerd worden — anders
+ * blijft een eerder geëngageerde sessie altijd op PillMini hangen en
+ * krijgt de bezoeker het nieuwe ontwerp nooit te zien. Bij design-
+ * mismatch valt engaged terug op false en rendert de full pill weer
+ * tot de gebruiker opnieuw engaget met de nieuwe look.
+ *
+ * SSR-veilig via useSyncExternalStore en cross-instance sync via
+ * een custom 'mose:brand-engaged' event.
  */
-function useEngagedState(): [boolean, () => void] {
+function useEngagedState(
+  currentDesign: PillDesignId
+): [boolean, () => void] {
   const subscribe = useCallback((onChange: () => void) => {
     if (typeof window === 'undefined') return () => undefined
     window.addEventListener(ENGAGED_EVENT, onChange)
@@ -179,29 +199,33 @@ function useEngagedState(): [boolean, () => void] {
     }
   }, [])
   const getSnapshot = useCallback(() => {
-    if (typeof window === 'undefined') return false
+    if (typeof window === 'undefined') return ''
     try {
-      return window.sessionStorage.getItem(ENGAGED_SESSION_KEY) === '1'
+      return window.sessionStorage.getItem(ENGAGED_SESSION_KEY) ?? ''
     } catch {
-      return false
+      return ''
     }
   }, [])
-  const getServerSnapshot = useCallback(() => false, [])
-  const engaged = useSyncExternalStore(
+  const getServerSnapshot = useCallback(() => '', [])
+  const storedDesign = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
   )
+  // Engaged alleen wanneer het opgeslagen design EXACT overeenkomt
+  // met het huidige design. Lege string of andere design ⇒ niet engaged
+  // ⇒ full pill rendert opnieuw.
+  const engaged = storedDesign !== '' && storedDesign === currentDesign
   const setEngaged = useCallback(() => {
     if (typeof window === 'undefined') return
     try {
-      window.sessionStorage.setItem(ENGAGED_SESSION_KEY, '1')
+      window.sessionStorage.setItem(ENGAGED_SESSION_KEY, currentDesign)
     } catch {
       // Private mode: prima, dan blijft engaged binnen deze widget
       // alleen via event-broadcast levend (zonder persistentie).
     }
     window.dispatchEvent(new Event(ENGAGED_EVENT))
-  }, [])
+  }, [currentDesign])
   return [engaged, setEngaged]
 }
 
@@ -231,10 +255,11 @@ export default function BrandDiscoveryWidget({
   const [currentIdx, setCurrentIdx] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [bubbleVisible, setBubbleVisible] = useState(false)
-  // Engaged = gebruiker heeft de modal al geopend deze sessie. Dan
-  // schakelt de pill naar PillMini (kleine IG-tile) zodat we niet
-  // langer aandacht claimen.
-  const [engaged, setEngaged] = useEngagedState()
+  // Engaged = gebruiker heeft de modal al geopend deze sessie ÉN het
+  // toen-actieve design is nog steeds het huidige. Bij admin design-
+  // change resetting we automatisch naar non-engaged zodat het nieuwe
+  // ontwerp ook ECHT door de bezoeker gezien wordt.
+  const [engaged, setEngaged] = useEngagedState(design)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   // Onthoud of we de bubble in deze widget-instance al getriggerd
   // hebben, los van sessionStorage — voorkomt dubbele triggers binnen
