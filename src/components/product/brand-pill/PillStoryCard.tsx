@@ -40,7 +40,7 @@ export default function PillStoryCard({
       onClick={preview ? undefined : onClick}
       onMouseEnter={preview ? undefined : onMouseEnter}
       data-visible={visible ? 'true' : 'false'}
-      className={`group relative block w-[110px] md:w-[130px] bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] overflow-hidden text-left transition-[transform,opacity,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 ${
+      className={`group relative block w-[110px] md:w-[130px] bg-white border-2 border-black shadow-[0_4px_20px_rgba(0,0,0,0.18)] text-left transition-[transform,opacity,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 ${
         preview
           ? 'pointer-events-none'
           : visible
