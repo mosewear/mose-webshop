@@ -106,12 +106,24 @@ export default async function AboutPage({
             <h2 className="text-3xl md:text-4xl font-display mb-4">
               {about.story_title}
             </h2>
-            <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-4">
-              {about.story_paragraph1}
-            </p>
-            <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-              {about.story_paragraph2}
-            </p>
+            {/* Splitst zowel paragraph1 als paragraph2 op een lege regel
+                (blank-line, `\n\n`) zodat editors in /admin/about meerdere
+                alinea's kunnen typen binnen één veld zonder dat ze als
+                één onleesbare lap tekst tegen elkaar geplakt worden. */}
+            {[about.story_paragraph1, about.story_paragraph2]
+              .map((chunk) => chunk?.trim() ?? '')
+              .filter(Boolean)
+              .flatMap((chunk) => chunk.split(/\n\s*\n+/))
+              .map((para, idx, arr) => (
+                <p
+                  key={idx}
+                  className={`text-base md:text-lg text-gray-700 leading-relaxed ${
+                    idx < arr.length - 1 ? 'mb-4' : ''
+                  }`}
+                >
+                  {para.trim()}
+                </p>
+              ))}
           </section>
 
           <section className="bg-brand-primary/10 border-2 border-brand-primary p-6 md:p-8">

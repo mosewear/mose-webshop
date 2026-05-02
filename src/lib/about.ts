@@ -77,9 +77,9 @@ function fallback(locale: Locale): AboutSettings {
       hero_subtitle: 'No nonsense. Pure character.',
       story_title: 'OUR STORY',
       story_paragraph1:
-        "MOSE was born from frustration. Frustration about fast fashion, throwaway clothing, and brands that make big promises but don't deliver. We believe clothing should simply be good. Period.",
+        "We're Irma and Rick, the founders of MOSE.\n\nWe live with our cats Bob and Marley and our doggo Guus in Groningen, in Helpman. As of September we're even married. Wow, serious stuff.\n\n\"Why MOSE?\" Our late cat was named Mosie, we called her Moos. This is our tribute to her. \uD83D\uDC31",
       story_paragraph2:
-        "That's why we create premium basics built to last. Clothing without compromises, without nonsense. Rugged, modern, and full of character. Built to stay.",
+        "We started MOSE because fast fashion irritates us. We kept buying expensive t-shirts that were ready for the bin after a few washes. So we make clothing that lasts. Sustainable, honest and local. Even after countless washes.\n\nLocal? Yes. Just made in the atelier in Groningen.",
       local_title: 'LOCALLY MADE IN GRONINGEN',
       local_text:
         "All our products are locally made in Groningen. Not because it's trendy, but because we want to know exactly where our clothing comes from and how it's made. Honest, transparent, and with respect for everyone involved in the process.",
@@ -119,9 +119,9 @@ function fallback(locale: Locale): AboutSettings {
     hero_subtitle: 'Geen poespas. Wel karakter.',
     story_title: 'ONS VERHAAL',
     story_paragraph1:
-      'MOSE is geboren uit frustratie. Frustratie over fast fashion, over wegwerpkleding, over merken die grote beloftes maken maar niet nakomen. Wij geloven dat kleding gewoon goed moet zijn. Punt.',
+      'Wij zijn Irma en Rick, de oprichters van MOSE.\n\nWe wonen met onze katten Bob en Marley en onze daggoe Guus in Groningen, in Helpman. Sinds september zijn we zelfs getrouwd. Wow, serieuze shit.\n\n\u201CWaarom MOSE?\u201D Onze overleden poes heette Mosie, we noemden haar Moos. Dit is ons eerbetoon. \uD83D\uDC31',
     story_paragraph2:
-      'Daarom maken we premium basics die lang meegaan. Kleding zonder concessies, zonder poespas. Stoer, modern, en met karakter. Gebouwd om te blijven.',
+      'We zijn MOSE gestart omdat fast fashion ons irriteert. We kochten vaak dure t-shirts die na een paar keer wassen klaar waren voor de prullenbak. Daarom maken we kleding die blijft. Duurzaam, eerlijk en lokaal. Ook na tig keer wassen.\n\nLokaal? Ja. Gewoon gemaakt in het atelier in Groningen.',
     local_title: 'LOKAAL GEMAAKT IN GRONINGEN',
     local_text:
       'Al onze producten worden lokaal gemaakt in Groningen. Niet omdat het hip is, maar omdat we precies willen weten waar onze kleding vandaan komt en hoe het gemaakt wordt. Eerlijk, transparant, en met respect voor iedereen die eraan werkt.',

@@ -138,8 +138,13 @@ function localizedCaption(post: InstagramPost, locale: string): string | null {
 
 function truncate(input: string, max: number): string {
   if (!input) return ''
-  if (input.length <= max) return input
-  return `${input.slice(0, max).trimEnd()}…`
+  // Editors mogen in /admin/about meerdere alinea's typen via lege
+  // regels (`\n\n`). De brand-modal preview is één compact `<p>`,
+  // dus we platten newlines hier naar enkele spaties zodat er geen
+  // rauwe linebreaks of dubbele whitespace door de zin lopen.
+  const flattened = input.replace(/\s*\n+\s*/g, ' ').trim()
+  if (flattened.length <= max) return flattened
+  return `${flattened.slice(0, max).trimEnd()}…`
 }
 
 /**
