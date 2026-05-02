@@ -275,6 +275,44 @@ const ASSETS: Asset[] = [
     storageKey: 'photoshoot-2026/tee/beige/detail',
     variants: ['desktop'],
   },
+  // ---------------- Batch 2 (mei 2026) — extra editorial + variant shots ---
+  // Dit blok werd toegevoegd nadat een tweede dropdown van 24 foto's binnen
+  // kwam. De source filenames zitten ook in `photoshoot-2026/`. Storage paths
+  // wijken iets af van batch 1 (suffix in de key) zodat we niet over de
+  // bestaande hero/detail-bestanden heen schrijven.
+  // Hoodie · Bruin
+  { tag: 'product.hoodie.bruin.hero-hood-up-smile', source: 'hero_hoodie_brown_graffiti-hood-up-smile_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/bruin/hero-hood-up-smile', variants: ['desktop'] },
+  { tag: 'product.hoodie.bruin.hero-concrete', source: 'hero_hoodie_brown_concrete-hood-up_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/bruin/hero-concrete', variants: ['desktop'] },
+  { tag: 'product.hoodie.bruin.hero-pink-hood-pull', source: 'hero_hoodie_brown_graffiti-pink-hood-pull_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/bruin/hero-pink-hood-pull', variants: ['desktop'] },
+  { tag: 'product.hoodie.bruin.lifestyle-pink-hood', source: 'lifestyle_hoodie_brown_graffiti-pink-hood-look_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/bruin/lifestyle-pink-hood', variants: ['desktop'] },
+  // Hoodie · Zwart
+  { tag: 'product.hoodie.zwart.lifestyle-brick-sleeve', source: 'lifestyle_hoodie_black_brick-graffiti-sleeve_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/zwart/lifestyle-brick-sleeve', variants: ['desktop'] },
+  // Hoodie · Groen (Olive)
+  { tag: 'product.hoodie.groen.hero-lean-smile', source: 'hero_hoodie_olive_graffiti-lean-smile_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/groen/hero-lean-smile', variants: ['desktop'] },
+  { tag: 'product.hoodie.groen.hero-arms-cross', source: 'hero_hoodie_olive_graffiti-arms-cross_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/groen/hero-arms-cross', variants: ['desktop'] },
+  { tag: 'product.hoodie.groen.lifestyle-sleeve-look', source: 'lifestyle_hoodie_olive_graffiti-sleeve-look_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/groen/lifestyle-sleeve-look', variants: ['desktop'] },
+  { tag: 'product.hoodie.groen.crop-hood-up', source: 'crop_hoodie_olive_graffiti-hood-up_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/groen/crop-hood-up', variants: ['desktop'] },
+  // Hoodie · multi
+  { tag: 'product.hoodie.multi.couple-grass', source: 'couple_hoodies_black-olive_graffiti-walk-grass_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/multi/couple-grass', variants: ['desktop'] },
+  { tag: 'product.hoodie.multi.duo-pink-walk', source: 'lifestyle_hoodies_brown-olive_graffiti-pink-walk_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/multi/duo-pink-walk', variants: ['desktop'] },
+  { tag: 'product.hoodie.multi.duo-walk-forward', source: 'lifestyle_hoodies_brown-olive_graffiti-walk-forward_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/multi/duo-walk-forward', variants: ['desktop'] },
+  { tag: 'product.hoodie.multi.duo-laughing-arm-rest', source: 'group_hoodies_black-olive_graffiti-laughing-arm-rest_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/multi/duo-laughing-arm-rest', variants: ['desktop'] },
+  { tag: 'product.hoodie.multi.trio-smile-line', source: 'group_hoodies_trio-brown-black-olive_graffiti-smile-line_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/hoodie/multi/trio-smile-line', variants: ['desktop'] },
+  // Sweater · Off White
+  { tag: 'product.sweater.offwhite.hero-arch-lean', source: 'hero_sweater_cream_facade-arch-lean_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/sweater/off-white/hero-arch-lean', variants: ['desktop'] },
+  { tag: 'product.sweater.offwhite.lifestyle-arch-smile', source: 'lifestyle_sweater_cream_facade-arch-smile_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/sweater/off-white/lifestyle-arch-smile', variants: ['desktop'] },
+  { tag: 'product.sweater.offwhite.detail-puff-logo', source: 'detail_sweater_cream_chest-puff-logo_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/sweater/off-white/detail-puff-logo', variants: ['desktop'] },
+  // Sweater · Zwart
+  { tag: 'product.sweater.zwart.detail-chest-hand', source: 'detail_sweater_black_chest-logo-hand_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/sweater/zwart/detail-chest-hand', variants: ['desktop'] },
+  // Tee · Wit
+  { tag: 'product.tee.wit.lifestyle-canal-sleeve', source: 'lifestyle_tee_white_canal-sleeve-roll_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/tee/wit/lifestyle-canal-sleeve', variants: ['desktop'] },
+  { tag: 'product.tee.wit.detail-chest-arms', source: 'detail_tee_white_chest-logo-arms_landscape.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/tee/wit/detail-chest-arms', variants: ['desktop'] },
+  // Tee · Zwart
+  { tag: 'product.tee.zwart.lifestyle-canal-pockets', source: 'lifestyle_tee_black_canal-pockets_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/tee/zwart/lifestyle-canal-pockets', variants: ['desktop'] },
+  { tag: 'product.tee.zwart.detail-chest', source: 'detail_tee_black_chest-logo-pockets_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/tee/zwart/detail-chest', variants: ['desktop'] },
+  // Tee · Groen (eerste shots ooit voor deze variant)
+  { tag: 'product.tee.groen.hero-canal-pose', source: 'hero_tee_olive_canal-pose_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/tee/groen/hero-canal-pose', variants: ['desktop'] },
+  { tag: 'product.tee.groen.lifestyle-back-walk', source: 'lifestyle_tee_olive_canal-back-walk_portrait.jpg', bucket: 'product-images', storageKey: 'photoshoot-2026/tee/groen/lifestyle-back-walk', variants: ['desktop'] },
 ]
 
 // ---------------------------------------------------------------------------

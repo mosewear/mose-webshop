@@ -276,6 +276,41 @@ const PRODUCT_IMAGES: ImageSeed[] = [
   { productSlug: 'mose-tee', url: url('product.tee.wit.detail'), color: 'Wit', alt: 'MOSE Tee Wit — 3D puff-logo detail', position: 1 },
   { productSlug: 'mose-tee', url: url('product.tee.beige.lifestyle'), color: 'Beige', alt: 'MOSE Tee Beige — zonnige lifestyle in Groningse straat', position: 0, is_primary: true },
   { productSlug: 'mose-tee', url: url('product.tee.beige.detail'), color: 'Beige', alt: 'MOSE Tee Beige — borduurde MOSE chest-logo', position: 1 },
+
+  // ---- Batch 2 (mei 2026) — extra editorial + variant shots --------------
+  // Hoodie · Bruin (extra hero/lifestyle posities 2-5; bestaande hero blijft pos 0)
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.bruin.hero-hood-up-smile'), color: 'Bruin', alt: 'MOSE Essential Hoodie Bruin — hood up, lachend voor groene graffiti', position: 2 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.bruin.hero-concrete'), color: 'Bruin', alt: 'MOSE Essential Hoodie Bruin — hood up tegen rauwe betonwand', position: 3 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.bruin.hero-pink-hood-pull'), color: 'Bruin', alt: 'MOSE Essential Hoodie Bruin — hood-up gebaar voor roze graffiti', position: 4 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.bruin.lifestyle-pink-hood'), color: 'Bruin', alt: 'MOSE Essential Hoodie Bruin — lifestyle, hood-up, blik opzij', position: 5 },
+  // Hoodie · Zwart (extra lifestyle pos 2)
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.zwart.lifestyle-brick-sleeve'), color: 'Zwart', alt: 'MOSE Essential Hoodie Zwart — lifestyle, leunend tegen baksteen', position: 2 },
+  // Hoodie · Groen (extra hero/lifestyle posities 2-5)
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.groen.hero-lean-smile'), color: 'Groen', alt: 'MOSE Essential Hoodie Olive Groen — leunend voor graffiti, glimlach', position: 2 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.groen.hero-arms-cross'), color: 'Groen', alt: 'MOSE Essential Hoodie Olive Groen — armen gekruist, graffiti achtergrond', position: 3 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.groen.lifestyle-sleeve-look'), color: 'Groen', alt: 'MOSE Essential Hoodie Olive Groen — kijkt naar mouw, hood-up moment', position: 4 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.groen.crop-hood-up'), color: 'Groen', alt: 'MOSE Essential Hoodie Olive Groen — torso crop met hood-up', position: 5 },
+  // Hoodie · multi (kleur=null, posities 11-15; lineup blijft op 10)
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.multi.couple-grass'), color: null, alt: 'MOSE Essential Hoodie — duo Zwart + Olive Groen wandelen door gras', position: 11 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.multi.duo-pink-walk'), color: null, alt: 'MOSE Essential Hoodie — duo Bruin + Olive voor roze graffiti', position: 12 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.multi.duo-walk-forward'), color: null, alt: 'MOSE Essential Hoodie — duo Bruin + Olive lopen frontaal in beeld', position: 13 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.multi.duo-laughing-arm-rest'), color: null, alt: 'MOSE Essential Hoodie — duo Zwart + Olive lachend, arm op schouder', position: 14 },
+  { productSlug: 'mose-essential-hoodie', url: url('product.hoodie.multi.trio-smile-line'), color: null, alt: 'MOSE Essential Hoodie — trio Bruin / Zwart / Olive, complete colorway', position: 15 },
+  // Sweater · Off White (posities 3-5)
+  { productSlug: 'mose-classic-sweater', url: url('product.sweater.offwhite.hero-arch-lean'), color: 'Off White', alt: 'MOSE Classic Sweater Off-White — leunend tegen monumentale Groningse boog', position: 3 },
+  { productSlug: 'mose-classic-sweater', url: url('product.sweater.offwhite.lifestyle-arch-smile'), color: 'Off White', alt: 'MOSE Classic Sweater Off-White — lifestyle voor monumentale gevel', position: 4 },
+  { productSlug: 'mose-classic-sweater', url: url('product.sweater.offwhite.detail-puff-logo'), color: 'Off White', alt: 'MOSE Classic Sweater Off-White — close-up van het 3D puff-logo', position: 5 },
+  // Sweater · Zwart (eerste echte detail-shot voor de zwarte variant)
+  { productSlug: 'mose-classic-sweater', url: url('product.sweater.zwart.detail-chest-hand'), color: 'Zwart', alt: 'MOSE Classic Sweater Zwart — detail met embroidered MOSE chest-logo', position: 1 },
+  // Tee · Wit (extra lifestyle + detail; pos 3 blijft video)
+  { productSlug: 'mose-tee', url: url('product.tee.wit.lifestyle-canal-sleeve'), color: 'Wit', alt: 'MOSE Tee Wit — lifestyle aan de gracht, mouw rollend', position: 2 },
+  { productSlug: 'mose-tee', url: url('product.tee.wit.detail-chest-arms'), color: 'Wit', alt: 'MOSE Tee Wit — detail close-up van chest-logo met onderarm-tattoo', position: 4 },
+  // Tee · Zwart (extra lifestyle + detail)
+  { productSlug: 'mose-tee', url: url('product.tee.zwart.lifestyle-canal-pockets'), color: 'Zwart', alt: 'MOSE Tee Zwart — lifestyle aan de gracht, handen in zakken', position: 1 },
+  { productSlug: 'mose-tee', url: url('product.tee.zwart.detail-chest'), color: 'Zwart', alt: 'MOSE Tee Zwart — detail close-up van het reliëf MOSE chest-logo', position: 2 },
+  // Tee · Groen — EERSTE foto's voor deze variant (was alleen video tot nu toe)
+  { productSlug: 'mose-tee', url: url('product.tee.groen.hero-canal-pose'), color: 'Groen', alt: 'MOSE Tee Olive Groen — hero shot aan de gracht in lentezon', position: 0, is_primary: true },
+  { productSlug: 'mose-tee', url: url('product.tee.groen.lifestyle-back-walk'), color: 'Groen', alt: 'MOSE Tee Olive Groen — lifestyle, back-view aan de gracht', position: 1 },
 ]
 
 async function reseedProductImages() {
