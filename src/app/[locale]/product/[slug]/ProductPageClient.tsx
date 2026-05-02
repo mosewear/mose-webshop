@@ -59,6 +59,10 @@ interface Product {
   model_build?: string | null
   model_build_en?: string | null
   model_size_worn?: string | null
+  // Visuele stijl van de color-picker op deze productpagina:
+  //   * 'swatch' (default) — klassieke gekleurde vierkantjes per kleur
+  //   * 'image'            — mini productfoto-tegels met swatch-puntje
+  pdp_color_picker_style?: 'swatch' | 'image' | null
   product_images: ProductImage[]
   product_variants: ProductVariant[]
   product_quantity_discounts?: { id: string; min_quantity: number; discount_type: string; discount_value: number; is_active: boolean }[]
@@ -291,7 +295,17 @@ function VideoThumbnail({
   )
 }
 
-export default function ProductPage({ params }: { params: Promise<{ slug: string; locale: string }> }) {
+interface ProductPageProps {
+  params: Promise<{ slug: string; locale: string }>
+  /** Server-rendered Instagram-feed sectie. Komt vanuit de bovenliggende
+   *  page.tsx (server-component) zodat we Instagram-data niet hoeven te
+   *  her-fetchen vanuit een client component. Wanneer de admin de feed
+   *  niet aan heeft staan, levert page.tsx hier `null` aan en rendert
+   *  de PDP gewoon zonder Instagram-blok. */
+  instagramSlot?: React.ReactNode
+}
+
+export default function ProductPage({ params, instagramSlot }: ProductPageProps) {
   const t = useTranslations('product')
   const tShipping = useTranslations('shipping')
   const tCommon = useTranslations('common')
@@ -959,26 +973,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     <>
       <div className="min-h-screen px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
-          {/* Breadcrumb */}
-          <div className="mb-6 md:mb-8 text-sm">
-            <LocaleLink href="/" className="text-gray-600 hover:text-brand-primary transition-colors">
-              {t('breadcrumb.home', { ns: 'common' })}
-            </LocaleLink>
-            <span className="mx-2 text-gray-400">/</span>
-            <LocaleLink href="/shop" className="text-gray-600 hover:text-brand-primary transition-colors">
-              {t('breadcrumb.shop', { ns: 'common' })}
-            </LocaleLink>
-            <span className="mx-2 text-gray-400">/</span>
-            <LocaleLink
-              href={`/shop?category=${product.categories.slug}`}
-              className="text-gray-600 hover:text-brand-primary transition-colors"
-            >
-              {product.categories.name}
-            </LocaleLink>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-black font-semibold">{product && getLocalizedName(product)}</span>
-          </div>
-
           {/* Sentinel for the mobile sticky variant-picker. Sits at the very
               top of the layout grid so the sticky strip only kicks in once
               the user has scrolled past the hero gallery. */}
@@ -1144,6 +1138,42 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
             {/* RIGHT: Product Info (45% width, sticky) */}
             <div className="space-y-4 md:sticky md:top-24 md:self-start">
+              {/* Subtiele breadcrumb — verplaatst van boven de gallery
+                  naar hier zodat 'ie op mobiel direct onder de hoofd-
+                  productafbeelding verschijnt en op desktop bovenaan de
+                  rechter kolom (visueel net onder de top van het beeld).
+                  Klein, lichtgrijs en uppercase-vrij zodat 'ie geen
+                  aandacht trekt van de titel + prijs eronder. */}
+              <nav
+                aria-label={t('breadcrumb.home', { ns: 'common' })}
+                className="text-[11px] md:text-xs text-gray-400 leading-tight"
+              >
+                <LocaleLink
+                  href="/"
+                  className="hover:text-brand-primary transition-colors"
+                >
+                  {t('breadcrumb.home', { ns: 'common' })}
+                </LocaleLink>
+                <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span>
+                <LocaleLink
+                  href="/shop"
+                  className="hover:text-brand-primary transition-colors"
+                >
+                  {t('breadcrumb.shop', { ns: 'common' })}
+                </LocaleLink>
+                <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span>
+                <LocaleLink
+                  href={`/shop?category=${product.categories.slug}`}
+                  className="hover:text-brand-primary transition-colors"
+                >
+                  {product.categories.name}
+                </LocaleLink>
+                <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span>
+                <span className="text-gray-700 font-medium">
+                  {product && getLocalizedName(product)}
+                </span>
+              </nav>
+
               {/* Title & social proof */}
               <div>
                 {/* Review snippet replaces the (often invisible) Trustpilot
@@ -1358,62 +1388,170 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 </div>
               )}
 
-              {/* Color Selector - Enhanced (Minimal) */}
-              {availableColors.length > 0 && (
-                <div data-color-section>
-                  <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
-                    {t('color')}: <span className="text-brand-primary font-bold">{getTranslatedColor(selectedColor)}</span>
-                  </label>
-                  <div className="flex flex-wrap gap-2 md:gap-3">
-                    {availableColors.map(({ color, hex }) => {
-                      const colorVariant = product.product_variants.find(
-                        (v) => v.size === selectedSize && v.color === color
-                      )
-                      const totalStock = colorVariant ? colorVariant.stock_quantity + (colorVariant.presale_stock_quantity || 0) : 0
-                      const colorAvailable = colorVariant && colorVariant.is_available && totalStock > 0
-                      const isSelected = selectedColor === color
-                      return (
-                        <button
-                          key={color}
-                          onClick={() => {
-                            setSelectedColor(color)
-                            setSelectedImage(0) // Reset to first image when color changes
-                            setQuantity(1) // Reset quantity when changing color
-                          }}
-                          disabled={!colorAvailable}
-                          className={`relative border-2 transition-all ${
-                            isSelected
-                              ? 'w-14 h-14 md:w-16 md:h-16 border-4 border-brand-primary'
-                              : 'w-10 h-10 md:w-12 md:h-12'
-                          } ${
-                            colorAvailable
-                              ? 'border-gray-400 hover:border-black'
-                              : 'border-gray-300 cursor-not-allowed opacity-50'
-                          }`}
-                          aria-label={t('selectColor', { color })}
-                        >
-                          <div
-                            className="w-full h-full"
-                            style={{ backgroundColor: hex }}
-                          />
-                          {isSelected && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <svg className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                              </svg>
-                            </div>
-                          )}
-                          {!colorAvailable && (
-                            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                              <span className="text-red-600 text-2xl font-bold">✕</span>
-                            </div>
-                          )}
-                        </button>
-                      )
-                    })}
+              {/* Color Selector — twee modes, per product instelbaar in
+                  de admin via products.pdp_color_picker_style:
+                    * 'swatch' (default): klassieke kleurvierkantjes
+                    * 'image':            mini productfoto-tegels per
+                                          variant met een kleinen swatch-
+                                          puntje rechtsboven, zodat ook
+                                          op witte/lichte producten de
+                                          kleur direct herkenbaar blijft
+                  Beide modes delen exact dezelfde state, hover/disabled
+                  en a11y-attributen — alleen de visuele tile verschilt. */}
+              {availableColors.length > 0 && (() => {
+                const pickerStyle: 'swatch' | 'image' =
+                  product.pdp_color_picker_style === 'image' ? 'image' : 'swatch'
+
+                // Beste afbeelding voor een kleurvariant met graceful
+                // fallback-keten: primary van die kleur > eerste van die
+                // kleur > algemene primary > allereerste image.
+                const getImageForColor = (color: string) => {
+                  return (
+                    product.product_images.find(
+                      (img) => img.color === color && img.is_primary
+                    ) ||
+                    product.product_images
+                      .filter((img) => img.color === color)
+                      .sort((a, b) => a.position - b.position)[0] ||
+                    product.product_images.find((img) => img.is_primary) ||
+                    product.product_images[0] ||
+                    null
+                  )
+                }
+
+                return (
+                  <div data-color-section>
+                    <label className="block text-xs md:text-sm font-bold uppercase tracking-wider mb-2 md:mb-3">
+                      {t('color')}: <span className="text-brand-primary font-bold">{getTranslatedColor(selectedColor)}</span>
+                    </label>
+                    <div className="flex flex-wrap gap-2 md:gap-3">
+                      {availableColors.map(({ color, hex }) => {
+                        const colorVariant = product.product_variants.find(
+                          (v) => v.size === selectedSize && v.color === color
+                        )
+                        const totalStock = colorVariant ? colorVariant.stock_quantity + (colorVariant.presale_stock_quantity || 0) : 0
+                        const colorAvailable = colorVariant && colorVariant.is_available && totalStock > 0
+                        const isSelected = selectedColor === color
+                        const onPick = () => {
+                          setSelectedColor(color)
+                          setSelectedImage(0)
+                          setQuantity(1)
+                        }
+
+                        if (pickerStyle === 'image') {
+                          const tileImage = getImageForColor(color)
+                          return (
+                            <button
+                              key={color}
+                              onClick={onPick}
+                              disabled={!colorAvailable}
+                              className={`relative overflow-hidden border-2 transition-all ${
+                                isSelected
+                                  ? 'w-14 h-[72px] md:w-16 md:h-20 border-brand-primary ring-2 ring-brand-primary/30'
+                                  : 'w-14 h-[72px] md:w-16 md:h-20'
+                              } ${
+                                colorAvailable
+                                  ? isSelected
+                                    ? ''
+                                    : 'border-gray-300 hover:border-black'
+                                  : 'border-gray-300 cursor-not-allowed'
+                              }`}
+                              aria-label={t('selectColor', { color })}
+                              aria-pressed={isSelected}
+                            >
+                              {tileImage ? (
+                                <Image
+                                  src={tileImage.url}
+                                  alt={getTranslatedColor(color)}
+                                  fill
+                                  sizes="64px"
+                                  className="object-cover object-center"
+                                />
+                              ) : (
+                                <span
+                                  aria-hidden="true"
+                                  className="block w-full h-full"
+                                  style={{ backgroundColor: hex }}
+                                />
+                              )}
+                              {/* Mini hex-puntje rechtsboven zodat de
+                                  klant de kleur ook ziet als de foto er
+                                  niks van verraadt (witte stof, ver
+                                  uitgezoomd). 2px witte border tegen
+                                  donkere foto's. */}
+                              <span
+                                aria-hidden="true"
+                                className="absolute top-1 right-1 w-3 h-3 border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.4)]"
+                                style={{ backgroundColor: hex }}
+                              />
+                              {!colorAvailable && (
+                                <>
+                                  <span
+                                    aria-hidden="true"
+                                    className="absolute inset-0 bg-white/55"
+                                  />
+                                  <svg
+                                    aria-hidden="true"
+                                    className="absolute inset-0 w-full h-full text-gray-700/80"
+                                    viewBox="0 0 100 100"
+                                    preserveAspectRatio="none"
+                                  >
+                                    <line
+                                      x1="0"
+                                      y1="100"
+                                      x2="100"
+                                      y2="0"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                    />
+                                  </svg>
+                                </>
+                              )}
+                            </button>
+                          )
+                        }
+
+                        // Default 'swatch'-mode (huidig gedrag, ongewijzigd
+                        // op één refactor-detail na: gedeelde onClick).
+                        return (
+                          <button
+                            key={color}
+                            onClick={onPick}
+                            disabled={!colorAvailable}
+                            className={`relative border-2 transition-all ${
+                              isSelected
+                                ? 'w-14 h-14 md:w-16 md:h-16 border-4 border-brand-primary'
+                                : 'w-10 h-10 md:w-12 md:h-12'
+                            } ${
+                              colorAvailable
+                                ? 'border-gray-400 hover:border-black'
+                                : 'border-gray-300 cursor-not-allowed opacity-50'
+                            }`}
+                            aria-label={t('selectColor', { color })}
+                          >
+                            <div
+                              className="w-full h-full"
+                              style={{ backgroundColor: hex }}
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <svg className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                                </svg>
+                              </div>
+                            )}
+                            {!colorAvailable && (
+                              <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                                <span className="text-red-600 text-2xl font-bold">✕</span>
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {/* Size Selector with Size Guide */}
               {availableSizes.length > 0 && (
@@ -1892,6 +2030,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           {/* Product Reviews */}
           <ProductReviews productId={product.id} />
+
+          {/* Compact Instagram-grid van de PDP-fetcher (server). Dient
+              als visuele brand-break en vertrouwens-anker tussen reviews
+              en FAQ. Rendert volledig niets als de admin de IG-feed
+              niet heeft ingeschakeld of er geen posts zijn. */}
+          {instagramSlot}
 
           {/* PDP-specific FAQ - addresses the five most common conversion
               blockers (fit, delivery, exchanges, authenticity, payment). */}

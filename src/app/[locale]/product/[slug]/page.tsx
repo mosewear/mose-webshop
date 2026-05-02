@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { createAnonClient } from '@/lib/supabase/server'
 import ProductPageClient from './ProductPageClient'
 import BrandDiscoveryFetcher from '@/components/product/BrandDiscoveryFetcher'
+import PdpInstagramFetcher from '@/components/product/PdpInstagramFetcher'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
@@ -270,7 +271,18 @@ export default async function ProductPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      <ProductPageClient params={Promise.resolve({ slug, locale: localeParam })} />
+      <ProductPageClient
+        params={Promise.resolve({ slug, locale: localeParam })}
+        instagramSlot={
+          // Server-component variant van de homepage Instagram-feed,
+          // tussen reviews en FAQ gerenderd. In Suspense zodat een
+          // trage IG-fetch (ge-cached, max 300s) nooit de PDP zelf
+          // blokkeert. Rendert null wanneer de feed uit staat.
+          <Suspense fallback={null}>
+            <PdpInstagramFetcher />
+          </Suspense>
+        }
+      />
       {/* Sticky brand-discovery pill bottom-left. Server-fetcht IG-feed
           + about-content + admin-toggle; rendert null als één daarvan
           afwezig is. In Suspense gewikkeld zodat een trage IG-fetch

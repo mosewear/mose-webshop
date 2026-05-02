@@ -385,6 +385,13 @@
       "genericName": "Model",
       "overlay": "{name} is {height} and wears size {size}"
     },
+    "instagram": {
+      "tagLabel": "COMMUNITY",
+      "title": "Worn by our community",
+      "subline": "Tag @{username} for a chance to be featured",
+      "cta": "Follow @{username} on Instagram",
+      "viewPost": "View"
+    },
     "brandWidget": {
       "headline": "WHO ARE WE?",
       "subline": "Find us on Instagram",
@@ -582,6 +589,7 @@
       "submit": "Submit review",
       "submitting": "Submitting...",
       "customerReviews": "Customer reviews",
+      "reviewsTagline": "Reviews",
       "basedOn": "Based on {count} {count, plural, =1 {review} other {reviews}}",
       "noReviews": "No reviews for this product yet.",
       "optional": "(optional)",
@@ -595,7 +603,10 @@
       "imagesTooLarge": "Photo too large. Try a smaller image (max 8 MB).",
       "fillRequired": "Please fill in all required fields",
       "submitError": "Something went wrong while submitting your review",
-      "submitSuccess": "Thanks for your review! It will be approved within 24 hours."
+      "submitSuccess": "Thanks for your review! It will be approved within 24 hours.",
+      "showAll": "Show all {count} reviews",
+      "openPhoto": "Open photo",
+      "removePhoto": "Remove photo"
     },
     "sticky": {
       "addToCart": "Add to Cart",

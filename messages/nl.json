@@ -385,6 +385,13 @@
       "genericName": "Model",
       "overlay": "{name} is {height} en draagt maat {size}"
     },
+    "instagram": {
+      "tagLabel": "COMMUNITY",
+      "title": "Gedragen door onze community",
+      "subline": "Tag @{username} voor een kans om gedeeld te worden",
+      "cta": "Volg @{username} op Instagram",
+      "viewPost": "Bekijk"
+    },
     "brandWidget": {
       "headline": "WIE ZIJN WIJ?",
       "subline": "Ontdek ons op Instagram",
@@ -582,6 +589,7 @@
       "submit": "Verstuur review",
       "submitting": "Verzenden...",
       "customerReviews": "Klantervaringen",
+      "reviewsTagline": "Reviews",
       "basedOn": "Gebaseerd op {count} {count, plural, =1 {review} other {reviews}}",
       "noReviews": "Nog geen reviews voor dit product.",
       "optional": "(optioneel)",
@@ -595,7 +603,10 @@
       "imagesTooLarge": "Foto te groot. Probeer een kleinere afbeelding (max 8 MB).",
       "fillRequired": "Vul alle verplichte velden in",
       "submitError": "Er ging iets mis bij het verzenden van je review",
-      "submitSuccess": "Bedankt voor je review! Hij wordt binnen 24 uur goedgekeurd."
+      "submitSuccess": "Bedankt voor je review! Hij wordt binnen 24 uur goedgekeurd.",
+      "showAll": "Toon alle {count} reviews",
+      "openPhoto": "Open foto",
+      "removePhoto": "Verwijder foto"
     },
     "sticky": {
       "addToCart": "In winkelwagen",

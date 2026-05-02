@@ -32,6 +32,9 @@ interface Product {
   model_build: string | null
   model_build_en: string | null
   model_size_worn: string | null
+  // Keuze tussen klassieke kleur-swatch (vierkant met hex-fill) of een
+  // mini productfoto-tegel per variant. Default 'swatch'.
+  pdp_color_picker_style: 'swatch' | 'image' | null
 }
 
 interface QuantityDiscountTier {
@@ -73,6 +76,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     model_build: '',
     model_build_en: '',
     model_size_worn: '',
+    pdp_color_picker_style: 'swatch' as 'swatch' | 'image',
   })
 
   // Single publish state for the merchant. Maps onto BOTH the
@@ -145,6 +149,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           model_build: product.model_build || '',
           model_build_en: product.model_build_en || '',
           model_size_worn: product.model_size_worn || '',
+          pdp_color_picker_style: (product.pdp_color_picker_style === 'image' ? 'image' : 'swatch'),
         })
         setGiftCard({
           is_gift_card: Boolean(product.is_gift_card),
@@ -282,6 +287,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           model_build: formData.model_build.trim() || null,
           model_build_en: formData.model_build_en.trim() || null,
           model_size_worn: formData.model_size_worn.trim() || null,
+          pdp_color_picker_style: formData.pdp_color_picker_style === 'image' ? 'image' : 'swatch',
           is_gift_card: isGift,
           allows_custom_amount: isGift ? giftCard.allows_custom_amount : false,
           gift_card_min_amount: isGift ? giftCardMin : null,
@@ -798,6 +804,151 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   placeholder="Bijv. M"
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Color picker style: per product instelbaar of de PDP de
+              klassieke gekleurde swatches toont of mini productfoto's
+              per kleurvariant. Niet voor cadeaubonnen (geen kleur). */}
+          {!isGift && (
+            <div className="border-t-2 border-gray-200 pt-6">
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide mb-1">
+                Kleurkiezer op productpagina
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Kies hoe de kleurvarianten worden getoond op de
+                productpagina. Standaard zijn dat gekleurde vierkantjes
+                (snel herkenbaar bij eenvoudige basics). Voor producten
+                waar het verschil tussen de kleurvarianten visueel rijk
+                is (prints, contrast-stitching, was-effecten) werkt
+                een mini productfoto per variant doorgaans beter.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label
+                  className={`relative cursor-pointer border-2 p-4 transition-colors ${
+                    formData.pdp_color_picker_style === 'swatch'
+                      ? 'border-brand-primary bg-brand-primary/5'
+                      : 'border-gray-300 hover:border-black'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pdp_color_picker_style"
+                    value="swatch"
+                    checked={formData.pdp_color_picker_style === 'swatch'}
+                    onChange={() =>
+                      setFormData({
+                        ...formData,
+                        pdp_color_picker_style: 'swatch',
+                      })
+                    }
+                    className="sr-only"
+                  />
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      Swatch
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`w-4 h-4 rounded-full border-2 ${
+                        formData.pdp_color_picker_style === 'swatch'
+                          ? 'border-brand-primary bg-brand-primary'
+                          : 'border-gray-400'
+                      }`}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Klassieke gekleurde vierkantjes per variant.
+                  </p>
+                  <div className="flex gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="w-10 h-10 border-2 border-brand-primary"
+                      style={{ background: '#1a1a1a' }}
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="w-10 h-10 border-2 border-gray-400"
+                      style={{ background: '#f4ecdc' }}
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="w-10 h-10 border-2 border-gray-400"
+                      style={{ background: '#5a6b4a' }}
+                    />
+                  </div>
+                </label>
+
+                <label
+                  className={`relative cursor-pointer border-2 p-4 transition-colors ${
+                    formData.pdp_color_picker_style === 'image'
+                      ? 'border-brand-primary bg-brand-primary/5'
+                      : 'border-gray-300 hover:border-black'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pdp_color_picker_style"
+                    value="image"
+                    checked={formData.pdp_color_picker_style === 'image'}
+                    onChange={() =>
+                      setFormData({
+                        ...formData,
+                        pdp_color_picker_style: 'image',
+                      })
+                    }
+                    className="sr-only"
+                  />
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-sm font-bold uppercase tracking-wide">
+                      Foto
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`w-4 h-4 rounded-full border-2 ${
+                        formData.pdp_color_picker_style === 'image'
+                          ? 'border-brand-primary bg-brand-primary'
+                          : 'border-gray-400'
+                      }`}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Mini productfoto per variant met klein swatch-puntje.
+                    Werkt het best als je per kleur eigen foto&apos;s
+                    upload.
+                  </p>
+                  <div className="flex gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="relative block w-10 h-12 border-2 border-brand-primary bg-gradient-to-br from-gray-700 to-gray-900"
+                    >
+                      <span
+                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full border border-white"
+                        style={{ background: '#1a1a1a' }}
+                      />
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="relative block w-10 h-12 border-2 border-gray-400 bg-gradient-to-br from-amber-100 to-amber-200"
+                    >
+                      <span
+                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full border border-white"
+                        style={{ background: '#f4ecdc' }}
+                      />
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="relative block w-10 h-12 border-2 border-gray-400 bg-gradient-to-br from-green-700 to-green-900"
+                    >
+                      <span
+                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full border border-white"
+                        style={{ background: '#5a6b4a' }}
+                      />
+                    </span>
+                  </div>
+                </label>
               </div>
             </div>
           )}

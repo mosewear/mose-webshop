@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PenLine, X, Camera } from 'lucide-react'
+import { Check, PenLine, X, Camera } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 
 interface ReviewImage {
@@ -287,18 +287,21 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
   }
 
   const renderStars = (rating: number, size: 'sm' | 'md' | 'lg' = 'md') => {
+    // Sterren in MOSE brand-primary (groen) i.p.v. het generieke
+    // yellow zodat de review-sectie visueel hetzelfde DNA heeft als
+    // de rest van de PDP (ATC-knop, korting-tags, accenten).
     const sizeClasses = {
-      sm: 'w-4 h-4',
-      md: 'w-5 h-5',
-      lg: 'w-8 h-8',
+      sm: 'w-3.5 h-3.5',
+      md: 'w-4 h-4',
+      lg: 'w-6 h-6 md:w-7 md:h-7',
     }
 
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5" aria-hidden="true">
         {[1, 2, 3, 4, 5].map((star) => (
           <svg
             key={star}
-            className={`${sizeClasses[size]} ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+            className={`${sizeClasses[size]} ${star <= rating ? 'text-brand-primary' : 'text-gray-300'}`}
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -311,19 +314,42 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
   const dateLocale = locale === 'en' ? 'en-GB' : 'nl-NL'
 
+  // Pagineren op 6 zodat de sectie compact blijft. Onder de strip
+  // verschijnt een "Toon alle X reviews"-link wanneer er meer zijn.
+  const REVIEWS_INITIAL = 6
+  const [showAll, setShowAll] = useState(false)
+  const visibleReviews = useMemo(
+    () => (showAll ? reviews : reviews.slice(0, REVIEWS_INITIAL)),
+    [reviews, showAll]
+  )
+
   if (loading) {
     return null
   }
 
-  // No reviews yet: compact "be the first" CTA
+  // No reviews yet: compact "be the first" CTA in MOSE brutalist stijl.
   if (totalReviews === 0) {
     return (
-      <div data-pdp-reviews id="reviews" className="border-t-2 border-gray-200 pt-6 mt-8">
+      <section
+        data-pdp-reviews
+        id="reviews"
+        aria-labelledby="reviews-heading-empty"
+        className="border-t-2 border-black pt-8 md:pt-10 mt-12 md:mt-16"
+      >
+        <p className="text-[11px] tracking-[0.2em] uppercase text-gray-500 mb-1">
+          {t('reviewsTagline')}
+        </p>
+        <h2
+          id="reviews-heading-empty"
+          className="font-display text-3xl md:text-4xl uppercase tracking-tight leading-none mb-5 md:mb-6"
+        >
+          {t('customerReviews')}
+        </h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="w-full md:w-auto bg-gray-100 hover:bg-brand-primary hover:text-white border-2 border-gray-300 hover:border-brand-primary text-black font-bold py-4 px-8 uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+          className="w-full md:w-auto bg-white text-black border-2 border-black font-bold py-3 px-6 md:px-8 uppercase tracking-wider transition-colors flex items-center justify-center gap-2 hover:bg-black hover:text-white"
         >
-          <PenLine size={18} />
+          <PenLine size={16} />
           <span>{t('beFirst')}</span>
         </button>
 
@@ -340,61 +366,95 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             submitting={submitting}
           />
         )}
-      </div>
+      </section>
     )
   }
 
   return (
-    <div data-pdp-reviews id="reviews" className="border-t-2 border-gray-200 pt-8 mt-8">
-      <h2 className="text-3xl font-bold mb-6">{t('customerReviews')}</h2>
+    <section
+      data-pdp-reviews
+      id="reviews"
+      aria-labelledby="reviews-heading"
+      className="border-t-2 border-black pt-8 md:pt-10 mt-12 md:mt-16"
+    >
+      <p className="text-[11px] tracking-[0.2em] uppercase text-gray-500 mb-1">
+        {t('reviewsTagline')}
+      </p>
+      <h2
+        id="reviews-heading"
+        className="font-display text-3xl md:text-4xl uppercase tracking-tight leading-none mb-5 md:mb-6"
+      >
+        {t('customerReviews')}
+      </h2>
 
-      {totalReviews > 0 && (
-        <div className="bg-gray-50 border-2 border-gray-200 p-6 mb-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="text-center">
-              <div className="text-5xl font-bold mb-2">{averageRating.toFixed(1)}</div>
-              {renderStars(Math.round(averageRating), 'lg')}
-              <p className="text-gray-600 mt-2">{t('basedOn', { count: totalReviews })}</p>
-            </div>
-
-            <div className="space-y-2">
-              {[5, 4, 3, 2, 1].map((rating) => {
-                const count = ratingDistribution[rating - 1]
-                const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0
-
-                return (
-                  <div key={rating} className="flex items-center gap-3">
-                    <span className="text-sm font-semibold w-16">{rating} {t('stars', { count: rating })}</span>
-                    <div className="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-yellow-400 h-full transition-all"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
-                  </div>
-                )
-              })}
-            </div>
+      {/* Compact summary-strip: één brutalist horizontaal vlak met 3
+          segmenten op desktop (gemiddeld cijfer | distributie-bars |
+          schrijf-knop) en 2 segmenten op mobiel (cijfer + distributie),
+          met de schrijf-knop als full-width brute knop daaronder. */}
+      <div className="border-2 border-black mb-5 md:mb-6">
+        <div className="flex items-stretch divide-x-2 divide-black">
+          <div className="px-4 py-3 md:px-6 md:py-4 flex flex-col items-start justify-center min-w-[110px] md:min-w-[140px]">
+            <span className="font-display text-4xl md:text-5xl leading-none mb-1.5">
+              {averageRating.toFixed(1)}
+            </span>
+            {renderStars(Math.round(averageRating), 'md')}
+            <span className="text-[10px] md:text-[11px] uppercase tracking-wider text-gray-500 mt-1.5">
+              {t('basedOn', { count: totalReviews })}
+            </span>
           </div>
-        </div>
-      )}
 
-      <div className="mb-8">
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors flex items-center gap-2"
-        >
-          {showForm ? (
-            t('close')
-          ) : (
-            <>
-              <PenLine size={18} />
-              <span>{t('writeReview')}</span>
-            </>
-          )}
-        </button>
+          <div className="flex-1 px-4 py-3 md:px-6 md:py-4 flex flex-col justify-center gap-1.5 md:gap-2">
+            {[5, 4, 3, 2, 1].map((rating) => {
+              const count = ratingDistribution[rating - 1]
+              const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0
+              return (
+                <div key={rating} className="flex items-center gap-2 md:gap-3">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider w-3 text-gray-700">
+                    {rating}
+                  </span>
+                  <div className="flex-1 bg-gray-100 h-1.5 overflow-hidden">
+                    <div
+                      className="bg-brand-primary h-full transition-[width] duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] md:text-xs text-gray-500 w-6 text-right tabular-nums">
+                    {count}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowForm(!showForm)}
+            className="hidden md:flex flex-col items-center justify-center gap-1.5 px-5 lg:px-7 bg-black text-white hover:bg-brand-primary transition-colors min-w-[140px]"
+          >
+            <PenLine size={18} aria-hidden="true" />
+            <span className="text-[11px] font-bold uppercase tracking-wider leading-tight text-center">
+              {showForm ? t('close') : t('writeReview')}
+            </span>
+          </button>
+        </div>
       </div>
+
+      {/* Mobile-only schrijf-knop, full-width onder de strip. Op desktop
+          zit dezelfde actie ingebouwd als rechter segment hierboven. */}
+      <button
+        type="button"
+        onClick={() => setShowForm(!showForm)}
+        className="md:hidden w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors flex items-center justify-center gap-2 mb-5"
+      >
+        {showForm ? (
+          t('close')
+        ) : (
+          <>
+            <PenLine size={16} aria-hidden="true" />
+            <span>{t('writeReview')}</span>
+          </>
+        )}
+      </button>
 
       {showForm && (
         <ReviewForm
@@ -410,25 +470,38 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         />
       )}
 
-      {reviews.length > 0 && (
-        <div className="space-y-6">
-          {reviews.map((review) => (
-            <div key={review.id} className="border-2 border-gray-200 p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  {renderStars(review.rating)}
-                  {review.title && <h4 className="font-bold text-lg mt-2">{review.title}</h4>}
+      {visibleReviews.length > 0 && (
+        <div className="space-y-3 md:space-y-4">
+          {visibleReviews.map((review) => (
+            <article
+              key={review.id}
+              className="border-2 border-black p-4 md:p-5 bg-white"
+            >
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0">
+                  {renderStars(review.rating, 'sm')}
+                  {review.title && (
+                    <h3 className="font-bold text-base md:text-lg mt-1.5 leading-tight">
+                      {review.title}
+                    </h3>
+                  )}
                 </div>
                 {review.is_verified_purchase && (
-                  <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 uppercase">
-                    ✓ {t('verifiedPurchase')}
+                  <span className="shrink-0 inline-flex items-center gap-1 bg-black text-white border-2 border-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em]">
+                    <Check className="w-3 h-3" aria-hidden="true" />
+                    <span>{t('verifiedPurchase')}</span>
                   </span>
                 )}
               </div>
-              {review.comment && <p className="text-gray-700 mb-3">{review.comment}</p>}
+
+              {review.comment && (
+                <p className="text-sm md:text-[15px] text-gray-800 leading-relaxed mb-3">
+                  {review.comment}
+                </p>
+              )}
 
               {review.images && review.images.length > 0 && (
-                <div className="flex gap-2 mb-3 overflow-x-auto">
+                <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
                   {review.images.map((img, idx) => (
                     <button
                       key={img.id}
@@ -437,14 +510,14 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                         setLightboxImages(review.images || null)
                         setLightboxIndex(idx)
                       }}
-                      className="relative shrink-0 border-2 border-gray-200 hover:border-black transition-colors"
-                      aria-label="Open foto"
+                      className="relative shrink-0 border-2 border-black hover:border-brand-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                      aria-label={t('openPhoto')}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.url}
-                        alt={`Review foto ${idx + 1}`}
-                        className="w-20 h-20 md:w-24 md:h-24 object-cover"
+                        alt=""
+                        className="w-16 h-16 md:w-20 md:h-20 object-cover"
                         loading="lazy"
                       />
                     </button>
@@ -452,14 +525,30 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                 </div>
               )}
 
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span className="font-semibold">{review.reviewer_name}</span>
-                <span>•</span>
-                <span>{new Date(review.created_at).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-gray-500">
+                <span className="font-bold text-gray-700">{review.reviewer_name}</span>
+                <span aria-hidden="true">·</span>
+                <span>
+                  {new Date(review.created_at).toLocaleDateString(dateLocale, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
               </div>
-            </div>
+            </article>
           ))}
         </div>
+      )}
+
+      {reviews.length > REVIEWS_INITIAL && !showAll && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="mt-5 md:mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider underline-offset-4 hover:underline hover:text-brand-primary transition-colors"
+        >
+          {t('showAll', { count: reviews.length })}
+        </button>
       )}
 
       {/* Lightbox */}
@@ -510,7 +599,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
           )}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -552,24 +641,34 @@ function ReviewForm({
   submitting,
 }: ReviewFormProps) {
   return (
-    <form onSubmit={onSubmit} className="bg-white border-2 border-gray-200 p-6 mt-6 mb-8">
-      <h3 className="text-xl font-bold mb-4">{t('yourReview')}</h3>
+    <form
+      onSubmit={onSubmit}
+      className="bg-white border-2 border-black p-5 md:p-6 mt-5 md:mt-6 mb-6 md:mb-8"
+    >
+      <h3 className="font-display text-2xl md:text-3xl uppercase tracking-tight leading-none mb-5 md:mb-6">
+        {t('yourReview')}
+      </h3>
 
       <div className="mb-4">
-        <label className="block text-sm font-bold mb-2">
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-700">
           {t('rating')} {t('required')}
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
               onClick={() => setFormData({ ...formData, rating: star })}
-              className="focus:outline-none"
-              aria-label={`${star} ster${star === 1 ? '' : 'ren'}`}
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              aria-label={`${star} ${t('stars', { count: star })}`}
+              aria-pressed={star <= formData.rating}
             >
               <svg
-                className={`w-8 h-8 ${star <= formData.rating ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-300 transition-colors`}
+                className={`w-7 h-7 transition-colors ${
+                  star <= formData.rating
+                    ? 'text-brand-primary'
+                    : 'text-gray-300 hover:text-brand-primary/60'
+                }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -581,55 +680,62 @@ function ReviewForm({
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-bold mb-2">{t('name')} {t('required')}</label>
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-700">
+          {t('name')} {t('required')}
+        </label>
         <input
           type="text"
           value={formData.reviewer_name}
           onChange={(e) => setFormData({ ...formData, reviewer_name: e.target.value })}
-          className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+          className="w-full px-4 py-3 border-2 border-black focus:border-brand-primary focus:outline-none transition-colors"
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-bold mb-2">{t('email')} {t('required')} {t('emailNote')}</label>
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-700">
+          {t('email')} {t('required')} <span className="text-gray-500 normal-case tracking-normal">{t('emailNote')}</span>
+        </label>
         <input
           type="email"
           value={formData.reviewer_email}
           onChange={(e) => setFormData({ ...formData, reviewer_email: e.target.value })}
-          className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+          className="w-full px-4 py-3 border-2 border-black focus:border-brand-primary focus:outline-none transition-colors"
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-bold mb-2">{t('title')} {t('optional')}</label>
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-700">
+          {t('title')} {t('optional')}
+        </label>
         <input
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+          className="w-full px-4 py-3 border-2 border-black focus:border-brand-primary focus:outline-none transition-colors"
           placeholder={t('titlePlaceholder')}
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-bold mb-2">{t('comment')} {t('optional')}</label>
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-700">
+          {t('comment')} {t('optional')}
+        </label>
         <textarea
           value={formData.comment}
           onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-          className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
+          className="w-full px-4 py-3 border-2 border-black focus:border-brand-primary focus:outline-none transition-colors"
           rows={5}
           placeholder={t('commentPlaceholder')}
         />
       </div>
 
-      {/* Photos */}
       <div className="mb-6">
-        <label className="block text-sm font-bold mb-2">
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-2 text-gray-700">
           {t('addPhotos')} {t('optional')}
         </label>
-        <p className="text-xs text-gray-600 mb-2">{t('photosHelp', { count: MAX_IMAGES })}</p>
+        <p className="text-xs text-gray-500 mb-3">{t('photosHelp', { count: MAX_IMAGES })}</p>
 
         <input
           ref={fileInputRef}
@@ -642,16 +748,19 @@ function ReviewForm({
 
         <div className="flex flex-wrap items-center gap-3">
           {previewImages.map((p) => (
-            <div key={p.id} className="relative w-20 h-20 md:w-24 md:h-24 border-2 border-gray-300">
+            <div
+              key={p.id}
+              className="relative w-20 h-20 md:w-24 md:h-24 border-2 border-black"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url} alt="Preview" className="w-full h-full object-cover" />
+              <img src={p.url} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"
                 onClick={() => onRemovePreview(p.id)}
-                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black text-white flex items-center justify-center"
-                aria-label="Verwijder foto"
+                className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white border-2 border-white flex items-center justify-center hover:bg-brand-primary transition-colors"
+                aria-label={t('removePhoto')}
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ))}
@@ -660,7 +769,7 @@ function ReviewForm({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-20 h-20 md:w-24 md:h-24 border-2 border-dashed border-gray-400 flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-brand-primary hover:border-brand-primary transition-colors"
+              className="w-20 h-20 md:w-24 md:h-24 border-2 border-dashed border-black flex flex-col items-center justify-center gap-1 text-black hover:text-brand-primary hover:border-brand-primary transition-colors"
             >
               <Camera className="w-5 h-5 md:w-6 md:h-6" />
               <span className="text-[10px] md:text-xs uppercase tracking-wider font-bold">
@@ -674,7 +783,7 @@ function ReviewForm({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full md:w-auto bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {submitting ? t('submitting') : t('submit')}
       </button>

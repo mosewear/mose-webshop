@@ -26,10 +26,13 @@ interface ModelFitInfoProps {
  *   * Bouw wordt op de overlay niet getoond (te lang voor één regel),
  *     maar blijft wel in de DB voor toekomstige uitbreidingen.
  *
- * Styling: brutalist MOSE — solid black tile met witte tekst, border
- * voor consistente kantlijn, subtiele drop-shadow zodat de tag los van
- * een wit kledingstuk altijd leesbaar is. Pointer-events disabled
- * zodat de tag niet de zoom-on-click op de afbeelding blokkeert.
+ * Styling: brutalist MOSE — semi-transparante zwarte tile (70%) met
+ * een lichte backdrop-blur zodat de tag minder hard prikt en de
+ * onderliggende productfoto er deels doorheen schemert. Witte tekst,
+ * border iets zachter dan de fill voor naadloze blend op witte stof,
+ * subtiele drop-shadow zodat de tag boven licht beeld altijd leesbaar
+ * blijft. Pointer-events disabled zodat de tag niet de zoom-on-click
+ * op de afbeelding blokkeert.
  *
  * Plaatsing: deze component MOET ALTIJD direct binnen een ouder met
  * `position: relative` (de gallery container) gerenderd worden,
@@ -57,7 +60,7 @@ export default function ModelFitInfo({
       aria-hidden="true"
       className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)]"
     >
-      <span className="inline-block bg-black text-white border-2 border-black px-2.5 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.28)]">
+      <span className="inline-block bg-black/70 text-white border-2 border-black/80 backdrop-blur-sm px-2.5 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.22)]">
         <span className="block text-[10px] md:text-[11px] font-bold uppercase tracking-[0.05em] leading-tight">
           {t('overlay', {
             name: displayName,
