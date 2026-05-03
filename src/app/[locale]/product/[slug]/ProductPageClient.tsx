@@ -18,7 +18,8 @@ import PdpFaq from '@/components/product/PdpFaq'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
-import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle } from 'lucide-react'
+import PdpGalleryLightbox from '@/components/product/PdpGalleryLightbox'
+import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle, Plus } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackProductView, trackAddToCart } from '@/lib/analytics'
@@ -332,6 +333,11 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [showLightbox, setShowLightbox] = useState(false)
+  // Brutalist "BEKIJK ALLES" overlay: opent een fullscreen grid met
+  // ALLE product-media, ongeacht hoeveel het er zijn. Wordt geactiveerd
+  // door de zwarte "+N MEER"-tegel in de thumbnail-row OF (toekomstig)
+  // door een knop boven de gallerij.
+  const [showAllPhotos, setShowAllPhotos] = useState(false)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [activeTab, setActiveTab] = useState<'description' | 'trust' | 'details' | 'materials' | 'shipping'>('description')
   const [notifyEmail, setNotifyEmail] = useState('')
@@ -1086,40 +1092,109 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 </div>
               </div>
 
-              {/* Thumbnails - 4 on mobile, 5 on desktop */}
-              {displayImages.length > 1 && (
-                <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
-                  {displayImages.map((media, index) => (
-                    media.media_type === 'video' ? (
-                      <VideoThumbnail
-                        key={media.id}
-                        videoUrl={media.url}
-                        posterUrl={media.video_thumbnail_url}
-                        isSelected={selectedImage === index}
-                        onClick={() => scrollToImage(index)}
-                      />
-                    ) : (
-                      <button
-                        key={media.id}
-                        onClick={() => scrollToImage(index)}
-                        className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
-                          selectedImage === index
-                            ? 'border-brand-primary scale-95'
-                            : 'border-gray-300 hover:border-black'
-                        }`}
-                      >
-                        <Image
-                          src={media.url}
-                          alt={media.alt_text || product.name}
-                          fill
-                          sizes="(max-width: 768px) 25vw, 12vw"
-                          className="object-cover object-center"
+              {/* Thumbnails — gecapt op MAX 4 tegels (1 rij op elke device).
+                  Bij >4 media: toon de eerste 3 + een zwarte "+N MEER"-tegel
+                  die de fullscreen gallery-lightbox opent. Bij ≤4 media:
+                  toon ze allemaal zonder overflow-tegel. Dit voorkomt dat
+                  de thumbnails wrappen naar 2 rijen en de PDP onnodig
+                  hoog wordt — ongeacht hoeveel foto's een variant heeft. */}
+              {displayImages.length > 1 && (() => {
+                const MAX_VISIBLE_THUMBS = 4
+                const hasOverflow = displayImages.length > MAX_VISIBLE_THUMBS
+                // Bij overflow houden we 1 slot vrij voor de "+N"-tegel,
+                // dus de zichtbare thumbnails worden 3 (i.p.v. 4).
+                const visibleCount = hasOverflow
+                  ? MAX_VISIBLE_THUMBS - 1
+                  : displayImages.length
+                const visibleThumbs = displayImages.slice(0, visibleCount)
+                // Foto die als "ghost"-achtergrond in de +N tegel komt:
+                // bij voorkeur de eerstvolgende verborgen image (positie
+                // 3). Voor video's pakken we de poster zodat we altijd
+                // een statische preview hebben.
+                const overflowAnchor = displayImages[visibleCount]
+                const overflowAnchorSrc = overflowAnchor
+                  ? overflowAnchor.media_type === 'video'
+                    ? overflowAnchor.video_thumbnail_url ?? null
+                    : overflowAnchor.url
+                  : null
+                const hiddenCount = displayImages.length - visibleCount
+
+                return (
+                  <div className="grid grid-cols-4 gap-2 md:gap-3">
+                    {visibleThumbs.map((media, index) => (
+                      media.media_type === 'video' ? (
+                        <VideoThumbnail
+                          key={media.id}
+                          videoUrl={media.url}
+                          posterUrl={media.video_thumbnail_url}
+                          isSelected={selectedImage === index}
+                          onClick={() => scrollToImage(index)}
                         />
+                      ) : (
+                        <button
+                          key={media.id}
+                          onClick={() => scrollToImage(index)}
+                          className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
+                            selectedImage === index
+                              ? 'border-brand-primary scale-95'
+                              : 'border-gray-300 hover:border-black'
+                          }`}
+                        >
+                          <Image
+                            src={media.url}
+                            alt={media.alt_text || product.name}
+                            fill
+                            sizes="(max-width: 768px) 25vw, 12vw"
+                            className="object-cover object-center"
+                          />
+                        </button>
+                      )
+                    ))}
+
+                    {hasOverflow && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllPhotos(true)}
+                        aria-label={t('gallery.viewAllAria', { count: displayImages.length })}
+                        aria-haspopup="dialog"
+                        className="group relative aspect-[3/4] border-2 border-black overflow-hidden bg-black text-white transition-all hover:border-brand-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary"
+                      >
+                        {overflowAnchorSrc && (
+                          <Image
+                            src={overflowAnchorSrc}
+                            alt=""
+                            aria-hidden="true"
+                            fill
+                            sizes="(max-width: 768px) 25vw, 12vw"
+                            className="object-cover object-center opacity-30 group-hover:opacity-40 transition-opacity"
+                          />
+                        )}
+                        {/* Donkere lift bovenop de ghost-image zorgt
+                            dat de "+N"-typografie altijd leesbaar is,
+                            ongeacht de helderheid van de achtergrond. */}
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/70"
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-1.5 leading-none">
+                          <span className="font-display text-2xl md:text-3xl tracking-tight flex items-baseline">
+                            <Plus
+                              size={14}
+                              strokeWidth={3}
+                              className="mr-0.5 self-center"
+                              aria-hidden="true"
+                            />
+                            {hiddenCount}
+                          </span>
+                          <span className="mt-1 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.1em] md:tracking-[0.18em] text-white/85 whitespace-nowrap">
+                            {t('gallery.viewAllShort')}
+                          </span>
+                        </div>
                       </button>
-                    )
-                  ))}
-                </div>
-              )}
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Preview Images Notice - Only show if setting is enabled */}
               {settings?.show_preview_images_notice && (
@@ -2042,6 +2117,26 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           <PdpFaq />
         </div>
       </div>
+
+      {/* Brutalist fullscreen GALLERY-lightbox: toont alle product-media
+          in een verticaal grid. Geactiveerd door de "+N MEER"-tegel in
+          de thumbnail-row (of toekomstige andere triggers). Klikken op
+          een tegel navigeert de hero-viewer naar die index en sluit. */}
+      {showAllPhotos && (
+        <PdpGalleryLightbox
+          items={displayImages.map((m) => ({
+            id: m.id,
+            url: m.url,
+            alt_text: m.alt_text,
+            media_type: m.media_type,
+            video_thumbnail_url: m.video_thumbnail_url,
+          }))}
+          selectedIndex={selectedImage}
+          productName={product.name}
+          onSelect={(idx) => scrollToImage(idx)}
+          onClose={() => setShowAllPhotos(false)}
+        />
+      )}
 
       {/* Image/Video Lightbox */}
       {showLightbox && displayImages[selectedImage]?.media_type === 'image' && (

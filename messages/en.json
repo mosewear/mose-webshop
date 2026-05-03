@@ -392,6 +392,14 @@
       "cta": "Follow @{username} on Instagram",
       "viewPost": "View"
     },
+    "gallery": {
+      "title": "All photos",
+      "close": "Close",
+      "viewAllShort": "View all",
+      "viewAllAria": "View all {count} photos in fullscreen",
+      "openPhoto": "Open photo {index} of {total}",
+      "current": "Now viewing"
+    },
     "brandWidget": {
       "headline": "WHO ARE WE?",
       "subline": "Find us on Instagram",

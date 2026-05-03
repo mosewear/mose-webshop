@@ -392,6 +392,14 @@
       "cta": "Volg @{username} op Instagram",
       "viewPost": "Bekijk"
     },
+    "gallery": {
+      "title": "Alle foto's",
+      "close": "Sluiten",
+      "viewAllShort": "Bekijk alles",
+      "viewAllAria": "Bekijk alle {count} foto's in fullscreen",
+      "openPhoto": "Open foto {index} van {total}",
+      "current": "Nu in beeld"
+    },
     "brandWidget": {
       "headline": "WIE ZIJN WIJ?",
       "subline": "Ontdek ons op Instagram",
