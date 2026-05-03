@@ -12,8 +12,10 @@ import {
   Search as SearchIcon,
   Instagram,
   Mail,
+  Truck,
 } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
+import MobileMenuInstagramRow from '@/components/layout/MobileMenuInstagramRow'
 
 interface MobileMenuProps {
   isOpen: boolean
@@ -46,7 +48,7 @@ const INSTAGRAM_URL = 'https://instagram.com/mosewearcom'
 /**
  * MOSE STATEMENT DRAWER — full-bleed brutalist mobile menu.
  *
- * Bug-fixes t.o.v. de oude inline menu in Header.tsx:
+ * UX-fundamenten (allemaal aanwezig):
  *  - Eigen close-knop binnen de drawer (de hamburger zat onder
  *    de drawer en was niet bereikbaar zodra het menu open was).
  *  - Esc-toets sluit
@@ -54,15 +56,17 @@ const INSTAGRAM_URL = 'https://instagram.com/mosewearcom'
  *  - Body-scroll-lock zolang open
  *  - Focus-management: focus naar close-knop on open, restore on close
  *  - role="dialog" + aria-modal voor screenreaders
+ *  - Auto-close bij pathname-change (covers in-menu links + back/fwd)
  *
- * Visueel ontwerp:
- *  [1] Sticky zwarte header (logo + close-X)
- *  [2] Groene tagline-eyebrow ("GEEN FAST FASHION • …")
- *  [3] Editorial mega-nav (5 items) met "01 — SHOP →"
- *  [4] 3 brutalist actie-tegels (ACCOUNT / WISHLIST / ZOEK)
- *  [5] Zwart manifest-blok ("100% gemaakt in Groningen …")
- *  [6] Socials + taal-toggle in compacte voet-rij
- *  [7] Signature © MOSE — MADE WITH 🐾
+ * Visueel ontwerp (boven → onder):
+ *  [1]   Sticky zwarte header (logo + close-X)
+ *  [2]   Animated marquee-ticker (zwart-wit tape-strip met MOSE-waarden)
+ *  [3]   Editorial mega-nav (5 items) met "01 — SHOP →" + stagger
+ *  [3.5] Gratis-verzending-pill (smart, leest free_shipping_threshold)
+ *  [4]   3 brutalist actie-tegels (ACCOUNT / WISHLIST / ZOEK)
+ *  [5]   Live Instagram-rij (hergebruikt /api/instagram/feed)
+ *  [6]   Socials + taal-toggle in compacte voet-rij
+ *  [7]   Signature © MOSE — MADE WITH 🐾
  */
 export default function MobileMenu({
   isOpen,
@@ -75,24 +79,24 @@ export default function MobileMenu({
   const router = useRouter()
   const pathname = usePathname()
 
-  // Email komt uit site_settings (admin-beheer); we vallen netjes terug
-  // op de bekende fallback waarde wanneer de fetch (nog) niet klaar is.
+  // Site-settings: email + free-shipping threshold worden beide gebruikt
+  // in respectievelijk de socials-rij en de gratis-verzending-pill. We
+  // fetchen één keer bij mount en vallen netjes terug op sane defaults.
   const [contactEmail, setContactEmail] = useState('info@mosewear.nl')
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(100)
 
-  // Fetch site-settings één keer bij mount. Niet wachten op open zodat
-  // het email-adres direct correct is wanneer de drawer voor het eerst
-  // opent — getSiteSettings is gecached in lib/settings dus dit is
-  // effectief gratis na de eerste call van de page.
   useEffect(() => {
     let cancelled = false
     getSiteSettings()
       .then((s) => {
-        if (!cancelled && s.contact_email) {
-          setContactEmail(s.contact_email)
+        if (cancelled) return
+        if (s.contact_email) setContactEmail(s.contact_email)
+        if (typeof s.free_shipping_threshold === 'number') {
+          setFreeShippingThreshold(s.free_shipping_threshold)
         }
       })
       .catch(() => {
-        // bewust stil — fallback waarde is al gezet en valide
+        // bewust stil — defaults zijn al geldig
       })
     return () => {
       cancelled = true
@@ -144,13 +148,29 @@ export default function MobileMenu({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  // Hardcoded ticker-items uit de i18n messages. We lezen de array via
-  // t.raw om next-intl's array-flow te respecteren (zonder typescast
-  // valt 'ie terug op `string`).
+  // Ticker-items komen uit de i18n messages (array). Voor de marquee
+  // duplicaten we de set 2× zodat de animatie naadloos kan loopen
+  // (translateX 0 → -50% in CSS verlegt de tweede set exact op de
+  // startpositie van de eerste). Dit is hetzelfde patroon als
+  // PillTicker / InstagramMarquee elders in de codebase.
   const tickerItems = useMemo(() => {
     const raw = t.raw('tickerItems') as string[] | undefined
     return Array.isArray(raw) ? raw : []
   }, [t])
+
+  // Smart label voor de gratis-verzending pill. De admin bepaalt het
+  // gedrag via free_shipping_threshold:
+  //   - 0 (of <= 0): "Altijd gratis verzending"
+  //   - > 0:         "Gratis verzending vanaf €X"
+  // Zo blijft de pill altijd accuraat zonder dat we hem hardcoden.
+  const shippingLabel = useMemo(() => {
+    if (freeShippingThreshold <= 0) return t('freeShipping.always')
+    return t('freeShipping.fromAmount', {
+      amount: Number.isInteger(freeShippingThreshold)
+        ? freeShippingThreshold.toString()
+        : freeShippingThreshold.toFixed(2),
+    })
+  }, [freeShippingThreshold, t])
 
   const handleLanguageSwitch = (newLocale: string) => {
     if (newLocale === locale) return
@@ -216,18 +236,38 @@ export default function MobileMenu({
             geeft naar de pagina eronder (extra failsafe naast de body-
             scroll-lock). */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          {/* [2] GROENE TAGLINE-EYEBROW */}
-          <div
-            aria-hidden="true"
-            className="bg-brand-primary text-white text-[10px] font-bold uppercase tracking-[0.22em] px-4 py-2.5 flex items-center justify-center gap-3 border-b-2 border-black overflow-hidden whitespace-nowrap"
-          >
-            {tickerItems.map((item, idx) => (
-              <span key={idx} className="flex items-center gap-3">
-                {idx > 0 && <span aria-hidden="true">•</span>}
-                <span>{item}</span>
-              </span>
-            ))}
-          </div>
+          {/* [2] ANIMATED MARQUEE-TICKER — brutalist tape-strip. Twee
+              identieke sets achter elkaar zodat translateX(-50%) een
+              naadloze loop oplevert. Reduced-motion → animatie uit,
+              tweede set verborgen, eerste set blijft statisch leesbaar.
+              Alleen renderen als er items zijn (defensive: lege i18n
+              array zou anders een lege zwarte balk geven). */}
+          {tickerItems.length > 0 && (
+            <div
+              role="region"
+              aria-label={t('tickerAria')}
+              className="relative bg-black text-white border-b-2 border-black overflow-hidden"
+              // Custom marquee-snelheid voor deze instance (kort en
+              // levendig). Globale default in globals.css = 60s.
+              style={{ ['--marquee-duration' as string]: '24s' }}
+            >
+              <div className="flex w-max motion-safe:animate-marquee will-change-transform py-2.5">
+                <TickerSet items={tickerItems} />
+                <TickerSet items={tickerItems} ariaHidden />
+              </div>
+              {/* Subtiele fade-edges links/rechts zodat de tekst niet
+                  hard wegknipt; pointer-events:none zodat ze geen taps
+                  eten. */}
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black to-transparent pointer-events-none"
+              />
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-black to-transparent pointer-events-none"
+              />
+            </div>
+          )}
 
           {/* [3] PRIMARY NAVIGATION — editorial mega-items met
               stagger-fade-in. We gebruiken inline animationDelay zodat
@@ -289,6 +329,19 @@ export default function MobileMenu({
             </ol>
           </nav>
 
+          {/* [3.5] SHIPPING PILL — conversion-cue direct onder de
+              primary nav. Smart label: toont "Altijd gratis verzending"
+              wanneer threshold = 0 (of niet ingesteld), anders het
+              accurate drempelbedrag uit site_settings. */}
+          <div className="px-4 py-3 border-b-2 border-black bg-white">
+            <div className="inline-flex items-center gap-2 bg-brand-primary text-white px-3 h-9 border-2 border-black">
+              <Truck size={14} strokeWidth={2.5} aria-hidden="true" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em] leading-none">
+                {shippingLabel}
+              </span>
+            </div>
+          </div>
+
           {/* [4] SECONDARY ACTIONS — 3 gelijkwaardige tegels */}
           <div
             className="grid grid-cols-3 gap-2 p-4 border-b-2 border-black"
@@ -331,30 +384,13 @@ export default function MobileMenu({
             </button>
           </div>
 
-          {/* [5] BRAND MANIFEST — zwart blok met merk-DNA. Klikbaar als
-              link naar /over-mose zodat het méér is dan een statement. */}
-          <LocaleLink
-            href="/over-mose"
-            onClick={onClose}
-            className="group relative block bg-black text-white px-5 py-6 border-b-2 border-black hover:bg-brand-primary focus-visible:bg-brand-primary focus-visible:outline-none transition-colors"
-          >
-            <div className="font-display uppercase text-lg leading-tight space-y-1">
-              <p>{t('manifest.lineOne')}</p>
-              <p>{t('manifest.lineTwo')}</p>
-              <p className="text-brand-primary group-hover:text-white group-focus-visible:text-white transition-colors">
-                {t('manifest.lineThree')}
-              </p>
-            </div>
-            <div className="mt-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/70 group-hover:text-white transition-colors">
-              <span>{t('manifest.cta')}</span>
-              <ArrowRight
-                size={14}
-                strokeWidth={2.5}
-                className="transform group-hover:translate-x-1 transition-transform"
-                aria-hidden="true"
-              />
-            </div>
-          </LocaleLink>
+          {/* [5] LIVE INSTAGRAM-RIJ — community-vibe in MOSE-stijl.
+              Hergebruikt de bestaande IG-feed data (cached). Lazy-fetch:
+              de eerste keer dat het menu opent triggeren we de call,
+              daarna blijft de data in-memory. Rendert null als de admin
+              de feed disabled heeft of als het menu nog nooit open is
+              geweest. Eigen border-b + empty/skeleton zit in component. */}
+          <MobileMenuInstagramRow isOpen={isOpen} />
 
           {/* [6] SOCIALS + TAAL — compacte footer-rij */}
           <div className="flex items-center justify-between gap-4 px-4 py-4 border-b-2 border-black">
@@ -416,5 +452,41 @@ export default function MobileMenu({
         </div>
       </aside>
     </>
+  )
+}
+
+/**
+ * Eén kopie van de marquee-tekst-set. Wordt 2× gerenderd door de
+ * parent zodat translateX(0) → translateX(-50%) een naadloze loop is.
+ * Items worden gescheiden door een groene • bullet — kleine highlight
+ * van het brand-primary in een verder zwart-wit element.
+ */
+function TickerSet({
+  items,
+  ariaHidden = false,
+}: {
+  items: string[]
+  ariaHidden?: boolean
+}) {
+  return (
+    <div
+      // Bij ariaHidden negeert AT deze duplicate; eerste set blijft de
+      // canonical voor screen readers. Reduced-motion verbergt 'm via
+      // motion-reduce:hidden zodat enkel de eerste set in beeld blijft.
+      aria-hidden={ariaHidden ? 'true' : undefined}
+      className={`flex items-center shrink-0 ${ariaHidden ? 'motion-reduce:hidden' : ''}`}
+    >
+      {items.map((item, idx) => (
+        <span
+          key={`${ariaHidden ? 'b' : 'a'}-${idx}`}
+          className="flex items-center gap-3 pr-6 text-[10px] font-bold uppercase tracking-[0.22em] whitespace-nowrap"
+        >
+          <span aria-hidden="true" className="text-brand-primary leading-none">
+            •
+          </span>
+          <span>{item}</span>
+        </span>
+      ))}
+    </div>
   )
 }

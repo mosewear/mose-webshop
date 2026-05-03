@@ -114,16 +114,25 @@
       "GEEN FAST FASHION",
       "GEMAAKT IN GRONINGEN",
       "DOOR IRMA & RICK",
-      "BUILT TO LAST"
+      "BUILT TO LAST",
+      "30 DAGEN BEDENKTIJD",
+      "VERZENDING IN 1-2 DAGEN"
     ],
+    "tickerAria": "MOSE waarden-ticker",
     "navAria": "Hoofdnavigatie",
     "actionsAria": "Snelle acties",
     "search": "Zoek",
-    "manifest": {
-      "lineOne": "100% gemaakt in Groningen",
-      "lineTwo": "Door Irma & Rick",
-      "lineThree": "Geen fast fashion. Echt niet.",
-      "cta": "Lees ons verhaal"
+    "freeShipping": {
+      "always": "Altijd gratis verzending",
+      "fromAmount": "Gratis verzending vanaf €{amount}"
+    },
+    "instagramRow": {
+      "eyebrow": "OP INSTAGRAM",
+      "title": "Volg @{username}",
+      "subline": "Gedragen door onze community",
+      "viewAllShort": "Volg",
+      "viewPost": "Bekijk post {index} op Instagram",
+      "empty": "Binnenkort hier — volg ons alvast"
     },
     "social": {
       "instagram": "Bekijk MOSE op Instagram",

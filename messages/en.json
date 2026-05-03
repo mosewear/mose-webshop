@@ -114,16 +114,25 @@
       "NO FAST FASHION",
       "MADE IN GRONINGEN",
       "BY IRMA & RICK",
-      "BUILT TO LAST"
+      "BUILT TO LAST",
+      "30-DAY RETURNS",
+      "SHIPS IN 1-2 DAYS"
     ],
+    "tickerAria": "MOSE values ticker",
     "navAria": "Main navigation",
     "actionsAria": "Quick actions",
     "search": "Search",
-    "manifest": {
-      "lineOne": "100% made in Groningen",
-      "lineTwo": "By Irma & Rick",
-      "lineThree": "No fast fashion. Seriously.",
-      "cta": "Read our story"
+    "freeShipping": {
+      "always": "Always free shipping",
+      "fromAmount": "Free shipping from €{amount}"
+    },
+    "instagramRow": {
+      "eyebrow": "ON INSTAGRAM",
+      "title": "Follow @{username}",
+      "subline": "Worn by our community",
+      "viewAllShort": "Follow",
+      "viewPost": "View post {index} on Instagram",
+      "empty": "Coming soon — follow us in the meantime"
     },
     "social": {
       "instagram": "View MOSE on Instagram",
