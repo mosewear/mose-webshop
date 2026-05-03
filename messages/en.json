@@ -105,6 +105,36 @@
       "shop": "Shop"
     }
   },
+  "mobileMenu": {
+    "ariaLabel": "Main menu",
+    "openLabel": "Open menu",
+    "closeShort": "Close",
+    "closeAria": "Close menu",
+    "tickerItems": [
+      "NO FAST FASHION",
+      "MADE IN GRONINGEN",
+      "BY IRMA & RICK",
+      "BUILT TO LAST"
+    ],
+    "navAria": "Main navigation",
+    "actionsAria": "Quick actions",
+    "search": "Search",
+    "manifest": {
+      "lineOne": "100% made in Groningen",
+      "lineTwo": "By Irma & Rick",
+      "lineThree": "No fast fashion. Seriously.",
+      "cta": "Read our story"
+    },
+    "social": {
+      "instagram": "View MOSE on Instagram",
+      "email": "Email us"
+    },
+    "language": {
+      "label": "Language",
+      "switchTo": "Switch to {label}"
+    },
+    "signature": "© {year} MOSE — MADE WITH 🐾"
+  },
   "footer": {
     "tagline": "Clothing without fuss. Locally made. Built to last.",
     "shop": {

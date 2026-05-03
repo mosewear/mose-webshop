@@ -105,6 +105,36 @@
       "shop": "Shop"
     }
   },
+  "mobileMenu": {
+    "ariaLabel": "Hoofdmenu",
+    "openLabel": "Menu openen",
+    "closeShort": "Sluit",
+    "closeAria": "Menu sluiten",
+    "tickerItems": [
+      "GEEN FAST FASHION",
+      "GEMAAKT IN GRONINGEN",
+      "DOOR IRMA & RICK",
+      "BUILT TO LAST"
+    ],
+    "navAria": "Hoofdnavigatie",
+    "actionsAria": "Snelle acties",
+    "search": "Zoek",
+    "manifest": {
+      "lineOne": "100% gemaakt in Groningen",
+      "lineTwo": "Door Irma & Rick",
+      "lineThree": "Geen fast fashion. Echt niet.",
+      "cta": "Lees ons verhaal"
+    },
+    "social": {
+      "instagram": "Bekijk MOSE op Instagram",
+      "email": "Mail ons"
+    },
+    "language": {
+      "label": "Taal",
+      "switchTo": "Wissel naar {label}"
+    },
+    "signature": "© {year} MOSE — MADE WITH 🐾"
+  },
   "footer": {
     "tagline": "Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.",
     "shop": {

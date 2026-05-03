@@ -8,7 +8,7 @@ import { useCartDrawer } from '@/store/cartDrawer'
 import CartDrawer from '@/components/CartDrawer'
 import SearchOverlay from '@/components/SearchOverlay'
 import LanguageSelector from '@/components/LanguageSelector'
-import { ChevronRight, User, Heart } from 'lucide-react'
+import MobileMenu from '@/components/layout/MobileMenu'
 import { useTranslations, useLocale } from 'next-intl'
 
 export function Header() {
@@ -158,78 +158,15 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      <div
-        className={`fixed inset-0 z-40 bg-white transform transition-transform duration-300 md:hidden ${
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <nav className="flex flex-col h-full pt-24 px-8">
-          {/* Navigation Links - Green Arrows! */}
-          <Link
-            href={localeLink('/shop')}
-            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="uppercase">{t('shop')}</span>
-            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
-          </Link>
-          <Link
-            href={localeLink('/lookbook')}
-            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="uppercase">{t('lookbook')}</span>
-            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
-          </Link>
-          <Link
-            href={localeLink('/blog')}
-            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="uppercase">{t('blog')}</span>
-            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
-          </Link>
-          <Link
-            href={localeLink('/over-mose')}
-            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="uppercase">{t('about')}</span>
-            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
-          </Link>
-          <Link
-            href={localeLink('/contact')}
-            className="flex items-center justify-between py-5 text-2xl font-display border-b-2 border-gray-200 hover:text-brand-primary transition-all group"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <span className="uppercase">{t('contact')}</span>
-            <ChevronRight className="w-6 h-6 text-brand-primary group-hover:translate-x-2 transition-transform" />
-          </Link>
-
-          {/* Account - Green Box! */}
-          <div className="mt-8">
-            <Link
-              href={localeLink('/account')}
-              className="flex items-center gap-3 py-4 px-6 text-lg font-bold border-2 border-brand-primary bg-brand-primary text-white hover:bg-brand-primary-hover transition-all group"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <User className="w-6 h-6" />
-              <span className="uppercase tracking-wide">{t('account')}</span>
-            </Link>
-          </div>
-
-          {/* Wishlist - Green Heart */}
-          <Link
-            href={localeLink('/wishlist')}
-            className="flex items-center gap-3 py-4 text-lg font-semibold border-b-2 border-gray-200 hover:text-brand-primary transition-colors mt-6"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <Heart className="w-5 h-5 text-brand-primary" />
-            <span>{t('wishlist')}</span>
-          </Link>
-        </nav>
-      </div>
+      {/* Mobile Menu — brutalist statement-drawer met eigen close-X,
+          backdrop-tap-to-close, ESC, scroll-lock en focus-management.
+          Zie src/components/layout/MobileMenu.tsx voor de volledige
+          UX-uitleg per sectie. */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        onOpenSearch={() => setSearchOpen(true)}
+      />
 
       {/* Cart Drawer */}
       <CartDrawer isOpen={isOpen} onClose={closeDrawer} />
