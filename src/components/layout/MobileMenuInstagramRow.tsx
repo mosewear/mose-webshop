@@ -1,6 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Instagram, ArrowRight, Film, Layers } from 'lucide-react'
@@ -14,15 +21,65 @@ interface MobileMenuInstagramRowProps {
   /** True wanneer het menu (zichtbaar) open staat. Wordt gebruikt om
    *  de fetch lazy te triggeren — pas wanneer de gebruiker het menu
    *  voor het eerst opent slaan we onze /api/instagram/feed-call af.
-   *  Voorkomt een onnodige network-request voor élke bezoeker die
-   *  het menu nooit opent. */
+   *  Ook gate voor de auto-advance: zolang het menu dicht is loopt
+   *  de rAF niet (CPU/battery). */
   isOpen: boolean
+}
+
+/* Aantal posts dat we maximaal in de strip tonen. */
+const MAX_POSTS = 12
+/* Loop-duur in seconden voor de auto-advance (één volledige set). */
+const LOOP_SECONDS = 30
+
+/** Reactief: respecteert macOS/Windows prefers-reduced-motion. */
+function usePrefersReducedMotion(): boolean {
+  const [prefers, setPrefers] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setPrefers(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+  return prefers
+}
+
+/** Page Visibility API — pauzeert auto-advance wanneer tab verborgen. */
+function usePageVisible(): boolean {
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const update = () => setVisible(!document.hidden)
+    update()
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+  return visible
 }
 
 /**
  * Compacte brutalist Instagram-rij voor het mobiele menu. Toont een
- * horizontaal scrollbare strip van 6 thumbnails (tap = open IG-post in
- * nieuwe tab) plus een minimale header (eyebrow + handle + Volg-CTA).
+ * horizontaal **auto-scrollende** strip van max 12 thumbnails (tap =
+ * open IG-post in nieuwe tab) plus een minimale header (eyebrow +
+ * handle + Volg-CTA).
+ *
+ * Auto-scroll: zelfde hybrid-scroll als de homepage Instagram-carousel.
+ * Native swipe blijft werken; rAF schuift de strip continu door wanneer
+ * de gebruiker NIET interageert. Loop is naadloos doordat de post-set
+ * 2× gerenderd wordt en we wrappen op halfWidth.
+ *
+ * Auto-pauze in de volgende gevallen:
+ *   - Menu dicht (isOpen=false)
+ *   - Tab niet zichtbaar
+ *   - Recente user-interactie (touch / pointer-drag / horizontaal wheel)
+ *     → resumes 1.5s na laatste input
+ *   - prefers-reduced-motion: reduce → géén auto-advance, swipe blijft
+ *
+ * BELANGRIJK: track heeft GEEN `scroll-behavior: smooth`. Sommige
+ * browsers passen die rule óók toe op directe `scrollLeft = X`
+ * assignments → elke rAF-tick zou dan een smooth-animation triggeren
+ * die de volgende tick weer cancelt → strip staat visueel stil.
  *
  * Datasource: client-side fetch naar /api/instagram/feed (public,
  * gecached). De fetch wordt LAZY gestart wanneer `isOpen` voor het
@@ -46,21 +103,42 @@ export default function MobileMenuInstagramRow({
 }: MobileMenuInstagramRowProps) {
   const t = useTranslations('mobileMenu.instagramRow')
   const locale = useLocale()
+  const prefersReducedMotion = usePrefersReducedMotion()
+  const pageVisible = usePageVisible()
 
   const [data, setData] = useState<InstagramFeedData | null>(null)
   const [loaded, setLoaded] = useState(false)
-  // hasFetched voorkomt dat we bij elke open/close-toggle opnieuw
-  // fetchen — eerste open initialiseert, daarna hergebruikt de in-
-  // memory cache (en de server-side cache van /api/instagram/feed).
-  const hasFetchedRef = useRef(false)
+  // everOpened wordt true zodra de drawer voor het EERST opent en
+  // blijft daarna true. Werkt als gate voor (a) de fetch en (b) of
+  // we überhaupt iets in de DOM willen (skeleton/empty/strip). Voor
+  // bezoekers die het menu nooit openen blijft het component dus
+  // volledig "uit".
+  const [everOpened, setEverOpened] = useState(false)
 
+  /* ---- DOM + helper refs voor de auto-advance loop ---- */
+  const trackRef = useRef<HTMLDivElement | null>(null)
+  const halfWidthRef = useRef<number>(0)
+  const lastTickTsRef = useRef<number>(0)
+  const rafIdRef = useRef<number | null>(null)
+  const userResumeTimeoutRef = useRef<number | null>(null)
+  const isPointerDownRef = useRef<boolean>(false)
+  const [userInteracting, setUserInteracting] = useState(false)
+
+  // Eerste-open-gate: setState-in-render-pattern, het door React
+  // aanbevolen alternatief voor "derive state from prop history"
+  // zonder een useEffect-roundtrip
+  // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes).
+  // Triggert een directe re-render maar stabiliseert na 1 cycle.
+  if (isOpen && !everOpened) {
+    setEverOpened(true)
+  }
+
+  // Lazy fetch — pas wanneer het menu daadwerkelijk geopend is en we
+  // nog géén data binnen hebben. AbortController zodat we netjes
+  // kunnen aborten als de component unmount tijdens een trage fetch.
   useEffect(() => {
-    if (!isOpen) return
-    if (hasFetchedRef.current) return
-    hasFetchedRef.current = true
+    if (!everOpened || loaded) return
 
-    // AbortController zodat we netjes kunnen aborten als de component
-    // unmount tijdens een trage fetch (bv. user sluit het tabblad).
     const ctrl = new AbortController()
 
     fetch('/api/instagram/feed', { signal: ctrl.signal })
@@ -78,23 +156,141 @@ export default function MobileMenuInstagramRow({
       })
 
     return () => ctrl.abort()
-  }, [isOpen])
+  }, [everOpened, loaded])
 
-  // Eerste 6 posts maximaal — meer past niet ergonomisch in de
-  // scroll-strip en houdt de DOM lekker compact.
-  const posts = useMemo(() => (data?.posts ?? []).slice(0, 6), [data])
+  // Eerste 12 posts maximaal — past nét comfortabel in de loop-set en
+  // houdt de DOM in toom.
+  const posts = useMemo(
+    () => (data?.posts ?? []).slice(0, MAX_POSTS),
+    [data]
+  )
+  // Loop-set: posts 2× gedupliceerd voor naadloze wrap.
+  const loopPosts = useMemo(() => [...posts, ...posts], [posts])
 
-  // Settings + computed afgeleiden. We pakken de username uit settings
-  // (admin-beheer) en vallen netjes terug op 'mosewearcom' zodat we
-  // altijd een werkbare CTA-href hebben.
+  // Settings + computed afgeleiden.
   const settings: InstagramDisplaySettings | null = data?.settings ?? null
   const username = settings?.username || 'mosewearcom'
   const ctaUrl = settings?.cta_url || `https://www.instagram.com/${username}`
 
+  /* ---- Auto-advance: gate-check ---- */
+  const isAnimating =
+    isOpen &&
+    pageVisible &&
+    !userInteracting &&
+    !prefersReducedMotion &&
+    posts.length > 1
+
+  /* ---- Effect: meet halfWidth (= 1 post-set) ----
+     Gemeten via useLayoutEffect zodat 't synchroon na DOM-commit
+     gebeurt. Hermeten bij wijziging in posts.length én bij resize. */
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (trackRef.current) {
+        halfWidthRef.current = trackRef.current.scrollWidth / 2
+      }
+    }
+    measure()
+    let ro: ResizeObserver | null = null
+    if (trackRef.current && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(measure)
+      ro.observe(trackRef.current)
+    }
+    window.addEventListener('resize', measure)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [posts.length])
+
+  /* ---- Effect: rAF auto-advance loop ---- */
+  useEffect(() => {
+    if (!isAnimating) {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+      lastTickTsRef.current = 0
+      return
+    }
+
+    const tick = (ts: number) => {
+      const track = trackRef.current
+      if (!track) return
+      // Hermeet halfWidth elke tick (kost ~0ms).
+      const halfWidth = track.scrollWidth / 2
+      halfWidthRef.current = halfWidth
+      if (halfWidth <= 0) {
+        rafIdRef.current = requestAnimationFrame(tick)
+        return
+      }
+      const last = lastTickTsRef.current
+      lastTickTsRef.current = ts
+      if (last === 0) {
+        rafIdRef.current = requestAnimationFrame(tick)
+        return
+      }
+      const dt = (ts - last) / 1000
+      const pps = halfWidth / LOOP_SECONDS
+      const dx = pps * dt
+      const next = track.scrollLeft + dx
+      track.scrollLeft = next >= halfWidth ? next - halfWidth : next
+      rafIdRef.current = requestAnimationFrame(tick)
+    }
+
+    rafIdRef.current = requestAnimationFrame(tick)
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+    }
+  }, [isAnimating])
+
+  /* ---- User interaction → pauzeer 1.5s ---- */
+  const noteUserInteraction = useCallback(() => {
+    setUserInteracting(true)
+    if (userResumeTimeoutRef.current !== null) {
+      clearTimeout(userResumeTimeoutRef.current)
+    }
+    userResumeTimeoutRef.current = window.setTimeout(() => {
+      setUserInteracting(false)
+      userResumeTimeoutRef.current = null
+    }, 1500)
+  }, [])
+
+  const handlePointerDown = useCallback(() => {
+    isPointerDownRef.current = true
+    noteUserInteraction()
+  }, [noteUserInteraction])
+
+  const handlePointerUpLike = useCallback(() => {
+    isPointerDownRef.current = false
+  }, [])
+
+  const handlePointerMove = useCallback(() => {
+    if (isPointerDownRef.current) noteUserInteraction()
+  }, [noteUserInteraction])
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) noteUserInteraction()
+    },
+    [noteUserInteraction]
+  )
+
+  /* Cleanup op unmount */
+  useEffect(() => {
+    return () => {
+      if (userResumeTimeoutRef.current !== null) {
+        clearTimeout(userResumeTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Voordat de drawer ooit open is geweest fetchen we niets en
   // renderen we niets — geen waste skeleton in de DOM voor users
   // die het menu nooit openen.
-  if (!hasFetchedRef.current && !loaded) return null
+  if (!everOpened) return null
   // Wanneer feed disabled is door admin: rendert helemaal niets. Niet
   // tonen is beter dan een lege placeholder voor de admin die expliciet
   // gekozen heeft om geen IG te koppelen.
@@ -107,11 +303,7 @@ export default function MobileMenuInstagramRow({
       aria-label={t('eyebrow')}
       className="border-b-2 border-black"
     >
-      {/* Header-rij: eyebrow + handle + brutalist Volg-CTA. Typografie
-          getuned op site-brede DNA — eyebrow text-xs/0.2em (matcht de
-          PDP-eyebrow & ProductReviews), title text-2xl, en Volg-CTA als
-          filled-black primary CTA met hover→groen flip (consistent met
-          de PDP "Toevoegen aan mandje"-logica). */}
+      {/* Header-rij: eyebrow + handle + brutalist Volg-CTA. */}
       <div className="flex items-end justify-between gap-3 px-4 pt-4 pb-3">
         <div className="min-w-0">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
@@ -137,8 +329,7 @@ export default function MobileMenuInstagramRow({
         </a>
       </div>
 
-      {/* Empty state: enabled door admin maar nog geen posts. Heel
-          subtiel — gewoon een dunne lijn met label. */}
+      {/* Empty state */}
       {loaded && posts.length === 0 && (
         <div className="px-4 pb-4">
           <div className="border-2 border-dashed border-gray-300 px-3 py-4 text-center">
@@ -149,56 +340,68 @@ export default function MobileMenuInstagramRow({
         </div>
       )}
 
-      {/* Thumbnail-strip: horizontaal scrollbaar met scroll-snap. Op
-          smal scherm zie je ~3.5 tegels — de fade-edge rechts en de
-          half-zichtbare 4e tegel hinten subtiel naar de rest. We
-          gebruiken aspect-square (= IG-feed default) zodat de tegels
-          niet onnodig veel verticale ruimte vreten. */}
+      {/* Auto-scrollende thumbnail-strip. snap-proximity (i.p.v.
+          mandatory) zodat de rAF auto-advance niet door snap-points
+          wordt onderbroken. Native swipe behoudt z'n snap-feel
+          wanneer de gebruiker zelf scrollt. */}
       {posts.length > 0 && (
         <div className="relative pb-4">
           <div
-            className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            ref={trackRef}
+            className="overflow-x-auto overflow-y-hidden snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{
               // IE/Edge legacy fallback. Tailwind's arbitrary
               // [scrollbar-width:none] dekt moderne browsers af; deze
               // inline style is voor Edge < 79.
               msOverflowStyle: 'none',
             }}
+            onTouchStart={noteUserInteraction}
+            onTouchMove={noteUserInteraction}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUpLike}
+            onPointerCancel={handlePointerUpLike}
+            onPointerLeave={handlePointerUpLike}
+            onPointerMove={handlePointerMove}
+            onWheel={handleWheel}
+            onKeyDown={noteUserInteraction}
           >
             <ol className="flex gap-2 px-4">
-              {posts.map((post, idx) => (
+              {loopPosts.map((post, idx) => (
                 <InstagramThumb
                   key={`${post.id}-${idx}`}
                   post={post}
                   index={idx}
                   locale={locale}
-                  viewPostLabel={t('viewPost', { index: idx + 1 })}
+                  viewPostLabel={t('viewPost', { index: (idx % posts.length) + 1 })}
                 />
               ))}
             </ol>
           </div>
-          {/* Scroll-hint: fade-edge rechts, alleen wanneer er meer dan
-              4 posts zijn (anders past alles direct in beeld). Pure
-              CSS, pointer-events-none zodat 'ie geen taps eet. */}
-          {posts.length > 4 && (
-            <span
-              aria-hidden="true"
-              className="absolute top-0 right-0 bottom-4 w-8 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none"
-            />
-          )}
+          {/* Scroll-hint: fade-edges links + rechts. Met de continue
+              auto-scroll loopt er altijd content beide kanten op uit
+              beeld; subtiele fade-edges geven dat een polished gevoel.
+              pointer-events-none zodat ze geen taps eten. */}
+          <span
+            aria-hidden="true"
+            className="absolute top-0 left-0 bottom-4 w-6 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none"
+          />
+          <span
+            aria-hidden="true"
+            className="absolute top-0 right-0 bottom-4 w-6 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none"
+          />
         </div>
       )}
 
       {/* Skeleton: voorkom layout-jump tijdens initial load. We tonen
-          6 grijze placeholders die exact dezelfde dimensies hebben als
-          de echte thumbs. */}
+          12 grijze placeholders die exact dezelfde dimensies hebben
+          als de echte thumbs. */}
       {!loaded && (
         <div className="overflow-hidden pb-4">
           <ol
             className="flex gap-2 px-4"
             aria-hidden="true"
           >
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: MAX_POSTS }).map((_, i) => (
               <li
                 key={i}
                 className="flex-shrink-0 w-24 aspect-square border-2 border-black bg-gray-100 animate-pulse"
