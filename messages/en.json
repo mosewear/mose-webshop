@@ -1306,10 +1306,13 @@
       "returns": "{days} days return",
       "secure": "Secure payment"
     },
-    "reviewsMarquee": {
-      "ariaLabel": "Real reviews from MOSE customers",
-      "eyebrow": "Real reviews",
-      "verified": "Verified"
+    "founders": {
+      "eyebrow": "Behind MOSE",
+      "name": "We're Irma & Rick",
+      "description": "Our atelier in Groningen-Helpman.",
+      "cta": "Read our story",
+      "aria": "Read our story — we're Irma & Rick, founders of MOSE",
+      "photoAlt": "Irma & Rick — founders of MOSE"
     },
     "featured": {
       "label": "Bestsellers",

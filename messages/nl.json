@@ -1257,10 +1257,13 @@
       "returns": "{days} dagen retour",
       "secure": "Veilig betalen"
     },
-    "reviewsMarquee": {
-      "ariaLabel": "Echte reviews van MOSE-klanten",
-      "eyebrow": "Echte reviews",
-      "verified": "Geverifieerd"
+    "founders": {
+      "eyebrow": "Achter MOSE",
+      "name": "Wij zijn Irma & Rick",
+      "description": "Ons atelier in Groningen-Helpman.",
+      "cta": "Lees ons verhaal",
+      "aria": "Lees ons verhaal — wij zijn Irma & Rick, oprichters van MOSE",
+      "photoAlt": "Irma & Rick — oprichters van MOSE"
     },
     "featured": {
       "label": "Bestsellers",

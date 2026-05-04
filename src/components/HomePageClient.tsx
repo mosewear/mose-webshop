@@ -29,10 +29,6 @@ interface HomePageClientProps {
   featuredProducts: any[]
   categories: any[]
   instagramSlot?: React.ReactNode
-  /** Server-rendered brutalist reviews tape-strip die de oude
-   *  trust-badges-balk vervangt. Wordt uit `[locale]/page.tsx`
-   *  doorgegeven en rendert `null` wanneer er <3 5★ reviews zijn. */
-  reviewsMarqueeSlot?: React.ReactNode
 }
 
 export default function HomePageClient({
@@ -41,7 +37,6 @@ export default function HomePageClient({
   featuredProducts: initialFeaturedProducts,
   categories: initialCategories,
   instagramSlot,
-  reviewsMarqueeSlot,
 }: HomePageClientProps) {
   const t = useTranslations('homepage')
   const tProduct = useTranslations('product')
@@ -276,12 +271,79 @@ export default function HomePageClient({
         </div>
       </section>
 
-      {/* Reviews Tape-Strip — vervangt de generieke trust-badges-bar.
-          Echte 5★ reviews uit de database als brutalist marquee. Server-
-          rendered (zie `HomeReviewsMarqueeFetcher`); rendert `null`
-          wanneer er nog <3 goedgekeurde 5★ reviews zijn zodat de
-          homepage in dat geval simpelweg doorloopt naar de products. */}
-      {reviewsMarqueeSlot}
+      {/* Founders Strip — vervangt de oude trust-bullets met een
+          persoonlijk statement van de oprichters. Hergebruikt de
+          story-foto uit de admin (één bron van waarheid) zodat de
+          foto van Irma & Rick consistent blijft tussen deze strip en
+          de story-sectie verderop. Klikbaar door de hele strip naar
+          /over-mose voor diepere context.
+
+          Layout:
+            Mobile  — [foto] [naam + korte zin]                    [→]
+            Desktop — [foto] [eyebrow + naam + zin]   [LEES VERHAAL →]
+      */}
+      <section className="bg-white border-b-2 border-black">
+        <LocaleLink
+          href="/over-mose"
+          aria-label={t('founders.aria')}
+          className="group block max-w-7xl mx-auto px-4 py-4 md:py-5 hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none transition-colors"
+        >
+          <div className="flex items-center gap-4 md:gap-6">
+            {/* Founder photo — brutalist 2px zwarte border, vierkante
+                tile. Op mobiel 64px, desktop 80px. group-hover doet
+                een subtiele scale voor leven, geen fluffy shadow. */}
+            <div className="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 border-2 border-black overflow-hidden bg-gray-100">
+              <Image
+                src={homepageSettings?.story_image_url || '/og-default.jpg'}
+                alt={t('founders.photoAlt')}
+                fill
+                sizes="(min-width: 768px) 80px, 64px"
+                className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+
+            {/* Tekstblok. Eyebrow alleen op desktop (op mobiel zou hij
+                botsen met de naam — daar zien we direct WIJ ZIJN). */}
+            <div className="flex-1 min-w-0">
+              <div className="hidden md:block text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none mb-2">
+                {t('founders.eyebrow')}
+              </div>
+              <h3 className="font-display text-lg md:text-2xl uppercase tracking-tight leading-none">
+                {t('founders.name')}
+              </h3>
+              <p className="text-[11px] md:text-sm text-gray-600 mt-1 md:mt-1.5 leading-snug truncate md:whitespace-normal">
+                {t('founders.description')}
+              </p>
+            </div>
+
+            {/* Desktop CTA — filled-black knop met hover-flip naar
+                groen, identiek aan de "Volg" CTA in de mobiele menu IG-
+                rij voor visuele consistentie. */}
+            <div className="hidden md:flex flex-shrink-0">
+              <span className="inline-flex items-center gap-2 bg-black text-white border-2 border-black px-4 h-10 text-xs font-bold uppercase tracking-[0.2em] group-hover:bg-brand-primary group-hover:border-brand-primary transition-colors">
+                <span>{t('founders.cta')}</span>
+                <ArrowRight
+                  size={14}
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                  className="transform group-hover:translate-x-0.5 transition-transform"
+                />
+              </span>
+            </div>
+
+            {/* Mobile arrow-tile — compacter, geen tekst. Gegarandeerd
+                tap-target ≥ 40px. */}
+            <div className="md:hidden flex-shrink-0">
+              <span
+                aria-hidden="true"
+                className="inline-flex items-center justify-center w-10 h-10 border-2 border-black group-hover:bg-brand-primary group-hover:border-brand-primary group-hover:text-white transition-colors"
+              >
+                <ArrowRight size={16} strokeWidth={2.5} />
+              </span>
+            </div>
+          </div>
+        </LocaleLink>
+      </section>
 
       {/* Featured Products */}
       <section className="py-12 md:py-20 px-4 relative overflow-hidden bg-gray-50">
