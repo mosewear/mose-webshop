@@ -107,19 +107,21 @@ export default function MobileMenuInstagramRow({
       aria-label={t('eyebrow')}
       className="border-b-2 border-black"
     >
-      {/* Header-rij: eyebrow + handle + brutalist Volg-CTA. We gebruiken
-          dezelfde schaal en typografie als de andere drawer-secties zodat
-          het ritme intact blijft. */}
+      {/* Header-rij: eyebrow + handle + brutalist Volg-CTA. Typografie
+          getuned op site-brede DNA — eyebrow text-xs/0.2em (matcht de
+          PDP-eyebrow & ProductReviews), title text-2xl, en Volg-CTA als
+          filled-black primary CTA met hover→groen flip (consistent met
+          de PDP "Toevoegen aan mandje"-logica). */}
       <div className="flex items-end justify-between gap-3 px-4 pt-4 pb-3">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-brand-primary leading-none">
-            <Instagram size={12} strokeWidth={2.5} aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
+            <Instagram size={14} strokeWidth={2.5} aria-hidden="true" />
             <span>{t('eyebrow')}</span>
           </div>
-          <h2 className="mt-1.5 font-display text-xl uppercase tracking-tight leading-none truncate">
+          <h2 className="mt-2 font-display text-2xl uppercase tracking-tight leading-none truncate">
             {t('title', { username })}
           </h2>
-          <p className="mt-1 text-[11px] text-gray-500 truncate">
+          <p className="mt-1.5 text-[11px] text-gray-500 truncate">
             {t('subline')}
           </p>
         </div>
@@ -128,10 +130,10 @@ export default function MobileMenuInstagramRow({
           href={ctaUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-shrink-0 inline-flex items-center gap-1.5 border-2 border-black px-3 h-9 text-[10px] font-bold uppercase tracking-[0.18em] hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-black text-white border-2 border-black px-3 h-9 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-brand-primary hover:border-brand-primary focus-visible:bg-brand-primary focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-colors"
         >
           <span>{t('viewAllShort')}</span>
-          <ArrowRight size={12} strokeWidth={2.5} aria-hidden="true" />
+          <ArrowRight size={14} strokeWidth={2.5} aria-hidden="true" />
         </a>
       </div>
 

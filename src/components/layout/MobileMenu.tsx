@@ -208,8 +208,11 @@ export default function MobileMenu({
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* [1] STICKY HEADER — zwarte balk met logo + close-X */}
-        <header className="sticky top-0 z-10 bg-black text-white flex items-center justify-between gap-4 px-4 h-14 border-b-2 border-white">
+        {/* [1] STICKY HEADER — zwarte balk met logo + close-X. De
+            groene 3px scheidingslijn beneden matched de signatuur uit
+            de shop-hero (`border-b-4 border-brand-primary`) en geeft
+            direct merk-cue zodra het menu opent. */}
+        <header className="sticky top-0 z-10 bg-black text-white flex items-center justify-between gap-4 px-4 h-14 border-b-[3px] border-brand-primary">
           <LocaleLink
             href="/"
             onClick={onClose}
@@ -219,9 +222,9 @@ export default function MobileMenu({
             <Image
               src="/logomose.png"
               alt="MOSE"
-              width={140}
-              height={48}
-              className="h-7 w-auto brightness-0 invert"
+              width={160}
+              height={56}
+              className="h-8 w-auto brightness-0 invert"
               priority
             />
           </LocaleLink>
@@ -243,17 +246,19 @@ export default function MobileMenu({
             geeft naar de pagina eronder (extra failsafe naast de body-
             scroll-lock). */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          {/* [2] ANIMATED MARQUEE-TICKER — brutalist tape-strip. Twee
-              identieke sets achter elkaar zodat translateX(-50%) een
-              naadloze loop oplevert. Reduced-motion → animatie uit,
+          {/* [2] ANIMATED MARQUEE-TICKER — brutalist tape-strip op het
+              wit-canvas (consistent met shop/PDP/home, die allemaal wit
+              + zwarte borders + groene accents als handtekening hebben).
+              Twee identieke sets achter elkaar zodat translateX(-50%)
+              een naadloze loop oplevert. Reduced-motion → animatie uit,
               tweede set verborgen, eerste set blijft statisch leesbaar.
               Alleen renderen als er items zijn (defensive: lege i18n
-              array zou anders een lege zwarte balk geven). */}
+              array zou anders een lege balk geven). */}
           {tickerItems.length > 0 && (
             <div
               role="region"
               aria-label={t('tickerAria')}
-              className="relative bg-black text-white border-b-2 border-black overflow-hidden"
+              className="relative bg-white text-black border-b-2 border-black overflow-hidden"
               // Custom marquee-snelheid voor deze instance (kort en
               // levendig). Globale default in globals.css = 60s.
               style={{ ['--marquee-duration' as string]: '24s' }}
@@ -267,11 +272,11 @@ export default function MobileMenu({
                   eten. */}
               <span
                 aria-hidden="true"
-                className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black to-transparent pointer-events-none"
+                className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white to-transparent pointer-events-none"
               />
               <span
                 aria-hidden="true"
-                className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-black to-transparent pointer-events-none"
+                className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none"
               />
             </div>
           )}
@@ -309,15 +314,26 @@ export default function MobileMenu({
                       onClick={onClose}
                       className="group relative flex items-center justify-between gap-4 px-5 py-5 bg-white hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none transition-colors"
                     >
-                      {/* Groene linker-marker, alleen zichtbaar op
-                          hover/focus voor een sterk MOSE-feel */}
+                      {/* Groene linker-marker. 3px (in plaats van 1px)
+                          maakt 'm op hover/focus visueel volwaardig
+                          gelijkwaardig aan de PDP-CTA accent-bar en de
+                          shop-filter-borders, en blijft als brutalist
+                          accent leesbaar op zwart hover-canvas. */}
                       <span
                         aria-hidden="true"
-                        className="absolute left-0 top-0 bottom-0 w-1 bg-brand-primary scale-y-0 group-hover:scale-y-100 group-focus-visible:scale-y-100 origin-top transition-transform duration-200"
+                        className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand-primary scale-y-0 group-hover:scale-y-100 group-focus-visible:scale-y-100 origin-top transition-transform duration-200"
                       />
                       <span className="flex items-baseline gap-3 md:gap-4">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-primary leading-none">
-                          {number}
+                        {/* Editorial-binding: nummer + em-dash + label.
+                            Tracking 0.2em matched de site-brede eyebrow-
+                            standard (PDP, ProductReviews, IG-eyebrow).
+                            De em-dash visualiseert de relatie tussen
+                            nummer en titel — herkenbaar magazine-patroon. */}
+                        <span className="inline-flex items-baseline gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
+                          <span>{number}</span>
+                          <span aria-hidden="true" className="opacity-70">
+                            —
+                          </span>
                         </span>
                         <span className="font-display text-2xl md:text-3xl uppercase tracking-tight leading-none">
                           {tCommon(item.labelKey)}
@@ -337,19 +353,24 @@ export default function MobileMenu({
           </nav>
 
           {/* [3.5] SHIPPING PILL — conversion-cue direct onder de
-              primary nav. Smart label: toont "Altijd gratis verzending"
-              wanneer threshold = 0 (of niet ingesteld), anders het
-              accurate drempelbedrag uit site_settings. */}
-          <div className="px-4 py-3 border-b-2 border-black bg-white">
-            <div className="inline-flex items-center gap-2 bg-brand-primary text-white px-3 h-9 border-2 border-black">
-              <Truck size={14} strokeWidth={2.5} aria-hidden="true" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.18em] leading-none">
-                {shippingLabel}
-              </span>
-            </div>
+              primary nav. Full-width brutalist statement-strip i.p.v.
+              een kleine inline pill: visueel volwaardig blok dat ritme
+              maakt tussen de nav-rij en de actie-tegels. Matched de
+              uitstraling van de primary CTA's op PDP/checkout (groen
+              + zwart border + uppercase + 0.2em tracking). */}
+          <div
+            role="note"
+            className="flex items-center justify-center gap-2.5 px-4 py-3 border-b-2 border-black bg-brand-primary text-white"
+          >
+            <Truck size={16} strokeWidth={2.5} aria-hidden="true" />
+            <span className="text-[11px] md:text-xs font-bold uppercase tracking-[0.2em] leading-none">
+              {shippingLabel}
+            </span>
           </div>
 
-          {/* [4] SECONDARY ACTIONS — 3 gelijkwaardige tegels */}
+          {/* [4] SECONDARY ACTIONS — 3 gelijkwaardige tegels.
+              text-[11px] + tracking-[0.2em] + 22px-icons matched de
+              standaard chip/utility-styling op PDP en shop-filters. */}
           <div
             className="grid grid-cols-3 gap-2 p-4 border-b-2 border-black"
             aria-label={t('actionsAria')}
@@ -360,8 +381,8 @@ export default function MobileMenu({
               onClick={onClose}
               className="flex flex-col items-center justify-center gap-1.5 border-2 border-black px-2 py-4 hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none transition-colors"
             >
-              <User size={20} strokeWidth={2} aria-hidden="true" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] leading-none">
+              <User size={22} strokeWidth={2} aria-hidden="true" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] leading-none">
                 {tCommon('account')}
               </span>
             </LocaleLink>
@@ -370,8 +391,8 @@ export default function MobileMenu({
               onClick={onClose}
               className="flex flex-col items-center justify-center gap-1.5 border-2 border-black px-2 py-4 hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none transition-colors"
             >
-              <Heart size={20} strokeWidth={2} aria-hidden="true" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] leading-none">
+              <Heart size={22} strokeWidth={2} aria-hidden="true" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] leading-none">
                 {tCommon('wishlist')}
               </span>
             </LocaleLink>
@@ -384,8 +405,8 @@ export default function MobileMenu({
               className="flex flex-col items-center justify-center gap-1.5 border-2 border-black px-2 py-4 hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none transition-colors"
               aria-label={tCommon('search')}
             >
-              <SearchIcon size={20} strokeWidth={2} aria-hidden="true" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] leading-none">
+              <SearchIcon size={22} strokeWidth={2} aria-hidden="true" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] leading-none">
                 {t('search')}
               </span>
             </button>
