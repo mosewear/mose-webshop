@@ -6,7 +6,17 @@ import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
 import { useWishlist } from '@/store/wishlist'
-import { Star, CalendarCheck, Crown } from 'lucide-react'
+import {
+  Star,
+  CalendarCheck,
+  Crown,
+  MapPin,
+  Truck,
+  RefreshCw,
+  ShieldCheck,
+  Mail,
+  ArrowRight,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useState, FormEvent, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -170,11 +180,16 @@ export default function HomePageClient({
               {homepageSettings?.hero_subtitle || t('hero.subtitle')}
             </p>
 
-            {/* Modern CTA Buttons - Touch Optimized */}
+            {/* Brutalist CTA Buttons — flat vlakken, harde randen, geen
+                scale of drop-shadow. De primary CTA behoudt de
+                scale-x-fill (links → rechts) animatie omdat dat een
+                editorial brutalist micro-interactie is, geen "fluffy
+                modern web". Tracking gelijk getrokken naar 0.2em
+                (site-brede eyebrow-standaard). */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <LocaleLink 
-                href={homepageSettings?.hero_cta1_link || '/shop'} 
-                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl hover:shadow-brand-primary/50 block text-center"
+              <LocaleLink
+                href={homepageSettings?.hero_cta1_link || '/shop'}
+                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] overflow-hidden border-2 border-brand-primary block text-center transition-colors"
                 aria-label={t('hero.cta1.aria')}
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -183,11 +198,11 @@ export default function HomePageClient({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </span>
-                <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
+                <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" aria-hidden="true" />
               </LocaleLink>
-              <LocaleLink 
-                href={homepageSettings?.hero_cta2_link || '/lookbook'} 
-                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-wider transition-all duration-300 hover:bg-white hover:text-black active:scale-95 block text-center"
+              <LocaleLink
+                href={homepageSettings?.hero_cta2_link || '/lookbook'}
+                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] transition-colors hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary block text-center"
                 aria-label={t('hero.cta2.aria')}
               >
                 <span className="flex items-center justify-center gap-2">
@@ -202,44 +217,57 @@ export default function HomePageClient({
           </div>
         </div>
 
-        {/* Animated Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
-          <div className="flex flex-col items-center gap-2 animate-bounce">
-            <span className="text-white/60 text-sm uppercase tracking-wider">{t('hero.scroll')}</span>
-            <div className="w-6 h-10 border-2 border-white/40 rounded-full flex items-start justify-center p-2">
-              <div className="w-1.5 h-3 bg-brand-primary rounded-full animate-pulse" />
-            </div>
+        {/* Brutalist scroll-indicator — verticale 2px lijn met groene
+            pulsing punt. Vervangt de "rounded-full mouse"-icon die het
+            meest niet-brutalist element op de pagina was. Editorial:
+            label boven, ↓ pijl, dan een dunne lijn die naar beneden
+            wijst. Hele groep heeft de animate-bounce voor de subtiele
+            "scroll-prompt" cue, identiek aan de oude indicator. */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+          <div className="flex flex-col items-center gap-3 animate-bounce">
+            <span className="text-white text-[10px] font-bold uppercase tracking-[0.3em] leading-none">
+              {t('hero.scroll')}
+            </span>
+            <span aria-hidden="true" className="block w-px h-10 bg-white/80" />
+            <span aria-hidden="true" className="block w-2 h-2 bg-brand-primary animate-pulse" style={{ animationDuration: '1.6s' }} />
           </div>
         </div>
       </section>
 
-      {/* Stats Bar - Mobile Optimized */}
-      <section className="bg-gradient-to-r from-brand-primary via-brand-primary-hover to-brand-primary py-10 md:py-14">
+      {/* Stats Bar — flat brand-primary statement-blok. Geen gradient,
+          geen drop-shadow op cijfers, geen scale-hover. border-y-2
+          zwart maakt het een echt brutalist blok (zelfde patroon als
+          de shipping-pill in het mobiele menu). Tracking 0.2em
+          consistent met site-brede eyebrow-standaard. */}
+      <section className="bg-brand-primary text-white border-y-2 border-black py-10 md:py-14">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-3 gap-4 md:gap-8 text-center text-white">
-            <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{homepageSettings?.stats_1_number || '100%'}</div>
-              <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
+          <div className="grid grid-cols-3 gap-4 md:gap-8 text-center">
+            <div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 leading-none">
+                {homepageSettings?.stats_1_number || '100%'}
+              </div>
+              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] font-bold leading-tight px-1">
                 {homepageSettings?.stats_1_text || t('stats.local')}
               </div>
             </div>
-            <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 drop-shadow-lg">{settings.return_days}</div>
-              <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
+            <div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 leading-none">
+                {settings.return_days}
+              </div>
+              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] font-bold leading-tight px-1">
                 {homepageSettings?.stats_2_text || t('stats.returns')}
               </div>
             </div>
-            <div className="group hover:scale-105 active:scale-95 transition-transform duration-300 cursor-pointer">
-              {/* Render Icon dynamically */}
+            <div>
               <div className="flex justify-center mb-2 md:mb-3">
                 {(() => {
                   const iconMap: Record<string, LucideIcon> = { Star, CalendarCheck, Crown }
                   const iconName = homepageSettings?.stats_3_icon || 'Star'
                   const IconComponent = iconMap[iconName] || Star
-                  return <IconComponent className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 drop-shadow-lg" strokeWidth={2.5} />
+                  return <IconComponent className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16" strokeWidth={2.5} />
                 })()}
               </div>
-              <div className="text-[10px] leading-tight sm:text-xs md:text-base uppercase tracking-tight sm:tracking-[0.15em] md:tracking-[0.2em] font-semibold opacity-90 px-1">
+              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] font-bold leading-tight px-1">
                 {homepageSettings?.stats_3_text || t('stats.quality')}
               </div>
             </div>
@@ -247,46 +275,37 @@ export default function HomePageClient({
         </div>
       </section>
 
-      {/* Trust Badges Bar */}
-      <section className="bg-gray-100 border-y border-gray-200 py-4">
+      {/* Trust Badges Bar — wit canvas met 2px zwarte border-y, lucide
+          icons (consistent met menu/PDP), bold uppercase met 0.18em
+          tracking. Harde zwarte 2px dividers tussen items zodat het
+          ritme matched met de brutalist taal van de site. */}
+      <section className="bg-white border-b-2 border-black py-4">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-xs md:text-sm text-gray-700">
-            {/* Lokaal Gemaakt */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 md:gap-x-8 text-[11px] md:text-xs text-black">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-medium">{t('trust.local')}</span>
+              <MapPin size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
+              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.local')}</span>
             </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-gray-300" />
-            
-            {/* Gratis Verzending */}
+
+            <span aria-hidden="true" className="hidden sm:block w-px h-3 bg-black" />
+
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              <span className="font-medium">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
+              <Truck size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
+              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
             </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-gray-300" />
-            
-            {/* Retourbeleid */}
+
+            <span aria-hidden="true" className="hidden sm:block w-px h-3 bg-black" />
+
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span className="font-medium">{t('trust.returns', { days: settings.return_days })}</span>
+              <RefreshCw size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
+              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.returns', { days: settings.return_days })}</span>
             </div>
-            
-            <div className="hidden md:block w-px h-4 bg-gray-300" />
-            
-            {/* Veilig Betalen */}
+
+            <span aria-hidden="true" className="hidden md:block w-px h-3 bg-black" />
+
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span className="font-medium">{t('trust.secure')}</span>
+              <ShieldCheck size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
+              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.secure')}</span>
             </div>
           </div>
         </div>
@@ -313,12 +332,17 @@ export default function HomePageClient({
         </div>
         
         <div className="max-w-7xl mx-auto relative z-10">
-          {/* Section Header */}
+          {/* Section header — brutalist editorial. Eyebrow is solid
+              brand-primary text met groene • bullet (zelfde patroon
+              als de IG-eyebrow in het mobiele menu en de PDP-reviews),
+              i.p.v. de tinted bg-brand-primary/10 chip. */}
           <div className="text-center mb-12 md:mb-16 px-4">
-            <div className="inline-block px-4 py-2 bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-[0.2em] text-sm mb-4">
-              {homepageSettings?.featured_label || t('featured.label')}
+            <div className="inline-flex items-center justify-center gap-2 mb-4 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
+              <span aria-hidden="true">•</span>
+              <span>{homepageSettings?.featured_label || t('featured.label')}</span>
+              <span aria-hidden="true">•</span>
             </div>
-            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">{homepageSettings?.featured_title || t('featured.title')}</h2>
+            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight uppercase">{homepageSettings?.featured_title || t('featured.title')}</h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
               {homepageSettings?.featured_description || t('featured.description')}
             </p>
@@ -337,9 +361,9 @@ export default function HomePageClient({
                   <LocaleLink
                     key={product.id}
                     href={`/product/${product.slug}`}
-                    className="group active:scale-95 transition-transform"
+                    className="group block"
                   >
-                    <div className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 md:hover:-translate-y-2 border-2 border-black">
+                    <div className="bg-white overflow-hidden border-2 border-black transition-colors">
                     {/* Product Image Container */}
                     <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                       <Image
@@ -350,27 +374,29 @@ export default function HomePageClient({
                         className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
                         onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                       />
-                      
-                      {/* Badge - show stock status including presale */}
+
+                      {/* Stock-badge — flat brutalist tile met 2px zwarte
+                          border, geen shadow (consistent met menu pills
+                          en PDP variant-chips). */}
                       {(() => {
                         const totalStock = product.stock_quantity + (product.presale_stock_quantity || 0)
                         const isPresale = product.stock_quantity === 0 && product.presale_stock_quantity > 0
-                        
+
                         if (isPresale) {
                           return (
-                            <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                            <div className="absolute top-3 left-3 bg-brand-primary text-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] border-2 border-black leading-none">
                               PRE-SALE
                             </div>
                           )
                         } else if (product.stock_quantity > 0) {
                           return (
-                            <div className="absolute top-4 left-4 bg-brand-primary text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                            <div className="absolute top-3 left-3 bg-brand-primary text-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] border-2 border-black leading-none">
                               {t('featured.inStock')}
                             </div>
                           )
                         } else if (totalStock === 0) {
                           return (
-                            <div className="absolute top-4 left-4 bg-black text-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg">
+                            <div className="absolute top-3 left-3 bg-black text-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] border-2 border-black leading-none">
                               {t('featured.outOfStock')}
                             </div>
                           )
@@ -378,12 +404,14 @@ export default function HomePageClient({
                         return null
                       })()}
                       
-                      {/* Wishlist Button - Hover on desktop */}
+                      {/* Wishlist Button — flat brutalist tile met 2px
+                          zwarte border, geen backdrop-blur, geen scale.
+                          Hover-flip wit → groen. */}
                       <button
-                        className={`absolute top-4 right-4 z-20 w-10 h-10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-90 border-2 border-black ${
+                        className={`absolute top-3 right-3 z-20 w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-colors border-2 border-black ${
                           isWishlisted
                             ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-white/90 hover:bg-brand-primary hover:text-white'
+                            : 'bg-white hover:bg-brand-primary hover:text-white'
                         }`}
                         onClick={async (e) => {
                           e.preventDefault()
@@ -420,9 +448,11 @@ export default function HomePageClient({
                       {/* Gradient Overlay on Hover (Desktop only) */}
                       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
-                      {/* Quick View Button (Desktop only) - Volledig verborgen tot hover */}
-                      <div className="absolute bottom-4 left-4 right-4 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                        <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-wider text-sm hover:bg-brand-primary hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                      {/* Quick View Button — brutalist filled-white met
+                          2px zwarte border, hover-flip wit → groen. Geen
+                          shadow, geen scale-fluff. */}
+                      <div className="absolute bottom-3 left-3 right-3 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                        <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-[0.2em] text-xs border-2 border-black hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-colors flex items-center justify-center gap-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -432,9 +462,10 @@ export default function HomePageClient({
                       </div>
                     </div>
                     
-                    {/* Product Info */}
+                    {/* Product Info — font-display titel matched de
+                        editorial typografie van menu/PDP/shop. */}
                     <div className="p-6 text-center">
-                      <h3 className="font-bold text-xl mb-2 uppercase tracking-wide group-hover:text-brand-primary transition-colors">
+                      <h3 className="font-display text-xl md:text-2xl mb-2 uppercase tracking-tight leading-none group-hover:text-brand-primary transition-colors">
                         {product.name}
                       </h3>
                       {(() => {
@@ -494,12 +525,19 @@ export default function HomePageClient({
         </div>
       </section>
 
-      {/* Category Grid - Modern & Immersive */}
-      <section className="py-16 md:py-24 px-4 bg-white">
+      {/* Category Grid — brutalist tiles. Geen shadows, geen scale,
+          geen draai-corner-accent. Vaste groene 3px topbar (i.p.v.
+          opacity-tint hover-laag), tracking + typografie consistent
+          met menu/PDP. */}
+      <section className="py-16 md:py-24 px-4 bg-white border-t-2 border-black">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight">{t('categories.title')}</h2>
-            <p className="text-lg text-gray-600">{t('categories.subtitle')}</p>
+            <div className="inline-flex items-center justify-center gap-2 mb-4 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
+              <span aria-hidden="true">•</span>
+              <span>{t('categories.subtitle')}</span>
+              <span aria-hidden="true">•</span>
+            </div>
+            <h2 className="font-display text-4xl md:text-6xl tracking-tight uppercase">{t('categories.title')}</h2>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -507,49 +545,45 @@ export default function HomePageClient({
               categories.map((category: any) => {
                 const categoryImage = category.image_url || '/og-default.jpg'
                 const categoryHref = `/shop?category=${category.slug}`
-                
+
                 return (
                   <LocaleLink
                     key={category.id}
                     href={categoryHref}
-                    className="group relative aspect-[3/4] overflow-hidden shadow-md hover:shadow-2xl active:scale-95 transition-all duration-500 border-2 border-black"
+                    className="group relative aspect-[3/4] overflow-hidden border-2 border-black bg-black"
                   >
-                    {/* Image */}
                     <Image
                       src={failedImages.has(category.id) ? '/placeholder-product.svg' : categoryImage}
                       alt={category.name}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                      className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                       onError={() => setFailedImages(prev => new Set(prev).add(category.id))}
                     />
-                    
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-                    
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-brand-primary/0 group-hover:bg-brand-primary/20 transition-colors duration-500" />
-                    
-                    {/* Content */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-white">
-                      <h3 className="font-display text-2xl md:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+
+                    {/* Hard gradient overlay voor leesbaarheid van het
+                        label onderaan. Blijft bottom-up, geen tint-flip
+                        op hover (te zacht). */}
+                    <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+
+                    {/* Hover-rim: groene 3px lijn aan de bovenkant slidet
+                        in vanaf links → rechts. Editorial brutalist
+                        accent — zelfde patroon als de menu-nav accent. */}
+                    <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-[3px] bg-brand-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
+
+                    <div className="absolute inset-0 flex flex-col items-center justify-end p-5 md:p-6 text-white">
+                      <h3 className="font-display text-2xl md:text-3xl mb-3 uppercase tracking-tight leading-none">
                         {category.name.toUpperCase()}
                       </h3>
-                      <div className="flex items-center gap-2 text-brand-primary font-bold group-hover:gap-4 transition-all">
-                        <span className="uppercase tracking-wider text-sm">{t('categories.shopNow')}</span>
-                        <svg className="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
+                      <div className="inline-flex items-center gap-2 text-brand-primary group-hover:gap-3 transition-all">
+                        <span className="font-bold uppercase tracking-[0.2em] text-[11px] md:text-xs">{t('categories.shopNow')}</span>
+                        <ArrowRight size={16} strokeWidth={2.5} aria-hidden="true" className="transform group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
-                    
-                    {/* Corner Accent */}
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-brand-primary transform translate-x-full translate-y-full rotate-45 group-hover:translate-x-8 group-hover:translate-y-8 transition-transform duration-500" />
                   </LocaleLink>
                 )
               })
             ) : (
-              // Fallback
               <div className="col-span-4 text-center py-12 text-gray-500">
                 <p>{t('categories.noCategories')}</p>
               </div>
@@ -594,50 +628,57 @@ export default function HomePageClient({
                 </p>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-6 pt-8">
+              {/* Stats Grid — brutalist tiles met 2px witte border (zelfde
+                  contrastniveau als de stats-bar tegen de groene bg).
+                  Drop tinted hover-bg + scale, hover-flip border naar
+                  brand-primary. */}
+              <div className="grid grid-cols-3 gap-4 md:gap-6 pt-8">
                 {[
-                  { 
+                  {
                     icon: <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>,
-                    label: t('story.stat1.label'), 
-                    sublabel: t('story.stat1.sublabel') 
+                    label: t('story.stat1.label'),
+                    sublabel: t('story.stat1.sublabel')
                   },
-                  { 
+                  {
                     icon: <CalendarCheck className="w-8 h-8 mx-auto" strokeWidth={2} />,
-                    label: t('story.stat2.label'), 
-                    sublabel: t('story.stat2.sublabel') 
+                    label: t('story.stat2.label'),
+                    sublabel: t('story.stat2.sublabel')
                   },
-                  { 
+                  {
                     icon: <Crown className="w-8 h-8 mx-auto" strokeWidth={2} />,
-                    label: t('story.stat3.label'), 
-                    sublabel: t('story.stat3.sublabel') 
+                    label: t('story.stat3.label'),
+                    sublabel: t('story.stat3.sublabel')
                   },
                 ].map((stat, idx) => (
-                  <div key={idx} className="group text-center p-4 border-2 border-gray-700 hover:border-brand-primary transition-all duration-300 hover:bg-brand-primary/10">
-                    <div className="mb-3 group-hover:scale-110 transition-transform">{stat.icon}</div>
-                    <div className="text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</div>
-                    <div className="text-xs text-gray-400">{stat.sublabel}</div>
+                  <div key={idx} className="text-center p-4 border-2 border-white/30 hover:border-brand-primary transition-colors">
+                    <div className="mb-3 text-brand-primary">{stat.icon}</div>
+                    <div className="text-[11px] md:text-xs font-bold uppercase tracking-[0.2em] mb-1 leading-none">{stat.label}</div>
+                    <div className="text-[11px] text-gray-400 leading-tight">{stat.sublabel}</div>
                   </div>
                 ))}
               </div>
 
-              <LocaleLink 
-                href="/over-mose" 
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-brand-primary-hover active:scale-95 transition-all duration-300 group-hover:gap-5 shadow-lg shadow-brand-primary/30"
+              {/* CTA — flat brutalist met 2px zwarte border, geen drop-
+                  shadow. Hover-flip naar de iets donkerder primary-hover
+                  blijft consistent met andere CTA's op de site. */}
+              <LocaleLink
+                href="/over-mose"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] border-2 border-black hover:bg-brand-primary-hover transition-colors"
                 aria-label={t('story.cta.aria')}
               >
                 {t('story.cta.text')}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+                <ArrowRight size={20} strokeWidth={2.5} aria-hidden="true" className="transform group-hover:translate-x-1 transition-transform" />
               </LocaleLink>
             </div>
 
-            {/* Image with Frame Effect */}
+            {/* Image — brutalist frame: 2px witte border, solid 4px
+                groene binnen-rand (i.p.v. translucent), floating MOSE
+                tile zonder shadow, decoratieve lijn solid (i.p.v.
+                opacity-20). */}
             <div className="relative">
-              <div className="relative aspect-square overflow-hidden shadow-2xl border-2 border-white">
+              <div className="relative aspect-square overflow-hidden border-2 border-white">
                 <Image
                   src={homepageSettings?.story_image_url || '/og-default.jpg'}
                   alt="MOSE — gedragen in het echte leven"
@@ -645,12 +686,10 @@ export default function HomePageClient({
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
-                {/* Frame Overlay */}
-                <div className="absolute inset-0 border-8 border-brand-primary/20" />
+                <div aria-hidden="true" className="absolute inset-0 border-4 border-brand-primary pointer-events-none" />
               </div>
-              
-              {/* Floating Badge met MOSE Logo */}
-              <div className="absolute -bottom-6 -right-6 bg-brand-primary p-8 shadow-2xl flex items-center justify-center">
+
+              <div className="absolute -bottom-6 -right-6 bg-brand-primary border-2 border-black p-6 md:p-8 flex items-center justify-center">
                 <Image
                   src="/logomose.png"
                   alt="MOSE Logo"
@@ -660,8 +699,7 @@ export default function HomePageClient({
                 />
               </div>
 
-              {/* Decorative Element */}
-              <div className="absolute -top-8 -left-8 w-32 h-32 border-4 border-brand-primary opacity-20" />
+              <div aria-hidden="true" className="absolute -top-6 -left-6 w-28 h-28 md:w-32 md:h-32 border-2 border-brand-primary" />
             </div>
           </div>
         </div>
@@ -673,17 +711,15 @@ export default function HomePageClient({
       {/* FAQ Accordion */}
       <FAQAccordion />
 
-      {/* Newsletter CTA - Modern & Engaging */}
-      <section className="relative py-16 md:py-24 px-4 bg-gradient-to-br from-brand-primary via-brand-primary-hover to-brand-primary overflow-hidden">
-        {/* Animated Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse" style={{ animationDuration: '3s' }} />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-black rounded-full filter blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-        </div>
-
-        {/* Claw Mark */}
-        <div className="absolute inset-0 pointer-events-none opacity-5">
-            <Image
+      {/* Newsletter CTA — flat brutalist statement-blok. Geen gradient,
+          geen blurry blob-decoraties, geen glass-icon. Subtiele claw
+          watermark blijft (scoort op merkidentiteit), maar de rest gaat
+          naar een wit-canvas op groen flat blok met 4px zwarte border-t
+          die het visueel "afhakt" van de FAQ erboven. */}
+      <section className="relative py-16 md:py-24 px-4 bg-brand-primary border-t-4 border-black overflow-hidden">
+        {/* Subtiele claw watermark — blijft als merksignatuur. */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.06]">
+          <Image
             src="/claw.png"
             alt=""
             width={600}
@@ -693,25 +729,29 @@ export default function HomePageClient({
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          {/* Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm mb-8 border-2 border-white/40" role="img" aria-label="Nieuwsbrief email icoon">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+          {/* Brutalist icon-tile — flat zwart blok met 2px witte border,
+              vervangt de glass-card. Direct herkenbaar, hard, zelfde
+              taal als de menu-action-tiles. */}
+          <div
+            className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-black border-2 border-white mb-8"
+            role="img"
+            aria-label="Nieuwsbrief email icoon"
+          >
+            <Mail className="w-8 h-8 md:w-10 md:h-10 text-white" strokeWidth={2} aria-hidden="true" />
           </div>
 
-          <h2 className="font-display text-4xl md:text-6xl text-white mb-6 tracking-tight">
+          <h2 className="font-display text-4xl md:text-6xl text-white mb-6 tracking-tight uppercase">
             {t('newsletter.title')}
           </h2>
-          
-          <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
+
+          <p className="text-base md:text-xl text-white mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed">
             {t('newsletter.description')}
             <br />
             <span className="font-bold">{t('newsletter.noSpam')}</span>
           </p>
 
           <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label="Nieuwsbrief inschrijving" onSubmit={handleNewsletterSubmit}>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-0">
               <label htmlFor="newsletter-email" className="sr-only">E-mailadres voor nieuwsbrief</label>
               <input
                 id="newsletter-email"
@@ -724,13 +764,13 @@ export default function HomePageClient({
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
                 disabled={newsletterLoading || newsletterSuccess}
-                className="flex-1 px-6 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/30 placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-5 py-4 text-black text-base md:text-lg bg-white border-2 border-black focus:outline-none focus:ring-4 focus:ring-white/40 placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed sm:border-r-0"
               />
               <button
                 type="submit"
                 aria-label="Schrijf je in voor de MOSE nieuwsbrief"
                 disabled={newsletterLoading || newsletterSuccess}
-                className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-wider hover:bg-gray-900 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:active:scale-100"
+                className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 transition-colors flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
               >
                 {newsletterLoading ? (
                   <>
@@ -750,16 +790,13 @@ export default function HomePageClient({
                 ) : (
                   <>
                     {t('newsletter.submit')}
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
+                    <ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" className="transform group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
             </div>
-            
-            {/* Trust Badge */}
-            <p className="text-white/70 text-sm mt-6 flex items-center justify-center gap-2">
+
+            <p className="text-white/80 text-xs md:text-sm mt-6 flex items-center justify-center gap-2 uppercase tracking-[0.15em] font-semibold">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
