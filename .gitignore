@@ -44,9 +44,16 @@ next-env.d.ts
 # one-shot exports that may contain customer PII
 trustpilot-invitations-*.csv
 
-# Photoshoot 2026 originals — large RAW JPGs, not for git.
+# Photoshoot 2026 originals — large RAW JPGs and source ZIPs, not for git.
 # Optimised WebP variants live on Supabase Storage; static fallbacks live in /public.
 photoshoot-2026/*.jpg
 photoshoot-2026/*.JPG
 photoshoot-2026/*.jpeg
 photoshoot-2026/*.JPEG
+photoshoot-2026/*.zip
+photoshoot-2026/*.ZIP
+
+# macOS Finder duplicate-on-paste artefacts (e.g. "foo 2.sql"). These
+# are never intentional and have caused accidental commits before.
+*\ [0-9].*
+*\ [0-9][0-9].*
