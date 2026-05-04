@@ -9,6 +9,7 @@ import {
   useCallback,
   useLayoutEffect,
   type RefObject,
+  type CSSProperties,
 } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import {
@@ -40,22 +41,8 @@ function localizedCaption(post: InstagramPost, locale: string): string | null {
 /* Hooks                                                              */
 /* ------------------------------------------------------------------ */
 
-/** Reactief: respecteert macOS/Windows-instelling op runtime-wijziging. */
-function usePrefersReducedMotion(): boolean {
-  const [prefers, setPrefers] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const update = () => setPrefers(mq.matches)
-    update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
-  return prefers
-}
-
-/** Tab/window-zichtbaarheid via Page Visibility API. Pauzeert auto-
- *  advance + video-playback wanneer de tab verborgen is (CPU/battery). */
+/** Page Visibility API — pauzeert auto-advance + video-playback wanneer
+ *  de tab verborgen is (CPU/battery). */
 function usePageVisible(): boolean {
   const [visible, setVisible] = useState(true)
   useEffect(() => {
@@ -73,32 +60,32 @@ function usePageVisible(): boolean {
 /* ------------------------------------------------------------------ */
 
 /**
- * MOSE Instagram-carousel — hybrid scroller.
+ * MOSE Instagram-carousel — buttery-smooth GPU-composited marquee
+ * met opt-in finger-pause op mobiel.
  *
- * Combineert het beste van twee werelden:
- *  - **Native horizontale scroll** in de container → swipen op mobiel
- *    en muiswiel/trackpad-scroll op desktop werken direct.
- *  - **Auto-advance via requestAnimationFrame** wanneer de gebruiker
- *    NIET interageert → de strip blijft "vol leven" zoals de oude
- *    pure-CSS marquee, maar nu overrul-baar.
- *
- * BELANGRIJK: track heeft GEEN `scroll-behavior: smooth` (CSS).
- * Sommige browsers passen die rule óók toe op directe `scrollLeft = X`
- * assignments → elke rAF-tick zou dan een smooth-animation triggeren
- * die de volgende tick weer cancelt → carousel staat visueel stil.
- * Smooth scroll is enkel actief op de skip-buttons via
- * `scrollBy({ behavior: 'smooth' })`.
+ * **Hoe werkt 't?**
+ *  - De track scrollt continu via een **CSS `@keyframes` animatie op
+ *    `transform`** (zie globals.css `.animate-marquee`). Dit draait op
+ *    de compositor-thread (GPU) → géén layout/paint per frame zoals
+ *    bij een rAF + `scrollLeft` aanpak. Vandaar ECHT smooth, exact
+ *    zoals de oude pure-CSS marquee.
+ *  - De **container heeft `overflow-x: auto`** zodat native swipe op
+ *    mobiel werkt + muiswiel/trackpad-scroll op desktop. Beide
+ *    composeren netjes met de transform-animatie van de track.
+ *  - **Pauze**: alleen wanneer de gebruiker actief op de carousel
+ *    staat (touch/pen pointerdown). NIET op hover, focus, video-
+ *    autoplay of caption-open. Dit was de expliciete user-wens —
+ *    auto-scroll en video-playback bestaan nu naast elkaar i.p.v.
+ *    elkaar uit te zetten.
+ *  - **Wrap**: omdat de post-set 2× wordt gerenderd komt de gebruiker
+ *    via swipe nooit voorbij `setWidth` (we wrappen 'm op het
+ *    scroll-event terug naar de "eerste set"). Visueel onmerkbaar
+ *    omdat de content identiek dupliceerd is.
  *
  * Auto-pauze in de volgende gevallen:
+ *   - Gebruiker actief touching/pointer-down op de carousel
  *   - Tab/window niet zichtbaar (Page Visibility API)
- *   - Sectie out-of-viewport (IntersectionObserver, drempel 0.1)
- *   - Cursor over de carousel (desktop hover)
- *   - Toetsenbord-focus binnen de carousel
- *   - Recente user-interactie (touch / pointer-drag / horizontaal wheel
- *     / keydown) → auto resumes 1.5s na laatste input
- *   - Caption open op een tile (mobiel)
- *   - prefers-reduced-motion: reduce → géén auto-advance, swipe + skip
- *     blijven werken
+ *   - prefers-reduced-motion: reduce → animation: none via globals.css
  *
  * Extra UX:
  *   - Skip-buttons ← / → (desktop), brutalist tile-overlays
@@ -106,46 +93,25 @@ function usePageVisible(): boolean {
  *     overlay zonder naar IG te navigeren
  *   - Video-thumbnails autoplayen muted on hover (desktop) of wanneer
  *     ze het centrum van de carousel-viewport raken (mobiel) — met
- *     poster-overlay tegen "zwart beeld" bij eerste play
- *
- * Loop is naadloos doordat de post-set 2× wordt gerenderd: zodra
- * scrollLeft ≥ halfWidth, springt de container terug naar
- * `scrollLeft - halfWidth`. Visueel onmerkbaar omdat de pixels exact
- * identiek zijn.
+ *     poster-overlay tegen "play-icon flash" / "zwart beeld"
  */
 export default function InstagramMarquee({ settings, posts }: InstagramMarqueeProps) {
   const t = useTranslations('homepage.instagram')
   const locale = useLocale()
-  const prefersReducedMotion = usePrefersReducedMotion()
   const pageVisible = usePageVisible()
 
   /* ---- DOM refs ---- */
   const sectionRef = useRef<HTMLElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const trackRef = useRef<HTMLDivElement | null>(null)
 
-  /* ---- Helper refs (geen re-render nodig) ---- */
-  const halfWidthRef = useRef<number>(0)
-  const lastTickTsRef = useRef<number>(0)
-  const rafIdRef = useRef<number | null>(null)
-  const userResumeTimeoutRef = useRef<number | null>(null)
-  const isPointerDownRef = useRef<boolean>(false)
-  // Float-positie van de auto-advance. We accumuleren sub-pixel
-  // movement HIER (in een ref) i.p.v. via track.scrollLeft te lezen
-  // → sommige browsers truncaten scrollLeft naar integer pixels bij
-  // read, waardoor dx < 1 px/frame nooit accumuleert (positie blijft
-  // 0). Door intern als float bij te houden en alleen te schrijven
-  // naar scrollLeft is sub-pixel-accumulatie betrouwbaar.
-  const positionRef = useRef<number>(0)
+  /* setWidthRef = breedte van één post-set (= scrollWidth / 2 met 2×
+     duplicate). Wordt gebruikt door de scroll-wrap handler om de
+     gebruiker netjes binnen de eerste set te houden. */
+  const setWidthRef = useRef<number>(0)
 
   /* ---- State ---- */
-  const [hoverPaused, setHoverPaused] = useState(false)
-  const [focusPaused, setFocusPaused] = useState(false)
-  const [userInteracting, setUserInteracting] = useState(false)
-  // Default true: aanname "in viewport" tot de IntersectionObserver
-  // 't tegendeel zegt. Voorkomt FOUC waarbij de animatie pas start
-  // ná de eerste IO-callback (typisch ~50ms) en geeft ons een nette
-  // SSR-fallback wanneer IO niet beschikbaar is.
-  const [inViewport, setInViewport] = useState(true)
+  const [touchPaused, setTouchPaused] = useState(false)
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
 
   /* ---- Loop-set (2× duplicaat) ---- */
@@ -169,26 +135,19 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
 
   const ctaUrl = settings.cta_url || `https://www.instagram.com/${settings.username}`
 
-  /* Bepaalt of de auto-advance MAG draaien op dit moment. */
-  const isAnimating =
-    !hoverPaused &&
-    !focusPaused &&
-    !userInteracting &&
-    !expandedKey &&
-    inViewport &&
-    pageVisible &&
-    !prefersReducedMotion &&
-    posts.length > 1
+  /* Pauze-state voor de CSS animatie. We pauzeren alleen op de "harde"
+     redenen (user touch, tab hidden) — bewust GEEN hover/focus/video-
+     autoplay zodat de auto-scroll lekker doorloopt. */
+  const animPaused = touchPaused || !pageVisible
 
-  /* ---- Effect: meet halfWidth (= 1 post-set) ----------------------
-     halfWidth = scrollWidth / 2. Hermeten bij resize én bij wijziging
-     in posts.length zodat de loop-wrap altijd op de juiste positie
-     terugspringt. */
+  /* ---- Effect: meet setWidth ---------------------------------------
+     setWidth = scrollWidth / 2 (track bevat 2× post-set). Hermeten bij
+     resize én bij wijziging in posts.length. */
   useLayoutEffect(() => {
     const measure = () => {
-      if (trackRef.current) {
-        halfWidthRef.current = trackRef.current.scrollWidth / 2
-      }
+      const t = trackRef.current
+      if (!t) return
+      setWidthRef.current = t.scrollWidth / 2
     }
     measure()
     let ro: ResizeObserver | null = null
@@ -203,158 +162,59 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
     }
   }, [posts.length])
 
-  /* ---- Effect: IntersectionObserver voor sectie-zichtbaarheid ----
-     inViewport default = true (zie state-init). Wanneer IO niet
-     beschikbaar is op de browser, blijven we dus permanent "in
-     viewport". Anders krijgt de observer 't laatste woord. */
-  useEffect(() => {
-    if (!sectionRef.current || typeof IntersectionObserver === 'undefined') {
-      return
+  /* Scroll-wrap: zodra de gebruiker via swipe/wheel voorbij setWidth
+     komt (= in de "tweede set" terechtkomt), wrappen we naar
+     scrollLeft - setWidth. Visueel onmerkbaar omdat de content
+     identiek dupliceerd is. Houdt de gebruiker permanent binnen de
+     eerste set zodat de animatie nooit out-of-bounds gaat. */
+  const handleScroll = useCallback(() => {
+    const c = containerRef.current
+    if (!c) return
+    const setW = setWidthRef.current
+    if (setW <= 0) return
+    if (c.scrollLeft >= setW) {
+      c.scrollLeft -= setW
+    } else if (c.scrollLeft < 0) {
+      c.scrollLeft += setW
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0]
-        if (entry) setInViewport(entry.isIntersecting)
-      },
-      { threshold: 0.1 }
-    )
-    io.observe(sectionRef.current)
-    return () => io.disconnect()
   }, [])
 
-  /* ---- Effect: rAF auto-advance loop -----------------------------
-     Loopt alleen wanneer isAnimating true is. Per frame:
-       1. delta-time → pixels-per-second × dt = dx
-       2. positionRef += dx (FLOAT-accumulatie, niet via scrollLeft!)
-       3. wanneer positionRef ≥ halfWidth → wrap
-       4. assign track.scrollLeft = positionRef
-     Eerste tick na (re)start skipt dt-berekening om grote jumps na
-     een lange pauze te voorkomen. positionRef wordt aan 't begin
-     gesynct vanuit de ECHTE scroll-positie zodat we netjes verder
-     gaan vanaf waar de gebruiker handmatig was gescrolld. */
-  useEffect(() => {
-    if (!isAnimating) {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
-      }
-      lastTickTsRef.current = 0
-      return
+  /* Pointer-pauze logic — ALLEEN voor touch/pen, niet voor mouse.
+     Mouse-hover mag NOOIT pauzeren (user-vereiste). */
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      setTouchPaused(true)
     }
-
-    // Sync positionRef vanuit echte scrollLeft → catch-up na manuele
-    // scroll. Hierna is positionRef de single source of truth.
-    if (trackRef.current) {
-      positionRef.current = trackRef.current.scrollLeft
-    }
-
-    const seconds = Math.max(20, settings.marquee_speed_seconds || 60)
-
-    const tick = (ts: number) => {
-      const track = trackRef.current
-      if (!track) return
-      // Hermeet halfWidth elke tick (kost ~0ms): voorkomt out-of-sync
-      // wrap wanneer images later pas hun final layout krijgen.
-      const halfWidth = track.scrollWidth / 2
-      halfWidthRef.current = halfWidth
-      if (halfWidth <= 0) {
-        rafIdRef.current = requestAnimationFrame(tick)
-        return
-      }
-      const last = lastTickTsRef.current
-      lastTickTsRef.current = ts
-      if (last === 0) {
-        rafIdRef.current = requestAnimationFrame(tick)
-        return
-      }
-      const dt = (ts - last) / 1000
-      const pps = halfWidth / seconds
-      const dx = pps * dt
-      let pos = positionRef.current + dx
-      if (pos >= halfWidth) pos -= halfWidth
-      if (pos < 0) pos += halfWidth // safety
-      positionRef.current = pos
-      track.scrollLeft = pos
-      rafIdRef.current = requestAnimationFrame(tick)
-    }
-
-    rafIdRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
-      }
-    }
-  }, [isAnimating, settings.marquee_speed_seconds])
-
-  /* ---- User-interaction → pauzeer auto-advance gedurende 1.5s ---- */
-  const noteUserInteraction = useCallback(() => {
-    setUserInteracting(true)
-    if (userResumeTimeoutRef.current !== null) {
-      clearTimeout(userResumeTimeoutRef.current)
-    }
-    userResumeTimeoutRef.current = window.setTimeout(() => {
-      setUserInteracting(false)
-      userResumeTimeoutRef.current = null
-    }, 1500)
   }, [])
 
-  /* Pointer-events met "is down"-tracking zodat we drag-to-scroll op
-     desktop netjes als gebruikersinteractie tellen, maar onschuldige
-     hover-bewegingen NIET de timer eindeloos resetten. */
-  const handlePointerDown = useCallback(() => {
-    isPointerDownRef.current = true
-    noteUserInteraction()
-  }, [noteUserInteraction])
-
-  const handlePointerUpLike = useCallback(() => {
-    isPointerDownRef.current = false
+  const handlePointerEnd = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      setTouchPaused(false)
+    }
   }, [])
-
-  const handlePointerMove = useCallback(() => {
-    if (isPointerDownRef.current) noteUserInteraction()
-  }, [noteUserInteraction])
-
-  /* Wheel: alleen pauzeren wanneer de horizontale component dominant
-     is. Voorkomt dat puur verticaal page-scrollen óver de carousel
-     onnodig pauzeert. */
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) noteUserInteraction()
-    },
-    [noteUserInteraction]
-  )
 
   /* Skip-button handler — scrollt 1 tile-breedte links/rechts via
-     native smooth-scroll. Triggert ook noteUserInteraction zodat de
-     auto-advance pauzeert tijdens (en kort na) de smooth-scroll. */
+     native smooth-scroll. Pauzeert NIET de animatie (auto-scroll
+     loopt door, skip is een "nudge" boven op de animatie). */
   const skip = useCallback((dir: 'left' | 'right') => {
-    const track = trackRef.current
-    if (!track) return
-    const firstCard = track.firstElementChild as HTMLElement | null
-    // Tile-breedte + gap (~24px op desktop, ~16px op mobiel — we
-    // nemen 24 als veilige bovengrens; eventueel iets te ver scrollen
-    // op mobiel valt nog netjes in de native scroll op).
+    const c = containerRef.current
+    if (!c) return
+    const firstCard = trackRef.current?.firstElementChild as HTMLElement | null
     const cardWidth = (firstCard?.offsetWidth ?? 280) + 24
-    track.scrollBy({ left: dir === 'left' ? -cardWidth : cardWidth, behavior: 'smooth' })
-    noteUserInteraction()
-  }, [noteUserInteraction])
+    c.scrollBy({ left: dir === 'left' ? -cardWidth : cardWidth, behavior: 'smooth' })
+  }, [])
 
-  /* Caption-toggle handler — sluit alle anderen wanneer er een opent.
-     We passen één expandedKey per carousel toe (i.p.v. per-tile state)
-     zodat we altijd max 1 caption tegelijk tonen. */
+  /* Caption-toggle handler — sluit alle anderen wanneer er een opent. */
   const toggleCaption = useCallback((key: string) => {
     setExpandedKey((current) => (current === key ? null : key))
   }, [])
 
-  /* Cleanup op unmount */
-  useEffect(() => {
-    return () => {
-      if (userResumeTimeoutRef.current !== null) {
-        clearTimeout(userResumeTimeoutRef.current)
-      }
-    }
-  }, [])
+  /* Marquee-duration als CSS custom property → globals.css regelt de
+     animation. Min 20s zodat super-snelle admin-instellingen niet
+     onleesbaar worden. */
+  const trackStyle: CSSProperties = {
+    ['--marquee-duration' as string]: `${Math.max(20, settings.marquee_speed_seconds || 60)}s`,
+  }
 
   /* ---- Render ----------------------------------------------------- */
   return (
@@ -384,16 +244,8 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
       </div>
 
       {/* Marquee container */}
-      <div
-        className="relative w-full"
-        onMouseEnter={() => setHoverPaused(true)}
-        onMouseLeave={() => setHoverPaused(false)}
-        onFocusCapture={() => setFocusPaused(true)}
-        onBlurCapture={() => setFocusPaused(false)}
-      >
-        {/* Skip-buttons (desktop). Brutalist tiles — bg-zwart + 2px
-            witte border, hover/focus flip naar groen. Layered op z=10
-            zodat ze boven de tiles én de fade-edges staan. */}
+      <div className="relative w-full">
+        {/* Skip-buttons (desktop). */}
         <button
           type="button"
           onClick={() => skip('left')}
@@ -411,42 +263,47 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
           <ChevronRight size={22} strokeWidth={2.5} aria-hidden="true" />
         </button>
 
-        {/* Track — overflow-x-auto met verborgen scrollbar. Native
-            touch + wheel-scroll werkt direct. GEEN scroll-smooth EN
-            géén scroll-snap (beide kunnen rAF-driven scrollLeft-
-            mutaties verstoren door snap-fights of smooth-animations
-            die de tick weer cancelen → carousel staat visueel stil). */}
+        {/* Scroll-container — overflow-x:auto voor native swipe. Géén
+            scroll-snap of scroll-smooth (kan composeren-gedrag met de
+            CSS-animatie verstoren). Pointer-events vangen alleen
+            touch/pen → mouse-hover pauzeert NIET. */}
         <div
-          ref={trackRef}
-          role="list"
-          className="flex gap-4 md:gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={containerRef}
+          className="overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ msOverflowStyle: 'none' as const }}
-          onTouchStart={noteUserInteraction}
-          onTouchMove={noteUserInteraction}
+          onScroll={handleScroll}
           onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUpLike}
-          onPointerCancel={handlePointerUpLike}
-          onPointerLeave={handlePointerUpLike}
-          onPointerMove={handlePointerMove}
-          onWheel={handleWheel}
-          onKeyDown={noteUserInteraction}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onPointerLeave={handlePointerEnd}
         >
-          {loopPosts.map((post, idx) => {
-            const key = `${post.id}-${idx}`
-            return (
-              <Tile
-                key={key}
-                tileKey={key}
-                post={post}
-                locale={locale}
-                isPriority={idx < 4}
-                expanded={expandedKey === key}
-                onToggleCaption={toggleCaption}
-                trackRef={trackRef}
-                pageVisible={pageVisible}
-              />
-            )
-          })}
+          {/* Track — pure CSS marquee animatie via class
+              animate-marquee + data-paused attribute (zie globals.css).
+              GPU-composited → smooth zoals voorheen. */}
+          <div
+            ref={trackRef}
+            role="list"
+            className="flex gap-4 md:gap-6 w-max animate-marquee"
+            data-paused={animPaused ? 'true' : 'false'}
+            style={trackStyle}
+          >
+            {loopPosts.map((post, idx) => {
+              const key = `${post.id}-${idx}`
+              return (
+                <Tile
+                  key={key}
+                  tileKey={key}
+                  post={post}
+                  locale={locale}
+                  isPriority={idx < 4}
+                  expanded={expandedKey === key}
+                  onToggleCaption={toggleCaption}
+                  containerRef={containerRef}
+                  pageVisible={pageVisible}
+                />
+              )
+            })}
+          </div>
         </div>
 
         {/* Edge fade-outs (desktop, cinematisch effect) */}
@@ -488,7 +345,7 @@ interface TileProps {
   isPriority: boolean
   expanded: boolean
   onToggleCaption: (key: string) => void
-  trackRef: RefObject<HTMLDivElement | null>
+  containerRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
 }
 
@@ -499,7 +356,7 @@ function Tile({
   isPriority,
   expanded,
   onToggleCaption,
-  trackRef,
+  containerRef,
   pageVisible,
 }: TileProps) {
   const t = useTranslations('homepage.instagram')
@@ -522,15 +379,13 @@ function Tile({
         className="group relative block aspect-square w-[60vw] sm:w-[40vw] md:w-[28vw] lg:w-[22vw] xl:w-[18vw] border-2 border-black overflow-hidden bg-gray-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary"
       >
         {/* Image of Video — voor VIDEO-posts gebruiken we een
-            VideoTile met layered Image+Video (poster blijft zichtbaar
-            tot de video eerste frame heeft → géén zwart beeld).
-            Voor IMAGE/CAROUSEL_ALBUM tonen we de standaard Image. */}
+            VideoTile met poster-laag tegen play-icon-flash. */}
         {isVideo && post.media_url ? (
           <VideoTile
             src={post.media_url}
             poster={post.thumbnail_url || imageSrc}
             isPriority={isPriority}
-            trackRef={trackRef}
+            containerRef={containerRef}
             pageVisible={pageVisible}
             captionExpanded={expanded}
           />
@@ -574,7 +429,7 @@ function Tile({
         {/* Caption-overlay — gestapeld onderin de tile.
             Desktop: zichtbaar op hover/focus.
             Mobiel: zichtbaar wanneer de gebruiker via de "i"-knop
-            expliciet de caption toont (caption-on-tap, optie B). */}
+            expliciet de caption toont. */}
         <div
           aria-hidden="true"
           className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 z-[2] ${
@@ -606,9 +461,7 @@ function Tile({
       </a>
 
       {/* Caption-toggle — alleen mobiel. Bewust BUITEN de <a> zodat
-          tap op deze knop NIET naar IG navigeert; de rest van de tile
-          (incl. afbeelding) gaat wel naar IG. preventDefault +
-          stopPropagation als extra failsafe. */}
+          tap op deze knop NIET naar IG navigeert. */}
       {caption && (
         <button
           type="button"
@@ -640,49 +493,43 @@ interface VideoTileProps {
   src: string
   poster: string
   isPriority: boolean
-  trackRef: RefObject<HTMLDivElement | null>
+  containerRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
   captionExpanded: boolean
 }
 
 /**
- * VideoTile — toont een autoplayende muted video voor IG-Reels-posts.
+ * VideoTile — autoplayende muted video voor IG-Reels.
  *
- * **Mount/unmount + autoPlay + onLoadedData approach**:
- *  - Poster (Next.js Image) staat ALTIJD onder als basislaag.
- *  - <video> wordt alleen gemount wanneer `shouldPlay` true is. Browser
- *    krijgt `autoPlay` + `muted` + `playsInline` mee → die start dan
- *    netjes binnen de autoplay-policies (geen JS play()-call die
- *    silent kan rejecten).
- *  - Zodra `onLoadedData` vuurt heeft de browser de eerste frame
- *    gedecodeerd → we fade'n de video in (opacity-100). Geen zwart
- *    beeld. Voor posts die vroeg in de cache zitten gebruiken we als
- *    backup ook `onPlaying`.
- *  - `videoReady` wordt op iedere shouldPlay-flip hard ge-reset via
- *    de "adjust state in response to props"-render-pattern, zodat een
- *    stale ready-flag van een vorige cycle niet leidt tot een blank
- *    frame.
+ * **Anti-play-icon-flash architectuur**:
+ *  - Native <video poster={...}> — de browser toont de poster zelf
+ *    tijdens loading i.p.v. een play-icon-fallback. Dit is dé fix
+ *    voor de "play icon flash" die de user zag.
+ *  - Next.js <Image> daarbovenop — geoptimaliseerd format/sizing,
+ *    fadet pas weg wanneer de video écht een frame heeft (`onLoadedData`).
+ *  - <video> wordt alleen gemount wanneer `shouldPlay=true` (hover op
+ *    desktop, centered in viewport op mobiel) → spaart bandwidth en
+ *    voorkomt dat 12 video's tegelijk laden.
+ *
+ * `autoPlay` + `muted` + `playsInline` voldoen aan álle browser
+ * autoplay-policies → de browser handelt 't autoplay-protocol zelf
+ * af, geen JS play()-call die silent kan rejecten.
  *
  * Wanneer afgespeeld:
  *  - Desktop: bij hover op de tile.
- *  - Mobiel: wanneer de tile in het centrale ~60% van de carousel-
- *    viewport staat (IO met rootMargin -20% lateraal).
+ *  - Mobiel: wanneer de tile in het centrum van de carousel staat
+ *    (IO met root=container, threshold 0.4).
  *
- * Wanneer gepauzeerd:
+ * Wanneer gepauzeerd (= unmount):
  *  - Tab niet zichtbaar (pageVisible=false)
  *  - Caption open op deze tile (captionExpanded=true)
  *  - Geen hover én niet centered
- *  → in die gevallen wordt de <video> simpelweg unmounted en zie je
- *    weer de poster.
- *
- * `preload="auto"` op de gemounte video duwt de browser om vroeg te
- * laden zodat playback bijna direct start na mount.
  */
 function VideoTile({
   src,
   poster,
   isPriority,
-  trackRef,
+  containerRef,
   pageVisible,
   captionExpanded,
 }: VideoTileProps) {
@@ -694,11 +541,9 @@ function VideoTile({
   /* Bereken of de video MAG spelen op dit moment. */
   const shouldPlay = (hovered || centered) && pageVisible && !captionExpanded
 
-  /* "Adjust state in response to props" — React-aanbevolen pattern
-     (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes).
-     Reset videoReady zodra shouldPlay flipt: een stale `true` uit een
-     vorige play-cycle zou anders bij re-mount instant een blank
-     video-frame tonen voordat de browser frames heeft. */
+  /* "Adjust state in response to props" — React-aanbevolen pattern.
+     Reset videoReady zodra shouldPlay flipt zodat een stale `true`
+     uit een vorige cycle niet leidt tot een blank frame bij re-mount. */
   const [lastShouldPlay, setLastShouldPlay] = useState(shouldPlay)
   if (lastShouldPlay !== shouldPlay) {
     setLastShouldPlay(shouldPlay)
@@ -706,13 +551,11 @@ function VideoTile({
   }
 
   /* IntersectionObserver: detecteert centrale-positie binnen de
-     carousel. rootMargin -20% links/rechts + threshold 0.4 → tile
-     "centered" zodra ~40% binnen de centrale 60% van de viewport
-     valt. Iets permissiever dan strict-center zodat playback al
-     start vóór de tile exact in 't midden zit. */
+     carousel-container. rootMargin -20% lateraal → centrale 60%
+     telt als "centered". */
   useEffect(() => {
     const wrap = wrapperRef.current
-    const root = trackRef.current
+    const root = containerRef.current
     if (!wrap || !root || typeof IntersectionObserver === 'undefined') return
     const io = new IntersectionObserver(
       (entries) => {
@@ -723,7 +566,7 @@ function VideoTile({
     )
     io.observe(wrap)
     return () => io.disconnect()
-  }, [trackRef])
+  }, [containerRef])
 
   return (
     <div
@@ -732,8 +575,9 @@ function VideoTile({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Poster image — altijd zichtbaar, fadet ALLEEN uit wanneer
-          de video én gemount én ready is. Voorkomt blank moment. */}
+      {/* Poster image — altijd zichtbaar, fadet ALLEEN uit wanneer de
+          video én gemount én ready is. Voorkomt blank moment bij
+          re-mount. */}
       <Image
         src={poster}
         alt=""
@@ -746,12 +590,14 @@ function VideoTile({
         priority={isPriority}
         loading={isPriority ? undefined : 'lazy'}
       />
-      {/* Video — alleen mounten bij shouldPlay. autoPlay + muted +
-          playsInline laten browser autoplay-policy zelf afhandelen
-          (geen JS play()-call die silent kan rejecten). */}
+      {/* Video — alleen mounten bij shouldPlay. KRITISCH: native
+          poster-attribuut → browser toont poster zelf tijdens load,
+          GEEN play-icon-fallback. autoPlay + muted + playsInline
+          dekken alle browser autoplay-policies. */}
       {shouldPlay && (
         <video
           src={src}
+          poster={poster}
           muted
           loop
           playsInline
