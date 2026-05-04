@@ -1320,7 +1320,13 @@
       "viewPost": "Bekijk op Instagram",
       "videoLabel": "Video",
       "carouselLabel": "Meerdere foto's",
-      "likes": "{count} likes"
+      "likes": "{count} likes",
+      "prev": "Vorige",
+      "next": "Volgende",
+      "pauseMarquee": "Pauzeer",
+      "playMarquee": "Hervat",
+      "showCaption": "Toon bijschrift",
+      "hideCaption": "Verberg bijschrift"
     }
   },
   "searchOverlay": {
