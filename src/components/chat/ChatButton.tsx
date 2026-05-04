@@ -10,40 +10,40 @@ export default function ChatButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // Listen for filter drawer state (detect by checking if element exists)
+  // Eén MutationObserver voor alle drawer-detecties: één DOM-traversal
+  // per mutatie i.p.v. drie aparte observers. Een gewijzigd attribute
+  // (zoals het MobileMenu dat data-mobile-menu="open|closed" toggle't
+  // zonder unmount) telt óók als mutation, dus we kijken expliciet
+  // naar attribute-changes naast childList.
   useEffect(() => {
-    const checkFilterDrawer = () => {
-      const filterDrawer = document.querySelector('[data-filter-drawer]')
-      setIsFilterDrawerOpen(!!filterDrawer)
+    const checkAllDrawers = () => {
+      setIsFilterDrawerOpen(!!document.querySelector('[data-filter-drawer]'))
+      setIsCartDrawerOpen(!!document.querySelector('[data-cart-drawer]'))
+      // Mobile menu staat permanent in de DOM (translate off-canvas),
+      // dus we checken op de attribuut-WAARDE i.p.v. enkel presence.
+      setIsMobileMenuOpen(
+        !!document.querySelector('[data-mobile-menu="open"]')
+      )
     }
 
-    // Check on mount and when DOM changes
-    checkFilterDrawer()
-    const observer = new MutationObserver(checkFilterDrawer)
-    observer.observe(document.body, { childList: true, subtree: true })
+    checkAllDrawers()
+    const observer = new MutationObserver(checkAllDrawers)
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-mobile-menu'],
+    })
 
     return () => observer.disconnect()
   }, [])
 
-  // Listen for cart drawer state
-  useEffect(() => {
-    const checkCartDrawer = () => {
-      const cartDrawer = document.querySelector('[data-cart-drawer]')
-      setIsCartDrawerOpen(!!cartDrawer)
-    }
-
-    // Check on mount and when DOM changes
-    checkCartDrawer()
-    const observer = new MutationObserver(checkCartDrawer)
-    observer.observe(document.body, { childList: true, subtree: true })
-
-    return () => observer.disconnect()
-  }, [])
-
-  // Hide button on mobile when chat is open, but always show on desktop
-  // Also hide when filter or cart drawer is open
-  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen
+  // Verberg de chat-knop wanneer een full-screen overlay open staat
+  // (filter-drawer, cart-drawer, of mobile-menu). De chat-bubble heeft
+  // z-[9999] en zou anders door alle drawers heen prikken.
+  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isMobileMenuOpen
 
   return (
     <>

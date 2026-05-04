@@ -191,12 +191,19 @@ export default function MobileMenu({
         }`}
       />
 
-      {/* Drawer */}
+      {/* Drawer.
+          data-mobile-menu="open|closed" wordt opgepikt door ChatButton
+          (en eventueel andere overlays in de toekomst) zodat zwevende
+          UI netjes verbergt zolang dit menu open staat — analoog aan
+          hoe ChatButton al checkt op data-filter-drawer / data-cart-
+          drawer. We gebruiken een waarde i.p.v. enkel presence omdat
+          het menu altijd in de DOM staat (off-canvas via translate). */}
       <aside
         role="dialog"
         aria-modal="true"
         aria-label={t('ariaLabel')}
         aria-hidden={!isOpen}
+        data-mobile-menu={isOpen ? 'open' : 'closed'}
         className={`fixed inset-y-0 right-0 z-50 w-full bg-white shadow-2xl transform transition-transform duration-300 ease-out md:hidden flex flex-col ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
