@@ -122,6 +122,13 @@ export default function MobileMenuInstagramRow({
   const rafIdRef = useRef<number | null>(null)
   const userResumeTimeoutRef = useRef<number | null>(null)
   const isPointerDownRef = useRef<boolean>(false)
+  // Float-positie van de auto-advance. We accumuleren sub-pixel
+  // movement HIER (in een ref) i.p.v. via track.scrollLeft te lezen
+  // → sommige browsers truncaten scrollLeft naar integer pixels bij
+  // read, waardoor dx < 1 px/frame nooit accumuleert (positie blijft
+  // 0). Door intern als float bij te houden en alleen te schrijven
+  // is sub-pixel-accumulatie betrouwbaar.
+  const positionRef = useRef<number>(0)
   const [userInteracting, setUserInteracting] = useState(false)
 
   // Eerste-open-gate: setState-in-render-pattern, het door React
@@ -202,7 +209,11 @@ export default function MobileMenuInstagramRow({
     }
   }, [posts.length])
 
-  /* ---- Effect: rAF auto-advance loop ---- */
+  /* ---- Effect: rAF auto-advance loop ----
+     Float-accumulatie: positionRef wordt bij start gesynct vanuit
+     scrollLeft, en daarna intern als float bijgehouden. Elke tick
+     schrijven we positionRef naar scrollLeft. Sub-pixel-bewegingen
+     accumuleren netjes ondanks browser-rounding. */
   useEffect(() => {
     if (!isAnimating) {
       if (rafIdRef.current !== null) {
@@ -213,10 +224,13 @@ export default function MobileMenuInstagramRow({
       return
     }
 
+    if (trackRef.current) {
+      positionRef.current = trackRef.current.scrollLeft
+    }
+
     const tick = (ts: number) => {
       const track = trackRef.current
       if (!track) return
-      // Hermeet halfWidth elke tick (kost ~0ms).
       const halfWidth = track.scrollWidth / 2
       halfWidthRef.current = halfWidth
       if (halfWidth <= 0) {
@@ -232,8 +246,11 @@ export default function MobileMenuInstagramRow({
       const dt = (ts - last) / 1000
       const pps = halfWidth / LOOP_SECONDS
       const dx = pps * dt
-      const next = track.scrollLeft + dx
-      track.scrollLeft = next >= halfWidth ? next - halfWidth : next
+      let pos = positionRef.current + dx
+      if (pos >= halfWidth) pos -= halfWidth
+      if (pos < 0) pos += halfWidth // safety
+      positionRef.current = pos
+      track.scrollLeft = pos
       rafIdRef.current = requestAnimationFrame(tick)
     }
 
@@ -340,15 +357,15 @@ export default function MobileMenuInstagramRow({
         </div>
       )}
 
-      {/* Auto-scrollende thumbnail-strip. snap-proximity (i.p.v.
-          mandatory) zodat de rAF auto-advance niet door snap-points
-          wordt onderbroken. Native swipe behoudt z'n snap-feel
-          wanneer de gebruiker zelf scrollt. */}
+      {/* Auto-scrollende thumbnail-strip. GEEN scroll-snap (kan rAF-
+          driven scrollLeft mutaties verstoren) en GEEN scroll-smooth
+          (zou elke tick een smooth-anim triggeren die de volgende
+          tick weer cancelt → carousel staat visueel stil). */}
       {posts.length > 0 && (
         <div className="relative pb-4">
           <div
             ref={trackRef}
-            className="overflow-x-auto overflow-y-hidden snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{
               // IE/Edge legacy fallback. Tailwind's arbitrary
               // [scrollbar-width:none] dekt moderne browsers af; deze
@@ -440,7 +457,7 @@ function InstagramThumb({ post, index, locale, viewPostLabel }: InstagramThumbPr
     : viewPostLabel
 
   return (
-    <li className="flex-shrink-0 snap-start">
+    <li className="flex-shrink-0">
       <a
         href={post.permalink}
         target="_blank"
