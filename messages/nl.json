@@ -1257,6 +1257,11 @@
       "returns": "{days} dagen retour",
       "secure": "Veilig betalen"
     },
+    "reviewsMarquee": {
+      "ariaLabel": "Echte reviews van MOSE-klanten",
+      "eyebrow": "Echte reviews",
+      "verified": "Geverifieerd"
+    },
     "featured": {
       "label": "Bestsellers",
       "title": "ESSENTIALS DIE BLIJVEN",

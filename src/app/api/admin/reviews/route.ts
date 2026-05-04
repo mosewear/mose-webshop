@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { REVIEWS_MARQUEE_TAG } from '@/lib/reviews/marquee'
 
 interface AdminReviewImage {
   id: string
@@ -85,6 +87,10 @@ export async function PATCH(req: NextRequest) {
       .update({ is_approved: true })
       .eq('review_id', reviewId)
 
+    // Invalideer de homepage reviews-marquee zodat deze nieuwe approval
+    // direct zichtbaar wordt zonder te wachten op de 5-min revalidate.
+    revalidateTag(REVIEWS_MARQUEE_TAG, { expire: 0 })
+
     return NextResponse.json({ success: true })
   }
 
@@ -109,6 +115,11 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Een verwijderde review kan ook in de marquee staan; invalidate
+    // zodat we 'm direct uit de strip halen.
+    revalidateTag(REVIEWS_MARQUEE_TAG, { expire: 0 })
+
     return NextResponse.json({ success: true })
   }
 

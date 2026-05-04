@@ -1306,6 +1306,11 @@
       "returns": "{days} days return",
       "secure": "Secure payment"
     },
+    "reviewsMarquee": {
+      "ariaLabel": "Real reviews from MOSE customers",
+      "eyebrow": "Real reviews",
+      "verified": "Verified"
+    },
     "featured": {
       "label": "Bestsellers",
       "title": "ESSENTIALS THAT LAST",

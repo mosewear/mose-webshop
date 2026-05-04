@@ -2,6 +2,7 @@ import { getSiteSettings } from '@/lib/settings'
 import { getHomepageSettings, getFeaturedProducts, getCategoryData } from '@/lib/homepage'
 import HomePageClient from '@/components/HomePageClient'
 import InstagramFeed from '@/components/home/InstagramFeed'
+import HomeReviewsMarqueeFetcher from '@/components/home/HomeReviewsMarqueeFetcher'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
@@ -83,6 +84,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         featuredProducts={featuredProducts}
         categories={categories}
         instagramSlot={<InstagramFeed />}
+        reviewsMarqueeSlot={<HomeReviewsMarqueeFetcher />}
       />
     </>
   )

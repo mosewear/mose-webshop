@@ -10,10 +10,6 @@ import {
   Star,
   CalendarCheck,
   Crown,
-  MapPin,
-  Truck,
-  RefreshCw,
-  ShieldCheck,
   Mail,
   ArrowRight,
 } from 'lucide-react'
@@ -33,6 +29,10 @@ interface HomePageClientProps {
   featuredProducts: any[]
   categories: any[]
   instagramSlot?: React.ReactNode
+  /** Server-rendered brutalist reviews tape-strip die de oude
+   *  trust-badges-balk vervangt. Wordt uit `[locale]/page.tsx`
+   *  doorgegeven en rendert `null` wanneer er <3 5★ reviews zijn. */
+  reviewsMarqueeSlot?: React.ReactNode
 }
 
 export default function HomePageClient({
@@ -41,6 +41,7 @@ export default function HomePageClient({
   featuredProducts: initialFeaturedProducts,
   categories: initialCategories,
   instagramSlot,
+  reviewsMarqueeSlot,
 }: HomePageClientProps) {
   const t = useTranslations('homepage')
   const tProduct = useTranslations('product')
@@ -275,41 +276,12 @@ export default function HomePageClient({
         </div>
       </section>
 
-      {/* Trust Badges Bar — wit canvas met 2px zwarte border-y, lucide
-          icons (consistent met menu/PDP), bold uppercase met 0.18em
-          tracking. Harde zwarte 2px dividers tussen items zodat het
-          ritme matched met de brutalist taal van de site. */}
-      <section className="bg-white border-b-2 border-black py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 md:gap-x-8 text-[11px] md:text-xs text-black">
-            <div className="flex items-center gap-2">
-              <MapPin size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
-              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.local')}</span>
-            </div>
-
-            <span aria-hidden="true" className="hidden sm:block w-px h-3 bg-black" />
-
-            <div className="flex items-center gap-2">
-              <Truck size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
-              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.freeShipping', { threshold: settings.free_shipping_threshold })}</span>
-            </div>
-
-            <span aria-hidden="true" className="hidden sm:block w-px h-3 bg-black" />
-
-            <div className="flex items-center gap-2">
-              <RefreshCw size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
-              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.returns', { days: settings.return_days })}</span>
-            </div>
-
-            <span aria-hidden="true" className="hidden md:block w-px h-3 bg-black" />
-
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
-              <span className="font-bold uppercase tracking-[0.18em]">{t('trust.secure')}</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Reviews Tape-Strip — vervangt de generieke trust-badges-bar.
+          Echte 5★ reviews uit de database als brutalist marquee. Server-
+          rendered (zie `HomeReviewsMarqueeFetcher`); rendert `null`
+          wanneer er nog <3 goedgekeurde 5★ reviews zijn zodat de
+          homepage in dat geval simpelweg doorloopt naar de products. */}
+      {reviewsMarqueeSlot}
 
       {/* Featured Products */}
       <section className="py-12 md:py-20 px-4 relative overflow-hidden bg-gray-50">
