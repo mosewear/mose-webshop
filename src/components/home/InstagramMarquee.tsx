@@ -18,8 +18,6 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
-  Pause,
-  Play,
   Info,
   X,
 } from 'lucide-react'
@@ -84,25 +82,31 @@ function usePageVisible(): boolean {
  *    NIET interageert → de strip blijft "vol leven" zoals de oude
  *    pure-CSS marquee, maar nu overrul-baar.
  *
+ * BELANGRIJK: track heeft GEEN `scroll-behavior: smooth` (CSS).
+ * Sommige browsers passen die rule óók toe op directe `scrollLeft = X`
+ * assignments → elke rAF-tick zou dan een smooth-animation triggeren
+ * die de volgende tick weer cancelt → carousel staat visueel stil.
+ * Smooth scroll is enkel actief op de skip-buttons via
+ * `scrollBy({ behavior: 'smooth' })`.
+ *
  * Auto-pauze in de volgende gevallen:
  *   - Tab/window niet zichtbaar (Page Visibility API)
  *   - Sectie out-of-viewport (IntersectionObserver, drempel 0.1)
  *   - Cursor over de carousel (desktop hover)
  *   - Toetsenbord-focus binnen de carousel
- *   - Recente user-interactie (touch / pointer-drag / wheel / keydown)
- *     → auto resumes 1.5s na laatste input
- *   - Pauze-toggle expliciet door gebruiker gezet
+ *   - Recente user-interactie (touch / pointer-drag / horizontaal wheel
+ *     / keydown) → auto resumes 1.5s na laatste input
  *   - Caption open op een tile (mobiel)
  *   - prefers-reduced-motion: reduce → géén auto-advance, swipe + skip
- *     + pauze-toggle blijven werken
+ *     blijven werken
  *
  * Extra UX:
  *   - Skip-buttons ← / → (desktop), brutalist tile-overlays
  *   - Caption-toggle "i"-icoon per tile (mobiel) → toont caption + likes
  *     overlay zonder naar IG te navigeren
- *   - Pauze-toggle ❚❚/▶ inline boven de strip (mobiel + desktop)
  *   - Video-thumbnails autoplayen muted on hover (desktop) of wanneer
- *     ze het centrum van de carousel-viewport raken (mobiel)
+ *     ze het centrum van de carousel-viewport raken (mobiel) — met
+ *     poster-overlay tegen "zwart beeld" bij eerste play
  *
  * Loop is naadloos doordat de post-set 2× wordt gerenderd: zodra
  * scrollLeft ≥ halfWidth, springt de container terug naar
@@ -127,7 +131,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
   const isPointerDownRef = useRef<boolean>(false)
 
   /* ---- State ---- */
-  const [explicitPaused, setExplicitPaused] = useState(false) // pauze-toggle
   const [hoverPaused, setHoverPaused] = useState(false)
   const [focusPaused, setFocusPaused] = useState(false)
   const [userInteracting, setUserInteracting] = useState(false)
@@ -161,7 +164,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
 
   /* Bepaalt of de auto-advance MAG draaien op dit moment. */
   const isAnimating =
-    !explicitPaused &&
     !hoverPaused &&
     !focusPaused &&
     !userInteracting &&
@@ -235,7 +237,10 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
     const tick = (ts: number) => {
       const track = trackRef.current
       if (!track) return
-      const halfWidth = halfWidthRef.current
+      // Hermeet halfWidth elke tick (kost ~0ms): voorkomt out-of-sync
+      // wrap wanneer images later pas hun final layout krijgen.
+      const halfWidth = track.scrollWidth / 2
+      halfWidthRef.current = halfWidth
       if (halfWidth <= 0) {
         rafIdRef.current = requestAnimationFrame(tick)
         return
@@ -291,6 +296,16 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
     if (isPointerDownRef.current) noteUserInteraction()
   }, [noteUserInteraction])
 
+  /* Wheel: alleen pauzeren wanneer de horizontale component dominant
+     is. Voorkomt dat puur verticaal page-scrollen óver de carousel
+     onnodig pauzeert. */
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) noteUserInteraction()
+    },
+    [noteUserInteraction]
+  )
+
   /* Skip-button handler — scrollt 1 tile-breedte links/rechts via
      native smooth-scroll. Triggert ook noteUserInteraction zodat de
      auto-advance pauzeert tijdens (en kort na) de smooth-scroll. */
@@ -311,11 +326,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
      zodat we altijd max 1 caption tegelijk tonen. */
   const toggleCaption = useCallback((key: string) => {
     setExpandedKey((current) => (current === key ? null : key))
-  }, [])
-
-  /* Pauze-toggle handler */
-  const togglePaused = useCallback(() => {
-    setExplicitPaused((p) => !p)
   }, [])
 
   /* Cleanup op unmount */
@@ -354,26 +364,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
         )}
       </div>
 
-      {/* Pauze-toggle — kleine inline knop boven de strip, rechts uit-
-          gelijnd. Reflect explicit user pause-intent — hover/focus
-          pauses laten deze toggle in z'n "play"-state staan. */}
-      <div className="px-4 md:px-8 max-w-7xl mx-auto flex items-center justify-end mb-4 md:mb-6">
-        <button
-          type="button"
-          onClick={togglePaused}
-          aria-label={explicitPaused ? t('playMarquee') : t('pauseMarquee')}
-          aria-pressed={explicitPaused}
-          className="inline-flex items-center gap-2 border-2 border-black px-3 h-9 text-[11px] font-bold uppercase tracking-[0.2em] text-black hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
-        >
-          {explicitPaused ? (
-            <Play size={12} fill="currentColor" strokeWidth={0} aria-hidden="true" />
-          ) : (
-            <Pause size={12} fill="currentColor" strokeWidth={0} aria-hidden="true" />
-          )}
-          <span>{explicitPaused ? t('playMarquee') : t('pauseMarquee')}</span>
-        </button>
-      </div>
-
       {/* Marquee container */}
       <div
         className="relative w-full"
@@ -403,14 +393,15 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
         </button>
 
         {/* Track — overflow-x-auto met verborgen scrollbar. Native
-            touch + wheel-scroll werkt direct. scroll-snap proximity
-            geeft mobiele swipe een "premium" snap-feel zonder de
-            rAF auto-advance te storen (proximity = alleen snappen
-            wanneer scroll-velocity 0 bereikt). */}
+            touch + wheel-scroll werkt direct. GEEN scroll-smooth class
+            (zie file-header). scroll-snap proximity geeft mobiele swipe
+            een "premium" snap-feel zonder de rAF auto-advance te storen
+            (proximity = alleen snappen wanneer scroll-velocity 0
+            bereikt). */}
         <div
           ref={trackRef}
           role="list"
-          className="flex gap-4 md:gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain scroll-smooth snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 md:gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain snap-x snap-proximity [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ msOverflowStyle: 'none' as const }}
           onTouchStart={noteUserInteraction}
           onTouchMove={noteUserInteraction}
@@ -419,7 +410,7 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
           onPointerCancel={handlePointerUpLike}
           onPointerLeave={handlePointerUpLike}
           onPointerMove={handlePointerMove}
-          onWheel={noteUserInteraction}
+          onWheel={handleWheel}
           onKeyDown={noteUserInteraction}
         >
           {loopPosts.map((post, idx) => {
@@ -435,7 +426,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
                 onToggleCaption={toggleCaption}
                 trackRef={trackRef}
                 pageVisible={pageVisible}
-                explicitPaused={explicitPaused}
               />
             )
           })}
@@ -482,7 +472,6 @@ interface TileProps {
   onToggleCaption: (key: string) => void
   trackRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
-  explicitPaused: boolean
 }
 
 function Tile({
@@ -494,7 +483,6 @@ function Tile({
   onToggleCaption,
   trackRef,
   pageVisible,
-  explicitPaused,
 }: TileProps) {
   const t = useTranslations('homepage.instagram')
   const caption = localizedCaption(post, locale)
@@ -516,15 +504,16 @@ function Tile({
         className="group relative block aspect-square w-[60vw] sm:w-[40vw] md:w-[28vw] lg:w-[22vw] xl:w-[18vw] border-2 border-black overflow-hidden bg-gray-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary"
       >
         {/* Image of Video — voor VIDEO-posts gebruiken we een
-            VideoTile die zelf bepaalt wanneer hij play/pause is.
+            VideoTile met layered Image+Video (poster blijft zichtbaar
+            tot de video eerste frame heeft → géén zwart beeld).
             Voor IMAGE/CAROUSEL_ALBUM tonen we de standaard Image. */}
         {isVideo && post.media_url ? (
           <VideoTile
             src={post.media_url}
             poster={post.thumbnail_url || imageSrc}
+            isPriority={isPriority}
             trackRef={trackRef}
             pageVisible={pageVisible}
-            explicitPaused={explicitPaused}
             captionExpanded={expanded}
           />
         ) : (
@@ -631,15 +620,22 @@ function Tile({
 
 interface VideoTileProps {
   src: string
-  poster?: string
+  poster: string
+  isPriority: boolean
   trackRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
-  explicitPaused: boolean
   captionExpanded: boolean
 }
 
 /**
  * VideoTile — toont een autoplayende muted video voor IG-Reels-posts.
+ *
+ * **Layered approach tegen "zwart beeld"**:
+ *  - Poster (Next.js Image) is ALTIJD zichtbaar onder de video.
+ *  - <video> overlapt de poster maar start opacity-0.
+ *  - Pas wanneer `onPlaying` vuurt (browser heeft eerste frame)
+ *    fade'n we de video in (opacity-100). Bij pause / off-screen
+ *    fade'n we 'm weer uit → poster zichtbaar. Geen zwart frame.
  *
  * Wanneer afgespeeld:
  *  - Desktop: bij hover op de tile.
@@ -648,9 +644,7 @@ interface VideoTileProps {
  *
  * Wanneer gepauzeerd:
  *  - Tab niet zichtbaar (pageVisible=false)
- *  - Pauze-toggle aan (explicitPaused=true)
- *  - Caption open op deze tile (captionExpanded=true; voorkomt dat de
- *    video onder de caption-overlay door blijft spelen)
+ *  - Caption open op deze tile (captionExpanded=true)
  *  - Geen hover én niet centered
  *
  * preload="metadata" voorkomt dat we het volledige videobestand vóór
@@ -660,22 +654,27 @@ interface VideoTileProps {
 function VideoTile({
   src,
   poster,
+  isPriority,
   trackRef,
   pageVisible,
-  explicitPaused,
   captionExpanded,
 }: VideoTileProps) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [hovered, setHovered] = useState(false)
   const [centered, setCentered] = useState(false)
+  // True zodra de browser de eerste frame rendert (`onPlaying` event).
+  // Wordt ge-reset bij pause zodat de poster weer naar voren komt.
+  const [videoReady, setVideoReady] = useState(false)
 
   /* Bereken of de video MAG spelen op dit moment. */
-  const shouldPlay =
-    (hovered || centered) && pageVisible && !explicitPaused && !captionExpanded
+  const shouldPlay = (hovered || centered) && pageVisible && !captionExpanded
 
   /* Sync play/pause met de actual <video>-element. play() retourneert
      een Promise die kan rejecten op autoplay-policies; we vangen 'em
-     stil af zodat 't geen unhandled rejection wordt. */
+     stil af zodat 't geen unhandled rejection wordt. videoReady wordt
+     NIET hier geset — dat doen `onPlaying` en `onPause` op de <video>
+     zelf zodat we 'm niet sync in een effect mutaten. */
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -696,11 +695,13 @@ function VideoTile({
   /* IntersectionObserver: detecteert centrale-positie binnen de
      carousel. rootMargin -25% links/rechts → alleen het middelste
      50% van de carousel telt als "centered" → voorkomt dat 5 video's
-     tegelijk afspelen op een breed scherm. */
+     tegelijk afspelen op een breed scherm. We observeren de wrapper
+     (niet de video) zodat de meting onafhankelijk is van de video-
+     opacity-state. */
   useEffect(() => {
-    const video = videoRef.current
+    const wrap = wrapperRef.current
     const root = trackRef.current
-    if (!video || !root || typeof IntersectionObserver === 'undefined') return
+    if (!wrap || !root || typeof IntersectionObserver === 'undefined') return
     const io = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
@@ -708,23 +709,48 @@ function VideoTile({
       },
       { root, rootMargin: '0px -25% 0px -25%', threshold: [0, 0.3, 0.6, 0.9, 1] }
     )
-    io.observe(video)
+    io.observe(wrap)
     return () => io.disconnect()
   }, [trackRef])
 
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      poster={poster}
-      muted
-      loop
-      playsInline
-      preload="metadata"
+    <div
+      ref={wrapperRef}
+      className="absolute inset-0 w-full h-full"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-      aria-hidden="true"
-    />
+    >
+      {/* Poster image — altijd gerenderd, fadet uit wanneer video    
+          ready is. Voorkomt zwart beeld tijdens video-load. */}
+      <Image
+        src={poster}
+        alt=""
+        fill
+        unoptimized={!poster.includes('supabase')}
+        sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 768px) 28vw, (min-width: 640px) 40vw, 60vw"
+        className={`absolute inset-0 object-cover transition-opacity duration-300 group-hover:scale-105 ${
+          videoReady ? 'opacity-0' : 'opacity-100'
+        }`}
+        priority={isPriority}
+        loading={isPriority ? undefined : 'lazy'}
+      />
+      {/* Video — boven de poster gestapeld, fadet IN wanneer eerste
+          frame is gedecodeerd. */}
+      <video
+        ref={videoRef}
+        src={src}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        onPlaying={() => setVideoReady(true)}
+        onPause={() => setVideoReady(false)}
+        onEmptied={() => setVideoReady(false)}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105 ${
+          videoReady ? 'opacity-100' : 'opacity-0'
+        }`}
+        aria-hidden="true"
+      />
+    </div>
   )
 }

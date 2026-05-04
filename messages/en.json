@@ -1372,8 +1372,6 @@
       "likes": "{count} likes",
       "prev": "Previous",
       "next": "Next",
-      "pauseMarquee": "Pause",
-      "playMarquee": "Resume",
       "showCaption": "Show caption",
       "hideCaption": "Hide caption"
     }
