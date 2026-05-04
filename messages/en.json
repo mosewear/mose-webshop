@@ -1306,14 +1306,6 @@
       "returns": "{days} days return",
       "secure": "Secure payment"
     },
-    "founders": {
-      "eyebrow": "Behind MOSE",
-      "name": "We're Irma & Rick",
-      "description": "We make clothes that last.",
-      "cta": "Read our story",
-      "aria": "Read our story — we're Irma & Rick, founders of MOSE",
-      "photoAlt": "Irma & Rick — founders of MOSE"
-    },
     "featured": {
       "label": "Bestsellers",
       "title": "ESSENTIALS THAT LAST",

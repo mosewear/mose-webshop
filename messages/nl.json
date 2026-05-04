@@ -1257,14 +1257,6 @@
       "returns": "{days} dagen retour",
       "secure": "Veilig betalen"
     },
-    "founders": {
-      "eyebrow": "Achter MOSE",
-      "name": "Wij zijn Irma & Rick",
-      "description": "Wij maken kleding die blijft.",
-      "cta": "Lees ons verhaal",
-      "aria": "Lees ons verhaal — wij zijn Irma & Rick, oprichters van MOSE",
-      "photoAlt": "Irma & Rick — oprichters van MOSE"
-    },
     "featured": {
       "label": "Bestsellers",
       "title": "ESSENTIALS DIE BLIJVEN",
