@@ -156,12 +156,16 @@ export default function HomePageClient({
         {/* Hero Content */}
         <div className="relative z-10 h-full flex items-center justify-center px-4 animate-fadeInUp">
               <div className="text-center max-w-5xl">
-                {/* Badge with Icon - Transparant met witte border */}
-                <div className="inline-flex items-center gap-2 mb-8 px-5 py-3 bg-transparent border-2 border-white text-white text-sm font-bold uppercase tracking-[0.2em]">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                {/* Hero badge — kleiner formaat + tightere tracking op
+                    mobiel zodat lange admin-teksten als "ONS NIEUWSTE
+                    LOOKBOOK IS UIT" niet over de viewport-grens gaan.
+                    Op iPhone SE (375px - 32px container = 343px content)
+                    moet de badge altijd binnen de viewport blijven. */}
+                <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 px-3 sm:px-5 py-2 sm:py-3 bg-transparent border-2 border-white text-white text-[11px] sm:text-sm font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] max-w-[calc(100vw-2rem)]">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
-                  {homepageSettings?.hero_badge_text || t('hero.badge')}
+                  <span className="break-words">{homepageSettings?.hero_badge_text || t('hero.badge')}</span>
                 </div>
 
             {/* Main Heading - Responsive Sizes */}
@@ -233,24 +237,33 @@ export default function HomePageClient({
       {/* Stats Bar — flat brand-primary statement-blok. Geen gradient,
           geen drop-shadow op cijfers, geen scale-hover. border-y-2
           zwart maakt het een echt brutalist blok (zelfde patroon als
-          de shipping-pill in het mobiele menu). Tracking 0.2em
-          consistent met site-brede eyebrow-standaard. */}
+          de shipping-pill in het mobiele menu).
+
+          Mobile typografie:
+            - Label tracking → 0.12em (i.p.v. 0.2em) zodat lange teksten
+              als "PREMIUM KWALITEIT" niet wrappen op iPhone SE (375px),
+              waar elke kolom maar ~103px breed is.
+            - Cijfers iets kleiner zodat de cijfer/label-verhouding niet
+              onbalanced voelt (~3.5x i.p.v. 4×).
+            - Icoon (3e kolom) klein genoeg om gelijk te ogen met cijfers
+              uit kolom 1 + 2.
+      */}
       <section className="bg-brand-primary text-white border-y-2 border-black py-10 md:py-14">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-3 gap-4 md:gap-8 text-center">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-8 text-center">
             <div>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 leading-none">
+              <div className="text-3xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 leading-none">
                 {homepageSettings?.stats_1_number || '100%'}
               </div>
-              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] font-bold leading-tight px-1">
+              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.12em] sm:tracking-[0.18em] md:tracking-[0.2em] font-bold leading-tight px-0.5">
                 {homepageSettings?.stats_1_text || t('stats.local')}
               </div>
             </div>
             <div>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 leading-none">
+              <div className="text-3xl sm:text-5xl md:text-6xl font-display mb-2 md:mb-3 leading-none">
                 {settings.return_days}
               </div>
-              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] font-bold leading-tight px-1">
+              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.12em] sm:tracking-[0.18em] md:tracking-[0.2em] font-bold leading-tight px-0.5">
                 {homepageSettings?.stats_2_text || t('stats.returns')}
               </div>
             </div>
@@ -260,10 +273,10 @@ export default function HomePageClient({
                   const iconMap: Record<string, LucideIcon> = { Star, CalendarCheck, Crown }
                   const iconName = homepageSettings?.stats_3_icon || 'Star'
                   const IconComponent = iconMap[iconName] || Star
-                  return <IconComponent className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16" strokeWidth={2.5} />
+                  return <IconComponent className="w-9 h-9 sm:w-14 sm:h-14 md:w-16 md:h-16" strokeWidth={2.5} />
                 })()}
               </div>
-              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] font-bold leading-tight px-1">
+              <div className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.12em] sm:tracking-[0.18em] md:tracking-[0.2em] font-bold leading-tight px-0.5">
                 {homepageSettings?.stats_3_text || t('stats.quality')}
               </div>
             </div>
@@ -531,13 +544,18 @@ export default function HomePageClient({
                         accent — zelfde patroon als de menu-nav accent. */}
                     <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-[3px] bg-brand-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
 
-                    <div className="absolute inset-0 flex flex-col items-center justify-end p-5 md:p-6 text-white">
-                      <h3 className="font-display text-2xl md:text-3xl mb-3 uppercase tracking-tight leading-none">
+                    <div className="absolute inset-0 flex flex-col items-center justify-end p-4 sm:p-5 md:p-6 text-white">
+                      {/* Categorienaam: getrapt schaal-down zodat lange
+                          labels (bv. "ACCESSOIRES", "OUTERWEAR") op
+                          smalle 2-koloms grids niet wrappen en de CTA
+                          eronder niet wegduwen. line-clamp-2 als laatste
+                          vangnet voor extreem lange admin-namen. */}
+                      <h3 className="font-display text-lg sm:text-xl md:text-3xl mb-2 md:mb-3 uppercase tracking-tight leading-[1.05] text-center line-clamp-2 break-words w-full">
                         {category.name.toUpperCase()}
                       </h3>
-                      <div className="inline-flex items-center gap-2 text-brand-primary group-hover:gap-3 transition-all">
-                        <span className="font-bold uppercase tracking-[0.2em] text-[11px] md:text-xs">{t('categories.shopNow')}</span>
-                        <ArrowRight size={16} strokeWidth={2.5} aria-hidden="true" className="transform group-hover:translate-x-1 transition-transform" />
+                      <div className="inline-flex items-center gap-1.5 sm:gap-2 text-brand-primary group-hover:gap-2.5 sm:group-hover:gap-3 transition-all">
+                        <span className="font-bold uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[10px] sm:text-[11px] md:text-xs">{t('categories.shopNow')}</span>
+                        <ArrowRight size={14} strokeWidth={2.5} aria-hidden="true" className="sm:w-4 sm:h-4 transform group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </LocaleLink>
@@ -633,10 +651,18 @@ export default function HomePageClient({
               </LocaleLink>
             </div>
 
-            {/* Image — brutalist frame: 2px witte border, solid 4px
-                groene binnen-rand (i.p.v. translucent), floating MOSE
-                tile zonder shadow, decoratieve lijn solid (i.p.v.
-                opacity-20). */}
+            {/* Image — brutalist frame.
+
+                Mobile-tuning:
+                  - Groene binnen-rand 2px (i.p.v. 4px) zodat 'ie niet
+                    de helft van een 343×343 mobiel-foto opslokt.
+                  - Floating MOSE-tile is op mobiel ~33% smaller (60×60
+                    logo + p-3 = ~84px tile, was ~168px = 50% van foto).
+                    Op desktop blijft 'ie groot en statement-vol.
+                  - Decoratief vierkant linksboven verborgen op mobiel
+                    omdat 't sectie-padding overlapt en visueel druk maakt
+                    op smalle viewports. Toont vanaf md:.
+            */}
             <div className="relative">
               <div className="relative aspect-square overflow-hidden border-2 border-white">
                 <Image
@@ -646,20 +672,20 @@ export default function HomePageClient({
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
-                <div aria-hidden="true" className="absolute inset-0 border-4 border-brand-primary pointer-events-none" />
+                <div aria-hidden="true" className="absolute inset-0 border-2 md:border-4 border-brand-primary pointer-events-none" />
               </div>
 
-              <div className="absolute -bottom-6 -right-6 bg-brand-primary border-2 border-black p-6 md:p-8 flex items-center justify-center">
+              <div className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 bg-brand-primary border-2 border-black p-3 md:p-8 flex items-center justify-center">
                 <Image
                   src="/logomose.png"
                   alt="MOSE Logo"
                   width={120}
                   height={120}
-                  className="object-contain"
+                  className="object-contain w-14 h-14 md:w-[120px] md:h-[120px]"
                 />
               </div>
 
-              <div aria-hidden="true" className="absolute -top-6 -left-6 w-28 h-28 md:w-32 md:h-32 border-2 border-brand-primary" />
+              <div aria-hidden="true" className="hidden md:block absolute -top-6 -left-6 w-28 h-28 md:w-32 md:h-32 border-2 border-brand-primary" />
             </div>
           </div>
         </div>
