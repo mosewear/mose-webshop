@@ -169,10 +169,19 @@ export default function MobileMenuInstagramRow({
     }
   }, [])
 
-  /* Pointer-pauze logic — ALLEEN voor touch/pen, niet voor mouse. */
+  /* Pointer-pauze logic — ALLEEN voor touch/pen, niet voor mouse.
+     setPointerCapture op pointerdown garandeert dat de bijbehorende
+     pointerup óók op deze handler vuurt, zelfs als de vinger tijdens
+     swipen buiten de carousel eindigt. Zonder capture zou
+     touchPaused dan eeuwig true blijven hangen. */
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
       setTouchPaused(true)
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId)
+      } catch {
+        // Stille fallback voor browsers die capture niet ondersteunen.
+      }
     }
   }, [])
 
