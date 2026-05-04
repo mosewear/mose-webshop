@@ -120,12 +120,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
   const t = useTranslations('homepage.instagram')
   const locale = useLocale()
   const pageVisible = usePageVisible()
-  /* `(hover: none)` matcht op pure-touch-devices (telefoons/tablets).
-     Op desktop / touchscreen-laptops met muis matcht 'ie niet — daar
-     gebruiken we hover als video-trigger. Op pure touch-devices
-     gebruiken we IntersectionObserver-centered, omdat hover-events
-     daar niet vuren. */
-  const isTouchDevice = useMediaQuery('(hover: none)')
   /* A11y: respecteert OS-niveau "reduce motion". CSS animation wordt
      al gedisabled via globals.css, maar video-autoplay moeten we
      hier in JS gateen omdat dat niet via CSS gaat. */
@@ -341,7 +335,6 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
                   onToggleCaption={toggleCaption}
                   containerRef={containerRef}
                   pageVisible={pageVisible}
-                  isTouchDevice={isTouchDevice}
                   prefersReducedMotion={prefersReducedMotion}
                 />
               )
@@ -390,7 +383,6 @@ interface TileProps {
   onToggleCaption: (key: string) => void
   containerRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
-  isTouchDevice: boolean
   prefersReducedMotion: boolean
 }
 
@@ -403,7 +395,6 @@ function Tile({
   onToggleCaption,
   containerRef,
   pageVisible,
-  isTouchDevice,
   prefersReducedMotion,
 }: TileProps) {
   const t = useTranslations('homepage.instagram')
@@ -435,7 +426,6 @@ function Tile({
             containerRef={containerRef}
             pageVisible={pageVisible}
             captionExpanded={expanded}
-            isTouchDevice={isTouchDevice}
             prefersReducedMotion={prefersReducedMotion}
           />
         ) : (
@@ -545,21 +535,15 @@ interface VideoTileProps {
   containerRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
   captionExpanded: boolean
-  isTouchDevice: boolean
   prefersReducedMotion: boolean
 }
 
 /**
  * VideoTile — autoplayende muted video voor IG-Reels.
  *
- * **Device-split trigger** (belangrijk!):
- *  - **Desktop** (hover-capable): video speelt ALLEEN bij hover. Geen
- *    IO-centered, want op brede schermen zouden 3-4 tiles tegelijk in
- *    de centrale zone vallen → 3-4 videos tegelijk afspelen = heavy +
- *    visueel onrustig. Hover geeft bewuste user-controle.
- *  - **Mobiel** (no hover): video speelt wanneer de tile in het
- *    centrum van de carousel staat (IO met threshold 0.4). Hover-
- *    events vuren niet op touch dus dit is de enige werkbare trigger.
+ * **Trigger**: video speelt zodra de tile ook maar 1% binnen de
+ * carousel-viewport zit. Geldt universeel — desktop én mobiel — geen
+ * device-split, geen "centered"-eis. Simpele "in-view = play"-regel.
  *
  * **Anti-play-icon-flash architectuur**:
  *  - Native <video poster={...}> — de browser toont de poster zelf
@@ -567,18 +551,18 @@ interface VideoTileProps {
  *    voor de "play icon flash" die de user zag.
  *  - Next.js <Image> daarbovenop — geoptimaliseerd format/sizing,
  *    fadet pas weg wanneer de video écht een frame heeft (`onLoadedData`).
- *  - <video> wordt alleen gemount wanneer `shouldPlay=true` → spaart
- *    bandwidth en voorkomt dat 12 video's tegelijk laden.
+ *  - <video> wordt alleen gemount wanneer `shouldPlay=true` → out-of-
+ *    view tiles laden geen bytes.
  *
  * `autoPlay` + `muted` + `playsInline` voldoen aan álle browser
  * autoplay-policies → de browser handelt 't autoplay-protocol zelf
  * af, geen JS play()-call die silent kan rejecten.
  *
  * Wanneer gepauzeerd (= unmount):
+ *  - Tile is niet zichtbaar binnen de carousel-viewport
  *  - Tab niet zichtbaar (pageVisible=false)
  *  - Caption open op deze tile (captionExpanded=true)
  *  - prefers-reduced-motion: reduce → a11y respect
- *  - Desktop: niet gehoverd. Mobiel: niet centered.
  */
 function VideoTile({
   src,
@@ -587,20 +571,15 @@ function VideoTile({
   containerRef,
   pageVisible,
   captionExpanded,
-  isTouchDevice,
   prefersReducedMotion,
 }: VideoTileProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null)
-  const [hovered, setHovered] = useState(false)
-  const [centered, setCentered] = useState(false)
+  const [inView, setInView] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
 
-  /* Device-aware trigger:
-     - touch device → IO-centered (geen hover beschikbaar)
-     - desktop → hover-only (voorkomt multi-play in center zone) */
-  const trigger = isTouchDevice ? centered : hovered
+  /* Bereken of de video MAG spelen op dit moment. */
   const shouldPlay =
-    trigger && pageVisible && !captionExpanded && !prefersReducedMotion
+    inView && pageVisible && !captionExpanded && !prefersReducedMotion
 
   /* "Adjust state in response to props" — React-aanbevolen pattern.
      Reset videoReady zodra shouldPlay flipt zodat een stale `true`
@@ -611,40 +590,30 @@ function VideoTile({
     setVideoReady(false)
   }
 
-  /* IntersectionObserver: ALLEEN op touch-devices (op desktop gebruiken
-     we hover, dus IO is dan onnodig CPU-werk). rootMargin -20% lateraal
-     → centrale 60% van de carousel-viewport telt als "centered". */
+  /* IntersectionObserver: triggert zodra de tile 1%+ in de carousel-
+     viewport zit. root=container zodat we meten t.o.v. de scrollbare
+     carousel — niet de page-viewport — anders zouden tiles die binnen
+     de carousel rechts buiten beeld zijn-gescrold tóch "in viewport"
+     lijken (de carousel zelf staat nl. in beeld). */
   useEffect(() => {
-    if (!isTouchDevice) return
     const wrap = wrapperRef.current
     const root = containerRef.current
     if (!wrap || !root || typeof IntersectionObserver === 'undefined') return
     const io = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        if (entry) setCentered(entry.intersectionRatio >= 0.4)
+        if (entry) setInView(entry.isIntersecting)
       },
-      { root, rootMargin: '0px -20% 0px -20%', threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] }
+      { root, threshold: 0.01 }
     )
     io.observe(wrap)
     return () => io.disconnect()
-  }, [containerRef, isTouchDevice])
-
-  /* Mouse-events ALLEEN renderen op desktop. Op touch-devices vuren
-     deze events niet sowieso, maar door ze conditioneel te zetten
-     houden we de DOM-attributes schoon. */
-  const mouseHandlers = isTouchDevice
-    ? undefined
-    : {
-        onMouseEnter: () => setHovered(true),
-        onMouseLeave: () => setHovered(false),
-      }
+  }, [containerRef])
 
   return (
     <div
       ref={wrapperRef}
       className="absolute inset-0 w-full h-full"
-      {...mouseHandlers}
     >
       {/* Poster image — altijd zichtbaar, fadet ALLEEN uit wanneer de
           video én gemount én ready is. Voorkomt blank moment bij
