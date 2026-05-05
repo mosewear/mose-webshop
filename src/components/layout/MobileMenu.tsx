@@ -60,13 +60,12 @@ const INSTAGRAM_URL = 'https://instagram.com/mosewearcom'
  *
  * Visueel ontwerp (boven → onder):
  *  [1]   Sticky zwarte header (logo + close-X)
- *  [2]   Animated marquee-ticker (zwart-wit tape-strip met MOSE-waarden)
- *  [3]   Editorial mega-nav (5 items) met "01 — SHOP →" + stagger
- *  [3.5] Gratis-verzending-pill (smart, leest free_shipping_threshold)
- *  [4]   3 brutalist actie-tegels (ACCOUNT / WISHLIST / ZOEK)
- *  [5]   Live Instagram-rij (hergebruikt /api/instagram/feed)
- *  [6]   Socials + taal-toggle in compacte voet-rij
- *  [7]   Signature © MOSE — MADE WITH 🐾
+ *  [2]   Editorial mega-nav (5 items) met "SHOP →" + stagger
+ *  [2.5] Gratis-verzending-pill (smart, leest free_shipping_threshold)
+ *  [3]   3 brutalist actie-tegels (ACCOUNT / WISHLIST / ZOEK)
+ *  [4]   Live Instagram-rij (hergebruikt /api/instagram/feed)
+ *  [5]   Socials + taal-toggle in compacte voet-rij
+ *  [6]   Signature © MOSE — MADE WITH 🐾
  */
 export default function MobileMenu({
   isOpen,
@@ -147,16 +146,6 @@ export default function MobileMenu({
     if (isOpen) onClose()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
-
-  // Ticker-items komen uit de i18n messages (array). Voor de marquee
-  // duplicaten we de set 2× zodat de animatie naadloos kan loopen
-  // (translateX 0 → -50% in CSS verlegt de tweede set exact op de
-  // startpositie van de eerste). Dit is hetzelfde patroon als
-  // PillTicker / InstagramMarquee elders in de codebase.
-  const tickerItems = useMemo(() => {
-    const raw = t.raw('tickerItems') as string[] | undefined
-    return Array.isArray(raw) ? raw : []
-  }, [t])
 
   // Smart label voor de gratis-verzending pill. De admin bepaalt het
   // gedrag via free_shipping_threshold:
@@ -246,113 +235,62 @@ export default function MobileMenu({
             geeft naar de pagina eronder (extra failsafe naast de body-
             scroll-lock). */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          {/* [2] ANIMATED MARQUEE-TICKER — brutalist tape-strip op het
-              wit-canvas (consistent met shop/PDP/home, die allemaal wit
-              + zwarte borders + groene accents als handtekening hebben).
-              Twee identieke sets achter elkaar zodat translateX(-50%)
-              een naadloze loop oplevert. Reduced-motion → animatie uit,
-              tweede set verborgen, eerste set blijft statisch leesbaar.
-              Alleen renderen als er items zijn (defensive: lege i18n
-              array zou anders een lege balk geven). */}
-          {tickerItems.length > 0 && (
-            <div
-              role="region"
-              aria-label={t('tickerAria')}
-              className="relative bg-white text-black border-b-2 border-black overflow-hidden"
-              // Custom marquee-snelheid voor deze instance (kort en
-              // levendig). Globale default in globals.css = 60s.
-              style={{ ['--marquee-duration' as string]: '24s' }}
-            >
-              <div className="flex w-max motion-safe:animate-marquee will-change-transform py-2.5">
-                <TickerSet items={tickerItems} />
-                <TickerSet items={tickerItems} ariaHidden />
-              </div>
-              {/* Subtiele fade-edges links/rechts zodat de tekst niet
-                  hard wegknipt; pointer-events:none zodat ze geen taps
-                  eten. */}
-              <span
-                aria-hidden="true"
-                className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white to-transparent pointer-events-none"
-              />
-              <span
-                aria-hidden="true"
-                className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none"
-              />
-            </div>
-          )}
-
-          {/* [3] PRIMARY NAVIGATION — editorial mega-items met
+          {/* [2] PRIMARY NAVIGATION — editorial mega-items met
               stagger-fade-in. We gebruiken inline animationDelay zodat
               elk item ~50ms later inkomt; werkt out-of-the-box met
               de bestaande `animate-fadeIn` keyframe in tailwind config. */}
           <nav aria-label={t('navAria')}>
             <ol className="divide-y-2 divide-black border-b-2 border-black">
-              {NAV_ITEMS.map((item, idx) => {
-                const number = String(idx + 1).padStart(2, '0')
-                return (
-                  <li
-                    key={item.href}
-                    // Stagger fade-in alleen wanneer drawer open is.
-                    // animation-fill-mode 'both' = backwards (opacity 0
-                    // tijdens delay) + forwards (opacity 1 na animatie),
-                    // dus geen flikker en geen FOUC. Bij gesloten drawer
-                    // OF prefers-reduced-motion is opacity standaard 1
-                    // (geen animation actief), dus altijd zichtbaar als
-                    // de drawer al rendered is.
-                    className={isOpen ? 'animate-fadeIn' : undefined}
-                    style={
-                      isOpen
-                        ? {
-                            animationDelay: `${80 + idx * 55}ms`,
-                            animationFillMode: 'both',
-                          }
-                        : undefined
-                    }
+              {NAV_ITEMS.map((item, idx) => (
+                <li
+                  key={item.href}
+                  // Stagger fade-in alleen wanneer drawer open is.
+                  // animation-fill-mode 'both' = backwards (opacity 0
+                  // tijdens delay) + forwards (opacity 1 na animatie),
+                  // dus geen flikker en geen FOUC. Bij gesloten drawer
+                  // OF prefers-reduced-motion is opacity standaard 1
+                  // (geen animation actief), dus altijd zichtbaar als
+                  // de drawer al rendered is.
+                  className={isOpen ? 'animate-fadeIn' : undefined}
+                  style={
+                    isOpen
+                      ? {
+                          animationDelay: `${80 + idx * 55}ms`,
+                          animationFillMode: 'both',
+                        }
+                      : undefined
+                  }
+                >
+                  <LocaleLink
+                    href={item.href}
+                    onClick={onClose}
+                    className="group relative flex items-center justify-between gap-4 px-5 py-5 bg-white hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none transition-colors"
                   >
-                    <LocaleLink
-                      href={item.href}
-                      onClick={onClose}
-                      className="group relative flex items-center justify-between gap-4 px-5 py-5 bg-white hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none transition-colors"
-                    >
-                      {/* Groene linker-marker. 3px (in plaats van 1px)
-                          maakt 'm op hover/focus visueel volwaardig
-                          gelijkwaardig aan de PDP-CTA accent-bar en de
-                          shop-filter-borders, en blijft als brutalist
-                          accent leesbaar op zwart hover-canvas. */}
-                      <span
-                        aria-hidden="true"
-                        className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand-primary scale-y-0 group-hover:scale-y-100 group-focus-visible:scale-y-100 origin-top transition-transform duration-200"
-                      />
-                      <span className="flex items-baseline gap-3 md:gap-4">
-                        {/* Editorial-binding: nummer + em-dash + label.
-                            Tracking 0.2em matched de site-brede eyebrow-
-                            standard (PDP, ProductReviews, IG-eyebrow).
-                            De em-dash visualiseert de relatie tussen
-                            nummer en titel — herkenbaar magazine-patroon. */}
-                        <span className="inline-flex items-baseline gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
-                          <span>{number}</span>
-                          <span aria-hidden="true" className="opacity-70">
-                            —
-                          </span>
-                        </span>
-                        <span className="font-display text-2xl md:text-3xl uppercase tracking-tight leading-none">
-                          {tCommon(item.labelKey)}
-                        </span>
-                      </span>
-                      <ArrowRight
-                        size={22}
-                        strokeWidth={2.5}
-                        className="flex-shrink-0 transform group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 transition-transform"
-                        aria-hidden="true"
-                      />
-                    </LocaleLink>
-                  </li>
-                )
-              })}
+                    {/* Groene linker-marker. 3px (in plaats van 1px)
+                        maakt 'm op hover/focus visueel volwaardig
+                        gelijkwaardig aan de PDP-CTA accent-bar en de
+                        shop-filter-borders, en blijft als brutalist
+                        accent leesbaar op zwart hover-canvas. */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand-primary scale-y-0 group-hover:scale-y-100 group-focus-visible:scale-y-100 origin-top transition-transform duration-200"
+                    />
+                    <span className="font-display text-2xl md:text-3xl uppercase tracking-tight leading-none">
+                      {tCommon(item.labelKey)}
+                    </span>
+                    <ArrowRight
+                      size={22}
+                      strokeWidth={2.5}
+                      className="flex-shrink-0 transform group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 transition-transform"
+                      aria-hidden="true"
+                    />
+                  </LocaleLink>
+                </li>
+              ))}
             </ol>
           </nav>
 
-          {/* [3.5] SHIPPING PILL — conversion-cue direct onder de
+          {/* [2.5] SHIPPING PILL — conversion-cue direct onder de
               primary nav. Full-width brutalist statement-strip i.p.v.
               een kleine inline pill: visueel volwaardig blok dat ritme
               maakt tussen de nav-rij en de actie-tegels. Matched de
@@ -368,7 +306,7 @@ export default function MobileMenu({
             </span>
           </div>
 
-          {/* [4] SECONDARY ACTIONS — 3 gelijkwaardige tegels.
+          {/* [3] SECONDARY ACTIONS — 3 gelijkwaardige tegels.
               text-[11px] + tracking-[0.2em] + 22px-icons matched de
               standaard chip/utility-styling op PDP en shop-filters. */}
           <div
@@ -412,7 +350,7 @@ export default function MobileMenu({
             </button>
           </div>
 
-          {/* [5] LIVE INSTAGRAM-RIJ — community-vibe in MOSE-stijl.
+          {/* [4] LIVE INSTAGRAM-RIJ — community-vibe in MOSE-stijl.
               Hergebruikt de bestaande IG-feed data (cached). Lazy-fetch:
               de eerste keer dat het menu opent triggeren we de call,
               daarna blijft de data in-memory. Rendert null als de admin
@@ -420,7 +358,7 @@ export default function MobileMenu({
               geweest. Eigen border-b + empty/skeleton zit in component. */}
           <MobileMenuInstagramRow isOpen={isOpen} />
 
-          {/* [6] SOCIALS + TAAL — compacte footer-rij */}
+          {/* [5] SOCIALS + TAAL — compacte footer-rij */}
           <div className="flex items-center justify-between gap-4 px-4 py-4 border-b-2 border-black">
             <div className="flex items-center gap-2">
               <a
@@ -471,7 +409,7 @@ export default function MobileMenu({
             </div>
           </div>
 
-          {/* [7] SIGNATURE — micro-mini footer-noot */}
+          {/* [6] SIGNATURE — micro-mini footer-noot */}
           <div className="px-4 py-4 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">
               {t('signature', { year: new Date().getFullYear() })}
@@ -480,41 +418,5 @@ export default function MobileMenu({
         </div>
       </aside>
     </>
-  )
-}
-
-/**
- * Eén kopie van de marquee-tekst-set. Wordt 2× gerenderd door de
- * parent zodat translateX(0) → translateX(-50%) een naadloze loop is.
- * Items worden gescheiden door een groene • bullet — kleine highlight
- * van het brand-primary in een verder zwart-wit element.
- */
-function TickerSet({
-  items,
-  ariaHidden = false,
-}: {
-  items: string[]
-  ariaHidden?: boolean
-}) {
-  return (
-    <div
-      // Bij ariaHidden negeert AT deze duplicate; eerste set blijft de
-      // canonical voor screen readers. Reduced-motion verbergt 'm via
-      // motion-reduce:hidden zodat enkel de eerste set in beeld blijft.
-      aria-hidden={ariaHidden ? 'true' : undefined}
-      className={`flex items-center shrink-0 ${ariaHidden ? 'motion-reduce:hidden' : ''}`}
-    >
-      {items.map((item, idx) => (
-        <span
-          key={`${ariaHidden ? 'b' : 'a'}-${idx}`}
-          className="flex items-center gap-3 pr-6 text-[10px] font-bold uppercase tracking-[0.22em] whitespace-nowrap"
-        >
-          <span aria-hidden="true" className="text-brand-primary leading-none">
-            •
-          </span>
-          <span>{item}</span>
-        </span>
-      ))}
-    </div>
   )
 }
