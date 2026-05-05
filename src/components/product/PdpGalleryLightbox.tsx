@@ -185,14 +185,6 @@ export default function PdpGalleryLightbox({
                       />
                     )}
 
-                    {/* Index-tag linksboven – brutalist nummer-chip */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute top-2 left-2 bg-white text-black px-1.5 py-0.5 text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] border-2 border-black leading-none"
-                    >
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
-
                     {/* Video-overlay met play-knop */}
                     {item.media_type === 'video' && (
                       <div
