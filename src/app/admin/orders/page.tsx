@@ -42,6 +42,7 @@ export default function AdminOrdersPage() {
   const [batchLabelsLoading, setBatchLabelsLoading] = useState(false)
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[] | null>(null)
   const [deleteSubmitting, setDeleteSubmitting] = useState(false)
+  const [syncingAll, setSyncingAll] = useState(false)
   const router = useRouter()
   const supabase = createClient()
   const [page, setPage] = useState(1)
@@ -355,6 +356,41 @@ export default function AdminOrdersPage() {
     }
   }
 
+  const handleSyncAllStatuses = async () => {
+    setSyncingAll(true)
+    const toastId = toast.loading('Sendcloud statussen synchroniseren…')
+    try {
+      const res = await fetch('/api/admin/sync-order-statuses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json().catch(() => ({} as any))
+
+      toast.dismiss(toastId)
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Sync mislukt')
+      }
+
+      if (data.skipped) {
+        toast('Sendcloud niet geconfigureerd — niets te synchroniseren.', {
+          icon: 'ℹ️',
+        })
+      } else {
+        const summary = `Gescand: ${data.scanned ?? 0} • Bijgewerkt: ${data.changed ?? 0} • Mails: ${data.emailsSent ?? 0}${data.errors ? ` • Fouten: ${data.errors}` : ''}`
+        toast.success(summary, { duration: 6000 })
+      }
+      fetchOrders()
+      fetchStatusCounts()
+    } catch (err: any) {
+      toast.dismiss(toastId)
+      toast.error(err.message || 'Sync mislukt')
+    } finally {
+      setSyncingAll(false)
+    }
+  }
+
   const handleBatchLabels = async () => {
     if (selectedOrders.length === 0) {
       toast.error('Selecteer eerst orders')
@@ -456,6 +492,15 @@ export default function AdminOrdersPage() {
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Bezig...' : 'Ververs'}
+          </button>
+          <button
+            onClick={handleSyncAllStatuses}
+            disabled={syncingAll}
+            title="Haal voor alle openstaande zendingen de actuele status op bij Sendcloud"
+            className="bg-gray-800 hover:bg-black text-white font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 md:gap-2 col-span-3 md:col-span-1"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
+            {syncingAll ? 'Sync…' : 'Sync Sendcloud'}
           </button>
           <button
             onClick={() => {

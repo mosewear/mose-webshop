@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { mapSendcloudStatus } from '@/lib/sendcloud'
-import { sendOrderDeliveredEmail } from '@/lib/email'
-import { logEmail } from '@/lib/email-logger'
+import { applyParcelStatusUpdate } from '@/lib/sync-order-statuses'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import crypto from 'crypto'
 
@@ -49,10 +47,22 @@ export async function POST(req: NextRequest) {
     }
 
     const signature = req.headers.get('sendcloud-signature')
-    const webhookSecret = process.env.SENDCLOUD_WEBHOOK_SECRET
 
-    if (!webhookSecret) {
-      console.error('[Sendcloud Webhook] SENDCLOUD_WEBHOOK_SECRET not configured')
+    // Sendcloud signs each payload with HMAC-SHA256 using EITHER the
+    // dedicated "Webhook Signature Key" or the API "Secret Key", depending
+    // on the integration type (per https://sendcloud.dev/api/v3/webhooks).
+    // We accept BOTH so a key rotation or integration-type switch on the
+    // Sendcloud side does not silently break status sync. The polling cron
+    // in /api/sendcloud-sync-statuses is the second safety net.
+    const candidateSecrets = [
+      process.env.SENDCLOUD_WEBHOOK_SECRET,
+      process.env.SENDCLOUD_SECRET_KEY,
+    ].filter((s): s is string => Boolean(s && s.trim()))
+
+    if (candidateSecrets.length === 0) {
+      console.error(
+        '[Sendcloud Webhook] No HMAC secret configured (SENDCLOUD_WEBHOOK_SECRET / SENDCLOUD_SECRET_KEY both missing)'
+      )
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
     }
 
@@ -61,10 +71,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
     }
 
-    const hmac = crypto.createHmac('sha256', webhookSecret)
-    const digest = hmac.update(rawBody).digest('hex')
-    if (digest !== signature) {
-      console.error('[Sendcloud Webhook] Invalid signature')
+    const sigBuf = (() => {
+      try {
+        return Buffer.from(signature, 'hex')
+      } catch {
+        return null
+      }
+    })()
+
+    const matched = sigBuf
+      ? candidateSecrets.some((secret) => {
+          const digest = crypto
+            .createHmac('sha256', secret)
+            .update(rawBody)
+            .digest()
+          // timingSafeEqual throws on length mismatch; guard explicitly.
+          if (digest.length !== sigBuf.length) return false
+          try {
+            return crypto.timingSafeEqual(digest, sigBuf)
+          } catch {
+            return false
+          }
+        })
+      : false
+
+    if (!matched) {
+      console.error(
+        `[Sendcloud Webhook] Invalid signature (head=${signature.slice(0, 8)}…, secrets_tried=${candidateSecrets.length})`
+      )
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
@@ -114,60 +148,40 @@ async function handleStatusChange(payload: SendcloudWebhookPayload) {
     .single()
 
   if (orderError || !order) {
-    console.error(`[Sendcloud Webhook] Order not found: ${orderNumberOrReturnId}`, orderError?.message)
+    console.error(
+      `[Sendcloud Webhook] Order not found: ${orderNumberOrReturnId}`,
+      orderError?.message
+    )
     return
   }
 
-  const newStatus = mapSendcloudStatus(parcel.status.id)
-  const oldStatus = order.status
+  // Delegate to the shared sync helper — same business rules as the
+  // polling cron (idempotent delivered-mail, downgrade-protection,
+  // shipped_at/delivered_at stamps, atomic Trustpilot claim).
+  // The select('*, order_items(*)') above returns the full row; we cast
+  // through `unknown` because the SDK's typed Row doesn't include the
+  // joined order_items array.
+  const result = await applyParcelStatusUpdate(
+    supabase,
+    order as unknown as Parameters<typeof applyParcelStatusUpdate>[1],
+    parcel
+  )
 
-  if (oldStatus === newStatus) {
-    console.log(`[Sendcloud Webhook] Order ${orderNumberOrReturnId.slice(0, 8)} status unchanged (${oldStatus})`)
+  if (result.error) {
+    console.error(
+      `[Sendcloud Webhook] applyParcelStatusUpdate failed for ${orderNumberOrReturnId.slice(0, 8)}: ${result.error}`
+    )
     return
   }
 
-  // Don't downgrade delivered orders back to shipped
-  if (oldStatus === 'delivered' && newStatus === 'shipped') {
-    console.log(`[Sendcloud Webhook] Skipping downgrade from delivered to shipped for ${orderNumberOrReturnId.slice(0, 8)}`)
-    return
-  }
-
-  const nowIso = new Date().toISOString()
-  const statusUpdate: Record<string, unknown> = {
-    tracking_code: parcel.tracking_number,
-    tracking_url: parcel.tracking_url,
-    carrier: parcel.carrier.name,
-    status: newStatus,
-    updated_at: nowIso,
-  }
-
-  // Stamp shipped_at / delivered_at the first time we see each transition,
-  // so returns-deadline enforcement and review-invitation scheduling have
-  // reliable timestamps to work with.
-  if (newStatus === 'shipped' && !(order as any).shipped_at) {
-    statusUpdate.shipped_at = nowIso
-  }
-  if (newStatus === 'delivered' && !(order as any).delivered_at) {
-    statusUpdate.delivered_at = nowIso
-  }
-
-  const { error: updateError } = await supabase
-    .from('orders')
-    .update(statusUpdate)
-    .eq('id', orderNumberOrReturnId)
-
-  if (updateError) {
-    console.error(`[Sendcloud Webhook] Failed to update order ${orderNumberOrReturnId.slice(0, 8)}:`, updateError.message)
-    return
-  }
-
-  console.log(`[Sendcloud Webhook] Order ${orderNumberOrReturnId.slice(0, 8)}: ${oldStatus} → ${newStatus}`)
-
-  if (newStatus === 'delivered' && oldStatus !== 'delivered') {
-    await sendDeliveredEmailForOrder({
-      ...order,
-      delivered_at: (order as any).delivered_at || nowIso,
-    })
+  if (!result.changed) {
+    console.log(
+      `[Sendcloud Webhook] Order ${orderNumberOrReturnId.slice(0, 8)} no-op (${result.reason || 'unchanged'}) status=${result.oldStatus}`
+    )
+  } else {
+    console.log(
+      `[Sendcloud Webhook] Order ${orderNumberOrReturnId.slice(0, 8)} ${result.oldStatus} → ${result.newStatus}${result.emailSent ? ' (delivered email sent)' : ''}`
+    )
   }
 }
 
@@ -240,17 +254,35 @@ async function handleParcelCreated(payload: SendcloudWebhookPayload) {
     return
   }
 
+  if (orderId.startsWith('RETURN-')) {
+    // Returns volgen hun eigen lifecycle (handleReturnStatusChange).
+    return
+  }
+
   const supabase = getSupabase()
+
+  // Lees de huidige order zodat we shipped_at niet platslaan als die al gezet is.
+  const { data: existing } = await supabase
+    .from('orders')
+    .select('id, shipped_at')
+    .eq('id', orderId)
+    .maybeSingle<{ id: string; shipped_at: string | null }>()
+
+  const nowIso = new Date().toISOString()
+  const update: Record<string, unknown> = {
+    tracking_code: parcel.tracking_number,
+    tracking_url: parcel.tracking_url,
+    carrier: parcel.carrier.name,
+    status: 'shipped',
+    updated_at: nowIso,
+  }
+  if (existing && !existing.shipped_at) {
+    update.shipped_at = nowIso
+  }
 
   const { error: updateError } = await supabase
     .from('orders')
-    .update({
-      tracking_code: parcel.tracking_number,
-      tracking_url: parcel.tracking_url,
-      carrier: parcel.carrier.name,
-      status: 'shipped',
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq('id', orderId)
 
   if (updateError) {
@@ -261,96 +293,3 @@ async function handleParcelCreated(payload: SendcloudWebhookPayload) {
   console.log(`[Sendcloud Webhook] Tracking added to order ${orderId.slice(0, 8)}: ${parcel.tracking_number}`)
 }
 
-async function sendDeliveredEmailForOrder(order: any) {
-  try {
-    // Idempotency guard: if we already BCC'd Trustpilot AFS for this order
-    // (e.g. due to a webhook retry or a manual resend), skip re-sending so
-    // the customer doesn't get a duplicate delivered email and Trustpilot
-    // doesn't receive a duplicate invitation trigger.
-    if (order.review_invitation_sent_at) {
-      console.log(
-        `[Sendcloud Webhook] Skipping delivered email for order ${order.id.slice(0, 8)} — review invitation already dispatched at ${order.review_invitation_sent_at}`
-      )
-      return
-    }
-
-    const customerName = (order.shipping_address as any)?.name || 'Klant'
-    const customerEmail = order.email
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
-    const locale = (order.locale as string) || 'nl'
-
-    const orderItems = (order.order_items || []).map((item: any) => ({
-      product_id: item.product_id || '',
-      product_name: item.product_name,
-      image_url: item.image_url
-        ? (item.image_url.startsWith('http') ? item.image_url : `${siteUrl}${item.image_url.startsWith('/') ? item.image_url : '/' + item.image_url}`)
-        : '',
-    }))
-
-    const result = await sendOrderDeliveredEmail({
-      customerName,
-      customerEmail,
-      orderId: order.id,
-      orderItems,
-      shippingAddress: order.shipping_address,
-      deliveryDate: new Date().toISOString(),
-      locale,
-    })
-
-    if (result.success) {
-      await logEmail({
-        orderId: order.id,
-        emailType: 'delivered',
-        recipientEmail: customerEmail,
-        subject: 'Je MOSE pakket is aangekomen!',
-        status: 'sent',
-      })
-
-      const supabase = getSupabase()
-      const trustpilotConfigured = Boolean(process.env.TRUSTPILOT_AFS_BCC_EMAIL?.trim())
-      const nowIso = new Date().toISOString()
-
-      // Always refresh last_email_* markers.
-      await supabase
-        .from('orders')
-        .update({
-          last_email_sent_at: nowIso,
-          last_email_type: 'delivered',
-        })
-        .eq('id', order.id)
-
-      // Claim the review-invitation slot ATOMICALLY: only mark it as sent
-      // if no parallel worker has already claimed it. This protects us from
-      // duplicate Trustpilot triggers if Sendcloud retries the webhook or
-      // an admin clicks "resend" at the same time.
-      if (trustpilotConfigured) {
-        const { data: claimed, error: claimError } = await supabase
-          .from('orders')
-          .update({ review_invitation_sent_at: nowIso })
-          .eq('id', order.id)
-          .is('review_invitation_sent_at', null)
-          .select('id')
-          .maybeSingle()
-
-        if (claimError) {
-          console.error(
-            `[Sendcloud Webhook] Failed to claim review_invitation_sent_at for order ${order.id.slice(0, 8)}:`,
-            claimError.message
-          )
-        } else if (!claimed) {
-          console.log(
-            `[Sendcloud Webhook] Review invitation for order ${order.id.slice(0, 8)} was already claimed by a parallel run.`
-          )
-        }
-      }
-
-      console.log(
-        `[Sendcloud Webhook] Delivered email sent for order ${order.id.slice(0, 8)} (trustpilot_bcc=${trustpilotConfigured})`
-      )
-    } else {
-      console.error(`[Sendcloud Webhook] Failed to send delivered email for order ${order.id.slice(0, 8)}`)
-    }
-  } catch (error: any) {
-    console.error(`[Sendcloud Webhook] Error sending delivered email:`, error?.message)
-  }
-}

@@ -109,6 +109,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   // PDF server-side using the stored API credentials.
   const [labelReady, setLabelReady] = useState(false)
   const [refreshingReturns, setRefreshingReturns] = useState(false)
+  const [syncingFromSendcloud, setSyncingFromSendcloud] = useState(false)
 
   // Customer info edit states
   const [editingCustomer, setEditingCustomer] = useState(false)
@@ -432,6 +433,49 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       alert(`Fout bij versturen email: ${err.message}`)
     } finally {
       setSendingEmail(false)
+    }
+  }
+
+  const handleSyncFromSendcloud = async () => {
+    if (!order) return
+    try {
+      setSyncingFromSendcloud(true)
+      const response = await fetch('/api/admin/sync-order-statuses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data.error || 'Sync mislukt')
+      }
+
+      const r = data.result || {}
+      if (r.error) {
+        alert(`Fout: ${r.error}`)
+      } else if (!r.changed) {
+        const reason =
+          r.reason === 'parcel-not-found'
+            ? 'Geen parcel gevonden in Sendcloud voor deze tracking code.'
+            : r.reason === 'no-tracking-code'
+              ? 'Order heeft geen tracking code.'
+              : r.reason === 'skip-downgrade'
+                ? `Sendcloud meldt "${r.newStatus}" maar order staat al op "${r.oldStatus}" — niet teruggezet.`
+                : `Status onveranderd (${r.oldStatus}).`
+        alert(`ℹ️ ${reason}`)
+      } else {
+        alert(
+          `✅ Status bijgewerkt: ${r.oldStatus} → ${r.newStatus}${
+            r.emailSent === 'delivered' ? ' (delivered email verstuurd)' : ''
+          }`
+        )
+        await fetchOrder()
+      }
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    } finally {
+      setSyncingFromSendcloud(false)
     }
   }
 
@@ -2114,6 +2158,26 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   >
                     <Mail size={16} />
                     {sendingEmail ? 'Verzenden...' : 'Verzend Email (Opnieuw) Versturen'}
+                  </button>
+                )}
+
+                {/* Sync status met Sendcloud — handige fallback wanneer
+                    de webhook (tijdelijk) niet doorkomt of we de status
+                    direct willen ophalen zonder op de cron te wachten.
+                    Werkt voor élke order met tracking code, ongeacht
+                    huidige status (de server-side helper bevat dezelfde
+                    downgrade-protectie als de webhook). */}
+                {trackingCode && (
+                  <button
+                    onClick={handleSyncFromSendcloud}
+                    disabled={syncingFromSendcloud}
+                    className="w-full bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  >
+                    <RefreshCw
+                      size={16}
+                      className={syncingFromSendcloud ? 'animate-spin' : undefined}
+                    />
+                    {syncingFromSendcloud ? 'Synchroniseren...' : 'Sync status vanaf Sendcloud'}
                   </button>
                 )}
               </div>

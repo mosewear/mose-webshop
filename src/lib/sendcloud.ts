@@ -456,6 +456,36 @@ export async function getParcel(parcelId: number): Promise<SendcloudParcel | nul
 }
 
 /**
+ * Zoek parcel(s) op via tracking number. Sendcloud retourneert dit als
+ * een lijst (kan meerdere multi-collo parcels bevatten); we pakken het
+ * meest-recente. Wordt gebruikt door de status-sync cron als fallback
+ * voor wanneer de webhook niet doorkomt.
+ */
+export async function getParcelByTrackingNumber(
+  trackingNumber: string
+): Promise<SendcloudParcel | null> {
+  if (!trackingNumber) return null
+  try {
+    const data = await sendcloudFetch(
+      `/parcels?tracking_number=${encodeURIComponent(trackingNumber)}`
+    )
+    const parcels: SendcloudParcel[] = Array.isArray(data?.parcels) ? data.parcels : []
+    if (parcels.length === 0) return null
+    // Sort by created_at desc and take the freshest record. Sendcloud
+    // mostly returns one match for a unique tracking number, but for
+    // re-labeled / multi-collo parcels there can be multiple.
+    parcels.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+    return parcels[0]
+  } catch (error: any) {
+    console.error(
+      `[Sendcloud] Failed to fetch parcel by tracking ${trackingNumber}:`,
+      error?.message || error
+    )
+    return null
+  }
+}
+
+/**
  * Haal parcel status op
  */
 export async function getParcelStatus(parcelId: number): Promise<{
