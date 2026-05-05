@@ -437,7 +437,9 @@
       "viewAllShort": "Bekijk alles",
       "viewAllAria": "Bekijk alle {count} foto's in fullscreen",
       "openPhoto": "Open foto {index} van {total}",
-      "current": "Nu in beeld"
+      "current": "Nu in beeld",
+      "prev": "Vorige foto",
+      "next": "Volgende foto"
     },
     "brandWidget": {
       "headline": "WIE ZIJN WIJ?",

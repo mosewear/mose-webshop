@@ -19,6 +19,7 @@ import WatchSpecsModal from '@/components/WatchSpecsModal'
 import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import PdpGalleryLightbox from '@/components/product/PdpGalleryLightbox'
+import PdpImageLightbox from '@/components/product/PdpImageLightbox'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle, Plus } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -2138,42 +2139,44 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         />
       )}
 
-      {/* Image/Video Lightbox */}
-      {showLightbox && displayImages[selectedImage]?.media_type === 'image' && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-          <button
-            onClick={() => setShowLightbox(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
-          >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
-            <Image
-              src={displayImages[selectedImage]?.url || '/placeholder-product.svg'}
-              alt={displayImages[selectedImage]?.alt_text || product.name}
-              fill
-              sizes="100vw"
-              className="object-contain"
-            />
-          </div>
-          {/* Image Navigation */}
-          {displayImages.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {displayImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`w-2 h-2 rounded-full ${
-                    selectedImage === index ? 'bg-white' : 'bg-white/40'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Fullscreen image lightbox.
+          Bevat ALLEEN de image-media (videos slaan we over: die spelen
+          al in de hero-viewer en zouden in een swipe-strip rare
+          autoplay-keuzes triggeren). De index die we doorgeven wordt
+          gemapt van `selectedImage` (positie in displayImages) naar de
+          positie in de gefilterde imageOnlyMedia-lijst. Bij swipe in
+          de lightbox mappen we andersom terug zodat de hero-viewer
+          dezelfde foto toont na sluiten. */}
+      {showLightbox && displayImages[selectedImage]?.media_type === 'image' && (() => {
+        const imageOnlyMedia = displayImages
+          .map((m, originalIdx) => ({ media: m, originalIdx }))
+          .filter(({ media }) => media.media_type === 'image')
+
+        // Map selected hero-index -> index binnen image-only lijst.
+        const initialLightboxIndex = Math.max(
+          0,
+          imageOnlyMedia.findIndex(({ originalIdx }) => originalIdx === selectedImage),
+        )
+
+        return (
+          <PdpImageLightbox
+            items={imageOnlyMedia.map(({ media }) => ({
+              id: media.id,
+              url: media.url,
+              alt_text: media.alt_text,
+            }))}
+            initialIndex={initialLightboxIndex}
+            productName={product.name}
+            onClose={() => setShowLightbox(false)}
+            onIndexChange={(idx) => {
+              const original = imageOnlyMedia[idx]?.originalIdx
+              if (typeof original === 'number') {
+                scrollToImage(original)
+              }
+            }}
+          />
+        )
+      })()}
 
       {/* Hybrid Size Guide Modal: Product Override OR Category Template */}
       {showSizeGuide && (() => {
