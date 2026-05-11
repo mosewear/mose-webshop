@@ -78,6 +78,25 @@ Cron routes authenticate via `CRON_SECRET` (Bearer header). Internal server-to-s
 ### Env vars
 Canonical list in `.env.example`. Production values are set in Vercel. `NEXT_PUBLIC_SITE_URL` must be the canonical storefront URL in prod (`https://www.mosewear.com`); email links and Stripe return URLs depend on it.
 
+## Photoshoot pipeline (refresh imagery)
+
+When all storefront imagery is being replaced with a new shoot, follow this order — it is the only path that keeps Storage, DB, and `/public` fallbacks in lockstep. Every script reads `.env.local` and requires `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (the service-role key bypasses RLS for the `product-images` bucket and `product_images` table).
+
+1. **Drop new sources** in `photoshoot-2026/` as semantically named JPGs (e.g. `homepage-hero-desktop.jpg`, `hoodie-bruin-hero.jpg`, `lookbook-01-city.jpg`, `blog/<post-slug>.jpg`). The folder is in `.gitignore`. The mapping from raw `DSC*.jpg` filenames to semantic names lives in `scripts/photoshoot-2026-source-mapping.json`; `scripts/rename-photoshoot-2026.sh` reproduces the copy from the source folder.
+2. **Edit `scripts/deploy-photoshoot.ts`** — the `ASSETS` array is the single source of truth for which slot maps to which source file, which Storage bucket (`images` for editorial, `product-images` for PDP), and which variants to generate. Variants are defined in `VARIANTS`:
+   - `xl` (3600px WebP Q88) — product images only, powering the PDP lightbox zoom
+   - `desktop` (2400px WebP Q82) — default editorial + product hero
+   - `mobile` (1200px WebP Q80) — homepage/about/lookbook mobile
+   - `og` (1200×630 JPEG Q85) and `square` (1200×1200 JPEG Q85) — social
+   Set `crop: { focalX, focalY }` on landscape-from-portrait crops to keep faces in frame (translated to `sharp`'s 9-region position via `sharpFocalPosition`).
+3. **Edit `scripts/apply-photoshoot-content.ts`** — the `PRODUCT_IMAGES`, `BLOG_LINKS`, `NEW_BLOG_POST`, and the inline `homepage_settings` / `categories` / `lookbook_chapters` / `about_settings` blocks decide what the DB ends up with. Existing non-video product images are wiped per product before re-inserting.
+4. **Wipe Storage**: `npx tsx scripts/prune-photoshoot-2026.ts` recursively removes everything under `photoshoot-2026/` in both `images` and `product-images`. Pass `--dry-run` first if unsure.
+5. **Process + upload**: `npx tsx scripts/deploy-photoshoot.ts` runs `sharp` over every asset, uploads variants to Supabase Storage with `cache-control: public, max-age=31536000, immutable`, writes the `/public` fallbacks (`hero-desktop.webp`, `hero-mobile.webp`, `og-default.jpg`), and writes `scripts/photoshoot-urls.json`.
+6. **Sync DB**: `npx tsx scripts/apply-photoshoot-content.ts` updates `homepage_settings`, `categories`, `lookbook_chapters`, `product_images`, `about_settings`, and `blog_posts`. Fresh-database installs pick up `about_settings` defaults from the most recent `supabase/migrations/<timestamp>_about_settings_photoshoot_v2.sql` — write a new migration when the about hero changes again.
+7. **Verify**: `npx tsx scripts/verify-photoshoot-2026.ts` HEAD-checks every URL in `photoshoot-urls.json`; `npx tsx scripts/sanity-photoshoot-2026.ts` prints the live DB rows so you can eyeball that homepage / about / categories / lookbook / products / blog all point at `photoshoot-2026/…`. Then `npx tsc --noEmit` and `npm run build`.
+
+The PDP lightbox swaps `-desktop.webp` → `-xl.webp` for `product-images/photoshoot-2026/` URLs in `src/components/product/PdpImageLightbox.tsx` (`toLightboxUrl`) — keep the Storage key naming convention or zoom will silently fall back to the desktop variant.
+
 ## Conventions worth knowing
 
 - Production builds strip `console.log/info/warn/debug` but keep `console.error` (`next.config.ts` `removeConsole`).

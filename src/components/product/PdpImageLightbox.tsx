@@ -16,6 +16,22 @@ export interface PdpImageLightboxItem {
   alt_text?: string
 }
 
+/**
+ * For product-images uploaded by the 2026 photoshoot pipeline we ship a
+ * dedicated 3600px WebP "xl" variant alongside the regular 2400px
+ * "desktop" version. The lightbox is the only place pinch-zoom can
+ * actually consume those extra pixels, so we swap the suffix here.
+ *
+ * Anything outside the `product-images/photoshoot-2026/` namespace
+ * (legacy Cloudinary URLs, static `/public` placeholders, video media)
+ * falls through unchanged.
+ */
+function toLightboxUrl(url: string): string {
+  if (!url) return url
+  if (!url.includes('/product-images/photoshoot-2026/')) return url
+  return url.replace(/-desktop\.webp(\?|$)/, '-xl.webp$1')
+}
+
 interface PdpImageLightboxProps {
   items: PdpImageLightboxItem[]
   /** Index waarmee de lightbox geopend wordt. Wordt ook als initiële
@@ -239,10 +255,11 @@ export default function PdpImageLightbox({
             className="relative flex-shrink-0 w-full h-full snap-center snap-always"
           >
             <Image
-              src={item.url || '/placeholder-product.svg'}
+              src={toLightboxUrl(item.url) || '/placeholder-product.svg'}
               alt={item.alt_text || productName}
               fill
               sizes="100vw"
+              quality={90}
               className="object-contain object-center select-none"
               draggable={false}
               priority={idx === initialIndex}

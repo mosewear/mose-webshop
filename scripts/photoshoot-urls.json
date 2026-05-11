@@ -43,51 +43,248 @@
   },
   "og.default": {
     "og": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/og/default-og.jpg",
+    "square": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/og/default-square.jpg",
     "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/og/default-desktop.webp"
   },
   "product.hoodie.bruin.hero": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-desktop.webp"
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-xl.webp"
   },
-  "product.hoodie.bruin.detail": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/detail-desktop.webp"
+  "product.hoodie.bruin.detail-drape": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/detail-drape-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/detail-drape-xl.webp"
+  },
+  "product.hoodie.bruin.hero-pink-hood-pull": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-pink-hood-pull-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-pink-hood-pull-xl.webp"
+  },
+  "product.hoodie.bruin.lifestyle-pink-hood": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/lifestyle-pink-hood-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/lifestyle-pink-hood-xl.webp"
+  },
+  "product.hoodie.bruin.hero-graffiti-smile": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-graffiti-smile-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-graffiti-smile-xl.webp"
+  },
+  "product.hoodie.bruin.hero-concrete": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-concrete-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/hero-concrete-xl.webp"
+  },
+  "product.hoodie.bruin.lifestyle-concrete-side": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/lifestyle-concrete-side-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/lifestyle-concrete-side-xl.webp"
+  },
+  "product.hoodie.bruin.detail-back": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/detail-back-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/bruin/detail-back-xl.webp"
   },
   "product.hoodie.zwart.hero": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-desktop.webp"
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-xl.webp"
+  },
+  "product.hoodie.zwart.hero-drape": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-drape-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-drape-xl.webp"
+  },
+  "product.hoodie.zwart.hero-concrete": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-concrete-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/hero-concrete-xl.webp"
+  },
+  "product.hoodie.zwart.lifestyle-concrete-arm": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/lifestyle-concrete-arm-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/lifestyle-concrete-arm-xl.webp"
+  },
+  "product.hoodie.zwart.detail-back": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/detail-back-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/zwart/detail-back-xl.webp"
   },
   "product.hoodie.groen.hero": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-desktop.webp"
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-xl.webp"
   },
-  "product.hoodie.groen.detail": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-desktop.webp"
+  "product.hoodie.groen.hero-arms-cross": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-arms-cross-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-arms-cross-xl.webp"
   },
-  "product.hoodie.lifestyle.pair": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/lifestyle-pair-desktop.webp"
+  "product.hoodie.groen.lifestyle-lean-smile": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/lifestyle-lean-smile-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/lifestyle-lean-smile-xl.webp"
   },
-  "product.hoodie.lineup": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/lineup-desktop.webp"
+  "product.hoodie.groen.lifestyle-sleeve-look": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/lifestyle-sleeve-look-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/lifestyle-sleeve-look-xl.webp"
+  },
+  "product.hoodie.groen.hero-concrete-front": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-concrete-front-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-concrete-front-xl.webp"
+  },
+  "product.hoodie.groen.lifestyle-concrete-hand": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/lifestyle-concrete-hand-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/lifestyle-concrete-hand-xl.webp"
+  },
+  "product.hoodie.groen.detail-puff-logo": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-logo-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-logo-xl.webp"
+  },
+  "product.hoodie.groen.detail-puff-close": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-close-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-close-xl.webp"
+  },
+  "product.hoodie.groen.detail-back": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-back-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-back-xl.webp"
+  },
+  "product.hoodie.multi.lineup-crop": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/lineup-crop-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/lineup-crop-xl.webp"
+  },
+  "product.hoodie.multi.trio-smile-line": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-smile-line-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-smile-line-xl.webp"
+  },
+  "product.hoodie.multi.trio-laughing-landscape": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-laughing-landscape-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-laughing-landscape-xl.webp"
+  },
+  "product.hoodie.multi.duo-walk-grass": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-walk-grass-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-walk-grass-xl.webp"
+  },
+  "product.hoodie.multi.duo-pink-walk": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-pink-walk-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-pink-walk-xl.webp"
+  },
+  "product.hoodie.multi.duo-laughing-arm-rest": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-laughing-arm-rest-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-laughing-arm-rest-xl.webp"
+  },
+  "product.hoodie.multi.duo-mmx-smile": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-mmx-smile-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/duo-mmx-smile-xl.webp"
   },
   "product.sweater.offwhite.hero": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/hero-desktop.webp"
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/hero-xl.webp"
   },
-  "product.sweater.quartet": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/quartet-desktop.webp"
+  "product.sweater.offwhite.lifestyle-arch-smile": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/lifestyle-arch-smile-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/lifestyle-arch-smile-xl.webp"
   },
-  "product.sweater.couple-walk": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/couple-walk-desktop.webp"
+  "product.sweater.offwhite.lifestyle-arch-lean": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/lifestyle-arch-lean-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/lifestyle-arch-lean-xl.webp"
   },
-  "product.tee.zwart.hero": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp"
+  "product.sweater.offwhite.detail-puff-close": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/detail-puff-close-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/detail-puff-close-xl.webp"
   },
-  "product.tee.wit.editorial": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/editorial-desktop.webp"
+  "product.sweater.offwhite.detail-puff-roll": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/detail-puff-roll-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/detail-puff-roll-xl.webp"
   },
-  "product.tee.wit.detail": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/detail-desktop.webp"
+  "product.sweater.zwart.detail-chest-hand": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/zwart/detail-chest-hand-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/zwart/detail-chest-hand-xl.webp"
   },
-  "product.tee.beige.lifestyle": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/lifestyle-desktop.webp"
+  "product.sweater.multi.quartet-arches": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/quartet-arches-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/quartet-arches-xl.webp"
+  },
+  "product.sweater.multi.quartet-poised": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/quartet-poised-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/quartet-poised-xl.webp"
+  },
+  "product.sweater.multi.detail-arms-shoulder": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/detail-arms-shoulder-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/detail-arms-shoulder-xl.webp"
+  },
+  "product.sweater.multi.couple-walk": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/couple-walk-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/couple-walk-xl.webp"
+  },
+  "product.sweater.multi.couple-lean": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/couple-lean-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/multi/couple-lean-xl.webp"
+  },
+  "product.tee.beige.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/hero-xl.webp"
   },
   "product.tee.beige.detail": {
-    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/detail-desktop.webp"
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/detail-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/detail-xl.webp"
+  },
+  "product.tee.wit.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/hero-xl.webp"
+  },
+  "product.tee.wit.lifestyle-canal-sleeve": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/lifestyle-canal-sleeve-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/lifestyle-canal-sleeve-xl.webp"
+  },
+  "product.tee.wit.detail-puff": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/detail-puff-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/detail-puff-xl.webp"
+  },
+  "product.tee.wit.detail-chest-arms": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/detail-chest-arms-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/detail-chest-arms-xl.webp"
+  },
+  "product.tee.zwart.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-xl.webp"
+  },
+  "product.tee.zwart.lifestyle-look-down": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/lifestyle-look-down-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/lifestyle-look-down-xl.webp"
+  },
+  "product.tee.groen.hero": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/groen/hero-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/groen/hero-xl.webp"
+  },
+  "product.tee.groen.lifestyle-back-walk": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/groen/lifestyle-back-walk-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/groen/lifestyle-back-walk-xl.webp"
+  },
+  "product.tee.multi.couple-blossoms": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/couple-blossoms-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/couple-blossoms-xl.webp"
+  },
+  "product.tee.multi.duo-canal": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/duo-canal-desktop.webp",
+    "xl": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/duo-canal-xl.webp"
+  },
+  "blog.waarom-fast-fashion-kapot-is": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/waarom-fast-fashion-kapot-is-desktop.webp"
+  },
+  "blog.de-perfecte-winter-hoodie-koopgids": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/de-perfecte-winter-hoodie-koopgids-desktop.webp"
+  },
+  "blog.capsule-wardrobe-mannen-minder-kleding-meer-stijl": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/capsule-wardrobe-mannen-minder-kleding-meer-stijl-desktop.webp"
+  },
+  "blog.lokaal-produceren-waarom-mose-kiest-voor-groningen": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/lokaal-produceren-waarom-mose-kiest-voor-groningen-desktop.webp"
+  },
+  "blog.kwaliteit-vs-kwantiteit-echte-kosten-kleding": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/kwaliteit-vs-kwantiteit-echte-kosten-kleding-desktop.webp"
+  },
+  "blog.5-tijdloze-basics-die-iedereen-nodig-heeft": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/5-tijdloze-basics-die-iedereen-nodig-heeft-desktop.webp"
+  },
+  "blog.van-schets-tot-product-hoe-een-mose-hoodie-ontstaat": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/van-schets-tot-product-hoe-een-mose-hoodie-ontstaat-desktop.webp"
+  },
+  "blog.streetwear-trends-2026-wat-blijft-wat-verdwijnt": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/streetwear-trends-2026-wat-blijft-wat-verdwijnt-desktop.webp"
+  },
+  "blog.duurzame-mode-hoeft-niet-duur-te-zijn": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/duurzame-mode-hoeft-niet-duur-te-zijn-desktop.webp"
+  },
+  "blog.groningse-streetwear-scene-van-underground-tot-mainstream": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/groningse-streetwear-scene-van-underground-tot-mainstream-desktop.webp"
+  },
+  "blog.de-perfecte-lente-garderobe-7-stukken-die-werken": {
+    "desktop": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/blog/de-perfecte-lente-garderobe-7-stukken-die-werken-desktop.webp"
   }
 }

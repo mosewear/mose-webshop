@@ -52,6 +52,10 @@ photoshoot-2026/*.jpeg
 photoshoot-2026/*.JPEG
 photoshoot-2026/*.zip
 photoshoot-2026/*.ZIP
+photoshoot-2026/**/*.jpg
+photoshoot-2026/**/*.JPG
+photoshoot-2026/**/*.jpeg
+photoshoot-2026/**/*.JPEG
 
 # macOS Finder duplicate-on-paste artefacts (e.g. "foo 2.sql"). These
 # are never intentional and have caused accidental commits before.
