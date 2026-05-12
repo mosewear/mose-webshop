@@ -1164,8 +1164,8 @@
     },
     "lookbook": {
       "title": "Lookbook",
-      "description": "Editorial hoofdstukken vol MOSE outfits, verhaal en inspiratie. Shop direct de looks uit onze campagne.",
-      "keywords": "MOSE lookbook, editorial, outfit inspiratie, premium basics, Groningen, streetwear"
+      "description": "Campagnefoto's in Groningen: onze hoodie, sweater en tee, lokaal gemaakt. Shop de stukken uit dit shoot.",
+      "keywords": "MOSE lookbook, outfit inspiratie, premium basics, Groningen, streetwear, campagne"
     },
     "product": {
       "notFound": "Product niet gevonden",
@@ -2046,7 +2046,7 @@
     }
   },
   "lookbook": {
-    "eyebrow": "MOSE · Editorial",
+    "eyebrow": "MOSE IN GRONINGEN",
     "chapterLabel": "HOOFDSTUK",
     "emptyState": {
       "title": "Het volgende hoofdstuk komt eraan.",

@@ -132,7 +132,7 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
             : ''
           const nextNumber = String(index + 2).padStart(2, '0')
           const stampRight = nextChapter
-            ? `${nextLabel} — ${nextNumber} / ${totalLabel} · ${nextTitle}`
+            ? `${nextLabel} · ${nextNumber} / ${totalLabel} · ${nextTitle}`
             : ''
 
           return (
