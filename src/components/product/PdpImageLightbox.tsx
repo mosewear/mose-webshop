@@ -1,9 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import {
+  ensurePdpLightboxXlLoaded,
+  hasPdpLightboxXlVariant,
+  toLightboxXlUrl,
+} from '@/lib/pdp-lightbox-image'
 
 /**
  * Minimal item shape — losgekoppeld van het ProductImage type uit
@@ -16,21 +20,7 @@ export interface PdpImageLightboxItem {
   alt_text?: string
 }
 
-/**
- * For product-images uploaded by the 2026 photoshoot pipeline we ship a
- * dedicated 3600px WebP "xl" variant alongside the regular 2400px
- * "desktop" version. The lightbox is the only place pinch-zoom can
- * actually consume those extra pixels, so we swap the suffix here.
- *
- * Anything outside the `product-images/photoshoot-2026/` namespace
- * (legacy Cloudinary URLs, static `/public` placeholders, video media)
- * falls through unchanged.
- */
-function toLightboxUrl(url: string): string {
-  if (!url) return url
-  if (!url.includes('/product-images/photoshoot-2026/')) return url
-  return url.replace(/-desktop\.webp(\?|$)/, '-xl.webp$1')
-}
+export { prefetchPdpLightboxXl } from '@/lib/pdp-lightbox-image'
 
 interface PdpImageLightboxProps {
   items: PdpImageLightboxItem[]
@@ -47,25 +37,78 @@ interface PdpImageLightboxProps {
 }
 
 /**
- * MOSE PDP fullscreen image lightbox met **echte** swipe-navigatie.
- *
- * Waarom deze component bestaat:
- *  De oude inline-lightbox toonde alleen de huidige foto en bood enkel
- *  klikbare dots als navigatie. Op mobiel betekende dat: lightbox open
- *  tikken = vast komen te zitten op die ene foto. Onacceptabel voor een
- *  PDP waar een variant zomaar 9 foto's kan hebben.
- *
- * UX:
- *  - Mobiel: horizontale `scroll-snap` strip met álle foto's. Swipen
- *    voelt native aan en triggert automatisch de index-update via
- *    `onScroll`. Pinch-zoom van de browser blijft per-foto werken.
- *  - Desktop: prev/next buttons + ←/→ keyboard arrows. Swipe blijft
- *    werken voor trackpad/touchscreen-laptops omdat we de scroll-snap
- *    container ook daar gebruiken.
- *  - Esc sluit. Body-scroll-lock zolang de modal openstaat.
- *  - Klik op de close-knop sluit; klik op de foto zelf doet niets
- *    (anders sluit men per ongeluk tijdens het swipen).
+ * Fullscreen strip: native `<img>` direct vanaf Supabase CDN (geen
+ * `next/image` / `/_next/image`), plus progressive XL voor photoshoot-assets.
  */
+function LightboxSlideImage({
+  item,
+  productName,
+  slideIdx,
+  activeIndex,
+  initialIndex,
+}: {
+  item: PdpImageLightboxItem
+  productName: string
+  slideIdx: number
+  activeIndex: number
+  initialIndex: number
+}) {
+  const alt = item.alt_text || productName
+  const desktop = item.url || '/placeholder-product.svg'
+  const xl = toLightboxXlUrl(desktop)
+  const useXl = hasPdpLightboxXlVariant(desktop)
+
+  const inPrefetchWindow =
+    Math.abs(slideIdx - activeIndex) <= 1 || slideIdx === initialIndex
+
+  const [xlReady, setXlReady] = useState(false)
+
+  useEffect(() => {
+    if (!useXl) return
+    if (!inPrefetchWindow) {
+      setXlReady(false)
+      return
+    }
+    let cancelled = false
+    ensurePdpLightboxXlLoaded(desktop)
+      .then(() => {
+        if (!cancelled) setXlReady(true)
+      })
+      .catch(() => {
+        /* XL ontbreekt of netwerk: desktop blijft */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [useXl, inPrefetchWindow, desktop])
+
+  const eager = slideIdx === initialIndex
+
+  return (
+    <div className="relative h-full w-full bg-black">
+      <img
+        src={desktop}
+        alt={alt}
+        decoding="async"
+        loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : 'low'}
+        draggable={false}
+        className="absolute inset-0 m-auto max-h-full max-w-full object-contain object-center select-none"
+      />
+      {useXl && inPrefetchWindow && xlReady && (
+        <img
+          src={xl}
+          alt=""
+          aria-hidden
+          decoding="async"
+          draggable={false}
+          className="absolute inset-0 m-auto max-h-full max-w-full object-contain object-center select-none"
+        />
+      )}
+    </div>
+  )
+}
+
 export default function PdpImageLightbox({
   items,
   initialIndex,
@@ -80,14 +123,9 @@ export default function PdpImageLightbox({
     Math.max(0, Math.min(items.length - 1, initialIndex)),
   )
 
-  // Tijdens een programmatische scrollTo (initial mount, dot-click,
-  // arrow-key, resize) willen we de scroll-listener tijdelijk negeren.
-  // Anders kan een race tussen "zet active naar X" en "scroll-event nog
-  // op oude positie Y" een korte flits naar de oude index veroorzaken.
   const isProgrammaticScroll = useRef(false)
   const rafRef = useRef<number | null>(null)
 
-  // Body-scroll-lock — restore on unmount.
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -96,9 +134,6 @@ export default function PdpImageLightbox({
     }
   }, [])
 
-  // Initiële scroll-positie zetten ná de eerste paint zodat
-  // `clientWidth` correct is. `auto` (instant) zodat de gebruiker geen
-  // smooth-animatie ziet bij het openen.
   useEffect(() => {
     const scroller = scrollerRef.current
     if (!scroller) return
@@ -107,12 +142,9 @@ export default function PdpImageLightbox({
       left: initialIndex * scroller.clientWidth,
       behavior: 'auto',
     })
-    // Eén RAF is genoeg; de scroll-jump is synchronously toegepast.
     requestAnimationFrame(() => {
       isProgrammaticScroll.current = false
     })
-    // We willen dit alleen één keer doen bij mount. Index-changes daarna
-    // komen via gebruiker-acties (swipe / arrow / dot).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -128,10 +160,6 @@ export default function PdpImageLightbox({
       })
       setActiveIndex(clamped)
       onIndexChange?.(clamped)
-      // Smooth scroll kan 200-400ms duren; pas daarna mogen scroll-
-      // events de index weer updaten. 500ms is ruim genoeg en blokkeert
-      // verder geen user interaction omdat we tussentijds nog wel
-      // andere goTo's accepteren.
       window.setTimeout(() => {
         isProgrammaticScroll.current = false
       }, 500)
@@ -142,7 +170,6 @@ export default function PdpImageLightbox({
   const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
   const goNext = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
 
-  // Keyboard: Esc sluit, ←/→ navigeert.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -160,9 +187,6 @@ export default function PdpImageLightbox({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, goPrev, goNext])
 
-  // Sync active-index op user-driven scroll (swipe). Throttled met
-  // requestAnimationFrame zodat we niet bij elk scroll-tick een
-  // setState doen.
   const handleScroll = useCallback(() => {
     if (isProgrammaticScroll.current) return
     if (rafRef.current !== null) return
@@ -180,8 +204,6 @@ export default function PdpImageLightbox({
     })
   }, [items.length, onIndexChange])
 
-  // Bij viewport-resize / device-rotatie moet de scroll-positie mee
-  // bewegen; anders staat de actieve slide ineens half buiten beeld.
   useEffect(() => {
     const onResize = () => {
       const scroller = scrollerRef.current
@@ -199,7 +221,6 @@ export default function PdpImageLightbox({
     return () => window.removeEventListener('resize', onResize)
   }, [activeIndex])
 
-  // Cleanup van pending RAF bij unmount.
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
@@ -217,10 +238,6 @@ export default function PdpImageLightbox({
       aria-label={t('title')}
       className="fixed inset-0 z-50 bg-black/95 flex flex-col animate-fadeIn"
     >
-      {/* Header: counter + close. Absolute zodat de scroll-strip de
-          volledige hoogte krijgt; pointer-events alleen op de knop zelf
-          zodat het swipen niet hapert wanneer een vinger de header
-          raakt. */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 md:px-6 md:py-4 pointer-events-none">
         {total > 1 ? (
           <span className="text-[11px] md:text-xs font-bold uppercase tracking-[0.2em] text-white bg-black/50 border border-white/30 px-2.5 py-1 leading-none">
@@ -240,10 +257,6 @@ export default function PdpImageLightbox({
         </button>
       </header>
 
-      {/* Horizontale scroll-snap strip. Alle foto's leven hier in,
-          mobiel-swipe is gewoon native scrollen. `touch-pan-x` houdt
-          verticale gestures (close gestures, refresh) buiten de strip
-          zodat alleen horizontaal swipen telt. */}
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
@@ -254,23 +267,17 @@ export default function PdpImageLightbox({
             key={`${item.id}-${idx}`}
             className="relative flex-shrink-0 w-full h-full snap-center snap-always"
           >
-            <Image
-              src={toLightboxUrl(item.url) || '/placeholder-product.svg'}
-              alt={item.alt_text || productName}
-              fill
-              sizes="100vw"
-              quality={90}
-              className="object-contain object-center select-none"
-              draggable={false}
-              priority={idx === initialIndex}
+            <LightboxSlideImage
+              item={item}
+              productName={productName}
+              slideIdx={idx}
+              activeIndex={activeIndex}
+              initialIndex={initialIndex}
             />
           </div>
         ))}
       </div>
 
-      {/* Prev/Next — desktop only. Op mobiel is swipen het primaire
-          gebaar; arrows zouden daar alleen maar boven de foto in de weg
-          zitten. */}
       {total > 1 && (
         <>
           <button
@@ -294,7 +301,6 @@ export default function PdpImageLightbox({
         </>
       )}
 
-      {/* Dot indicators — werkend tikbaar (was voorheen alleen visueel). */}
       {total > 1 && (
         <div className="absolute bottom-4 md:bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
           {items.map((_, idx) => {

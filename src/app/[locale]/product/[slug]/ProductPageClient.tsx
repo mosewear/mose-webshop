@@ -20,6 +20,7 @@ import DynamicSizeGuideModal from '@/components/DynamicSizeGuideModal'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import PdpGalleryLightbox from '@/components/product/PdpGalleryLightbox'
 import PdpImageLightbox from '@/components/product/PdpImageLightbox'
+import { prefetchPdpLightboxXl } from '@/lib/pdp-lightbox-image'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle, Plus } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -699,7 +700,18 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   
   const displayImages = getDisplayImages()
 
-  // Responsive image navigation: scroll on mobile, state on desktop
+  // Warm XL lightbox assets (CDN) for current + adjacent slides before tap.
+  useEffect(() => {
+    if (!product) return
+    const indices = [selectedImage - 1, selectedImage, selectedImage + 1].filter(
+      (i) => i >= 0 && i < displayImages.length,
+    )
+    for (const i of indices) {
+      const m = displayImages[i]
+      if (m?.media_type === 'image' && m.url) prefetchPdpLightboxXl(m.url)
+    }
+  }, [product, selectedImage, selectedColor, selectedSize])
+
   const scrollToImage = (index: number) => {
     const container = scrollContainerRef.current
     if (!container) return
@@ -1022,6 +1034,9 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         ) : (
                           <div
                             onClick={() => index === selectedImage && setShowLightbox(true)}
+                            onPointerEnter={() => {
+                              if (media.media_type === 'image' && media.url) prefetchPdpLightboxXl(media.url)
+                            }}
                             className={`relative w-full h-full ${index === selectedImage ? 'cursor-zoom-in' : ''}`}
                           >
                             <Image
@@ -1134,7 +1149,9 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                       ) : (
                         <button
                           key={media.id}
+                          type="button"
                           onClick={() => scrollToImage(index)}
+                          onPointerEnter={() => prefetchPdpLightboxXl(media.url)}
                           className={`relative aspect-[3/4] border-2 transition-all overflow-hidden ${
                             selectedImage === index
                               ? 'border-brand-primary scale-95'
