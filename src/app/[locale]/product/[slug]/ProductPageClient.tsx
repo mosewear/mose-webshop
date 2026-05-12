@@ -2087,8 +2087,6 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               fill
                               sizes="(max-width: 640px) 50vw, 25vw"
                               className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
-                              placeholder="blur"
-                              blurDataURL={BLUR_DATA_URL}
                             />
                           )}
                           {!hasStock && (

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { Link } from '@/i18n/routing'
@@ -75,24 +76,28 @@ export default async function AboutPage({
           </p>
         </div>
 
-        {/* Story Image — art-directed via native <picture> so the
-            browser only ever fetches the breakpoint we'll actually
-            display. The previous dual <Image priority> emitted two
-            preload hints, doubling the bytes the about page paid for
-            its LCP. */}
+        {/* Story Image — art-directed: portrait on mobile, landscape on desktop */}
         <div className="relative aspect-[4/5] md:aspect-[3/2] mb-12 border-2 border-black overflow-hidden">
-          <picture>
-            <source media="(min-width: 768px)" srcSet={about.hero_image_url} />
-            <img
-              src={about.hero_image_url_mobile || about.hero_image_url}
-              alt={about.hero_alt}
-              fetchPriority="high"
-              decoding="async"
-              draggable={false}
-              className="absolute inset-0 h-full w-full object-cover"
-              style={{ objectPosition: focal }}
-            />
-          </picture>
+          {/* Mobile / portrait */}
+          <Image
+            src={about.hero_image_url_mobile || about.hero_image_url}
+            alt={about.hero_alt}
+            fill
+            sizes="(min-width: 768px) 1px, 100vw"
+            className="md:hidden object-cover"
+            style={{ objectPosition: focal }}
+            priority
+          />
+          {/* Desktop / landscape */}
+          <Image
+            src={about.hero_image_url}
+            alt={about.hero_alt}
+            fill
+            sizes="(min-width: 768px) 896px, 1px"
+            className="hidden md:block object-cover"
+            style={{ objectPosition: focal }}
+            priority
+          />
         </div>
 
         {/* Story Content */}

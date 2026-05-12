@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatPrice } from '@/lib/format-price'
 import { useWishlist } from '@/store/wishlist'
-import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import toast from 'react-hot-toast'
 
 interface Product {
@@ -131,8 +130,6 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                     fill
                     sizes="(max-width: 768px) 80vw, 280px"
                     className="object-cover object-center"
-                    placeholder="blur"
-                    blurDataURL={BLUR_DATA_URL}
                     onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                   />
                   

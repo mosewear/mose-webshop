@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter, usePathname } from '@/i18n/routing'
-import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 interface BlogPost {
   id: string
@@ -157,8 +156,6 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    placeholder="blur"
-                    blurDataURL={BLUR_DATA_URL}
                     onError={() => setFailedImages((prev) => new Set(prev).add(featuredPost.id))}
                   />
                 ) : (
@@ -218,8 +215,6 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
-                        placeholder="blur"
-                        blurDataURL={BLUR_DATA_URL}
                         onError={() => setFailedImages((prev) => new Set(prev).add(post.id))}
                       />
                     ) : (

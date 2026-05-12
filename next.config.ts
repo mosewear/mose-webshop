@@ -43,11 +43,13 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // AVIF first, WebP fallback. Browsers that don't speak AVIF (older
-    // Safari, etc.) auto-negotiate down to WebP. AVIF typically saves
-    // 25-40% bytes vs. WebP at the same visual quality, so this is a
-    // free win for LCP without touching source assets.
-    formats: ['image/avif', 'image/webp'],
+    // We deliberately keep WebP as the only output format (the Next/Image
+    // default). Adding AVIF sounds free on paper, but Vercel's image
+    // optimizer encodes AVIF on demand and the cold-cache encode of a
+    // 2400px source can cost 1-3s of TTFB for the first visitor — which
+    // is exactly the regression we keep getting reports about. WebP-out
+    // from a WebP source is essentially a sharp resize, fast on every
+    // request.
     // 30 days. Holds the optimised variant on Vercel's image cache long
     // enough that returning visitors and shared-CDN edges almost always
     // serve from cache instead of re-encoding from origin.

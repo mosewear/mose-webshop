@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
-import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import { useWishlist } from '@/store/wishlist'
 import {
   Star,
@@ -112,36 +111,30 @@ export default function HomePageClient({
       <div className="min-h-screen bg-white" data-full-bleed-top>
       {/* Hero Section - Full Viewport */}
       <section className="relative h-screen w-full overflow-hidden">
-        {/* Background image with art-directed mobile / desktop split.
-            We deliberately use a native <picture> here instead of two
-            next/image elements: that previous setup forced *both* hero
-            variants to be preloaded (priority emits a <link rel=preload>
-            unconditionally), so visitors paid for the off-breakpoint
-            asset they could never see. With <picture>, the browser
-            picks ONE source via the media query and starts downloading
-            immediately courtesy of the preload scanner + fetchpriority
-            high. We trade Next's AVIF auto-negotiation for a single
-            half-size payload, which is the bigger LCP win on cold
-            cache. */}
+        {/* Background Image with art-directed mobile/desktop split */}
         <div className="absolute inset-0">
-          <picture>
-            <source
-              media="(min-width: 768px)"
-              srcSet={homepageSettings?.hero_image_url || '/hero-desktop.webp'}
-            />
-            <img
-              src={
-                homepageSettings?.hero_image_url_mobile ||
-                homepageSettings?.hero_image_url ||
-                '/hero-mobile.webp'
-              }
-              alt="MOSE, gemaakt in Groningen, gedragen in de stad"
-              fetchPriority="high"
-              decoding="async"
-              draggable={false}
-              className="absolute inset-0 h-full w-full object-cover object-center scale-105"
-            />
-          </picture>
+          {/* Desktop / tablet: landscape group shot */}
+          <Image
+            src={homepageSettings?.hero_image_url || '/hero-desktop.webp'}
+            alt="MOSE, gemaakt in Groningen, gedragen in de stad"
+            fill
+            sizes="(max-width: 767px) 0px, 100vw"
+            className="hidden md:block object-cover object-center scale-105"
+            priority
+          />
+          {/* Mobile: portrait crop with the trio in frame */}
+          <Image
+            src={
+              homepageSettings?.hero_image_url_mobile ||
+              homepageSettings?.hero_image_url ||
+              '/hero-mobile.webp'
+            }
+            alt="MOSE, gemaakt in Groningen, gedragen in de stad"
+            fill
+            sizes="(min-width: 768px) 0px, 100vw"
+            className="block md:hidden object-cover object-center scale-105"
+            priority
+          />
           {/* Improved Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
           {/* Vignette Effect */}
@@ -352,8 +345,6 @@ export default function HomePageClient({
                         fill
                         sizes="(max-width: 768px) 50vw, 33vw"
                         className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
-                        placeholder="blur"
-                        blurDataURL={BLUR_DATA_URL}
                         onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                       />
 
@@ -540,8 +531,6 @@ export default function HomePageClient({
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                      placeholder="blur"
-                      blurDataURL={BLUR_DATA_URL}
                       onError={() => setFailedImages(prev => new Set(prev).add(category.id))}
                     />
 
@@ -682,8 +671,6 @@ export default function HomePageClient({
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
-                  placeholder="blur"
-                  blurDataURL={BLUR_DATA_URL}
                 />
                 <div aria-hidden="true" className="absolute inset-0 border-2 md:border-4 border-brand-primary pointer-events-none" />
               </div>

@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import type { LookbookChapterWithProducts } from '@/lib/lookbook'
 import { pickLocalized } from '@/lib/lookbook'
-import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import ShopModule from './ShopModule'
 import { MotionFadeIn, MotionStaggerItem, ParallaxImage } from './motion'
 
@@ -152,8 +151,6 @@ function WideLayout({
               sizes="(max-width: 1280px) 100vw, 1280px"
               style={{ objectPosition }}
               className="object-cover"
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
               priority
             />
           ) : (
@@ -229,8 +226,6 @@ function SplitLayout({
             sizes="(max-width: 1024px) 100vw, 50vw"
             style={{ objectPosition }}
             className="object-cover"
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
             priority
           />
         ) : (
@@ -325,8 +320,6 @@ function DarkLayout({
             sizes="(max-width: 1280px) 100vw, 1280px"
             style={{ objectPosition }}
             className="object-cover"
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
             priority
           />
         ) : (
