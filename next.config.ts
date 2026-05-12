@@ -43,6 +43,19 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    // AVIF first, WebP fallback. Browsers that don't speak AVIF (older
+    // Safari, etc.) auto-negotiate down to WebP. AVIF typically saves
+    // 25-40% bytes vs. WebP at the same visual quality, so this is a
+    // free win for LCP without touching source assets.
+    formats: ['image/avif', 'image/webp'],
+    // 30 days. Holds the optimised variant on Vercel's image cache long
+    // enough that returning visitors and shared-CDN edges almost always
+    // serve from cache instead of re-encoding from origin.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    // Tightened to the breakpoints we actually design for. Default
+    // includes 3840 which we never serve, and skipping unused sizes
+    // reduces the srcset payload Next emits in the HTML.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     qualities: [75, 90],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

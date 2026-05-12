@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getRecentlyViewed, type RecentlyViewedProduct } from '@/lib/recentlyViewed'
 import { createClient } from '@/lib/supabase/client'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import { useTranslations } from 'next-intl'
 
 interface Product {
@@ -105,6 +106,8 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
                     className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
                     onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                   />
                 </div>

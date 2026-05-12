@@ -9,6 +9,7 @@ import {
   useTransform,
   type Variants,
 } from 'framer-motion'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 /**
  * Scroll / viewport-entry motion primitives for the lookbook.
@@ -194,6 +195,8 @@ export function ParallaxImage({
           fill
           sizes={sizes}
           priority={priority}
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
           className="object-cover"
           style={{ objectPosition }}
         />

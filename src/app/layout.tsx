@@ -98,9 +98,35 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Preconnect to the Supabase Storage host so the very first product /
+  // hero image starts streaming immediately, instead of paying a fresh
+  // DNS + TLS roundtrip on the cold cache visit. We derive the host from
+  // NEXT_PUBLIC_SUPABASE_URL so no environment ever ships a stale literal.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseOrigin = supabaseUrl
+    ? (() => {
+        try {
+          return new URL(supabaseUrl).origin
+        } catch {
+          return null
+        }
+      })()
+    : null
+
   return (
     <html lang="nl" className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        {/* Connection warm-up to Supabase Storage (used for every product +
+            editorial image). Both hints are kept: dns-prefetch is a cheap
+            hedge for browsers / proxies that ignore preconnect.
+            crossOrigin is required so the warmed connection can serve the
+            credentialless image fetches Next/Image issues. */}
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
         {/* Facebook Pixel - Only load after consent */}
         <Script
           id="facebook-pixel"

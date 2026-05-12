@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import toast from 'react-hot-toast'
 
 interface BlogPost {
@@ -133,6 +134,8 @@ export default function BlogDetailClient({
               fill
               sizes="(max-width: 1280px) 100vw, 1280px"
               className="object-cover"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
               priority
             />
           </div>
@@ -296,6 +299,8 @@ export default function BlogDetailClient({
                           fill
                           sizes="(max-width: 768px) 100vw, 33vw"
                           className="object-cover group-hover:scale-105 transition-transform duration-700"
+                          placeholder="blur"
+                          blurDataURL={BLUR_DATA_URL}
                           onError={() => setFailedImages((prev) => new Set(prev).add(relPost.id))}
                         />
                       ) : (
