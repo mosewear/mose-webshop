@@ -140,14 +140,6 @@ async function main() {
         const hoodie = productMap.get('mose-essential-hoodie')!
         const sweater = productMap.get('mose-classic-sweater')!
 
-        const priceWithStrike = (
-          salePrice: number | null,
-          basePrice: number
-        ) =>
-          salePrice == null
-            ? eur(basePrice)
-            : `${eur(salePrice)}&nbsp;&nbsp;<span style="color:#999;text-decoration:line-through;font-weight:600">${eur(basePrice)}</span>`
-
         const result = await sendSpringDrop1LaunchEmail({
           email: TO,
           locale: 'nl',
@@ -158,7 +150,6 @@ async function main() {
             {
               name: tee.name,
               priceLabel: eur(tee.salePrice ?? tee.basePrice),
-              subtitle: '240 gsm jersey, vier kleuren.',
               badge: 'Vanaf €44,95 bij 3 stuks',
               badgeTone: 'staffel',
               imageUrl: tee.primaryImageUrl,
@@ -166,9 +157,11 @@ async function main() {
             },
             {
               name: hoodie.name,
-              priceLabel: priceWithStrike(hoodie.salePrice, hoodie.basePrice),
-              subtitle: 'Zware sweat, geborsteld van binnen.',
-              badge: 'Lente: -17%',
+              priceLabel:
+                hoodie.salePrice != null
+                  ? `${eur(hoodie.salePrice)}  ${eur(hoodie.basePrice)}`
+                  : eur(hoodie.basePrice),
+              badge: '-17% lente-prijs',
               badgeTone: 'sale',
               imageUrl: hoodie.primaryImageUrl,
               url: appendUtm(
@@ -179,9 +172,11 @@ async function main() {
             },
             {
               name: sweater.name,
-              priceLabel: priceWithStrike(sweater.salePrice, sweater.basePrice),
-              subtitle: `Lente-sale, nog ${sweaterStock} stuks beschikbaar.`,
-              badge: `Nog ${sweaterStock} stuks`,
+              priceLabel:
+                sweater.salePrice != null
+                  ? `${eur(sweater.salePrice)}  ${eur(sweater.basePrice)}`
+                  : eur(sweater.basePrice),
+              badge: `-18%, nog ${sweaterStock} stuks`,
               badgeTone: 'scarcity',
               imageUrl: sweater.primaryImageUrl,
               url: appendUtm(

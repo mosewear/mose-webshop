@@ -249,7 +249,7 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
     key: 'spring_drop_1_launch',
     name: 'Spring Drop 1 — Launch',
     description:
-      'Eerste mail van de Spring Drop 2026 campagne: hero + 4-product grid (Tee, Hoodie, Sweater, Watch).',
+      'Eerste mail Spring Drop 2026: hero + grid met Tee, hoodie en sweater (horloge niet in campagne).',
     category: 'campaign',
     accent: '#00A676',
     previewSlug: 'spring-drop-1-launch',

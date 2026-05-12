@@ -1734,7 +1734,7 @@ interface SpringDropBaseProps {
 }
 
 /**
- * Send Spring Drop mail 1: launch + 4-product grid.
+ * Send Spring Drop mail 1: launch + productgrid (Tee, hoodie, sweater).
  */
 export async function sendSpringDrop1LaunchEmail(
   props: SpringDropBaseProps & {
@@ -1850,8 +1850,8 @@ export async function sendSpringDrop2TeeEmail(
 
   const subject =
     locale === 'en'
-      ? 'A favorite from this shoot: the MOSE Tee.'
-      : 'Een favoriet uit dit shoot: de MOSE Tee.'
+      ? 'A favourite from this shoot: the MOSE Tee.'
+      : 'Een favoriet uit deze shoot: de MOSE Tee.'
 
   return await sendAndLog(
     {

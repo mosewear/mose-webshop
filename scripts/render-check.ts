@@ -342,7 +342,6 @@ async function main() {
             {
               name: 'MOSE Tee',
               priceLabel: '€49,95',
-              subtitle: '240 gsm jersey, vier kleuren.',
               badge: 'Vanaf €44,95 bij 3 stuks',
               badgeTone: 'staffel' as const,
               imageUrl: 'https://x/tee.webp',
@@ -350,18 +349,16 @@ async function main() {
             },
             {
               name: 'MOSE Hoodie',
-              priceLabel: '€99,95&nbsp;&nbsp;<span>€119,95</span>',
-              subtitle: 'Zware sweat, geborsteld van binnen.',
-              badge: 'Lente: -17%',
+              priceLabel: '€99,95  €119,95',
+              badge: '-17% lente',
               badgeTone: 'sale' as const,
               imageUrl: 'https://x/hoodie.webp',
               url: 'https://mosewear.com/nl/product/mose-hoodie',
             },
             {
               name: 'MOSE Sweater',
-              priceLabel: '€89,95&nbsp;&nbsp;<span>€109,95</span>',
-              subtitle: 'Lente-sale, nog 31 stuks beschikbaar.',
-              badge: 'Nog 31 stuks',
+              priceLabel: '€89,95  €109,95',
+              badge: '-18%, nog 31 stuks',
               badgeTone: 'scarcity' as const,
               imageUrl: 'https://x/sweater.webp',
               url: 'https://mosewear.com/nl/product/mose-sweater',
@@ -448,7 +445,9 @@ async function main() {
         anyFail = true
         continue
       }
-      const text = html.replace(/<[^>]+>/g, ' ')
+      const text = html
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
       const matches = text.match(rawKeyRe) || []
       const raw = matches.filter(m => {
         if (/@|\.com|\.nl|\.co|\.io|\.org|\.be|\.de|\.pdf|\.png|\.jpg|\.svg|\.css|\.html/.test(m)) return false
