@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe } from 'lucide-react'
+import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe, Sparkles, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Subscriber {
@@ -32,9 +32,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unsubscribed'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest')
   const [exporting, setExporting] = useState(false)
-  const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails' | 'popup-settings'>('subscribers')
+  const [activeTab, setActiveTab] = useState<'subscribers' | 'insider-emails' | 'spring-drop' | 'popup-settings'>('subscribers')
   const [sendingEmail, setSendingEmail] = useState<string | null>(null)
   const [sendingTestEmail, setSendingTestEmail] = useState<string | null>(null)
+  const [sendingSpringDrop, setSendingSpringDrop] = useState<number | null>(null)
+  const [sendingSpringDropTest, setSendingSpringDropTest] = useState<number | null>(null)
+  const [confirmSpringDrop, setConfirmSpringDrop] = useState<{ mail: 1 | 2 | 3; recipients: number } | null>(null)
+  const [springDropDryRun, setSpringDropDryRun] = useState<Record<number, { recipients: number; promoCodeCoverage?: any } | null>>({ 1: null, 2: null, 3: null })
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingAll, setDeletingAll] = useState(false)
 
@@ -180,6 +184,113 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       setSendingTestEmail(null)
     }
   }
+
+  // ---------------------------------------------------------------
+  // Spring Drop 2026 campaign actions
+  // ---------------------------------------------------------------
+
+  const SPRING_DROP_TEST_EMAIL = 'h.schlimback@gmail.com'
+
+  const refreshSpringDropDryRun = async (mail: 1 | 2 | 3) => {
+    try {
+      const response = await fetch('/api/admin/campaigns/spring-drop/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mail, dryRun: true }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Dry-run failed')
+      setSpringDropDryRun((prev) => ({
+        ...prev,
+        [mail]: {
+          recipients: data.recipients ?? 0,
+          promoCodeCoverage: data.promoCodeCoverage ?? null,
+        },
+      }))
+      return data
+    } catch (err: any) {
+      toast.error(err?.message || 'Dry-run mislukt')
+      return null
+    }
+  }
+
+  const handleSpringDropTest = async (mail: 1 | 2 | 3) => {
+    setSendingSpringDropTest(mail)
+    toast.loading(`Test mail ${mail} wordt verstuurd...`)
+    try {
+      const response = await fetch('/api/admin/campaigns/spring-drop/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mail, testEmail: SPRING_DROP_TEST_EMAIL }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Test send failed')
+      toast.dismiss()
+      if (data.failed > 0) {
+        toast.error(
+          `Test gefaald (${data.failed}). Eerste error: ${data.errors?.[0] || 'unknown'}`
+        )
+      } else {
+        toast.success(`Test mail ${mail} verstuurd naar ${SPRING_DROP_TEST_EMAIL}`)
+      }
+    } catch (err: any) {
+      toast.dismiss()
+      toast.error(err?.message || 'Kon test mail niet versturen')
+    } finally {
+      setSendingSpringDropTest(null)
+    }
+  }
+
+  const requestSpringDropBlast = async (mail: 1 | 2 | 3) => {
+    const dry = await refreshSpringDropDryRun(mail)
+    if (!dry) return
+    setConfirmSpringDrop({ mail, recipients: dry.recipients ?? 0 })
+  }
+
+  const confirmSpringDropBlast = async () => {
+    if (!confirmSpringDrop) return
+    const { mail } = confirmSpringDrop
+    setSendingSpringDrop(mail)
+    setConfirmSpringDrop(null)
+    toast.loading(`Spring Drop mail ${mail} wordt verstuurd...`)
+    try {
+      const response = await fetch('/api/admin/campaigns/spring-drop/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mail }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Send failed')
+      toast.dismiss()
+      const msg = `Verstuurd: ${data.sent}/${data.total}${data.failed ? ` (${data.failed} gefaald)` : ''}`
+      if (data.failed > 0) toast.error(msg)
+      else toast.success(msg)
+      // Refresh dry-run so the counter updates after dedup-write
+      await refreshSpringDropDryRun(mail)
+    } catch (err: any) {
+      toast.dismiss()
+      toast.error(err?.message || 'Kon Spring Drop niet versturen')
+    } finally {
+      setSendingSpringDrop(null)
+    }
+  }
+
+  // Auto-dry-run the three mails when the tab opens, so admin sees how many
+  // recipients are still pending per mail.
+  useEffect(() => {
+    if (activeTab !== 'spring-drop') return
+    let cancelled = false
+    ;(async () => {
+      for (const m of [1, 2, 3] as const) {
+        if (cancelled) break
+        await refreshSpringDropDryRun(m)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
 
   const handleDeleteSubscriber = async (subscriberId: string, email: string) => {
     if (!confirm(`Weet je zeker dat je ${email} wilt verwijderen?`)) {
@@ -387,6 +498,17 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
         >
           <Mail className="w-5 h-5 inline-block mr-2" />
           Insider Emails
+        </button>
+        <button
+          onClick={() => setActiveTab('spring-drop')}
+          className={`px-6 py-3 font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
+            activeTab === 'spring-drop'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
+        >
+          <Sparkles className="w-5 h-5 inline-block mr-2" />
+          Spring Drop
         </button>
         <button
           onClick={() => setActiveTab('popup-settings')}
@@ -782,6 +904,180 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               <li>Test eerst met jezelf of een test account voordat je naar iedereen verstuurt</li>
               <li>Emails kunnen niet worden teruggehaald na verzenden</li>
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Content - Spring Drop 2026 Tab */}
+      {activeTab === 'spring-drop' && (
+        <div className="space-y-6">
+          {/* Info Box */}
+          <div className="bg-emerald-50 border-2 border-emerald-200 p-6">
+            <div className="flex items-start gap-3">
+              <Sparkles className="w-6 h-6 text-emerald-700 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-bold text-lg mb-2">Spring Drop 2026 — 3-mail campagne</h3>
+                <p className="text-sm text-gray-700 mb-3">
+                  Driedelige NL-campagne naar de ~100 actieve abonnees. Werkt met de bestaande
+                  lente-sale prijzen, Tee-staffelkorting en persoonlijke <code className="bg-white px-1 border">WELCOME10-XXXXXX</code> codes.
+                  Subs zonder persoonlijke code krijgen automatisch <code className="bg-white px-1 border">SPRING10</code>.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-700">
+                  <div className="bg-white border-2 border-black p-3">
+                    <div className="font-bold uppercase text-xs tracking-wider mb-1">Mail 1 — DAG 0</div>
+                    <div className="text-xs">"Het is lente. Tijd voor je MOSE."</div>
+                    <div className="text-xs text-gray-500 mt-1">Aanbevolen: woe 13 mei 09:00</div>
+                  </div>
+                  <div className="bg-white border-2 border-black p-3">
+                    <div className="font-bold uppercase text-xs tracking-wider mb-1">Mail 2 — DAG +4</div>
+                    <div className="text-xs">"Een favoriet uit dit shoot: de MOSE Tee."</div>
+                    <div className="text-xs text-gray-500 mt-1">Aanbevolen: zo 17 mei 18:00</div>
+                  </div>
+                  <div className="bg-white border-2 border-black p-3">
+                    <div className="font-bold uppercase text-xs tracking-wider mb-1">Mail 3 — DAG +9</div>
+                    <div className="text-xs">"Je MOSE-code verloopt binnenkort."</div>
+                    <div className="text-xs text-gray-500 mt-1">Aanbevolen: vr 22 mei 11:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mail cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {([1, 2, 3] as const).map((mail) => {
+              const meta: Record<number, { title: string; preview: string; subject: string; previewSlug: string }> = {
+                1: {
+                  title: 'Mail 1 — Launch',
+                  preview: 'Hero + 2x2 product grid (Tee, Hoodie, Sweater, Watch).',
+                  subject: 'Het is lente. Tijd voor je MOSE.',
+                  previewSlug: 'spring-drop-1-launch',
+                },
+                2: {
+                  title: 'Mail 2 — Tee',
+                  preview: 'Tee-focus + 4 kleuren rij + staffel-blokje (geen code).',
+                  subject: 'Een favoriet uit dit shoot: de MOSE Tee.',
+                  previewSlug: 'spring-drop-2-tee',
+                },
+                3: {
+                  title: 'Mail 3 — Founders',
+                  preview: 'Persoonlijke note van Irma & Rick + WELCOME10-code reminder.',
+                  subject: 'Je MOSE-code verloopt binnenkort.',
+                  previewSlug: 'spring-drop-3-founders',
+                },
+              }
+              const m = meta[mail]
+              const dry = springDropDryRun[mail]
+              return (
+                <div key={mail} className="bg-white border-2 border-black p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-bold text-lg mb-1">{m.title}</h3>
+                      <div className="text-xs text-gray-500 italic mb-2">"{m.subject}"</div>
+                    </div>
+                    <a
+                      href={`/api/email-preview?type=${m.previewSlug}&locale=nl`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2 hover:bg-gray-100 transition-colors rounded"
+                      title="Open preview in nieuw tabblad"
+                    >
+                      <Eye className="w-5 h-5 text-gray-600 hover:text-brand-primary transition-colors" />
+                    </a>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-4">{m.preview}</p>
+
+                  <div className="bg-gray-50 border border-gray-300 px-3 py-2 mb-4 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Nog te versturen</span>
+                      <span className="font-bold text-base">
+                        {dry ? `${dry.recipients}` : '—'}
+                      </span>
+                    </div>
+                    {mail === 3 && dry?.promoCodeCoverage && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        Persoonlijk: {dry.promoCodeCoverage.personal} ·
+                        Fallback ({dry.promoCodeCoverage.fallbackCode}):{' '}
+                        {dry.promoCodeCoverage.fallback}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => requestSpringDropBlast(mail)}
+                    disabled={
+                      sendingSpringDrop !== null ||
+                      sendingSpringDropTest !== null ||
+                      (dry?.recipients ?? 0) === 0
+                    }
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-4 h-4" />
+                    {sendingSpringDrop === mail
+                      ? 'Bezig...'
+                      : `Verstuur naar ${dry?.recipients ?? '...'}`}
+                  </button>
+                  <button
+                    onClick={() => handleSpringDropTest(mail)}
+                    disabled={sendingSpringDropTest !== null || sendingSpringDrop !== null}
+                    className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black"
+                  >
+                    <Send className="w-4 h-4" />
+                    {sendingSpringDropTest === mail ? 'Bezig...' : 'Verzend test e-mail'}
+                  </button>
+                  <button
+                    onClick={() => refreshSpringDropDryRun(mail)}
+                    className="w-full mt-2 text-xs text-gray-500 hover:text-black underline"
+                  >
+                    Ververs counter
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Warning Box */}
+          <div className="bg-yellow-50 border-2 border-yellow-200 p-6">
+            <h4 className="font-bold mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-700" />
+              Voor je verstuurt
+            </h4>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <li>Doe per mail eerst een test naar <strong>h.schlimback@gmail.com</strong> en check de inbox.</li>
+              <li>Dedup gaat via <code>order_emails</code> (template_key + recipient_email). Een tweede klik voor dezelfde mail stuurt nooit dubbel.</li>
+              <li>Counter "Nog te versturen" trekt al-verstuurden af. Wordt 0 zodra alles uitgegaan is.</li>
+              <li>Mail 3 gebruikt persoonlijke <code>WELCOME10-XXXXXX</code> waar beschikbaar, anders fallback <code>SPRING10</code>.</li>
+              <li>Aanbevolen schema: 13 mei (mail 1) → 17 mei (mail 2) → 22 mei (mail 3).</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm modal Spring Drop blast */}
+      {confirmSpringDrop && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-black max-w-md w-full p-6">
+            <h3 className="text-xl font-bold uppercase mb-3">Spring Drop mail {confirmSpringDrop.mail} versturen?</h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Je staat op het punt mail {confirmSpringDrop.mail} naar{' '}
+              <strong>{confirmSpringDrop.recipients}</strong> abonnee
+              {confirmSpringDrop.recipients === 1 ? '' : 's'} te sturen. Dit kan niet ongedaan
+              gemaakt worden.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmSpringDrop(null)}
+                className="flex-1 px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors border-2 border-black"
+              >
+                Annuleer
+              </button>
+              <button
+                onClick={confirmSpringDropBlast}
+                className="flex-1 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+              >
+                Ja, versturen
+              </button>
+            </div>
           </div>
         </div>
       )}

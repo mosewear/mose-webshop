@@ -31,6 +31,9 @@ import ContactFormEmail from '@/emails/ContactForm'
 import NewReviewNotificationEmail from '@/emails/NewReviewNotification'
 import LoyaltyStatusUpdateEmail from '@/emails/LoyaltyStatusUpdate'
 import ReturnCreatedByAdminEmail from '@/emails/ReturnCreatedByAdmin'
+import SpringDrop1LaunchEmail from '@/emails/SpringDrop1Launch'
+import SpringDrop2TeeEmail from '@/emails/SpringDrop2Tee'
+import SpringDrop3FoundersEmail from '@/emails/SpringDrop3Founders'
 
 async function main() {
   const locales: Array<'nl' | 'en'> = ['nl', 'en']
@@ -323,6 +326,111 @@ async function main() {
           labelCost: 7.87,
           t,
           locale,
+        }),
+    },
+    {
+      name: 'SpringDrop1Launch',
+      build: (_t, locale) =>
+        React.createElement(SpringDrop1LaunchEmail, {
+          email: 'p@example.com',
+          locale,
+          unsubscribeUrl: 'https://mosewear.com/nl/unsubscribe?email=p@example.com',
+          shopUrl: 'https://mosewear.com/nl/shop',
+          heroImageUrl: 'https://x/hero1.webp',
+          heroAlt: 'Hero alt',
+          products: [
+            {
+              name: 'MOSE Tee',
+              priceLabel: '€49,95',
+              badge: 'Vanaf €44,95 bij 3 stuks',
+              badgeTone: 'staffel' as const,
+              imageUrl: 'https://x/tee.webp',
+              url: 'https://mosewear.com/nl/product/mose-tee',
+            },
+            {
+              name: 'MOSE Hoodie',
+              priceLabel: '€99,95  €119,95',
+              badge: '-17% lente',
+              badgeTone: 'sale' as const,
+              imageUrl: 'https://x/hoodie.webp',
+              url: 'https://mosewear.com/nl/product/mose-hoodie',
+            },
+            {
+              name: 'MOSE Sweater',
+              priceLabel: '€89,95  €109,95',
+              badge: '-18%, nog 31 stuks',
+              badgeTone: 'scarcity' as const,
+              imageUrl: 'https://x/sweater.webp',
+              url: 'https://mosewear.com/nl/product/mose-sweater',
+            },
+            {
+              name: 'MOSE Watch',
+              priceLabel: '€199,95  €249,95',
+              badge: '-20% lente',
+              badgeTone: 'sale' as const,
+              imageUrl: 'https://x/watch.png',
+              url: 'https://mosewear.com/nl/product/mose-watch',
+            },
+          ],
+        }),
+    },
+    {
+      name: 'SpringDrop2Tee',
+      build: (_t, locale) =>
+        React.createElement(SpringDrop2TeeEmail, {
+          email: 'p@example.com',
+          locale,
+          unsubscribeUrl: 'https://mosewear.com/nl/unsubscribe?email=p@example.com',
+          colors: [
+            {
+              name: 'Wit',
+              imageUrl: 'https://x/wit.webp',
+              url: 'https://mosewear.com/nl/product/mose-tee?color=Wit',
+            },
+            {
+              name: 'Groen',
+              imageUrl: 'https://x/groen.webp',
+              url: 'https://mosewear.com/nl/product/mose-tee?color=Groen',
+            },
+            {
+              name: 'Beige',
+              imageUrl: 'https://x/beige.webp',
+              url: 'https://mosewear.com/nl/product/mose-tee?color=Beige',
+            },
+            {
+              name: 'Zwart',
+              imageUrl: 'https://x/zwart.webp',
+              url: 'https://mosewear.com/nl/product/mose-tee?color=Zwart',
+              stockNote: 'Nog 12 stuks',
+            },
+          ],
+          staffel: [
+            { qtyLabel: 'Koop 1', pricePerPiece: '€49,95 / stuk', totalLabel: 'Totaal €49,95' },
+            { qtyLabel: 'Koop 2', pricePerPiece: '€47,45 / stuk', totalLabel: 'Totaal €94,90' },
+            {
+              qtyLabel: 'Koop 3+',
+              pricePerPiece: '€44,95 / stuk',
+              totalLabel: 'Totaal €134,85',
+              highlight: true,
+            },
+          ],
+          heroImageUrl: 'https://x/hero2.webp',
+          teeUrl: 'https://mosewear.com/nl/product/mose-tee',
+          shopUrl: 'https://mosewear.com/nl/shop',
+          someSizesSoldOut: true,
+        }),
+    },
+    {
+      name: 'SpringDrop3Founders',
+      build: (_t, locale) =>
+        React.createElement(SpringDrop3FoundersEmail, {
+          email: 'p@example.com',
+          locale,
+          unsubscribeUrl: 'https://mosewear.com/nl/unsubscribe?email=p@example.com',
+          promoCode: 'WELCOME10-XXXX12',
+          promoExpiryLabel: locale === 'en' ? '15 June 2026' : '15 juni 2026',
+          ctaUrl: 'https://mosewear.com/nl/product/mose-tee',
+          shippedOrders: 33,
         }),
     },
   ]

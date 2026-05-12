@@ -16,6 +16,7 @@ export type EmailTemplateCategory =
   | 'insider'
   | 'loyalty'
   | 'admin'
+  | 'campaign'
 
 export interface EmailTemplateDefinition {
   /** Stable identifier. Used as template_key in the email log. */
@@ -244,6 +245,36 @@ export const EMAIL_TEMPLATES: EmailTemplateDefinition[] = [
     previewSlug: 'gift-card-delivery',
     from: 'MOSE Gift Cards <orders@mosewear.com>',
   },
+  {
+    key: 'spring_drop_1_launch',
+    name: 'Spring Drop 1 — Launch',
+    description:
+      'Eerste mail van de Spring Drop 2026 campagne: hero + 4-product grid (Tee, Hoodie, Sweater, Watch).',
+    category: 'campaign',
+    accent: '#00A676',
+    previewSlug: 'spring-drop-1-launch',
+    from: 'MOSE Newsletter <info@mosewear.com>',
+  },
+  {
+    key: 'spring_drop_2_tee',
+    name: 'Spring Drop 2 — Tee',
+    description:
+      'Tweede mail van de Spring Drop 2026 campagne: focus op de Tee, kleurenrij en staffelkorting (geen code nodig).',
+    category: 'campaign',
+    accent: '#00A676',
+    previewSlug: 'spring-drop-2-tee',
+    from: 'MOSE Newsletter <info@mosewear.com>',
+  },
+  {
+    key: 'spring_drop_3_founders',
+    name: 'Spring Drop 3 — Founders',
+    description:
+      'Derde mail van de Spring Drop 2026 campagne: persoonlijke note van Irma & Rick met de WELCOME10 code-reminder.',
+    category: 'campaign',
+    accent: '#00A676',
+    previewSlug: 'spring-drop-3-founders',
+    from: 'MOSE Newsletter <info@mosewear.com>',
+  },
 ]
 
 export const EMAIL_TEMPLATES_BY_KEY: Record<string, EmailTemplateDefinition> =
@@ -276,5 +307,7 @@ export function getCategoryLabel(category: EmailTemplateCategory): string {
       return 'Loyalty'
     case 'admin':
       return 'Admin'
+    case 'campaign':
+      return 'Campaign'
   }
 }

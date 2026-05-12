@@ -30,3 +30,8 @@ export { default as InsiderWelcomeEmail } from './InsiderWelcome'
 export { default as InsiderCommunityEmail } from './InsiderCommunity'
 export { default as InsiderBehindScenesEmail } from './InsiderBehindScenes'
 export { default as InsiderLaunchWeekEmail } from './InsiderLaunchWeek'
+
+// Spring Drop campaign 2026
+export { default as SpringDrop1LaunchEmail } from './SpringDrop1Launch'
+export { default as SpringDrop2TeeEmail } from './SpringDrop2Tee'
+export { default as SpringDrop3FoundersEmail } from './SpringDrop3Founders'

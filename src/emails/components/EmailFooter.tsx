@@ -14,6 +14,15 @@ interface EmailFooterProps {
   locale?: string
   /** Optionele extra tekst boven de contact-regel (bv. "Made with love in Groningen") */
   tagline?: string
+  /**
+   * Optionele unsubscribe-URL. Wanneer gezet wordt onderaan een kleine
+   * "Geen MOSE-mails meer? Uitschrijven" regel getoond. Verplicht voor
+   * marketing/campaign-mails (CAN-SPAM/GDPR/Gmail bulk-sender vereisten).
+   */
+  unsubscribeUrl?: string
+  /** Optionele NL/EN labels voor de unsubscribe-regel. */
+  unsubscribePrompt?: string
+  unsubscribeLabel?: string
 }
 
 const footerSection = {
@@ -70,6 +79,23 @@ const taglineStyle = {
   fontStyle: 'italic' as const,
 }
 
+const unsubscribeBlock = {
+  marginTop: '20px',
+  paddingTop: '14px',
+  borderTop: `1px solid ${EMAIL_COLORS.dark700}`,
+  fontFamily: EMAIL_FONTS.body,
+  fontSize: '11px',
+  color: EMAIL_COLORS.dark500,
+  lineHeight: 1.6,
+  letterSpacing: '0.04em',
+}
+
+const unsubscribeLinkStyle = {
+  color: EMAIL_COLORS.textSubtle,
+  textDecoration: 'underline',
+  fontWeight: 600,
+}
+
 /**
  * Dark footer module met wit MOSE logo en contactgegevens.
  * Onderaan een fijne regel © & origin.
@@ -80,8 +106,14 @@ export default function EmailFooter({
   contactPhone = EMAIL_DEFAULT_CONTACT.phone,
   contactAddress = EMAIL_DEFAULT_CONTACT.address,
   tagline,
+  unsubscribeUrl,
+  unsubscribePrompt,
+  unsubscribeLabel,
 }: EmailFooterProps) {
   const year = new Date().getFullYear()
+  const unsubText =
+    unsubscribePrompt || 'Geen MOSE-mails meer ontvangen?'
+  const unsubLabel = unsubscribeLabel || 'Uitschrijven'
 
   return (
     <Section style={footerSection}>
@@ -114,6 +146,15 @@ export default function EmailFooter({
       </div>
 
       <div style={metaBlock}>© {year} MOSE · Made in Groningen</div>
+
+      {unsubscribeUrl ? (
+        <div style={unsubscribeBlock}>
+          {unsubText}{' '}
+          <Link href={unsubscribeUrl} style={unsubscribeLinkStyle}>
+            {unsubLabel}
+          </Link>
+        </div>
+      ) : null}
     </Section>
   )
 }

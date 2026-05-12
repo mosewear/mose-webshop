@@ -23,6 +23,9 @@ import {
   ReturnRejectedEmail,
   ReturnRequestedEmail,
   ShippingConfirmationEmail,
+  SpringDrop1LaunchEmail,
+  SpringDrop2TeeEmail,
+  SpringDrop3FoundersEmail,
 } from '@/emails'
 import { EMAIL_TEMPLATES } from '@/lib/email-catalog'
 import { getEmailT } from '@/lib/email-i18n'
@@ -614,6 +617,136 @@ export async function GET(req: NextRequest) {
             contactEmail,
             contactPhone,
             contactAddress,
+          })
+        )
+        break
+
+      case 'spring-drop-1-launch': {
+        const previewProducts = [
+          {
+            name: 'MOSE Tee',
+            priceLabel: '€49,95',
+            badge: 'Vanaf €44,95 bij 3 stuks',
+            badgeTone: 'staffel' as const,
+            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp`,
+            url: `${siteUrl}/${locale}/product/mose-tee?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-tee`,
+          },
+          {
+            name: 'MOSE Essential Hoodie',
+            priceLabel: '€99,95  €119,95',
+            badge: '-17% lente-prijs',
+            badgeTone: 'sale' as const,
+            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-desktop.webp`,
+            url: `${siteUrl}/${locale}/product/mose-essential-hoodie?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-hoodie`,
+          },
+          {
+            name: 'MOSE Classic Sweater',
+            priceLabel: '€89,95  €109,95',
+            badge: '-18%, nog 31 stuks',
+            badgeTone: 'scarcity' as const,
+            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/hero-desktop.webp`,
+            url: `${siteUrl}/${locale}/product/mose-classic-sweater?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-sweater`,
+          },
+          {
+            name: 'MOSE Automatisch Horloge',
+            priceLabel: '€199,95  €249,95',
+            badge: '-20% lente-prijs',
+            badgeTone: 'sale' as const,
+            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/products/07dbf6e8-230c-4799-b739-ff4c423ca603/zwart/1767806485539-lt3nle.png`,
+            url: `${siteUrl}/${locale}/product/mose-automatisch-horloge?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-watch`,
+          },
+        ]
+        html = await render(
+          SpringDrop1LaunchEmail({
+            email: dummyData.customerEmail,
+            locale,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            unsubscribeUrl: `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(dummyData.customerEmail)}`,
+            products: previewProducts,
+            shopUrl: `${siteUrl}/${locale}/shop?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-all`,
+            heroImageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp`,
+            heroAlt: 'MOSE in Groningen, lente 2026',
+          })
+        )
+        break
+      }
+
+      case 'spring-drop-2-tee': {
+        const colors = [
+          {
+            name: 'Wit',
+            imageUrl:
+              'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/wit/hero-desktop.webp',
+            url: `${siteUrl}/${locale}/product/mose-tee?color=Wit&utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-2-tee-wit`,
+          },
+          {
+            name: 'Groen',
+            imageUrl:
+              'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/groen/hero-desktop.webp',
+            url: `${siteUrl}/${locale}/product/mose-tee?color=Groen&utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-2-tee-groen`,
+          },
+          {
+            name: 'Beige',
+            imageUrl:
+              'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/beige/hero-desktop.webp',
+            url: `${siteUrl}/${locale}/product/mose-tee?color=Beige&utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-2-tee-beige`,
+          },
+          {
+            name: 'Zwart',
+            imageUrl:
+              'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp',
+            url: `${siteUrl}/${locale}/product/mose-tee?color=Zwart&utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-2-tee-zwart`,
+            stockNote: 'Nog 12 stuks',
+          },
+        ]
+        const staffel = [
+          { qtyLabel: 'Koop 1', pricePerPiece: '€49,95 / stuk', totalLabel: 'Totaal €49,95' },
+          { qtyLabel: 'Koop 2', pricePerPiece: '€47,45 / stuk', totalLabel: 'Totaal €94,90' },
+          {
+            qtyLabel: 'Koop 3+',
+            pricePerPiece: '€44,95 / stuk',
+            totalLabel: 'Totaal €134,85',
+            highlight: true,
+          },
+        ]
+        html = await render(
+          SpringDrop2TeeEmail({
+            email: dummyData.customerEmail,
+            locale,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            unsubscribeUrl: `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(dummyData.customerEmail)}`,
+            colors,
+            staffel,
+            heroImageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/02-spring-desktop.webp`,
+            teeUrl: `${siteUrl}/${locale}/product/mose-tee?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-2-tee`,
+            shopUrl: `${siteUrl}/${locale}/shop?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-2-shop`,
+            heroAlt: 'MOSE Tee aan de gracht in Groningen, lente 2026',
+            someSizesSoldOut: true,
+          })
+        )
+        break
+      }
+
+      case 'spring-drop-3-founders':
+        html = await render(
+          SpringDrop3FoundersEmail({
+            email: dummyData.customerEmail,
+            locale,
+            siteUrl,
+            contactEmail,
+            contactPhone,
+            contactAddress,
+            unsubscribeUrl: `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(dummyData.customerEmail)}`,
+            promoCode: 'WELCOME10-XXXX12',
+            promoExpiryLabel: locale === 'en' ? '15 June 2026' : '15 juni 2026',
+            ctaUrl: `${siteUrl}/${locale}/product/mose-tee?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-3-tee-cta`,
+            shippedOrders: 33,
           })
         )
         break

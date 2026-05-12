@@ -46,7 +46,15 @@ import {
   InsiderLaunchWeekEmail,
   LoyaltyStatusUpdateEmail,
   GiftCardDeliveryEmail,
+  SpringDrop1LaunchEmail,
+  SpringDrop2TeeEmail,
+  SpringDrop3FoundersEmail,
 } from '@/emails'
+import type { SpringDropProduct } from '@/emails/SpringDrop1Launch'
+import type {
+  SpringDrop2TeeColor,
+  SpringDrop2TeeStaffelTier,
+} from '@/emails/SpringDrop2Tee'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -1672,5 +1680,272 @@ export async function sendGiftCardDeliveryEmail(props: {
     console.error('❌ Error sending gift card delivery email:', error)
     return { success: false, error }
   }
+}
+
+// =====================================================
+// SPRING DROP CAMPAIGN 2026
+// =====================================================
+//
+// Driedelige Nederlandse campagne richting de ~100 abonnees die zich in
+// februari opgaven via early-access of newsletter, maar nog niets gekocht
+// hebben. Alles draait om assets en kortingen die al in de DB zitten:
+//   - lente-sale prijzen op Hoodie / Sweater / Watch (al actief)
+//   - staffelkorting op de Tee (2+, 3+ — al actief)
+//   - persoonlijke WELCOME10-XXXXXX promo codes (al uitgegeven)
+// Geen nieuwe marge weggeven, alleen zichtbaar maken.
+//
+// Compliance:
+//   - elke mail krijgt een unsubscribeUrl in de footer
+//   - elke send krijgt List-Unsubscribe + List-Unsubscribe-Post headers,
+//     zodat Gmail/Apple Mail de native one-click unsubscribe-knop tonen
+//     (CAN-SPAM + RFC 8058 + Gmail bulk sender 2024 vereisten)
+// =====================================================
+
+const SPRING_DROP_FROM = 'MOSE Newsletter <info@mosewear.com>'
+const SPRING_DROP_CAMPAIGN_KEY = 'spring_drop_2026'
+
+function buildUnsubscribeUrl(siteUrl: string, locale: string, email: string) {
+  return `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(email)}`
+}
+
+function buildListUnsubscribeHeaders(unsubscribeUrl: string, contactEmail: string) {
+  // Volgens RFC 2369 + 8058: comma-separated mailto + https.
+  // Resend rendert dit 1:1 door naar de email headers.
+  return {
+    'List-Unsubscribe': `<mailto:${contactEmail}?subject=unsubscribe>, <${unsubscribeUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  }
+}
+
+function buildResendTags(mailNumber: 1 | 2 | 3) {
+  return [
+    { name: 'campaign', value: SPRING_DROP_CAMPAIGN_KEY },
+    { name: 'mail', value: String(mailNumber) },
+  ]
+}
+
+interface SpringDropBaseProps {
+  email: string
+  locale?: string
+  siteUrl?: string
+  contactEmail?: string
+  contactPhone?: string
+  contactAddress?: string
+}
+
+/**
+ * Send Spring Drop mail 1: launch + 4-product grid.
+ */
+export async function sendSpringDrop1LaunchEmail(
+  props: SpringDropBaseProps & {
+    products: SpringDropProduct[]
+    shopUrl: string
+    heroImageUrl: string
+    heroAlt?: string
+  }
+) {
+  const locale = props.locale || 'nl'
+  const settings = await getSiteSettings()
+  const siteUrl =
+    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail =
+    props.contactEmail || settings.contact_email || 'info@mosewear.com'
+  const contactPhone =
+    props.contactPhone || settings.contact_phone || '+31 50 211 1931'
+  const contactAddress =
+    props.contactAddress ||
+    settings.contact_address ||
+    'Stavangerweg 13, 9723 JC Groningen'
+
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
+  const html = await render(
+    SpringDrop1LaunchEmail({
+      email: props.email,
+      locale,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+      unsubscribeUrl,
+      products: props.products,
+      shopUrl: props.shopUrl,
+      heroImageUrl: props.heroImageUrl,
+      heroAlt: props.heroAlt,
+    })
+  )
+
+  const subject =
+    locale === 'en'
+      ? 'It is spring. Time for your MOSE.'
+      : 'Het is lente. Tijd voor je MOSE.'
+
+  return await sendAndLog(
+    {
+      from: SPRING_DROP_FROM,
+      to: [props.email],
+      subject,
+      html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
+      tags: buildResendTags(1),
+    },
+    {
+      templateKey: 'spring_drop_1_launch',
+      locale,
+      metadata: {
+        campaign: SPRING_DROP_CAMPAIGN_KEY,
+        mail: 1,
+      },
+    }
+  )
+}
+
+/**
+ * Send Spring Drop mail 2: Tee-focus + colors + staffel block.
+ */
+export async function sendSpringDrop2TeeEmail(
+  props: SpringDropBaseProps & {
+    colors: SpringDrop2TeeColor[]
+    staffel: SpringDrop2TeeStaffelTier[]
+    heroImageUrl: string
+    teeUrl: string
+    shopUrl: string
+    heroAlt?: string
+    someSizesSoldOut?: boolean
+  }
+) {
+  const locale = props.locale || 'nl'
+  const settings = await getSiteSettings()
+  const siteUrl =
+    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail =
+    props.contactEmail || settings.contact_email || 'info@mosewear.com'
+  const contactPhone =
+    props.contactPhone || settings.contact_phone || '+31 50 211 1931'
+  const contactAddress =
+    props.contactAddress ||
+    settings.contact_address ||
+    'Stavangerweg 13, 9723 JC Groningen'
+
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
+  const html = await render(
+    SpringDrop2TeeEmail({
+      email: props.email,
+      locale,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+      unsubscribeUrl,
+      colors: props.colors,
+      staffel: props.staffel,
+      heroImageUrl: props.heroImageUrl,
+      teeUrl: props.teeUrl,
+      shopUrl: props.shopUrl,
+      heroAlt: props.heroAlt,
+      someSizesSoldOut: props.someSizesSoldOut,
+    })
+  )
+
+  const subject =
+    locale === 'en'
+      ? 'A favorite from this shoot: the MOSE Tee.'
+      : 'Een favoriet uit dit shoot: de MOSE Tee.'
+
+  return await sendAndLog(
+    {
+      from: SPRING_DROP_FROM,
+      to: [props.email],
+      subject,
+      html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
+      tags: buildResendTags(2),
+    },
+    {
+      templateKey: 'spring_drop_2_tee',
+      locale,
+      metadata: {
+        campaign: SPRING_DROP_CAMPAIGN_KEY,
+        mail: 2,
+      },
+    }
+  )
+}
+
+/**
+ * Send Spring Drop mail 3: founders note + WELCOME10-code reminder.
+ *
+ * `promoCode` is normaal een persoonlijke `WELCOME10-XXXXXX` (uit
+ * `promo_codes.subscriber_id`). Als de subscriber geen persoonlijke code
+ * heeft, valt de send-API terug op de globale `SPRING10`.
+ */
+export async function sendSpringDrop3FoundersEmail(
+  props: SpringDropBaseProps & {
+    promoCode: string
+    promoExpiryLabel: string
+    ctaUrl: string
+    shippedOrders?: number
+  }
+) {
+  const locale = props.locale || 'nl'
+  const settings = await getSiteSettings()
+  const siteUrl =
+    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const contactEmail =
+    props.contactEmail || settings.contact_email || 'info@mosewear.com'
+  const contactPhone =
+    props.contactPhone || settings.contact_phone || '+31 50 211 1931'
+  const contactAddress =
+    props.contactAddress ||
+    settings.contact_address ||
+    'Stavangerweg 13, 9723 JC Groningen'
+
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
+  const html = await render(
+    SpringDrop3FoundersEmail({
+      email: props.email,
+      locale,
+      siteUrl,
+      contactEmail,
+      contactPhone,
+      contactAddress,
+      unsubscribeUrl,
+      promoCode: props.promoCode,
+      promoExpiryLabel: props.promoExpiryLabel,
+      ctaUrl: props.ctaUrl,
+      shippedOrders: props.shippedOrders,
+    })
+  )
+
+  const subject =
+    locale === 'en'
+      ? 'Your MOSE code is expiring.'
+      : 'Je MOSE-code verloopt binnenkort.'
+
+  return await sendAndLog(
+    {
+      // Mail 3 voelt persoonlijker; we sturen vanuit info@ om
+      // domain-reputatie consistent te houden (geen extra Resend domain
+      // setup nodig). Reply-to staat op contact-mailbox.
+      from: SPRING_DROP_FROM,
+      to: [props.email],
+      replyTo: contactEmail,
+      subject,
+      html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
+      tags: buildResendTags(3),
+    },
+    {
+      templateKey: 'spring_drop_3_founders',
+      locale,
+      metadata: {
+        campaign: SPRING_DROP_CAMPAIGN_KEY,
+        mail: 3,
+        promoCode: props.promoCode,
+      },
+    }
+  )
 }
 
