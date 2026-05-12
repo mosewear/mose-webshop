@@ -58,8 +58,8 @@ const globalStyles = `
     .mose-container { width:100% !important; max-width:100% !important; padding:16px 8px 24px 8px !important; box-sizing:border-box !important; }
     .mose-pad { padding:20px !important; }
     .mose-pad-lg { padding:28px 22px !important; }
-    .mose-hero-title { font-size:56px !important; line-height:0.9 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
-    .mose-hero-title-lg { font-size:64px !important; line-height:0.88 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
+    .mose-hero-title { font-size:46px !important; line-height:0.92 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
+    .mose-hero-title-lg { font-size:54px !important; line-height:0.9 !important; overflow-wrap:anywhere !important; word-wrap:break-word !important; }
     .mose-total-value { font-size:40px !important; overflow-wrap:anywhere !important; }
     .mose-section-title { font-size:22px !important; }
     .mose-product-frame { width:88px !important; height:88px !important; max-width:88px !important; }
@@ -69,11 +69,38 @@ const globalStyles = `
     .mose-logo-footer { width:100px !important; height:auto !important; }
     .mose-mobile-stack { display:block !important; width:100% !important; max-width:100% !important; box-sizing:border-box !important; border-right:none !important; border-bottom:1px solid ${EMAIL_COLORS.borderStrong} !important; }
     .mose-mobile-stack-last { border-bottom:none !important; }
+    .mose-mobile-stack-soft { display:block !important; width:100% !important; max-width:100% !important; box-sizing:border-box !important; }
     .mose-gutter { display:none !important; width:0 !important; font-size:0 !important; line-height:0 !important; height:0 !important; overflow:hidden !important; }
     .mose-hide-mobile { display:none !important; }
     .mose-btn { display:block !important; width:100% !important; box-sizing:border-box !important; }
     .mose-breakdown-value { white-space:normal !important; word-break:break-word !important; overflow-wrap:anywhere !important; }
+
+    /* Spring Drop campaign tweaks */
+    .mose-spring-hero { height:240px !important; }
+    .mose-spring-hero-pad { padding:24px 22px 26px 22px !important; }
+    .mose-spring-product-img { height:300px !important; }
+    .mose-spring-product-pad { padding:18px 18px 22px 18px !important; }
+    .mose-spring-product-name { font-size:22px !important; }
+    .mose-spring-product-price { font-size:15px !important; }
+    .mose-spring-product-badge { font-size:10px !important; padding:6px 10px !important; }
+    .mose-spring-trust { font-size:10px !important; letter-spacing:0.14em !important; line-height:1.9 !important; padding:14px 12px 4px 12px !important; }
+    .mose-spring-trust-sep { display:none !important; }
+    .mose-spring-trust-item { display:block !important; }
+    .mose-spring-color-row { display:block !important; width:100% !important; }
+    .mose-spring-color-cell { display:inline-block !important; width:48% !important; box-sizing:border-box !important; padding:0 !important; vertical-align:top !important; }
+    .mose-spring-color-cell-l { padding-right:6px !important; }
+    .mose-spring-color-cell-r { padding-left:6px !important; }
+    .mose-spring-color-spacer { display:block !important; width:100% !important; height:14px !important; line-height:14px !important; font-size:0 !important; }
+    .mose-spring-staffel-pad { padding:26px 18px !important; }
+    .mose-spring-staffel-title { font-size:24px !important; }
+    .mose-spring-code-pad { padding:30px 18px !important; }
+    .mose-spring-code-block { font-size:30px !important; letter-spacing:0.1em !important; word-break:break-all !important; }
+    .mose-spring-code-meta { font-size:11px !important; max-width:280px !important; }
+    .mose-spring-footer-spacer { padding-top:64px !important; padding-bottom:36px !important; }
   }
+
+  /* Outlook 2007+ specific cleanup */
+  body[data-outlook-cycle] .mose-btn { padding:18px 28px !important; }
 
   @media (prefers-color-scheme: dark) {
     .mose-force-light { background-color:${EMAIL_COLORS.surface} !important; color:${EMAIL_COLORS.text} !important; }

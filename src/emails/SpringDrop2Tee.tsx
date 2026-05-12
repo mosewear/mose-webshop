@@ -50,8 +50,69 @@ interface SpringDrop2TeeEmailProps {
   shopUrl: string
   /** Optionele alt text */
   heroAlt?: string
-  /** Optioneel: aantal kleuren met sold-out maten (voor de regel "Sommige maten zijn al uitverkocht") */
+  /** Optioneel: aantal kleuren met sold-out maten */
   someSizesSoldOut?: boolean
+}
+
+function ColorThumb({ color }: { color: SpringDrop2TeeColor }) {
+  return (
+    <Link
+      href={color.url}
+      style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+    >
+      <div
+        style={{
+          backgroundColor: EMAIL_COLORS.productBg,
+          border: `1px solid ${EMAIL_COLORS.border}`,
+          padding: '8px',
+        }}
+      >
+        <Img
+          src={color.imageUrl}
+          alt={`MOSE Tee ${color.name}`}
+          width="124"
+          height="124"
+          className="mose-product-img"
+          style={{
+            width: '100%',
+            height: '124px',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block',
+          }}
+        />
+      </div>
+      <div
+        style={{
+          marginTop: '10px',
+          textAlign: 'center',
+          fontFamily: EMAIL_FONTS.body,
+          fontSize: '12px',
+          fontWeight: 800,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: EMAIL_COLORS.ink,
+        }}
+      >
+        {color.name}
+      </div>
+      {color.stockNote ? (
+        <div
+          style={{
+            marginTop: '4px',
+            textAlign: 'center',
+            fontFamily: EMAIL_FONTS.body,
+            fontSize: '11px',
+            color: color.soldOut
+              ? EMAIL_COLORS.danger
+              : EMAIL_COLORS.textMuted,
+          }}
+        >
+          {color.stockNote}
+        </div>
+      ) : null}
+    </Link>
+  )
 }
 
 export default function SpringDrop2TeeEmail({
@@ -79,32 +140,43 @@ export default function SpringDrop2TeeEmail({
   const heroBadge = isNl ? 'EEN FAVORIET' : 'A FAVORITE'
   const heroTitle = isNl ? 'DE MOSE TEE.' : 'THE MOSE TEE.'
 
+  const greeting = isNl ? 'Hé,' : 'Hi,'
   const introLine1 = isNl
-    ? 'Als een stuk je startpunt is, kies dan de Tee.'
-    : 'If one piece is your starting point, make it the Tee.'
+    ? 'De vraag die we het vaakst krijgen: waar begin je mee? Eerlijk antwoord: bij de Tee.'
+    : 'The question we get most often: where do you start? Honest answer: with the Tee.'
   const introLine2 = isNl
-    ? '240 gsm jersey, stevig genoeg om mooi te vallen, licht genoeg voor warmere dagen.'
-    : '240 gsm jersey: enough body to drape well, light enough for warmer days.'
+    ? '240 gsm jersey, dik genoeg om mooi te vallen, licht genoeg voor warmere dagen. Strak logo, droge afwerking, gemaakt om vaak te dragen.'
+    : '240 gsm jersey, heavy enough to drape well, light enough for warmer days. Crisp logo, clean finish, made to wear often.'
   const introLine3 = isNl
-    ? 'Stevig logo, droge afwerking, gemaakt om vaak te dragen. In vier kleuren.'
-    : 'Solid logo, clean finish, made to wear often. In four colors.'
+    ? 'In vier kleuren beschikbaar.'
+    : 'Available in four colors.'
 
   const colorsTitle = isNl ? 'In vier kleuren' : 'In four colors'
   const colorsMeta = isNl ? 'Live voorraad' : 'Live stock'
 
   const sizesNote = isNl
-    ? 'Sommige maten zijn al uitverkocht.'
-    : 'Some sizes are already sold out.'
+    ? 'Sommige maten zijn al uitverkocht. Check de PDP voor de actuele stand.'
+    : 'Some sizes are already sold out. Check the PDP for live availability.'
 
-  const staffelTitle = isNl ? 'Hoe meer, hoe scherper.' : 'The more, the better.'
+  const staffelEyebrow = isNl ? 'Staffelkorting' : 'Quantity discount'
+  const staffelTitle = isNl ? 'Hoe meer Tees, hoe scherper.' : 'The more Tees, the better.'
   const staffelSubtitle = isNl
-    ? 'De korting wordt automatisch in je winkelmand toegepast. Geen code nodig.'
-    : 'The discount is applied automatically in your cart. No code required.'
+    ? 'De korting wordt automatisch toegepast in je winkelmand. Geen code nodig.'
+    : 'The discount is applied automatically at checkout. No code needed.'
 
-  const ctaLabel = isNl ? 'Shop de Tee  →' : 'Shop the Tee  →'
+  const ctaLabel = isNl
+    ? `Shop de Tee\u00A0\u00A0→`
+    : `Shop the Tee\u00A0\u00A0→`
   const subCtaLabel = isNl
-    ? 'Liever de hoodie of sweater? Bekijk de hele collectie  →'
-    : 'Prefer the hoodie or sweater? View the full collection  →'
+    ? 'Liever een hoodie of sweater? Bekijk de hele collectie\u00A0→'
+    : 'Prefer the hoodie or sweater? View the full collection\u00A0→'
+
+  // 4 kleuren splitsen in 2 paren voor mobile-stack 2x2
+  const safeColors = colors.slice(0, 4)
+  const pairs: SpringDrop2TeeColor[][] = []
+  for (let i = 0; i < safeColors.length; i += 2) {
+    pairs.push(safeColors.slice(i, i + 2))
+  }
 
   return (
     <EmailShell locale={locale} preview={preview}>
@@ -132,10 +204,11 @@ export default function SpringDrop2TeeEmail({
                       : 'MOSE Tee in spring light in Groningen')
                   }
                   width="600"
-                  height="320"
+                  height="360"
+                  className="mose-product-img mose-spring-hero"
                   style={{
                     width: '100%',
-                    height: '320px',
+                    height: '360px',
                     objectFit: 'cover',
                     objectPosition: 'center 35%',
                     display: 'block',
@@ -146,8 +219,8 @@ export default function SpringDrop2TeeEmail({
             <tr>
               <td
                 align="left"
-                className="mose-pad-lg"
-                style={{ padding: '30px 36px 36px 36px' }}
+                className="mose-pad-lg mose-spring-hero-pad"
+                style={{ padding: '34px 36px 38px 36px' }}
               >
                 <div
                   style={{
@@ -182,108 +255,77 @@ export default function SpringDrop2TeeEmail({
         </table>
       </Section>
 
-      <EmailModule padding="28px 30px">
+      {/* Persoonlijke intro */}
+      <EmailModule padding="32px 32px 28px 32px">
+        <EmailParagraph mb={14}>{greeting}</EmailParagraph>
         <EmailParagraph>{introLine1}</EmailParagraph>
         <EmailParagraph>{introLine2}</EmailParagraph>
         <EmailParagraph mb={0}>{introLine3}</EmailParagraph>
       </EmailModule>
 
-      {/* Kleurenrij - 4 thumbnails */}
-      <EmailModule padding="26px 22px">
+      {/* Kleurenrij — 4 thumbnails op desktop, 2x2 op mobile */}
+      <EmailModule padding="28px 24px">
         <EmailSectionTitle title={colorsTitle} meta={colorsMeta} />
         <div style={{ marginTop: '20px' }}>
+          {/* Desktop: 4 kolommen in één rij; mobile: per paar 2x2 */}
           <table
             role="presentation"
             width="100%"
             cellPadding={0}
             cellSpacing={0}
             border={0}
+            className="mose-hide-mobile"
           >
             <tbody>
               <tr>
-                {colors.slice(0, 4).map((c, idx) => {
-                  const isLast = idx === Math.min(colors.length, 4) - 1
+                {safeColors.map((c, idx) => {
+                  const isLast = idx === safeColors.length - 1
                   return (
                     <td
                       key={c.name}
                       width="25%"
                       valign="top"
-                      className="mose-mobile-stack"
                       style={{
                         padding: `0 ${isLast ? 0 : 6}px 0 ${idx === 0 ? 0 : 6}px`,
                       }}
                     >
-                      <Link
-                        href={c.url}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
-                      >
-                        <div
-                          style={{
-                            backgroundColor: EMAIL_COLORS.productBg,
-                            border: `1px solid ${EMAIL_COLORS.border}`,
-                            padding: '8px',
-                          }}
-                        >
-                          <Img
-                            src={c.imageUrl}
-                            alt={`MOSE Tee ${c.name}`}
-                            width="120"
-                            height="120"
-                            className="mose-product-img"
-                            style={{
-                              width: '100%',
-                              height: '120px',
-                              objectFit: 'cover',
-                              objectPosition: 'center',
-                              display: 'block',
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            marginTop: '10px',
-                            textAlign: 'center',
-                            fontFamily: EMAIL_FONTS.body,
-                            fontSize: '12px',
-                            fontWeight: 800,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            color: EMAIL_COLORS.ink,
-                          }}
-                        >
-                          {c.name}
-                        </div>
-                        {c.stockNote ? (
-                          <div
-                            style={{
-                              marginTop: '4px',
-                              textAlign: 'center',
-                              fontFamily: EMAIL_FONTS.body,
-                              fontSize: '11px',
-                              color: c.soldOut
-                                ? EMAIL_COLORS.danger
-                                : EMAIL_COLORS.textMuted,
-                            }}
-                          >
-                            {c.stockNote}
-                          </div>
-                        ) : null}
-                      </Link>
+                      <ColorThumb color={c} />
                     </td>
                   )
                 })}
               </tr>
             </tbody>
           </table>
+
+          {/* Mobile-only: 2x2 stacked pairs */}
+          <div
+            style={{ display: 'none' }}
+            className="mose-spring-color-row"
+          >
+            {pairs.map((pair, pi) => (
+              <div key={pi} style={{ marginBottom: pi < pairs.length - 1 ? 14 : 0 }}>
+                {pair.map((c, ci) => (
+                  <span
+                    key={c.name}
+                    className={`mose-spring-color-cell ${ci === 0 ? 'mose-spring-color-cell-l' : 'mose-spring-color-cell-r'}`}
+                  >
+                    <ColorThumb color={c} />
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+
           {someSizesSoldOut ? (
             <div
               style={{
-                marginTop: '16px',
+                marginTop: '18px',
                 textAlign: 'center',
                 fontFamily: EMAIL_FONTS.body,
                 fontSize: '12px',
                 color: EMAIL_COLORS.textMuted,
                 fontStyle: 'italic',
+                lineHeight: 1.6,
               }}
             >
               {sizesNote}
@@ -294,9 +336,10 @@ export default function SpringDrop2TeeEmail({
 
       {/* Staffel block */}
       <EmailModule
-        padding="28px 30px"
+        padding="34px 30px"
         background={EMAIL_COLORS.ink}
         align="center"
+        innerClassName="mose-pad mose-spring-staffel-pad"
       >
         <div
           style={{
@@ -306,20 +349,21 @@ export default function SpringDrop2TeeEmail({
             textTransform: 'uppercase',
             color: EMAIL_COLORS.primary,
             fontWeight: 800,
-            marginBottom: '10px',
+            marginBottom: '12px',
           }}
         >
-          {isNl ? 'Staffelkorting' : 'Quantity discount'}
+          {staffelEyebrow}
         </div>
         <div
+          className="mose-spring-staffel-title"
           style={{
             fontFamily: EMAIL_FONTS.display,
-            fontSize: '28px',
+            fontSize: '30px',
             color: EMAIL_COLORS.paper,
             letterSpacing: '0.02em',
             lineHeight: 1.1,
             textTransform: 'uppercase',
-            marginBottom: '6px',
+            marginBottom: '8px',
           }}
         >
           {staffelTitle}
@@ -331,7 +375,7 @@ export default function SpringDrop2TeeEmail({
             color: EMAIL_COLORS.textSubtle,
             lineHeight: 1.6,
             maxWidth: '420px',
-            margin: '0 auto 18px auto',
+            margin: '0 auto 20px auto',
           }}
         >
           {staffelSubtitle}
@@ -354,7 +398,7 @@ export default function SpringDrop2TeeEmail({
                 <td
                   align="left"
                   style={{
-                    padding: '12px 14px',
+                    padding: '13px 14px',
                     borderTop:
                       i === 0
                         ? 'none'
@@ -374,7 +418,7 @@ export default function SpringDrop2TeeEmail({
                 <td
                   align="right"
                   style={{
-                    padding: '12px 14px',
+                    padding: '13px 14px',
                     borderTop:
                       i === 0
                         ? 'none'
@@ -416,6 +460,7 @@ export default function SpringDrop2TeeEmail({
               color: EMAIL_COLORS.textMuted,
               textDecoration: 'underline',
               fontSize: '12px',
+              fontWeight: 600,
             }}
           >
             {subCtaLabel}

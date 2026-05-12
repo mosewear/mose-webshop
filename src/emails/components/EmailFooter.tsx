@@ -27,7 +27,8 @@ interface EmailFooterProps {
 
 const footerSection = {
   backgroundColor: EMAIL_COLORS.black,
-  /* Veel lucht boven het logo t.o.v. de witte content erboven */
+  /* Veel lucht boven het logo t.o.v. de witte content erboven; op mobile
+     halveren we dit via .mose-spring-footer-spacer (zie EmailShell). */
   padding: '120px 24px 56px 24px',
   textAlign: 'center' as const,
 }
@@ -116,7 +117,10 @@ export default function EmailFooter({
   const unsubLabel = unsubscribeLabel || 'Uitschrijven'
 
   return (
-    <Section style={footerSection}>
+    <Section
+      className="mose-spring-footer-spacer"
+      style={footerSection}
+    >
       <Link href={siteUrl} style={{ textDecoration: 'none' }}>
         <Img
           className="mose-logo-footer"

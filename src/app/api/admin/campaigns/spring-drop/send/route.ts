@@ -91,11 +91,13 @@ interface ResolvedProduct {
 async function loadProducts(
   sb: ReturnType<typeof createServiceRoleClient>
 ): Promise<ResolvedProduct[]> {
+  // Spring Drop promoot bewust alleen de drie kledingstukken (Tee,
+  // Hoodie, Sweater). Het horloge is een ander prijspunt en wordt in
+  // deze campagne overgeslagen.
   const slugs = [
     'mose-tee',
     'mose-essential-hoodie',
     'mose-classic-sweater',
-    'mose-automatisch-horloge',
   ]
 
   const { data: products, error } = await sb
@@ -148,14 +150,18 @@ interface BuildMail1Params {
   products: ResolvedProduct[]
   sweaterStock: number
 }
+function priceWithStrike(salePrice: number | null, basePrice: number) {
+  if (salePrice == null) return eur(basePrice)
+  return `${eur(salePrice)}&nbsp;&nbsp;<span style="color:#999;text-decoration:line-through;font-weight:600">${eur(basePrice)}</span>`
+}
+
 function buildMail1Payload({ products, sweaterStock }: BuildMail1Params) {
   const bySlug = new Map(products.map((p) => [p.slug, p]))
   const tee = bySlug.get('mose-tee')
   const hoodie = bySlug.get('mose-essential-hoodie')
   const sweater = bySlug.get('mose-classic-sweater')
-  const watch = bySlug.get('mose-automatisch-horloge')
 
-  if (!tee || !hoodie || !sweater || !watch) {
+  if (!tee || !hoodie || !sweater) {
     throw new Error('Missing products for Spring Drop mail 1')
   }
 
@@ -163,6 +169,7 @@ function buildMail1Payload({ products, sweaterStock }: BuildMail1Params) {
     {
       name: tee.name,
       priceLabel: eur(tee.salePrice ?? tee.basePrice),
+      subtitle: '240 gsm jersey, vier kleuren.',
       badge: 'Vanaf €44,95 bij 3 stuks',
       badgeTone: 'staffel',
       imageUrl: tee.primaryImageUrl,
@@ -170,36 +177,21 @@ function buildMail1Payload({ products, sweaterStock }: BuildMail1Params) {
     },
     {
       name: hoodie.name,
-      priceLabel:
-        hoodie.salePrice != null
-          ? `${eur(hoodie.salePrice)}  ${eur(hoodie.basePrice)}`
-          : eur(hoodie.basePrice),
-      badge: '-17% lente-prijs',
+      priceLabel: priceWithStrike(hoodie.salePrice, hoodie.basePrice),
+      subtitle: 'Zware sweat, geborsteld van binnen.',
+      badge: 'Lente: -17%',
       badgeTone: 'sale',
       imageUrl: hoodie.primaryImageUrl,
       url: appendUtm(`${siteUrl()}/nl/product/${hoodie.slug}`, 1, 'hoodie'),
     },
     {
       name: sweater.name,
-      priceLabel:
-        sweater.salePrice != null
-          ? `${eur(sweater.salePrice)}  ${eur(sweater.basePrice)}`
-          : eur(sweater.basePrice),
-      badge: `-18%, nog ${sweaterStock} stuks`,
+      priceLabel: priceWithStrike(sweater.salePrice, sweater.basePrice),
+      subtitle: `Lente-sale, nog ${sweaterStock} stuks beschikbaar.`,
+      badge: `Nog ${sweaterStock} stuks`,
       badgeTone: 'scarcity',
       imageUrl: sweater.primaryImageUrl,
       url: appendUtm(`${siteUrl()}/nl/product/${sweater.slug}`, 1, 'sweater'),
-    },
-    {
-      name: watch.name,
-      priceLabel:
-        watch.salePrice != null
-          ? `${eur(watch.salePrice)}  ${eur(watch.basePrice)}`
-          : eur(watch.basePrice),
-      badge: '-20% lente-prijs',
-      badgeTone: 'sale',
-      imageUrl: watch.primaryImageUrl,
-      url: appendUtm(`${siteUrl()}/nl/product/${watch.slug}`, 1, 'watch'),
     },
   ]
 

@@ -4,7 +4,6 @@ import EmailHeader from './components/EmailHeader'
 import EmailFooter from './components/EmailFooter'
 import EmailModule from './components/EmailModule'
 import EmailParagraph from './components/EmailParagraph'
-import EmailSectionTitle from './components/EmailSectionTitle'
 import EmailCta from './components/EmailCta'
 import {
   EMAIL_COLORS,
@@ -20,19 +19,19 @@ interface SpringDropProduct {
   badgeTone?: 'sale' | 'staffel' | 'scarcity'
   imageUrl: string
   url: string
+  /** Optionele subtekst onder de naam (bv. "240 gsm jersey, 4 kleuren") */
+  subtitle?: string
 }
 
 interface SpringDrop1LaunchProps {
-  /** E-mail van de ontvanger (voor de footnote) */
   email: string
-  /** UTM-suffix wordt los toegevoegd aan elke link, want we kennen het slug-pad */
   locale?: string
   siteUrl?: string
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
   unsubscribeUrl?: string
-  /** Vier producten in de 2x2 grid; volgorde = render-volgorde. */
+  /** Drie producten in stack-layout; volgorde = render-volgorde. */
   products: SpringDropProduct[]
   /** URL voor de "Bekijk de hele collectie" CTA, inclusief UTMs. */
   shopUrl: string
@@ -42,13 +41,13 @@ interface SpringDrop1LaunchProps {
   heroAlt?: string
 }
 
-const HERO_FRAME_HEIGHT = 320 // visueel sterk maar niet teveel data
+const HERO_FRAME_HEIGHT = 360
 
 const wordmarkStyle = {
   fontFamily: EMAIL_FONTS.display,
   textTransform: 'uppercase' as const,
-  fontSize: '40px',
-  lineHeight: 1,
+  fontSize: '54px',
+  lineHeight: 0.95,
   letterSpacing: '-0.01em',
   color: EMAIL_COLORS.paper,
   margin: 0,
@@ -66,18 +65,6 @@ const heroOverlayBadge = {
   border: `1px solid ${EMAIL_COLORS.paper}`,
 }
 
-const trustStripStyle = {
-  fontFamily: EMAIL_FONTS.body,
-  fontSize: '11px',
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase' as const,
-  color: EMAIL_COLORS.textSubtle,
-  fontWeight: 700,
-  textAlign: 'center' as const,
-  padding: '14px 16px 6px 16px',
-  lineHeight: 1.7,
-}
-
 function badgeColors(tone: SpringDropProduct['badgeTone']) {
   switch (tone) {
     case 'sale':
@@ -91,81 +78,177 @@ function badgeColors(tone: SpringDropProduct['badgeTone']) {
   }
 }
 
-function ProductCell({ product }: { product: SpringDropProduct }) {
+function ProductCard({
+  product,
+  locale,
+}: {
+  product: SpringDropProduct
+  locale: 'nl' | 'en'
+}) {
   const b = badgeColors(product.badgeTone)
+  const linkLabel = locale === 'en' ? 'Shop now' : 'Bekijken'
+
   return (
     <Link
       href={product.url}
       style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
     >
-      <div
+      <table
+        role="presentation"
+        width="100%"
+        cellPadding={0}
+        cellSpacing={0}
+        border={0}
         style={{
           backgroundColor: EMAIL_COLORS.productBg,
-          padding: '10px 10px 18px 10px',
           border: `1px solid ${EMAIL_COLORS.border}`,
         }}
       >
-        <Img
-          src={product.imageUrl}
-          alt={product.name}
-          width="260"
-          height="260"
-          className="mose-product-img"
-          style={{
-            width: '100%',
-            height: '260px',
-            objectFit: 'cover',
-            objectPosition: 'center',
-            display: 'block',
-          }}
-        />
-        <div
-          style={{
-            padding: '14px 6px 0 6px',
-          }}
-        >
-          <div
-            style={{
-              fontFamily: EMAIL_FONTS.display,
-              fontSize: '17px',
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              color: EMAIL_COLORS.ink,
-              lineHeight: 1.15,
-              marginBottom: '6px',
-            }}
-          >
-            {product.name}
-          </div>
-          <div
-            style={{
-              fontFamily: EMAIL_FONTS.body,
-              fontSize: '13px',
-              fontWeight: 700,
-              color: EMAIL_COLORS.text,
-              marginBottom: '10px',
-            }}
-          >
-            {product.priceLabel}
-          </div>
-          <span
-            style={{
-              display: 'inline-block',
-              backgroundColor: b.bg,
-              color: b.color,
-              fontFamily: EMAIL_FONTS.body,
-              fontSize: '10px',
-              fontWeight: 800,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              padding: '6px 10px',
-              lineHeight: 1.1,
-            }}
-          >
-            {product.badge}
-          </span>
-        </div>
-      </div>
+        <tbody>
+          <tr>
+            <td style={{ padding: 0 }}>
+              <Img
+                src={product.imageUrl}
+                alt={product.name}
+                width="558"
+                height="380"
+                className="mose-product-img mose-spring-product-img"
+                style={{
+                  width: '100%',
+                  height: '380px',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  display: 'block',
+                }}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td
+              className="mose-spring-product-pad"
+              style={{ padding: '22px 24px 26px 24px' }}
+            >
+              <table
+                role="presentation"
+                width="100%"
+                cellPadding={0}
+                cellSpacing={0}
+                border={0}
+              >
+                <tbody>
+                  <tr>
+                    <td valign="top" style={{ paddingRight: '12px' }}>
+                      <div
+                        className="mose-spring-product-name"
+                        style={{
+                          fontFamily: EMAIL_FONTS.display,
+                          fontSize: '24px',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          color: EMAIL_COLORS.ink,
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {product.name}
+                      </div>
+                      {product.subtitle ? (
+                        <div
+                          style={{
+                            marginTop: '6px',
+                            fontFamily: EMAIL_FONTS.body,
+                            fontSize: '12px',
+                            color: EMAIL_COLORS.textMuted,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {product.subtitle}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td
+                      valign="top"
+                      align="right"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      <div
+                        className="mose-spring-product-price"
+                        style={{
+                          fontFamily: EMAIL_FONTS.body,
+                          fontSize: '16px',
+                          fontWeight: 800,
+                          color: EMAIL_COLORS.ink,
+                          lineHeight: 1.1,
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: product.priceLabel,
+                        }}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} style={{ paddingTop: '16px' }}>
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellPadding={0}
+                        cellSpacing={0}
+                        border={0}
+                      >
+                        <tbody>
+                          <tr>
+                            <td valign="middle" align="left">
+                              <span
+                                className="mose-spring-product-badge"
+                                style={{
+                                  display: 'inline-block',
+                                  backgroundColor: b.bg,
+                                  color: b.color,
+                                  fontFamily: EMAIL_FONTS.body,
+                                  fontSize: '11px',
+                                  fontWeight: 800,
+                                  letterSpacing: '0.18em',
+                                  textTransform: 'uppercase',
+                                  padding: '7px 12px',
+                                  lineHeight: 1.1,
+                                }}
+                              >
+                                {product.badge}
+                              </span>
+                            </td>
+                            <td
+                              valign="middle"
+                              align="right"
+                              style={{
+                                fontFamily: EMAIL_FONTS.body,
+                                fontSize: '12px',
+                                fontWeight: 800,
+                                color: EMAIL_COLORS.primary,
+                                letterSpacing: '0.16em',
+                                textTransform: 'uppercase',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {linkLabel}{' '}
+                              <span
+                                style={{
+                                  fontWeight: 400,
+                                  fontFamily: EMAIL_FONTS.body,
+                                }}
+                              >
+                                {'\u00A0→'}
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </Link>
   )
 }
@@ -184,41 +267,36 @@ export default function SpringDrop1LaunchEmail({
   heroAlt,
 }: SpringDrop1LaunchProps) {
   const isNl = locale !== 'en'
+  const lang: 'nl' | 'en' = isNl ? 'nl' : 'en'
+
   const preview = isNl
-    ? 'De volledige collectie staat klaar. Gemaakt in Groningen, eerlijk geprijsd.'
-    : 'The full collection is live. Made in Groningen, fairly priced.'
+    ? 'Onze eerste collectie staat klaar. Gemaakt in Groningen, eerlijk geprijsd.'
+    : 'Our first collection is live. Made in Groningen, fairly priced.'
 
   const headline = isNl ? 'HET IS LENTE.' : 'IT IS SPRING.'
   const headlineSub = isNl ? 'TIJD VOOR JE MOSE.' : 'TIME FOR YOUR MOSE.'
 
+  const greeting = isNl ? 'Hé,' : 'Hi,'
   const introLine1 = isNl
-    ? 'Drie maanden geleden zei je dat je dit wilde meemaken. We zijn rond.'
-    : 'Three months ago you said you wanted in. We are ready.'
+    ? 'In februari schreef je je in om als eerste te horen wanneer onze webshop live zou gaan. Die tijd is nu.'
+    : 'In February you signed up to be the first to know when our shop would go live. That time is now.'
   const introLine2 = isNl
-    ? 'Hieronder zie je wat we maakten in Groningen, in vier stukken die je het hele voorjaar draagt.'
-    : 'Below is what we made in Groningen: four pieces to wear all spring.'
-  const trustLineParts = isNl
+    ? 'Hieronder zie je drie stukken die we in Groningen hebben gemaakt. Eerlijke prijzen, gratis verzending en 30 dagen retour.'
+    : 'Below are three pieces we made in Groningen. Fair pricing, free shipping and 30 day returns.'
+
+  const trustItems = isNl
     ? ['Gratis verzending', '30 dagen retour', 'Ophalen in Groningen']
     : ['Free shipping', '30 day returns', 'Pickup in Groningen']
 
   const ctaLabel = isNl
-    ? `Bekijk de hele collectie  →`
-    : `View the full collection  →`
-
-  const sectionTitle = isNl ? 'Vier stukken' : 'Four pieces'
-  const sectionMeta = isNl ? 'Gemaakt in Groningen' : 'Made in Groningen'
-
-  // 4 -> 2x2 grid
-  const rows: SpringDropProduct[][] = []
-  for (let i = 0; i < products.length; i += 2) {
-    rows.push(products.slice(i, i + 2))
-  }
+    ? `Bekijk de hele collectie\u00A0\u00A0→`
+    : `View the full collection\u00A0\u00A0→`
 
   return (
     <EmailShell locale={locale} preview={preview}>
-      <EmailHeader siteUrl={siteUrl} status={isNl ? 'SPRING DROP' : 'SPRING DROP'} />
+      <EmailHeader siteUrl={siteUrl} status="SPRING DROP" />
 
-      {/* Hero met foto + overlay */}
+      {/* Hero met foto + tekstblok onder de foto in dezelfde zwarte module */}
       <Section style={{ paddingBottom: '12px' }}>
         <table
           role="presentation"
@@ -236,11 +314,12 @@ export default function SpringDrop1LaunchEmail({
                   alt={
                     heroAlt ||
                     (isNl
-                      ? 'Drie MOSE-stukken in Groningen, lente 2026'
-                      : 'Three MOSE pieces in Groningen, spring 2026')
+                      ? 'MOSE-stukken in Groningen, lente 2026'
+                      : 'MOSE pieces in Groningen, spring 2026')
                   }
                   width="600"
                   height={String(HERO_FRAME_HEIGHT)}
+                  className="mose-product-img mose-spring-hero"
                   style={{
                     width: '100%',
                     height: `${HERO_FRAME_HEIGHT}px`,
@@ -254,30 +333,19 @@ export default function SpringDrop1LaunchEmail({
             <tr>
               <td
                 align="left"
-                className="mose-pad-lg"
-                style={{ padding: '32px 36px 36px 36px' }}
+                className="mose-pad-lg mose-spring-hero-pad"
+                style={{ padding: '34px 36px 38px 36px' }}
               >
                 <div style={{ marginBottom: '18px' }}>
-                  <span style={heroOverlayBadge}>
-                    {isNl ? 'Spring Drop 2026' : 'Spring Drop 2026'}
-                  </span>
+                  <span style={heroOverlayBadge}>Spring Drop 2026</span>
                 </div>
-                <h1
-                  className="mose-hero-title"
-                  style={{
-                    ...wordmarkStyle,
-                    fontSize: '54px',
-                    lineHeight: 0.95,
-                  }}
-                >
+                <h1 className="mose-hero-title" style={wordmarkStyle}>
                   {headline}
                 </h1>
                 <h2
                   className="mose-hero-title"
                   style={{
                     ...wordmarkStyle,
-                    fontSize: '54px',
-                    lineHeight: 0.95,
                     marginTop: '4px',
                     color: EMAIL_COLORS.primary,
                   }}
@@ -290,68 +358,74 @@ export default function SpringDrop1LaunchEmail({
         </table>
       </Section>
 
-      <EmailModule padding="28px 30px">
+      {/* Persoonlijke intro */}
+      <EmailModule padding="32px 32px 28px 32px">
+        <EmailParagraph mb={14}>{greeting}</EmailParagraph>
         <EmailParagraph>{introLine1}</EmailParagraph>
-        <EmailParagraph>{introLine2}</EmailParagraph>
-        <EmailParagraph mt={6} mb={0}>
-          {isNl
-            ? 'Eerlijke prijzen, gratis verzending, 30 dagen retour.'
-            : 'Fair pricing, free shipping, 30 day returns.'}
-        </EmailParagraph>
+        <EmailParagraph mb={0}>{introLine2}</EmailParagraph>
       </EmailModule>
 
-      {/* 2x2 product grid */}
-      <EmailModule padding="26px 22px">
-        <EmailSectionTitle title={sectionTitle} meta={sectionMeta} />
-        <div style={{ marginTop: '20px' }}>
-          {rows.map((row, idx) => (
-            <table
-              key={idx}
-              role="presentation"
-              width="100%"
-              cellPadding={0}
-              cellSpacing={0}
-              border={0}
-              style={{ marginTop: idx === 0 ? 0 : 14 }}
-            >
-              <tbody>
-                <tr>
-                  <td
-                    valign="top"
-                    width="48%"
-                    className="mose-mobile-stack"
-                    style={{ paddingRight: '8px' }}
-                  >
-                    {row[0] ? <ProductCell product={row[0]} /> : null}
-                  </td>
-                  <td
-                    width="4%"
-                    className="mose-gutter"
-                    style={{ fontSize: 0, lineHeight: 0 }}
-                  >
-                    &nbsp;
-                  </td>
-                  <td
-                    valign="top"
-                    width="48%"
-                    className="mose-mobile-stack mose-mobile-stack-last"
-                    style={{ paddingLeft: '8px' }}
-                  >
-                    {row[1] ? <ProductCell product={row[1]} /> : null}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          ))}
-        </div>
-      </EmailModule>
+      {/* Drie producten als stack van full-width cards */}
+      {products.slice(0, 3).map((p, idx) => (
+        <EmailModule
+          key={`${p.name}-${idx}`}
+          padding="20px 20px"
+          background={EMAIL_COLORS.paper}
+        >
+          <ProductCard product={p} locale={lang} />
+        </EmailModule>
+      ))}
 
+      {/* CTA + trust */}
       <EmailCta
         href={shopUrl}
         label={ctaLabel}
         variant="teal"
         footnote={
-          <div style={trustStripStyle}>{trustLineParts.join('  ·  ')}</div>
+          <table
+            role="presentation"
+            width="100%"
+            cellPadding={0}
+            cellSpacing={0}
+            border={0}
+          >
+            <tbody>
+              <tr>
+                <td
+                  align="center"
+                  className="mose-spring-trust"
+                  style={{
+                    fontFamily: EMAIL_FONTS.body,
+                    fontSize: '11px',
+                    letterSpacing: '0.22em',
+                    textTransform: 'uppercase',
+                    color: EMAIL_COLORS.textSubtle,
+                    fontWeight: 700,
+                    padding: '14px 16px 6px 16px',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {trustItems.map((item, i) => (
+                    <span
+                      key={item}
+                      className="mose-spring-trust-item"
+                      style={{ display: 'inline-block' }}
+                    >
+                      {item}
+                      {i < trustItems.length - 1 ? (
+                        <span
+                          className="mose-spring-trust-sep"
+                          style={{ padding: '0 10px', color: EMAIL_COLORS.textFaint }}
+                        >
+                          ·
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         }
       />
 

@@ -626,6 +626,7 @@ export async function GET(req: NextRequest) {
           {
             name: 'MOSE Tee',
             priceLabel: '€49,95',
+            subtitle: '240 gsm jersey, vier kleuren.',
             badge: 'Vanaf €44,95 bij 3 stuks',
             badgeTone: 'staffel' as const,
             imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp`,
@@ -633,27 +634,21 @@ export async function GET(req: NextRequest) {
           },
           {
             name: 'MOSE Essential Hoodie',
-            priceLabel: '€99,95  €119,95',
-            badge: '-17% lente-prijs',
+            priceLabel: `€99,95&nbsp;&nbsp;<span style="color:#999;text-decoration:line-through;font-weight:600">€119,95</span>`,
+            subtitle: 'Zware sweat, geborsteld van binnen.',
+            badge: 'Lente: -17%',
             badgeTone: 'sale' as const,
             imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/hero-desktop.webp`,
             url: `${siteUrl}/${locale}/product/mose-essential-hoodie?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-hoodie`,
           },
           {
             name: 'MOSE Classic Sweater',
-            priceLabel: '€89,95  €109,95',
-            badge: '-18%, nog 31 stuks',
+            priceLabel: `€89,95&nbsp;&nbsp;<span style="color:#999;text-decoration:line-through;font-weight:600">€109,95</span>`,
+            subtitle: 'Lente-sale, nog 31 stuks beschikbaar.',
+            badge: 'Nog 31 stuks',
             badgeTone: 'scarcity' as const,
             imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/sweater/off-white/hero-desktop.webp`,
             url: `${siteUrl}/${locale}/product/mose-classic-sweater?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-sweater`,
-          },
-          {
-            name: 'MOSE Automatisch Horloge',
-            priceLabel: '€199,95  €249,95',
-            badge: '-20% lente-prijs',
-            badgeTone: 'sale' as const,
-            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/products/07dbf6e8-230c-4799-b739-ff4c423ca603/zwart/1767806485539-lt3nle.png`,
-            url: `${siteUrl}/${locale}/product/mose-automatisch-horloge?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-watch`,
           },
         ]
         html = await render(
