@@ -188,18 +188,27 @@ export default function SpringDrop1LaunchEmail({
   const gridProducts = products.slice(0, 3)
   const isNl = locale !== 'en'
   const preview = isNl
-    ? 'Tee, hoodie en sweater uit Groningen. Sale op hoodie en sweater, staffel op de Tee.'
-    : 'Tee, hoodie and sweater from Groningen. Sale on hoodie and sweater, bundle pricing on the Tee.'
+    ? 'Irma & Rick uit Groningen: lente-items, sale op hoodie en sweater, staffel op de Tee.'
+    : 'Irma & Rick from Groningen: spring items, sale on hoodie and sweater, bundle pricing on the Tee.'
 
   const headline = isNl ? 'HET IS LENTE.' : 'IT IS SPRING.'
   const headlineSub = isNl ? 'TIJD VOOR JE MOSE.' : 'TIME FOR YOUR MOSE.'
 
-  const introLine1 = isNl
-    ? 'Misschien ken je ons al een beetje, misschien is dit je eerste mail van ons. In beide gevallen: leuk dat je meeleest.'
-    : 'Maybe you already know us a little, maybe this is your first email from us. Either way: glad you are here.'
-  const introLine2 = isNl
-    ? 'We maken alles in Groningen. Hieronder drie stukken voor het hele voorjaar: de Tee, de hoodie en de sweater. Hoodie en sweater staan nu in de lente-sale. Op de Tee krijg je automatisch staffelkorting in je winkelmand, zonder code.'
-    : 'We make everything in Groningen. Below are three pieces for spring: the Tee, the hoodie and the sweater. The hoodie and sweater are on spring sale. The Tee gets automatic quantity discounts in your cart, no code needed.'
+  const introParagraphs = isNl
+    ? [
+        'Misschien ken je ons al een beetje, of misschien is dit je eerste mail van ons. In beide gevallen: leuk dat je meeleest!',
+        'Wij zijn Irma en Rick, de oprichters van MOSE. We wonen in Groningen met onze katten Bob en Marley en onze daggoe Guus. MOSE is vernoemd naar onze overleden poes Mosie, oftewel Moos. 🐱',
+        'We zijn begonnen met MOSE omdat fast fashion ons mateloos irriteerde. T-shirts die na een paar keer wassen hun vorm verliezen, daar werden we gek van. Daarom maken we kleding die lang meegaat. Eerlijk, lokaal en gemaakt in een atelier in Groningen.',
+        'Hieronder vind je onze 3 items voor het voorjaar: de Tee, de Hoodie en de Sweater. De hoodie en sweater staan nu in de lente-sale. Op de Tee krijg je automatisch staffelkorting in je winkelmand. Des te meer je toevoegt, des te hoger de korting. Nice!',
+        'We rekenen nooit verzendkosten, en als het niet past mag je binnen 30 dagen ruilen of retourneren.',
+      ]
+    : [
+        'Maybe you already know us a little, or maybe this is your first email from us. Either way: thanks for reading along!',
+        'We are Irma and Rick, the founders of MOSE. We live in Groningen with our cats Bob and Marley and our dog Guus. MOSE is named after our late cat Mosie, or Moos. 🐱',
+        'We started MOSE because fast fashion drove us up the wall. T-shirts that lost their shape after a few washes — that drove us crazy. So we make clothes that last. Honest, local, made in a studio in Groningen.',
+        'Below you will find our 3 items for spring: the Tee, the Hoodie and the Sweater. The hoodie and sweater are now in the spring sale. On the Tee you get automatic tiered discount in your cart. The more you add, the higher the discount. Nice!',
+        'We never charge shipping, and if it does not fit you can exchange or return within 30 days.',
+      ]
   const trustLineParts = isNl
     ? ['Gratis verzending', '30 dagen retour', 'Ophalen in Groningen']
     : ['Free shipping', '30 day returns', 'Pickup in Groningen']
@@ -208,7 +217,7 @@ export default function SpringDrop1LaunchEmail({
     ? `Naar de shop  →`
     : `Go to the shop  →`
 
-  const sectionTitle = isNl ? 'Drie stukken' : 'Three pieces'
+  const sectionTitle = isNl ? 'Drie items' : 'Three items'
   const sectionMeta = isNl ? 'Gemaakt in Groningen' : 'Made in Groningen'
 
   const firstPair = gridProducts.slice(0, 2)
@@ -236,8 +245,8 @@ export default function SpringDrop1LaunchEmail({
                   alt={
                     heroAlt ||
                     (isNl
-                      ? 'Drie MOSE-stukken in Groningen, lente 2026'
-                      : 'Three MOSE pieces in Groningen, spring 2026')
+                      ? 'Drie MOSE-items in Groningen, lente 2026'
+                      : 'Three MOSE items in Groningen, spring 2026')
                   }
                   width="600"
                   height={String(HERO_FRAME_HEIGHT)}
@@ -291,13 +300,15 @@ export default function SpringDrop1LaunchEmail({
       </Section>
 
       <EmailModule padding="28px 30px">
-        <EmailParagraph>{introLine1}</EmailParagraph>
-        <EmailParagraph>{introLine2}</EmailParagraph>
-        <EmailParagraph mt={6} mb={0}>
-          {isNl
-            ? 'Geen verzendkosten, en als het niet past mag je binnen 30 dagen ruilen of retourneren.'
-            : 'No shipping cost, and if it does not fit you can exchange or return within 30 days.'}
-        </EmailParagraph>
+        {introParagraphs.map((text, i) => (
+          <EmailParagraph
+            key={i}
+            mt={i === 0 ? undefined : 14}
+            mb={i === introParagraphs.length - 1 ? 0 : undefined}
+          >
+            {text}
+          </EmailParagraph>
+        ))}
       </EmailModule>
 
       {/* Productgrid: 2 + 1 gecentreerd (Tee / hoodie / sweater) */}
