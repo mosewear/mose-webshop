@@ -195,9 +195,11 @@ export default function SpringDrop1LaunchEmail({
     storyUrlProp ??
     `${base}/${locale}/spring-drop-verhaal?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-verhaal`
 
+  /** Preheader: vult inbox-snippet; spaties verbergen hero-tekst in veel clients. */
+  const preheaderPad = `${'\u00a0'.repeat(120)}`
   const preview = isNl
-    ? 'Lees ons verhaal op de site, daarna de lente-items in deze mail.'
-    : 'Read our story on the site, then the spring items in this email.'
+    ? `Tee, Hoodie, Sweater · lente-sale · staffel op de Tee · Groningen · gratis verzending${preheaderPad}`
+    : `Tee, Hoodie, Sweater · spring sale · Tee bundle pricing · Groningen · free shipping${preheaderPad}`
 
   const headline = isNl ? 'HET IS LENTE.' : 'IT IS SPRING.'
   const headlineSub = isNl ? 'TIJD VOOR JE MOSE.' : 'TIME FOR YOUR MOSE.'
