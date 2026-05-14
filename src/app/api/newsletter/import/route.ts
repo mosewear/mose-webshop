@@ -4,9 +4,12 @@ import { requireNewsletterAdmin } from '@/lib/newsletter-admin-auth'
 import {
   buildParsedSubscriberRows,
   chunkEmailsForInFilter,
+  collectImportHeaderKeys,
   parseNewsletterImportBuffer,
+  parseNewsletterImportColumnPreview,
+  validateImportColumnMapping,
 } from '@/lib/newsletter-import/parse-import-file'
-import type { ParsedSubscriberInput } from '@/lib/newsletter-import/parse-import-file'
+import type { ImportColumnMapping, ParsedSubscriberInput } from '@/lib/newsletter-import/parse-import-file'
 import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
 import { sendNewsletterWelcomeEmail } from '@/lib/email'
 
@@ -96,6 +99,7 @@ export async function POST(req: NextRequest) {
     const form = await req.formData()
     const file = form.get('file')
     const dryRun = String(form.get('dryRun') || '') === 'true'
+    const step = String(form.get('step') || '')
     const reactivateUnsubscribed =
       String(form.get('reactivateUnsubscribed') || '') === 'true'
     const sendWelcomeEmail = String(form.get('sendWelcomeEmail') || '') === 'true'
@@ -108,6 +112,41 @@ export async function POST(req: NextRequest) {
     }
 
     const buf = Buffer.from(await file.arrayBuffer())
+
+    if (step === 'columns') {
+      const preview = parseNewsletterImportColumnPreview(buf, file.name)
+      if (preview.issues.some((i) => i.kind === 'limit')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: preview.issues[0]?.message || 'Bestand te groot',
+          },
+          { status: 400 }
+        )
+      }
+      return NextResponse.json({
+        success: true,
+        step: 'columns',
+        headers: preview.headers,
+        sampleRows: preview.sampleRows,
+        suggestedMapping: preview.suggestedMapping,
+        parseWarnings: preview.issues.map((i) => i.message),
+      })
+    }
+
+    let columnMapping: ImportColumnMapping | null = null
+    const rawMapping = form.get('columnMapping')
+    if (typeof rawMapping === 'string' && rawMapping.trim()) {
+      try {
+        columnMapping = JSON.parse(rawMapping) as ImportColumnMapping
+      } catch {
+        return NextResponse.json(
+          { success: false, error: 'Ongeldige kolomkoppeling (JSON).' },
+          { status: 400 }
+        )
+      }
+    }
+
     const { rows: rawRows, issues: parseBufferIssues } =
       parseNewsletterImportBuffer(buf, file.name)
 
@@ -121,12 +160,20 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (columnMapping) {
+      const headerKeys = collectImportHeaderKeys(rawRows)
+      const v = validateImportColumnMapping(columnMapping, headerKeys)
+      if (!v.ok) {
+        return NextResponse.json({ success: false, error: v.error }, { status: 400 })
+      }
+    }
+
     const {
       parsed,
       invalid,
       duplicateInFile,
       issues: rowIssues,
-    } = buildParsedSubscriberRows(rawRows)
+    } = buildParsedSubscriberRows(rawRows, columnMapping)
 
     const allIssues = [...parseBufferIssues, ...rowIssues]
     if (allIssues.some((i) => i.kind === 'limit')) {

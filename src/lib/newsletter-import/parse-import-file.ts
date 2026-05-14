@@ -23,8 +23,24 @@ export interface ParseFileIssue {
   message: string
 }
 
+/** User-selected CSV/Excel column → subscriber field (exact header labels from the file). */
+export interface ImportColumnMapping {
+  email: string
+  status?: string
+  locale?: string
+  source?: string
+}
+
 export function stripBom(input: string): string {
   return input.replace(/^\uFEFF/, '')
+}
+
+/** Semicolon CSV when the header line has `;` and no `,` (EU Excel export). */
+export function detectCsvDelimiterFromText(text: string): ';' | undefined {
+  const clean = stripBom(text)
+  const headerLine =
+    clean.split(/\r?\n/).find((l) => l.trim().length > 0) || ''
+  return headerLine.includes(';') && !headerLine.includes(',') ? ';' : undefined
 }
 
 /**
@@ -136,28 +152,270 @@ export function rowToParsedInput(
   }
 }
 
+function cellByHeader(rec: Record<string, unknown>, header: string | undefined): string {
+  if (!header || !Object.prototype.hasOwnProperty.call(rec, header)) return ''
+  return String(rec[header] ?? '').trim()
+}
+
+export function rowToParsedInputWithMapping(
+  rec: Record<string, unknown>,
+  row: number,
+  mapping: ImportColumnMapping
+): ParsedSubscriberInput | null {
+  const email = cellByHeader(rec, mapping.email).toLowerCase()
+  if (!email || !EMAIL_REGEX.test(email)) return null
+  const statusRaw = mapping.status ? cellByHeader(rec, mapping.status) : undefined
+  const localeRaw = mapping.locale ? cellByHeader(rec, mapping.locale) : undefined
+  const sourceRaw = mapping.source ? cellByHeader(rec, mapping.source) : undefined
+  return {
+    row,
+    email,
+    status: normalizeStatus(statusRaw),
+    locale: normalizeLocale(localeRaw),
+    source: normalizeSource(sourceRaw),
+  }
+}
+
+export function detectImportHeadersFromRows(
+  rawRows: Record<string, unknown>[]
+): string[] {
+  for (const r of rawRows) {
+    if (!r || typeof r !== 'object') continue
+    const keys = Object.keys(r).filter((k) => stripBom(k).trim() !== '')
+    if (keys.length) return keys
+  }
+  return []
+}
+
+/** Union of keys seen in the first rows (handles sparse trailing columns). */
+export function collectImportHeaderKeys(
+  rawRows: Record<string, unknown>[],
+  maxRows = 100
+): string[] {
+  const seen = new Set<string>()
+  const order: string[] = []
+  for (let i = 0; i < Math.min(rawRows.length, maxRows); i++) {
+    const r = rawRows[i]
+    if (!r || typeof r !== 'object') continue
+    for (const k of Object.keys(r)) {
+      if (!stripBom(k).trim()) continue
+      if (!seen.has(k)) {
+        seen.add(k)
+        order.push(k)
+      }
+    }
+  }
+  return order
+}
+
+export function guessImportColumnMapping(
+  headers: string[],
+  sampleRows: Record<string, unknown>[]
+): ImportColumnMapping {
+  const pickCanonical = (field: 'email' | 'status' | 'locale' | 'source') => {
+    for (const h of headers) {
+      if (canonicalHeader(h) === field) return h
+    }
+    return ''
+  }
+
+  let email = pickCanonical('email')
+  if (!email) {
+    for (const h of headers) {
+      const hit = sampleRows.some((r) =>
+        EMAIL_REGEX.test(String(r[h] ?? '').trim().toLowerCase())
+      )
+      if (hit) {
+        email = h
+        break
+      }
+    }
+  }
+  if (!email && headers.length) email = headers[0]
+
+  return {
+    email,
+    status: pickCanonical('status') || undefined,
+    locale: pickCanonical('locale') || undefined,
+    source: pickCanonical('source') || undefined,
+  }
+}
+
+export function validateImportColumnMapping(
+  mapping: ImportColumnMapping,
+  headers: string[]
+): { ok: true } | { ok: false; error: string } {
+  const set = new Set(headers)
+  if (!mapping.email?.trim()) {
+    return { ok: false, error: 'Kies welke kolom het e-mailadres bevat.' }
+  }
+  if (!set.has(mapping.email)) {
+    return {
+      ok: false,
+      error: `De gekozen e-mailkolom "${mapping.email}" komt niet voor in dit bestand.`,
+    }
+  }
+  const optional: [keyof ImportColumnMapping, string | undefined][] = [
+    ['status', mapping.status],
+    ['locale', mapping.locale],
+    ['source', mapping.source],
+  ]
+  for (const [key, col] of optional) {
+    if (!col?.trim()) continue
+    if (!set.has(col)) {
+      return {
+        ok: false,
+        error: `Kolom "${col}" (${String(key)}) bestaat niet in dit bestand.`,
+      }
+    }
+  }
+  return { ok: true }
+}
+
+function rowToStringRecord(rec: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(rec)) {
+    out[k] = String(v ?? '').trim()
+  }
+  return out
+}
+
+const COLUMN_PREVIEW_MAX_SAMPLE = 15
+
+/**
+ * Lightweight read: first rows only (CSV `preview`; Excel `sheetRows`) for header detection + mapping UI.
+ */
+export function parseNewsletterImportColumnPreview(
+  buffer: Buffer,
+  filename: string
+): {
+  headers: string[]
+  sampleRows: Record<string, string>[]
+  suggestedMapping: ImportColumnMapping
+  issues: ParseFileIssue[]
+} {
+  const empty = (): {
+    headers: string[]
+    sampleRows: Record<string, string>[]
+    suggestedMapping: ImportColumnMapping
+    issues: ParseFileIssue[]
+  } => ({
+    headers: [],
+    sampleRows: [],
+    suggestedMapping: { email: '' },
+    issues: [],
+  })
+
+  if (buffer.length > MAX_IMPORT_FILE_BYTES) {
+    return {
+      ...empty(),
+      issues: [
+        {
+          kind: 'limit',
+          message: `Bestand te groot (max ${Math.round(MAX_IMPORT_FILE_BYTES / 1024 / 1024)} MB).`,
+        },
+      ],
+    }
+  }
+
+  const lower = filename.toLowerCase()
+  const issues: ParseFileIssue[] = []
+
+  if (lower.endsWith('.csv')) {
+    const clean = stripBom(buffer.toString('utf8'))
+    const delimiter = detectCsvDelimiterFromText(clean)
+    const parsed = Papa.parse<Record<string, unknown>>(clean, {
+      header: true,
+      preview: COLUMN_PREVIEW_MAX_SAMPLE + 50,
+      skipEmptyLines: 'greedy',
+      transformHeader: (h) => stripBom(h).trim(),
+      delimiter: delimiter ?? '',
+      dynamicTyping: false,
+    })
+    if (parsed.errors?.length) {
+      for (const e of parsed.errors.slice(0, 3)) {
+        issues.push({ kind: 'parse', message: e.message || 'CSV parsefout' })
+      }
+    }
+    const fields = ((parsed.meta.fields || []) as string[]).filter(
+      (f) => f != null && String(f).trim() !== ''
+    )
+    const data = (parsed.data || []).filter(
+      (r) => r && Object.values(r).some((v) => String(v ?? '').trim() !== '')
+    )
+    const sample = data
+      .slice(0, COLUMN_PREVIEW_MAX_SAMPLE)
+      .map((r) => rowToStringRecord(r as Record<string, unknown>))
+    const suggested = guessImportColumnMapping(fields, data as Record<string, unknown>[])
+    return { headers: fields, sampleRows: sample, suggestedMapping: suggested, issues }
+  }
+
+  if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) {
+    try {
+      const ab = buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength
+      ) as ArrayBuffer
+      const wb = XLSX.read(ab, {
+        type: 'array',
+        cellDates: true,
+        sheetRows: 120,
+      })
+      const name = wb.SheetNames[0]
+      if (!name) {
+        issues.push({
+          kind: 'parse',
+          message: 'Excel-bestand heeft geen werkbladen.',
+        })
+        return { ...empty(), issues }
+      }
+      const sheet = wb.Sheets[name]
+      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+        defval: '',
+        raw: false,
+      })
+      const data = raw.filter(
+        (r) => r && Object.values(r).some((v) => String(v ?? '').trim() !== '')
+      )
+      const headers = detectImportHeadersFromRows(data)
+      const sample = data
+        .slice(0, COLUMN_PREVIEW_MAX_SAMPLE)
+        .map((r) => rowToStringRecord(r))
+      const suggested = guessImportColumnMapping(headers, data)
+      return { headers, sampleRows: sample, suggestedMapping: suggested, issues }
+    } catch (e: any) {
+      issues.push({
+        kind: 'parse',
+        message: e?.message || 'Kon Excel-bestand niet lezen.',
+      })
+      return { ...empty(), issues }
+    }
+  }
+
+  return {
+    ...empty(),
+    issues: [{ kind: 'parse', message: 'Alleen .csv, .xlsx of .xls toegestaan.' }],
+  }
+}
+
 export function parseCsvText(text: string): {
   rows: Record<string, unknown>[]
   issues: ParseFileIssue[]
 } {
   const issues: ParseFileIssue[] = []
   const clean = stripBom(text)
+  const delimiter = detectCsvDelimiterFromText(clean)
 
-  const headerLine =
-    clean.split(/\r?\n/).find((l) => l.trim().length > 0) || ''
-  const useSemicolon =
-    headerLine.includes(';') && !headerLine.includes(',')
-
-  const run = (delimiter: string | undefined) =>
+  const run = (del: string | undefined) =>
     Papa.parse<Record<string, unknown>>(clean, {
       header: true,
       skipEmptyLines: 'greedy',
       transformHeader: (h) => stripBom(h).trim(),
-      delimiter: delimiter ?? '',
+      delimiter: del ?? '',
       dynamicTyping: false,
     })
 
-  let parsed = run(useSemicolon ? ';' : undefined)
+  let parsed = run(delimiter)
   if (parsed.errors?.length) {
     for (const e of parsed.errors.slice(0, 5)) {
       issues.push({
@@ -244,9 +502,12 @@ export interface BuildParsedRowsResult {
 
 /**
  * Turn raw table rows into validated subscriber inputs (dedupe by email, first wins).
+ * With `columnMapping`, only those headers are read (user-defined import).
+ * Without mapping, legacy auto-detection via {@link rowToParsedInput}.
  */
 export function buildParsedSubscriberRows(
-  rawRows: Record<string, unknown>[]
+  rawRows: Record<string, unknown>[],
+  columnMapping?: ImportColumnMapping | null
 ): BuildParsedRowsResult {
   const issues: ParseFileIssue[] = []
   if (rawRows.length > MAX_IMPORT_ROWS) {
@@ -262,13 +523,26 @@ export function buildParsedSubscriberRows(
   const invalid: { row: number; reason: string; value?: string }[] = []
   let duplicateInFile = 0
 
+  const mapRow = columnMapping
+    ? (rec: Record<string, unknown>, row: number) =>
+        rowToParsedInputWithMapping(rec, row, columnMapping)
+    : (rec: Record<string, unknown>, row: number) => rowToParsedInput(rec, row)
+
   rawRows.forEach((rec, idx) => {
     const row = idx + 2
-    const input = rowToParsedInput(rec, row)
+    const input = mapRow(rec, row)
     if (!input) {
-      const hint = detectEmailFromRow(rec)
+      const hint = columnMapping
+        ? cellByHeader(rec, columnMapping.email) || undefined
+        : detectEmailFromRow(rec)
       if (Object.values(rec).some((v) => String(v ?? '').trim())) {
-        invalid.push({ row, reason: 'Geen geldig e-mailadres gevonden.', value: hint || undefined })
+        invalid.push({
+          row,
+          reason: columnMapping
+            ? 'Geen geldig e-mailadres in de gekoppelde e-mailkolom.'
+            : 'Geen geldig e-mailadres gevonden.',
+          value: hint || undefined,
+        })
       }
       return
     }

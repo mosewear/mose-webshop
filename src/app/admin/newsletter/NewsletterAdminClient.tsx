@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe, Sparkles, AlertTriangle, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
+import type { ImportColumnMapping } from '@/lib/newsletter-import/parse-import-file'
 
 interface Subscriber {
   id: string
@@ -48,6 +49,36 @@ type NewsletterImportOkBody = {
   parseWarnings?: string[]
 }
 
+type NewsletterImportColumnsResponse = {
+  success?: boolean
+  error?: string
+  headers?: string[]
+  sampleRows?: Record<string, string>[]
+  suggestedMapping?: ImportColumnMapping
+  parseWarnings?: string[]
+}
+
+function emptyImportColumnMapping(): ImportColumnMapping {
+  return { email: '', status: '', locale: '', source: '' }
+}
+
+function normalizeSuggestedMapping(s?: ImportColumnMapping): ImportColumnMapping {
+  return {
+    email: s?.email?.trim() ?? '',
+    status: s?.status?.trim() ?? '',
+    locale: s?.locale?.trim() ?? '',
+    source: s?.source?.trim() ?? '',
+  }
+}
+
+function mappingToJsonPayload(m: ImportColumnMapping): ImportColumnMapping {
+  const out: ImportColumnMapping = { email: m.email.trim() }
+  if (m.status?.trim()) out.status = m.status.trim()
+  if (m.locale?.trim()) out.locale = m.locale.trim()
+  if (m.source?.trim()) out.source = m.source.trim()
+  return out
+}
+
 export default function NewsletterAdminClient({ initialSubscribers, initialStats }: Props) {
   const router = useRouter()
   const [subscribers, setSubscribers] = useState<Subscriber[]>(initialSubscribers)
@@ -71,7 +102,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [deletingAll, setDeletingAll] = useState(false)
 
   const [importModalOpen, setImportModalOpen] = useState(false)
+  const [importWizardStep, setImportWizardStep] = useState<'file' | 'columns' | 'preview'>('file')
   const [importFile, setImportFile] = useState<File | null>(null)
+  const [importHeaders, setImportHeaders] = useState<string[]>([])
+  const [importSampleRows, setImportSampleRows] = useState<Record<string, string>[]>([])
+  const [importColumnParseWarnings, setImportColumnParseWarnings] = useState<string[]>([])
+  const [importMapping, setImportMapping] = useState<ImportColumnMapping>(() => emptyImportColumnMapping())
+  const [importColumnsLoading, setImportColumnsLoading] = useState(false)
   const [importDryRunResult, setImportDryRunResult] = useState<{
     summary: NewsletterImportSummary
     invalid: NewsletterImportInvalidRow[]
@@ -167,7 +204,12 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   }
 
   const resetImportModal = () => {
+    setImportWizardStep('file')
     setImportFile(null)
+    setImportHeaders([])
+    setImportSampleRows([])
+    setImportColumnParseWarnings([])
+    setImportMapping(emptyImportColumnMapping())
     setImportDryRunResult(null)
     setImportReactivateUnsub(false)
     setImportSendWelcome(false)
@@ -188,11 +230,16 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       toast.error('Kies eerst een bestand.')
       return null
     }
+    if (!importMapping.email?.trim()) {
+      toast.error('Kies welke kolom het e-mailadres bevat.')
+      return null
+    }
     const fd = new FormData()
     fd.append('file', importFile)
     fd.append('dryRun', dryRun ? 'true' : 'false')
     fd.append('reactivateUnsubscribed', importReactivateUnsub ? 'true' : 'false')
     fd.append('sendWelcomeEmail', importSendWelcome ? 'true' : 'false')
+    fd.append('columnMapping', JSON.stringify(mappingToJsonPayload(importMapping)))
 
     const res = await fetch('/api/newsletter/import', {
       method: 'POST',
@@ -214,7 +261,54 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     return data
   }
 
+  const handleLoadImportColumns = async () => {
+    if (!importFile) {
+      toast.error('Kies eerst een bestand.')
+      return
+    }
+    setImportColumnsLoading(true)
+    setImportDryRunResult(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', importFile)
+      fd.append('step', 'columns')
+      const res = await fetch('/api/newsletter/import', { method: 'POST', body: fd })
+      const text = await res.text()
+      let data: NewsletterImportColumnsResponse = {}
+      try {
+        if (text) data = JSON.parse(text) as NewsletterImportColumnsResponse
+      } catch {
+        /* non-json */
+      }
+      if (!res.ok) {
+        throw new Error(
+          (typeof data.error === 'string' && data.error.trim()) ||
+            `Kolommen lezen mislukt (HTTP ${res.status})`
+        )
+      }
+      const headers = data.headers ?? []
+      if (!headers.length) {
+        toast.error('Geen kolomkoppen gevonden. Controleer het bestand (eerste rij = koppen).')
+        return
+      }
+      setImportHeaders(headers)
+      setImportSampleRows(data.sampleRows ?? [])
+      setImportColumnParseWarnings(data.parseWarnings ?? [])
+      setImportMapping(normalizeSuggestedMapping(data.suggestedMapping))
+      setImportWizardStep('columns')
+      toast.success('Kolommen geladen. Koppel ze aan de velden hieronder.')
+    } catch (e: any) {
+      toast.error(e?.message || 'Kolommen lezen mislukt')
+    } finally {
+      setImportColumnsLoading(false)
+    }
+  }
+
   const handleImportPreview = async () => {
+    if (importWizardStep !== 'columns') {
+      toast.error('Lees eerst de kolommen en koppel ze.')
+      return
+    }
     setImportPreviewLoading(true)
     setImportDryRunResult(null)
     try {
@@ -225,6 +319,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
         invalid: data.invalid ?? [],
         parseWarnings: data.parseWarnings ?? [],
       })
+      setImportWizardStep('preview')
       toast.success('Controle klaar. Bekijk de tellingen en bevestig.')
     } catch (e: any) {
       toast.error(e?.message || 'Controle mislukt')
@@ -234,7 +329,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   }
 
   const handleImportExecute = async () => {
-    if (!importDryRunResult) {
+    if (importWizardStep !== 'preview' || !importDryRunResult) {
       toast.error('Doe eerst een controle (droge run).')
       return
     }
@@ -1221,111 +1316,357 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       {/* Import CSV / Excel modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border-4 border-black max-w-lg w-full p-6 my-8">
+          <div className="bg-white border-4 border-black max-w-3xl w-full p-6 my-8">
             <h3 className="text-xl font-bold uppercase mb-2">Import subscribers</h3>
-            <p className="text-sm text-gray-700 mb-4">
-              Ondersteund: <strong>.csv</strong> (komma of puntkomma, UTF-8) en{' '}
-              <strong>.xlsx / .xls</strong> (eerste werkblad). Minimaal een e-mailkolom. Tot ca.{' '}
-              <strong>60.000</strong> datarijen per bestand (max. ~20 MB). Optioneel kolommen:{' '}
-              <code className="text-xs bg-gray-100 px-1">status</code>,{' '}
-              <code className="text-xs bg-gray-100 px-1">locale</code>,{' '}
-              <code className="text-xs bg-gray-100 px-1">source</code> (alleen toegestane waarden, anders{' '}
-              <code className="text-xs bg-gray-100 px-1">admin_import</code>).
-            </p>
-
-            <input
-              type="file"
-              accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-              className="w-full text-sm border-2 border-black p-2 mb-4"
-              onChange={(e) => {
-                setImportDryRunResult(null)
-                setImportFile(e.target.files?.[0] || null)
-              }}
-            />
-
-            <label className="flex items-start gap-2 text-sm mb-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={importReactivateUnsub}
-                onChange={(e) => {
-                  setImportReactivateUnsub(e.target.checked)
-                  setImportDryRunResult(null)
-                }}
-                className="mt-1"
-              />
-              <span>
-                Ook <strong>uitgeschreven</strong> adressen weer actief zetten (alleen gebruiken als je daar
-                toestemming voor hebt).
-              </span>
-            </label>
-
-            <label className="flex items-start gap-2 text-sm mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={importSendWelcome}
-                onChange={(e) => {
-                  setImportSendWelcome(e.target.checked)
-                  setImportDryRunResult(null)
-                }}
-                className="mt-1"
-              />
-              <span>
-                <strong>Welkomstmail</strong> sturen bij elke nieuwe of geheractiveerde inschrijving (standaard uit).
-              </span>
-            </label>
-
-            {importDryRunResult ? (
-              <div className="border-2 border-black p-4 mb-4 text-sm space-y-1 bg-gray-50">
-                <div className="font-bold mb-2">Resultaat controle</div>
-                <div>Nieuwe rijen (insert): {importDryRunResult.summary.inserted ?? 0}</div>
-                <div>Heractiveren: {importDryRunResult.summary.reactivated ?? 0}</div>
-                <div>Al actief (overslaan): {importDryRunResult.summary.skippedActive ?? 0}</div>
-                <div>Uitgeschreven (overslaan): {importDryRunResult.summary.skippedUnsubscribed ?? 0}</div>
-                <div>Dubbel in bestand: {importDryRunResult.summary.duplicateInFile ?? 0}</div>
-                <div>Ongeldige rijen: {importDryRunResult.summary.invalidCount ?? 0}</div>
-                {importDryRunResult.invalid?.length ? (
-                  <ul className="mt-2 max-h-28 overflow-y-auto text-xs list-disc list-inside text-red-700">
-                    {importDryRunResult.invalid.slice(0, 8).map((inv, i) => (
-                      <li key={i}>
-                        Rij {inv.row}: {inv.reason}
-                        {inv.value ? ` (${inv.value})` : ''}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {importDryRunResult.parseWarnings?.length ? (
-                  <p className="text-xs text-amber-800 mt-2">
-                    {importDryRunResult.parseWarnings.join(' ')}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                type="button"
-                onClick={closeImportModal}
-                className="flex-1 px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
-              >
-                Sluiten
-              </button>
-              <button
-                type="button"
-                disabled={!importFile || importPreviewLoading}
-                onClick={handleImportPreview}
-                className="flex-1 px-4 py-3 bg-black text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-800 disabled:opacity-50"
-              >
-                {importPreviewLoading ? 'Bezig...' : 'Controleer'}
-              </button>
-              <button
-                type="button"
-                disabled={!importDryRunResult || importExecuteLoading}
-                onClick={handleImportExecute}
-                className="flex-1 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover disabled:opacity-50"
-              >
-                {importExecuteLoading ? 'Importeren...' : 'Import uitvoeren'}
-              </button>
+            <div className="flex flex-wrap gap-2 text-xs font-bold uppercase mb-4 text-gray-600">
+              <span className={importWizardStep === 'file' ? 'text-black underline' : ''}>1. Bestand</span>
+              <span aria-hidden>→</span>
+              <span className={importWizardStep === 'columns' ? 'text-black underline' : ''}>2. Kolommen</span>
+              <span aria-hidden>→</span>
+              <span className={importWizardStep === 'preview' ? 'text-black underline' : ''}>3. Controle</span>
             </div>
+
+            {importWizardStep === 'file' && (
+              <>
+                <p className="text-sm text-gray-700 mb-4">
+                  Ondersteund: <strong>.csv</strong> (komma of puntkomma, UTF-8) en{' '}
+                  <strong>.xlsx / .xls</strong> (eerste werkblad). Tot ca. <strong>60.000</strong> datarijen (max.{' '}
+                  ~20 MB). Je koppelt daarna elke kolom aan e-mail (verplicht) en optioneel status, taal (locale) en
+                  bron (source).
+                </p>
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+                  className="w-full text-sm border-2 border-black p-2 mb-4"
+                  onChange={(e) => {
+                    setImportDryRunResult(null)
+                    setImportWizardStep('file')
+                    setImportHeaders([])
+                    setImportSampleRows([])
+                    setImportColumnParseWarnings([])
+                    setImportMapping(emptyImportColumnMapping())
+                    setImportFile(e.target.files?.[0] || null)
+                  }}
+                />
+                <label className="flex items-start gap-2 text-sm mb-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importReactivateUnsub}
+                    onChange={(e) => {
+                      setImportReactivateUnsub(e.target.checked)
+                      setImportDryRunResult(null)
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    Ook <strong>uitgeschreven</strong> adressen weer actief zetten (alleen gebruiken als je daar
+                    toestemming voor hebt).
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importSendWelcome}
+                    onChange={(e) => {
+                      setImportSendWelcome(e.target.checked)
+                      setImportDryRunResult(null)
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    <strong>Welkomstmail</strong> sturen bij elke nieuwe of geheractiveerde inschrijving (standaard
+                    uit).
+                  </span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={closeImportModal}
+                    className="flex-1 px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
+                  >
+                    Sluiten
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!importFile || importColumnsLoading}
+                    onClick={() => void handleLoadImportColumns()}
+                    className="flex-1 px-4 py-3 bg-black text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {importColumnsLoading ? 'Bezig...' : 'Volgende: kolommen'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {importWizardStep === 'columns' && (
+              <>
+                <p className="text-sm text-gray-700 mb-3">
+                  Koppel de kolommen uit je bestand aan onze velden. Alleen de gekoppelde kolommen worden gebruikt.
+                </p>
+                {importSampleRows.length > 0 ? (
+                  <div className="mb-4 overflow-x-auto border-2 border-black max-h-40">
+                    <table className="min-w-full text-xs">
+                      <thead>
+                        <tr className="bg-gray-100 border-b-2 border-black">
+                          {importHeaders.map((h) => (
+                            <th key={h} className="text-left px-2 py-1 font-bold whitespace-nowrap">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importSampleRows.slice(0, 6).map((row, ri) => (
+                          <tr key={ri} className="border-b border-gray-200">
+                            {importHeaders.map((h) => (
+                              <td key={h} className="px-2 py-1 whitespace-nowrap max-w-[12rem] truncate">
+                                {row[h] ?? ''}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+                {importColumnParseWarnings.length > 0 ? (
+                  <p className="text-xs text-amber-800 mb-3">{importColumnParseWarnings.join(' ')}</p>
+                ) : null}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label htmlFor="import-map-email" className="block text-xs font-bold uppercase mb-1">
+                      E-mail <span className="text-red-600">*</span>
+                    </label>
+                    <select
+                      id="import-map-email"
+                      className="w-full border-2 border-black px-2 py-2 text-sm"
+                      value={importMapping.email}
+                      onChange={(e) =>
+                        setImportMapping((m) => ({ ...m, email: e.target.value }))
+                      }
+                    >
+                      <option value="" disabled>
+                        — Kies kolom —
+                      </option>
+                      {importHeaders.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="import-map-status" className="block text-xs font-bold uppercase mb-1">
+                      Status (optioneel)
+                    </label>
+                    <select
+                      id="import-map-status"
+                      className="w-full border-2 border-black px-2 py-2 text-sm"
+                      value={importMapping.status ?? ''}
+                      onChange={(e) =>
+                        setImportMapping((m) => ({ ...m, status: e.target.value }))
+                      }
+                    >
+                      <option value="">— Niet importeren —</option>
+                      {importHeaders.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="import-map-locale" className="block text-xs font-bold uppercase mb-1">
+                      Taal / locale (optioneel)
+                    </label>
+                    <select
+                      id="import-map-locale"
+                      className="w-full border-2 border-black px-2 py-2 text-sm"
+                      value={importMapping.locale ?? ''}
+                      onChange={(e) =>
+                        setImportMapping((m) => ({ ...m, locale: e.target.value }))
+                      }
+                    >
+                      <option value="">— Niet importeren —</option>
+                      {importHeaders.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="import-map-source" className="block text-xs font-bold uppercase mb-1">
+                      Source (optioneel)
+                    </label>
+                    <select
+                      id="import-map-source"
+                      className="w-full border-2 border-black px-2 py-2 text-sm"
+                      value={importMapping.source ?? ''}
+                      onChange={(e) =>
+                        setImportMapping((m) => ({ ...m, source: e.target.value }))
+                      }
+                    >
+                      <option value="">— Niet importeren —</option>
+                      {importHeaders.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 mb-4">
+                  Toegestane <code className="bg-gray-100 px-1">source</code>-waarden staan in de database; anders
+                  wordt <code className="bg-gray-100 px-1">admin_import</code> gebruikt.
+                </p>
+                <label className="flex items-start gap-2 text-sm mb-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importReactivateUnsub}
+                    onChange={(e) => {
+                      setImportReactivateUnsub(e.target.checked)
+                      setImportDryRunResult(null)
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    Ook <strong>uitgeschreven</strong> adressen weer actief zetten (alleen met toestemming).
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importSendWelcome}
+                    onChange={(e) => {
+                      setImportSendWelcome(e.target.checked)
+                      setImportDryRunResult(null)
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    <strong>Welkomstmail</strong> sturen bij nieuwe of geheractiveerde inschrijvingen.
+                  </span>
+                </label>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImportWizardStep('file')
+                      setImportHeaders([])
+                      setImportSampleRows([])
+                      setImportColumnParseWarnings([])
+                      setImportMapping(emptyImportColumnMapping())
+                      setImportDryRunResult(null)
+                    }}
+                    className="flex-1 min-w-[8rem] px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
+                  >
+                    Terug
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeImportModal}
+                    className="flex-1 min-w-[8rem] px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
+                  >
+                    Sluiten
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!importMapping.email || importPreviewLoading}
+                    onClick={() => void handleImportPreview()}
+                    className="flex-1 min-w-[8rem] px-4 py-3 bg-black text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {importPreviewLoading ? 'Bezig...' : 'Controleer'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {importWizardStep === 'preview' && importDryRunResult && (
+              <>
+                <div className="border-2 border-black p-4 mb-4 text-sm space-y-1 bg-gray-50">
+                  <div className="font-bold mb-2">Resultaat controle</div>
+                  <div>Nieuwe rijen (insert): {importDryRunResult.summary.inserted ?? 0}</div>
+                  <div>Heractiveren: {importDryRunResult.summary.reactivated ?? 0}</div>
+                  <div>Al actief (overslaan): {importDryRunResult.summary.skippedActive ?? 0}</div>
+                  <div>Uitgeschreven (overslaan): {importDryRunResult.summary.skippedUnsubscribed ?? 0}</div>
+                  <div>Dubbel in bestand: {importDryRunResult.summary.duplicateInFile ?? 0}</div>
+                  <div>Ongeldige rijen: {importDryRunResult.summary.invalidCount ?? 0}</div>
+                  {importDryRunResult.invalid?.length ? (
+                    <ul className="mt-2 max-h-28 overflow-y-auto text-xs list-disc list-inside text-red-700">
+                      {importDryRunResult.invalid.slice(0, 8).map((inv, i) => (
+                        <li key={i}>
+                          Rij {inv.row}: {inv.reason}
+                          {inv.value ? ` (${inv.value})` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {importDryRunResult.parseWarnings?.length ? (
+                    <p className="text-xs text-amber-800 mt-2">
+                      {importDryRunResult.parseWarnings.join(' ')}
+                    </p>
+                  ) : null}
+                </div>
+                <label className="flex items-start gap-2 text-sm mb-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importReactivateUnsub}
+                    onChange={(e) => {
+                      setImportReactivateUnsub(e.target.checked)
+                      setImportDryRunResult(null)
+                      setImportWizardStep('columns')
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    Ook <strong>uitgeschreven</strong> adressen weer actief zetten (alleen met toestemming).
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm mb-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importSendWelcome}
+                    onChange={(e) => {
+                      setImportSendWelcome(e.target.checked)
+                      setImportDryRunResult(null)
+                      setImportWizardStep('columns')
+                    }}
+                    className="mt-1"
+                  />
+                  <span>
+                    <strong>Welkomstmail</strong> sturen bij nieuwe of geheractiveerde inschrijvingen.
+                  </span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImportDryRunResult(null)
+                      setImportWizardStep('columns')
+                    }}
+                    className="flex-1 px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
+                  >
+                    Terug naar kolommen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeImportModal}
+                    className="flex-1 px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
+                  >
+                    Sluiten
+                  </button>
+                  <button
+                    type="button"
+                    disabled={importExecuteLoading}
+                    onClick={() => void handleImportExecute()}
+                    className="flex-1 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover disabled:opacity-50"
+                  >
+                    {importExecuteLoading ? 'Importeren...' : 'Import uitvoeren'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
