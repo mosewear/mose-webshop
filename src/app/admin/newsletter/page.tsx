@@ -17,22 +17,16 @@ export default async function NewsletterAdminPage() {
     redirect('/admin/login')
   }
 
-  // Fetch initial subscribers and stats
-  const { data: subscribers, error } = await supabase
-    .from('newsletter_subscribers')
-    .select('*')
-    .order('subscribed_at', { ascending: false })
-    .limit(100)
-
-  if (error) {
-    console.error('Error fetching subscribers:', error)
-  }
-
-  // Calculate stats
-  const { count: totalCount } = await supabase
+  // Stats only; subscriber list loads client-side via /api/newsletter/subscribers (pagination).
+  const { count: totalCount, error: totalCountError } = await supabase
     .from('newsletter_subscribers')
     .select('*', { count: 'exact', head: true })
 
+  if (totalCountError) {
+    console.error('Error counting subscribers:', totalCountError)
+  }
+
+  // Calculate stats
   const { count: activeCount } = await supabase
     .from('newsletter_subscribers')
     .select('*', { count: 'exact', head: true })
@@ -64,9 +58,9 @@ export default async function NewsletterAdminPage() {
   }
 
   return (
-    <NewsletterAdminClient 
-      initialSubscribers={subscribers || []} 
+    <NewsletterAdminClient
       initialStats={stats}
+      totalSubscriberRows={totalCount ?? 0}
     />
   )
 }

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe, Sparkles, AlertTriangle, Upload } from 'lucide-react'
+import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe, Sparkles, AlertTriangle, Upload, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { ImportColumnMapping } from '@/lib/newsletter-import/parse-import-file'
 
@@ -24,8 +24,9 @@ interface Stats {
 }
 
 interface Props {
-  initialSubscribers: Subscriber[]
   initialStats: Stats
+  /** Totaal aantal rijen in newsletter_subscribers (voor o.a. delete-all bevestiging). */
+  totalSubscriberRows: number
 }
 
 type NewsletterImportSummary = {
@@ -79,15 +80,25 @@ function mappingToJsonPayload(m: ImportColumnMapping): ImportColumnMapping {
   return out
 }
 
-export default function NewsletterAdminClient({ initialSubscribers, initialStats }: Props) {
+export default function NewsletterAdminClient({
+  initialStats,
+  totalSubscriberRows,
+}: Props) {
   const router = useRouter()
-  const [subscribers, setSubscribers] = useState<Subscriber[]>(initialSubscribers)
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([])
+  const [listTotal, setListTotal] = useState(0)
+  const [listLoading, setListLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const listFetchId = useRef(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [listRefresh, setListRefresh] = useState(0)
 
   useEffect(() => {
-    setSubscribers(initialSubscribers)
-  }, [initialSubscribers])
-
-  const [searchQuery, setSearchQuery] = useState('')
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 400)
+    return () => clearTimeout(t)
+  }, [searchQuery])
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unsubscribed'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest')
   const [exporting, setExporting] = useState(false)
@@ -141,35 +152,49 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     setPreviewModalOpen(true)
   }
 
-  // Filtered and sorted subscribers
-  const filteredSubscribers = useMemo(() => {
-    let filtered = subscribers
-
-    // Filter by search
-    if (searchQuery) {
-      filtered = filtered.filter(sub => 
-        sub.email.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    }
-
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(sub => sub.status === statusFilter)
-    }
-
-    // Sort
-    filtered = [...filtered].sort((a, b) => {
-      if (sortBy === 'newest') {
-        return new Date(b.subscribed_at).getTime() - new Date(a.subscribed_at).getTime()
-      } else if (sortBy === 'oldest') {
-        return new Date(a.subscribed_at).getTime() - new Date(b.subscribed_at).getTime()
-      } else { // email
-        return a.email.localeCompare(b.email)
+  const fetchSubscriberPage = useCallback(async () => {
+    const id = ++listFetchId.current
+    setListLoading(true)
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        status: statusFilter,
+        sort: sortBy,
+      })
+      if (debouncedSearch) params.set('q', debouncedSearch)
+      const res = await fetch(`/api/newsletter/subscribers?${params.toString()}`)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.error || 'Kon subscribers niet laden')
       }
-    })
+      if (listFetchId.current !== id) return
+      const rows = data.subscribers || []
+      const total = typeof data.total === 'number' ? data.total : 0
+      const lastPage = Math.max(1, Math.ceil(total / pageSize))
+      setSubscribers(rows)
+      setListTotal(total)
+      if (page > lastPage) {
+        setPage(lastPage)
+      }
+    } catch (e: any) {
+      if (listFetchId.current === id) {
+        toast.error(e?.message || 'Kon subscribers niet laden')
+      }
+    } finally {
+      if (listFetchId.current === id) {
+        setListLoading(false)
+      }
+    }
+  }, [page, pageSize, statusFilter, sortBy, debouncedSearch, listRefresh])
 
-    return filtered
-  }, [subscribers, searchQuery, statusFilter, sortBy])
+  useEffect(() => {
+    void fetchSubscriberPage()
+  }, [fetchSubscriberPage])
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
 
   const handleExport = async () => {
     setExporting(true)
@@ -343,6 +368,8 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       )
       closeImportModal()
       router.refresh()
+      setPage(1)
+      setListRefresh((n) => n + 1)
     } catch (e: any) {
       toast.error(e?.message || 'Import mislukt')
     } finally {
@@ -537,11 +564,9 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
         throw new Error(data.error || 'Failed to delete subscriber')
       }
 
-      // Update local state
-      setSubscribers(prev => prev.filter(sub => sub.id !== subscriberId))
-
       toast.dismiss()
       toast.success('Subscriber verwijderd!')
+      await fetchSubscriberPage()
     } catch (error: any) {
       console.error('Delete subscriber error:', error)
       toast.dismiss()
@@ -552,7 +577,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   }
 
   const handleDeleteAll = async () => {
-    if (!confirm(`⚠️ WAARSCHUWING: Dit verwijdert ALLE ${subscribers.length} subscribers!\n\nWeet je dit ABSOLUUT ZEKER?`)) {
+    if (!confirm(`⚠️ WAARSCHUWING: Dit verwijdert ALLE ${totalSubscriberRows.toLocaleString('nl-NL')} subscribers!\n\nWeet je dit ABSOLUUT ZEKER?`)) {
       return
     }
 
@@ -575,11 +600,11 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
         throw new Error(data.error || 'Failed to delete all subscribers')
       }
 
-      // Update local state
-      setSubscribers([])
-
       toast.dismiss()
       toast.success(`${data.deleted} subscribers verwijderd!`)
+      router.refresh()
+      setPage(1)
+      setListRefresh((n) => n + 1)
     } catch (error: any) {
       console.error('Delete all subscribers error:', error)
       toast.dismiss()
@@ -667,6 +692,8 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     })
   }
 
+  const subscriberListTotalPages = Math.max(1, Math.ceil((listTotal || 0) / pageSize))
+
   return (
     <div className="p-4 md:p-8">
       {/* Header */}
@@ -681,7 +708,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
           <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleDeleteAll}
-              disabled={deletingAll || subscribers.length === 0}
+              disabled={deletingAll || totalSubscriberRows === 0}
               className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
             >
               <Trash2 className="w-4 h-4" />
@@ -830,7 +857,10 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               {/* Status Filter */}
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as 'all' | 'active' | 'unsubscribed')
+                  setPage(1)
+                }}
                 className="px-4 py-3 border-2 border-black bg-white md:w-48 font-semibold"
               >
                 <option value="all">Alle statussen</option>
@@ -841,23 +871,64 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
               {/* Sort */}
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => {
+                  setSortBy(e.target.value as 'newest' | 'oldest' | 'email')
+                  setPage(1)
+                }}
                 className="px-4 py-3 border-2 border-black bg-white md:w-48 font-semibold"
               >
                 <option value="newest">Nieuwste eerst</option>
                 <option value="oldest">Oudste eerst</option>
                 <option value="email">Email A-Z</option>
               </select>
+
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value))
+                  setPage(1)
+                }}
+                className="px-4 py-3 border-2 border-black bg-white md:w-44 font-semibold"
+              >
+                <option value={25}>25 per pagina</option>
+                <option value={50}>50 per pagina</option>
+                <option value={100}>100 per pagina</option>
+              </select>
             </div>
           </div>
 
           {/* Results count */}
-          <div className="mb-4 text-sm text-gray-600">
-            {filteredSubscribers.length} {filteredSubscribers.length === 1 ? 'resultaat' : 'resultaten'}
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
+            <span>
+              {listLoading ? (
+                'Laden…'
+              ) : (
+                <>
+                  <strong>{listTotal.toLocaleString('nl-NL')}</strong>{' '}
+                  {listTotal === 1 ? 'adres' : 'adressen'} gevonden
+                  {listTotal > 0 ? (
+                    <>
+                      {' '}
+                      · pagina <strong>{page}</strong> van <strong>{subscriberListTotalPages}</strong>
+                      {searchQuery !== debouncedSearch ? (
+                        <span className="text-amber-700"> (zoeken…)</span>
+                      ) : null}
+                    </>
+                  ) : null}
+                </>
+              )}
+            </span>
           </div>
 
-          {/* Subscribers List - Desktop Table */}
-          <div className="hidden md:block bg-white border-2 border-black overflow-hidden">
+          <div className="relative">
+            {listLoading ? (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 border-2 border-black pointer-events-none">
+                <span className="text-sm font-bold uppercase tracking-wider text-gray-700">
+                  Laden…
+                </span>
+              </div>
+            ) : null}
+            <div className="hidden md:block bg-white border-2 border-black overflow-hidden">
             <table className="w-full">
               <thead className="bg-black text-white">
                 <tr>
@@ -870,14 +941,14 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                 </tr>
               </thead>
               <tbody>
-                {filteredSubscribers.length === 0 ? (
+                {subscribers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                       Geen subscribers gevonden
                     </td>
                   </tr>
                 ) : (
-                  filteredSubscribers.map((sub, index) => (
+                  subscribers.map((sub, index) => (
                     <tr 
                       key={sub.id}
                       className={`border-b-2 border-gray-200 hover:bg-gray-50 transition-colors ${
@@ -914,16 +985,16 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
 
           {/* Subscribers List - Mobile Cards */}
           <div className="md:hidden space-y-3">
-            {filteredSubscribers.length === 0 ? (
+            {subscribers.length === 0 ? (
               <div className="bg-white border-2 border-black p-8 text-center text-gray-500">
                 Geen subscribers gevonden
               </div>
             ) : (
-              filteredSubscribers.map((sub) => (
+              subscribers.map((sub) => (
                 <div key={sub.id} className="bg-white border-2 border-black p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="font-semibold text-sm break-all pr-2 flex-1">
@@ -957,6 +1028,33 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                 </div>
               ))
             )}
+          </div>
+
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t-2 border-gray-200 pt-4">
+            <p className="text-sm text-gray-600">
+              Pagina <strong>{page}</strong> van <strong>{subscriberListTotalPages}</strong>
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1 || listLoading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="inline-flex items-center gap-1 px-4 py-2 border-2 border-black bg-white font-bold uppercase text-sm tracking-wider hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Vorige
+              </button>
+              <button
+                type="button"
+                disabled={page >= subscriberListTotalPages || listLoading}
+                onClick={() => setPage((p) => Math.min(subscriberListTotalPages, p + 1))}
+                className="inline-flex items-center gap-1 px-4 py-2 border-2 border-black bg-white font-bold uppercase text-sm tracking-wider hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Volgende
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
           </div>
         </>
       )}
