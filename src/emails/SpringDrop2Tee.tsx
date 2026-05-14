@@ -432,7 +432,6 @@ export default function SpringDrop2TeeEmail({
       </EmailModule>
 
       <EmailFooter
-        springCampaignFooter
         siteUrl={siteUrl}
         contactEmail={contactEmail}
         contactPhone={contactPhone}
