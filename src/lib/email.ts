@@ -1686,9 +1686,10 @@ export async function sendGiftCardDeliveryEmail(props: {
 // SPRING DROP CAMPAIGN 2026
 // =====================================================
 //
-// Driedelige Nederlandse campagne richting de ~100 abonnees die zich in
-// februari opgaven via early-access of newsletter, maar nog niets gekocht
-// hebben. Alles draait om assets en kortingen die al in de DB zitten:
+// Driedelige Nederlandse campagne richting nieuwsbrief-abonnees. De admin
+// send-route mailt in chunks (RPC-wachtrij + parallelle Resend-calls) zodat
+// grote lijsten binnen serverless-limieten blijven. Alles draait om assets
+// en kortingen die al in de DB zitten:
 //   - lente-sale prijzen op Hoodie / Sweater / Watch (al actief)
 //   - staffelkorting op de Tee (2+, 3+ — al actief)
 //   - persoonlijke WELCOME10-XXXXXX promo codes (al uitgegeven)

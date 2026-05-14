@@ -503,23 +503,60 @@ export default function NewsletterAdminClient({
     const { mail } = confirmSpringDrop
     setSendingSpringDrop(mail)
     setConfirmSpringDrop(null)
-    toast.loading(`Spring Drop mail ${mail} wordt verstuurd...`)
+    let chunk = 0
+    let totalSent = 0
+    let totalFailed = 0
+    const allErrors: string[] = []
+    const TOAST_ID = 'spring-drop-blast'
     try {
-      const response = await fetch('/api/admin/campaigns/spring-drop/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mail }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Send failed')
-      toast.dismiss()
-      const msg = `Verstuurd: ${data.sent}/${data.total}${data.failed ? ` (${data.failed} gefaald)` : ''}`
-      if (data.failed > 0) toast.error(msg)
-      else toast.success(msg)
-      // Refresh dry-run so the counter updates after dedup-write
+      while (true) {
+        if (chunk >= 400) {
+          throw new Error(
+            'Gestopt na 400 chunks (veiligheid). Reeds verstuurde adressen worden bij een nieuwe run overgeslagen; controleer de dry-run teller.'
+          )
+        }
+        chunk += 1
+        toast.loading(
+          `Spring Drop mail ${mail}: bezig… chunk ${chunk} (${totalSent.toLocaleString('nl-NL')} verstuurd)`,
+          { id: TOAST_ID }
+        )
+        const response = await fetch('/api/admin/campaigns/spring-drop/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mail }),
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(
+            data.details ? `${data.error} (${data.details})` : data.error || 'Send failed'
+          )
+        }
+        const sentThis = Number(data.chunkSent ?? data.sent ?? 0)
+        const failThis = Number(data.chunkFailed ?? data.failed ?? 0)
+        totalSent += sentThis
+        totalFailed += failThis
+        if (Array.isArray(data.errors)) {
+          for (const e of data.errors) {
+            if (e && allErrors.length < 25) allErrors.push(String(e))
+          }
+        }
+        if (data.morePending !== true) break
+      }
+      toast.dismiss(TOAST_ID)
+      const msg = `Verstuurd: ${totalSent.toLocaleString('nl-NL')}${totalFailed ? ` (${totalFailed.toLocaleString('nl-NL')} gefaald)` : ''}`
+      if (totalFailed > 0) {
+        toast.error(
+          allErrors.length
+            ? `${msg} — ${allErrors[0]}`
+            : msg,
+          { duration: 12000 }
+        )
+      } else {
+        toast.success(msg)
+      }
       await refreshSpringDropDryRun(mail)
     } catch (err: any) {
-      toast.dismiss()
+      toast.dismiss(TOAST_ID)
       toast.error(err?.message || 'Kon Spring Drop niet versturen')
     } finally {
       setSendingSpringDrop(null)
@@ -1247,7 +1284,8 @@ export default function NewsletterAdminClient({
               <div>
                 <h3 className="font-bold text-lg mb-2">Spring Drop 2026 — 3-mail campagne</h3>
                 <p className="text-sm text-gray-700 mb-3">
-                  Driedelige NL-campagne naar de ~100 actieve abonnees. Werkt met de bestaande
+                  Driedelige NL-campagne naar alle actieve nieuwsbrief-abonnees. Verzenden gebeurt in batches
+                  (meerdere server-requests); laat dit tabblad open tot de toast klaar is. Werkt met de bestaande
                   lente-sale prijzen, Tee-staffelkorting en persoonlijke <code className="bg-white px-1 border">WELCOME10-XXXXXX</code> codes.
                   Subs zonder persoonlijke code krijgen automatisch <code className="bg-white px-1 border">SPRING10</code>.
                 </p>

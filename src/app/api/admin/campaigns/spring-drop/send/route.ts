@@ -26,10 +26,12 @@ export const maxDuration = 300
 // dryRun=true        → builds payload + counts recipients, sends NOTHING
 // testEmail=<addr>   → sends ONE mail to <addr> (subscriber data lookup
 //                      first; falls back to a test envelope if unknown)
-// neither            → sends to all active subscribers, batched 25,
-//                      with dedup against `order_emails` audit-log so
-//                      the same subscriber is never double-mailed for
-//                      the same template_key.
+// neither            → sends in server-side CHUNKs (see CHUNK_LIMIT): each
+//                      HTTP request mails up to CHUNK_LIMIT subscribers who
+//                      are not yet in `order_emails` for this template_key.
+//                      The admin UI loops until `morePending` is false, so
+//                      large lists (10k+) stay under Vercel maxDuration and
+//                      Resend throughput is controlled via SEND_CONCURRENCY.
 // =====================================================
 
 const TEMPLATE_KEYS = {
@@ -43,8 +45,10 @@ const PROMO_EXPIRY_LABEL_NL = '15 juni 2026'
 const PROMO_EXPIRY_LABEL_EN = '15 June 2026'
 const SHIPPED_ORDERS = 33 // expliciet, want we willen niet per send een query doen
 
-const BATCH_SIZE = 25
-const BATCH_PAUSE_MS = 1000
+/** Max recipients processed per HTTP invocation (stay under maxDuration). */
+const CHUNK_LIMIT = 220
+/** Parallel Resend calls within a chunk (paid Resend: higher throughput). */
+const SEND_CONCURRENCY = 6
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -67,6 +71,30 @@ function utm(mailNumber: 1 | 2 | 3, content?: string) {
 function appendUtm(baseUrl: string, mailNumber: 1 | 2 | 3, content?: string) {
   const sep = baseUrl.includes('?') ? '&' : '?'
   return `${baseUrl}${sep}${utm(mailNumber, content)}`
+}
+
+/**
+ * Parallel map with a fixed concurrency (order of completion may differ;
+ * results align with original `items` order).
+ */
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  if (items.length === 0) return []
+  const results: R[] = new Array(items.length)
+  const pending = items.map((item, index) => ({ item, index }))
+  const workers = Math.min(Math.max(1, concurrency), items.length)
+  async function worker() {
+    while (pending.length > 0) {
+      const job = pending.shift()
+      if (!job) break
+      results[job.index] = await fn(job.item)
+    }
+  }
+  await Promise.all(Array.from({ length: workers }, () => worker()))
+  return results
 }
 
 // Reusable lookbook + product image URLs. We hardcode them here on purpose:
@@ -432,7 +460,8 @@ export async function POST(req: NextRequest) {
 
     const teeColors = mail === 2 ? await loadTeeColors(sb) : []
 
-    // Determine recipients
+    // Determine recipients (full list only for dry-run / promo stats; real
+    // blasts pull a chunk per request via RPC to stay within maxDuration).
     let subscribers: SubscriberRow[] = []
     if (testEmail) {
       const { data: existing } = await sb
@@ -452,7 +481,7 @@ export async function POST(req: NextRequest) {
         // Synthetic subscriber so we can still render+send to a test addr
         subscribers = [{ id: `test-${Date.now()}`, email: testEmail, locale: 'nl' }]
       }
-    } else {
+    } else if (dryRun) {
       const all = await loadActiveSubscribers(sb)
       const alreadySent = await loadAlreadySentEmails(sb, templateKey)
       subscribers = all.filter((s) => !alreadySent.has(s.email.toLowerCase()))
@@ -502,70 +531,114 @@ export async function POST(req: NextRequest) {
     const mail1Payload = mail === 1 ? buildMail1Payload({ products, sweaterStock }) : null
     const mail2Payload = mail === 2 ? buildMail2Payload(teeColors) : null
 
+    const dispatchOne = async (
+      subscriber: SubscriberRow
+    ): Promise<{ ok: boolean; detail?: string }> => {
+      const locale = subscriber.locale === 'en' ? 'en' : 'nl'
+      try {
+        let result: any = null
+
+        if (mail === 1 && mail1Payload) {
+          result = await sendSpringDrop1LaunchEmail({
+            email: subscriber.email,
+            locale,
+            ...mail1Payload,
+          })
+        } else if (mail === 2 && mail2Payload) {
+          result = await sendSpringDrop2TeeEmail({
+            email: subscriber.email,
+            locale,
+            ...mail2Payload,
+          })
+        } else if (mail === 3) {
+          const personal = personalCodes.get(subscriber.id)
+          const code = personal?.code || FALLBACK_PROMO_CODE
+          const expiryLabel =
+            locale === 'en' ? PROMO_EXPIRY_LABEL_EN : PROMO_EXPIRY_LABEL_NL
+          result = await sendSpringDrop3FoundersEmail({
+            email: subscriber.email,
+            locale,
+            promoCode: code,
+            promoExpiryLabel: expiryLabel,
+            ctaUrl: appendUtm(
+              `${siteUrl()}/${locale}/product/mose-tee`,
+              3,
+              'tee-cta'
+            ),
+            shippedOrders: SHIPPED_ORDERS,
+          })
+        }
+
+        if (result?.success) return { ok: true }
+        const errMsg =
+          (result?.error as any)?.message ||
+          JSON.stringify(result?.error || 'Unknown error')
+        return { ok: false, detail: `${subscriber.email}: ${errMsg}` }
+      } catch (err: any) {
+        console.error('[spring-drop] send failed for', subscriber.email, err)
+        return {
+          ok: false,
+          detail: `${subscriber.email}: ${err?.message || 'Unknown error'}`,
+        }
+      }
+    }
+
+    // Test send: single (or synthetic) subscriber, one request.
+    if (testEmail) {
+      const outcomes = await mapPool(subscribers, 1, dispatchOne)
+      let sentCount = 0
+      let failCount = 0
+      const errors: string[] = []
+      for (const o of outcomes) {
+        if (o.ok) sentCount++
+        else {
+          failCount++
+          if (o.detail) errors.push(o.detail)
+        }
+      }
+      return NextResponse.json({
+        success: true,
+        mail,
+        templateKey,
+        total: subscribers.length,
+        sent: sentCount,
+        failed: failCount,
+        errors: errors.slice(0, 20),
+      })
+    }
+
+    // Full blast: one chunk per HTTP request (admin UI loops until morePending=false).
+    const { data: pendingRows, error: rpcErr } = await sb.rpc(
+      'newsletter_recipients_not_yet_mailed',
+      { p_template_key: templateKey, p_limit: CHUNK_LIMIT }
+    )
+    if (rpcErr) {
+      console.error('[spring-drop] rpc newsletter_recipients_not_yet_mailed', rpcErr)
+      return NextResponse.json(
+        {
+          error:
+            'Kon wachtrij niet ophalen. Voer de Supabase-migratie uit (functie newsletter_recipients_not_yet_mailed) en probeer opnieuw.',
+          details: rpcErr.message,
+        },
+        { status: 503 }
+      )
+    }
+
+    const chunk: SubscriberRow[] = (pendingRows || []).map((r: any) => ({
+      id: r.id,
+      email: r.email,
+      locale: r.locale,
+    }))
+
+    const outcomes = await mapPool(chunk, SEND_CONCURRENCY, dispatchOne)
     let sentCount = 0
     let failCount = 0
     const errors: string[] = []
-
-    for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-      const batch = subscribers.slice(i, i + BATCH_SIZE)
-
-      // Send sequentially in a batch to avoid hammering Resend; small
-      // population so this is fine.
-      for (const subscriber of batch) {
-        const locale = subscriber.locale === 'en' ? 'en' : 'nl'
-        try {
-          let result: any = null
-
-          if (mail === 1 && mail1Payload) {
-            result = await sendSpringDrop1LaunchEmail({
-              email: subscriber.email,
-              locale,
-              ...mail1Payload,
-            })
-          } else if (mail === 2 && mail2Payload) {
-            result = await sendSpringDrop2TeeEmail({
-              email: subscriber.email,
-              locale,
-              ...mail2Payload,
-            })
-          } else if (mail === 3) {
-            const personal = personalCodes.get(subscriber.id)
-            const code = personal?.code || FALLBACK_PROMO_CODE
-            const expiryLabel =
-              locale === 'en' ? PROMO_EXPIRY_LABEL_EN : PROMO_EXPIRY_LABEL_NL
-            result = await sendSpringDrop3FoundersEmail({
-              email: subscriber.email,
-              locale,
-              promoCode: code,
-              promoExpiryLabel: expiryLabel,
-              ctaUrl: appendUtm(
-                `${siteUrl()}/${locale}/product/mose-tee`,
-                3,
-                'tee-cta'
-              ),
-              shippedOrders: SHIPPED_ORDERS,
-            })
-          }
-
-          if (result?.success) {
-            sentCount++
-          } else {
-            failCount++
-            const errMsg =
-              (result?.error as any)?.message ||
-              JSON.stringify(result?.error || 'Unknown error')
-            errors.push(`${subscriber.email}: ${errMsg}`)
-          }
-        } catch (err: any) {
-          failCount++
-          errors.push(`${subscriber.email}: ${err?.message || 'Unknown error'}`)
-          console.error('[spring-drop] send failed for', subscriber.email, err)
-        }
-      }
-
-      // Pause between batches (skip after last batch)
-      if (i + BATCH_SIZE < subscribers.length) {
-        await new Promise((r) => setTimeout(r, BATCH_PAUSE_MS))
+    for (const o of outcomes) {
+      if (o.ok) sentCount++
+      else {
+        failCount++
+        if (o.detail) errors.push(o.detail)
       }
     }
 
@@ -573,9 +646,10 @@ export async function POST(req: NextRequest) {
       success: true,
       mail,
       templateKey,
-      total: subscribers.length,
-      sent: sentCount,
-      failed: failCount,
+      chunkSent: sentCount,
+      chunkFailed: failCount,
+      chunkSize: chunk.length,
+      morePending: chunk.length === CHUNK_LIMIT,
       errors: errors.slice(0, 20),
     })
   } catch (err: any) {

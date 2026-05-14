@@ -881,6 +881,17 @@ export type Database = {
         }
         Returns: Json
       }
+      newsletter_recipients_not_yet_mailed: {
+        Args: {
+          p_template_key: string
+          p_limit: number
+        }
+        Returns: {
+          id: string
+          email: string
+          locale: string
+        }[]
+      }
     }
     Enums: {
       admin_role: "admin" | "manager" | "viewer"
