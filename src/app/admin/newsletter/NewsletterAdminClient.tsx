@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe, Sparkles, AlertTriangle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Users, TrendingUp, UserX, Download, Search, Mail, Send, Calendar, Eye, Trash2, Settings, Globe, Sparkles, AlertTriangle, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Subscriber {
@@ -27,7 +28,13 @@ interface Props {
 }
 
 export default function NewsletterAdminClient({ initialSubscribers, initialStats }: Props) {
+  const router = useRouter()
   const [subscribers, setSubscribers] = useState<Subscriber[]>(initialSubscribers)
+
+  useEffect(() => {
+    setSubscribers(initialSubscribers)
+  }, [initialSubscribers])
+
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unsubscribed'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'email'>('newest')
@@ -41,6 +48,18 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [springDropDryRun, setSpringDropDryRun] = useState<Record<number, { recipients: number; promoCodeCoverage?: any } | null>>({ 1: null, 2: null, 3: null })
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingAll, setDeletingAll] = useState(false)
+
+  const [importModalOpen, setImportModalOpen] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importDryRunResult, setImportDryRunResult] = useState<{
+    summary: Record<string, number>
+    invalid: { row: number; reason: string; value?: string }[]
+    parseWarnings: string[]
+  } | null>(null)
+  const [importPreviewLoading, setImportPreviewLoading] = useState(false)
+  const [importExecuteLoading, setImportExecuteLoading] = useState(false)
+  const [importReactivateUnsub, setImportReactivateUnsub] = useState(false)
+  const [importSendWelcome, setImportSendWelcome] = useState(false)
 
   // Popup settings state
   const [popupEnabled, setPopupEnabled] = useState(false)
@@ -123,6 +142,84 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       toast.error('Kon CSV niet exporteren')
     } finally {
       setExporting(false)
+    }
+  }
+
+  const resetImportModal = () => {
+    setImportFile(null)
+    setImportDryRunResult(null)
+    setImportReactivateUnsub(false)
+    setImportSendWelcome(false)
+  }
+
+  const openImportModal = () => {
+    resetImportModal()
+    setImportModalOpen(true)
+  }
+
+  const closeImportModal = () => {
+    setImportModalOpen(false)
+    resetImportModal()
+  }
+
+  const postImportForm = async (dryRun: boolean) => {
+    if (!importFile) {
+      toast.error('Kies eerst een bestand.')
+      return null
+    }
+    const fd = new FormData()
+    fd.append('file', importFile)
+    fd.append('dryRun', dryRun ? 'true' : 'false')
+    fd.append('reactivateUnsubscribed', importReactivateUnsub ? 'true' : 'false')
+    fd.append('sendWelcomeEmail', importSendWelcome ? 'true' : 'false')
+
+    const res = await fetch('/api/newsletter/import', {
+      method: 'POST',
+      body: fd,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.error || 'Import mislukt')
+    }
+    return data
+  }
+
+  const handleImportPreview = async () => {
+    setImportPreviewLoading(true)
+    setImportDryRunResult(null)
+    try {
+      const data = await postImportForm(true)
+      setImportDryRunResult({
+        summary: data.summary || {},
+        invalid: data.invalid || [],
+        parseWarnings: data.parseWarnings || [],
+      })
+      toast.success('Controle klaar. Bekijk de tellingen en bevestig.')
+    } catch (e: any) {
+      toast.error(e?.message || 'Controle mislukt')
+    } finally {
+      setImportPreviewLoading(false)
+    }
+  }
+
+  const handleImportExecute = async () => {
+    if (!importDryRunResult) {
+      toast.error('Doe eerst een controle (droge run).')
+      return
+    }
+    setImportExecuteLoading(true)
+    try {
+      const data = await postImportForm(false)
+      const s = data.summary || {}
+      toast.success(
+        `Klaar: ${s.inserted ?? 0} nieuw, ${s.reactivated ?? 0} heractiveerd, ${s.welcomeEmailsSent ?? 0} welkomstmails.`
+      )
+      closeImportModal()
+      router.refresh()
+    } catch (e: any) {
+      toast.error(e?.message || 'Import mislukt')
+    } finally {
+      setImportExecuteLoading(false)
     }
   }
 
@@ -462,6 +559,13 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
             >
               <Trash2 className="w-4 h-4" />
               Verwijder Alles
+            </button>
+            <button
+              onClick={openImportModal}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors whitespace-nowrap"
+            >
+              <Upload className="w-5 h-5" />
+              Import CSV / Excel
             </button>
             <button
               onClick={handleExport}
@@ -1076,6 +1180,117 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
                 className="flex-1 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
               >
                 Ja, versturen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import CSV / Excel modal */}
+      {importModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border-4 border-black max-w-lg w-full p-6 my-8">
+            <h3 className="text-xl font-bold uppercase mb-2">Import subscribers</h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Ondersteund: <strong>.csv</strong> (komma of puntkomma, UTF-8) en{' '}
+              <strong>.xlsx / .xls</strong> (eerste werkblad). Minimaal een e-mailkolom. Optioneel:{' '}
+              <code className="text-xs bg-gray-100 px-1">status</code>,{' '}
+              <code className="text-xs bg-gray-100 px-1">locale</code>,{' '}
+              <code className="text-xs bg-gray-100 px-1">source</code> (alleen toegestane waarden, anders{' '}
+              <code className="text-xs bg-gray-100 px-1">admin_import</code>).
+            </p>
+
+            <input
+              type="file"
+              accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+              className="w-full text-sm border-2 border-black p-2 mb-4"
+              onChange={(e) => {
+                setImportDryRunResult(null)
+                setImportFile(e.target.files?.[0] || null)
+              }}
+            />
+
+            <label className="flex items-start gap-2 text-sm mb-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={importReactivateUnsub}
+                onChange={(e) => {
+                  setImportReactivateUnsub(e.target.checked)
+                  setImportDryRunResult(null)
+                }}
+                className="mt-1"
+              />
+              <span>
+                Ook <strong>uitgeschreven</strong> adressen weer actief zetten (alleen gebruiken als je daar
+                toestemming voor hebt).
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={importSendWelcome}
+                onChange={(e) => {
+                  setImportSendWelcome(e.target.checked)
+                  setImportDryRunResult(null)
+                }}
+                className="mt-1"
+              />
+              <span>
+                <strong>Welkomstmail</strong> sturen bij elke nieuwe of geheractiveerde inschrijving (standaard uit).
+              </span>
+            </label>
+
+            {importDryRunResult ? (
+              <div className="border-2 border-black p-4 mb-4 text-sm space-y-1 bg-gray-50">
+                <div className="font-bold mb-2">Resultaat controle</div>
+                <div>Nieuwe rijen (insert): {importDryRunResult.summary.inserted ?? 0}</div>
+                <div>Heractiveren: {importDryRunResult.summary.reactivated ?? 0}</div>
+                <div>Al actief (overslaan): {importDryRunResult.summary.skippedActive ?? 0}</div>
+                <div>Uitgeschreven (overslaan): {importDryRunResult.summary.skippedUnsubscribed ?? 0}</div>
+                <div>Dubbel in bestand: {importDryRunResult.summary.duplicateInFile ?? 0}</div>
+                <div>Ongeldige rijen: {importDryRunResult.summary.invalidCount ?? 0}</div>
+                {importDryRunResult.invalid?.length ? (
+                  <ul className="mt-2 max-h-28 overflow-y-auto text-xs list-disc list-inside text-red-700">
+                    {importDryRunResult.invalid.slice(0, 8).map((inv, i) => (
+                      <li key={i}>
+                        Rij {inv.row}: {inv.reason}
+                        {inv.value ? ` (${inv.value})` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {importDryRunResult.parseWarnings?.length ? (
+                  <p className="text-xs text-amber-800 mt-2">
+                    {importDryRunResult.parseWarnings.join(' ')}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={closeImportModal}
+                className="flex-1 px-4 py-3 bg-gray-200 text-black font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-300"
+              >
+                Sluiten
+              </button>
+              <button
+                type="button"
+                disabled={!importFile || importPreviewLoading}
+                onClick={handleImportPreview}
+                className="flex-1 px-4 py-3 bg-black text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-gray-800 disabled:opacity-50"
+              >
+                {importPreviewLoading ? 'Bezig...' : 'Controleer'}
+              </button>
+              <button
+                type="button"
+                disabled={!importDryRunResult || importExecuteLoading}
+                onClick={handleImportExecute}
+                className="flex-1 px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover disabled:opacity-50"
+              >
+                {importExecuteLoading ? 'Importeren...' : 'Import uitvoeren'}
               </button>
             </div>
           </div>
