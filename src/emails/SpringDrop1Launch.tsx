@@ -188,8 +188,8 @@ export default function SpringDrop1LaunchEmail({
   const gridProducts = products.slice(0, 3)
   const isNl = locale !== 'en'
   const preview = isNl
-    ? 'Irma & Rick uit Groningen: lente-items, sale op hoodie en sweater, staffel op de Tee.'
-    : 'Irma & Rick from Groningen: spring items, sale on hoodie and sweater, bundle pricing on the Tee.'
+    ? 'Minder maar beter: basics uit Groningen. Lente-sale hoodie & sweater, staffel op de Tee.'
+    : 'Less but better: basics from Groningen. Spring sale on hoodie & sweater, bundle pricing on the Tee.'
 
   const headline = isNl ? 'HET IS LENTE.' : 'IT IS SPRING.'
   const headlineSub = isNl ? 'TIJD VOOR JE MOSE.' : 'TIME FOR YOUR MOSE.'
@@ -197,17 +197,23 @@ export default function SpringDrop1LaunchEmail({
   const introParagraphs = isNl
     ? [
         'Misschien ken je ons al een beetje, of misschien is dit je eerste mail van ons. In beide gevallen: leuk dat je meeleest!',
-        'Wij zijn Irma en Rick, de oprichters van MOSE. We wonen in Groningen met onze katten Bob en Marley en onze daggoe Guus. MOSE is vernoemd naar onze overleden poes Mosie, oftewel Moos. 🐱',
-        'We zijn begonnen met MOSE omdat fast fashion ons mateloos irriteerde. T-shirts die na een paar keer wassen hun vorm verliezen, daar werden we gek van. Daarom maken we kleding die lang meegaat. Eerlijk, lokaal en gemaakt in een atelier in Groningen.',
+        'Wij zijn Irma en Rick, de oprichters van MOSE. We wonen in Groningen met onze katten Bob en Marley en onze (verwende) hond Guus. MOSE is vernoemd naar onze overleden kat Mosie, oftewel Moos. 🐱',
+        'We zijn begonnen met MOSE omdat fast fashion ons mateloos irriteerde. T-shirts die na een paar keer wassen hun vorm verliezen, daar werden we gek van. Maar ook het idee dat je vaak niet weet waar kleding vandaan komt, door wie het gemaakt is en onder welke omstandigheden. Er is al meer dan genoeg kleding op de wereld. Wij willen juist bijdragen aan minder, maar beter.',
+        'Daarom kiezen we bewust voor een kleine collectie met sterke basics van hoge kwaliteit. Geen tientallen kleuren, drops of trends die elkaar in hoog tempo opvolgen, maar kleding die je vaak draagt en lang mooi blijft.',
+        'Alles wordt eerlijk en lokaal geproduceerd in een atelier in Groningen. Geen massaproductie aan de andere kant van de wereld, maar transparantie, kwaliteit en aandacht voor het maakproces.',
         'Hieronder vind je onze 3 items voor het voorjaar: de Tee, de Hoodie en de Sweater. De hoodie en sweater staan nu in de lente-sale. Op de Tee krijg je automatisch staffelkorting in je winkelmand. Des te meer je toevoegt, des te hoger de korting. Nice!',
         'We rekenen nooit verzendkosten, en als het niet past mag je binnen 30 dagen ruilen of retourneren.',
+        'Natuurlijk dromen we ervan om MOSE verder uit te breiden met meer items en nieuwe ideeën. Maar dat kunnen we alleen samen met jullie. Elke bestelling helpt ons om stap voor stap verder te bouwen aan een eerlijker kledingmerk.',
       ]
     : [
-        'Maybe you already know us a little, or maybe this is your first email from us. Either way: thanks for reading along!',
-        'We are Irma and Rick, the founders of MOSE. We live in Groningen with our cats Bob and Marley and our dog Guus. MOSE is named after our late cat Mosie, or Moos. 🐱',
-        'We started MOSE because fast fashion drove us up the wall. T-shirts that lost their shape after a few washes — that drove us crazy. So we make clothes that last. Honest, local, made in a studio in Groningen.',
+        'Maybe you already know us a little, or maybe this is your first email from us. Either way: glad you are reading along!',
+        'We are Irma and Rick, the founders of MOSE. We live in Groningen with our cats Bob and Marley and our (spoilt) dog Guus. MOSE is named after our late cat Mosie, or Moos. 🐱',
+        'We started MOSE because fast fashion drove us mad. T-shirts that lost their shape after a few washes — that drove us crazy. So did not knowing where clothes come from, who made them, and under what conditions. There is already more than enough clothing in the world. We want to contribute to less, but better.',
+        'That is why we deliberately choose a small collection of strong, high-quality basics. No dozens of colours, drops or trends that replace each other at breakneck speed, but clothes you wear often that stay beautiful for a long time.',
+        'Everything is produced fairly and locally in a studio in Groningen. No mass production on the other side of the world, but transparency, quality and attention to how things are made.',
         'Below you will find our 3 items for spring: the Tee, the Hoodie and the Sweater. The hoodie and sweater are now in the spring sale. On the Tee you get automatic tiered discount in your cart. The more you add, the higher the discount. Nice!',
         'We never charge shipping, and if it does not fit you can exchange or return within 30 days.',
+        'Of course we dream of growing MOSE with more items and new ideas. But we can only do that together with you. Every order helps us build, step by step, towards a fairer clothing brand.',
       ]
   const trustLineParts = isNl
     ? ['Gratis verzending', '30 dagen retour', 'Ophalen in Groningen']
