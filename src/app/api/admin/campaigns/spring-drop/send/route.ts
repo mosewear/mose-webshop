@@ -108,6 +108,10 @@ const LOOKBOOK_HERO = {
     'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/02-spring-desktop.webp',
 }
 
+/** Mail 1 producttegel Tee: algemene duo-foto (beige + zwart), zwart naar de camera — niet de PDP-primary. */
+const SPRING_MAIL1_TEE_GRID_IMAGE =
+  'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/couple-blossoms-desktop.webp'
+
 interface ResolvedProduct {
   slug: string
   name: string
@@ -190,7 +194,7 @@ function buildMail1Payload({ products, sweaterStock }: BuildMail1Params) {
       priceLabel: eur(tee.salePrice ?? tee.basePrice),
       badge: 'Vanaf €44,95 bij 3 stuks',
       badgeTone: 'staffel',
-      imageUrl: tee.primaryImageUrl,
+      imageUrl: SPRING_MAIL1_TEE_GRID_IMAGE,
       url: appendUtm(`${siteUrl()}/nl/product/${tee.slug}`, 1, 'tee'),
     },
     {

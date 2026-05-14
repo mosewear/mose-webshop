@@ -628,7 +628,7 @@ export async function GET(req: NextRequest) {
             priceLabel: '€49,95',
             badge: 'Vanaf €44,95 bij 3 stuks',
             badgeTone: 'staffel' as const,
-            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/zwart/hero-desktop.webp`,
+            imageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/couple-blossoms-desktop.webp`,
             url: `${siteUrl}/${locale}/product/mose-tee?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-tee`,
           },
           {

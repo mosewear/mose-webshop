@@ -54,6 +54,10 @@ async function main() {
       'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/02-spring-desktop.webp',
   }
 
+  /** Zelfde als campaign send route: duo Beige+Zwart, zwart naar camera (couple-blossoms). */
+  const SPRING_MAIL1_TEE_GRID_IMAGE =
+    'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/tee/multi/couple-blossoms-desktop.webp'
+
   function eur(value: number) {
     return new Intl.NumberFormat('nl-NL', {
       style: 'currency',
@@ -153,7 +157,7 @@ async function main() {
               priceLabel: eur(tee.salePrice ?? tee.basePrice),
               badge: 'Vanaf €44,95 bij 3 stuks',
               badgeTone: 'staffel',
-              imageUrl: tee.primaryImageUrl,
+              imageUrl: SPRING_MAIL1_TEE_GRID_IMAGE,
               url: appendUtm(`${siteUrl}/nl/product/${tee.slug}`, 1, 'tee'),
             },
             {
