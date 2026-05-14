@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -111,16 +111,19 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
     }
   }
 
-  // Get filtered images based on selected color
-  const getFilteredImages = () => {
-    if (selectedColor === null) {
-      // Show general images (no color assigned)
-      return images.filter(img => !img.color)
-    }
-    return images.filter(img => img.color === selectedColor)
-  }
-
-  const filteredImages = getFilteredImages()
+  /** Same bucket as the tab (algemeen vs kleur), sorted like the grid / DB: position, then created_at. */
+  const orderedFilteredImages = useMemo(() => {
+    const list =
+      selectedColor === null
+        ? images.filter((img) => !img.color)
+        : images.filter((img) => img.color === selectedColor)
+    return [...list].sort((a, b) => {
+      const pa = a.position ?? 0
+      const pb = b.position ?? 0
+      if (pa !== pb) return pa - pb
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    })
+  }, [images, selectedColor])
 
   const handleMediaUploaded = async (files: { url: string; type: 'image' | 'video'; color?: string }[]) => {
     try {
@@ -333,28 +336,24 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
   }
 
   const handleMoveImage = async (imageId: string, direction: 'up' | 'down') => {
-    // Use filtered images for position swapping
-    const currentIndex = filteredImages.findIndex(img => img.id === imageId)
+    const sorted = [...orderedFilteredImages]
+    const currentIndex = sorted.findIndex((img) => img.id === imageId)
     if (currentIndex === -1) return
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-    if (newIndex < 0 || newIndex >= filteredImages.length) return
+    if (newIndex < 0 || newIndex >= sorted.length) return
+
+    ;[sorted[currentIndex], sorted[newIndex]] = [sorted[newIndex], sorted[currentIndex]]
 
     try {
-      // Swap positions
-      const currentImage = filteredImages[currentIndex]
-      const otherImage = filteredImages[newIndex]
-
-      await supabase
-        .from('product_images')
-        .update({ position: otherImage.position })
-        .eq('id', currentImage.id)
-
-      await supabase
-        .from('product_images')
-        .update({ position: currentImage.position })
-        .eq('id', otherImage.id)
-
+      // Renumber 0..n-1 so reorder works even when rows shared the same position (swap alone was a no-op).
+      for (let i = 0; i < sorted.length; i++) {
+        const { error } = await supabase
+          .from('product_images')
+          .update({ position: i })
+          .eq('id', sorted[i].id)
+        if (error) throw error
+      }
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -490,7 +489,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
 
       {/* Images Grid */}
       <div className="bg-white border-2 border-gray-200">
-        {filteredImages.length === 0 ? (
+        {orderedFilteredImages.length === 0 ? (
           <div className="text-center py-12">
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -508,7 +507,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {filteredImages.map((image, index) => (
+            {orderedFilteredImages.map((image, index) => (
               <div key={image.id} className="bg-white border-2 border-gray-200 overflow-hidden group">
                 {/* Media Preview */}
                 <div className="relative aspect-square bg-gray-100">
@@ -711,6 +710,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                     
                     <div className="flex gap-2">
                       <button
+                        type="button"
                         onClick={() => handleMoveImage(image.id, 'up')}
                         disabled={index === 0}
                         className="p-2 border-2 border-gray-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -722,8 +722,9 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                       </button>
                       
                       <button
+                        type="button"
                         onClick={() => handleMoveImage(image.id, 'down')}
-                        disabled={index === filteredImages.length - 1}
+                        disabled={index === orderedFilteredImages.length - 1}
                         className="p-2 border-2 border-gray-300 hover:border-brand-primary hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Naar beneden"
                       >
