@@ -1,0 +1,12 @@
+---
+description: Supabase schema changes — migrations only, no ad-hoc SQL dumps
+alwaysApply: true
+---
+
+# Supabase database changes
+
+- **Never** treat a long “paste this in the SQL editor” script as the primary deliverable when the repo needs a schema change.
+- **Always** add a new timestamped file under `supabase/migrations/` (lexicographic order; use a sensible `YYYYMMDDHHMMSS_description.sql` name). Keep one logical change per migration when practical.
+- **Apply** with the Supabase CLI against the linked project: `supabase db push` (or your team’s equivalent: `supabase migration up` on CI). Do not rely on root-level one-off `*.sql` scripts for ongoing schema — those are historical only; see `CLAUDE.md`.
+- After DDL that affects types, run **`supabase gen types typescript`** (or the project’s documented codegen) and commit updated `src/lib/supabase/types.ts` / `database.types.ts` when applicable.
+- If the user’s remote is behind, the fix is **missing migration files + push**, not replacing migrations with a consolidated editor script.

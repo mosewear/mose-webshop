@@ -31,6 +31,8 @@ No Husky/pre-commit hooks. CI (`.github/workflows/ci.yml`) runs `lint` → `tsc 
 
 Database migrations are SQL files under `supabase/migrations/` (timestamp-prefixed, lexicographic). Apply via the Supabase CLI (`supabase db push`) — **not** via any of the root-level `*.sql` files or `run-migrations.sh` / `execute-sql-migration.js`, which are one-shot historical fix scripts. The top-level `migrations/` directory is older i18n seed work and is not part of the active migration chain.
 
+For any schema change: add a new file under `supabase/migrations/`, then `supabase db push` on the linked project. Do not use a consolidated “paste in the Supabase SQL editor” script as the main workflow when a migration belongs in the repo.
+
 ## Architecture
 
 ### Routing & i18n
