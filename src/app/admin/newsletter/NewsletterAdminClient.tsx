@@ -177,9 +177,18 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       method: 'POST',
       body: fd,
     })
-    const data = await res.json().catch(() => ({}))
+    const text = await res.text()
+    let data: { error?: string; summary?: Record<string, unknown>; invalid?: unknown[]; parseWarnings?: string[] } = {}
+    try {
+      if (text) data = JSON.parse(text)
+    } catch {
+      // e.g. HTML error page from the platform
+    }
     if (!res.ok) {
-      throw new Error(data.error || 'Import mislukt')
+      const msg =
+        (typeof data.error === 'string' && data.error.trim()) ||
+        `Import mislukt (HTTP ${res.status})`
+      throw new Error(msg)
     }
     return data
   }

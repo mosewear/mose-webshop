@@ -27,6 +27,30 @@ export function stripBom(input: string): string {
   return input.replace(/^\uFEFF/, '')
 }
 
+/**
+ * PostgREST sends `.in('email', [...])` on the query string. Too many or too long
+ * values exceed URL limits; Supabase then returns 400 "Bad Request".
+ */
+export const MAX_EMAIL_IN_QUERY_CHARS = 4500
+
+export function chunkEmailsForInFilter(emails: string[]): string[][] {
+  const chunks: string[][] = []
+  let cur: string[] = []
+  let budget = 0
+  for (const email of emails) {
+    const part = encodeURIComponent(email).length + 1
+    if (cur.length > 0 && budget + part > MAX_EMAIL_IN_QUERY_CHARS) {
+      chunks.push(cur)
+      cur = []
+      budget = 0
+    }
+    cur.push(email)
+    budget += part
+  }
+  if (cur.length) chunks.push(cur)
+  return chunks
+}
+
 function normalizeHeaderKey(h: string): string {
   return stripBom(h)
     .trim()

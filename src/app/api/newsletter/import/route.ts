@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { requireNewsletterAdmin } from '@/lib/newsletter-admin-auth'
 import {
   buildParsedSubscriberRows,
+  chunkEmailsForInFilter,
   parseNewsletterImportBuffer,
 } from '@/lib/newsletter-import/parse-import-file'
 import type { ParsedSubscriberInput } from '@/lib/newsletter-import/parse-import-file'
@@ -57,9 +58,7 @@ async function loadExistingByEmail(
   emails: string[]
 ): Promise<Map<string, { id: string; status: string }>> {
   const map = new Map<string, { id: string; status: string }>()
-  const chunkSize = 1000
-  for (let i = 0; i < emails.length; i += chunkSize) {
-    const chunk = emails.slice(i, i + chunkSize)
+  for (const chunk of chunkEmailsForInFilter(emails)) {
     const { data, error } = await sb
       .from('newsletter_subscribers')
       .select('id, email, status')
@@ -319,9 +318,13 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error('[newsletter/import]', err)
-    return NextResponse.json(
-      { success: false, error: err?.message || 'Import mislukt' },
-      { status: 500 }
-    )
+    const msg =
+      (typeof err?.message === 'string' && err.message.trim()) || ''
+    const detail =
+      typeof err?.details === 'string' ? err.details.trim() : ''
+    const hint = typeof err?.hint === 'string' ? err.hint.trim() : ''
+    const userError =
+      [msg, detail, hint].filter(Boolean).join(' — ') || 'Import mislukt'
+    return NextResponse.json({ success: false, error: userError }, { status: 500 })
   }
 }

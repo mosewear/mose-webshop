@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   buildParsedSubscriberRows,
   canonicalHeader,
+  chunkEmailsForInFilter,
+  MAX_EMAIL_IN_QUERY_CHARS,
   parseCsvText,
   stripBom,
 } from '@/lib/newsletter-import/parse-import-file'
@@ -9,6 +11,26 @@ import {
 describe('stripBom', () => {
   it('removes utf-8 BOM', () => {
     expect(stripBom('\uFEFFhello')).toBe('hello')
+  })
+})
+
+describe('chunkEmailsForInFilter', () => {
+  it('keeps each chunk under the encoded URL budget', () => {
+    const long = 'a'.repeat(120) + '@b.nl'
+    const emails = Array.from({ length: 200 }, (_, i) => `${i}-${long}`)
+    const chunks = chunkEmailsForInFilter(emails)
+    expect(chunks.length).toBeGreaterThan(1)
+    for (const chunk of chunks) {
+      let budget = 0
+      for (const email of chunk) {
+        budget += encodeURIComponent(email).length + 1
+      }
+      expect(budget).toBeLessThanOrEqual(MAX_EMAIL_IN_QUERY_CHARS)
+    }
+  })
+
+  it('returns one chunk for a short list', () => {
+    expect(chunkEmailsForInFilter(['x@y.nl', 'z@y.nl'])).toEqual([['x@y.nl', 'z@y.nl']])
   })
 })
 
