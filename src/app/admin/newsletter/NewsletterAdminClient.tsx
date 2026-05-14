@@ -27,6 +27,27 @@ interface Props {
   initialStats: Stats
 }
 
+type NewsletterImportSummary = {
+  parsedTotal?: number
+  inserted?: number
+  reactivated?: number
+  skippedActive?: number
+  skippedUnsubscribed?: number
+  duplicateInFile?: number
+  invalidCount?: number
+  welcomeEmailsSent?: number
+}
+
+type NewsletterImportInvalidRow = { row: number; reason: string; value?: string }
+
+type NewsletterImportOkBody = {
+  success?: boolean
+  error?: string
+  summary?: NewsletterImportSummary
+  invalid?: NewsletterImportInvalidRow[]
+  parseWarnings?: string[]
+}
+
 export default function NewsletterAdminClient({ initialSubscribers, initialStats }: Props) {
   const router = useRouter()
   const [subscribers, setSubscribers] = useState<Subscriber[]>(initialSubscribers)
@@ -52,8 +73,8 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
   const [importModalOpen, setImportModalOpen] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importDryRunResult, setImportDryRunResult] = useState<{
-    summary: Record<string, number>
-    invalid: { row: number; reason: string; value?: string }[]
+    summary: NewsletterImportSummary
+    invalid: NewsletterImportInvalidRow[]
     parseWarnings: string[]
   } | null>(null)
   const [importPreviewLoading, setImportPreviewLoading] = useState(false)
@@ -162,7 +183,7 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     resetImportModal()
   }
 
-  const postImportForm = async (dryRun: boolean) => {
+  const postImportForm = async (dryRun: boolean): Promise<NewsletterImportOkBody | null> => {
     if (!importFile) {
       toast.error('Kies eerst een bestand.')
       return null
@@ -178,9 +199,9 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
       body: fd,
     })
     const text = await res.text()
-    let data: { error?: string; summary?: Record<string, unknown>; invalid?: unknown[]; parseWarnings?: string[] } = {}
+    let data: NewsletterImportOkBody = {}
     try {
-      if (text) data = JSON.parse(text)
+      if (text) data = JSON.parse(text) as NewsletterImportOkBody
     } catch {
       // e.g. HTML error page from the platform
     }
@@ -198,10 +219,11 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     setImportDryRunResult(null)
     try {
       const data = await postImportForm(true)
+      if (!data) return
       setImportDryRunResult({
-        summary: data.summary || {},
-        invalid: data.invalid || [],
-        parseWarnings: data.parseWarnings || [],
+        summary: data.summary ?? {},
+        invalid: data.invalid ?? [],
+        parseWarnings: data.parseWarnings ?? [],
       })
       toast.success('Controle klaar. Bekijk de tellingen en bevestig.')
     } catch (e: any) {
@@ -219,7 +241,8 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
     setImportExecuteLoading(true)
     try {
       const data = await postImportForm(false)
-      const s = data.summary || {}
+      if (!data) return
+      const s = data.summary ?? {}
       toast.success(
         `Klaar: ${s.inserted ?? 0} nieuw, ${s.reactivated ?? 0} heractiveerd, ${s.welcomeEmailsSent ?? 0} welkomstmails.`
       )
