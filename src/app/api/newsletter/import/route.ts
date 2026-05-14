@@ -10,7 +10,8 @@ import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
 import { sendNewsletterWelcomeEmail } from '@/lib/email'
 
 export const runtime = 'nodejs'
-export const maxDuration = 120
+/** Grote imports (15k+ rijen); Pro plan ondersteunt langere functions. */
+export const maxDuration = 300
 
 interface Classified {
   toInsert: ParsedSubscriberInput[]
@@ -56,7 +57,7 @@ async function loadExistingByEmail(
   emails: string[]
 ): Promise<Map<string, { id: string; status: string }>> {
   const map = new Map<string, { id: string; status: string }>()
-  const chunkSize = 400
+  const chunkSize = 1000
   for (let i = 0; i < emails.length; i += chunkSize) {
     const chunk = emails.slice(i, i + chunkSize)
     const { data, error } = await sb
@@ -72,6 +73,20 @@ async function loadExistingByEmail(
     }
   }
   return map
+}
+
+async function mapInBatches<T, R>(
+  items: T[],
+  batchSize: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const out: R[] = []
+  for (let i = 0; i < items.length; i += batchSize) {
+    const slice = items.slice(i, i + batchSize)
+    const part = await Promise.all(slice.map((item) => fn(item)))
+    out.push(...part)
+  }
+  return out
 }
 
 export async function POST(req: NextRequest) {
@@ -181,7 +196,7 @@ export async function POST(req: NextRequest) {
     let reactivated = 0
     let welcomeEmailsSent = 0
 
-    const insertChunkSize = 120
+    const insertChunkSize = 200
     for (let i = 0; i < classified.toInsert.length; i += insertChunkSize) {
       const chunk = classified.toInsert.slice(i, i + insertChunkSize)
       const payload = chunk.map((r) => ({
@@ -209,12 +224,15 @@ export async function POST(req: NextRequest) {
 
       inserted += insertedRows?.length || 0
 
-      for (const row of insertedRows || []) {
+      const insertJobs = (insertedRows || []).map((row) => {
         const id = row.id as string
         const email = String(row.email).toLowerCase()
         const meta = chunk.find((c) => c.email === email)
         const locale = meta?.locale || 'nl'
+        return { id, email, locale }
+      })
 
+      const welcomeFlags = await mapInBatches(insertJobs, 16, async ({ id, email, locale }) => {
         let promo: { code: string; expiresAt: Date } | null = null
         try {
           promo = await generateNewsletterPromoCode(id, email, locale)
@@ -222,49 +240,52 @@ export async function POST(req: NextRequest) {
           console.error('[newsletter/import] promo code', email, e)
         }
 
-        if (sendWelcomeEmail) {
-          try {
-            await sendNewsletterWelcomeEmail({
-              email,
-              source: 'admin_import',
-              locale,
-              promoCode: promo?.code,
-              promoExpiry: promo?.expiresAt,
-            })
-            welcomeEmailsSent++
-          } catch (e) {
-            console.error('[newsletter/import] welcome email', email, e)
-          }
+        if (!sendWelcomeEmail) return 0
+        try {
+          await sendNewsletterWelcomeEmail({
+            email,
+            source: 'admin_import',
+            locale,
+            promoCode: promo?.code,
+            promoExpiry: promo?.expiresAt,
+          })
+          return 1
+        } catch (e) {
+          console.error('[newsletter/import] welcome email', email, e)
+          return 0
         }
-      }
+      })
+      welcomeEmailsSent += welcomeFlags.reduce<number>((a, b) => a + b, 0)
     }
 
-    for (const { row, id } of classified.toReactivate) {
-      const { error: upErr } = await sb
-        .from('newsletter_subscribers')
-        .update({
-          status: 'active',
-          subscribed_at: new Date().toISOString(),
-          unsubscribed_at: null,
-          source: row.source,
-          locale: row.locale,
-        })
-        .eq('id', id)
+    const reactivateResults = await mapInBatches(
+      classified.toReactivate,
+      12,
+      async ({ row, id }) => {
+        const { error: upErr } = await sb
+          .from('newsletter_subscribers')
+          .update({
+            status: 'active',
+            subscribed_at: new Date().toISOString(),
+            unsubscribed_at: null,
+            source: row.source,
+            locale: row.locale,
+          })
+          .eq('id', id)
 
-      if (upErr) {
-        console.error('[newsletter/import] reactivate failed', row.email, upErr)
-        continue
-      }
-      reactivated++
+        if (upErr) {
+          console.error('[newsletter/import] reactivate failed', row.email, upErr)
+          return { ok: false as const, welcome: 0 }
+        }
 
-      let promo: { code: string; expiresAt: Date } | null = null
-      try {
-        promo = await generateNewsletterPromoCode(id, row.email, row.locale)
-      } catch (e) {
-        console.error('[newsletter/import] promo reactivate', row.email, e)
-      }
+        let promo: { code: string; expiresAt: Date } | null = null
+        try {
+          promo = await generateNewsletterPromoCode(id, row.email, row.locale)
+        } catch (e) {
+          console.error('[newsletter/import] promo reactivate', row.email, e)
+        }
 
-      if (sendWelcomeEmail) {
+        if (!sendWelcomeEmail) return { ok: true as const, welcome: 0 }
         try {
           await sendNewsletterWelcomeEmail({
             email: row.email,
@@ -273,12 +294,16 @@ export async function POST(req: NextRequest) {
             promoCode: promo?.code,
             promoExpiry: promo?.expiresAt,
           })
-          welcomeEmailsSent++
+          return { ok: true as const, welcome: 1 }
         } catch (e) {
           console.error('[newsletter/import] welcome reactivate', row.email, e)
+          return { ok: true as const, welcome: 0 }
         }
       }
-    }
+    )
+
+    reactivated += reactivateResults.filter((r) => r.ok).length
+    welcomeEmailsSent += reactivateResults.reduce((a, r) => a + r.welcome, 0)
 
     return NextResponse.json({
       success: true,

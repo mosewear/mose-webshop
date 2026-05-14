@@ -1193,7 +1193,8 @@ export default function NewsletterAdminClient({ initialSubscribers, initialStats
             <h3 className="text-xl font-bold uppercase mb-2">Import subscribers</h3>
             <p className="text-sm text-gray-700 mb-4">
               Ondersteund: <strong>.csv</strong> (komma of puntkomma, UTF-8) en{' '}
-              <strong>.xlsx / .xls</strong> (eerste werkblad). Minimaal een e-mailkolom. Optioneel:{' '}
+              <strong>.xlsx / .xls</strong> (eerste werkblad). Minimaal een e-mailkolom. Tot ca.{' '}
+              <strong>60.000</strong> datarijen per bestand (max. ~20 MB). Optioneel kolommen:{' '}
               <code className="text-xs bg-gray-100 px-1">status</code>,{' '}
               <code className="text-xs bg-gray-100 px-1">locale</code>,{' '}
               <code className="text-xs bg-gray-100 px-1">source</code> (alleen toegestane waarden, anders{' '}

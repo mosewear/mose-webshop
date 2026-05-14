@@ -14,7 +14,8 @@ export type NewsletterDbSource = (typeof NEWSLETTER_DB_SOURCES)[number]
 
 export const DEFAULT_IMPORT_SOURCE: NewsletterDbSource = 'admin_import'
 
-export const MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024 // 5 MB
-export const MAX_IMPORT_ROWS = 8000
+/** Ruim boven twee lijsten van ~15k; let op Vercel request body limits op Hobby. */
+export const MAX_IMPORT_FILE_BYTES = 20 * 1024 * 1024 // 20 MB
+export const MAX_IMPORT_ROWS = 60000
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
