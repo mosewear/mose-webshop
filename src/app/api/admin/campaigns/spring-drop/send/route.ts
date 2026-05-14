@@ -348,21 +348,33 @@ interface SubscriberRow {
   locale: string | null
 }
 
+/** PostgREST default max_rows is 1000 (see supabase/config.toml); paginate past that. */
+const REST_PAGE_SIZE = 1000
+
 async function loadActiveSubscribers(
   sb: ReturnType<typeof createServiceRoleClient>
 ): Promise<SubscriberRow[]> {
-  const { data, error } = await sb
-    .from('newsletter_subscribers')
-    .select('id, email, locale, status')
-    .eq('status', 'active')
-    .order('subscribed_at', { ascending: true })
+  const rows: SubscriberRow[] = []
+  for (let from = 0; ; from += REST_PAGE_SIZE) {
+    const { data, error } = await sb
+      .from('newsletter_subscribers')
+      .select('id, email, locale, status')
+      .eq('status', 'active')
+      .order('subscribed_at', { ascending: true })
+      .range(from, from + REST_PAGE_SIZE - 1)
 
-  if (error) throw error
-  return (data || []).map((s: any) => ({
-    id: s.id,
-    email: s.email,
-    locale: s.locale,
-  }))
+    if (error) throw error
+    const batch = data || []
+    rows.push(
+      ...batch.map((s: any) => ({
+        id: s.id,
+        email: s.email,
+        locale: s.locale,
+      }))
+    )
+    if (batch.length < REST_PAGE_SIZE) break
+  }
+  return rows
 }
 
 async function loadAlreadySentEmails(
@@ -372,17 +384,30 @@ async function loadAlreadySentEmails(
   // Audit log is the source of truth. Anything successfully sent earlier
   // for this template_key skips this run, regardless of admin button
   // panic-clicking.
-  const { data, error } = await sb
-    .from('order_emails')
-    .select('recipient_email')
-    .eq('template_key', templateKey)
-    .eq('status', 'sent')
+  const set = new Set<string>()
+  try {
+    for (let from = 0; ; from += REST_PAGE_SIZE) {
+      const { data, error } = await sb
+        .from('order_emails')
+        .select('recipient_email')
+        .eq('template_key', templateKey)
+        .eq('status', 'sent')
+        .order('id', { ascending: true })
+        .range(from, from + REST_PAGE_SIZE - 1)
 
-  if (error) {
-    console.warn('[spring-drop] could not load order_emails dedup', error.message)
+      if (error) throw error
+      const batch = data || []
+      for (const r of batch) {
+        const e = String((r as any).recipient_email || '').toLowerCase()
+        if (e) set.add(e)
+      }
+      if (batch.length < REST_PAGE_SIZE) break
+    }
+  } catch (err: any) {
+    console.warn('[spring-drop] could not load order_emails dedup', err?.message)
     return new Set()
   }
-  return new Set((data || []).map((r: any) => (r.recipient_email || '').toLowerCase()))
+  return set
 }
 
 async function loadPersonalCodesBySubscriberId(

@@ -1358,7 +1358,9 @@ export default function NewsletterAdminClient({
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Nog te versturen</span>
                       <span className="font-bold text-base">
-                        {dry ? `${dry.recipients}` : '—'}
+                        {dry
+                          ? dry.recipients.toLocaleString('nl-NL')
+                          : '—'}
                       </span>
                     </div>
                     {mail === 3 && dry?.promoCodeCoverage && (
@@ -1382,7 +1384,7 @@ export default function NewsletterAdminClient({
                     <Send className="w-4 h-4" />
                     {sendingSpringDrop === mail
                       ? 'Bezig...'
-                      : `Verstuur naar ${dry?.recipients ?? '...'}`}
+                      : `Verstuur naar ${dry != null ? dry.recipients.toLocaleString('nl-NL') : '...'}`}
                   </button>
                   <button
                     onClick={() => handleSpringDropTest(mail)}
@@ -1412,7 +1414,10 @@ export default function NewsletterAdminClient({
             <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
               <li>Doe per mail eerst een test naar <strong>h.schlimback@gmail.com</strong> en check de inbox.</li>
               <li>Dedup gaat via <code>order_emails</code> (template_key + recipient_email). Een tweede klik voor dezelfde mail stuurt nooit dubbel.</li>
-              <li>Counter "Nog te versturen" trekt al-verstuurden af. Wordt 0 zodra alles uitgegaan is.</li>
+              <li>
+                Counter &quot;Nog te versturen&quot; telt alle actieve adressen minus al verstuurd
+                (geen 1000-limiet in de UI). Verzenden zelf gaat in batches tot iedereen bereikt is.
+              </li>
               <li>Mail 3 gebruikt persoonlijke <code>WELCOME10-XXXXXX</code> waar beschikbaar, anders fallback <code>SPRING10</code>.</li>
               <li>Aanbevolen schema: 13 mei (mail 1) → 17 mei (mail 2) → 22 mei (mail 3).</li>
             </ul>
@@ -1427,7 +1432,10 @@ export default function NewsletterAdminClient({
             <h3 className="text-xl font-bold uppercase mb-3">Spring Drop mail {confirmSpringDrop.mail} versturen?</h3>
             <p className="text-sm text-gray-700 mb-4">
               Je staat op het punt mail {confirmSpringDrop.mail} naar{' '}
-              <strong>{confirmSpringDrop.recipients}</strong> abonnee
+              <strong>
+                {confirmSpringDrop.recipients.toLocaleString('nl-NL')}
+              </strong>{' '}
+              abonnee
               {confirmSpringDrop.recipients === 1 ? '' : 's'} te sturen. Dit kan niet ongedaan
               gemaakt worden.
             </p>
