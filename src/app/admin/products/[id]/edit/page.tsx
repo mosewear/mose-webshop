@@ -687,18 +687,18 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 Modelinfo (Pasvorm-referentie)
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Optioneel. Verschijnt als compacte tag linksonder op de
-                hoofd-productafbeelding (bijv.{' '}
-                <span className="font-mono bg-gray-100 px-1.5 py-0.5">
-                  TYLER IS 1,88 M EN DRAAGT MAAT XL
-                </span>
-                ). Vul minimaal lengte + maat in om de tag te activeren;
-                naam is optioneel (zonder naam zien klanten{' '}
-                <span className="font-mono bg-gray-100 px-1.5 py-0.5">
-                  MODEL IS …
-                </span>
-                ). Bouw wordt op dit moment niet op de tag getoond, maar
-                is wel opgeslagen voor toekomstig gebruik.
+                Optioneel. Standaard geldt voor alle foto&apos;s zonder eigen
+                modelregels per afbeelding. Op{' '}
+                <Link
+                  href={`/admin/products/${id}/images`}
+                  className="text-brand-primary font-semibold underline"
+                >
+                  Afbeeldingen
+                </Link>{' '}
+                kun je per foto lengte + maat (en optioneel naam en bouw)
+                invullen; die overschrijven dan dit blok voor die slide.
+                Vul minimaal lengte + maat in om de tag te tonen; bouw
+                verschijnt mee op de tag als ingevuld.
               </p>
 
               {/* Naam: optioneel, voornaam van het model. Wordt

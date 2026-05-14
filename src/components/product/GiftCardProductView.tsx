@@ -23,7 +23,7 @@ import TrustpilotWidget from '@/components/TrustpilotWidget'
 interface GiftCardProductImage {
   id: string
   url: string
-  alt_text: string
+  alt_text: string | null
   position: number
   is_primary: boolean
 }

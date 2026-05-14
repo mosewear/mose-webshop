@@ -24,6 +24,11 @@ interface ProductImage {
   media_type: 'image' | 'video'
   video_thumbnail_url?: string | null
   created_at: string
+  model_name?: string | null
+  model_height?: string | null
+  model_build?: string | null
+  model_build_en?: string | null
+  model_size_worn?: string | null
 }
 
 interface ProductVariant {
@@ -270,6 +275,33 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         .update({ alt_text: altText || null })
         .eq('id', imageId)
 
+      if (error) throw error
+      fetchImages()
+    } catch (err: any) {
+      alert(`Fout: ${err.message}`)
+    }
+  }
+
+  const handlePatchModelField = async (
+    imageId: string,
+    field:
+      | 'model_name'
+      | 'model_height'
+      | 'model_build'
+      | 'model_build_en'
+      | 'model_size_worn',
+    raw: string
+  ) => {
+    const value = raw.trim() || null
+    const img = images.find((i) => i.id === imageId)
+    if (!img) return
+    const prev = (img[field] as string | null | undefined) ?? null
+    if (prev === value) return
+    try {
+      const { error } = await supabase
+        .from('product_images')
+        .update({ [field]: value })
+        .eq('id', imageId)
       if (error) throw error
       fetchImages()
     } catch (err: any) {
@@ -577,6 +609,94 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
                       placeholder="Beschrijving van afbeelding"
                     />
                   </div>
+
+                  {image.media_type === 'image' && (
+                    <div
+                      key={`model-${image.id}-${image.model_name ?? ''}-${image.model_height ?? ''}-${image.model_size_worn ?? ''}-${image.model_build ?? ''}-${image.model_build_en ?? ''}`}
+                      className="border-t border-gray-200 pt-3 space-y-2"
+                    >
+                      <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+                        Model (alleen deze foto)
+                      </p>
+                      <p className="text-[11px] text-gray-500 leading-snug">
+                        Vul minimaal <strong>lengte</strong> en <strong>maat</strong> in om de pasvorm-tag op de
+                        productpagina te tonen voor <em>deze</em> foto. Leeg laten = gebruik modelgegevens op
+                        productniveau (bewerken onder Product bewerken).
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">
+                            Modelnaam
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={image.model_name ?? ''}
+                            onBlur={(e) =>
+                              handlePatchModelField(image.id, 'model_name', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 border-2 border-gray-300 text-sm"
+                            placeholder="Optioneel"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">
+                            Lengte
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={image.model_height ?? ''}
+                            onBlur={(e) =>
+                              handlePatchModelField(image.id, 'model_height', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 border-2 border-gray-300 text-sm"
+                            placeholder="bv. 1,85 m"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">
+                            Bouw (NL)
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={image.model_build ?? ''}
+                            onBlur={(e) =>
+                              handlePatchModelField(image.id, 'model_build', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 border-2 border-gray-300 text-sm"
+                            placeholder="Optioneel"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">
+                            Bouw (EN)
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={image.model_build_en ?? ''}
+                            onBlur={(e) =>
+                              handlePatchModelField(image.id, 'model_build_en', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 border-2 border-gray-300 text-sm"
+                            placeholder="Optional"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">
+                            Maat gedragen
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={image.model_size_worn ?? ''}
+                            onBlur={(e) =>
+                              handlePatchModelField(image.id, 'model_size_worn', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 border-2 border-gray-300 text-sm"
+                            placeholder="bv. M"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2">

@@ -14,7 +14,7 @@ import { X, Play } from 'lucide-react'
 export interface PdpGalleryLightboxItem {
   id: string
   url: string
-  alt_text?: string
+  alt_text?: string | null
   media_type: 'image' | 'video'
   /** Voor videos: poster om in de tegel te tonen. Wanneer afwezig
    *  faalt de Image-render gracefully terug op een neutrale tegel met

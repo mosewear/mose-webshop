@@ -422,7 +422,8 @@
       "build": "Bouw",
       "wears": "Draagt",
       "genericName": "Model",
-      "overlay": "{name} is {height} en draagt maat {size}"
+      "overlay": "{name} is {height} en draagt maat {size}",
+      "overlayWithBuild": "{name} is {height}, {build}, draagt maat {size}"
     },
     "instagram": {
       "tagLabel": "COMMUNITY",

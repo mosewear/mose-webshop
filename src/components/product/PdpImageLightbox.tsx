@@ -17,7 +17,7 @@ import {
 export interface PdpImageLightboxItem {
   id: string
   url: string
-  alt_text?: string
+  alt_text?: string | null
 }
 
 export { prefetchPdpLightboxXl } from '@/lib/pdp-lightbox-image'

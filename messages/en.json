@@ -422,7 +422,8 @@
       "build": "Build",
       "wears": "Wears",
       "genericName": "Model",
-      "overlay": "{name} is {height} and wears size {size}"
+      "overlay": "{name} is {height} and wears size {size}",
+      "overlayWithBuild": "{name} is {height}, {build}, wears size {size}"
     },
     "instagram": {
       "tagLabel": "COMMUNITY",

@@ -475,33 +475,57 @@ export type Database = {
       product_images: {
         Row: {
           alt_text: string | null
+          color: string | null
           created_at: string | null
           id: string
           is_primary: boolean | null
+          media_type: string | null
+          model_build: string | null
+          model_build_en: string | null
+          model_height: string | null
+          model_name: string | null
+          model_size_worn: string | null
           position: number | null
           product_id: string
           url: string
           variant_id: string | null
+          video_thumbnail_url: string | null
         }
         Insert: {
           alt_text?: string | null
+          color?: string | null
           created_at?: string | null
           id?: string
           is_primary?: boolean | null
+          media_type?: string | null
+          model_build?: string | null
+          model_build_en?: string | null
+          model_height?: string | null
+          model_name?: string | null
+          model_size_worn?: string | null
           position?: number | null
           product_id: string
           url: string
           variant_id?: string | null
+          video_thumbnail_url?: string | null
         }
         Update: {
           alt_text?: string | null
+          color?: string | null
           created_at?: string | null
           id?: string
           is_primary?: boolean | null
+          media_type?: string | null
+          model_build?: string | null
+          model_build_en?: string | null
+          model_height?: string | null
+          model_name?: string | null
+          model_size_worn?: string | null
           position?: number | null
           product_id?: string
           url?: string
           variant_id?: string | null
+          video_thumbnail_url?: string | null
         }
         Relationships: [
           {

@@ -88,13 +88,19 @@ interface Product {
 interface ProductImage {
   id: string
   url: string
-  alt_text: string
+  alt_text: string | null
   position: number
   is_primary: boolean
   color: string | null
   media_type: 'image' | 'video'
   video_thumbnail_url?: string | null
   video_duration?: number | null
+  /** Per-foto modelinfo; overschrijft productniveau als lengte + maat zijn ingevuld. */
+  model_name?: string | null
+  model_height?: string | null
+  model_build?: string | null
+  model_build_en?: string | null
+  model_size_worn?: string | null
 }
 
 interface ProductVariant {
@@ -700,6 +706,45 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   
   const displayImages = getDisplayImages()
 
+  /** PDP-overlay: per afbeelding als lengte+maat op die rij staan, anders productvelden. */
+  const modelOverlayProps = (() => {
+    if (!product || displayImages.length === 0) return null
+    const media = displayImages[selectedImage]
+    if (!media) return null
+
+    const imgComplete =
+      !!media.model_height?.trim() && !!media.model_size_worn?.trim()
+    if (imgComplete) {
+      const build =
+        locale === 'en'
+          ? media.model_build_en?.trim() || media.model_build?.trim() || null
+          : media.model_build?.trim() || null
+      return {
+        name: media.model_name?.trim() || product.model_name,
+        height: media.model_height!.trim(),
+        sizeWorn: media.model_size_worn!.trim(),
+        build,
+      }
+    }
+
+    const prodComplete =
+      !!product.model_height?.trim() && !!product.model_size_worn?.trim()
+    if (prodComplete) {
+      const build =
+        locale === 'en'
+          ? product.model_build_en?.trim() || product.model_build?.trim() || null
+          : product.model_build?.trim() || null
+      return {
+        name: product.model_name,
+        height: product.model_height!.trim(),
+        sizeWorn: product.model_size_worn!.trim(),
+        build,
+      }
+    }
+
+    return null
+  })()
+
   // Warm XL lightbox assets (CDN) for current + adjacent slides before tap.
   useEffect(() => {
     if (!product) return
@@ -1075,11 +1120,14 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                       Vervangt de oude bulk-card onder de maatkiezer.
                       Renders alleen als zowel lengte als gedragen maat
                       ingevuld zijn in de admin (dus geen lege tag). */}
-                  <ModelFitInfo
-                    name={product.model_name}
-                    height={product.model_height}
-                    sizeWorn={product.model_size_worn}
-                  />
+                  {modelOverlayProps ? (
+                    <ModelFitInfo
+                      name={modelOverlayProps.name}
+                      height={modelOverlayProps.height}
+                      build={modelOverlayProps.build}
+                      sizeWorn={modelOverlayProps.sizeWorn}
+                    />
+                  ) : null}
 
                   {/* Dots Indicator - Mobile only, only if multiple images.
                       Worden hoger geplaatst (bottom-12) als de pasvorm-
@@ -1088,9 +1136,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                   {displayImages.length > 1 && (
                     <div
                       className={`absolute ${
-                        product.model_height?.trim() && product.model_size_worn?.trim()
-                          ? 'bottom-12'
-                          : 'bottom-3'
+                        modelOverlayProps ? 'bottom-12' : 'bottom-3'
                       } left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none z-10`}
                     >
                       {displayImages.map((_, index) => (
