@@ -223,6 +223,7 @@ export default function SpringDrop3FoundersEmail({
       </EmailModule>
 
       <EmailFooter
+        springCampaignFooter
         siteUrl={siteUrl}
         contactEmail={contactEmail}
         contactPhone={contactPhone}

@@ -397,6 +397,7 @@ export default function SpringDrop1LaunchEmail({
       </EmailModule>
 
       <EmailFooter
+        springCampaignFooter
         siteUrl={siteUrl}
         contactEmail={contactEmail}
         contactPhone={contactPhone}

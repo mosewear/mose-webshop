@@ -1,5 +1,6 @@
 import { Img, Link, Section } from '@react-email/components'
 import {
+  EMAIL_ASSETS,
   EMAIL_COLORS,
   EMAIL_DEFAULT_CONTACT,
   EMAIL_FONTS,
@@ -15,6 +16,11 @@ interface EmailFooterProps {
   /** Optionele extra tekst boven de contact-regel (bv. "Made with love in Groningen") */
   tagline?: string
   /**
+   * Spring-campaign mails: vaste zwarte top-spacer (~35% logo-hoogte) voor betrouwbare
+   * weergave in Gmail/Outlook (Section-padding alleen is daar vaak te dun).
+   */
+  springCampaignFooter?: boolean
+  /**
    * Optionele unsubscribe-URL. Wanneer gezet wordt onderaan een kleine
    * "Geen MOSE-mails meer? Uitschrijven" regel getoond. Verplicht voor
    * marketing/campaign-mails (CAN-SPAM/GDPR/Gmail bulk-sender vereisten).
@@ -27,9 +33,19 @@ interface EmailFooterProps {
 
 const footerSection = {
   backgroundColor: EMAIL_COLORS.black,
-  /* Veel lucht boven het logo t.o.v. de witte content erboven; op mobile
-     halveren we dit via .mose-spring-footer-spacer (zie EmailShell). */
   padding: '120px 24px 56px 24px',
+  textAlign: 'center' as const,
+}
+
+/** Zwarte band boven het logo: ~35% van de nominale logo-hoogte (tokens). */
+const FOOTER_LOGO_TOP_SPACER_PX = Math.max(
+  1,
+  Math.round(EMAIL_ASSETS.logoHeight * 0.35)
+)
+
+const footerSectionSpring = {
+  backgroundColor: EMAIL_COLORS.black,
+  padding: `0 24px 56px 24px`,
   textAlign: 'center' as const,
 }
 
@@ -107,6 +123,7 @@ export default function EmailFooter({
   contactPhone = EMAIL_DEFAULT_CONTACT.phone,
   contactAddress = EMAIL_DEFAULT_CONTACT.address,
   tagline,
+  springCampaignFooter = false,
   unsubscribeUrl,
   unsubscribePrompt,
   unsubscribeLabel,
@@ -116,11 +133,8 @@ export default function EmailFooter({
     unsubscribePrompt || 'Geen MOSE-mails meer ontvangen?'
   const unsubLabel = unsubscribeLabel || 'Uitschrijven'
 
-  return (
-    <Section
-      className="mose-spring-footer-spacer"
-      style={footerSection}
-    >
+  const inner = (
+    <>
       <Link href={siteUrl} style={{ textDecoration: 'none' }}>
         <Img
           className="mose-logo-footer"
@@ -159,6 +173,49 @@ export default function EmailFooter({
           </Link>
         </div>
       ) : null}
+    </>
+  )
+
+  if (springCampaignFooter) {
+    const h = FOOTER_LOGO_TOP_SPACER_PX
+    return (
+      <Section style={{ margin: 0, padding: 0 }}>
+        <table
+          role="presentation"
+          width="100%"
+          cellPadding={0}
+          cellSpacing={0}
+          border={0}
+          style={{ backgroundColor: EMAIL_COLORS.black }}
+        >
+          <tbody>
+            <tr>
+              <td
+                height={h}
+                style={{
+                  backgroundColor: EMAIL_COLORS.black,
+                  height: `${h}px`,
+                  fontSize: `${h}px`,
+                  lineHeight: `${h}px`,
+                }}
+              >
+                {'\u00a0'}
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style={footerSectionSpring}>
+                {inner}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </Section>
+    )
+  }
+
+  return (
+    <Section className="mose-email-footer" style={footerSection}>
+      {inner}
     </Section>
   )
 }
