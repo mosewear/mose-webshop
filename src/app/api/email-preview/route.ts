@@ -659,6 +659,7 @@ export async function GET(req: NextRequest) {
             unsubscribeUrl: `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(dummyData.customerEmail)}`,
             products: previewProducts,
             shopUrl: `${siteUrl}/${locale}/shop?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-all`,
+            storyUrl: `${siteUrl}/${locale}/spring-drop-verhaal?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-verhaal`,
             heroImageUrl: `https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp`,
             heroAlt: 'MOSE in Groningen, lente 2026',
           })

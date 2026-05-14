@@ -1743,6 +1743,8 @@ export async function sendSpringDrop1LaunchEmail(
     shopUrl: string
     heroImageUrl: string
     heroAlt?: string
+    /** Longread op de site; anders afgeleid in SpringDrop1Launch. */
+    storyUrl?: string
   }
 ) {
   const locale = props.locale || 'nl'
@@ -1773,6 +1775,7 @@ export async function sendSpringDrop1LaunchEmail(
       shopUrl: props.shopUrl,
       heroImageUrl: props.heroImageUrl,
       heroAlt: props.heroAlt,
+      storyUrl: props.storyUrl,
     })
   )
 

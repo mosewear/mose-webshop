@@ -543,6 +543,11 @@ export async function POST(req: NextRequest) {
             email: subscriber.email,
             locale,
             ...mail1Payload,
+            storyUrl: appendUtm(
+              `${siteUrl()}/${locale}/spring-drop-verhaal`,
+              1,
+              'verhaal'
+            ),
           })
         } else if (mail === 2 && mail2Payload) {
           result = await sendSpringDrop2TeeEmail({

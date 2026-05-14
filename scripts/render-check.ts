@@ -336,6 +336,7 @@ async function main() {
           locale,
           unsubscribeUrl: 'https://mosewear.com/nl/unsubscribe?email=p@example.com',
           shopUrl: 'https://mosewear.com/nl/shop',
+          storyUrl: 'https://mosewear.com/nl/spring-drop-verhaal?utm_source=newsletter&utm_medium=email&utm_campaign=spring-drop-2026&utm_content=mail-1-verhaal',
           heroImageUrl: 'https://x/hero1.webp',
           heroAlt: 'Hero alt',
           products: [

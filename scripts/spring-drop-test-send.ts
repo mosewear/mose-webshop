@@ -145,6 +145,7 @@ async function main() {
           locale: 'nl',
           heroImageUrl: LOOKBOOK_HERO.chapter1,
           heroAlt: 'MOSE in Groningen, lente 2026',
+          storyUrl: appendUtm(`${siteUrl}/nl/spring-drop-verhaal`, 1, 'verhaal'),
           shopUrl: appendUtm(`${siteUrl}/nl/shop`, 1, 'all'),
           products: [
             {
