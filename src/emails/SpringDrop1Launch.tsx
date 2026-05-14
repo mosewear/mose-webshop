@@ -198,8 +198,8 @@ export default function SpringDrop1LaunchEmail({
   /** Preheader: vult inbox-snippet; spaties verbergen hero-tekst in veel clients. */
   const preheaderPad = `${'\u00a0'.repeat(120)}`
   const preview = isNl
-    ? `Tee, Hoodie, Sweater · lente-sale · staffel op de Tee · Groningen · gratis verzending${preheaderPad}`
-    : `Tee, Hoodie, Sweater · spring sale · Tee bundle pricing · Groningen · free shipping${preheaderPad}`
+    ? `Tee, Hoodie, Sweater · lente-sale · staffelkorting op de Tee · gratis verzending · retour of ruil binnen 30 dagen${preheaderPad}`
+    : `Tee, Hoodie, Sweater · spring sale · volume discount on the Tee · free shipping · returns or exchange within 30 days${preheaderPad}`
 
   const headline = isNl ? 'HET IS LENTE.' : 'IT IS SPRING.'
   const headlineSub = isNl ? 'TIJD VOOR JE MOSE.' : 'TIME FOR YOUR MOSE.'

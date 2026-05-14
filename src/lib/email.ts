@@ -1781,8 +1781,8 @@ export async function sendSpringDrop1LaunchEmail(
 
   const subject =
     locale === 'en'
-      ? 'Why we refuse to be another fast-fashion brand'
-      : 'Waarom wij géén fast fashion willen zijn'
+      ? 'Clothes from our studio in Groningen (not a warehouse far away)'
+      : 'Kleding uit een atelier in Groningen (niet uit een magazijn ergens ver weg)'
 
   return await sendAndLog(
     {
