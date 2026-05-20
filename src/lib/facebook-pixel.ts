@@ -116,21 +116,32 @@ async function sendToConversionsAPI(
   }
 }
 
+interface TrackOptions {
+  /**
+   * Stable event identifier used by Meta to dedupe between client and
+   * server CAPI events. For Purchase events we pass the order UUID so
+   * the Stripe-webhook server-side CAPI event matches up.
+   * Falls back to a random per-call ID when not provided.
+   */
+  eventId?: string
+}
+
 /**
  * Track standard Facebook Pixel event (DUAL: Client + Server)
  */
 export function trackPixelEvent(
   event: PixelEvent,
   params?: PixelParams,
-  userData?: UserData
+  userData?: UserData,
+  options?: TrackOptions
 ) {
   if (typeof window === 'undefined' || !window.fbq) {
     return
   }
 
   try {
-    // Generate unique event ID for deduplication
-    const eventId = generateEventId()
+    // Stable ID when caller supplies one (Purchase: order.id), else random.
+    const eventId = options?.eventId || generateEventId()
     
     // Prepare parameters
     const eventParams: any = {

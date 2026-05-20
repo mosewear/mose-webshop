@@ -12,6 +12,7 @@ import {
   processGiftCardsForPaidOrder,
   reverseGiftCardsForOrder,
 } from '@/lib/gift-card-processing'
+import { sendServerPurchaseEvent } from '@/lib/meta/capi'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
 
@@ -428,6 +429,80 @@ export async function POST(req: NextRequest) {
         } catch (pushError) {
           console.error('⚠️ Failed to send push notification:', pushError)
           // Don't fail webhook if push fails
+        }
+
+        // ============================================
+        // 📊 META CAPI: server-side Purchase event
+        // ============================================
+        // Fired regardless of whether the buyer reaches the
+        // order-confirmation page. event_id = order.id so it dedupes
+        // with the client-side trackPixelEvent('Purchase') in that page
+        // when it does run. Errors never block the webhook.
+        try {
+          type ShippingAddressShape = {
+            name?: string
+            phone?: string
+            city?: string
+            postalCode?: string
+            country?: string
+            [key: string]: unknown
+          }
+          type OrderItemShape = {
+            product_id?: string | null
+            variant_id?: string | null
+            sku?: string | null
+            quantity?: number | string | null
+            price_at_purchase?: number | string | null
+          }
+
+          const shippingAddress = (updatedOrder.shipping_address || {}) as ShippingAddressShape
+          const fullName: string = shippingAddress.name || ''
+          const [firstName, ...rest] = fullName.trim().split(/\s+/)
+          const lastName = rest.length ? rest.join(' ') : undefined
+
+          const orderItems = updatedOrder.order_items as OrderItemShape[]
+          const purchaseContents = orderItems
+            .map((item) => ({
+              id: (item.product_id || item.variant_id || item.sku) ?? undefined,
+              quantity: Number(item.quantity) || 0,
+              item_price: Number(item.price_at_purchase) || 0,
+            }))
+            .filter(
+              (c): c is { id: string; quantity: number; item_price: number } => typeof c.id === 'string' && c.id.length > 0
+            )
+
+          const numItems = orderItems.reduce(
+            (sum, item) => sum + (Number(item.quantity) || 0),
+            0
+          )
+
+          const capiResult = await sendServerPurchaseEvent({
+            orderId: updatedOrder.id,
+            value: Number(updatedOrder.total) || 0,
+            currency: 'EUR',
+            email: updatedOrder.email,
+            phone: shippingAddress.phone || null,
+            firstName: firstName || null,
+            lastName: lastName || null,
+            city: shippingAddress.city || null,
+            zip: shippingAddress.postalCode || null,
+            country: shippingAddress.country || 'NL',
+            userId: updatedOrder.user_id || null,
+            clientIpAddress: updatedOrder.ip_address || null,
+            clientUserAgent: updatedOrder.user_agent || null,
+            contents: purchaseContents,
+            contentIds: purchaseContents.map((c: { id: string }) => c.id),
+            numItems,
+          })
+
+          if (capiResult.ok) {
+            console.log(`✅ Meta CAPI Purchase sent (fbtrace ${capiResult.fbtrace_id || 'n/a'})`)
+          } else {
+            console.error('⚠️ Meta CAPI Purchase failed:', capiResult.status, capiResult.error)
+          }
+        } catch (capiError) {
+          console.error('⚠️ Meta CAPI Purchase exception:', capiError)
+          // Don't fail webhook if CAPI fails
         }
         
         // ============================================

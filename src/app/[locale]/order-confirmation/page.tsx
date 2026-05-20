@@ -224,6 +224,10 @@ export default function OrderConfirmationPage({
           city: data.order.shipping_address?.city,
           zip: data.order.shipping_address?.postalCode,
           country: data.order.shipping_address?.country || 'NL'
+        }, {
+          // Pin event_id to order UUID so this dedupes with the
+          // server-side Purchase event fired from the Stripe webhook.
+          eventId: data.order.id,
         })
 
         // Track custom analytics purchase event
