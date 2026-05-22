@@ -98,9 +98,13 @@ interface RunDetail {
 }
 
 const MODEL_OPTIONS = [
-  { id: 'black-forest-labs/flux-kontext-pro', label: 'Flux Kontext Pro (default)' },
-  { id: 'black-forest-labs/flux-1.1-pro', label: 'Flux 1.1 Pro' },
-  { id: 'black-forest-labs/flux-schnell', label: 'Flux Schnell (snel + goedkoop)' },
+  { id: 'black-forest-labs/flux-kontext-pro', label: 'Flux Kontext Pro — Replicate (default, ~$0,04/s)' },
+  { id: 'black-forest-labs/flux-1.1-pro', label: 'Flux 1.1 Pro — Replicate' },
+  { id: 'black-forest-labs/flux-schnell', label: 'Flux Schnell — Replicate (snel + goedkoop)' },
+  { id: 'gpt-image-2', label: 'GPT Image 2 — OpenAI (nieuwste, ~$0,20/img)' },
+  { id: 'gpt-image-1.5', label: 'GPT Image 1.5 — OpenAI (~$0,18/img)' },
+  { id: 'gpt-image-1', label: 'GPT Image 1 — OpenAI (~$0,17/img)' },
+  { id: 'gpt-image-1-mini', label: 'GPT Image 1 mini — OpenAI (~$0,04/img)' },
 ]
 
 const STATUS_COLORS: Record<RunRow['status'], string> = {
@@ -194,7 +198,10 @@ export default function CreativesPage() {
           scene_id: sceneId,
           model,
           num_variants: numVariants,
-          provider,
+          // Only forward 'mock' explicitly — for paid providers we let
+          // the orchestrator auto-detect based on the model id prefix
+          // (gpt-image-* → OpenAI, anything else → Replicate).
+          ...(provider === 'mock' ? { provider: 'mock' as const } : {}),
           extra_prompt_hint: extraHint.trim() || undefined,
         }),
       })

@@ -21,6 +21,14 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { runReplicateModel, extractOutputUrls, ReplicateError } from '@/lib/ai/replicate'
 import {
+  generateImageWithOpenAI,
+  isOpenAIImageModel,
+  OpenAIImageError,
+  contentTypeForImageUrl,
+  filenameForImageUrl,
+  type OpenAIImageReference,
+} from '@/lib/ai/openai-image'
+import {
   adPolicyLint,
   downloadToBuffer,
   extractPaletteHex,
@@ -46,10 +54,24 @@ export interface CreativeRunInput {
   model?: string
   requestedBy?: string | null
   decisionId?: string | null
-  provider?: 'replicate' | 'mock'
+  provider?: 'replicate' | 'openai' | 'mock'
   /** Optional extra steering text appended to the prompt. */
   extraPromptHint?: string
 }
+
+/**
+ * Per-iteration prompt nudges that encourage compositional variety when
+ * the underlying model doesn't accept a `seed`. OpenAI Images uses
+ * these; Replicate Flux gets variety from a randomised seed instead.
+ */
+const OPENAI_VARIATION_HINTS = [
+  'variation: tight 3/4 framing, slight upward angle, golden hour rim light',
+  'variation: wider establishing shot, more environment, eye-level',
+  'variation: candid walking pose, profile/side, depth of field',
+  'variation: front-on close-up, low-key light, neutral expression',
+  'variation: half-body framing, hands relaxed, slight overcast',
+  'variation: from-below hero angle, asphalt or canal in lower frame',
+]
 
 export interface CreativeRunResult {
   runId: string
@@ -316,7 +338,6 @@ function decideStatus(qa: VariantQa, brand: BrandGuide, autoApprove: boolean): '
 export async function runCreativeBatch(input: CreativeRunInput): Promise<CreativeRunResult> {
   const supabase = createServiceRoleClient()
   const numVariants = Math.max(1, Math.min(8, input.numVariants ?? 2))
-  const provider: 'replicate' | 'mock' = input.provider ?? (process.env.REPLICATE_API_TOKEN ? 'replicate' : 'mock')
 
   const [settings, brand, scene, productCtx, pricing] = await Promise.all([
     loadCreativeSettings(),
@@ -326,6 +347,19 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
     getPricingContext(input.productId),
   ])
   const model = input.model || settings.defaultModel
+
+  // Provider auto-detect by model id when not explicitly passed. Keeps
+  // the UI minimal: the dropdown only needs to expose a model, and the
+  // orchestrator routes to the right API based on its prefix.
+  const provider: 'replicate' | 'openai' | 'mock' =
+    input.provider ??
+    (isOpenAIImageModel(model)
+      ? process.env.OPENAI_API_KEY
+        ? 'openai'
+        : 'mock'
+      : process.env.REPLICATE_API_TOKEN
+        ? 'replicate'
+        : 'mock')
   const { product, primaryImage: productImage, allImages } = productCtx
   // Cap reference photos to keep prompts compact and Replicate happy.
   // Most Flux Kontext checkpoints only honour 1 ref image; a few accept
@@ -333,10 +367,11 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
   // explicitly below and rely on the model to ignore unknown keys.
   const referenceImages = allImages.slice(0, 4)
 
-  // Budget pre-check (only counts against actual Replicate runs).
-  const mtdUsd = provider === 'replicate' ? await monthToDateUsd() : 0
+  // Budget pre-check — counts against any paid provider (Replicate or
+  // OpenAI). Mock runs never tick the meter.
+  const mtdUsd = provider === 'mock' ? 0 : await monthToDateUsd()
   const mtdEur = mtdUsd * USD_TO_EUR
-  if (provider === 'replicate' && mtdEur >= settings.monthlyCapEur) {
+  if (provider !== 'mock' && mtdEur >= settings.monthlyCapEur) {
     throw new Error(
       `Maandbudget bereikt (€${mtdEur.toFixed(2)} / €${settings.monthlyCapEur}). Verhoog de cap of wacht tot volgende maand.`,
     )
@@ -418,6 +453,34 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
   })
   const policy = adPolicyLint(prompt, brand.guardrails.ad_policy_blocked_terms || [])
 
+  // OpenAI Images needs the bytes of every reference photo upfront
+  // (multipart upload), unlike Replicate which just takes URLs. Pre-
+  // download once so the per-variant loop is cheap.
+  let openaiReferences: OpenAIImageReference[] = []
+  if (provider === 'openai') {
+    openaiReferences = [
+      {
+        buffer: sourceBuffer,
+        contentType: contentTypeForImageUrl(productImage.url),
+        filename: filenameForImageUrl(productImage.url, 'source.jpg'),
+      },
+    ]
+    // Up to 3 additional angles → 4 references max (OpenAI accepts more
+    // but quality stops improving past 4 and the latency climbs fast).
+    for (const extra of referenceImages.slice(1, 4)) {
+      try {
+        const buf = await downloadToBuffer(extra.url)
+        openaiReferences.push({
+          buffer: buf,
+          contentType: contentTypeForImageUrl(extra.url),
+          filename: filenameForImageUrl(extra.url, 'alt.jpg'),
+        })
+      } catch {
+        // Best-effort: a missing alt-angle photo shouldn't kill the run.
+      }
+    }
+  }
+
   for (let i = 0; i < numVariants; i++) {
     try {
       let outputBuffer: Buffer
@@ -432,6 +495,23 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
         outputBuffer = normalised.buffer
         contentType = normalised.contentType
         costUsd = 0
+      } else if (provider === 'openai') {
+        // gpt-image-* doesn't expose a `seed`, so we vary the prompt
+        // per iteration to encourage compositional diversity. The
+        // garment-preservation directive in `prompt` is unchanged —
+        // only framing/lighting hints rotate.
+        const variation = OPENAI_VARIATION_HINTS[i % OPENAI_VARIATION_HINTS.length]
+        const gen = await generateImageWithOpenAI({
+          model,
+          prompt: `${prompt}\n${variation}`,
+          referenceImages: openaiReferences,
+          size: '1024x1536',
+          quality: 'high',
+          n: 1,
+        })
+        outputBuffer = gen.buffer
+        contentType = gen.contentType
+        costUsd = gen.cost_usd
       } else {
         // Forward up to 3 secondary photos as input_image_2 / input_image_3 / ...
         // Flux Kontext models silently ignore unknown keys, so this is
@@ -520,7 +600,14 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
       else if (status === 'rejected') result.rejected++
       else result.pending++
     } catch (e) {
-      const message = e instanceof ReplicateError ? `${e.message} (status ${e.status ?? '?'})` : (e as Error).message
+      let message: string
+      if (e instanceof ReplicateError) {
+        message = `${e.message} (status ${e.status ?? '?'})`
+      } else if (e instanceof OpenAIImageError) {
+        message = `${e.message} (status ${e.status ?? '?'})`
+      } else {
+        message = (e as Error).message
+      }
       result.errors.push(`variant ${i}: ${message}`)
     }
   }

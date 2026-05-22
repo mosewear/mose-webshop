@@ -15,7 +15,7 @@ interface RunBody {
   scene_id?: string
   num_variants?: number
   model?: string
-  provider?: 'replicate' | 'mock'
+  provider?: 'replicate' | 'openai' | 'mock'
   extra_prompt_hint?: string
 }
 
