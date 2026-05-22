@@ -14,6 +14,7 @@ import {
   Sparkles,
   ClipboardList,
   Image as ImageIcon,
+  Plug,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -284,6 +285,11 @@ export default function AiCampaignsOverviewPage() {
         <SetupChecklist checks={checks} />
       </section>
 
+      {/* Live Meta connection test */}
+      {checks?.hasMetaCredentials && (
+        <MetaConnectionTester />
+      )}
+
       {/* Sub-pages */}
       <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <NavCard
@@ -431,6 +437,95 @@ function SetupChecklist({ checks }: { checks: SetupChecks | null }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+function MetaConnectionTester() {
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<
+    | { ok: true; name: string; id: string; currency: string; tz: string; spent: string | null }
+    | { ok: false; detail: string }
+    | null
+  >(null)
+
+  const runTest = async () => {
+    try {
+      setBusy(true)
+      setResult(null)
+      const res = await fetch('/api/admin/ai-campaigns/credentials/test?label=mose_primary', {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        setResult({ ok: false, detail: data.error || 'Onbekende fout' })
+      } else {
+        const a = data.account
+        setResult({
+          ok: true,
+          name: a.name ?? '—',
+          id: a.account_id ?? a.id ?? '—',
+          currency: a.currency ?? '—',
+          tz: a.timezone_name ?? '—',
+          spent: a.amount_spent ?? null,
+        })
+      }
+    } catch (e) {
+      setResult({ ok: false, detail: (e as Error).message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div className="flex items-center gap-2">
+          <Plug className="w-5 h-5 text-gray-700" />
+          <h2 className="text-lg font-semibold text-gray-900">Meta-verbinding testen</h2>
+        </div>
+        <button
+          type="button"
+          onClick={runTest}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+        >
+          <Plug className="w-4 h-4" />
+          {busy ? 'Testen…' : 'Test verbinding'}
+        </button>
+      </div>
+      <p className="text-xs text-gray-500 mb-3">
+        Doet een live call tegen <code>act_…</code> via je opgeslagen System User token. Bevestigt
+        dat het token nog geldig is en het juiste ad account terugkomt.
+      </p>
+      {result && (
+        <div
+          className={`mt-2 p-3 rounded-lg text-sm flex gap-2 ${
+            result.ok ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          {result.ok ? (
+            <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          )}
+          {result.ok ? (
+            <div>
+              <div className="font-medium">Verbinding werkt ✓</div>
+              <div className="text-xs mt-0.5">
+                <strong>{result.name}</strong> · <code>act_{result.id}</code> · {result.currency} ·
+                tz {result.tz}
+                {result.spent && <> · lifetime spend €{(Number(result.spent) / 100).toFixed(2)}</>}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="font-medium">Verbinding faalde</div>
+              <div className="text-xs mt-0.5 break-words">{result.detail}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   )
 }
 

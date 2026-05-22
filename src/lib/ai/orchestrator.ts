@@ -83,7 +83,7 @@ async function loadProviderSettings(
     typeof v === 'string' ? v.replace(/"/g, '') : fallback
   const providerRaw = cleanString(map.get('ai_autopilot_provider'), 'openai')
   const provider: ProviderSettings['provider'] = providerRaw === 'mock' ? 'mock' : 'openai'
-  const model = cleanString(map.get('ai_autopilot_model'), 'gpt-4o-mini') || 'gpt-4o-mini'
+  const model = cleanString(map.get('ai_autopilot_model'), 'gpt-5.5') || 'gpt-5.5'
   return { provider, model }
 }
 

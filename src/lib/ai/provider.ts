@@ -40,20 +40,40 @@ export interface ProviderRunResult {
 }
 
 /**
- * Pricing as of 2026-05 (Meta API and OpenAI both refresh quarterly;
- * keep this updated when bumping model versions). Numbers are USD per
- * 1k tokens. If a new model lands without an entry, costUsd is left
- * undefined and the orchestrator persists a null cost rather than a
- * misleading number.
+ * Pricing as of 2026-05 (OpenAI publishes per 1M tokens on the public
+ * pricing page; values below are converted to USD per 1k tokens).
+ * Source: https://platform.openai.com/docs/pricing — keep in sync when
+ * bumping model versions. If a new model lands without an entry,
+ * costUsd is left undefined and the orchestrator persists a null cost
+ * rather than a misleading number.
  */
 const MODEL_COSTS_USD_PER_1K: Record<string, { input: number; output: number }> = {
+  // GPT-5 family (current flagship line)
+  'gpt-5.5': { input: 0.005, output: 0.03 },
+  'gpt-5.5-pro': { input: 0.03, output: 0.18 },
+  'gpt-5.4': { input: 0.0025, output: 0.015 },
+  'gpt-5.4-mini': { input: 0.00075, output: 0.0045 },
+  'gpt-5.4-nano': { input: 0.0002, output: 0.00125 },
+  'gpt-5.2': { input: 0.00175, output: 0.014 },
+  'gpt-5.1': { input: 0.00125, output: 0.01 },
+  'gpt-5': { input: 0.00125, output: 0.01 },
+  'gpt-5-mini': { input: 0.00025, output: 0.002 },
+  'gpt-5-nano': { input: 0.00005, output: 0.0004 },
+  // Legacy entries kept so historic decisions still resolve a price.
   'gpt-4o': { input: 0.0025, output: 0.01 },
   'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
   'gpt-4.1': { input: 0.002, output: 0.008 },
   'gpt-4.1-mini': { input: 0.0004, output: 0.0016 },
 }
 
-const DEFAULT_MODEL = 'gpt-4o-mini'
+/**
+ * Default model for the daily campaign-audit run. Balances reasoning
+ * quality with cost: a ~20k-token input + 3k-token output run on
+ * gpt-5.5 costs ~$0.19, so a daily audit lands at ~$6/month — cheap
+ * enough that we never need to fall back to a weaker model just to
+ * save tokens.
+ */
+const DEFAULT_MODEL = 'gpt-5.5'
 
 function computeCostUsd(model: string, promptTokens?: number, completionTokens?: number): number | undefined {
   const pricing = MODEL_COSTS_USD_PER_1K[model]

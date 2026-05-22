@@ -34,7 +34,13 @@ interface SettingsState {
   promptOverride: string
 }
 
-const MODELS = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1']
+const MODELS = [
+  'gpt-5.5',
+  'gpt-5.5-pro',
+  'gpt-5.4',
+  'gpt-5.4-mini',
+  'gpt-5-mini',
+]
 
 function cleanString(v: unknown, fallback: string): string {
   return typeof v === 'string' ? v.replace(/"/g, '') : fallback
@@ -44,7 +50,7 @@ export default function ConfigPage() {
   const [credentials, setCredentials] = useState<CredentialRow[]>([])
   const [settings, setSettings] = useState<SettingsState>({
     provider: 'openai',
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.5',
     promptOverride: '',
   })
   const [initialSettings, setInitialSettings] = useState<SettingsState>(settings)
@@ -422,15 +428,16 @@ export default function ConfigPage() {
                       type="button"
                       onClick={() => testCredential(c.label)}
                       disabled={busy}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-md border border-gray-300 hover:bg-white"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md bg-black text-white hover:bg-gray-800 disabled:opacity-50"
                     >
-                      <Plug className="w-3.5 h-3.5" /> Test
+                      <Plug className="w-4 h-4" />
+                      {busy ? 'Testen…' : 'Test verbinding'}
                     </button>
                     <button
                       type="button"
                       onClick={() => removeCredential(c.id)}
                       disabled={busy}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-md border border-red-200 text-red-700 hover:bg-red-50"
+                      className="inline-flex items-center gap-1 px-3 py-2 text-xs rounded-md border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Verwijder
                     </button>
