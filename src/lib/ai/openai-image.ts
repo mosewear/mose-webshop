@@ -95,11 +95,16 @@ export async function generateImageWithOpenAI(
   form.append('size', input.size ?? '1024x1536')
   form.append('quality', input.quality ?? 'high')
   form.append('n', String(input.n ?? 1))
-  // `gpt-image-*` accepts multiple reference images via repeated `image`
-  // multipart fields — exactly what `FormData.append` produces.
+  // `/v1/images/edits` is strict about field names:
+  //   1 image  → singular `image`
+  //   N images → array syntax `image[]` (else OpenAI returns 400
+  //              "Duplicate parameter: 'image'")
+  // Both forms accept the same Blob payload; only the field name
+  // differs based on how many references we attach.
+  const fieldName = input.referenceImages.length > 1 ? 'image[]' : 'image'
   for (const ref of input.referenceImages) {
     form.append(
-      'image',
+      fieldName,
       new Blob([new Uint8Array(ref.buffer)], { type: ref.contentType }),
       ref.filename,
     )
