@@ -1,21 +1,22 @@
 /**
  * Creative orchestrator — turns a (product, scene) pair into N
- * Meta-ready creative variants via Replicate, runs automatic QA and
- * persists everything to `ai_creative_runs` + `ai_creative_variants`.
+ * Meta-ready creative variants via an image provider (Replicate Flux
+ * Kontext or OpenAI gpt-image-*), runs automatic QA and persists
+ * everything to `ai_creative_runs` + `ai_creative_variants`.
  *
  * Lifecycle for one run:
  *   1. Pre-check guards (budget cap, brand guide present, etc.).
  *   2. Insert run row with status='queued', then flip to 'running'.
- *   3. For each variant: build prompt → call Replicate (or mock) →
+ *   3. For each variant: build prompt → call provider (or mock) →
  *      download the output → re-encode + thumbnail → upload to
  *      Supabase Storage → compute QA scores → insert variant row.
  *   4. Mark run as 'completed' / 'failed' with totals.
  *
- * The "mock" provider is wired in so we can smoke-test the persistence
- * + QA + storage path end-to-end without paying Replicate. When mock
- * is used we copy the product image as the "output" and the SSIM-like
- * score is exactly 1.0 — that's deliberate so the auto-approve logic
- * can be exercised.
+ * Provider routing: when `input.provider` is omitted, the orchestrator
+ * picks one from the model id prefix — `gpt-image-*` → OpenAI, anything
+ * else → Replicate. Set `provider: 'mock'` explicitly to smoke-test the
+ * persistence + QA + storage path without paying either vendor (the
+ * mock copies the source garment as the "output" so SSIM ~ 1.0).
  */
 
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -25,6 +26,7 @@ import {
   isOpenAIImageModel,
   OpenAIImageError,
   contentTypeForImageUrl,
+  estimateOpenAIImageCostUsd,
   filenameForImageUrl,
   type OpenAIImageReference,
 } from '@/lib/ai/openai-image'
@@ -348,18 +350,29 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
   ])
   const model = input.model || settings.defaultModel
 
-  // Provider auto-detect by model id when not explicitly passed. Keeps
-  // the UI minimal: the dropdown only needs to expose a model, and the
-  // orchestrator routes to the right API based on its prefix.
-  const provider: 'replicate' | 'openai' | 'mock' =
-    input.provider ??
-    (isOpenAIImageModel(model)
-      ? process.env.OPENAI_API_KEY
-        ? 'openai'
-        : 'mock'
-      : process.env.REPLICATE_API_TOKEN
-        ? 'replicate'
-        : 'mock')
+  // Provider routing. When `input.provider` is explicitly set we honour
+  // it; otherwise we infer from the model id. Missing API tokens for
+  // an inferred paid provider throw a clear error instead of silently
+  // degrading to mock — otherwise the admin would think they were
+  // paying OpenAI while looking at a copy of their own product photo.
+  let provider: 'replicate' | 'openai' | 'mock'
+  if (input.provider) {
+    provider = input.provider
+  } else if (isOpenAIImageModel(model)) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error(
+        `Model "${model}" vereist OpenAI maar OPENAI_API_KEY ontbreekt. Voeg de key toe in Vercel / .env.local of selecteer een Replicate-model.`,
+      )
+    }
+    provider = 'openai'
+  } else {
+    if (!process.env.REPLICATE_API_TOKEN) {
+      throw new Error(
+        `Model "${model}" vereist Replicate maar REPLICATE_API_TOKEN ontbreekt. Voeg de token toe of selecteer een OpenAI gpt-image-* model.`,
+      )
+    }
+    provider = 'replicate'
+  }
   const { product, primaryImage: productImage, allImages } = productCtx
   // Cap reference photos to keep prompts compact and Replicate happy.
   // Most Flux Kontext checkpoints only honour 1 ref image; a few accept
@@ -368,12 +381,25 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
   const referenceImages = allImages.slice(0, 4)
 
   // Budget pre-check — counts against any paid provider (Replicate or
-  // OpenAI). Mock runs never tick the meter.
+  // OpenAI). Mock runs never tick the meter. We also estimate the
+  // *incoming* batch so a run that starts under the cap but would
+  // finish above it is blocked upfront. Replicate has no flat-rate
+  // per-call price so we use a conservative seconds-based estimate.
   const mtdUsd = provider === 'mock' ? 0 : await monthToDateUsd()
   const mtdEur = mtdUsd * USD_TO_EUR
-  if (provider !== 'mock' && mtdEur >= settings.monthlyCapEur) {
+  let projectedUsd = 0
+  if (provider === 'openai') {
+    projectedUsd = estimateOpenAIImageCostUsd(model, numVariants)
+  } else if (provider === 'replicate') {
+    // Rough heuristic: Flux Kontext runs ~12s; Schnell ~2s. We don't
+    // know exactly which one was picked so we assume the slow side
+    // (~$0.50 per variant) to keep the cap conservative.
+    projectedUsd = 0.5 * numVariants
+  }
+  const projectedEur = projectedUsd * USD_TO_EUR
+  if (provider !== 'mock' && mtdEur + projectedEur >= settings.monthlyCapEur) {
     throw new Error(
-      `Maandbudget bereikt (€${mtdEur.toFixed(2)} / €${settings.monthlyCapEur}). Verhoog de cap of wacht tot volgende maand.`,
+      `Maandbudget zou overschreden worden — huidige MTD €${mtdEur.toFixed(2)} + verwachte run €${projectedEur.toFixed(2)} > cap €${settings.monthlyCapEur}. Verhoog de cap of kies een goedkoper model.`,
     )
   }
 
@@ -536,7 +562,7 @@ export async function runCreativeBatch(input: CreativeRunInput): Promise<Creativ
         })
         const urls = extractOutputUrls(prediction.output)
         if (urls.length === 0) {
-          throw new Error('Replicate gaf geen output URL terug.')
+          throw new ReplicateError('Replicate gaf geen output URL terug.', 502, prediction)
         }
         outputBuffer = await downloadToBuffer(urls[0])
         contentType = 'image/jpeg'

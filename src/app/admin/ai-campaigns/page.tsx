@@ -17,6 +17,7 @@ import {
   Plug,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
 
 type AutopilotMode = 'advisory' | 'bounded' | 'full'
 
@@ -74,6 +75,8 @@ export default function AiCampaignsOverviewPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  useAutoDismiss(message, setMessage)
+  useAutoDismiss(error, setError, 10_000)
 
   const supabase = createClient()
 
@@ -146,11 +149,24 @@ export default function AiCampaignsOverviewPage() {
     setError(null)
     setMessage(null)
     try {
-      const { error: upError } = await supabase
-        .from('site_settings')
-        .update({ value, updated_at: new Date().toISOString() })
-        .eq('key', key)
-      if (upError) throw upError
+      // Route through the guardrails endpoint so all writes hit the
+      // same validator (mode whitelist, numeric ranges, working-hours
+      // shape). Going around it via the browser Supabase client used
+      // to bypass those checks.
+      const res = await fetch('/api/admin/ai-campaigns/guardrails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates: [{ key, value }] }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Opslaan mislukt')
+      if (data.skipped?.length) {
+        throw new Error(
+          (data.skipped as Array<{ key: string; reason: string }>)
+            .map((s) => `${s.key}: ${s.reason}`)
+            .join('; '),
+        )
+      }
       setMessage('Opgeslagen.')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Opslaan mislukt'
@@ -332,7 +348,7 @@ export default function AiCampaignsOverviewPage() {
           title="Creatives & approvals"
           icon={<Sparkles className="w-5 h-5" />}
           status="ready"
-          description="Garment-preserving generator (Flux Kontext) met SSIM + brand palette QA. Mock-mode beschikbaar voor smoke-tests zonder Replicate-cost."
+          description="Garment-preserving generator (Flux Kontext + GPT Image 2) met SSIM + brand palette QA. Mock-mode beschikbaar voor smoke-tests zonder API-kosten."
         />
         <NavCard
           href="/admin/ai-campaigns/config"

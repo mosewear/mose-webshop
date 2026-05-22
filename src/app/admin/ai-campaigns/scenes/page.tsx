@@ -16,6 +16,7 @@ import {
   X,
   Save,
 } from 'lucide-react'
+import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
 
 interface SceneRow {
   id: string
@@ -42,6 +43,8 @@ export default function ScenesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  useAutoDismiss(message, setMessage)
+  useAutoDismiss(error, setError, 10_000)
   const [uploading, setUploading] = useState(false)
 
   // Upload form state

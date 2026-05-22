@@ -2,9 +2,10 @@
  * AI provider abstraction.
  *
  * Thin wrapper over the Vercel AI SDK so the autopilot can swap models
- * without touching the orchestrator. Defaults to OpenAI GPT-4o-mini for
- * cost-efficiency on the daily audit; bump to gpt-4o when long-context
- * monthly reviews land in Phase 4.
+ * without touching the orchestrator. Defaults to OpenAI gpt-5.5 — best
+ * balance of reasoning quality (sees through staffel/promo combos in
+ * the daily audit) and cost (~€6/month for a daily run on ~20k input
+ * tokens). Switch via `ai_autopilot_model` in site_settings.
  *
  * Cost tracking: we capture promptTokens/completionTokens from the SDK
  * response and translate to USD using `MODEL_COSTS_USD_PER_1K` so the

@@ -16,6 +16,7 @@ import {
   Info,
   Undo2,
 } from 'lucide-react'
+import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
 
 interface DecisionRow {
   id: string
@@ -94,6 +95,8 @@ export default function DecisionsLogPage() {
   const [error, setError] = useState<string | null>(null)
   const [busyTrigger, setBusyTrigger] = useState<null | 'decision' | 'snapshots' | 'oos'>(null)
   const [message, setMessage] = useState<string | null>(null)
+  useAutoDismiss(message, setMessage)
+  useAutoDismiss(error, setError, 10_000)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [details, setDetails] = useState<Record<string, DetailPayload>>({})
   const [detailLoading, setDetailLoading] = useState<string | null>(null)
@@ -195,12 +198,18 @@ export default function DecisionsLogPage() {
       if (!res.ok || body.ok === false) {
         throw new Error(body.error || 'Trigger mislukt')
       }
+      const n = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
       setMessage(
         kind === 'decision'
-          ? `Beslissing aangemaakt (status: ${body.result?.status}, voorstellen: ${body.result?.parsedActionsCount}).`
+          ? `Beslissing aangemaakt (status: ${body.result?.status ?? 'onbekend'}, voorstellen: ${n(body.result?.parsedActionsCount)}).`
           : kind === 'snapshots'
-            ? `Meta-snapshots opgehaald (${body.result?.account_rows + body.result?.campaign_rows + body.result?.ad_set_rows + body.result?.ad_rows} rijen).`
-            : `OOS-regel uitgevoerd (paused: ${body.result?.ad_sets_paused}, resumed: ${body.result?.ad_sets_resumed}).`,
+            ? `Meta-snapshots opgehaald (${
+                n(body.result?.account_rows) +
+                n(body.result?.campaign_rows) +
+                n(body.result?.ad_set_rows) +
+                n(body.result?.ad_rows)
+              } rijen).`
+            : `OOS-regel uitgevoerd (paused: ${n(body.result?.ad_sets_paused)}, resumed: ${n(body.result?.ad_sets_resumed)}).`,
       )
       load()
     } catch (e: unknown) {
@@ -256,9 +265,9 @@ export default function DecisionsLogPage() {
             <button
               onClick={() => trigger('decision')}
               disabled={!!busyTrigger}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-black hover:bg-gray-800 text-white rounded-md disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-black hover:bg-gray-800 text-white rounded-md disabled:opacity-50"
             >
-              <Play className="w-3.5 h-3.5" />
+              <Play className="w-4 h-4" />
               {busyTrigger === 'decision' ? 'Bezig…' : 'Beslissing nu'}
             </button>
           </div>

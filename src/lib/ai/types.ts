@@ -247,7 +247,7 @@ export interface GuardrailConfig {
 // -----------------------------------------------------------------------
 
 export interface DecisionAuditMeta {
-  provider: 'openai' | 'anthropic' | 'mock'
+  provider: 'openai' | 'mock'
   model: string
   promptVersion: string
   promptHash: string

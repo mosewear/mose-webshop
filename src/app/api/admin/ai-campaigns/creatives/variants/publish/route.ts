@@ -139,18 +139,27 @@ export async function POST(req: NextRequest) {
   const locale: 'nl' | 'en' = body.locale === 'en' ? 'en' : 'nl'
   const offerLine = locale === 'en' ? pricing.offer_copy_en : pricing.offer_copy_nl
 
-  // Build link + copy
+  // Build link. Slugs are already URL-safe (lowercase, hyphen-only) so
+  // we hand them through raw — encoding would only get in the way of
+  // any template that wants to compose a query string with `{{slug}}`.
   const link = body.link_override?.trim()
-    || client.linkTemplate.replace('{{slug}}', encodeURIComponent(product.slug))
+    || client.linkTemplate.replace('{{slug}}', product.slug)
+
+  // Meta caps (Marketing API v22): headline 40 chars for link ads,
+  // description 30, primary text 125 (we send up to 1500 for posts).
+  // We trim defensively below the docs so the live ad never wraps.
+  const HEADLINE_MAX = 40
+  const DESCRIPTION_MAX = 125
+  const MESSAGE_MAX = 1500
 
   const autoHeadline = composeHeadline({ product, pricing, locale })
-  const headline = body.headline?.trim() || autoHeadline.slice(0, 60)
+  const headline = (body.headline?.trim() || autoHeadline).slice(0, HEADLINE_MAX)
 
   const autoDescription = composeDescription({ product, pricing, brand, locale })
-  const description = body.description?.trim() || autoDescription.slice(0, 160)
+  const description = (body.description?.trim() || autoDescription).slice(0, DESCRIPTION_MAX)
 
   const autoMessage = composeMessage({ product, pricing, brand, offerLine, locale })
-  const message = body.message?.trim() || autoMessage.slice(0, 1500)
+  const message = (body.message?.trim() || autoMessage).slice(0, MESSAGE_MAX)
 
   // Upload image
   let imageHash: string
@@ -205,7 +214,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await supabase
+  const { error: updateErr } = await supabase
     .from('ai_creative_variants')
     .update({
       status: 'published',
@@ -215,6 +224,21 @@ export async function POST(req: NextRequest) {
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', variant.id)
+
+  if (updateErr) {
+    // Creative is already live in Meta — surface a clear warning so
+    // the admin knows the database is out of sync and can flip the
+    // status manually instead of trying to "republish".
+    return NextResponse.json(
+      {
+        ok: true,
+        creative_id: creativeId,
+        ad_id: adId,
+        warning: `Creative gepubliceerd in Meta (id ${creativeId}) maar de variant-status in de database kon niet worden bijgewerkt: ${updateErr.message}`,
+      },
+      { status: 207 },
+    )
+  }
 
   return NextResponse.json({
     ok: true,
@@ -237,20 +261,34 @@ interface ComposeArgs {
 }
 
 function composeHeadline({ product, pricing, locale }: ComposeArgs): string {
-  // Headline = short. Lead with the deal if present, else just product.
+  // Headline = short. Lead with the strongest deal if present.
+  // Order matches our offer hierarchy: sale > staffel > promo > base.
   if (pricing.has_active_sale) {
     return locale === 'nl'
       ? `${product.name} — nu -${pricing.sale_off_pct}%`
       : `${product.name} — now -${pricing.sale_off_pct}%`
   }
-  if (pricing.has_active_staffel) {
-    const deepest = pricing.staffel_tiers[pricing.staffel_tiers.length - 1]
+  if (pricing.has_active_staffel && pricing.staffel_tiers.length > 0) {
+    // Pick the highest-discount tier (the "deepest" one) regardless of
+    // input order. Percentage tiers compare directly; fixed-amount
+    // tiers compare on their EUR value — comparing across types isn't
+    // meaningful so we just keep the largest within each type and
+    // prefer percentage when both exist.
+    const pctTier = pricing.staffel_tiers
+      .filter((t) => t.discount_type === 'percentage')
+      .sort((a, b) => b.discount_value - a.discount_value)[0]
+    const fixedTier = pricing.staffel_tiers
+      .filter((t) => t.discount_type === 'fixed')
+      .sort((a, b) => b.discount_value - a.discount_value)[0]
+    const deepest = pctTier ?? fixedTier
     if (deepest) {
       return locale === 'nl'
         ? `${product.name} — ${deepest.label_nl}`
         : `${product.name} — ${deepest.label_en}`
     }
   }
+  // `active_promo_codes` is now best-first (see pricing-context), so
+  // `[0]` is the strongest promo without us re-sorting here.
   if (pricing.has_active_promo && pricing.active_promo_codes[0]) {
     const p = pricing.active_promo_codes[0]
     const disc =

@@ -14,6 +14,11 @@ const KEYS = [
   'ai_autopilot_provider',
   'ai_autopilot_model',
   'ai_autopilot_prompt_override',
+  // Creative pipeline knobs — share validation surface with the
+  // autopilot guardrails so all writes go through one endpoint.
+  'ai_creative_monthly_cap_eur',
+  'ai_creative_default_model',
+  'ai_creative_auto_approve',
 ] as const
 
 type SettingKey = (typeof KEYS)[number]
@@ -74,6 +79,16 @@ function isValidValue(key: SettingKey, value: unknown): { ok: true } | { ok: fal
       return value === null || (typeof value === 'string' && value.length < 200)
         ? { ok: true }
         : { ok: false, reason: 'null of string < 200 chars' }
+    case 'ai_creative_monthly_cap_eur':
+      return typeof value === 'number' && value >= 0 && value <= 10_000
+        ? { ok: true }
+        : { ok: false, reason: 'getal tussen 0 en 10.000' }
+    case 'ai_creative_default_model':
+      return typeof value === 'string' && value.length > 0 && value.length < 100
+        ? { ok: true }
+        : { ok: false, reason: 'model moet niet-lege string zijn' }
+    case 'ai_creative_auto_approve':
+      return typeof value === 'boolean' ? { ok: true } : { ok: false, reason: 'moet boolean zijn' }
   }
 }
 

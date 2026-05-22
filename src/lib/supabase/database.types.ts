@@ -4203,10 +4203,13 @@ export type Database = {
           contribution_margin_per_unit: number | null
           cost_price: number | null
           current_stock: number | null
+          deepest_min_quantity: number | null
           effective_price: number | null
           gross_revenue_30d: number | null
           gross_revenue_7d: number | null
           gross_revenue_lifetime: number | null
+          has_active_sale: boolean | null
+          has_active_staffel: boolean | null
           has_product_econ: boolean | null
           has_variant_econ: boolean | null
           orders_30d: number | null
@@ -4221,10 +4224,14 @@ export type Database = {
           return_rate_30d: number | null
           returned_units_30d: number | null
           returned_units_lifetime: number | null
+          sale_off_pct: number | null
           sale_price: number | null
           shipping_cost_avg: number | null
           size: string | null
           sku: string | null
+          staffel_max_fixed_off: number | null
+          staffel_max_pct_off: number | null
+          staffel_tier_count: number | null
           total_back_in_stock_signups: number | null
           transaction_fee_pct: number | null
           units_sold_30d: number | null

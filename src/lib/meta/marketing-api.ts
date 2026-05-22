@@ -321,6 +321,29 @@ export class MetaMarketingClient {
     })
   }
 
+  /**
+   * Fetch a single ad set by id. Cheaper than `getAdSets()` when we
+   * only need the prior_state row before mutating — the executor calls
+   * this for every budget/pause action.
+   */
+  async getAdSet(adSetId: string, fields: string[] = ['id', 'name', 'status', 'effective_status', 'campaign_id', 'daily_budget', 'lifetime_budget']): Promise<AdSet> {
+    return graphFetch<AdSet>(this.credentials, `/${adSetId}`, {
+      searchParams: { fields: fields.join(',') },
+    })
+  }
+
+  async getCampaign(campaignId: string, fields: string[] = ['id', 'name', 'status', 'effective_status', 'objective', 'daily_budget', 'lifetime_budget']): Promise<Campaign> {
+    return graphFetch<Campaign>(this.credentials, `/${campaignId}`, {
+      searchParams: { fields: fields.join(',') },
+    })
+  }
+
+  async getAd(adId: string, fields: string[] = ['id', 'name', 'status', 'effective_status', 'adset_id', 'campaign_id']): Promise<Ad> {
+    return graphFetch<Ad>(this.credentials, `/${adId}`, {
+      searchParams: { fields: fields.join(',') },
+    })
+  }
+
   async getAds(fields: string[] = ['id', 'name', 'status', 'effective_status', 'adset_id', 'campaign_id', 'creative']): Promise<Ad[]> {
     return paginateAll<Ad>(this.credentials, `/${this.adAccountId}/ads`, {
       fields: fields.join(','),

@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ error: `Onbekende kind=${kind}` }, { status: 400 })
   } catch (e) {
-    return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 200 })
+    // 502 (Bad Gateway) reflects "upstream call failed" — usually
+    // OpenAI/Meta/Supabase returned an error we couldn't massage into
+    // a 4xx. The UI uses `ok === false` to render the message; the
+    // status code is for monitoring tools (Sentry/Vercel/Datadog).
+    return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 502 })
   }
 }

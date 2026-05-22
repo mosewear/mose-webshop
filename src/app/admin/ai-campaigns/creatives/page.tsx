@@ -19,6 +19,7 @@ import {
   Send,
   ExternalLink,
 } from 'lucide-react'
+import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
 
 interface ProductOption {
   id: string
@@ -98,13 +99,14 @@ interface RunDetail {
 }
 
 const MODEL_OPTIONS = [
-  { id: 'black-forest-labs/flux-kontext-pro', label: 'Flux Kontext Pro — Replicate (default, ~$0,04/s)' },
-  { id: 'black-forest-labs/flux-1.1-pro', label: 'Flux 1.1 Pro — Replicate' },
-  { id: 'black-forest-labs/flux-schnell', label: 'Flux Schnell — Replicate (snel + goedkoop)' },
-  { id: 'gpt-image-2', label: 'GPT Image 2 — OpenAI (nieuwste, ~$0,20/img)' },
-  { id: 'gpt-image-1.5', label: 'GPT Image 1.5 — OpenAI (~$0,18/img)' },
-  { id: 'gpt-image-1', label: 'GPT Image 1 — OpenAI (~$0,17/img)' },
-  { id: 'gpt-image-1-mini', label: 'GPT Image 1 mini — OpenAI (~$0,04/img)' },
+  { id: 'black-forest-labs/flux-kontext-pro', label: 'Flux Kontext Pro · Replicate (default, ~$0,04/s)' },
+  { id: 'black-forest-labs/flux-1.1-pro', label: 'Flux 1.1 Pro · Replicate' },
+  { id: 'black-forest-labs/flux-schnell', label: 'Flux Schnell · Replicate (snel + goedkoop)' },
+  { id: 'gpt-image-2', label: 'GPT Image 2 · OpenAI (nieuwste, ~$0,20/img)' },
+  { id: 'chatgpt-image-latest', label: 'ChatGPT Image (alias latest) · OpenAI (~$0,20/img)' },
+  { id: 'gpt-image-1.5', label: 'GPT Image 1.5 · OpenAI (~$0,18/img)' },
+  { id: 'gpt-image-1', label: 'GPT Image 1 · OpenAI (~$0,17/img)' },
+  { id: 'gpt-image-1-mini', label: 'GPT Image 1 mini · OpenAI (~$0,04/img)' },
 ]
 
 const STATUS_COLORS: Record<RunRow['status'], string> = {
@@ -133,6 +135,8 @@ export default function CreativesPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  useAutoDismiss(message, setMessage)
+  useAutoDismiss(error, setError, 10_000)
   const [reviewing, setReviewing] = useState<string | null>(null)
   const [publishing, setPublishing] = useState<string | null>(null)
   const [publishDraft, setPublishDraft] = useState<PublishDraft | null>(null)
@@ -171,14 +175,17 @@ export default function CreativesPage() {
       setProducts(pList)
       setScenes(scenesBody.scenes || [])
       setRuns(runsBody.rows || [])
-      if (!productId && pList.length > 0) setProductId(pList[0].id)
-      if (!sceneId && (scenesBody.scenes || []).length > 0) setSceneId(scenesBody.scenes[0].id)
+      // Seed defaults via functional setters so this callback stays a
+      // pure data-load — no productId/sceneId deps → no second fetch
+      // when the initial selection lands.
+      setProductId((prev) => prev || (pList[0]?.id ?? ''))
+      setSceneId((prev) => prev || (scenesBody.scenes?.[0]?.id ?? ''))
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setLoading(false)
     }
-  }, [productId, sceneId])
+  }, [])
 
   useEffect(() => {
     load()
@@ -478,7 +485,7 @@ export default function CreativesPage() {
                 onChange={(e) => setProvider(e.target.checked ? 'mock' : 'replicate')}
                 className="rounded border-gray-300"
               />
-              Mock-mode (geen Replicate cost — gebruikt de productfoto als output, voor smoke-tests).
+              Mock-mode (geen API-kosten — gebruikt de productfoto als output, voor smoke-tests).
             </label>
             <button
               type="button"
@@ -562,6 +569,18 @@ export default function CreativesPage() {
                               {detail.scene.scene_type})
                             </div>
                           )}
+                          {detail.variants.length === 0 ? (
+                            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
+                              <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                              <p className="text-sm font-medium text-gray-800">
+                                Geen varianten gegenereerd
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {r.error_message ||
+                                  'De run is afgesloten zonder dat er output is opgeslagen. Controleer het foutbericht in de detail-toast of probeer een goedkoper model in mock-mode om de pipeline te testen.'}
+                              </p>
+                            </div>
+                          ) : (
                           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             {detail.variants.map((v) => (
                               <article
@@ -603,12 +622,7 @@ export default function CreativesPage() {
                                   </div>
                                   <div className="grid grid-cols-2 gap-1.5">
                                     <QaBadge label="SSIM" value={v.ssim_score} ok={v.ssim_score !== null && v.ssim_score >= 0.78} />
-                                    <QaBadge
-                                      label="ΔE"
-                                      value={v.palette_distance}
-                                      ok={!!v.brand_color_pass}
-                                      lowerIsBetter
-                                    />
+                                    <QaBadge label="ΔE" value={v.palette_distance} ok={!!v.brand_color_pass} />
                                     <QaBadge label="ad-policy" boolValue={v.ad_policy_pass} />
                                     <QaBadge label="brand color" boolValue={v.brand_color_pass} />
                                   </div>
@@ -663,6 +677,7 @@ export default function CreativesPage() {
                               </article>
                             ))}
                           </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -863,22 +878,24 @@ function QaBadge({
   value,
   ok,
   boolValue,
-  lowerIsBetter,
 }: {
   label: string
+  /** Numeric value for SSIM / ΔE-style badges. */
   value?: number | null
+  /** Pass/fail for numeric badges — computed by the caller because the
+   *  threshold depends on whether lower or higher is better. */
   ok?: boolean
+  /** Pass/fail badges that don't have a numeric value. */
   boolValue?: boolean | null
-  lowerIsBetter?: boolean
 }) {
   let display = '–'
   let pass = false
   if (typeof boolValue === 'boolean') {
     pass = boolValue
     display = boolValue ? 'pass' : 'fail'
-  } else if (typeof value === 'number') {
+  } else if (typeof value === 'number' && Number.isFinite(value)) {
     display = value.toFixed(2)
-    pass = lowerIsBetter ? !!ok : !!ok
+    pass = !!ok
   }
   return (
     <div

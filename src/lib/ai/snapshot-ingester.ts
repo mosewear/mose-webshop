@@ -161,6 +161,11 @@ export async function ingestMetaSnapshots(): Promise<IngestSummary> {
     })
     const ok = await upsertSnapshot(supabase, row, summary)
     if (ok) summary.account_rows++
+  } else if (!summary.errors.length) {
+    // Meta returned a 200 with `data: []` — usually means the account
+    // spent €0 today. Surface it as a warning so admins know the
+    // ingest cron *did* run successfully but had nothing to write.
+    summary.errors.push('account insights: geen data van Meta (waarschijnlijk geen spend vandaag).')
   }
 
   // 2. Campaigns

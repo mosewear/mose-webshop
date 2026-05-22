@@ -268,7 +268,10 @@ export async function getPricingContext(productId: string): Promise<PricingConte
     sale_off_pct: saleOffPct,
     staffel_tiers: tiersNl,
     has_active_staffel: tiersNl.length > 0,
-    active_promo_codes: promos,
+    // Promo codes are returned best-first (largest effective discount,
+    // % preferred over fixed) so any consumer that picks `[0]` gets
+    // the strongest offer.
+    active_promo_codes: bestPromo ? [bestPromo, ...promos.filter((p) => p !== bestPromo)] : promos,
     has_active_promo: promos.length > 0,
     offer_copy_nl: offerCopyNl,
     offer_copy_en: offerCopyEn,
@@ -343,6 +346,11 @@ const COPY_EN = {
  * Batched variant — handy for the daily audit prompt which needs the
  * summary line per SKU without making N round-trips. Loads products,
  * tiers and promos in three queries regardless of input size.
+ *
+ * Note on promo codes: MOSE's `promo_codes` table holds *global* codes
+ * (no product_id column) that apply on the cart total. We intentionally
+ * attach the same promo list to every product in the batch — there's
+ * no per-product scoping to do.
  */
 export async function getPricingContextBatch(productIds: string[]): Promise<Map<string, PricingContext>> {
   const out = new Map<string, PricingContext>()
@@ -460,7 +468,9 @@ export async function getPricingContextBatch(productIds: string[]): Promise<Map<
       sale_off_pct: saleOffPct,
       staffel_tiers: tiersNl,
       has_active_staffel: tiersNl.length > 0,
-      active_promo_codes: promos,
+      // Mirror the single-product helper: best promo first so any
+      // downstream consumer that picks `[0]` gets the strongest offer.
+      active_promo_codes: bestPromo ? [bestPromo, ...promos.filter((p) => p !== bestPromo)] : promos,
       has_active_promo: promos.length > 0,
       offer_copy_nl: offerCopyNl,
       offer_copy_en: offerCopyEn,

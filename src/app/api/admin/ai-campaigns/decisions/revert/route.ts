@@ -31,7 +31,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Actie is niet revertbaar (status of timestamp ontbreekt).' }, { status: 400 })
   }
 
-  const windowDays = Number((windowRow.data as { value?: number } | null)?.value ?? 30)
+  // Parse with NaN-guard — a malformed jsonb value would otherwise let
+  // `ageMs > NaN` evaluate to false and silently disable the window.
+  const rawWindow = (windowRow.data as { value?: number | string } | null)?.value
+  const parsedWindow = typeof rawWindow === 'number' ? rawWindow : Number(rawWindow)
+  const windowDays = Number.isFinite(parsedWindow) && parsedWindow > 0 ? parsedWindow : 30
   const ageMs = Date.now() - new Date(action.executed_at).getTime()
   const windowMs = windowDays * 86_400_000
   if (ageMs > windowMs) {

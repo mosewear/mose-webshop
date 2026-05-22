@@ -39,12 +39,16 @@ export async function GET(req: NextRequest) {
     oosError = (e as Error).message
   }
 
-  return NextResponse.json({
-    ok: !snapshotError && !oosError,
-    started_at: startedAt,
-    snapshot: snapshotSummary,
-    snapshot_error: snapshotError,
-    oos_rule: oosSummary,
-    oos_error: oosError,
-  })
+  const allOk = !snapshotError && !oosError
+  return NextResponse.json(
+    {
+      ok: allOk,
+      started_at: startedAt,
+      snapshot: snapshotSummary,
+      snapshot_error: snapshotError,
+      oos_rule: oosSummary,
+      oos_error: oosError,
+    },
+    { status: allOk ? 200 : 500 },
+  )
 }

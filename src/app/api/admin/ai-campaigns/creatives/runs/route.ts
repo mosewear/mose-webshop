@@ -92,6 +92,41 @@ export async function POST(req: NextRequest) {
   }
   const numVariants = Math.max(1, Math.min(8, Number(body.num_variants ?? 2)))
 
+  // Concurrent-run guard. Two parallel runs would race on the monthly
+  // cap check (the second run reads MTD before the first writes its
+  // total_cost_usd) and bloat the Replicate/OpenAI bill by 2× without
+  // anyone clicking twice intentionally. We block on any in-progress
+  // run for the same product OR globally if the latest is < 5min old.
+  const supabase = createServiceRoleClient()
+  const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString()
+  const { data: busyRuns } = await supabase
+    .from('ai_creative_runs')
+    .select('id, source_product_id, status, started_at')
+    .in('status', ['queued', 'running'])
+    .gte('started_at', fiveMinAgo)
+    .limit(5)
+  if (busyRuns && busyRuns.length > 0) {
+    const sameProduct = busyRuns.find(
+      (r: { source_product_id: string | null }) => r.source_product_id === body.product_id,
+    )
+    if (sameProduct) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Er draait al een run voor dit product. Wacht tot die klaar is voor je een nieuwe start.',
+        },
+        { status: 409 },
+      )
+    }
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Er draait al ${busyRuns.length} andere creative run(s). Wacht tot die klaar zijn (max ~5min) om dubbele kosten te voorkomen.`,
+      },
+      { status: 409 },
+    )
+  }
+
   try {
     const result = await runCreativeBatch({
       productId: body.product_id,

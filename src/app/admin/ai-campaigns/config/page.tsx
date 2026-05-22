@@ -12,6 +12,7 @@ import {
   KeyRound,
   Plug,
 } from 'lucide-react'
+import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
 
 interface CredentialRow {
   id: string
@@ -32,6 +33,9 @@ interface SettingsState {
   provider: 'openai' | 'mock'
   model: string
   promptOverride: string
+  creativeMonthlyCapEur: number
+  creativeDefaultModel: string
+  creativeAutoApprove: boolean
 }
 
 const MODELS = [
@@ -40,6 +44,16 @@ const MODELS = [
   'gpt-5.4',
   'gpt-5.4-mini',
   'gpt-5-mini',
+]
+
+const CREATIVE_MODELS = [
+  'black-forest-labs/flux-kontext-pro',
+  'black-forest-labs/flux-1.1-pro',
+  'black-forest-labs/flux-schnell',
+  'gpt-image-2',
+  'gpt-image-1.5',
+  'gpt-image-1',
+  'gpt-image-1-mini',
 ]
 
 function cleanString(v: unknown, fallback: string): string {
@@ -52,11 +66,16 @@ export default function ConfigPage() {
     provider: 'openai',
     model: 'gpt-5.5',
     promptOverride: '',
+    creativeMonthlyCapEur: 150,
+    creativeDefaultModel: 'black-forest-labs/flux-kontext-pro',
+    creativeAutoApprove: true,
   })
   const [initialSettings, setInitialSettings] = useState<SettingsState>(settings)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  useAutoDismiss(message, setMessage)
+  useAutoDismiss(error, setError, 10_000)
   const [testResult, setTestResult] = useState<{ label: string; ok: boolean; detail: string } | null>(null)
 
   // Inline form state for a new/updated credential row.
@@ -70,6 +89,9 @@ export default function ConfigPage() {
     default_link_template: '',
   })
   const [busy, setBusy] = useState(false)
+  // Per-credential test state so other rows + the save button stay
+  // clickable while one test is in flight.
+  const [testingLabel, setTestingLabel] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -91,13 +113,22 @@ export default function ConfigPage() {
         settingsMap.set(s.key, s.value)
       }
       const providerRaw = cleanString(settingsMap.get('ai_autopilot_provider'), 'openai')
+      const rawCap = settingsMap.get('ai_creative_monthly_cap_eur')
+      const cap = typeof rawCap === 'number' ? rawCap : Number(rawCap) || 150
+      const rawAuto = settingsMap.get('ai_creative_auto_approve')
       const next: SettingsState = {
         provider: providerRaw === 'mock' ? 'mock' : 'openai',
-        model: cleanString(settingsMap.get('ai_autopilot_model'), 'gpt-4o-mini'),
+        model: cleanString(settingsMap.get('ai_autopilot_model'), 'gpt-5.5'),
         promptOverride:
           settingsMap.get('ai_autopilot_prompt_override') == null
             ? ''
             : cleanString(settingsMap.get('ai_autopilot_prompt_override'), ''),
+        creativeMonthlyCapEur: Number.isFinite(cap) && cap > 0 ? cap : 150,
+        creativeDefaultModel: cleanString(
+          settingsMap.get('ai_creative_default_model'),
+          'black-forest-labs/flux-kontext-pro',
+        ),
+        creativeAutoApprove: typeof rawAuto === 'boolean' ? rawAuto : true,
       }
       setSettings(next)
       setInitialSettings(next)
@@ -141,6 +172,9 @@ export default function ConfigPage() {
         { key: 'ai_autopilot_provider', value: settings.provider },
         { key: 'ai_autopilot_model', value: settings.model },
         { key: 'ai_autopilot_prompt_override', value: settings.promptOverride ? settings.promptOverride : null },
+        { key: 'ai_creative_monthly_cap_eur', value: settings.creativeMonthlyCapEur },
+        { key: 'ai_creative_default_model', value: settings.creativeDefaultModel },
+        { key: 'ai_creative_auto_approve', value: settings.creativeAutoApprove },
       ]
       const res = await fetch('/api/admin/ai-campaigns/guardrails', {
         method: 'POST',
@@ -219,7 +253,7 @@ export default function ConfigPage() {
 
   const testCredential = async (label: string) => {
     try {
-      setBusy(true)
+      setTestingLabel(label)
       setTestResult(null)
       setError(null)
       const res = await fetch(`/api/admin/ai-campaigns/credentials/test?label=${encodeURIComponent(label)}`, {
@@ -239,7 +273,7 @@ export default function ConfigPage() {
     } catch (e) {
       setTestResult({ label, ok: false, detail: (e as Error).message })
     } finally {
-      setBusy(false)
+      setTestingLabel(null)
     }
   }
 
@@ -427,16 +461,16 @@ export default function ConfigPage() {
                     <button
                       type="button"
                       onClick={() => testCredential(c.label)}
-                      disabled={busy}
+                      disabled={testingLabel === c.label}
                       className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md bg-black text-white hover:bg-gray-800 disabled:opacity-50"
                     >
                       <Plug className="w-4 h-4" />
-                      {busy ? 'Testen…' : 'Test verbinding'}
+                      {testingLabel === c.label ? 'Testen…' : 'Test verbinding'}
                     </button>
                     <button
                       type="button"
                       onClick={() => removeCredential(c.id)}
-                      disabled={busy}
+                      disabled={busy || testingLabel === c.label}
                       className="inline-flex items-center gap-1 px-3 py-2 text-xs rounded-md border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Verwijder
@@ -480,7 +514,7 @@ export default function ConfigPage() {
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              <code>gpt-4o-mini</code> is de standaard — ruim genoeg context, lage kosten.
+              <code>gpt-5.5</code> is de standaard — vlaggenschip-model met sterke reasoning op SKU-economics. Daily-audit kost ≈ €6/maand bij dagelijkse runs.
             </p>
           </div>
           <div className="sm:col-span-2">
@@ -495,6 +529,66 @@ export default function ConfigPage() {
             <p className="text-xs text-gray-500 mt-1">
               Alleen vullen wanneer er een nieuwe prompt-versie is uitgerold. Wij vergelijken de hash voor reproducibility.
             </p>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 mt-6 pt-5">
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">Creative pipeline</h3>
+          <p className="text-xs text-gray-600 mb-4">
+            Knobs voor de AI image generator (gebruikt op <code>/admin/ai-campaigns/creatives</code>). De budget-cap geldt voor Replicate en OpenAI samen.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Maandbudget (EUR)</label>
+              <input
+                type="number"
+                min={0}
+                step={10}
+                value={settings.creativeMonthlyCapEur}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    creativeMonthlyCapEur: Math.max(0, Number(e.target.value) || 0),
+                  })
+                }
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Runs worden geweigerd zodra MTD + verwachte run-kosten boven deze cap uitkomen.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Standaard model</label>
+              <select
+                value={settings.creativeDefaultModel}
+                onChange={(e) => setSettings({ ...settings, creativeDefaultModel: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black bg-white"
+              >
+                {CREATIVE_MODELS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Provider wordt automatisch gekozen op basis van de prefix (gpt-image-* → OpenAI).
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Auto-approve</label>
+              <label className="inline-flex items-center gap-2 mt-1.5 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={settings.creativeAutoApprove}
+                  onChange={(e) => setSettings({ ...settings, creativeAutoApprove: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                Variants die alle QA-drempels halen direct goedkeuren
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Uit zetten om altijd handmatig te reviewen (veiliger bij eerste batches).
+              </p>
+            </div>
           </div>
         </div>
         <div className="mt-4 flex items-center gap-3">

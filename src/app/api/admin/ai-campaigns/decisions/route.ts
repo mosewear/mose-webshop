@@ -30,6 +30,9 @@ export async function GET(req: NextRequest) {
     if (decisionRes.error) {
       return NextResponse.json({ error: decisionRes.error.message }, { status: 500 })
     }
+    if (!decisionRes.data) {
+      return NextResponse.json({ error: 'Beslissing niet gevonden.' }, { status: 404 })
+    }
     return NextResponse.json({
       decision: decisionRes.data,
       actions: actionsRes.data ?? [],

@@ -39,8 +39,11 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json({ ok: true, ...result })
   } catch (e) {
+    // 500 so Vercel's cron dashboard + Sentry register the failure.
+    // The orchestrator already persisted a row in ad_autopilot_decisions
+    // with status='failed', so admins can still trace what went wrong.
     const message = (e as Error).message
     console.error('[cron/autopilot-daily-decision] failed:', message)
-    return NextResponse.json({ ok: false, error: message }, { status: 200 })
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }

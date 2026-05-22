@@ -87,14 +87,18 @@ interface AdSetSnapshot extends Record<string, unknown> {
 }
 
 async function fetchAdSetPrior(client: MetaMarketingClient, adSetId: string): Promise<AdSetSnapshot> {
-  const all = await client.getAdSets(['id', 'name', 'status', 'effective_status', 'daily_budget', 'lifetime_budget'])
-  const hit = all.find((a) => a.id === adSetId)
-  if (!hit) return {}
-  return {
-    daily_budget: hit.daily_budget ?? null,
-    lifetime_budget: hit.lifetime_budget ?? null,
-    status: hit.status ?? null,
-    effective_status: hit.effective_status ?? null,
+  try {
+    const hit = await client.getAdSet(adSetId)
+    return {
+      daily_budget: hit.daily_budget ?? null,
+      lifetime_budget: hit.lifetime_budget ?? null,
+      status: hit.status ?? null,
+      effective_status: hit.effective_status ?? null,
+    }
+  } catch {
+    // Don't block the mutation just because we couldn't snapshot;
+    // revert window will surface the empty prior_state to the admin.
+    return {}
   }
 }
 
@@ -109,14 +113,33 @@ async function fetchCampaignPrior(
   client: MetaMarketingClient,
   campaignId: string,
 ): Promise<CampaignSnapshot> {
-  const all = await client.getCampaigns()
-  const hit = all.find((c) => c.id === campaignId)
-  if (!hit) return {}
-  return {
-    daily_budget: hit.daily_budget ?? null,
-    lifetime_budget: hit.lifetime_budget ?? null,
-    status: hit.status ?? null,
-    effective_status: hit.effective_status ?? null,
+  try {
+    const hit = await client.getCampaign(campaignId)
+    return {
+      daily_budget: hit.daily_budget ?? null,
+      lifetime_budget: hit.lifetime_budget ?? null,
+      status: hit.status ?? null,
+      effective_status: hit.effective_status ?? null,
+    }
+  } catch {
+    return {}
+  }
+}
+
+interface AdSnapshot extends Record<string, unknown> {
+  status?: string | null
+  effective_status?: string | null
+}
+
+async function fetchAdPrior(client: MetaMarketingClient, adId: string): Promise<AdSnapshot> {
+  try {
+    const hit = await client.getAd(adId)
+    return {
+      status: hit.status ?? null,
+      effective_status: hit.effective_status ?? null,
+    }
+  } catch {
+    return {}
   }
 }
 
@@ -299,6 +322,10 @@ export async function executeApprovedActions(input: ExecutorRunInput): Promise<E
       }
 
       if (action.action_type === 'pause_ad' || action.action_type === 'resume_ad') {
+        // Capture real status before mutation so the 30-day revert
+        // can restore it exactly (instead of defaulting to ACTIVE and
+        // accidentally turning on a deliberately paused ad).
+        const prior = await fetchAdPrior(client, action.target.meta_id)
         const resp = await client.updateAd(action.target.meta_id, {
           status: action.action_type === 'pause_ad' ? 'PAUSED' : 'ACTIVE',
         })
@@ -307,7 +334,7 @@ export async function executeApprovedActions(input: ExecutorRunInput): Promise<E
           action,
           status: 'executed',
           guardrail_outcome: 'allowed',
-          prior_state: { note: 'prior status not captured (lookup unsupported)' },
+          prior_state: prior,
           meta_response: resp,
           executed_at: new Date().toISOString(),
         })

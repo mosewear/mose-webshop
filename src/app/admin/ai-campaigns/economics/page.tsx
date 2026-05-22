@@ -14,6 +14,7 @@ import {
   Trash2,
   Info,
 } from 'lucide-react'
+import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
 
 interface VariantRow {
   id: string
@@ -76,6 +77,8 @@ export default function EconomicsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  useAutoDismiss(message, setMessage)
+  useAutoDismiss(error, setError, 10_000)
   const [savingKey, setSavingKey] = useState<string | null>(null)
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set())
   const [showImport, setShowImport] = useState(false)

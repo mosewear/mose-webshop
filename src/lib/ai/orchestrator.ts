@@ -211,14 +211,17 @@ export async function runAutopilotDailyDecision(
   const decisionId = decisionInsert.id as string
 
   try {
-    if (!guardrails.enabled && guardrails.mode !== 'advisory') {
-      // Killswitch path: still log a decision row so the UI can show why.
+    // Killswitch: when the admin flips `ai_autopilot_enabled` to false
+    // we short-circuit before any LLM tokens are spent. The mode still
+    // matters once enabled — `advisory` produces decisions but doesn't
+    // execute, `bounded`/`full` do.
+    if (!guardrails.enabled) {
       await supabase
         .from('ad_autopilot_decisions')
         .update({
           status: 'killswitch',
           run_completed_at: new Date().toISOString(),
-          input_summary: { reason: 'killswitch' },
+          input_summary: { reason: 'autopilot_disabled', mode: guardrails.mode },
         })
         .eq('id', decisionId)
       return {
