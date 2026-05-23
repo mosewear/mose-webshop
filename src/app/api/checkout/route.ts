@@ -11,6 +11,7 @@ import {
   clampRedeemAmount,
   maskFromLast4,
 } from '@/lib/gift-cards'
+import { computePromoEligibility } from '@/lib/promo-code-eligibility'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
@@ -264,95 +265,105 @@ export async function POST(request: Request) {
       // ============================================
       // NO-STACKING DISCOUNT LOGIC
       // ============================================
-      console.log('🔍 Checking for existing discounts on items...')
-      
-      // Calculate subtotal of items WITHOUT discount (eligible for promo code)
-      let subtotalEligibleForPromo = 0
-      let subtotalWithExistingDiscount = 0
-      
-      for (const item of items) {
-        // Gift cards are excluded from promo-code eligibility and not
-        // counted as "has existing discount" either — the code simply
-        // doesn't apply to them.
-        if (item.is_gift_card) {
-          continue
-        }
+      // Sale-vs-promo eligibility goes through the shared helper
+      // (`src/lib/promo-code-eligibility.ts`) so checkout, the cart
+      // validate endpoint and ExpressCheckout all apply the same rule.
+      console.log(
+        '🔍 Promo eligibility check — sale-stacking:',
+        promoCode.applies_to_sale_items ? 'allowed' : 'blocked',
+      )
 
-        // Fetch product to check if it has a sale_price
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('base_price, sale_price')
-          .eq('id', item.product_id)
-          .single()
-        
-        if (productError || !product) {
-          console.error('❌ Product not found:', item.product_id)
-          continue
-        }
-        
-        const hasDiscount = product.sale_price && product.sale_price < product.base_price
-        const itemTotal = item.quantity * item.unit_price
-        
-        if (hasDiscount) {
-          subtotalWithExistingDiscount += itemTotal
-          console.log(`  ❌ Item "${item.product_name}" already has discount (${product.base_price} → ${product.sale_price}) - NOT eligible for promo`)
-        } else {
-          subtotalEligibleForPromo += itemTotal
-          console.log(`  ✅ Item "${item.product_name}" has no discount - eligible for promo`)
-        }
-      }
-      
-      console.log('📊 Subtotal eligible for promo:', subtotalEligibleForPromo)
-      console.log('📊 Subtotal with existing discount:', subtotalWithExistingDiscount)
-      
-      // If ALL items already have discount, promo code cannot be applied
-      if (subtotalEligibleForPromo === 0) {
-        console.error('❌ All items already have discount - promo code cannot be applied')
-        return NextResponse.json(
-          { 
-            error: 'Korting op korting niet mogelijk',
-            details: 'Deze kortingscode kan niet worden toegepast omdat alle items in je winkelwagen al korting hebben. Kortingscodes werken alleen op producten zonder bestaande korting.'
-          },
-          { status: 400 }
-        )
-      }
-      
-      // Check if promo code has minimum order value (only count eligible items)
-      if (promoCode.min_order_value && subtotalEligibleForPromo < promoCode.min_order_value) {
-        console.error('❌ Eligible items total below minimum:', subtotalEligibleForPromo, 'Required:', promoCode.min_order_value)
-        return NextResponse.json(
-          { 
-            error: 'Minimaal bedrag niet bereikt',
-            details: `Deze kortingscode vereist een minimaal bestelbedrag van €${promoCode.min_order_value.toFixed(2)} aan producten zonder bestaande korting. Je hebt momenteel €${subtotalEligibleForPromo.toFixed(2)} aan items zonder korting.`
-          },
-          { status: 400 }
-        )
-      }
-      
-      // Check usage limit
+      // Usage-limit check first — independent of cart contents.
       if (promoCode.usage_limit && promoCode.usage_count >= promoCode.usage_limit) {
         console.error('❌ Promo code usage limit reached:', order.promo_code)
         return NextResponse.json(
-          { 
+          {
             error: 'Kortingscode maximaal gebruikt',
-            details: `De kortingscode "${order.promo_code}" is helaas al maximaal gebruikt`
+            details: `De kortingscode "${order.promo_code}" is helaas al maximaal gebruikt`,
           },
-          { status: 400 }
+          { status: 400 },
         )
       }
-      
-      // Calculate discount ONLY on eligible items (SERVER-SIDE - trusted source)
-      if (promoCode.discount_type === 'percentage') {
-        validatedDiscount = (subtotalEligibleForPromo * promoCode.discount_value) / 100
-      } else if (promoCode.discount_type === 'fixed') {
-        validatedDiscount = Math.min(promoCode.discount_value, subtotalEligibleForPromo)
+
+      // Build the eligibility input by joining items with product sale
+      // info in one round-trip.
+      const productIds = Array.from(
+        new Set(
+          items
+            .filter((it: { is_gift_card?: boolean }) => !it.is_gift_card)
+            .map((it: { product_id: string }) => it.product_id),
+        ),
+      )
+      const { data: productRows } = productIds.length
+        ? await supabase
+            .from('products')
+            .select('id, base_price, sale_price')
+            .in('id', productIds as string[])
+        : { data: [] as Array<{ id: string; base_price: number | null; sale_price: number | null }> }
+      const productMap = new Map<string, { base_price: number | null; sale_price: number | null }>()
+      for (const p of productRows ?? []) {
+        productMap.set(p.id, { base_price: p.base_price, sale_price: p.sale_price })
       }
-      
-      // Ensure discount doesn't exceed eligible subtotal
-      validatedDiscount = Math.min(validatedDiscount, subtotalEligibleForPromo)
-      
+
+      const eligibilityLines = items.map(
+        (it: {
+          product_id: string
+          product_name?: string
+          quantity: number
+          unit_price: number
+          is_gift_card?: boolean
+        }) => {
+          const product = productMap.get(it.product_id)
+          return {
+            productId: it.product_id,
+            productName: it.product_name,
+            unitPrice: Number(it.unit_price) || 0,
+            quantity: Number(it.quantity) || 0,
+            basePrice: product?.base_price ?? null,
+            salePrice: product?.sale_price ?? null,
+            isGiftCard: !!it.is_gift_card,
+          }
+        },
+      )
+
+      const eligibility = computePromoEligibility(
+        {
+          code: promoCode.code,
+          discount_type: promoCode.discount_type,
+          discount_value: Number(promoCode.discount_value),
+          min_order_value:
+            promoCode.min_order_value != null ? Number(promoCode.min_order_value) : null,
+          applies_to_sale_items: !!promoCode.applies_to_sale_items,
+        },
+        eligibilityLines,
+      )
+
+      if (!eligibility.eligible) {
+        const status = eligibility.reason === 'min_order_not_met' ? 400 : 400
+        const headline =
+          eligibility.reason === 'min_order_not_met'
+            ? 'Minimaal bedrag niet bereikt'
+            : 'Korting op korting niet mogelijk'
+        console.error('❌ Promo eligibility failed:', eligibility.reason)
+        return NextResponse.json(
+          {
+            error: headline,
+            details: eligibility.errorMessage,
+          },
+          { status },
+        )
+      }
+
+      validatedDiscount = eligibility.discountAmount
+
       console.log('✅ Promo code validated:', order.promo_code)
-      console.log('✅ Discount calculated:', validatedDiscount, '(only on items without existing discount)')
+      console.log(
+        '✅ Discount calculated:',
+        validatedDiscount,
+        promoCode.applies_to_sale_items
+          ? '(includes sale items)'
+          : '(sale items excluded from base)',
+      )
     }
     
     // Override client-provided discount with server-validated discount

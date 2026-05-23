@@ -72,6 +72,8 @@ export interface CampaignPromoCodeMeta {
   discount_value: number
   is_active: boolean
   expires_at: string | null
+  /** When true, this code stacks on top of sale-priced items. */
+  applies_to_sale_items: boolean
 }
 
 export interface ResolvedCampaign {

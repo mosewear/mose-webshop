@@ -41,6 +41,13 @@ export interface ActivePromoCode {
   expires_at: string | null
   /** Days until expiry — null if no expiry. */
   expires_in_days: number | null
+  /**
+   * True when the code is configured to stack on top of sale-priced
+   * items. Default false — a promo with `applies_to_sale_items=false`
+   * cannot be combined with the sale and must NOT appear in ad copy
+   * targeting an on-sale SKU.
+   */
+  applies_to_sale_items: boolean
 }
 
 export interface PricingContext {
@@ -99,6 +106,7 @@ interface PromoRow {
   subscriber_id: string | null
   usage_limit: number | null
   usage_count: number | null
+  applies_to_sale_items: boolean | null
 }
 
 function num(v: unknown): number {
@@ -164,7 +172,7 @@ export async function getPricingContext(productId: string): Promise<PricingConte
     supabase
       .from('promo_codes')
       .select(
-        'code, description, discount_type, discount_value, min_order_value, expires_at, is_active, subscriber_id, usage_limit, usage_count',
+        'code, description, discount_type, discount_value, min_order_value, expires_at, is_active, subscriber_id, usage_limit, usage_count, applies_to_sale_items',
       )
       .eq('is_active', true)
       .is('subscriber_id', null) // skip personal/subscriber-bound codes
@@ -204,6 +212,11 @@ export async function getPricingContext(productId: string): Promise<PricingConte
       if (!p.is_active) return false
       if (p.subscriber_id) return false
       if (p.usage_limit != null && p.usage_count != null && p.usage_count >= p.usage_limit) return false
+      // Filter out codes that won't actually apply to *this* product:
+      // when the product is on sale, only codes with
+      // `applies_to_sale_items=true` are usable. Surfacing the other
+      // ones in the ad copy would mislead shoppers.
+      if (hasSale && !p.applies_to_sale_items) return false
       return true
     })
     .map<ActivePromoCode>((p) => {
@@ -217,6 +230,7 @@ export async function getPricingContext(productId: string): Promise<PricingConte
         min_order_value: p.min_order_value != null ? num(p.min_order_value) : null,
         expires_at: p.expires_at,
         expires_in_days: days,
+        applies_to_sale_items: !!p.applies_to_sale_items,
       }
     })
 
@@ -369,7 +383,7 @@ export async function getPricingContextBatch(productIds: string[]): Promise<Map<
     supabase
       .from('promo_codes')
       .select(
-        'code, description, discount_type, discount_value, min_order_value, expires_at, is_active, subscriber_id, usage_limit, usage_count',
+        'code, description, discount_type, discount_value, min_order_value, expires_at, is_active, subscriber_id, usage_limit, usage_count, applies_to_sale_items',
       )
       .eq('is_active', true)
       .is('subscriber_id', null)
@@ -408,19 +422,28 @@ export async function getPricingContextBatch(productIds: string[]): Promise<Map<
         }))
       : []
 
-    const promos = allPromos.map<ActivePromoCode>((p) => {
-      const exp = p.expires_at ? new Date(p.expires_at).getTime() : null
-      const days = exp ? Math.max(0, Math.round((exp - Date.now()) / 86_400_000)) : null
-      return {
-        code: p.code,
-        description: p.description,
-        discount_type: p.discount_type === 'percentage' ? 'percentage' : 'fixed',
-        discount_value: num(p.discount_value),
-        min_order_value: p.min_order_value != null ? num(p.min_order_value) : null,
-        expires_at: p.expires_at,
-        expires_in_days: days,
-      }
-    })
+    const promos = allPromos
+      .filter((p) => {
+        // Same per-product gate as `getPricingContext`: hide codes
+        // that don't actually apply to this product because it's on
+        // sale and the code doesn't stack on sale items.
+        if (hasSale && !p.applies_to_sale_items) return false
+        return true
+      })
+      .map<ActivePromoCode>((p) => {
+        const exp = p.expires_at ? new Date(p.expires_at).getTime() : null
+        const days = exp ? Math.max(0, Math.round((exp - Date.now()) / 86_400_000)) : null
+        return {
+          code: p.code,
+          description: p.description,
+          discount_type: p.discount_type === 'percentage' ? 'percentage' : 'fixed',
+          discount_value: num(p.discount_value),
+          min_order_value: p.min_order_value != null ? num(p.min_order_value) : null,
+          expires_at: p.expires_at,
+          expires_in_days: days,
+          applies_to_sale_items: !!p.applies_to_sale_items,
+        }
+      })
     const bestPromo = [...promos].sort((a, b) => {
       const score = (p: ActivePromoCode) =>
         p.discount_type === 'percentage' ? p.discount_value * 10 : p.discount_value
@@ -492,7 +515,7 @@ export async function getActiveGeneralPromos(): Promise<ActivePromoCode[]> {
   const { data } = await supabase
     .from('promo_codes')
     .select(
-      'code, description, discount_type, discount_value, min_order_value, expires_at, is_active, subscriber_id, usage_limit, usage_count',
+      'code, description, discount_type, discount_value, min_order_value, expires_at, is_active, subscriber_id, usage_limit, usage_count, applies_to_sale_items',
     )
     .eq('is_active', true)
     .is('subscriber_id', null)
@@ -516,6 +539,7 @@ export async function getActiveGeneralPromos(): Promise<ActivePromoCode[]> {
         min_order_value: p.min_order_value != null ? num(p.min_order_value) : null,
         expires_at: p.expires_at,
         expires_in_days: days,
+        applies_to_sale_items: !!p.applies_to_sale_items,
       }
     })
 }

@@ -23,6 +23,7 @@ export default function QuickPromoCodeModal({
   const [value, setValue] = useState<string>('15')
   const [minOrder, setMinOrder] = useState<string>('0')
   const [expiresAt, setExpiresAt] = useState<string>('')
+  const [appliesToSaleItems, setAppliesToSaleItems] = useState<boolean>(false)
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -33,6 +34,7 @@ export default function QuickPromoCodeModal({
       setValue('15')
       setMinOrder('0')
       setExpiresAt('')
+      setAppliesToSaleItems(false)
       requestAnimationFrame(() => inputRef.current?.focus())
     }
   }, [open, defaultCode])
@@ -61,6 +63,7 @@ export default function QuickPromoCodeModal({
           discount_value: Number(value),
           min_order_value: Number(minOrder),
           expires_at: expiresAt || null,
+          applies_to_sale_items: appliesToSaleItems,
         }),
       })
       const json = (await res.json()) as {
@@ -199,6 +202,24 @@ export default function QuickPromoCodeModal({
               className="w-full px-3 py-2.5 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
             />
           </div>
+
+          <label className="flex items-start gap-3 p-3 border-2 border-gray-100 bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={appliesToSaleItems}
+              onChange={(e) => setAppliesToSaleItems(e.target.checked)}
+              className="w-4 h-4 mt-0.5"
+            />
+            <span className="flex-1">
+              <span className="block text-xs font-bold text-gray-900 uppercase tracking-wider">
+                Geldig op afgeprijsde artikelen
+              </span>
+              <span className="block text-[11px] text-gray-600 mt-1 font-normal">
+                Standaard werkt deze code <strong>niet</strong> op sale-items. Vink aan om wel te
+                stapelen bovenop sale-prijzen.
+              </span>
+            </span>
+          </label>
 
           <div className="flex gap-2 pt-2">
             <button

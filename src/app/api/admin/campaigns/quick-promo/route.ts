@@ -9,6 +9,7 @@ interface QuickPromoBody {
   discount_value?: number | string
   min_order_value?: number | string
   expires_at?: string | null
+  applies_to_sale_items?: boolean
 }
 
 const CODE_RE = /^[A-Z0-9_-]{3,40}$/
@@ -81,9 +82,10 @@ export async function POST(req: NextRequest) {
       min_order_value: Number.isFinite(min_order_value) && min_order_value > 0 ? min_order_value : 0,
       expires_at: body.expires_at && body.expires_at !== '' ? body.expires_at : null,
       is_active: true,
+      applies_to_sale_items: !!body.applies_to_sale_items,
       created_by: user.id,
     })
-    .select('id, code, discount_type, discount_value, is_active, expires_at')
+    .select('id, code, discount_type, discount_value, is_active, expires_at, applies_to_sale_items')
     .single()
 
   if (error || !data) {

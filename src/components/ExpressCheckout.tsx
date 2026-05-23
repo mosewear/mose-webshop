@@ -130,18 +130,57 @@ export default function ExpressCheckout({
               }
             }
 
+            // Re-validate the promo against the cart server-side before
+            // we insert the order. The discount we received as a prop
+            // came from CartDrawer (already validated) but products /
+            // sale flags may have shifted between cart view and pay-tap.
+            // /api/validate-promo-code is the single source of truth
+            // and respects the new `applies_to_sale_items` toggle.
+            let validatedDiscount = discount
+            if (promoCode) {
+              try {
+                const resp = await fetch('/api/validate-promo-code', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    code: promoCode,
+                    orderTotal: subtotal,
+                    items: cartItems.map((c) => ({
+                      product_id: c.productId,
+                      variant_id: c.variantId,
+                      quantity: c.quantity,
+                      unit_price: c.price,
+                      product_name: c.name,
+                    })),
+                  }),
+                })
+                const body = await resp.json()
+                if (resp.ok && body.valid) {
+                  validatedDiscount = Number(body.discountAmount) || 0
+                } else {
+                  // Promo no longer valid — drop it rather than fail
+                  // the whole express checkout flow.
+                  console.warn('[Express Checkout] promo re-validate failed:', body.error)
+                  validatedDiscount = 0
+                }
+              } catch (err) {
+                console.warn('[Express Checkout] promo re-validate threw, falling back to 0:', err)
+                validatedDiscount = 0
+              }
+            }
+
             // Create order in database
             const { data: order, error: orderError } = await supabase
               .from('orders')
               .insert({
                 email: e.payerEmail,
                 status: 'pending',
-                total: subtotal - discount - staffelSavings + shippingCost,
-                subtotal: subtotal - discount - staffelSavings,
+                total: subtotal - validatedDiscount - staffelSavings + shippingCost,
+                subtotal: subtotal - validatedDiscount - staffelSavings,
                 shipping_cost: shippingCost,
                 tax_amount: 0,
-                promo_code: promoCode || null,
-                discount_amount: discount,
+                promo_code: validatedDiscount > 0 ? promoCode || null : null,
+                discount_amount: validatedDiscount,
                 shipping_address: {
                   name: capitalizeName(e.payerName || ''),
                   address: e.shippingAddress?.addressLine?.[0] || '',
@@ -246,7 +285,7 @@ export default function ExpressCheckout({
 
             const newSubtotal = orderItems.reduce((sum, item) => sum + (item.subtotal || 0), 0)
             const newTotal =
-              Math.round((newSubtotal - discount + shippingCost) * 100) / 100
+              Math.round((newSubtotal - validatedDiscount + shippingCost) * 100) / 100
 
             const { error: itemsError } = await supabase
               .from('order_items')

@@ -3605,6 +3605,7 @@ export type Database = {
       }
       promo_codes: {
         Row: {
+          applies_to_sale_items: boolean
           code: string
           created_at: string
           created_by: string | null
@@ -3621,6 +3622,7 @@ export type Database = {
           usage_limit: number | null
         }
         Insert: {
+          applies_to_sale_items?: boolean
           code: string
           created_at?: string
           created_by?: string | null
@@ -3637,6 +3639,7 @@ export type Database = {
           usage_limit?: number | null
         }
         Update: {
+          applies_to_sale_items?: boolean
           code?: string
           created_at?: string
           created_by?: string | null

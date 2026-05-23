@@ -30,7 +30,7 @@ async function fetchActiveCampaignFromDb(): Promise<ResolvedCampaign | null> {
     if (row.promo_code_id) {
       const { data: codeData } = await supabase
         .from('promo_codes')
-        .select('id, code, discount_type, discount_value, is_active, expires_at')
+        .select('id, code, discount_type, discount_value, is_active, expires_at, applies_to_sale_items')
         .eq('id', row.promo_code_id)
         .maybeSingle()
 

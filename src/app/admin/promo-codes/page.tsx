@@ -15,6 +15,7 @@ interface PromoCode {
   usage_count: number
   expires_at: string | null
   is_active: boolean
+  applies_to_sale_items: boolean
   created_at: string
 }
 
@@ -32,6 +33,7 @@ export default function PromoCodesPage() {
     usage_limit: '',
     expires_at: '',
     is_active: true,
+    applies_to_sale_items: false,
   })
 
   useEffect(() => {
@@ -86,6 +88,7 @@ export default function PromoCodesPage() {
         usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
         expires_at: formData.expires_at || null,
         is_active: formData.is_active,
+        applies_to_sale_items: formData.applies_to_sale_items,
       }
 
       if (editingId) {
@@ -119,6 +122,7 @@ export default function PromoCodesPage() {
       usage_limit: promoCode.usage_limit?.toString() || '',
       expires_at: promoCode.expires_at ? promoCode.expires_at.split('T')[0] : '',
       is_active: promoCode.is_active,
+      applies_to_sale_items: !!promoCode.applies_to_sale_items,
     })
     setShowCreateForm(true)
   }
@@ -163,6 +167,7 @@ export default function PromoCodesPage() {
       usage_limit: '',
       expires_at: '',
       is_active: true,
+      applies_to_sale_items: false,
     })
     setEditingId(null)
     setShowCreateForm(false)
@@ -326,17 +331,39 @@ export default function PromoCodesPage() {
               />
             </div>
 
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="is_active"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <label htmlFor="is_active" className="text-xs md:text-sm font-bold text-gray-700 uppercase tracking-wider">
-                Code is actief
-              </label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="is_active" className="text-xs md:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                  Code is actief
+                </label>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 border-2 border-gray-100 bg-gray-50">
+                <input
+                  type="checkbox"
+                  id="applies_to_sale_items"
+                  checked={formData.applies_to_sale_items}
+                  onChange={(e) => setFormData({ ...formData, applies_to_sale_items: e.target.checked })}
+                  className="w-4 h-4 mt-0.5"
+                />
+                <label htmlFor="applies_to_sale_items" className="flex-1 cursor-pointer">
+                  <span className="block text-xs md:text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    Geldig op afgeprijsde artikelen
+                  </span>
+                  <span className="block text-xs text-gray-600 mt-1 normal-case font-normal">
+                    Standaard werken kortingscodes <strong>niet</strong> op artikelen die al in de sale staan.
+                    Vink dit aan om deze code <strong>wel</strong> bovenop sale-prijzen te laten gelden (stapeling).
+                    De staffelkorting-blokkade blijft hoe dan ook actief.
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
@@ -383,6 +410,11 @@ export default function PromoCodesPage() {
                       <div className="text-base font-bold text-gray-900 font-mono">{code.code}</div>
                       {code.description && (
                         <div className="text-xs text-gray-500 mt-1">{code.description}</div>
+                      )}
+                      {code.applies_to_sale_items && (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
+                          + sale items
+                        </span>
                       )}
                     </div>
                     <button
@@ -473,6 +505,14 @@ export default function PromoCodesPage() {
                           <div className="text-sm font-bold text-gray-900 font-mono">{code.code}</div>
                           {code.description && (
                             <div className="text-xs text-gray-500 mt-1">{code.description}</div>
+                          )}
+                          {code.applies_to_sale_items && (
+                            <span
+                              className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200"
+                              title="Deze code stapelt bovenop sale-prijzen."
+                            >
+                              + sale items
+                            </span>
                           )}
                         </div>
                       </td>
