@@ -4779,8 +4779,8 @@ export type Database = {
       move_product_order: {
         Args: { p_direction: string; p_product_id: string }
         Returns: {
-          display_order: number
-          id: string
+          result_display_order: number
+          result_id: string
         }[]
       }
       newsletter_recipients_not_yet_mailed: {
