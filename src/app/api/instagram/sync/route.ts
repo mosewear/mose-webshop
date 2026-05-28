@@ -52,10 +52,18 @@ async function handle(req: NextRequest) {
 
     let media
     try {
+      // Fetch a wide window (100 = Graph API max per page) so we can
+      // safely prune any DB row whose Instagram post got deleted —
+      // without false-positively hiding legitimately-old posts that
+      // simply fell out of a smaller window. For MOSE's account this
+      // covers all media in a single round-trip; for accounts with
+      // 100+ Instagram posts the prune simply marks the oldest ones
+      // hidden, which is benign because nothing surfaces them anyway
+      // (the widgets all cap rendered posts at `max_posts` ≤ ~24).
       media = await fetchRecentMedia(
         creds.long_lived_token,
         creds.business_account_id,
-        24
+        100,
       )
     } catch (err: unknown) {
       const status = err instanceof InstagramGraphError ? err.status : 500
@@ -74,9 +82,14 @@ async function handle(req: NextRequest) {
     }
 
     let upserted = 0
+    // Re-activate (is_hidden=false) any post that re-appears in the
+    // Graph fetch — covers the case where a previously-pruned row
+    // turns out to still exist (e.g. transient API hiccup last sync).
     for (const item of media) {
-      // Upsert op instagram_id zodat curatie-velden (is_hidden,
-      // is_pinned, pin_order, caption_en) bewaard blijven.
+      // Upsert op instagram_id zodat curatie-velden (is_pinned,
+      // pin_order, caption_en) bewaard blijven. `is_hidden` wordt
+      // hier expliciet gereset zodat een eerder onterecht-gepruunde
+      // post weer zichtbaar wordt zodra hij in de fetch terugkomt.
       const { error } = await supabase
         .from('instagram_posts')
         .upsert(
@@ -90,10 +103,51 @@ async function handle(req: NextRequest) {
             like_count: typeof item.like_count === 'number' ? item.like_count : null,
             taken_at: item.timestamp || null,
             source: 'graph',
+            is_hidden: false,
           },
-          { onConflict: 'instagram_id', ignoreDuplicates: false }
+          { onConflict: 'instagram_id', ignoreDuplicates: false },
         )
       if (!error) upserted++
+    }
+
+    // -----------------------------------------------------------------
+    // Prune: mark graph-sourced rows whose Instagram ID is no longer in
+    // the fetched set as `is_hidden = true`. This is the fix for
+    // "deleted IG post still shows as a ? placeholder" — Graph no
+    // longer returns the post, so we remove it from the storefront.
+    //
+    // Safety guards:
+    //   - Only prune when the fetch returned ≥ 1 item. A 0-result is
+    //     almost always a transient API/auth issue, not a "MOSE deleted
+    //     all their posts" event; pruning everything would be terrible.
+    //   - Only touch graph-sourced rows. `source = 'manual'` posts are
+    //     curated by an admin and must never be auto-pruned.
+    //   - Use `is_hidden = true` (not DELETE) so curation fields
+    //     (is_pinned, pin_order, caption_en) survive — and the admin
+    //     can still see/restore the post in /admin/instagram.
+    // -----------------------------------------------------------------
+    let pruned = 0
+    if (media.length > 0) {
+      // Instagram media IDs are numeric strings (e.g. "17890..."), so
+      // we pass them unquoted in the PostgREST `in` filter list. The
+      // parens are part of the value syntax for `not in`.
+      const liveIds = media
+        .map((m) => m.id)
+        .filter((id): id is string => typeof id === 'string' && /^[0-9]+$/.test(id))
+      if (liveIds.length > 0) {
+        const { data: prunedRows, error: pruneError } = await supabase
+          .from('instagram_posts')
+          .update({ is_hidden: true })
+          .eq('source', 'graph')
+          .eq('is_hidden', false)
+          .not('instagram_id', 'in', `(${liveIds.join(',')})`)
+          .select('id')
+        if (pruneError) {
+          console.error('[instagram/sync] prune failed:', pruneError)
+        } else {
+          pruned = prunedRows?.length ?? 0
+        }
+      }
     }
 
     await supabase
@@ -111,6 +165,7 @@ async function handle(req: NextRequest) {
       success: true,
       fetched: media.length,
       upserted,
+      pruned,
     })
   } catch (error: unknown) {
     console.error('[instagram/sync] error:', error)

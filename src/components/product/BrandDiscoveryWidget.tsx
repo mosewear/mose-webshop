@@ -69,6 +69,7 @@ import {
 import { useCartDrawer } from '@/store/cartDrawer'
 import { Link as LocaleLink } from '@/i18n/routing'
 import type { InstagramPost } from '@/lib/instagram/types'
+import { useHideFailedInstagramPosts } from '@/lib/instagram/useHideFailedPosts'
 import { getPillComponent, type PillDesignId } from './brand-pill'
 import PillMini from './brand-pill/PillMini'
 
@@ -235,7 +236,7 @@ function useEngagedState(
 }
 
 export default function BrandDiscoveryWidget({
-  posts,
+  posts: rawPosts,
   about,
   igUrl,
   pickerEnabled,
@@ -270,6 +271,13 @@ export default function BrandDiscoveryWidget({
   // hebben, los van sessionStorage — voorkomt dubbele triggers binnen
   // dezelfde page-load (bv. bij snelle scroll up/down).
   const bubbleTriggeredRef = useRef(false)
+
+  /* Defense-in-depth: filter posts waarvan de IG-CDN URL 404't
+     (verwijderde post / verlopen media_url). Anders zou de roterende
+     pill-thumb of het modal-grid de browser-default "?"-placeholder
+     tonen tot de volgende sync-prune draait. */
+  const { visiblePosts: posts, markFailed } =
+    useHideFailedInstagramPosts(rawPosts)
 
   // Eerste 3 posts voor de rotatie, eerste 9 voor het grid.
   const rotationPosts = useMemo(() => posts.slice(0, 3), [posts])
@@ -495,6 +503,7 @@ export default function BrandDiscoveryWidget({
           onMouseEnter={handlePillMouseEnter}
           triggerRef={triggerRef}
           visible={visible}
+          onImageFailed={markFailed}
         />
 
         {/* Speech-bubble — verschijnt boven (mobile) of rechts
@@ -529,6 +538,7 @@ export default function BrandDiscoveryWidget({
           locale={locale}
           isDesktop={isDesktop}
           onClose={handleClose}
+          onImageFailed={markFailed}
           tModalEyebrow={tModal('eyebrow')}
           tModalLatestPosts={tModal('latestPosts')}
           tModalIgCta={tModal('igCta')}
@@ -548,6 +558,10 @@ interface BrandDiscoveryModalProps {
   locale: string
   isDesktop: boolean
   onClose: () => void
+  /** Aangeroepen wanneer een grid-thumbnail faalt te laden (404 op
+   *  een verwijderde post / verlopen Graph-CDN URL). De parent
+   *  filtert de post dan uit `gridPosts` zodat het gat verdwijnt. */
+  onImageFailed: (postId: string) => void
   tModalEyebrow: string
   tModalLatestPosts: string
   tModalIgCta: string
@@ -563,6 +577,7 @@ function BrandDiscoveryModal({
   locale,
   isDesktop,
   onClose,
+  onImageFailed,
   tModalEyebrow,
   tModalLatestPosts,
   tModalIgCta,
@@ -712,6 +727,7 @@ function BrandDiscoveryModal({
                           unoptimized={!src.includes('supabase')}
                           loading="lazy"
                           className="object-cover transition-transform duration-500 motion-reduce:transition-none group-hover:scale-105"
+                          onError={() => onImageFailed(post.id)}
                         />
                         {post.media_type !== 'IMAGE' && (
                           <span

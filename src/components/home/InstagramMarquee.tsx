@@ -27,6 +27,7 @@ import type {
   InstagramDisplaySettings,
   InstagramPost,
 } from '@/lib/instagram/types'
+import { useHideFailedInstagramPosts } from '@/lib/instagram/useHideFailedPosts'
 
 interface InstagramMarqueeProps {
   settings: InstagramDisplaySettings
@@ -116,10 +117,20 @@ function useMediaQuery(query: string): boolean {
  *     ze het centrum van de carousel-viewport raken (mobiel) — met
  *     poster-overlay tegen "play-icon flash" / "zwart beeld"
  */
-export default function InstagramMarquee({ settings, posts }: InstagramMarqueeProps) {
+export default function InstagramMarquee({
+  settings,
+  posts: rawPosts,
+}: InstagramMarqueeProps) {
   const t = useTranslations('homepage.instagram')
   const locale = useLocale()
   const pageVisible = usePageVisible()
+
+  /* Defense-in-depth tegen Instagram CDN URLs die 404'en (deleted
+     posts of verlopen media_url tussen sync-runs in). Tegels waarvan
+     de image faalt verdwijnen volledig uit de carousel — geen "?"
+     placeholder. Server-side prune in /api/instagram/sync zorgt
+     uiteindelijk dat het row ook is_hidden krijgt. */
+  const { visiblePosts: posts, markFailed } = useHideFailedInstagramPosts(rawPosts)
   /* A11y: respecteert OS-niveau "reduce motion". CSS animation wordt
      al gedisabled via globals.css, maar video-autoplay moeten we
      hier in JS gateen omdat dat niet via CSS gaat. */
@@ -333,6 +344,7 @@ export default function InstagramMarquee({ settings, posts }: InstagramMarqueePr
                   isPriority={idx < 4}
                   expanded={expandedKey === key}
                   onToggleCaption={toggleCaption}
+                  onImageFailed={markFailed}
                   containerRef={containerRef}
                   pageVisible={pageVisible}
                   prefersReducedMotion={prefersReducedMotion}
@@ -381,6 +393,10 @@ interface TileProps {
   isPriority: boolean
   expanded: boolean
   onToggleCaption: (key: string) => void
+  /** Wordt aangeroepen wanneer poster/image faalt te laden (404 op
+   *  een verwijderde IG-post of verlopen CDN-URL). De parent filtert
+   *  de post dan uit `loopPosts`. */
+  onImageFailed: (postId: string) => void
   containerRef: RefObject<HTMLDivElement | null>
   pageVisible: boolean
   prefersReducedMotion: boolean
@@ -393,6 +409,7 @@ function Tile({
   isPriority,
   expanded,
   onToggleCaption,
+  onImageFailed,
   containerRef,
   pageVisible,
   prefersReducedMotion,
@@ -427,6 +444,7 @@ function Tile({
             pageVisible={pageVisible}
             captionExpanded={expanded}
             prefersReducedMotion={prefersReducedMotion}
+            onPosterFailed={() => onImageFailed(post.id)}
           />
         ) : (
           <Image
@@ -438,6 +456,7 @@ function Tile({
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             priority={isPriority}
             loading={isPriority ? undefined : 'lazy'}
+            onError={() => onImageFailed(post.id)}
           />
         )}
 
@@ -536,6 +555,9 @@ interface VideoTileProps {
   pageVisible: boolean
   captionExpanded: boolean
   prefersReducedMotion: boolean
+  /** Aangeroepen wanneer de poster-image 404't (verwijderde post /
+   *  verlopen IG-CDN URL). Parent verbergt dan de hele tile. */
+  onPosterFailed: () => void
 }
 
 /**
@@ -572,6 +594,7 @@ function VideoTile({
   pageVisible,
   captionExpanded,
   prefersReducedMotion,
+  onPosterFailed,
 }: VideoTileProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null)
   const [inView, setInView] = useState(false)
@@ -629,6 +652,7 @@ function VideoTile({
         }`}
         priority={isPriority}
         loading={isPriority ? undefined : 'lazy'}
+        onError={onPosterFailed}
       />
       {/* Video — alleen mounten bij shouldPlay. KRITISCH: native
           poster-attribuut → browser toont poster zelf tijdens load,

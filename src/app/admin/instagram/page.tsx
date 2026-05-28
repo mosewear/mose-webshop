@@ -655,7 +655,15 @@ export default function AdminInstagramPage() {
       if (!res.ok || !json?.success) {
         flashMessage('Sync mislukt: ' + (json?.error || 'onbekende fout'))
       } else {
-        flashMessage(`Sync voltooid: ${json.upserted}/${json.fetched} posts.`)
+        // `pruned` = aantal posts dat we verbergen omdat ze niet meer
+        // in de Graph-fetch zaten (verwijderd op Instagram). Alleen
+        // tonen wanneer > 0 zodat de gewone "alles oké"-meldingen
+        // kort blijven.
+        const pruned = typeof json.pruned === 'number' ? json.pruned : 0
+        const prunedSuffix = pruned > 0 ? ` · ${pruned} verwijderd` : ''
+        flashMessage(
+          `Sync voltooid: ${json.upserted}/${json.fetched} posts${prunedSuffix}.`,
+        )
       }
       await loadAll()
     } catch (err) {

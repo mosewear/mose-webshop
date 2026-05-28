@@ -7,6 +7,7 @@ import type {
   InstagramDisplaySettings,
   InstagramPost,
 } from '@/lib/instagram/types'
+import { useHideFailedInstagramPosts } from '@/lib/instagram/useHideFailedPosts'
 
 interface PdpInstagramFeedProps {
   settings: InstagramDisplaySettings
@@ -36,9 +37,16 @@ function localizedCaption(post: InstagramPost, locale: string): string | null {
  * Plaatsing: alleen renderen als de fetcher 1+ posts doorgeeft, daarom
  * is er geen "geen posts"-fallback op dit niveau.
  */
-export default function PdpInstagramFeed({ settings, posts }: PdpInstagramFeedProps) {
+export default function PdpInstagramFeed({
+  settings,
+  posts: rawPosts,
+}: PdpInstagramFeedProps) {
   const t = useTranslations('product.instagram')
   const locale = useLocale()
+
+  /* Tegels waarvan de IG-CDN URL 404't (verwijderde post / verlopen
+     media_url) verbergen we direct ipv de browser-default "?". */
+  const { visiblePosts: posts, markFailed } = useHideFailedInstagramPosts(rawPosts)
 
   const ctaUrl = settings.cta_url || `https://www.instagram.com/${settings.username}`
 
@@ -115,6 +123,7 @@ export default function PdpInstagramFeed({ settings, posts }: PdpInstagramFeedPr
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   priority={isPriority}
                   loading={isPriority ? undefined : 'lazy'}
+                  onError={() => markFailed(post.id)}
                 />
 
                 {/* Mediatype-badge: alleen voor video / carousel zodat de

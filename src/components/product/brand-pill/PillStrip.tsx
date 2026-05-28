@@ -32,6 +32,7 @@ export default function PillStrip({
   triggerRef,
   preview = false,
   visible = true,
+  onImageFailed,
 }: PillDesignProps) {
   // Toon altijd 3 cellen. Wanneer er minder posts zijn vullen we aan
   // met null-placeholders (gray-tile + IG-icoon) zodat de strip-vorm
@@ -81,6 +82,11 @@ export default function PillStrip({
                 unoptimized={!src.includes('supabase')}
                 priority
                 className="object-cover"
+                onError={
+                  onImageFailed && post
+                    ? () => onImageFailed(post.id)
+                    : undefined
+                }
               />
             ) : (
               <span className="absolute inset-0 flex items-center justify-center text-gray-400">

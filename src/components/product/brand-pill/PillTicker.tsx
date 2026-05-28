@@ -39,6 +39,7 @@ export default function PillTicker({
   triggerRef,
   preview = false,
   visible = true,
+  onImageFailed,
 }: PillDesignProps) {
   // Eén tekstgroep — wordt 2× gerenderd voor de seamless marquee-loop.
   // De separator-bullets in brand-primary geven het ticker-ritme.
@@ -103,6 +104,7 @@ export default function PillTicker({
               className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                 active ? 'opacity-100' : 'opacity-0'
               }`}
+              onError={onImageFailed ? () => onImageFailed(post.id) : undefined}
             />
           )
         })}

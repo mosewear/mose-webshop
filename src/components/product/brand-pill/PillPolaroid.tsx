@@ -28,6 +28,7 @@ export default function PillPolaroid({
   triggerRef,
   preview = false,
   visible = true,
+  onImageFailed,
 }: PillDesignProps) {
   return (
     <button
@@ -74,6 +75,7 @@ export default function PillPolaroid({
               className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                 active ? 'opacity-100' : 'opacity-0'
               }`}
+              onError={onImageFailed ? () => onImageFailed(post.id) : undefined}
             />
           )
         })}

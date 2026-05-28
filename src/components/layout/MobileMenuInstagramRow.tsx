@@ -17,6 +17,7 @@ import type {
   InstagramFeedData,
   InstagramPost,
 } from '@/lib/instagram/types'
+import { useHideFailedInstagramPosts } from '@/lib/instagram/useHideFailedPosts'
 
 interface MobileMenuInstagramRowProps {
   /** True wanneer het menu (zichtbaar) open staat. Wordt gebruikt om
@@ -121,10 +122,15 @@ export default function MobileMenuInstagramRow({
   }, [everOpened, loaded])
 
   // Eerste 12 posts maximaal.
-  const posts = useMemo(
+  const rawPosts = useMemo(
     () => (data?.posts ?? []).slice(0, MAX_POSTS),
     [data]
   )
+  /* Tegels waarvan de IG-CDN URL faalt (verwijderde post / verlopen
+     media_url) verbergen we direct uit de strip — anders zou de
+     browser z'n default "?"-broken-image tonen. */
+  const { visiblePosts: posts, markFailed } =
+    useHideFailedInstagramPosts(rawPosts)
   // Loop-set: posts 2× gedupliceerd voor naadloze wrap.
   const loopPosts = useMemo(() => [...posts, ...posts], [posts])
 
@@ -272,6 +278,7 @@ export default function MobileMenuInstagramRow({
                   index={idx}
                   locale={locale}
                   viewPostLabel={t('viewPost', { index: (idx % posts.length) + 1 })}
+                  onImageFailed={markFailed}
                 />
               ))}
             </ol>
@@ -313,9 +320,18 @@ interface InstagramThumbProps {
   index: number
   locale: string
   viewPostLabel: string
+  /** Aangeroepen wanneer de IG-CDN URL faalt (404 op verwijderde
+   *  post / verlopen media_url). Parent filtert dan de post weg. */
+  onImageFailed: (postId: string) => void
 }
 
-function InstagramThumb({ post, index, locale, viewPostLabel }: InstagramThumbProps) {
+function InstagramThumb({
+  post,
+  index,
+  locale,
+  viewPostLabel,
+  onImageFailed,
+}: InstagramThumbProps) {
   const imageSrc =
     post.media_type === 'VIDEO' && post.thumbnail_url
       ? post.thumbnail_url
@@ -345,6 +361,7 @@ function InstagramThumb({ post, index, locale, viewPostLabel }: InstagramThumbPr
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
           priority={index < 3}
           loading={index < 3 ? undefined : 'lazy'}
+          onError={() => onImageFailed(post.id)}
         />
 
         {post.media_type !== 'IMAGE' && (

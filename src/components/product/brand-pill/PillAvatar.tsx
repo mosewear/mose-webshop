@@ -28,6 +28,7 @@ export default function PillAvatar({
   triggerRef,
   preview = false,
   visible = true,
+  onImageFailed,
 }: PillDesignProps) {
   return (
     <button
@@ -72,6 +73,7 @@ export default function PillAvatar({
                 className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                   active ? 'opacity-100' : 'opacity-0'
                 }`}
+                onError={onImageFailed ? () => onImageFailed(post.id) : undefined}
               />
             )
           })}

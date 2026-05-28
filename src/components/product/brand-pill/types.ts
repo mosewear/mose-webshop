@@ -46,6 +46,14 @@ export interface PillDesignProps {
    * events-none. Default true.
    */
   visible?: boolean
+  /**
+   * Aangeroepen wanneer een IG-thumbnail-image faalt te laden (404
+   * op een verwijderde post of verlopen Graph-CDN URL). Parent
+   * verbergt de post dan uit de roterende set zodat er nooit een
+   * browser-default "?"-placeholder zichtbaar wordt. Optioneel
+   * voor de admin-preview-modus.
+   */
+  onImageFailed?: (postId: string) => void
 }
 
 export const PILL_DESIGN_IDS = [
