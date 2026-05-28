@@ -3455,6 +3455,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           description_en: string | null
+          display_order: number
           featured: boolean | null
           gift_card_default_validity_months: number | null
           gift_card_max_amount: number | null
@@ -3489,6 +3490,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           description_en?: string | null
+          display_order?: number
           featured?: boolean | null
           gift_card_default_validity_months?: number | null
           gift_card_max_amount?: number | null
@@ -3523,6 +3525,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           description_en?: string | null
+          display_order?: number
           featured?: boolean | null
           gift_card_default_validity_months?: number | null
           gift_card_max_amount?: number | null
@@ -4772,6 +4775,13 @@ export type Database = {
       mark_abandoned_cart_email_sent: {
         Args: { order_uuid: string }
         Returns: undefined
+      }
+      move_product_order: {
+        Args: { p_direction: string; p_product_id: string }
+        Returns: {
+          display_order: number
+          id: string
+        }[]
       }
       newsletter_recipients_not_yet_mailed: {
         Args: { p_limit: number; p_template_key: string }

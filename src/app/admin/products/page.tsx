@@ -21,6 +21,13 @@ interface Product {
   is_gift_card?: boolean
   created_at: string
   updated_at: string
+  /**
+   * Manual sort key matching products.display_order (smaller = higher
+   * in the storefront /shop grid). Managed exclusively through the
+   * move_product_order RPC — never UPDATE directly from the client
+   * or two products end up sharing the same value.
+   */
+  display_order: number
   category?: {
     name: string
   }
@@ -32,6 +39,8 @@ interface Product {
     stock_quantity: number
   }>
 }
+
+type ReorderDirection = 'up' | 'down' | 'top' | 'bottom'
 
 /**
  * Resolves the displayable publish state from a product row.
@@ -57,6 +66,7 @@ export default function AdminProductsPage() {
   const [duplicating, setDuplicating] = useState<string | null>(null)
   const [togglingStatus, setTogglingStatus] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+  const [reordering, setReordering] = useState<string | null>(null)
   const PAGE_SIZE = 25
   const supabase = createClient()
   const router = useRouter()
@@ -75,6 +85,10 @@ export default function AdminProductsPage() {
 
       setTotalCount(count || 0)
 
+      // Sort matches the storefront /shop grid: manual display_order
+      // first, created_at DESC as tiebreaker. This way the admin list
+      // mirrors what visitors actually see, and the ↑ / ↓ buttons
+      // produce the expected effect on this page too.
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -82,6 +96,7 @@ export default function AdminProductsPage() {
           category:categories(name),
           product_images(url, is_primary)
         `)
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: false })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
@@ -91,6 +106,41 @@ export default function AdminProductsPage() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  /**
+   * Reorder a single product via the atomic move_product_order RPC.
+   * The RPC handles top/bottom edge cases by no-op, so we always
+   * refetch the visible page afterwards — products can shuffle
+   * across pagination boundaries (e.g. moving page-2 row to top
+   * brings it onto page 1), and a stale local state would lie to
+   * the merchant about the resolved position.
+   */
+  const handleReorder = async (productId: string, direction: ReorderDirection) => {
+    setReordering(productId)
+    try {
+      const { error } = await supabase.rpc('move_product_order', {
+        p_product_id: productId,
+        p_direction: direction,
+      })
+      if (error) throw error
+      // "Move to top" usually jumps the row across pagination
+      // boundaries — bring the merchant to page 1 so they actually
+      // see the change land. For neighbour swaps we stay put.
+      if (direction === 'top' && page !== 1) {
+        setPage(1)
+        return
+      }
+      if (direction === 'bottom' && page < Math.ceil(totalCount / PAGE_SIZE)) {
+        setPage(Math.ceil(totalCount / PAGE_SIZE))
+        return
+      }
+      await fetchProducts()
+    } catch (err: any) {
+      toast.error(`Volgorde wijzigen mislukt: ${err.message}`)
+    } finally {
+      setReordering(null)
     }
   }
 
@@ -503,6 +553,16 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
+                  <div className="mt-3 border-t border-gray-100 pt-3">
+                    <ReorderControls
+                      productName={product.name}
+                      position={null}
+                      disabled={reordering === product.id}
+                      onMove={(direction) => handleReorder(product.id, direction)}
+                      compact={false}
+                    />
+                  </div>
+
                   <div className="mt-3 flex gap-2">
                     <Link
                       href={`/admin/products/${product.id}/edit`}
@@ -542,6 +602,12 @@ export default function AdminProductsPage() {
                       className="w-5 h-5"
                     />
                   </th>
+                  <th
+                    className="px-2 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider"
+                    title="Volgorde op de /shop pagina"
+                  >
+                    Volgorde
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Product
                   </th>
@@ -563,7 +629,7 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
+                {products.map((product, productIndex) => (
                   <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4 whitespace-nowrap">
                       <input
@@ -571,6 +637,14 @@ export default function AdminProductsPage() {
                         checked={selectedProducts.includes(product.id)}
                         onChange={() => handleSelectProduct(product.id)}
                         className="w-5 h-5"
+                      />
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap">
+                      <ReorderControls
+                        productName={product.name}
+                        position={(page - 1) * PAGE_SIZE + productIndex + 1}
+                        disabled={reordering === product.id}
+                        onMove={(direction) => handleReorder(product.id, direction)}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -743,5 +817,86 @@ export default function AdminProductsPage() {
   )
 }
 
+/**
+ * Volgorde-controls (move-to-top + up + down) used both in the
+ * desktop product table and the mobile card view. Buttons stay
+ * enabled even at the edges of the list — the `move_product_order`
+ * RPC is a no-op at the top/bottom, so we keep the UI consistent
+ * across pagination boundaries (we cannot reliably know "is this
+ * row globally at the top?" from one page of data).
+ *
+ * `position` is the 1-based index in the current full ordering
+ * (`(page - 1) * PAGE_SIZE + rowIndex + 1`). Showing it gives the
+ * merchant a visual anchor — "where am I right now?" — without
+ * exposing the raw display_order integer which can be negative
+ * after a `top` operation.
+ */
+function ReorderControls({
+  productName,
+  position,
+  disabled,
+  onMove,
+  compact = true,
+}: {
+  productName: string
+  position: number | null
+  disabled: boolean
+  onMove: (direction: ReorderDirection) => void
+  compact?: boolean
+}) {
+  const ariaLabel = (action: string) =>
+    `${action} — ${productName}`
 
-
+  return (
+    <div className={compact ? 'flex flex-col items-center gap-1' : 'flex items-center justify-between gap-3'}>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onMove('top')}
+          disabled={disabled}
+          aria-label={ariaLabel('Verplaats naar boven')}
+          title="Verplaats naar boven"
+          className="w-7 h-7 inline-flex items-center justify-center border border-gray-300 text-gray-700 hover:border-black hover:bg-gray-50 disabled:opacity-40 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 4h14M12 20V8m0 0l-4 4m4-4l4 4" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => onMove('up')}
+          disabled={disabled}
+          aria-label={ariaLabel('Een plek omhoog')}
+          title="Een plek omhoog"
+          className="w-7 h-7 inline-flex items-center justify-center border border-gray-300 text-gray-700 hover:border-black hover:bg-gray-50 disabled:opacity-40 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => onMove('down')}
+          disabled={disabled}
+          aria-label={ariaLabel('Een plek omlaag')}
+          title="Een plek omlaag"
+          className="w-7 h-7 inline-flex items-center justify-center border border-gray-300 text-gray-700 hover:border-black hover:bg-gray-50 disabled:opacity-40 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+      {position !== null && (
+        <span className="text-[10px] font-mono text-gray-500 tabular-nums">
+          #{position}
+        </span>
+      )}
+      {!compact && (
+        <span className="text-xs text-gray-500 uppercase tracking-wide">
+          Volgorde
+        </span>
+      )}
+    </div>
+  )
+}

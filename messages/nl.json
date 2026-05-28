@@ -814,6 +814,7 @@
     "sort": {
       "title": "Sorteren",
       "relevance": "Relevantie",
+      "featured": "Aanbevolen",
       "priceAsc": "Prijs: Laag - Hoog",
       "priceDesc": "Prijs: Hoog - Laag",
       "newest": "Nieuwste",

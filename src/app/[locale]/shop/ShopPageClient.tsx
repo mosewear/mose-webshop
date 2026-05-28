@@ -40,6 +40,12 @@ interface Product {
    * altijd één tegel, ongeacht de waarde van dit veld.
    */
   show_color_variants_on_shop?: boolean
+  /**
+   * Handmatige sort-key beheerd via /admin/products (kolom Volgorde).
+   * Smaller = higher in de grid. Wordt gebruikt voor de 'featured'
+   * sort die nu de default is.
+   */
+  display_order: number
   created_at: string
   category?: {
     name: string
@@ -90,7 +96,10 @@ export default function ShopPageClient() {
     locale === 'en' && category.name_en ? category.name_en : category.name
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<string>('newest')
+  // Default = handmatige volgorde uit /admin/products (kolom Volgorde).
+  // Klanten kunnen via de filter-dropdown alsnog op 'Nieuwste',
+  // 'Prijs' of 'Naam' sorteren — dat blijft volledig werken.
+  const [sortBy, setSortBy] = useState<string>('featured')
   const [searchQuery, setSearchQuery] = useState('')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500])
   const [minPrice, setMinPrice] = useState(0)
@@ -197,6 +206,9 @@ export default function ShopPageClient() {
   const fetchProducts = async () => {
     try {
       setLoading(true)
+      // Server-side sort keeps the network payload deterministic;
+      // the client-side `sortBy` switch below re-sorts when the
+      // visitor picks an option other than 'featured'.
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -209,6 +221,7 @@ export default function ShopPageClient() {
         `)
         .eq('is_active', true)
         .eq('status', 'active')
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -315,8 +328,22 @@ export default function ShopPageClient() {
         })
         break
       case 'newest':
-      default:
         filtered.sort((a, b) => {
+          const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          return timeDiff !== 0 ? timeDiff : a.id.localeCompare(b.id)
+        })
+        break
+      case 'featured':
+      default:
+        // Manual order managed via /admin/products (kolom Volgorde).
+        // Smaller display_order = earlier in the grid; created_at DESC
+        // is the tiebreaker so unset/equal rows still produce a stable,
+        // newest-first order — and a brand-new product visibly moves
+        // to the top of its display_order bucket without merchant
+        // intervention.
+        filtered.sort((a, b) => {
+          const orderDiff = (a.display_order ?? 0) - (b.display_order ?? 0)
+          if (orderDiff !== 0) return orderDiff
           const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           return timeDiff !== 0 ? timeDiff : a.id.localeCompare(b.id)
         })
@@ -531,6 +558,7 @@ export default function ShopPageClient() {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-semibold"
                   >
+                    <option value="featured">{t('sort.featured')}</option>
                     <option value="newest">{t('sort.newest')}</option>
                     <option value="price-asc">{t('sort.priceAsc')}</option>
                     <option value="price-desc">{t('sort.priceDesc')}</option>
@@ -720,6 +748,7 @@ export default function ShopPageClient() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-semibold"
                 >
+                  <option value="featured">{t('sort.featured')}</option>
                   <option value="newest">{t('sort.newest')}</option>
                   <option value="price-asc">{t('sort.priceAsc')}</option>
                   <option value="price-desc">{t('sort.priceDesc')}</option>

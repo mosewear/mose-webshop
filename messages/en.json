@@ -814,6 +814,7 @@
     "sort": {
       "title": "Sort",
       "relevance": "Relevance",
+      "featured": "Featured",
       "newest": "Newest",
       "priceAsc": "Price: Low - High",
       "priceDesc": "Price: High - Low",
