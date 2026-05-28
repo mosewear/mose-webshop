@@ -1628,16 +1628,60 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     </label>
                     <div className="flex flex-wrap gap-2 md:gap-3">
                       {availableColors.map(({ color, hex }) => {
-                        const colorVariant = product.product_variants.find(
-                          (v) => v.size === selectedSize && v.color === color
+                        // Color availability is GLOBAL per color: a colour
+                        // counts as available as long as *any* of its sizes
+                        // still has stock. This matches the size-picker's
+                        // logic below (a size is enabled when any colour
+                        // has it). Previously this read selectedSize + color
+                        // stock, which produced the confusing UX where
+                        // selecting "M" crossed out perfectly valid colours
+                        // that simply lacked M — even though those colours
+                        // had S/L/XL ready to ship. See
+                        // StickyVariantPicker.tsx#colorAvailability for the
+                        // same model on the floating bar.
+                        const hasStockInColor = product.product_variants.some(
+                          (v) => {
+                            if (v.color !== color) return false
+                            const total =
+                              v.stock_quantity + (v.presale_stock_quantity || 0)
+                            return v.is_available && total > 0
+                          },
                         )
-                        const totalStock = colorVariant ? colorVariant.stock_quantity + (colorVariant.presale_stock_quantity || 0) : 0
-                        const colorAvailable = colorVariant && colorVariant.is_available && totalStock > 0
+                        const colorAvailable = hasStockInColor
                         const isSelected = selectedColor === color
                         const onPick = () => {
                           setSelectedColor(color)
                           setSelectedImage(0)
                           setQuantity(1)
+                          // Auto-fallback the size if the currently selected
+                          // size is not available in the new colour. The
+                          // alternative — keeping a now-invalid size — leaves
+                          // the customer staring at a struck-through size
+                          // button and a disabled Add-to-cart with no hint of
+                          // what to do. We pick the first available size in
+                          // canonical XS→XXXL order (availableSizes is
+                          // already sorted) so the behaviour is deterministic.
+                          const currentSizeAvailableInNewColor =
+                            product.product_variants.some((v) => {
+                              if (v.color !== color || v.size !== selectedSize) return false
+                              const total =
+                                v.stock_quantity + (v.presale_stock_quantity || 0)
+                              return v.is_available && total > 0
+                            })
+                          if (!currentSizeAvailableInNewColor) {
+                            const fallbackSize = availableSizes.find((size) =>
+                              product.product_variants.some((v) => {
+                                if (v.color !== color || v.size !== size) return false
+                                const total =
+                                  v.stock_quantity +
+                                  (v.presale_stock_quantity || 0)
+                                return v.is_available && total > 0
+                              }),
+                            )
+                            if (fallbackSize) {
+                              setSelectedSize(fallbackSize)
+                            }
+                          }
                         }
 
                         if (pickerStyle === 'image') {
