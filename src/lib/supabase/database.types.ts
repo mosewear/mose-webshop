@@ -1312,6 +1312,36 @@ export type Database = {
           },
         ]
       }
+      email_suppressions: {
+        Row: {
+          created_at: string
+          details: Json | null
+          email: string
+          id: string
+          provider_message_id: string | null
+          reason: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          email: string
+          id?: string
+          provider_message_id?: string | null
+          reason: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          email?: string
+          id?: string
+          provider_message_id?: string | null
+          reason?: string
+          source?: string
+        }
+        Relationships: []
+      }
       gift_card_redemptions: {
         Row: {
           amount: number
@@ -2656,6 +2686,7 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          bounced_at: string | null
           created_at: string | null
           email: string
           id: string
@@ -2664,10 +2695,13 @@ export type Database = {
           source: string | null
           status: string | null
           subscribed_at: string | null
+          suppressed_at: string | null
+          suppression_reason: string | null
           unsubscribed_at: string | null
           updated_at: string | null
         }
         Insert: {
+          bounced_at?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -2676,10 +2710,13 @@ export type Database = {
           source?: string | null
           status?: string | null
           subscribed_at?: string | null
+          suppressed_at?: string | null
+          suppression_reason?: string | null
           unsubscribed_at?: string | null
           updated_at?: string | null
         }
         Update: {
+          bounced_at?: string | null
           created_at?: string | null
           email?: string
           id?: string
@@ -2688,6 +2725,8 @@ export type Database = {
           source?: string | null
           status?: string | null
           subscribed_at?: string | null
+          suppressed_at?: string | null
+          suppression_reason?: string | null
           unsubscribed_at?: string | null
           updated_at?: string | null
         }

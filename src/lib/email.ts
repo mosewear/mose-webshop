@@ -1,18 +1,41 @@
 /**
  * Email Service - React Email Implementation with i18n Support
- * 
- * This service sends all customer-facing emails using React Email templates
- * with full internationalization (NL/EN) support via i18next.
- * 
- * Features:
- * - React Email templates for type-safety and maintainability
- * - i18next for multi-language support (NL/EN)
- * - Resend as email delivery provider
- * - Automatic locale detection from order/return records
- * - Backward compatibility with existing email triggers
+ *
+ * Sends all customer-facing emails using React Email templates with full
+ * Dutch / English support via i18next, and delivers via Postmark (migrated
+ * from Resend on 2026-05-28 after a Resend suspension caused by high
+ * bounce-rate on a bulk send).
+ *
+ * Key invariants preserved during the Postmark migration
+ * ------------------------------------------------------
+ *   * Every wrapper (sendOrderConfirmationEmail, sendShippingConfirmation, …)
+ *     keeps its old function signature AND return shape so all 30+ callers
+ *     across `/api/**` and `src/lib/**` stay untouched.
+ *   * The React Email templates under `src/emails/` are UNCHANGED — pixel
+ *     identical HTML still hits the inbox.
+ *   * `order_emails.resend_id` keeps its name; new sends populate it with
+ *     Postmark's MessageID. Historic Resend ids stay valid audit data.
+ *
+ * What's new in the Postmark version
+ * ----------------------------------
+ *   * Pre-send suppression check (src/lib/email-suppression.ts) — every
+ *     recipient is screened against newsletter_subscribers.suppressed_at
+ *     and the email_suppressions registry. Marketing sends to a
+ *     suppressed address are silently skipped + logged as `failed` so
+ *     they show up in the admin UI for diagnosis. Transactional sends
+ *     still attempt delivery (we don't want to drop an order receipt
+ *     because the customer once complained about a newsletter).
+ *   * Stream routing — transactional templates ride the `outbound`
+ *     Postmark stream; marketing / insider / campaign / loyalty
+ *     broadcast templates ride the dedicated `broadcast` stream so a
+ *     complaint on a newsletter never poisons order deliverability.
+ *   * Plain-text body — every send now ships HTML + a stripped-text
+ *     fallback. Gmail and Apple Mail rank HTML-only sends lower.
+ *   * List-Unsubscribe / List-Unsubscribe-Post headers — applied to
+ *     ALL marketing wrappers (previously only Spring Drop). Required
+ *     by Gmail / Yahoo / Apple's 2024 bulk-sender policies.
  */
 
-import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import { getSiteSettings } from './settings'
 import { getEmailT } from './email-i18n'
@@ -20,8 +43,19 @@ import { logEmail } from './email-logger'
 import {
   EMAIL_TEMPLATES_BY_KEY,
   type EmailTemplateDefinition,
+  type EmailTemplateCategory,
 } from './email-catalog'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import {
+  htmlToText,
+  POSTMARK_STREAM_BROADCAST,
+  POSTMARK_STREAM_TRANSACTIONAL,
+  sendEmail as postmarkSendEmail,
+  type PostmarkAttachment,
+  type PostmarkHeader,
+  type PostmarkSendInput,
+} from './postmark'
+import { isEmailSuppressed } from './email-suppression'
 import { 
   OrderConfirmationEmail,
   ShippingConfirmationEmail,
@@ -56,13 +90,37 @@ import type {
   SpringDrop2TeeStaffelTier,
 } from '@/emails/SpringDrop2Tee'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 // =====================================================
-// sendAndLog — central wrapper around Resend + email log
+// sendAndLog — central Postmark + email-log wrapper
 // =====================================================
+//
+// Shape stayed identical to the old Resend wrapper so the 30+ callers
+// don't change. The payload type is the Resend-style object every
+// wrapper already builds (`from`, `to`, `subject`, `html`, `headers`,
+// `bcc`, `attachments`, `tags`, `replyTo`); we translate it to the
+// Postmark Email API shape inside here.
 
-type ResendPayload = Parameters<typeof resend.emails.send>[0]
+interface LegacyEmailPayload {
+  from: string
+  /** Always an array of length 1 in MOSE today. Kept as union for safety. */
+  to: string | string[]
+  subject: string
+  html: string
+  text?: string
+  bcc?: string | string[]
+  cc?: string | string[]
+  reply_to?: string | string[]
+  /** React-Email render output is always a string — never undefined. */
+  replyTo?: string | string[]
+  headers?: Record<string, string>
+  attachments?: Array<{
+    filename: string
+    content: string
+    contentType?: string
+    contentId?: string
+  }>
+  tags?: Array<{ name: string; value: string }>
+}
 
 interface SendAndLogOptions {
   /** Key from email-catalog. Required so every email ends up in the admin log. */
@@ -73,6 +131,12 @@ interface SendAndLogOptions {
   locale?: string
   /** Optional extra metadata stored with the log. */
   metadata?: Record<string, unknown>
+  /**
+   * Postmark stream override. If omitted, derived from the template
+   * category — transactional categories ride the `outbound` stream,
+   * marketing-ish categories ride the broadcast stream.
+   */
+  messageStream?: string
 }
 
 interface SendAndLogResult<T> {
@@ -82,67 +146,246 @@ interface SendAndLogResult<T> {
 }
 
 /**
- * Send an email via Resend and log the result into `order_emails`.
+ * Categories whose templates ship marketing / opt-in content. These
+ * default to the broadcast stream. Transactional categories (order,
+ * return, admin notifications) default to the outbound stream.
+ *
+ * The loyalty template is dual-purpose: a tier-up auto-mail (from
+ * Stripe webhook) is transactional, while the admin broadcast variant
+ * is marketing. The wrapper passes `messageStream` explicitly to pick.
+ */
+const MARKETING_DEFAULT_CATEGORIES = new Set<EmailTemplateCategory>([
+  'marketing',
+  'insider',
+  'campaign',
+  'loyalty',
+])
+
+function resolveMessageStream(
+  category: EmailTemplateCategory | 'other',
+  override?: string,
+): string {
+  if (override) return override
+  if (MARKETING_DEFAULT_CATEGORIES.has(category as EmailTemplateCategory)) {
+    return POSTMARK_STREAM_BROADCAST
+  }
+  return POSTMARK_STREAM_TRANSACTIONAL
+}
+
+function firstString(value: string | string[] | undefined): string | undefined {
+  if (!value) return undefined
+  return Array.isArray(value) ? value[0] : value
+}
+
+/**
+ * Translate a Resend-style payload object into Postmark's wire shape.
+ * Every wrapper in this file still produces the Resend object so this
+ * function is the ONLY place that knows about Postmark field names.
+ */
+function toPostmarkPayload(
+  payload: LegacyEmailPayload,
+  options: {
+    messageStream: string
+    tag?: string
+    metadata?: Record<string, string>
+  },
+): PostmarkSendInput {
+  const headers: PostmarkHeader[] = payload.headers
+    ? Object.entries(payload.headers).map(([Name, Value]) => ({ Name, Value }))
+    : []
+
+  // Resend uses snake-case `reply_to`, React Email + ours sometimes use
+  // camelCase `replyTo`. Accept both.
+  const replyTo = firstString(payload.reply_to) || firstString(payload.replyTo)
+
+  // Resend tags array → Postmark uses a single Tag string + an
+  // arbitrary Metadata bag. We surface the first tag as Tag (used in
+  // Postmark's dashboard filters) and the rest as Metadata.
+  let tag: string | undefined = options.tag
+  let metadata: Record<string, string> | undefined = options.metadata
+  if (payload.tags && payload.tags.length > 0) {
+    if (!tag) tag = payload.tags[0].value
+    metadata = metadata ?? {}
+    for (const t of payload.tags) {
+      metadata[t.name] = t.value
+    }
+  }
+
+  const attachments: PostmarkAttachment[] | undefined = payload.attachments?.map(
+    (a) => ({
+      Name: a.filename,
+      Content: a.content,
+      ContentType: a.contentType || 'application/octet-stream',
+      ContentID: a.contentId,
+    }),
+  )
+
+  return {
+    From: payload.from,
+    To: firstString(payload.to) || '',
+    Cc: firstString(payload.cc),
+    Bcc: firstString(payload.bcc),
+    Subject: payload.subject,
+    HtmlBody: payload.html,
+    // Auto-derived plain-text body. Lifts deliverability on Gmail /
+    // Apple Mail and avoids the "this email contains no plain text"
+    // demotion. Wrappers may override by setting payload.text.
+    TextBody: payload.text || htmlToText(payload.html),
+    ReplyTo: replyTo,
+    MessageStream: options.messageStream,
+    Tag: tag,
+    Metadata: metadata && Object.keys(metadata).length > 0 ? metadata : undefined,
+    Headers: headers.length > 0 ? headers : undefined,
+    Attachments: attachments,
+  }
+}
+
+/**
+ * Send an email via Postmark and log the result into `order_emails`.
  * Never throws — returns a `SendAndLogResult` the caller can forward.
+ *
+ * Suppression rules (see `src/lib/email-suppression.ts` for details):
+ *   * Marketing categories → suppressed recipient = skip + log failed
+ *     (so the admin UI surfaces it for diagnosis).
+ *   * Transactional categories → suppressed recipient = still attempt
+ *     (we don't drop order receipts on a marketing complaint). If
+ *     Postmark then rejects with `InactiveRecipient` we log it the
+ *     same way any other delivery failure is logged.
  */
 async function sendAndLog(
-  payload: ResendPayload,
-  options: SendAndLogOptions
+  payload: LegacyEmailPayload,
+  options: SendAndLogOptions,
 ): Promise<SendAndLogResult<{ id: string }>> {
   const template: EmailTemplateDefinition | undefined =
     EMAIL_TEMPLATES_BY_KEY[options.templateKey]
-  const emailType = template?.category ?? 'other'
-  const recipient = Array.isArray(payload.to)
-    ? payload.to[0]
-    : (payload.to as string)
+  const category: EmailTemplateCategory | 'other' = template?.category ?? 'other'
+  const recipient = firstString(payload.to) || ''
+  const messageStream = resolveMessageStream(category, options.messageStream)
+  // Suppression skip is keyed on the resolved STREAM, not category, so a
+  // wrapper that explicitly routes through `outbound` (e.g. loyalty
+  // tier-up auto-mail) still reaches the customer even when they
+  // previously opted out of marketing.
+  const isBroadcast = messageStream === POSTMARK_STREAM_BROADCAST
 
-  try {
-    const { data, error } = await resend.emails.send(payload)
-
-    if (error) {
-      console.error(`❌ ${options.templateKey}: resend error`, error)
+  // Pre-send suppression gate. Marketing sends never re-poke a bouncer
+  // — that's exactly the behaviour that got us suspended at Resend.
+  if (isBroadcast && recipient) {
+    const blocked = await isEmailSuppressed(recipient)
+    if (blocked) {
+      console.warn(
+        `⏭️  ${options.templateKey}: recipient ${recipient} is suppressed — skipping (stream=${messageStream})`,
+      )
       await logEmail({
-        emailType,
+        emailType: category,
         templateKey: options.templateKey,
         orderId: options.orderId ?? null,
         recipientEmail: recipient,
         subject: String(payload.subject || ''),
         status: 'failed',
-        errorMessage:
-          (error as any)?.message || JSON.stringify(error) || 'Unknown error',
+        errorMessage: 'skipped: recipient on suppression list',
         locale: options.locale,
-        metadata: options.metadata,
+        metadata: {
+          ...(options.metadata || {}),
+          suppression_skip: true,
+          message_stream: messageStream,
+        },
       })
-      return { success: false, error }
+      return {
+        success: false,
+        error: { message: 'recipient suppressed', code: 'SUPPRESSED' },
+      }
+    }
+  }
+
+  const postmarkPayload = toPostmarkPayload(payload, { messageStream })
+
+  try {
+    const result = await postmarkSendEmail(postmarkPayload)
+
+    if (!result.success) {
+      const errMsg =
+        (result.error as { Message?: string } | undefined)?.Message ||
+        (result.error as { message?: string } | undefined)?.message ||
+        JSON.stringify(result.error) ||
+        'Unknown error'
+      console.error(`❌ ${options.templateKey}: postmark error`, result.error)
+      await logEmail({
+        emailType: category,
+        templateKey: options.templateKey,
+        orderId: options.orderId ?? null,
+        recipientEmail: recipient,
+        subject: String(payload.subject || ''),
+        status: 'failed',
+        errorMessage: errMsg,
+        locale: options.locale,
+        metadata: {
+          ...(options.metadata || {}),
+          message_stream: messageStream,
+          postmark_error: result.error,
+        },
+      })
+      return { success: false, error: result.error }
     }
 
-    console.log(`✅ ${options.templateKey} sent`, data)
+    console.log(`✅ ${options.templateKey} sent`, result.data)
     await logEmail({
-      emailType,
+      emailType: category,
       templateKey: options.templateKey,
       orderId: options.orderId ?? null,
       recipientEmail: recipient,
       subject: String(payload.subject || ''),
       status: 'sent',
-      resendId: data?.id,
+      // `resend_id` column kept for historical-compat; now stores
+      // Postmark's MessageID. See migration
+      // 20260528120000_postmark_email_suppressions.sql.
+      resendId: result.data?.id,
       locale: options.locale,
-      metadata: options.metadata,
+      metadata: {
+        ...(options.metadata || {}),
+        message_stream: messageStream,
+      },
     })
-    return { success: true, data: data ?? undefined }
+    return { success: true, data: result.data ?? undefined }
   } catch (err) {
     console.error(`❌ ${options.templateKey}: unexpected error`, err)
     await logEmail({
-      emailType,
+      emailType: category,
       templateKey: options.templateKey,
       orderId: options.orderId ?? null,
       recipientEmail: recipient,
       subject: String(payload.subject || ''),
       status: 'failed',
-      errorMessage: (err as any)?.message || 'Unknown error',
+      errorMessage: (err as { message?: string })?.message || 'Unknown error',
       locale: options.locale,
       metadata: options.metadata,
     })
     return { success: false, error: err }
+  }
+}
+
+// =====================================================
+// Marketing helpers (List-Unsubscribe / one-click)
+// =====================================================
+//
+// Required by Gmail / Yahoo / Apple's 2024 bulk-sender rules
+// (RFC 2369 + RFC 8058). Every marketing send MUST set both headers
+// or the message lands in spam at the big inbox providers.
+
+export function buildUnsubscribeUrl(
+  siteUrl: string,
+  locale: string,
+  email: string,
+): string {
+  return `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(email)}`
+}
+
+export function buildListUnsubscribeHeaders(
+  unsubscribeUrl: string,
+  contactEmail: string,
+): Record<string, string> {
+  return {
+    'List-Unsubscribe': `<mailto:${contactEmail}?subject=unsubscribe>, <${unsubscribeUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
   }
 }
 
@@ -980,12 +1223,15 @@ export async function sendAbandonedCartEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.customerEmail)
+
   return await sendAndLog(
     {
       from: 'MOSE Cart <orders@mosewear.com>',
       to: [props.customerEmail],
       subject: t('abandonedCart.subject'),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'abandoned_cart',
@@ -1046,12 +1292,15 @@ export async function sendBackInStockEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.customerEmail)
+
   return await sendAndLog(
     {
       from: 'MOSE Notifications <info@mosewear.com>',
       to: [props.customerEmail],
       subject: t('backInStock.subject', { productName: props.productName }),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'back_in_stock',
@@ -1097,12 +1346,15 @@ export async function sendNewsletterWelcomeEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
   return await sendAndLog(
     {
       from: 'MOSE Newsletter <info@mosewear.com>',
       to: [props.email],
       subject: t('newsletterWelcome.subject'),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'newsletter_welcome',
@@ -1315,12 +1567,15 @@ export async function sendInsiderWelcomeEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
   return await sendAndLog(
     {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderWelcome.title'),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'insider_welcome',
@@ -1397,12 +1652,15 @@ export async function sendInsiderCommunityEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
   return await sendAndLog(
     {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderCommunity.title'),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'insider_community',
@@ -1446,12 +1704,15 @@ export async function sendInsiderBehindScenesEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
   return await sendAndLog(
     {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderBehindScenes.title'),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'insider_behind_scenes',
@@ -1493,12 +1754,15 @@ export async function sendInsiderLaunchWeekEmail(props: {
     })
   )
 
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.email)
+
   return await sendAndLog(
     {
       from: 'MOSE Insider Club <info@mosewear.com>',
       to: [props.email],
       subject: t('insiderLaunchWeek.title', { days: props.daysUntilLaunch }),
       html,
+      headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },
     {
       templateKey: 'insider_launch_week',
@@ -1581,16 +1845,33 @@ export async function sendLoyaltyStatusUpdateEmail(props: {
         ? `Your MOSE loyalty status: ${tierLabel}`
         : `Je MOSE loyalty status: ${tierLabel}`
 
+  // Tier-up auto-mail is transactional (Stripe-triggered, customer
+  // expects it on threshold cross) → outbound stream, no
+  // List-Unsubscribe (Postmark rejects List-Unsubscribe on the
+  // transactional stream because suppressing a transactional template
+  // is the wrong control). The broadcast variant (admin bulk send) is
+  // marketing → broadcast stream + List-Unsubscribe headers.
+  const isBroadcastVariant = variant === 'broadcast'
+  const unsubscribeUrl = isBroadcastVariant
+    ? buildUnsubscribeUrl(siteUrl, locale, props.customerEmail)
+    : null
+
   return await sendAndLog(
     {
       from: 'MOSE Loyalty <info@mosewear.com>',
       to: [props.customerEmail],
       subject,
       html,
+      headers: unsubscribeUrl
+        ? buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail)
+        : undefined,
     },
     {
       templateKey: 'loyalty_status_update',
       locale,
+      messageStream: isBroadcastVariant
+        ? undefined
+        : POSTMARK_STREAM_TRANSACTIONAL,
       metadata: {
         tier: props.tier,
         variant,
@@ -1705,19 +1986,11 @@ export async function sendGiftCardDeliveryEmail(props: {
 const SPRING_DROP_FROM = '"Irma & Rick (MOSE)" <info@mosewear.com>'
 const SPRING_DROP_CAMPAIGN_KEY = 'spring_drop_2026'
 
-function buildUnsubscribeUrl(siteUrl: string, locale: string, email: string) {
-  return `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(email)}`
-}
-
-function buildListUnsubscribeHeaders(unsubscribeUrl: string, contactEmail: string) {
-  // Volgens RFC 2369 + 8058: comma-separated mailto + https.
-  // Resend rendert dit 1:1 door naar de email headers.
-  return {
-    'List-Unsubscribe': `<mailto:${contactEmail}?subject=unsubscribe>, <${unsubscribeUrl}>`,
-    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-  }
-}
-
+// `buildUnsubscribeUrl` + `buildListUnsubscribeHeaders` were promoted
+// to module scope (see top of file) so all marketing wrappers share
+// them. Keeping the function name `buildResendTags` for git-blame
+// continuity even though the tags array is now mapped onto Postmark's
+// Tag + Metadata fields by `toPostmarkPayload` upstream.
 function buildResendTags(mailNumber: 1 | 2 | 3) {
   return [
     { name: 'campaign', value: SPRING_DROP_CAMPAIGN_KEY },

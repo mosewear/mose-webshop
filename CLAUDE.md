@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Storefront + admin for MOSE (Dutch streetwear brand). Next.js 16 App Router, React 19, TypeScript. Data/auth in Supabase (Postgres + RLS + Storage). Payments via Stripe. Shipping via SendCloud. Transactional email via Resend + React Email. i18n (`nl` default, `en`) via `next-intl`. Deployed on Vercel.
+Storefront + admin for MOSE (Dutch streetwear brand). Next.js 16 App Router, React 19, TypeScript. Data/auth in Supabase (Postgres + RLS + Storage). Payments via Stripe. Shipping via SendCloud. Transactional + broadcast email via Postmark + React Email (migrated from Resend on 2026-05-28 after a high-bounce-rate suspension). i18n (`nl` default, `en`) via `next-intl`. Deployed on Vercel.
 
 The `README.md` predates several major bumps — treat `package.json` and actual files as the source of truth when they disagree (e.g., README says Next 15 / Tailwind 4 / `npm run type-check`; reality is Next 16 / Tailwind 3 / no `type-check` script).
 
@@ -63,7 +63,11 @@ Database types are generated to `src/lib/supabase/types.ts` / `database.types.ts
 - Return flow state lives in DB tables created by `20260419000000_manual_returns.sql`; RLS fix in `20260419140000_fix_returns_select_rls.sql`.
 
 ### Email
-- React Email templates in `src/emails/` (shared primitives under `src/emails/components/`). Render via `src/lib/email.ts` and log via `src/lib/email-logger.ts`.
+- React Email templates in `src/emails/` (shared primitives under `src/emails/components/`). Render via `src/lib/email.ts` (single central `sendAndLog` wrapper) and log via `src/lib/email-logger.ts`.
+- Provider is **Postmark** (migrated from Resend on 2026-05-28). Required envs: `POSTMARK_SERVER_TOKEN`, `POSTMARK_WEBHOOK_USER`, `POSTMARK_WEBHOOK_PASSWORD`. Transactional templates ride Postmark's built-in `outbound` stream; marketing / insider / campaign / loyalty broadcast templates ride the `broadcast` stream (override with `POSTMARK_BROADCAST_STREAM`). The thin Postmark HTTP client lives in `src/lib/postmark.ts` — no SDK dependency.
+- `order_emails.resend_id` is kept for historical compat; new sends populate it with Postmark's MessageID. Do not rename the column.
+- **Bounce / complaint suppression is mandatory** (this is what got us suspended at Resend). `src/lib/email-suppression.ts` consults `newsletter_subscribers.suppressed_at` and the standalone `email_suppressions` registry before every send. The `/api/postmark-webhook` route (basic-auth via the env pair above) writes new suppressions on `Bounce` / `SpamComplaint` / `SubscriptionChange` events from Postmark. Marketing recipient queries (`newsletter_recipients_not_yet_mailed` RPC + the dry-run loader in `/api/admin/campaigns/spring-drop/send` + the direct query in `/api/newsletter/send-insider-email`) all filter `WHERE suppressed_at IS NULL`.
+- Every marketing wrapper sets `List-Unsubscribe` + `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers (RFC 2369 + RFC 8058) — required by Gmail / Yahoo / Apple bulk-sender policies. Helpers `buildUnsubscribeUrl` + `buildListUnsubscribeHeaders` live at the top of `src/lib/email.ts`.
 - Trustpilot invitations use the **AFS BCC** approach: the order-delivered email BCCs `TRUSTPILOT_AFS_BCC_EMAIL`, and Trustpilot fires its own review invitation. There is no client-side Trustpilot invitation call — do not reintroduce one. See `src/app/api/sendcloud-webhook/route.ts`, `src/app/api/admin/trigger-delivered-emails/route.ts`, and commit `91dde9e`.
 
 ### Scheduled jobs

@@ -49,7 +49,12 @@ export async function POST(req: NextRequest) {
         subscribers = [{ id: 'test', email: testEmail, locale: 'nl' }]
       }
     } else {
-      // Production mode: fetch all active subscribers who haven't received this email yet
+      // Production mode: fetch all active subscribers who haven't received this email yet.
+      // `.is('suppressed_at', null)` skips recipients flagged by the
+      // Postmark webhook (hard bounce / spam complaint) — mirrors the
+      // filter inside the `newsletter_recipients_not_yet_mailed` RPC
+      // used by Spring Drop sends. Without this an inactive address
+      // keeps tipping our hard-bounce-rate over Postmark's threshold.
       const { data: fetchedSubscribers, error: fetchError } = await serviceSupabase
         .from('newsletter_subscribers')
         .select(`
@@ -58,6 +63,7 @@ export async function POST(req: NextRequest) {
           locale
         `)
         .eq('status', 'active')
+        .is('suppressed_at', null)
 
       if (fetchError) {
         console.error('Error fetching subscribers:', fetchError)

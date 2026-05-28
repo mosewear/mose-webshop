@@ -1072,7 +1072,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0"></div>
                 <span className="text-gray-600 break-all">
-                  Emails worden verzonden vanaf <code className="font-mono font-bold text-[10px] sm:text-xs">bestellingen@orders.mosewear.nl</code>
+                  Transactionele mails vanaf <code className="font-mono font-bold text-[10px] sm:text-xs">orders@mosewear.com</code>, marketingmails vanaf <code className="font-mono font-bold text-[10px] sm:text-xs">info@mosewear.com</code> (Postmark)
                 </span>
               </div>
             </div>

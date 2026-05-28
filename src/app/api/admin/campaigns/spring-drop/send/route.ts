@@ -356,10 +356,14 @@ async function loadActiveSubscribers(
 ): Promise<SubscriberRow[]> {
   const rows: SubscriberRow[] = []
   for (let from = 0; ; from += REST_PAGE_SIZE) {
+    // `.is('suppressed_at', null)` matches the filter used by the
+    // chunked-send RPC (newsletter_recipients_not_yet_mailed) so the
+    // dry-run preview counts the same recipients the live send would.
     const { data, error } = await sb
       .from('newsletter_subscribers')
       .select('id, email, locale, status')
       .eq('status', 'active')
+      .is('suppressed_at', null)
       .order('subscribed_at', { ascending: true })
       .range(from, from + REST_PAGE_SIZE - 1)
 
