@@ -16,6 +16,13 @@ import { getSiteSettings } from '@/lib/settings'
 import { useWishlist } from '@/store/wishlist'
 import toast from 'react-hot-toast'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
+import {
+  buildPdpHref,
+  expandToShopTiles,
+  formatColorLabel,
+  getColorStock,
+  getImageForColor,
+} from '@/lib/product-display'
 
 interface Product {
   id: string
@@ -26,6 +33,13 @@ interface Product {
   sale_price: number | null
   category_id: string | null
   is_gift_card?: boolean
+  /**
+   * Per-product admin opt-in (zie /admin/products/[id]/edit). Wanneer
+   * true splitst de shop-grid dit product in één tegel per unieke
+   * variant-kleur. Producten met 0–1 kleuren en cadeaubonnen blijven
+   * altijd één tegel, ongeacht de waarde van dit veld.
+   */
+  show_color_variants_on_shop?: boolean
   created_at: string
   category?: {
     name: string
@@ -311,29 +325,35 @@ export default function ShopPageClient() {
     return filtered
   }, [products, selectedCategory, searchQuery, priceRange, minPrice, maxPrice, showInStockOnly, sortBy])
 
-  const getTotalStock = (product: Product) => {
-    if (product.is_gift_card) return Number.MAX_SAFE_INTEGER
-    return product.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
-  }
+  /**
+   * Expand each product into one or more shop tiles. Products with
+   * the `show_color_variants_on_shop` admin flag enabled AND 2+
+   * unique colors become one tile per color (linking to
+   * /product/<slug>?color=<color>), everyone else stays a single
+   * tile. The relative product order is preserved, color tiles of
+   * one product sit contiguously.
+   *
+   * `showInStockOnly` is re-applied at the tile level so an
+   * out-of-stock color tile disappears while in-stock colors of the
+   * same product remain — without this the product-level filter
+   * above would keep the OOS color visible.
+   */
+  const shopTiles = useMemo(() => {
+    const tiles = expandToShopTiles(filteredProducts)
+    if (!showInStockOnly) return tiles
+    return tiles.filter((tile) => {
+      if (tile.product.is_gift_card) return true
+      // For non-split tiles `tile.color` is null, which makes
+      // getColorStock aggregate across all variants — same outcome
+      // as the previous product-level in-stock check.
+      return getColorStock(tile.product.variants, tile.color).in_stock
+    })
+  }, [filteredProducts, showInStockOnly])
 
-  const isInStock = (product: Product) => {
-    if (product.is_gift_card) return true
-    return getTotalStock(product) > 0
-  }
-
-  const getPrimaryImage = (product: Product) => {
-    const images = product.images?.filter(img => img.media_type !== 'video') || []
-    
-    if (images.length === 0) return '/placeholder-product.svg'
-
-    const primary = images.find(img => img.is_primary)
-    if (primary?.url) return primary.url
-
-    const general = images.find(img => !img.color)
-    if (general?.url) return general.url
-
-    return images[0]?.url || '/placeholder-product.svg'
-  }
+  // Note: the legacy `getTotalStock`, `isInStock`, `getPrimaryImage`
+  // helpers used to live here. They were replaced by the color-aware
+  // `getColorStock` and `getImageForColor` in `src/lib/product-display`
+  // so the shop tile, PDP, and any future surface stay in sync.
 
   const handleApplyFilters = () => {
     setMobileFiltersOpen(false)
@@ -811,7 +831,7 @@ export default function ShopPageClient() {
             )}
 
             {/* Empty State */}
-            {!loading && filteredProducts.length === 0 && (
+            {!loading && shopTiles.length === 0 && (
               <div className="text-center py-16">
                 <svg className="w-20 h-20 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -835,34 +855,61 @@ export default function ShopPageClient() {
             )}
 
             {/* Products Grid */}
-            {!loading && filteredProducts.length > 0 && (
-              <div 
-                className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" 
-                style={{ 
+            {!loading && shopTiles.length > 0 && (
+              <div
+                className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+                style={{
                   contain: 'layout style paint',
                   contentVisibility: 'auto'
                 }}
               >
-                {filteredProducts.map((product, index) => {
+                {shopTiles.map((tile, index) => {
+                  const { product, color, color_hex } = tile
+
+                  // Color-aware stock aggregation. `color === null`
+                  // means this is a single-product tile and we
+                  // aggregate across all variants, matching the
+                  // pre-color-split behaviour exactly.
+                  const stock = getColorStock(product.variants, color)
+                  const totalStock = product.is_gift_card
+                    ? Number.MAX_SAFE_INTEGER
+                    : stock.stock_quantity
+                  const inStock = product.is_gift_card ? true : stock.in_stock
+                  const hasPresale = stock.has_presale
+
+                  // Image: color-specific hero when split, else the
+                  // legacy product-primary fallback chain. Both go
+                  // through the same shared helper so a tile and its
+                  // PDP always lead with the same image.
+                  const imageSrc = getImageForColor(product.images, color)
+
+                  // PDP link: appends `?color=<color>` only when the
+                  // tile represents a specific color, which the PDP
+                  // reads via useSearchParams to preselect.
+                  const pdpHref = buildPdpHref(product.slug, color)
+
+                  // Wishlist remains product-scoped — we don't track
+                  // wishlist-per-color in the schema and adding that
+                  // is intentionally out of scope here.
                   const isWishlisted = isInWishlist(product.id)
-                  const inStock = isInStock(product)
-                  const totalStock = getTotalStock(product)
-                  const hasPresale = product.variants?.some(v => 
-                    v.presale_enabled && v.stock_quantity === 0 && v.presale_stock_quantity > 0
-                  ) || false
-                  const presaleExpected = hasPresale 
-                    ? product.variants?.find(v => v.presale_enabled && v.presale_expected_date)?.presale_expected_date 
-                    : null
-                  
-                  // Priority load first 6 images to prevent layout shift
+
+                  // Suffix the localized color name on color-split
+                  // tiles so a row of identical product titles stays
+                  // scannable ("HOODIE / BRUIN" vs "HOODIE / STONE").
+                  const colorLabel = color ? formatColorLabel(color, locale) : null
+
+                  // Priority-load the first 6 tiles to avoid CLS at
+                  // the top of the viewport. Split products can put
+                  // more tiles in that window than before, so this
+                  // applies to tiles (not products).
                   const isPriority = index < 6
-                  
+
                   return (
                     <LocaleLink
-                      key={product.id}
-                      href={`/product/${product.slug}`}
+                      key={tile.tileKey}
+                      href={pdpHref}
                       className="group block h-full"
-                      style={{ 
+                      style={{
                         contain: 'layout style paint',
                         transform: 'translateZ(0)',
                         backfaceVisibility: 'hidden' as const,
@@ -875,8 +922,12 @@ export default function ShopPageClient() {
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
-                            src={failedImages.has(product.id) ? '/placeholder-product.svg' : getPrimaryImage(product)}
-                            alt={getProductName(product)}
+                            src={failedImages.has(tile.tileKey) ? '/placeholder-product.svg' : imageSrc}
+                            alt={
+                              colorLabel
+                                ? `${getProductName(product)} — ${colorLabel}`
+                                : getProductName(product)
+                            }
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover object-center"
@@ -884,9 +935,9 @@ export default function ShopPageClient() {
                             loading={isPriority ? 'eager' : 'lazy'}
                             placeholder="blur"
                             blurDataURL={BLUR_DATA_URL}
-                            onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
+                            onError={() => setFailedImages(prev => new Set(prev).add(tile.tileKey))}
                           />
-                          
+
                           {/* Stock Badge */}
                           {hasPresale && !inStock && (
                             <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 z-10">
@@ -908,11 +959,11 @@ export default function ShopPageClient() {
                           {(() => {
                             const hasDiscount = product.sale_price && product.sale_price < product.base_price
                             if (!hasDiscount || !product.sale_price) return null
-                            
+
                             const discountPercentage = Math.round(
                               ((product.base_price - product.sale_price) / product.base_price) * 100
                             )
-                            
+
                             return (
                               <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black text-white px-1.5 py-0.5 md:px-2 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider border-2 border-black">
                                 -{discountPercentage}%
@@ -974,45 +1025,59 @@ export default function ShopPageClient() {
                           <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
                             {getProductName(product)}
                           </h3>
-                          
-                          {/* Color Dots - MOSE Style */}
-                          {(() => {
-                            // Get unique colors from variants
-                            const uniqueColors = Array.from(
-                              new Set(
-                                product.variants
-                                  ?.map(v => v.color)
-                                  .filter(Boolean) as string[]
+
+                          {/* Color row.
+                              - Split tile: single swatch + localized
+                                color name so it reads as "BRUIN" etc.
+                                The legacy multi-dot strip is hidden
+                                because each color is now its own tile.
+                              - Non-split tile with >1 color: keep the
+                                informational color dots — visitors
+                                still need to know color choice exists. */}
+                          {color ? (
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <span
+                                aria-hidden="true"
+                                className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
+                                style={{ backgroundColor: color_hex || '#000000' }}
+                              />
+                              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-700">
+                                {colorLabel}
+                              </span>
+                            </div>
+                          ) : (
+                            (() => {
+                              const uniqueColors = Array.from(
+                                new Set(
+                                  product.variants
+                                    ?.map(v => v.color)
+                                    .filter(Boolean) as string[]
+                                )
                               )
-                            )
-                            
-                            if (uniqueColors.length > 1) {
+                              if (uniqueColors.length <= 1) return null
                               return (
                                 <div className="flex items-center gap-1.5 mb-2">
-                                  {uniqueColors.map(color => {
-                                    // Find variant with this color to get hex code
-                                    const variant = product.variants?.find(v => v.color === color)
-                                    const colorHex = variant?.color_hex || '#000000'
-                                    
+                                  {uniqueColors.map(c => {
+                                    const variant = product.variants?.find(v => v.color === c)
+                                    const hex = variant?.color_hex || '#000000'
                                     return (
                                       <div
-                                        key={color}
+                                        key={c}
                                         className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
-                                        style={{ backgroundColor: colorHex }}
-                                        title={color}
+                                        style={{ backgroundColor: hex }}
+                                        title={c}
                                       />
                                     )
                                   })}
                                 </div>
                               )
-                            }
-                            return null
-                          })()}
-                          
+                            })()
+                          )}
+
                           <div className="flex items-center justify-between mt-auto">
                             {(() => {
                               const hasDiscount = product.sale_price && product.sale_price < product.base_price
-                              
+
                               if (hasDiscount && product.sale_price) {
                                 return (
                                   <div className="flex flex-col gap-1">
@@ -1025,7 +1090,7 @@ export default function ShopPageClient() {
                                   </div>
                                 )
                               }
-                              
+
                               return (
                                 <span className="text-base md:text-2xl font-bold text-brand-primary">
                                   {formatPrice(product.base_price, locale)}

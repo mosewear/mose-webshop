@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useEffect, useRef, ReactElement } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useCart } from '@/store/cart'
@@ -320,6 +321,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   const tCommon = useTranslations('common')
   const locale = useLocale()
   const { slug } = use(params)
+  // ?color=<exact-or-case-insensitive-color> opens the PDP with that
+  // color preselected. Shop color-split tiles + transactional email
+  // links rely on this — see src/lib/product-display.ts buildPdpHref()
+  // and src/app/api/admin/campaigns/spring-drop/send/route.ts.
+  const searchParams = useSearchParams()
+  const requestedColorParam = searchParams.get('color')
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -463,6 +470,40 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     fetchProduct()
   }, [slug])
 
+  /**
+   * Sync `selectedColor` with `?color=` when the URL param changes on
+   * an *already-loaded* product (SPA navigation between two color
+   * tiles of the same slug). The initial-load case is already handled
+   * inside `fetchProduct` so this effect intentionally skips when the
+   * product hasn't loaded yet. Matching is case-insensitive to honour
+   * email links / arbitrary user-typed URLs while we still set the
+   * canonical (case-preserved) string from the DB row.
+   */
+  useEffect(() => {
+    if (!product || !requestedColorParam) return
+    const target = requestedColorParam.toLowerCase()
+    const matchVariant = product.product_variants.find(
+      (v) => v.color?.toLowerCase() === target,
+    )
+    if (!matchVariant) return
+    if (matchVariant.color === selectedColor) return
+    setSelectedColor(matchVariant.color)
+    // Snap the size to one with stock in the requested color so the
+    // ATC button keeps working without an extra click — matches the
+    // initial-load behaviour inside fetchProduct.
+    const sameColor = product.product_variants.filter(
+      (v) => v.color === matchVariant.color,
+    )
+    const sized =
+      sameColor.find(
+        (v) =>
+          v.is_available &&
+          v.stock_quantity + (v.presale_stock_quantity || 0) > 0,
+      ) || sameColor[0]
+    if (sized) setSelectedSize(sized.size)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedColorParam, product])
+
   useEffect(() => {
     if (product) {
       setIsWishlisted(isInWishlist(product.id))
@@ -566,15 +607,37 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         currency: 'EUR'
       })
 
-      // Auto-select first available variant (including presale)
+      // Auto-select variant. If the URL came in with ?color=<x> we
+      // prefer that color (resolving case-insensitively so email links
+      // and color-split shop tiles both work), picking the first size
+      // of that color that has stock or presale. Without a match we
+      // fall back to "first available across the whole product".
       if (data.product_variants.length > 0) {
-        const firstAvailable = data.product_variants.find((v: ProductVariant) => {
-          const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
-          return v.is_available && totalStock > 0
-        })
-        if (firstAvailable) {
-          setSelectedSize(firstAvailable.size)
-          setSelectedColor(firstAvailable.color)
+        const hasStock = (v: ProductVariant) =>
+          v.is_available &&
+          v.stock_quantity + (v.presale_stock_quantity || 0) > 0
+
+        let chosen: ProductVariant | undefined
+        if (requestedColorParam) {
+          const target = requestedColorParam.toLowerCase()
+          const colorVariants = data.product_variants.filter(
+            (v: ProductVariant) => v.color?.toLowerCase() === target,
+          )
+          // Within the requested color: prefer a size with stock, then
+          // any size at all so the PDP still opens on that color even
+          // when the entire color is sold out (admin can still see it
+          // and visitors get a "binnenkort terug"-style empty state).
+          chosen =
+            colorVariants.find(hasStock) ||
+            colorVariants.find((v: ProductVariant) => v.is_available) ||
+            colorVariants[0]
+        }
+        if (!chosen) {
+          chosen = data.product_variants.find(hasStock)
+        }
+        if (chosen) {
+          setSelectedSize(chosen.size)
+          setSelectedColor(chosen.color)
         }
       }
 

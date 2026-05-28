@@ -271,18 +271,27 @@ export default async function ProductPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      <ProductPageClient
-        params={Promise.resolve({ slug, locale: localeParam })}
-        instagramSlot={
-          // Server-component variant van de homepage Instagram-feed,
-          // tussen reviews en FAQ gerenderd. In Suspense zodat een
-          // trage IG-fetch (ge-cached, max 300s) nooit de PDP zelf
-          // blokkeert. Rendert null wanneer de feed uit staat.
-          <Suspense fallback={null}>
-            <PdpInstagramFetcher />
-          </Suspense>
-        }
-      />
+      {/* Suspense wrap is verplicht zodra ProductPageClient
+          `useSearchParams()` gebruikt (voor ?color= pre-select vanuit
+          de shop kleurvariant-tegels). Zonder deze boundary forceert
+          Next.js de hele PDP-route naar volledig dynamische rendering,
+          wat de ISR-revalidate kortsluit. Fallback=null houdt de
+          LCP-cascade hetzelfde als voorheen — de client component
+          rendert direct met zijn eigen interne loading-state. */}
+      <Suspense fallback={null}>
+        <ProductPageClient
+          params={Promise.resolve({ slug, locale: localeParam })}
+          instagramSlot={
+            // Server-component variant van de homepage Instagram-feed,
+            // tussen reviews en FAQ gerenderd. In Suspense zodat een
+            // trage IG-fetch (ge-cached, max 300s) nooit de PDP zelf
+            // blokkeert. Rendert null wanneer de feed uit staat.
+            <Suspense fallback={null}>
+              <PdpInstagramFetcher />
+            </Suspense>
+          }
+        />
+      </Suspense>
       {/* Sticky brand-discovery pill bottom-left. Server-fetcht IG-feed
           + about-content + admin-toggle; rendert null als één daarvan
           afwezig is. In Suspense gewikkeld zodat een trage IG-fetch

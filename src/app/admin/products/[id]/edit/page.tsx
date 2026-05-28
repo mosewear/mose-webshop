@@ -35,6 +35,10 @@ interface Product {
   // Keuze tussen klassieke kleur-swatch (vierkant met hex-fill) of een
   // mini productfoto-tegel per variant. Default 'swatch'.
   pdp_color_picker_style: 'swatch' | 'image' | null
+  // Wanneer true splitst de /shop pagina dit product in één tegel
+  // per unieke variant-kleur. Default false (één tegel per product).
+  // Cadeaubonnen en producten met 0–1 kleuren negeren deze waarde.
+  show_color_variants_on_shop: boolean | null
 }
 
 interface QuantityDiscountTier {
@@ -77,6 +81,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     model_build_en: '',
     model_size_worn: '',
     pdp_color_picker_style: 'swatch' as 'swatch' | 'image',
+    show_color_variants_on_shop: false,
   })
 
   // Single publish state for the merchant. Maps onto BOTH the
@@ -150,6 +155,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           model_build_en: product.model_build_en || '',
           model_size_worn: product.model_size_worn || '',
           pdp_color_picker_style: (product.pdp_color_picker_style === 'image' ? 'image' : 'swatch'),
+          show_color_variants_on_shop: Boolean(product.show_color_variants_on_shop),
         })
         setGiftCard({
           is_gift_card: Boolean(product.is_gift_card),
@@ -288,6 +294,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           model_build_en: formData.model_build_en.trim() || null,
           model_size_worn: formData.model_size_worn.trim() || null,
           pdp_color_picker_style: formData.pdp_color_picker_style === 'image' ? 'image' : 'swatch',
+          // Gift cards never split — store false defensively so a
+          // historical product that got converted to gift-card mode
+          // doesn't accidentally re-split on a future toggle of
+          // is_gift_card. Non-gift products honour the form value.
+          show_color_variants_on_shop: isGift ? false : formData.show_color_variants_on_shop,
           is_gift_card: isGift,
           allows_custom_amount: isGift ? giftCard.allows_custom_amount : false,
           gift_card_min_amount: isGift ? giftCardMin : null,
@@ -950,6 +961,57 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </label>
               </div>
+            </div>
+          )}
+
+          {/* Shop-grid kleurvariant-splitsing.
+              Bewust onder de kleurkiezer-instelling want het is een
+              gerelateerde merchandising-keuze ("hoe ziet dit product
+              eruit op de shoppagina?"). Verborgen voor cadeaubonnen —
+              die hebben sowieso geen kleurvarianten. */}
+          {!isGift && (
+            <div className="border-t-2 border-gray-200 pt-6">
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wide mb-1">
+                Kleurvarianten op de shoppagina
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Wanneer aangezet toont de shoppagina elke kleur van dit
+                product als een aparte tegel met z&apos;n eigen hero-foto
+                en een directe link naar de productpagina met die kleur
+                voorgeselecteerd. Heel handig voor &quot;volle&quot; collecties
+                (bv. drie hoodie-kleuren). Producten met maar één kleur
+                negeren deze instelling automatisch.
+              </p>
+
+              <label
+                className={`flex items-start gap-3 cursor-pointer border-2 p-4 transition-colors ${
+                  formData.show_color_variants_on_shop
+                    ? 'border-brand-primary bg-brand-primary/5'
+                    : 'border-gray-300 hover:border-black'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.show_color_variants_on_shop}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      show_color_variants_on_shop: e.target.checked,
+                    })
+                  }
+                  className="mt-1 w-5 h-5 border-2 border-black accent-brand-primary"
+                />
+                <span className="flex-1">
+                  <span className="block text-sm font-bold uppercase tracking-wide mb-1">
+                    Toon elke kleur als aparte tegel
+                  </span>
+                  <span className="block text-xs text-gray-600">
+                    Eén tegel per unieke variant-kleur op{' '}
+                    <code className="font-mono">/shop</code>. Maattegels
+                    blijven uitgeschakeld — die horen op de productpagina.
+                  </span>
+                </span>
+              </label>
             </div>
           )}
 

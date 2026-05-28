@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       about_settings: {
@@ -3411,6 +3436,7 @@ export type Database = {
           pdp_color_picker_style: string
           sale_price: number | null
           short_description_en: string | null
+          show_color_variants_on_shop: boolean
           size_guide_content: Json | null
           size_guide_content_en: Json | null
           slug: string
@@ -3444,6 +3470,7 @@ export type Database = {
           pdp_color_picker_style?: string
           sale_price?: number | null
           short_description_en?: string | null
+          show_color_variants_on_shop?: boolean
           size_guide_content?: Json | null
           size_guide_content_en?: Json | null
           slug: string
@@ -3477,6 +3504,7 @@ export type Database = {
           pdp_color_picker_style?: string
           sale_price?: number | null
           short_description_en?: string | null
+          show_color_variants_on_shop?: boolean
           size_guide_content?: Json | null
           size_guide_content_en?: Json | null
           slug?: string
@@ -4886,6 +4914,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       admin_role: ["admin", "manager", "viewer"],
