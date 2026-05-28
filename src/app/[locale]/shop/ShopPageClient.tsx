@@ -644,7 +644,7 @@ export default function ShopPageClient() {
                     onClick={handleApplyFilters}
                     className="flex-1 py-3 bg-black text-white border-2 border-black font-bold text-sm uppercase tracking-wider hover:bg-gray-900 transition-colors"
                   >
-                    {t('filters.show', { count: filteredProducts.length })}
+                    {t('filters.show', { count: shopTiles.length })}
                   </button>
                 </div>
               </div>
@@ -838,7 +838,7 @@ export default function ShopPageClient() {
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b-2 border-gray-200">
               <h2 className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
-                {t('results', { count: filteredProducts.length })}
+                {t('results', { count: shopTiles.length })}
                 {selectedCategory !== 'all' && (() => {
                   const category = categories.find(c => c.slug === selectedCategory)
                   return category ? (
