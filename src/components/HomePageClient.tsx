@@ -49,6 +49,18 @@ export default function HomePageClient({
   const categories = initialCategories
 
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+  // Fall back to the static /public asset if the Storage desktop hero
+  // 404s (happened after a photoshoot deploy that wrote the DB URL but
+  // never uploaded hero-desktop-desktop.webp). Without this, desktop
+  // shows a black gradient with no photo while mobile still works.
+  const [heroDesktopSrc, setHeroDesktopSrc] = useState(
+    homepageSettings?.hero_image_url || '/hero-desktop.webp',
+  )
+  const [heroMobileSrc, setHeroMobileSrc] = useState(
+    homepageSettings?.hero_image_url_mobile ||
+      homepageSettings?.hero_image_url ||
+      '/hero-mobile.webp',
+  )
 
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterLoading, setNewsletterLoading] = useState(false)
@@ -115,25 +127,31 @@ export default function HomePageClient({
         <div className="absolute inset-0">
           {/* Desktop / tablet: landscape group shot */}
           <Image
-            src={homepageSettings?.hero_image_url || '/hero-desktop.webp'}
+            src={heroDesktopSrc}
             alt="MOSE, gemaakt in Groningen, gedragen in de stad"
             fill
             sizes="(max-width: 767px) 0px, 100vw"
             className="hidden md:block object-cover object-center scale-105"
             priority
+            onError={() => {
+              if (heroDesktopSrc !== '/hero-desktop.webp') {
+                setHeroDesktopSrc('/hero-desktop.webp')
+              }
+            }}
           />
           {/* Mobile: portrait crop with the trio in frame */}
           <Image
-            src={
-              homepageSettings?.hero_image_url_mobile ||
-              homepageSettings?.hero_image_url ||
-              '/hero-mobile.webp'
-            }
+            src={heroMobileSrc}
             alt="MOSE, gemaakt in Groningen, gedragen in de stad"
             fill
             sizes="(min-width: 768px) 0px, 100vw"
             className="block md:hidden object-cover object-center scale-105"
             priority
+            onError={() => {
+              if (heroMobileSrc !== '/hero-mobile.webp') {
+                setHeroMobileSrc('/hero-mobile.webp')
+              }
+            }}
           />
           {/* Improved Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
