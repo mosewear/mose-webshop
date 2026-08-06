@@ -1124,15 +1124,11 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     {displayImages.map((media, index) => (
                       <div
                         key={media.id}
-                        className="relative w-full h-full flex-shrink-0 snap-start snap-always md:absolute md:inset-0 md:opacity-0 md:pointer-events-none"
-                        style={{
-                          // Desktop: only show selected image
-                          ...(typeof window !== 'undefined' && window.innerWidth >= 768 ? {
-                            opacity: index === selectedImage ? 1 : 0,
-                            pointerEvents: index === selectedImage ? 'auto' : 'none',
-                            transition: 'opacity 300ms ease-out'
-                          } : {})
-                        }}
+                        className={`relative w-full h-full flex-shrink-0 snap-start snap-always md:absolute md:inset-0 md:transition-opacity md:duration-300 ${
+                          index === selectedImage
+                            ? 'md:opacity-100 md:pointer-events-auto'
+                            : 'md:opacity-0 md:pointer-events-none'
+                        }`}
                       >
                         {media.media_type === 'video' ? (
                           <MainVideo 
@@ -1877,7 +1873,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-black text-white hover:bg-gray-800'
                     }`}
-                    aria-label="Decrease quantity"
+                    aria-label={t('decrease')}
                   >
                     −
                   </button>
@@ -1897,7 +1893,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-black text-white hover:bg-gray-800'
                     }`}
-                    aria-label="Increase quantity"
+                    aria-label={t('increase')}
                   >
                     +
                   </button>

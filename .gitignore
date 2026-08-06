@@ -61,3 +61,6 @@ photoshoot-2026/**/*.JPEG
 # are never intentional and have caused accidental commits before.
 *\ [0-9].*
 *\ [0-9][0-9].*
+
+# Local MCP secrets (MOSE Supabase token) — do not commit
+.cursor/mcp.json

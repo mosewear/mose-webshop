@@ -128,7 +128,7 @@ export default function HomePageClient({
           {/* Desktop / tablet: landscape group shot */}
           <Image
             src={heroDesktopSrc}
-            alt="MOSE, gemaakt in Groningen, gedragen in de stad"
+            alt={t('hero.imageAlt')}
             fill
             sizes="(max-width: 767px) 0px, 100vw"
             className="hidden md:block object-cover object-center scale-105"
@@ -142,7 +142,7 @@ export default function HomePageClient({
           {/* Mobile: portrait crop with the trio in frame */}
           <Image
             src={heroMobileSrc}
-            alt="MOSE, gemaakt in Groningen, gedragen in de stad"
+            alt={t('hero.imageAlt')}
             fill
             sizes="(min-width: 768px) 0px, 100vw"
             className="block md:hidden object-cover object-center scale-105"
@@ -153,21 +153,19 @@ export default function HomePageClient({
               }
             }}
           />
-          {/* Improved Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-          {/* Vignette Effect */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] opacity-40" />
+          {/* Lighter overlay so the photoshoot hero stays readable */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] opacity-25" />
         </div>
         
-        {/* Prominent Claw Mark Watermark */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.15]">
+        {/* Subtle claw watermark — no pulse (less visual noise over hero) */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.08]">
           <Image
             src="/claw.png"
             alt=""
             width={600}
             height={600}
-            className="absolute top-1/4 right-1/4 transform rotate-12 animate-pulse"
-            style={{ animationDuration: '4s' }}
+            className="absolute top-1/4 right-1/4 transform rotate-12"
           />
         </div>
 

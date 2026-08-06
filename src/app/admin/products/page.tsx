@@ -19,6 +19,7 @@ interface Product {
   is_active?: boolean
   status?: 'active' | 'draft' | string | null
   is_gift_card?: boolean
+  show_color_variants_on_shop?: boolean | null
   created_at: string
   updated_at: string
   /**
@@ -403,7 +404,7 @@ export default function AdminProductsPage() {
 
       {/* Products Table */}
       <div className="bg-white border-2 border-gray-200 overflow-hidden">
-        {products.length === 0 ? (
+        {!loading && !error && products.length === 0 ? (
           <div className="text-center py-12">
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -416,6 +417,10 @@ export default function AdminProductsPage() {
             >
               + Nieuw Product
             </Link>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 text-sm">
+            {loading ? 'Producten laden…' : 'Kon producten niet laden.'}
           </div>
         ) : (
           <>
@@ -496,6 +501,11 @@ export default function AdminProductsPage() {
                         {product.is_gift_card && (
                           <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-brand-primary text-white uppercase tracking-wider flex-shrink-0">
                             Cadeaubon
+                          </span>
+                        )}
+                        {product.show_color_variants_on_shop && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 uppercase tracking-wider flex-shrink-0">
+                            Kleurtegels
                           </span>
                         )}
                       </div>
@@ -676,11 +686,16 @@ export default function AdminProductsPage() {
                           })()}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <div className="text-sm font-bold text-gray-900 flex items-center gap-2 flex-wrap">
                             <span>{product.name}</span>
                             {product.is_gift_card && (
                               <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-brand-primary text-white uppercase tracking-wider">
                                 Cadeaubon
+                              </span>
+                            )}
+                            {product.show_color_variants_on_shop && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 uppercase tracking-wider">
+                                Kleurtegels
                               </span>
                             )}
                           </div>

@@ -110,6 +110,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [labelReady, setLabelReady] = useState(false)
   const [refreshingReturns, setRefreshingReturns] = useState(false)
   const [syncingFromSendcloud, setSyncingFromSendcloud] = useState(false)
+  const [orderEmails, setOrderEmails] = useState<{
+    id: string
+    email_type: string
+    template_key: string | null
+    recipient_email: string
+    subject: string | null
+    sent_at: string | null
+    status: string | null
+    error_message: string | null
+  }[]>([])
 
   // Customer info edit states
   const [editingCustomer, setEditingCustomer] = useState(false)
@@ -149,7 +159,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     fetchOrderItems()
     fetchStatusHistory()
     fetchReturns()
-    
+    fetchOrderEmails()
+
     // Setup realtime subscription voor return status updates
     const channel = supabase
       .channel(`returns-for-order-${id}`)
@@ -196,6 +207,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       console.error('Error fetching returns:', err)
     } finally {
       setRefreshingReturns(false)
+    }
+  }
+
+  const fetchOrderEmails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('order_emails')
+        .select(
+          'id, email_type, template_key, recipient_email, subject, sent_at, status, error_message'
+        )
+        .eq('order_id', id)
+        .order('sent_at', { ascending: false })
+        .limit(20)
+
+      if (error) throw error
+      setOrderEmails(data || [])
+    } catch (err) {
+      console.error('Error fetching order emails:', err)
     }
   }
 
@@ -428,8 +457,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         throw new Error(data.error || 'Failed to send email')
       }
 
+      await fetchOrder()
+      await fetchOrderEmails()
       alert('✅ Verzend-email verzonden!')
     } catch (err: any) {
+      await fetchOrderEmails()
       alert(`Fout bij versturen email: ${err.message}`)
     } finally {
       setSendingEmail(false)
@@ -996,6 +1028,63 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <strong>Laatste email:</strong> {order.last_email_type} verzonden op {' '}
             {new Date(order.last_email_sent_at).toLocaleString('nl-NL')}
           </div>
+        </div>
+      )}
+
+      {/* Failed transactional emails — prominent so ops can resend */}
+      {orderEmails.some((e) => e.status === 'failed') && (
+        <div className="bg-red-50 border-2 border-red-300 p-4 rounded space-y-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-red-800 uppercase tracking-wide">
+                Mislukte emails
+              </p>
+              <ul className="mt-2 space-y-2">
+                {orderEmails
+                  .filter((e) => e.status === 'failed')
+                  .map((email) => (
+                    <li key={email.id} className="text-sm text-red-800 border-l-2 border-red-300 pl-3">
+                      <span className="font-semibold">
+                        {email.template_key || email.email_type}
+                      </span>
+                      {' → '}
+                      {email.recipient_email}
+                      {email.sent_at && (
+                        <span className="text-red-600 text-xs block">
+                          {new Date(email.sent_at).toLocaleString('nl-NL')}
+                        </span>
+                      )}
+                      {email.error_message && (
+                        <span className="text-red-700 text-xs block mt-0.5">
+                          {email.error_message}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </div>
+          {trackingCode &&
+            order.delivery_method !== 'pickup' &&
+            orderEmails.some(
+              (e) =>
+                e.status === 'failed' &&
+                (e.email_type === 'shipped' ||
+                  e.template_key === 'shipping_confirmation' ||
+                  e.email_type === 'shipping' ||
+                  (e.template_key || '').includes('shipping'))
+            ) && (
+              <button
+                type="button"
+                onClick={handleSendShippingEmail}
+                disabled={sendingEmail}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-700 hover:bg-red-800 text-white font-bold uppercase text-xs tracking-wider transition-colors disabled:opacity-50"
+              >
+                <Mail className="w-4 h-4" />
+                {sendingEmail ? 'Verzenden...' : 'Verzendemail opnieuw versturen'}
+              </button>
+            )}
         </div>
       )}
 
@@ -2149,15 +2238,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 )}
 
-                {/* Handmatig email versturen als nodig */}
-                {trackingCode && order.status === 'shipped' && (
+                {/* Handmatig email versturen wanneer er tracking is (niet alleen bij shipped).
+                    Already inside the non-pickup branch of Verzending. */}
+                {trackingCode && (
                   <button
                     onClick={handleSendShippingEmail}
                     disabled={sendingEmail}
                     className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-2 px-4 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                   >
                     <Mail size={16} />
-                    {sendingEmail ? 'Verzenden...' : 'Verzend Email (Opnieuw) Versturen'}
+                    {sendingEmail ? 'Verzenden...' : 'Verzendemail opnieuw versturen'}
                   </button>
                 )}
 

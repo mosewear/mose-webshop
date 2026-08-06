@@ -617,7 +617,7 @@ export default function CreativesPage() {
                                       rel="noopener noreferrer"
                                       className="text-gray-500 hover:text-black"
                                     >
-                                      open full
+                                      volledig openen
                                     </a>
                                   </div>
                                   <div className="grid grid-cols-2 gap-1.5">
@@ -638,7 +638,7 @@ export default function CreativesPage() {
                                       disabled={reviewing === v.id || v.status === 'approved' || v.status === 'published'}
                                       className="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded border border-green-200 text-green-800 hover:bg-green-50 disabled:opacity-40"
                                     >
-                                      <Check className="w-3 h-3" /> approve
+                                      <Check className="w-3 h-3" /> goedkeuren
                                     </button>
                                     <button
                                       type="button"
@@ -646,7 +646,7 @@ export default function CreativesPage() {
                                       disabled={reviewing === v.id || v.status === 'rejected'}
                                       className="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded border border-red-200 text-red-800 hover:bg-red-50 disabled:opacity-40"
                                     >
-                                      <X className="w-3 h-3" /> reject
+                                      <X className="w-3 h-3" /> afwijzen
                                     </button>
                                     <button
                                       type="button"

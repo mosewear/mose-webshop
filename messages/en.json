@@ -281,7 +281,8 @@
       "button": "Get Address",
       "loading": "Loading...",
       "success": "Address retrieved!",
-      "edit": "Edit"
+      "edit": "Edit",
+      "error": "Could not fetch address. Try again or enter it manually."
     },
     "countryChanged": {
       "title": "Country changed → {country}",
@@ -796,6 +797,11 @@
   },
   "shop": {
     "title": "Shop",
+    "pageTitle": "Shop - MOSE",
+    "categoryPageTitle": "{category} - MOSE",
+    "heroAlt": "MOSE shop — streetwear from Groningen",
+    "loadError": "Products could not be loaded. Please try again.",
+    "retry": "Try again",
     "filters": {
       "title": "Filters",
       "clear": "Clear all",
@@ -1289,6 +1295,7 @@
       "title1": "NO NONSENSE.",
       "title2": "JUST CHARACTER.",
       "subtitle": "Locally made. Quality that lasts.",
+      "imageAlt": "MOSE, made in Groningen, worn in the city",
       "cta1": {
         "text": "Shop MOSE",
         "aria": "View our shop with all MOSE products"
@@ -2154,8 +2161,16 @@
     "pointsPerEuro": "1 point per euro spent",
     "redeemPoints": "Redeem points",
     "redeemDescription": "100 points = €5 discount",
+    "useAvailable": "Use loyalty points ({points} available)",
+    "availableLabel": "Loyalty Points ({points} available)",
+    "selectPoints": "Select points...",
+    "pointsOption": "{points} points = €{discount} off",
+    "pointsUsed": "{points} points",
+    "remove": "Remove",
     "apply": "Apply",
     "applied": "Loyalty discount applied!",
+    "redeemError": "Could not redeem points",
+    "genericError": "Something went wrong",
     "history": "Points history",
     "earned": "Earned",
     "redeemed": "Redeemed",

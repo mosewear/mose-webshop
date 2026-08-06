@@ -281,7 +281,8 @@
       "button": "Adres ophalen",
       "loading": "Ophalen...",
       "success": "Adres opgehaald!",
-      "edit": "Wijzig"
+      "edit": "Wijzig",
+      "error": "Kon adres niet ophalen. Probeer opnieuw of vul handmatig in."
     },
     "countryChanged": {
       "title": "Land gewijzigd → {country}",
@@ -796,6 +797,11 @@
   },
   "shop": {
     "title": "Shop",
+    "pageTitle": "Shop - MOSE",
+    "categoryPageTitle": "{category} - MOSE",
+    "heroAlt": "MOSE shop — streetwear uit Groningen",
+    "loadError": "Producten konden niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
     "filters": {
       "title": "Filters",
       "clear": "Wis alles",
@@ -1240,6 +1246,7 @@
       "title1": "GEEN POESPAS.",
       "title2": "WEL KARAKTER.",
       "subtitle": "Lokaal gemaakt. Kwaliteit die blijft.",
+      "imageAlt": "MOSE, gemaakt in Groningen, gedragen in de stad",
       "cta1": {
         "text": "Shop MOSE",
         "aria": "Bekijk onze shop met alle MOSE producten"
@@ -2106,8 +2113,16 @@
     "pointsPerEuro": "1 punt per bestede euro",
     "redeemPoints": "Punten inwisselen",
     "redeemDescription": "100 punten = €5 korting",
+    "useAvailable": "Gebruik loyalty punten ({points} beschikbaar)",
+    "availableLabel": "Loyalty Punten ({points} beschikbaar)",
+    "selectPoints": "Selecteer punten...",
+    "pointsOption": "{points} punten = €{discount} korting",
+    "pointsUsed": "{points} punten",
+    "remove": "Verwijderen",
     "apply": "Toepassen",
     "applied": "Loyalty korting toegepast!",
+    "redeemError": "Fout bij inwisselen",
+    "genericError": "Er ging iets mis",
     "history": "Punten historie",
     "earned": "Verdiend",
     "redeemed": "Ingewisseld",

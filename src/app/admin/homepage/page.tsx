@@ -130,7 +130,7 @@ export default function HomepageSettingsPage() {
 
     } catch (error) {
       console.error('Error fetching data:', error)
-      setMessage('Error loading settings')
+      setMessage('Fout bij laden van homepage-instellingen')
     } finally {
       setLoading(false)
     }
@@ -170,7 +170,7 @@ export default function HomepageSettingsPage() {
       setTimeout(() => setMessage(''), 5000)
     } catch (error) {
       console.error('Error saving:', error)
-      setMessage('❌ Error bij opslaan')
+      setMessage('❌ Fout bij opslaan')
     } finally {
       setSaving(false)
     }

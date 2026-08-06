@@ -85,6 +85,7 @@ export default function ShopPageClient() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [showCategoryLabels, setShowCategoryLabels] = useState(true) // Default to true
   
   // Helper for locale-aware links
@@ -147,17 +148,19 @@ export default function ShopPageClient() {
     loadSettings()
   }, [])
 
-  // Set page title based on selected category
+  // Set page title based on selected category (locale-aware)
   useEffect(() => {
     if (selectedCategory === 'all') {
-      document.title = 'Shop - MOSE'
+      document.title = t('pageTitle')
     } else {
       const category = categories.find(c => c.slug === selectedCategory)
       if (category) {
-        document.title = `${getCategoryName(category)} - MOSE`
+        document.title = t('categoryPageTitle', {
+          category: getCategoryName(category),
+        })
       }
     }
-  }, [selectedCategory, categories])
+  }, [selectedCategory, categories, t, locale])
 
   // Auto-select category from URL parameter (from homepage category links)
   useEffect(() => {
@@ -206,6 +209,7 @@ export default function ShopPageClient() {
   const fetchProducts = async () => {
     try {
       setLoading(true)
+      setLoadError(null)
       // Server-side sort keeps the network payload deterministic;
       // the client-side `sortBy` switch below re-sorts when the
       // visitor picks an option other than 'featured'.
@@ -260,6 +264,8 @@ export default function ShopPageClient() {
       }
     } catch (err) {
       console.error('Error fetching products:', err)
+      setLoadError(t('loadError'))
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -292,12 +298,11 @@ export default function ShopPageClient() {
       })
     }
 
-    // Filter by stock availability
+    // Filter by stock availability (presale-aware, same rules as shop tiles)
     if (showInStockOnly) {
       filtered = filtered.filter(p => {
         if (p.is_gift_card) return true
-        const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0
-        return totalStock > 0
+        return getColorStock(p.variants, null).in_stock
       })
     }
 
@@ -399,20 +404,29 @@ export default function ShopPageClient() {
     <div className="bg-white">
       {/* Hero Section - Minimal Banner with Image */}
       <section className="relative h-48 md:h-80 overflow-hidden border-b-4 border-brand-primary">
-        {/* Background Image */}
         <Image
           src="/hero-desktop.webp"
-          alt="MOSE Shop"
+          alt={t('heroAlt')}
           fill
-          sizes="100vw"
-          className="object-cover object-[center_30%]"
+          sizes="(max-width: 767px) 0px, 100vw"
+          className="hidden md:block object-cover object-[center_30%]"
+          priority
+        />
+        <Image
+          src="/hero-mobile.webp"
+          alt={t('heroAlt')}
+          fill
+          sizes="(min-width: 768px) 0px, 100vw"
+          className="block md:hidden object-cover object-[center_30%]"
           priority
         />
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
         {/* Text */}
         <div className="relative h-full flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="font-display text-7xl md:text-9xl tracking-tight">SHOP</h1>
+          <h1 className="font-display text-7xl md:text-9xl tracking-tight uppercase">
+            {t('title')}
+          </h1>
         </div>
       </section>
 
@@ -859,8 +873,23 @@ export default function ShopPageClient() {
               </div>
             )}
 
+            {/* Load error (distinct from empty catalog / filters) */}
+            {!loading && loadError && (
+              <div className="text-center py-16 border-2 border-red-200 bg-red-50 px-4">
+                <h3 className="text-2xl font-display font-bold mb-2 text-red-800">
+                  {loadError}
+                </h3>
+                <button
+                  onClick={() => fetchProducts()}
+                  className="mt-4 inline-block bg-black hover:bg-gray-900 text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors"
+                >
+                  {t('retry')}
+                </button>
+              </div>
+            )}
+
             {/* Empty State */}
-            {!loading && shopTiles.length === 0 && (
+            {!loading && !loadError && shopTiles.length === 0 && (
               <div className="text-center py-16">
                 <svg className="w-20 h-20 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -872,10 +901,7 @@ export default function ShopPageClient() {
                   {t('noResultsDesc')}
                 </p>
                 <button
-                  onClick={() => {
-                    setSelectedCategory('all')
-                    setSearchQuery('')
-                  }}
+                  onClick={handleResetFilters}
                   className="inline-block bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors"
                 >
                   {t('filters.clear')}

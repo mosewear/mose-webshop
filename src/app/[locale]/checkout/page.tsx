@@ -8,21 +8,16 @@ import { useRouter } from '@/i18n/routing'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock, Gift as GiftIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { capitalizeName } from '@/lib/utils'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
-import ExpressCheckout from '@/components/ExpressCheckout'
 import { calculateTierDiscount, getTierDiscountPercent, type LoyaltyTier } from '@/lib/loyalty'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { computeCartStaffelBreakdown } from '@/lib/cart-staffel-display'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 type PaymentMethod = 'ideal' | 'card' | 'klarna' | 'bancontact' | 'paypal'
 type DeliveryMethod = 'shipping' | 'pickup'
@@ -32,7 +27,7 @@ function sanitizeAddition(value: string): string {
   return value.replace(/[^A-Za-z0-9\s-]/g, '').slice(0, 10).trim()
 }
 
-const StripePaymentForm = dynamic(() => import('@/components/StripePaymentForm'), {
+const MolliePaymentForm = dynamic(() => import('@/components/MolliePaymentForm'), {
   ssr: false,
   loading: () => (
     <div className="animate-pulse space-y-4">
@@ -61,6 +56,7 @@ export default function CheckoutPage() {
   const tCommon = useTranslations('common')
   const tErrors = useTranslations('errors')
   const tCart = useTranslations('cart')
+  const tLoyalty = useTranslations('loyalty')
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -123,9 +119,8 @@ export default function CheckoutPage() {
     maxDistanceKm: 50,
   })
   const [currentStep, setCurrentStep] = useState<'details' | 'payment'>('details')
-  const [clientSecret, setClientSecret] = useState<string>()
   const [orderId, setOrderId] = useState<string>()
-  const [isCreatingIntent, setIsCreatingIntent] = useState(false)
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false)
   const [paymentCancelled, setPaymentCancelled] = useState(false)
   
   // Promo code state
@@ -1255,9 +1250,7 @@ export default function CheckoutPage() {
     if (!raw) return
     const normalized = raw.toUpperCase().replace(/\s+/g, '')
     if (giftCardEntries.some((e) => e.code === normalized)) {
-      setGiftCardError(
-        t('giftCard.alreadyApplied', { defaultValue: 'Deze cadeaubon is al toegevoegd.' })
-      )
+      setGiftCardError(t('giftCard.alreadyApplied'))
       return
     }
     setGiftCardError('')
@@ -1743,7 +1736,7 @@ export default function CheckoutPage() {
       setAddressLookup({
         isLookingUp: false,
         isLookedUp: false,
-        error: 'Kon adres niet ophalen. Probeer opnieuw of vul handmatig in.',
+        error: t('lookup.error'),
       })
     }
   }
@@ -1909,14 +1902,14 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
                       <div>
-                        <div className="font-semibold text-yellow-800 uppercase tracking-wide text-xs">Loyalty Punten</div>
+                        <div className="font-semibold text-yellow-800 uppercase tracking-wide text-xs">{tLoyalty('points')}</div>
                         <div className="text-xs text-gray-600">
-                          {loyaltyRedeemPoints} punten •
+                          {tLoyalty('pointsUsed', { points: loyaltyRedeemPoints })} •
                           <button
                             onClick={() => { setLoyaltyRedeemPoints(0); setLoyaltyDiscount(0) }}
                             className="ml-1 text-gray-500 hover:text-black font-semibold underline"
                           >
-                            Verwijderen
+                            {tLoyalty('remove')}
                           </button>
                         </div>
                       </div>
@@ -2843,14 +2836,14 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
                       <div>
-                        <div className="font-semibold text-yellow-800 uppercase tracking-wide text-sm">Loyalty Punten</div>
+                        <div className="font-semibold text-yellow-800 uppercase tracking-wide text-sm">{tLoyalty('points')}</div>
                         <div className="text-xs text-gray-600">
-                          {loyaltyRedeemPoints} punten •
+                          {tLoyalty('pointsUsed', { points: loyaltyRedeemPoints })} •
                           <button
                             onClick={() => { setLoyaltyRedeemPoints(0); setLoyaltyDiscount(0) }}
                             className="ml-1 text-gray-500 hover:text-black font-semibold underline"
                           >
-                            Verwijderen
+                            {tLoyalty('remove')}
                           </button>
                         </div>
                       </div>
@@ -3062,7 +3055,7 @@ export default function CheckoutPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l3.057-3 3.943 3 3.943-3L19 3l1 6.5-4 4.5v7l-4-2-4 2v-7l-4-4.5L5 3z" />
                         </svg>
-                        <span>Gebruik loyalty punten ({loyaltyPointsBalance} beschikbaar)</span>
+                        <span>{tLoyalty('useAvailable', { points: loyaltyPointsBalance })}</span>
                       </div>
                       <ChevronDown size={16} />
                     </button>
@@ -3073,7 +3066,7 @@ export default function CheckoutPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l3.057-3 3.943 3 3.943-3L19 3l1 6.5-4 4.5v7l-4-2-4 2v-7l-4-4.5L5 3z" />
                           </svg>
-                          <span>Loyalty Punten ({loyaltyPointsBalance} beschikbaar)</span>
+                          <span>{tLoyalty('availableLabel', { points: loyaltyPointsBalance })}</span>
                         </div>
                         <button
                           onClick={() => setLoyaltyExpanded(false)}
@@ -3091,13 +3084,16 @@ export default function CheckoutPage() {
                           }}
                           className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
                         >
-                          <option value={0}>Selecteer punten...</option>
+                          <option value={0}>{tLoyalty('selectPoints')}</option>
                           {Array.from(
                             { length: Math.floor(loyaltyPointsBalance / 100) },
                             (_, i) => (i + 1) * 100
                           ).map((pts) => (
                             <option key={pts} value={pts}>
-                              {pts} punten = €{(pts / 100 * 5).toFixed(2)} korting
+                              {tLoyalty('pointsOption', {
+                                points: pts,
+                                discount: (pts / 100 * 5).toFixed(2),
+                              })}
                             </option>
                           ))}
                         </select>
@@ -3117,10 +3113,10 @@ export default function CheckoutPage() {
                                 setLoyaltyPointsBalance(json.remaining_balance)
                                 setLoyaltyExpanded(false)
                               } else {
-                                toast.error(json.error || 'Fout bij inwisselen')
+                                toast.error(json.error || tLoyalty('redeemError'))
                               }
                             } catch {
-                              toast.error('Er ging iets mis')
+                              toast.error(tLoyalty('genericError'))
                             } finally {
                               setLoyaltyLoading(false)
                             }
@@ -3128,10 +3124,10 @@ export default function CheckoutPage() {
                           disabled={loyaltyRedeemPoints < 100 || loyaltyLoading}
                           className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
-                          {loyaltyLoading ? '...' : 'Toepassen'}
+                          {loyaltyLoading ? '...' : tLoyalty('apply')}
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500">100 punten = €5,00 korting</p>
+                      <p className="text-xs text-gray-500">{tLoyalty('redeemDescription')}</p>
                     </div>
                   )
                 )}

@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendShippingConfirmationEmail } from '@/lib/email'
-import { createClient } from '@/lib/supabase/server'
-import { logEmail } from '@/lib/email-logger'
+import { requireAdmin } from '@/lib/supabase/admin'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
+/**
+ * POST /api/send-shipping-email
+ *
+ * Admin-only resend of the shipping confirmation for an order that
+ * already has a tracking code. `sendShippingConfirmationEmail` already
+ * logs to `order_emails` via sendAndLog — do not double-log here.
+ */
 export async function POST(req: NextRequest) {
   try {
+    const { authorized } = await requireAdmin(['admin', 'manager'])
+    if (!authorized) {
+      return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 403 })
+    }
+
     const { orderId } = await req.json()
 
     if (!orderId) {
@@ -14,8 +26,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Get order details from Supabase
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
     const { data: order, error } = await supabase
       .from('orders')
       .select('*')
@@ -43,9 +54,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const shippingAddress = order.shipping_address as any
+    const shippingAddress = order.shipping_address as {
+      name?: string
+    } | null
 
-    // Send shipping confirmation email
     const result = await sendShippingConfirmationEmail({
       customerEmail: order.email,
       customerName: shippingAddress?.name || 'Klant',
@@ -56,16 +68,7 @@ export async function POST(req: NextRequest) {
       estimatedDelivery: order.estimated_delivery_date
         ? new Date(order.estimated_delivery_date).toLocaleDateString('nl-NL')
         : undefined,
-    })
-
-    // Log email to database
-    await logEmail({
-      orderId: order.id,
-      emailType: 'shipped',
-      recipientEmail: order.email,
-      subject: `Je bestelling is verzonden #${order.id.slice(0, 8).toUpperCase()}`,
-      status: result.success ? 'sent' : 'failed',
-      errorMessage: result.error ? JSON.stringify(result.error) : undefined,
+      locale: order.locale || 'nl',
     })
 
     if (!result.success) {
@@ -75,8 +78,17 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Keep the denormalised last-email columns in sync for the order UI.
+    await supabase
+      .from('orders')
+      .update({
+        last_email_sent_at: new Date().toISOString(),
+        last_email_type: 'shipped',
+      })
+      .eq('id', order.id)
+
     return NextResponse.json({ success: true, data: result.data })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error sending shipping email:', error)
     return NextResponse.json(
       { error: 'Er is een fout opgetreden' },
@@ -84,5 +96,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
-
