@@ -66,6 +66,9 @@ export default function CheckoutPage() {
   // Ref voor het scrollen naar de juiste sectie
   const checkoutContainerRef = useRef<HTMLDivElement>(null)
   const paymentSectionRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<CheckoutForm | null>(null)
+  const addressLookupRequestIdRef = useRef(0)
+  const addressLookupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   
   const [user, setUser] = useState<any>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -97,6 +100,8 @@ export default function CheckoutPage() {
     isLookedUp: false,
     error: null as string | null,
   })
+  // Keep latest form for address lookup so auto-trigger timeouts don't use a stale toevoeging.
+  formRef.current = form
   const [countryChangedInfo, setCountryChangedInfo] = useState<{show: boolean, oldCountry: string, newCountry: string} | null>(null)
   const [showOrderSummary, setShowOrderSummary] = useState(false)
   const [shippingCost, setShippingCost] = useState(5.95)
@@ -1570,6 +1575,11 @@ export default function CheckoutPage() {
     
     // Reset address lookup state als gebruiker handmatig wijzigt
     if (field === 'postalCode' || field === 'huisnummer' || field === 'toevoeging') {
+      if (addressLookupTimeoutRef.current) {
+        clearTimeout(addressLookupTimeoutRef.current)
+        addressLookupTimeoutRef.current = null
+      }
+      addressLookupRequestIdRef.current += 1
       setAddressLookup({ isLookingUp: false, isLookedUp: false, error: null })
     }
   }
@@ -1599,10 +1609,27 @@ export default function CheckoutPage() {
     return 'border-gray-300' // Default state
   }
 
+  const clearScheduledAddressLookup = () => {
+    if (addressLookupTimeoutRef.current) {
+      clearTimeout(addressLookupTimeoutRef.current)
+      addressLookupTimeoutRef.current = null
+    }
+  }
+
+  const scheduleAddressLookup = (delayMs = 500) => {
+    clearScheduledAddressLookup()
+    addressLookupTimeoutRef.current = setTimeout(() => {
+      addressLookupTimeoutRef.current = null
+      void handleAddressLookup()
+    }, delayMs)
+  }
+
   const handleAddressLookup = async () => {
-    // Validatie
-    const postcodeError = validateField('postalCode', form.postalCode)
-    const huisnummerError = validateField('huisnummer', form.huisnummer)
+    clearScheduledAddressLookup()
+
+    const current = formRef.current || form
+    const postcodeError = validateField('postalCode', current.postalCode)
+    const huisnummerError = validateField('huisnummer', current.huisnummer)
     
     if (postcodeError || huisnummerError) {
       setErrors((prev) => ({
@@ -1613,38 +1640,54 @@ export default function CheckoutPage() {
       return
     }
 
+    const requestId = ++addressLookupRequestIdRef.current
+    const huisnummer = current.huisnummer.trim()
+    const toevoeging = current.toevoeging.trim()
+    const normalizedPostcode = current.postalCode.replace(/\s+/g, '').toUpperCase()
+
     setAddressLookup({ isLookingUp: true, isLookedUp: false, error: null })
 
     try {
-      const normalizedPostcode = form.postalCode.replace(/\s+/g, '').toUpperCase()
-      
       const response = await fetch('/api/postcode-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           postcode: normalizedPostcode,
-          huisnummer: form.huisnummer.trim(),
-          toevoeging: form.toevoeging.trim() || undefined,
+          huisnummer,
+          toevoeging: toevoeging || undefined,
         }),
       })
 
       const data = await response.json()
 
+      // Ignore stale responses from an earlier auto-lookup race
+      if (requestId !== addressLookupRequestIdRef.current) return
+
       if (!data.success) {
-      setAddressLookup({
-        isLookingUp: false,
-        isLookedUp: false,
-        error: data.error || 'Adres niet gevonden',
-      })
-      return
+        setAddressLookup({
+          isLookingUp: false,
+          isLookedUp: false,
+          error: data.error || 'Adres niet gevonden',
+        })
+        return
       }
 
-      // Vul adres in
-      setForm((prev) => ({
-        ...prev,
-        address: data.fullAddress,
-        city: data.city,
-      }))
+      // Always keep toevoeging and append it to the street+number display
+      setForm((prev) => {
+        const addition = prev.toevoeging.trim() || data.addition || ''
+        const number = prev.huisnummer.trim() || data.houseNumber || huisnummer
+        const street = (data.street || '').trim()
+        const fullAddress = street
+          ? `${street} ${number}${addition}`
+          : (data.fullAddress || prev.address)
+
+        return {
+          ...prev,
+          address: fullAddress.trim(),
+          city: data.city || prev.city,
+          toevoeging: addition,
+        }
+      })
 
       setAddressLookup({
         isLookingUp: false,
@@ -1652,6 +1695,7 @@ export default function CheckoutPage() {
         error: null,
       })
     } catch (error: any) {
+      if (requestId !== addressLookupRequestIdRef.current) return
       console.error('Address lookup error:', error)
       setAddressLookup({
         isLookingUp: false,
@@ -2123,20 +2167,14 @@ export default function CheckoutPage() {
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
-                            onBlur={(e) => {
+                            onBlur={() => {
                               handleBlur('postalCode')
-                              
-                              // Auto-trigger lookup als postcode + huisnummer compleet zijn (ALLEEN NL)
+                              // Delay so toevoeging can be typed before lookup; reads latest via formRef
                               if (form.country === 'NL' && form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
                                 const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
                                 const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
                                 if (postcodeValid && huisnummerValid) {
-                                  // Debounce: kleine delay
-                                  setTimeout(() => {
-                                    if (form.postalCode && form.huisnummer) {
-                                      handleAddressLookup()
-                                    }
-                                  }, 500)
+                                  scheduleAddressLookup(700)
                                 }
                               }
                             }}
@@ -2168,19 +2206,14 @@ export default function CheckoutPage() {
                               const value = e.target.value.replace(/\D/g, '')
                               updateForm('huisnummer', value)
                             }}
-                            onBlur={(e) => {
+                            onBlur={() => {
                               handleBlur('huisnummer')
-                              
-                              // Auto-trigger lookup als postcode + huisnummer compleet zijn (ALLEEN NL)
+                              // Delay so user can fill toevoeging before lookup fires
                               if (form.country === 'NL' && form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
                                 const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
                                 const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
                                 if (postcodeValid && huisnummerValid) {
-                                  setTimeout(() => {
-                                    if (form.postalCode && form.huisnummer) {
-                                      handleAddressLookup()
-                                    }
-                                  }, 500)
+                                  scheduleAddressLookup(700)
                                 }
                               }
                             }}
@@ -2207,7 +2240,16 @@ export default function CheckoutPage() {
                               const value = sanitizeAddition(e.target.value)
                               updateForm('toevoeging', value)
                             }}
-                            onBlur={() => handleBlur('toevoeging')}
+                            onBlur={() => {
+                              handleBlur('toevoeging')
+                              if (form.country === 'NL' && form.postalCode && form.huisnummer && !addressLookup.isLookedUp) {
+                                const postcodeValid = /^\d{4}\s?[A-Z]{2}$/i.test(form.postalCode.replace(/\s+/g, ''))
+                                const huisnummerValid = /^\d+$/.test(form.huisnummer.trim())
+                                if (postcodeValid && huisnummerValid) {
+                                  scheduleAddressLookup(200)
+                                }
+                              }
+                            }}
                             className={`w-full px-4 py-3 border-2 ${
                               getInputBorderClass('toevoeging')
                             } focus:border-brand-primary focus:outline-none`}

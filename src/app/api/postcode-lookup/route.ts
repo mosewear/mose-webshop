@@ -109,22 +109,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Bouw volledige adres string
-    let fullAddress = `${straatnaam} ${huisnummerNum}`
-    
-    // Voeg toevoeging toe als die er is
-    if (toevoeging && toevoeging.trim()) {
-      fullAddress += toevoeging.trim()
-    } else if (result.huisletter) {
-      fullAddress += result.huisletter
-    } else if (result.huisnummertoevoeging) {
-      fullAddress += result.huisnummertoevoeging
-    }
+    // Prefer the caller's toevoeging; fall back to BAG huisletter / huisnummertoevoeging
+    const resolvedAddition = (
+      (typeof toevoeging === 'string' && toevoeging.trim()) ||
+      result.huisletter ||
+      result.huisnummertoevoeging ||
+      ''
+    ).toString().trim()
+
+    const fullAddress = `${straatnaam} ${huisnummerNum}${resolvedAddition}`
 
     return NextResponse.json({
       success: true,
       street: straatnaam,
       city: woonplaats,
+      houseNumber: String(huisnummerNum),
+      addition: resolvedAddition,
       fullAddress: fullAddress.trim(),
     })
 

@@ -843,10 +843,14 @@ export function formatAddressForSendcloud(address: {
   let houseNumber: string
 
   if (address.houseNumber) {
-    street = address.address.trim()
-    houseNumber = address.addition
-      ? `${address.houseNumber.trim()}${address.addition.trim()}`
-      : address.houseNumber.trim()
+    const rawStreet = address.address.trim()
+    const hn = address.houseNumber.trim()
+    const addition = (address.addition || '').trim()
+    houseNumber = addition ? `${hn}${addition}` : hn
+    // Checkout stores "street + number + addition" in address for display; strip that
+    // suffix so SendCloud gets a clean street name when houseNumber is separate.
+    const escapedSuffix = houseNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    street = rawStreet.replace(new RegExp(`\\s*${escapedSuffix}$`, 'i'), '').trim() || rawStreet
   } else {
     // Fallback: try to split house number from street (legacy/Express Checkout format like "Kalverstraat 123a")
     const addressMatch = address.address.match(/^(.+?)\s+(\d+[a-zA-Z]?.*)$/)
