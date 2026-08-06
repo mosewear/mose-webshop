@@ -3,60 +3,65 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from '@/i18n/routing'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
+import { useCart } from '@/store/cart'
 
-// Inner component that uses useSearchParams (wrapped in Suspense)
 function PaymentStatusContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const locale = useLocale()
   const t = useTranslations('paymentStatus')
-  
+  const clearCart = useCart((s) => s.clearCart)
+
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
-      const paymentIntent = searchParams.get('payment_intent')
-      const paymentIntentClientSecret = searchParams.get('payment_intent_client_secret')
-      const redirectStatus = searchParams.get('redirect_status')
+      const orderId = searchParams.get('order_id')
+      const payment =
+        searchParams.get('payment') || searchParams.get('payment_intent')
 
-      console.log('🔍 Payment Status Check:', { paymentIntent, redirectStatus })
-
-      if (!paymentIntent) {
-        console.error('❌ No payment_intent in URL')
+      if (!orderId && !payment) {
         router.push('/cart')
         return
       }
 
       try {
-        // Check status from Stripe via our API
-        const response = await fetch(`/api/check-payment-status?payment_intent=${paymentIntent}`)
+        const qs = new URLSearchParams()
+        if (orderId) qs.set('order_id', orderId)
+        if (payment) qs.set('payment', payment)
+
+        const response = await fetch(`/api/check-payment-status?${qs.toString()}`)
         const data = await response.json()
 
-        console.log('✅ Payment status:', data.status)
-
-        if (data.status === 'succeeded') {
-          // Successful payment → go to confirmation
-          console.log('✅ Payment succeeded, redirecting to confirmation')
-          router.push(`/order-confirmation?payment_intent=${paymentIntent}`)
-        } else if (data.status === 'canceled' || data.status === 'requires_payment_method') {
-          // Cancelled or failed → back to checkout with message
-          console.log('⚠️ Payment cancelled/failed, redirecting to checkout')
-          
-          // Save state to sessionStorage
+        if (data.status === 'succeeded' || data.mollie_status === 'paid') {
+          clearCart()
+          const confQs = new URLSearchParams()
+          if (data.orderId || orderId) {
+            confQs.set('order_id', data.orderId || orderId!)
+          }
+          if (data.paymentId || payment) {
+            confQs.set('payment', data.paymentId || payment!)
+          }
+          router.push(`/order-confirmation?${confQs.toString()}`)
+        } else if (
+          data.status === 'canceled' ||
+          data.status === 'requires_payment_method' ||
+          data.mollie_status === 'canceled' ||
+          data.mollie_status === 'failed' ||
+          data.mollie_status === 'expired'
+        ) {
           sessionStorage.setItem('payment_cancelled', 'true')
-          sessionStorage.setItem('payment_intent', paymentIntent)
-          sessionStorage.setItem('order_id', data.orderId || '')
-          
+          if (data.paymentId || payment) {
+            sessionStorage.setItem('payment_intent', data.paymentId || payment!)
+          }
+          sessionStorage.setItem('order_id', data.orderId || orderId || '')
           router.push('/checkout')
         } else {
-          // Other status (processing, etc.)
-          console.log('🔄 Payment status:', data.status)
-          setError(t('statusError', { status: data.status }))
+          setError(t('statusError', { status: data.mollie_status || data.status }))
         }
-      } catch (error: any) {
-        console.error('❌ Error checking payment status:', error)
+      } catch (err: unknown) {
+        console.error('Error checking payment status:', err)
         setError(t('checkError'))
       } finally {
         setChecking(false)
@@ -64,7 +69,7 @@ function PaymentStatusContent() {
     }
 
     checkPaymentStatus()
-  }, [searchParams, router])
+  }, [searchParams, router, clearCart, t])
 
   if (checking) {
     return (
@@ -103,10 +108,9 @@ function PaymentStatusContent() {
   return null
 }
 
-// Outer component with Suspense boundary
 export default function PaymentStatusPage() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center max-w-md px-4">
@@ -121,5 +125,3 @@ export default function PaymentStatusPage() {
     </Suspense>
   )
 }
-
-

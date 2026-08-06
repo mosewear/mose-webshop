@@ -47,13 +47,18 @@ interface OrderItem {
 export default function OrderConfirmationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string; order_id?: string; payment_intent?: string }>
+  searchParams: Promise<{
+    order?: string
+    order_id?: string
+    payment_intent?: string
+    payment?: string
+  }>
 }) {
   const t = useTranslations('orderConfirmation')
   const params = use(searchParams)
   const { locale } = useParams() as { locale: string }
   const orderId = params.order_id || params.order // Support both order_id and order
-  const paymentIntentId = params.payment_intent
+  const paymentId = params.payment || params.payment_intent
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -61,25 +66,19 @@ export default function OrderConfirmationPage({
   const { clearCart } = useCart()
 
   useEffect(() => {
-    console.log('🔍 Order Confirmation - Params:', { orderId, paymentIntentId })
-    
-    // Clear cart on successful order confirmation
     clearCart()
-    
-    // Clear promo code from localStorage (VOORSTEL 1: Auto-clear after successful order)
-    console.log('🎟️ Clearing promo code from localStorage after successful order')
+
     localStorage.removeItem('mose_promo_code')
     localStorage.removeItem('mose_promo_discount')
     localStorage.removeItem('mose_promo_type')
     localStorage.removeItem('mose_promo_value')
-    
-    if (orderId || paymentIntentId) {
+
+    if (orderId || paymentId) {
       fetchOrder()
     } else {
-      console.error('❌ No orderId or paymentIntentId provided!')
       setLoading(false)
     }
-  }, [orderId, paymentIntentId])
+  }, [orderId, paymentId])
 
   useEffect(() => {
     let mounted = true
@@ -108,31 +107,25 @@ export default function OrderConfirmationPage({
       console.log('🔵 ORDER CONFIRMATION - FETCH ORDER START')
       console.log('═══════════════════════════════════════════')
       console.log('📋 Order ID:', orderId)
-      console.log('💳 Payment Intent ID:', paymentIntentId)
-      
-      // STEP 1: If we have payment_intent, check status first (fallback mechanism)
-      if (paymentIntentId) {
-        console.log('🔍 [STEP 1] Checking payment status via fallback...')
-        const statusResponse = await fetch(`/api/check-payment-status?payment_intent=${paymentIntentId}`)
-        console.log('📡 [STEP 1] Response status:', statusResponse.status, statusResponse.statusText)
-        
+      console.log('💳 Payment ID:', paymentId)
+
+      // Confirm Mollie payment via API (webhook backup)
+      if (paymentId || orderId) {
+        const statusQs = new URLSearchParams()
+        if (paymentId) statusQs.set('payment', paymentId)
+        if (orderId) statusQs.set('order_id', orderId)
+        const statusResponse = await fetch(
+          `/api/check-payment-status?${statusQs.toString()}`
+        )
         if (statusResponse.ok) {
           const statusData = await statusResponse.json()
-          console.log('✅ [STEP 1] Payment status checked:', statusData)
-          if (statusData.fallback_applied) {
-            console.log('🔧 [STEP 1] Fallback applied - order updated to PAID')
-          }
-        } else {
-          console.error('❌ [STEP 1] Failed to check payment status')
+          console.log('Payment status checked:', statusData)
         }
-      } else {
-        console.log('⏭️  [STEP 1] No payment intent ID - skipping fallback check')
       }
-      
-      // STEP 2: Fetch order details
+
       const params = new URLSearchParams()
       if (orderId) params.append('order_id', orderId)
-      if (paymentIntentId) params.append('payment_intent', paymentIntentId)
+      if (paymentId) params.append('payment', paymentId)
 
       console.log('📡 [STEP 2] Fetching order via API...')
       console.log('🔗 [STEP 2] API URL:', `/api/get-order?${params.toString()}`)
@@ -226,7 +219,7 @@ export default function OrderConfirmationPage({
           country: data.order.shipping_address?.country || 'NL'
         }, {
           // Pin event_id to order UUID so this dedupes with the
-          // server-side Purchase event fired from the Stripe webhook.
+          // server-side Purchase event fired from the Mollie webhook.
           eventId: data.order.id,
         })
 

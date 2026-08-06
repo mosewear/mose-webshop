@@ -69,9 +69,10 @@
     "back": "Choose another payment method",
     "pay": "PAY",
     "processing": "PROCESSING...",
-    "secure": "Secure payment via Stripe",
+    "secure": "Secure payment via Mollie",
     "ssl": "SSL encrypted connection",
     "preparing": "Payment is being prepared...",
+    "redirecting": "Redirecting you to Mollie...",
     "moment": "This will only take a moment",
     "error": "An error occurred",
     "defaultName": "Customer"
@@ -1426,7 +1427,7 @@
       },
       {
         "question": "Which payment methods do you accept?",
-        "answer": "We accept iDEAL, Mastercard, Visa, American Express, PayPal and Bancontact. All payments are securely processed via Stripe. Your payment details are always protected."
+        "answer": "We accept iDEAL, Mastercard, Visa, American Express, PayPal and Bancontact. All payments are securely processed via Mollie. Your payment details are always protected."
       }
     ]
   },
@@ -1555,7 +1556,7 @@
           "Name and address (for shipping orders)",
           "Email address (for order confirmations and communication)",
           "Phone number (for delivery and customer service)",
-          "Payment details (securely processed via Stripe, not stored by us)",
+          "Payment details (securely processed via Mollie, not stored by us)",
           "Order history and preferences"
         ]
       },
@@ -1579,7 +1580,7 @@
         "intro": "We only share your data with:",
         "items": [
           "Shipping partners (for delivery of your order)",
-          "Stripe (for secure payment processing)",
+          "Mollie (for secure payment processing)",
           "Hosting providers (for data storage)"
         ],
         "outro": "We never sell your data to third parties and only share it when necessary for fulfilling your order."
@@ -1641,7 +1642,7 @@
       "payment": {
         "title": "4. PAYMENT",
         "items": [
-          "Payment is processed securely via Stripe",
+          "Payment is processed securely via Mollie",
           "We accept iDEAL, credit card and Bancontact",
           "Your payment must be completed before we ship your order",
           "Failed payments will automatically cancel your order"

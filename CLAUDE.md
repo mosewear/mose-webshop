@@ -54,7 +54,7 @@ Database types are generated to `src/lib/supabase/types.ts` / `database.types.ts
 - `src/store/cart.ts`, `cartDrawer.ts`, `wishlist.ts` — Zustand stores with localStorage persistence. Cart and wishlist are client-only.
 
 ### Payments & orders
-- Stripe client/server code in `src/lib/stripe*` and `src/app/api/create-payment-intent`, `stripe-webhook`. Webhook signature verified with `STRIPE_WEBHOOK_SECRET`.
+- Mollie Payments API (`@mollie/api-client`) via `src/lib/mollie.ts`, `src/app/api/create-mollie-payment`, `src/app/api/mollie-webhook`. Hosted checkout redirect (iDEAL + cards etc.). Always confirm status via Mollie API on webhook + return URL (`/api/check-payment-status`). Env: `MOLLIE_API_KEY`. Legacy `/api/stripe-webhook` returns 410.
 - Stock decrement is tracked via `orders.stock_decremented_at` (migration `20260422120000`) — stock is decremented exactly once per order; check that column before decrementing again from a retry path.
 - Promo codes (`src/lib/promo-code-utils.ts`, `promo-staffel-eligibility.ts`) and loyalty tiers (`src/lib/loyalty.ts`) have their own eligibility rules — don't bypass them when touching the checkout total.
 

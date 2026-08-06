@@ -17,6 +17,7 @@ interface Order {
   paid_at: string | null
   payment_method: string | null
   stripe_payment_intent_id: string | null
+  mollie_payment_id: string | null
   payment_metadata: any
   checkout_started_at: string | null
   total: number
@@ -1789,13 +1790,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 )}
 
-                {order.stripe_payment_intent_id && (
+                {(order.mollie_payment_id || order.stripe_payment_intent_id) && (
                   <div>
                     <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
-                      Stripe Payment Intent
+                      {(order.mollie_payment_id || order.stripe_payment_intent_id || '').startsWith('tr_')
+                        ? 'Mollie Payment'
+                        : 'Payment ID'}
                     </span>
                     <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono block break-all">
-                      {order.stripe_payment_intent_id}
+                      {order.mollie_payment_id || order.stripe_payment_intent_id}
                     </code>
                   </div>
                 )}
@@ -1851,16 +1854,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               )}
 
-              {/* Stripe Dashboard Link */}
-              {order.stripe_payment_intent_id && (
+              {/* Mollie Dashboard Link */}
+              {(order.mollie_payment_id ||
+                order.stripe_payment_intent_id?.startsWith('tr_')) && (
                 <div className="pt-2">
                   <a
-                    href={`https://dashboard.stripe.com/payments/${order.stripe_payment_intent_id}`}
+                    href={`https://my.mollie.com/dashboard/payments/${order.mollie_payment_id || order.stripe_payment_intent_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm font-semibold text-brand-primary hover:text-brand-primary-hover transition-colors"
                   >
-                    <span>Bekijk in Stripe Dashboard</span>
+                    <span>Bekijk in Mollie Dashboard</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>

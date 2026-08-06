@@ -3002,6 +3002,7 @@ export type Database = {
           shipping_cost: number | null
           status: string
           stock_decremented_at: string | null
+          mollie_payment_id: string | null
           stripe_payment_intent_id: string | null
           subtotal: number
           tax_amount: number | null
@@ -3057,6 +3058,7 @@ export type Database = {
           shipping_cost?: number | null
           status?: string
           stock_decremented_at?: string | null
+          mollie_payment_id?: string | null
           stripe_payment_intent_id?: string | null
           subtotal: number
           tax_amount?: number | null
@@ -3812,6 +3814,8 @@ export type Database = {
           sendcloud_return_id: number | null
           shipped_at: string | null
           status: string
+          mollie_refund_id: string | null
+          mollie_refund_status: string | null
           stripe_refund_id: string | null
           stripe_refund_status: string | null
           total_refund: number | null
@@ -3849,6 +3853,8 @@ export type Database = {
           sendcloud_return_id?: number | null
           shipped_at?: string | null
           status?: string
+          mollie_refund_id?: string | null
+          mollie_refund_status?: string | null
           stripe_refund_id?: string | null
           stripe_refund_status?: string | null
           total_refund?: number | null
@@ -3886,6 +3892,8 @@ export type Database = {
           sendcloud_return_id?: number | null
           shipped_at?: string | null
           status?: string
+          mollie_refund_id?: string | null
+          mollie_refund_status?: string | null
           stripe_refund_id?: string | null
           stripe_refund_status?: string | null
           total_refund?: number | null
@@ -4362,6 +4370,7 @@ export type Database = {
           shipping_address: Json | null
           shipping_cost: number | null
           status: string | null
+          mollie_payment_id: string | null
           stripe_payment_intent_id: string | null
           subtotal: number | null
           tax_amount: number | null
@@ -4504,6 +4513,7 @@ export type Database = {
           shipping_cost: number | null
           status: string
           stock_decremented_at: string | null
+          mollie_payment_id: string | null
           stripe_payment_intent_id: string | null
           subtotal: number
           tax_amount: number | null
@@ -4755,6 +4765,7 @@ export type Database = {
           shipping_cost: number | null
           status: string
           stock_decremented_at: string | null
+          mollie_payment_id: string | null
           stripe_payment_intent_id: string | null
           subtotal: number
           tax_amount: number | null

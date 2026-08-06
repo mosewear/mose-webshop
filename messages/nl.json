@@ -69,9 +69,10 @@
     "back": "Andere betaalmethode kiezen",
     "pay": "BETALEN",
     "processing": "BEZIG...",
-    "secure": "Veilig betalen via Stripe",
+    "secure": "Veilig betalen via Mollie",
     "ssl": "SSL versleutelde verbinding",
     "preparing": "Payment wordt voorbereid...",
+    "redirecting": "Je wordt doorgestuurd naar Mollie...",
     "moment": "Dit duurt slechts een moment",
     "error": "Er is een fout opgetreden",
     "defaultName": "Klant"
@@ -1377,7 +1378,7 @@
       },
       {
         "question": "Welke betaalmethoden accepteren jullie?",
-        "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Stripe. Je betaalgegevens zijn altijd beschermd."
+        "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Mollie. Je betaalgegevens zijn altijd beschermd."
       }
     ]
   },
@@ -1506,7 +1507,7 @@
           "Naam en adresgegevens (voor verzending van bestellingen)",
           "E-mailadres (voor orderbevestigingen en communicatie)",
           "Telefoonnummer (voor levering en klantenservice)",
-          "Betaalgegevens (veilig verwerkt via Stripe, niet opgeslagen bij ons)",
+          "Betaalgegevens (veilig verwerkt via Mollie, niet opgeslagen bij ons)",
           "Ordergeschiedenis en voorkeuren"
         ]
       },
@@ -1530,7 +1531,7 @@
         "intro": "We delen je gegevens alleen met:",
         "items": [
           "Verzendpartners (voor levering van je bestelling)",
-          "Stripe (voor veilige betalingsverwerking)",
+          "Mollie (voor veilige betalingsverwerking)",
           "Hosting providers (voor opslag van gegevens)"
         ],
         "outro": "We verkopen je gegevens nooit aan derden en delen ze alleen wanneer dit noodzakelijk is voor de uitvoering van je bestelling."
@@ -1592,7 +1593,7 @@
       "payment": {
         "title": "4. BETALING",
         "items": [
-          "Betaling verloopt veilig via Stripe",
+          "Betaling verloopt veilig via Mollie",
           "We accepteren iDEAL, creditcard en Bancontact",
           "Je betaling moet voltooid zijn voordat we je bestelling verzenden",
           "Bij mislukte betalingen wordt je bestelling automatisch geannuleerd"

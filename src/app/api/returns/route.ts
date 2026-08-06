@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
-import Stripe from 'stripe'
 import { calculateReturnRefundWithDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
+import {
+  asMolliePayment,
+  formatMollieAmount,
+  getMollieClient,
+  getMollieWebhookUrl,
+  getReturnPaymentRedirectUrl,
+  mollieLocale,
+} from '@/lib/mollie'
 
 // GET /api/returns — alleen retouren gekoppeld aan orders van deze gebruiker.
 // (Geen admin-lijst hier: die staat op GET /api/admin/returns i.v.m. veiligheid.)
@@ -298,37 +305,39 @@ export async function POST(req: NextRequest) {
       // Niet falen - return is al aangemaakt
     }
 
-    // Maak altijd direct een Payment Intent aan voor het retourlabel
-    // zodat de klant direct kan betalen (zolang binnen het retour-window
-    // dat in site_settings.return_days staat)
+    // Create Mollie payment for the return label so the customer can pay immediately
     try {
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
-      const amount = Math.round(returnLabelCostInclBtw * 100)
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency: 'eur',
-        payment_method_types: ['ideal', 'card'], // Alleen iDEAL en credit/debit cards (incl. Google Pay & Apple Pay)
-        metadata: {
-          return_id: returnRecord.id,
-          order_id,
-          type: 'return_label_payment',
-          user_id: user.id,
-        },
-        description: `Retourlabel kosten - Return ${returnRecord.id.slice(0, 8).toUpperCase()}`,
-        receipt_email: order.email,
-      })
+      const mollie = getMollieClient()
+      const locale = 'nl'
+      const payment = await asMolliePayment(
+        mollie.payments.create({
+          amount: {
+            currency: 'EUR',
+            value: formatMollieAmount(returnLabelCostInclBtw),
+          },
+          description: `Retourlabel kosten - Return ${returnRecord.id.slice(0, 8).toUpperCase()}`,
+          redirectUrl: getReturnPaymentRedirectUrl(returnRecord.id, locale),
+          webhookUrl: getMollieWebhookUrl(),
+          metadata: {
+            return_id: returnRecord.id,
+            order_id,
+            type: 'return_label_payment',
+            user_id: user.id,
+          },
+          locale: mollieLocale(locale),
+        })
+      )
 
-      // Sla intent op
       await supabase
         .from('returns')
         .update({
-          return_label_payment_intent_id: paymentIntent.id,
+          return_label_payment_intent_id: payment.id,
           return_label_payment_status: 'pending',
         })
         .eq('id', returnRecord.id)
     } catch (piError) {
-      console.error('Error creating payment intent on creation:', piError)
-      // Niet falen; klant kan via details alsnog intent laten (her)aanmaken
+      console.error('Error creating Mollie payment on return creation:', piError)
+      // Soft fail — customer can recreate via return details page
     }
 
     // GEEN emails meer hier - email wordt verstuurd na betaling in webhook

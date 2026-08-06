@@ -6,11 +6,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const orderId = searchParams.get('order_id')
-    const paymentIntentId = searchParams.get('payment_intent')
+    const paymentId =
+      searchParams.get('payment') ||
+      searchParams.get('payment_intent') ||
+      searchParams.get('mollie_payment_id')
 
-    if (!orderId && !paymentIntentId) {
+    if (!orderId && !paymentId) {
       return NextResponse.json(
-        { error: 'order_id or payment_intent required' },
+        { error: 'order_id or payment required' },
         { status: 400 }
       )
     }
@@ -24,31 +27,36 @@ export async function GET(req: NextRequest) {
     let order
     let orderError
 
-    if (orderId && paymentIntentId) {
-      // Both provided: verify they match (authenticated via payment_intent ownership)
+    if (orderId && paymentId) {
+      // Both provided: verify they match via Mollie or legacy Stripe column
       const result = await supabase
         .from('orders')
         .select('*')
         .eq('id', orderId)
-        .eq('stripe_payment_intent_id', paymentIntentId)
+        .or(
+          `mollie_payment_id.eq.${paymentId},stripe_payment_intent_id.eq.${paymentId}`
+        )
         .single()
       order = result.data
       orderError = result.error
-    } else if (paymentIntentId) {
+    } else if (paymentId) {
       const result = await supabase
         .from('orders')
         .select('*')
-        .eq('stripe_payment_intent_id', paymentIntentId)
+        .or(
+          `mollie_payment_id.eq.${paymentId},stripe_payment_intent_id.eq.${paymentId}`
+        )
         .single()
       order = result.data
       orderError = result.error
     } else if (orderId) {
-      // order_id only: restrict to unpaid/pending orders (abandoned cart recovery)
+      // With payment proof absent: allow paid orders (post-Mollie redirect)
+      // and unpaid/pending (abandoned cart recovery).
       const result = await supabase
         .from('orders')
         .select('*')
         .eq('id', orderId)
-        .in('payment_status', ['pending', 'unpaid'])
+        .in('payment_status', ['pending', 'unpaid', 'paid'])
         .single()
       order = result.data
       orderError = result.error

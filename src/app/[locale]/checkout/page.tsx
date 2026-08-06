@@ -407,68 +407,6 @@ export default function CheckoutPage() {
     }
   }, [])
 
-  // ============================================
-  // CHECK PAYMENT INTENT EXPIRY ON MOUNT
-  // ============================================
-  useEffect(() => {
-    const checkPaymentIntentExpiry = async () => {
-      // ALLEEN checken als we een bestaande order hebben die we ophalen
-      // NIET checken voor verse nieuwe orders die we zojuist hebben aangemaakt
-      if (!clientSecret || !orderId) return
-      
-      try {
-        console.log('🔍 [Expiry Check] Checking payment intent expiry...')
-        
-        // Fetch order to get payment intent ID
-        const { data: order } = await supabase
-          .from('orders')
-          .select('stripe_payment_intent_id, checkout_started_at, created_at')
-          .eq('id', orderId)
-          .single()
-        
-        if (!order || !order.stripe_payment_intent_id) {
-          console.log('⚠️ [Expiry Check] No payment intent found for order')
-          return
-        }
-        
-        // If checkout_started_at is null, skip expiry check (order just created)
-        if (!order.checkout_started_at) {
-          console.log('✅ [Expiry Check] Order just created (no checkout_started_at), skipping expiry check')
-          return
-        }
-        
-        // Check if order was created in the last 2 minutes - if so, it's fresh, don't check expiry
-        const orderCreatedTime = new Date(order.created_at)
-        const now = new Date()
-        const minutesSinceCreation = (now.getTime() - orderCreatedTime.getTime()) / (1000 * 60)
-        
-        if (minutesSinceCreation < 2) {
-          console.log('✅ [Expiry Check] Order created < 2 minutes ago, skipping expiry check')
-          return
-        }
-        
-        // Check if payment intent is older than 1 hour (Stripe default expiry)
-        const checkoutTime = new Date(order.checkout_started_at)
-        const hoursSinceCheckout = (now.getTime() - checkoutTime.getTime()) / (1000 * 60 * 60)
-        
-        console.log(`🔍 [Expiry Check] Hours since checkout: ${hoursSinceCheckout.toFixed(2)}`)
-        
-        if (hoursSinceCheckout > 1) {
-          console.log('❌ [Expiry Check] Payment intent expired (>1 hour old)')
-          setClientSecret(undefined)
-          setCurrentStep('details')
-          toast.error(t('messages.paymentExpired'))
-        } else {
-          console.log('✅ [Expiry Check] Payment intent is still valid')
-        }
-      } catch (error) {
-        console.error('❌ [Expiry Check] Error checking payment intent expiry:', error)
-      }
-    }
-    
-    checkPaymentIntentExpiry()
-  }, [clientSecret, orderId])
-
   // Auto-scroll naar de juiste sectie bij step wijziging
   useEffect(() => {
     // Scroll naar de top van de checkout container bij elke step change
@@ -1499,25 +1437,16 @@ export default function CheckoutPage() {
 
   const handlePaymentMethodSelected = async (paymentMethod: PaymentMethod) => {
     if (!orderId) return
-    
-    // Prevent duplicate Payment Intent creation
-    if (clientSecret && isCreatingIntent) {
-      console.log('⚠️ Payment Intent already being created, skipping...')
-      return
-    }
-    
-    setIsCreatingIntent(true)
+    if (isCreatingPayment) return
+
+    setIsCreatingPayment(true)
 
     try {
-      console.log('💳 Creating Payment Intent for:', paymentMethod)
-      
-      // Create Payment Intent with specific payment method
-      const paymentResponse = await fetch('/api/create-payment-intent', {
+      const paymentResponse = await fetch('/api/create-mollie-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: orderId,
-          items: items,
+          orderId,
           customerEmail: form.email,
           customerName: capitalizeName(`${form.firstName} ${form.lastName}`),
           shippingAddress: {
@@ -1531,45 +1460,36 @@ export default function CheckoutPage() {
             country: form.country,
           },
           deliveryMethod,
-          paymentMethod: paymentMethod,
-          // Include promo code for server-side validation
-          promoCode: promoCode || null,
-          promoDiscount: promoDiscount,
-          // Send expected total for validation
+          paymentMethod,
           expectedTotal: total,
+          locale,
         }),
       })
 
       if (!paymentResponse.ok) {
         const errorData = await paymentResponse.json()
-        console.error('❌ Payment Intent error:', errorData)
-        throw new Error(errorData.error || 'Failed to create payment intent')
+        throw new Error(errorData.error || 'Failed to create Mollie payment')
       }
 
-      const { clientSecret: secret, paymentIntentId } = await paymentResponse.json()
-      console.log('✅ Payment Intent created:', paymentIntentId)
-      
-      // Note: Order is already updated by create-payment-intent route
-      // (stripe_payment_intent_id, payment_method, payment_status, checkout_started_at)
-      
-      setClientSecret(secret)
-      setIsCreatingIntent(false)
+      const { checkoutUrl } = await paymentResponse.json()
+      if (!checkoutUrl) {
+        throw new Error('No Mollie checkout URL returned')
+      }
+
+      // Hosted Mollie checkout (iDEAL / card / etc.)
+      window.location.href = checkoutUrl
     } catch (error: any) {
-      console.error('💥 Payment Intent ERROR:', error)
-      alert(`${t('messages.errorOccurred')}: ${error.message}`)
-      setIsCreatingIntent(false)
+      console.error('Mollie payment create error:', error)
+      toast.error(`${t('messages.errorOccurred')}: ${error.message}`)
+      setIsCreatingPayment(false)
+      throw error
     }
   }
 
-  const handlePaymentSuccess = () => {
-    console.log('✅ Payment successful!')
-    clearCart()
-    router.push(`/order-confirmation?order=${orderId}`)
-  }
-
   const handlePaymentError = (error: string) => {
-    console.error('💥 Payment error:', error)
+    console.error('Payment error:', error)
     toast.error(`${t('messages.paymentFailed')}: ${error}`)
+    setIsCreatingPayment(false)
   }
 
   const updateForm = (field: keyof CheckoutForm, value: string, forceValidate: boolean = false) => {
@@ -1764,7 +1684,6 @@ export default function CheckoutPage() {
   }
 
   return (
-    <Elements stripe={stripePromise}>
       <div className="min-h-screen px-4 pb-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
@@ -2074,17 +1993,6 @@ export default function CheckoutPage() {
                   ) : (
                     /* GUEST CHECKOUT FORM */
                   <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Express Checkout (Apple Pay / Google Pay) - Direct bovenaan, compact */}
-                <ExpressCheckout
-                  cartItems={items}
-                  subtotal={subtotal}
-                  shippingCost={shipping}
-                  discount={promoDiscount}
-                  staffelSavings={staffelSavings}
-                  promoCode={promoCode}
-                  userEmail={user?.email}
-                />
-
                 {/* Contact - Compact */}
                 <div>
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -2718,27 +2626,13 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Stripe Payment Form */}
-              <StripePaymentForm
-                clientSecret={clientSecret || null}
-                onSuccess={handlePaymentSuccess}
+              {/* Mollie hosted checkout — method picker redirects to Mollie */}
+              <MolliePaymentForm
                 onError={handlePaymentError}
                 onMethodSelected={handlePaymentMethodSelected}
                 country={form.country}
-                isCreatingIntent={isCreatingIntent}
+                isCreatingPayment={isCreatingPayment}
                 orderId={orderId}
-                billingDetails={{
-                  name: capitalizeName(`${form.firstName.trim()} ${form.lastName.trim()}`) || 'Klant',
-                  email: form.email.trim(),
-                  phone: form.phone.trim(),
-                  address: {
-                    line1: form.address.trim(),
-                    city: form.city.trim(),
-                    postal_code: form.postalCode.trim(),
-                    country: form.country,
-                    state: null, // Not required for NL/EU countries
-                  }
-                }}
               />
             </>
           )}
@@ -3164,6 +3058,5 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
-    </Elements>
   )
 }

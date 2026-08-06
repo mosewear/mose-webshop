@@ -4,12 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+import { useLocale } from 'next-intl'
 
 interface ReturnData {
   id: string
@@ -50,160 +47,16 @@ interface ReturnData {
   }>
 }
 
-function CheckoutForm({ returnId, returnData }: { returnId: string; returnData: ReturnData }) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const router = useRouter()
-  const [processing, setProcessing] = useState(false)
-
-  // Verberg Stripe Link payment method
-  useEffect(() => {
-    const hideLink = () => {
-      const wrapper = document.querySelector('.payment-element-wrapper')
-      if (!wrapper) return
-
-      // Zoek en verberg Link tabs
-      const tabs = wrapper.querySelectorAll('[role="tab"]')
-      tabs.forEach((tab) => {
-        const text = tab.textContent?.toLowerCase() || ''
-        const ariaLabel = tab.getAttribute('aria-label')?.toLowerCase() || ''
-        if (text.includes('link') || ariaLabel.includes('link')) {
-          ;(tab as HTMLElement).style.display = 'none'
-        }
-      })
-
-      // Zoek en verberg Link iframes
-      const iframes = wrapper.querySelectorAll('iframe')
-      iframes.forEach((iframe) => {
-        const src = iframe.getAttribute('src')?.toLowerCase() || ''
-        if (src.includes('link')) {
-          ;(iframe as HTMLElement).style.display = 'none'
-          // Verberg ook de parent container
-          const parent = iframe.closest('[role="tabpanel"]')
-          if (parent) {
-            ;(parent as HTMLElement).style.display = 'none'
-          }
-        }
-      })
-
-      // Zoek en verberg buttons met Link
-      const buttons = wrapper.querySelectorAll('button')
-      buttons.forEach((button) => {
-        const text = button.textContent?.toLowerCase() || ''
-        const ariaLabel = button.getAttribute('aria-label')?.toLowerCase() || ''
-        if ((text.includes('link') || ariaLabel.includes('link')) && !text.includes('link in') && !text.includes('linken')) {
-          ;(button as HTMLElement).style.display = 'none'
-        }
-      })
-    }
-
-    // Direct proberen
-    hideLink()
-
-    // Observer voor dynamisch geladen content
-    const observer = new MutationObserver(() => {
-      hideLink()
-    })
-
-    const wrapper = document.querySelector('.payment-element-wrapper')
-    if (wrapper) {
-      observer.observe(wrapper, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      })
-    }
-
-    // Ook periodiek controleren (voor veiligheid)
-    const interval = setInterval(hideLink, 500)
-
-    return () => {
-      observer.disconnect()
-      clearInterval(interval)
-    }
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!stripe || !elements) {
-      return
-    }
-
-    setProcessing(true)
-
-    try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/returns/${returnId}?payment=success`,
-        },
-        redirect: 'if_required',
-      })
-
-      if (error) {
-        toast.error(error.message || 'Betaling mislukt')
-        setProcessing(false)
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Voor redirect-based payment methods (zoals iDEAL, PayPal) wordt gebruiker doorgestuurd
-        // Voor non-redirect methods wordt dit niet aangeroepen omdat redirect: 'if_required' is gebruikt
-        // In plaats daarvan wachten we op de return_url redirect
-        toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
-        // Refresh page to show updated status
-        setTimeout(() => {
-          window.location.href = `${window.location.origin}/returns/${returnId}?payment=success`
-        }, 1000)
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Er is iets misgegaan')
-      setProcessing(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="payment-element-wrapper">
-        <PaymentElement 
-          options={{
-            wallets: {
-              applePay: 'auto',
-              googlePay: 'auto',
-            },
-            layout: {
-              type: 'tabs',
-            },
-          }}
-        />
-      </div>
-      <style jsx global>{`
-        /* Verberg Stripe Link payment method - backup CSS voor JavaScript */
-        .payment-element-wrapper iframe[src*="link" i],
-        .payment-element-wrapper [data-testid*="link" i],
-        .payment-element-wrapper button[aria-label*="link" i]:not([aria-label*="link in"]):not([aria-label*="linken"]) {
-          display: none !important;
-        }
-      `}</style>
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {processing ? 'Betalen...' : `Betaal €${returnData.return_label_cost_incl_btw.toFixed(2)}`}
-      </button>
-    </form>
-  )
-}
-
 export default function ReturnDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const locale = useLocale()
   const returnId = params.id as string
 
   const [user, setUser] = useState<any>(null)
   const [returnData, setReturnData] = useState<ReturnData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [pollingLabel, setPollingLabel] = useState(false)
   const [generatingFreeLabel, setGeneratingFreeLabel] = useState(false)
@@ -221,25 +74,33 @@ export default function ReturnDetailsPage() {
     }
   }, [user, returnId])
 
-  // Check voor payment success parameter en toon successmelding
+  // Mollie return URL: ?payment=return — confirm via API, never trust redirect alone
   useEffect(() => {
-    const paymentSuccess = searchParams.get('payment')
-    if (paymentSuccess === 'success') {
-      toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
-      
-      // Wacht even om webhook tijd te geven, dan refresh data
-      setTimeout(async () => {
-        const data = await fetchReturn()
-        
-        // Start direct polling, ook als status nog niet is bijgewerkt (webhook kan vertraging hebben)
-        // Poll tot we status 'return_label_payment_completed' zien of label is gegenereerd
-        if (!isPollingRef.current) {
-          startPollingForLabel()
+    const paymentParam = searchParams.get('payment')
+    if (paymentParam !== 'return' && paymentParam !== 'success') return
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(
+          `/api/check-payment-status?return_id=${encodeURIComponent(returnId)}`
+        )
+        const data = await res.json()
+        if (cancelled) return
+        if (data.status === 'succeeded' || data.mollie_status === 'paid') {
+          toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
+          await fetchReturn()
+          if (!isPollingRef.current) startPollingForLabel()
         }
-        
-        // Remove query parameter na refresh
+      } catch (err) {
+        console.error('Return payment status check failed:', err)
+      } finally {
         router.replace(`/returns/${returnId}`, { scroll: false })
-      }, 2000) // Wacht 2 seconden voor webhook verwerking
+      }
+    })()
+
+    return () => {
+      cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, returnId])
@@ -380,10 +241,7 @@ export default function ReturnDetailsPage() {
 
       setReturnData(data.return)
 
-      // Als status payment_pending is, maak payment intent aan (als deze nog niet bestaat)
-      if (data.return.status === 'return_label_payment_pending' && !data.return.return_label_payment_intent_id) {
-        await createPaymentIntent()
-      }
+      // Payment is created on demand when the customer clicks "Betaal via Mollie"
 
       // Return data voor gebruikers van deze functie
       return data.return
@@ -416,23 +274,28 @@ export default function ReturnDetailsPage() {
     }
   }
 
-  async function createPaymentIntent() {
+  async function startMolliePayment() {
     setPaymentLoading(true)
     try {
       const response = await fetch(`/api/returns/${returnId}/create-payment-intent`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment intent')
+        throw new Error(data.error || 'Failed to create payment')
       }
 
-      setClientSecret(data.client_secret)
+      if (!data.checkoutUrl) {
+        throw new Error('Geen Mollie checkout URL ontvangen')
+      }
+
+      window.location.href = data.checkoutUrl
     } catch (error: any) {
       toast.error(error.message || 'Kon betaling niet voorbereiden')
-    } finally {
       setPaymentLoading(false)
     }
   }
@@ -614,28 +477,14 @@ export default function ReturnDetailsPage() {
             {paymentLoading ? (
               <div className="text-center py-4">
                 <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Betalingsformulier voorbereiden...</p>
+                <p className="text-sm text-gray-600">Doorsturen naar Mollie...</p>
               </div>
-            ) : clientSecret ? (
-              <Elements 
-                stripe={stripePromise} 
-                options={{ 
-                  clientSecret,
-                  appearance: {
-                    theme: 'stripe',
-                  },
-                  locale: 'nl',
-                  loader: 'auto',
-                }}
-              >
-                <CheckoutForm returnId={returnId} returnData={returnData} />
-              </Elements>
             ) : (
               <button
-                onClick={createPaymentIntent}
+                onClick={startMolliePayment}
                 className="w-full px-8 py-4 bg-orange-500 text-white font-bold uppercase tracking-wider hover:bg-orange-600 transition-colors"
               >
-                Betaalformulier Laden
+                Betaal €{returnData.return_label_cost_incl_btw.toFixed(2)} via Mollie
               </button>
             )}
           </div>

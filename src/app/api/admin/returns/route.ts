@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { requireAdmin } from '@/lib/supabase/admin'
+import {
+  asMolliePayment,
+  formatMollieAmount,
+  getMollieClient,
+  getMollieWebhookUrl,
+  getReturnPaymentRedirectUrl,
+  mollieLocale,
+} from '@/lib/mollie'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getSiteSettings } from '@/lib/settings'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
@@ -78,7 +85,7 @@ export async function GET(req: NextRequest) {
  * Admin creates a return manually on behalf of a customer.
  * Supports 4 label modes:
  *   - admin_generated: Sendcloud label is created immediately.
- *   - customer_paid:   Stripe PaymentIntent created; customer pays via portal.
+ *   - customer_paid:   Mollie payment created; customer pays via portal.
  *   - customer_free:   No payment needed; customer hits "Create label" in portal.
  *   - in_store:        Customer drops parcel off at the store. Sub-state sets
  *                      either return_approved (waiting) or return_received.
@@ -521,7 +528,7 @@ export async function POST(req: NextRequest) {
     let labelUrl: string | null = null
     let trackingCode: string | null = null
     let trackingUrl: string | null = null
-    let paymentIntentClientSecret: string | null = null
+    let mollieCheckoutUrl: string | null = null
 
     if (label_mode === 'admin_generated') {
       try {
@@ -575,36 +582,40 @@ export async function POST(req: NextRequest) {
       }
     } else if (label_mode === 'customer_paid') {
       try {
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
-        const amount = Math.round(returnLabelCostInclBtw * 100)
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount,
-          currency: 'eur',
-          payment_method_types: ['ideal', 'card'],
-          metadata: {
-            return_id: returnRecord.id,
-            order_id,
-            type: 'return_label_payment',
-            created_by_admin: '1',
-          },
-          description: `Retourlabel kosten - Return ${returnRecord.id
-            .slice(0, 8)
-            .toUpperCase()}`,
-          receipt_email: order.email,
-        })
+        const mollie = getMollieClient()
+        const payment = await asMolliePayment(
+          mollie.payments.create({
+            amount: {
+              currency: 'EUR',
+              value: formatMollieAmount(returnLabelCostInclBtw),
+            },
+            description: `Retourlabel kosten - Return ${returnRecord.id
+              .slice(0, 8)
+              .toUpperCase()}`,
+            redirectUrl: getReturnPaymentRedirectUrl(returnRecord.id, 'nl'),
+            webhookUrl: getMollieWebhookUrl(),
+            metadata: {
+              return_id: returnRecord.id,
+              order_id,
+              type: 'return_label_payment',
+              created_by_admin: '1',
+            },
+            locale: mollieLocale('nl'),
+          })
+        )
 
-        paymentIntentClientSecret = paymentIntent.client_secret
+        mollieCheckoutUrl = payment.getCheckoutUrl() || null
 
         await supabase
           .from('returns')
           .update({
-            return_label_payment_intent_id: paymentIntent.id,
+            return_label_payment_intent_id: payment.id,
             return_label_payment_status: 'pending',
             label_payment_pending_at: new Date().toISOString(),
           })
           .eq('id', returnRecord.id)
-      } catch (piErr: any) {
-        console.error('Error creating payment intent:', piErr)
+      } catch (piErr: unknown) {
+        console.error('Error creating Mollie payment:', piErr)
       }
     }
 
@@ -662,7 +673,7 @@ export async function POST(req: NextRequest) {
       label_url: labelUrl,
       tracking_code: trackingCode,
       tracking_url: trackingUrl,
-      payment_intent_client_secret: paymentIntentClientSecret,
+      mollie_checkout_url: mollieCheckoutUrl,
       refund: autoRefundOutcome,
     })
   } catch (error: any) {

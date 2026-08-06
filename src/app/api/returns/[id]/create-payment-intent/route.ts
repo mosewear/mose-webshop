@@ -1,24 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import {
+  asMolliePayment,
+  formatMollieAmount,
+  getMollieClient,
+  getMollieWebhookUrl,
+  getReturnPaymentRedirectUrl,
+  mollieLocale,
+} from '@/lib/mollie'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
-
-// POST /api/returns/[id]/create-payment-intent - Maak Payment Intent voor retourlabel
+// POST /api/returns/[id]/create-payment-intent — Mollie payment for return label
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
+    const body = await req.json().catch(() => ({}))
+    const locale = body?.locale === 'en' ? 'en' : 'nl'
+
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Haal retour op
     const { data: returnRecord, error: fetchError } = await supabase
       .from('returns')
       .select('*, orders!inner(*)')
@@ -29,67 +38,81 @@ export async function POST(
       return NextResponse.json({ error: 'Return not found' }, { status: 404 })
     }
 
-    // Check of gebruiker eigenaar is
     if (returnRecord.user_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Check of status correct is - klant moet direct kunnen betalen na aanvraag
     if (returnRecord.status !== 'return_label_payment_pending') {
-      return NextResponse.json({ 
-        error: `Cannot create payment intent. Return status must be 'return_label_payment_pending', current status: ${returnRecord.status}` 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: `Cannot create payment. Return status must be 'return_label_payment_pending', current status: ${returnRecord.status}`,
+        },
+        { status: 400 }
+      )
     }
 
-    // Check of er al een payment intent is
+    const mollie = getMollieClient()
+
     if (returnRecord.return_label_payment_intent_id) {
-      // Haal bestaande payment intent op
       try {
-        const existingIntent = await stripe.paymentIntents.retrieve(
-          returnRecord.return_label_payment_intent_id
+        const existing = await asMolliePayment(
+          mollie.payments.get(returnRecord.return_label_payment_intent_id)
         )
-
-        if (existingIntent.status === 'succeeded') {
-          return NextResponse.json({ 
-            error: 'Payment already completed' 
-          }, { status: 400 })
+        if (existing.status === 'paid') {
+          return NextResponse.json(
+            { error: 'Payment already completed' },
+            { status: 400 }
+          )
         }
-
-        // Return bestaande client secret
-        return NextResponse.json({
-          success: true,
-          client_secret: existingIntent.client_secret,
-          payment_intent_id: existingIntent.id,
-          amount: existingIntent.amount,
-          return_id: id,
-        })
-      } catch (error) {
-        // Payment intent bestaat niet meer, maak nieuwe
+        if (
+          (existing.status === 'open' || existing.status === 'pending') &&
+          existing.getCheckoutUrl()
+        ) {
+          return NextResponse.json({
+            success: true,
+            checkoutUrl: existing.getCheckoutUrl(),
+            payment_id: existing.id,
+            amount: existing.amount,
+            return_id: id,
+          })
+        }
+      } catch {
+        // create new below
       }
     }
 
-    // Maak nieuwe Payment Intent
-    const amount = Math.round(returnRecord.return_label_cost_incl_btw * 100) // €7,87 in cents
+    const amountValue = formatMollieAmount(
+      Number(returnRecord.return_label_cost_incl_btw)
+    )
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: 'eur',
-      payment_method_types: ['ideal', 'card', 'paypal'], // iDEAL, credit/debit cards (incl. Google Pay & Apple Pay), en PayPal
-      metadata: {
-        return_id: id,
-        order_id: returnRecord.order_id,
-        type: 'return_label_payment',
-        user_id: user.id,
-      },
-      description: `Retourlabel kosten - Return ${id.slice(0, 8).toUpperCase()}`,
-      receipt_email: returnRecord.orders.email,
-    })
+    const payment = await asMolliePayment(
+      mollie.payments.create({
+        amount: { currency: 'EUR', value: amountValue },
+        description: `Retourlabel kosten - Return ${id.slice(0, 8).toUpperCase()}`,
+        redirectUrl: getReturnPaymentRedirectUrl(id, locale),
+        webhookUrl: getMollieWebhookUrl(),
+        metadata: {
+          return_id: id,
+          order_id: returnRecord.order_id,
+          type: 'return_label_payment',
+          user_id: user.id,
+        },
+        locale: mollieLocale(locale),
+      })
+    )
 
-    // Update return met payment intent ID
+    const checkoutUrl = payment.getCheckoutUrl()
+    if (!checkoutUrl) {
+      return NextResponse.json(
+        { error: 'Mollie did not return a checkout URL' },
+        { status: 502 }
+      )
+    }
+
     const { error: updateError } = await supabase
       .from('returns')
       .update({
-        return_label_payment_intent_id: paymentIntent.id,
+        return_label_payment_intent_id: payment.id,
         return_label_payment_status: 'pending',
         status: 'return_label_payment_pending',
         label_payment_pending_at: new Date().toISOString(),
@@ -97,20 +120,19 @@ export async function POST(
       .eq('id', id)
 
     if (updateError) {
-      console.error('Error updating return with payment intent:', updateError)
+      console.error('Error updating return with Mollie payment:', updateError)
       return NextResponse.json({ error: 'Failed to update return' }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      client_secret: paymentIntent.client_secret,
-      payment_intent_id: paymentIntent.id,
-      amount: paymentIntent.amount,
+      checkoutUrl,
+      payment_id: payment.id,
+      amount: payment.amount,
       return_id: id,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in POST /api/returns/[id]/create-payment-intent:', error)
     return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })
   }
 }
-

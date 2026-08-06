@@ -1,62 +1,33 @@
 /**
- * Auto-refund helper for returns.
- *
- * Centralises the Stripe refund + status sync + customer email so that every
- * code path that "approves" or "marks received" a return can guarantee the
- * customer is automatically refunded.
+ * Auto-refund helper for returns via Mollie.
  *
  * Wired into:
- *   - POST /api/returns/[id]/confirm-received        (after items received)
- *   - POST /api/returns/[id]/approve                 (after final approval)
- *   - POST /api/admin/returns (in_store=received)    (manual return that
- *                                                     starts already received)
- *   - POST /api/returns/[id]/process-refund          (fallback / manual)
+ *   - POST /api/returns/[id]/confirm-received
+ *   - POST /api/returns/[id]/approve
+ *   - POST /api/admin/returns (in_store=received)
+ *   - POST /api/returns/[id]/process-refund
  *
- * The helper is fully idempotent and safe to call multiple times:
- *   - if the return already has a stripe_refund_id → no-op
- *   - if refund_amount <= 0                         → no-op
- *   - if the order has no stripe_payment_intent_id  → no-op (e.g. legacy /
- *                                                     non-Stripe order)
- *   - if Stripe rejects the refund                  → status reverts to
- *                                                     `return_received`,
- *                                                     reason returned
+ * Idempotent:
+ *   - if mollie_refund_id / stripe_refund_id already set → no-op
+ *   - if refund_amount <= 0 → no-op
+ *   - if order has no Mollie/Stripe payment id → no-op (manual refund)
  */
 
-import Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '@/lib/supabase/service'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import { sendReturnRefundedEmail } from '@/lib/email'
 import { reverseLoyaltyForReturn } from '@/lib/reverse-loyalty-for-return'
+import { asMolliePayment, formatMollieAmount, getMollieClient } from '@/lib/mollie'
 
 export type RefundOutcome =
   | { ok: true; status: 'refunded' | 'refund_processing'; refundId: string }
-  | { ok: false; reason: string; details?: any }
+  | { ok: false; reason: string; details?: unknown }
 
 interface ProcessReturnRefundOptions {
-  /**
-   * Force a refund attempt even when stripe_refund_id already exists.
-   * Defaults to false; only useful in admin-tooling scenarios.
-   */
   force?: boolean
-  /**
-   * Optional notes that should be persisted on the return alongside the
-   * refund update.
-   */
   adminNotes?: string
-  /**
-   * Inject a Supabase client (e.g. when caller already has one). Defaults to
-   * a fresh service-role client so this helper works from any route, webhook
-   * or background job.
-   */
   supabase?: SupabaseClient
-  /**
-   * Inject a Stripe client (mostly used for tests).
-   */
-  stripe?: Stripe
-  /**
-   * If false, skip the customer e-mail (still sends by default).
-   */
   sendEmail?: boolean
 }
 
@@ -67,9 +38,6 @@ export async function processReturnRefund(
   options: ProcessReturnRefundOptions = {}
 ): Promise<RefundOutcome> {
   const supabase = options.supabase ?? createServiceClient()
-  const stripe =
-    options.stripe ??
-    new Stripe(process.env.STRIPE_SECRET_KEY!.trim())
   const sendEmail = options.sendEmail !== false
 
   const { data: returnRecord, error: fetchError } = await supabase
@@ -82,10 +50,12 @@ export async function processReturnRefund(
     return { ok: false, reason: 'Return not found', details: fetchError }
   }
 
-  // Already refunded / processing → nothing to do unless forced.
+  const existingRefundId =
+    returnRecord.mollie_refund_id || returnRecord.stripe_refund_id
+
   if (
     !options.force &&
-    (returnRecord.stripe_refund_id ||
+    (existingRefundId ||
       returnRecord.status === 'refunded' ||
       returnRecord.status === 'refund_processing')
   ) {
@@ -93,7 +63,7 @@ export async function processReturnRefund(
       ok: true,
       status:
         returnRecord.status === 'refunded' ? 'refunded' : 'refund_processing',
-      refundId: returnRecord.stripe_refund_id || 'pre-existing',
+      refundId: existingRefundId || 'pre-existing',
     }
   }
 
@@ -102,17 +72,18 @@ export async function processReturnRefund(
     return { ok: false, reason: 'Refund amount is zero' }
   }
 
-  const paymentIntentId = returnRecord.orders?.stripe_payment_intent_id
-  if (!paymentIntentId) {
-    // Legacy / manual order without Stripe payment — refund must be handled
-    // out-of-band. Mark the return so the admin sees it explicitly.
+  const paymentId =
+    returnRecord.orders?.mollie_payment_id ||
+    returnRecord.orders?.stripe_payment_intent_id
+
+  if (!paymentId) {
     await supabase
       .from('returns')
       .update({
         admin_notes: [
           returnRecord.admin_notes,
           options.adminNotes,
-          '⚠️ Auto-refund overgeslagen: order heeft geen Stripe payment intent. Handmatige terugbetaling vereist.',
+          '⚠️ Auto-refund overgeslagen: order heeft geen Mollie payment ID. Handmatige terugbetaling vereist.',
         ]
           .filter(Boolean)
           .join('\n')
@@ -121,58 +92,63 @@ export async function processReturnRefund(
       .eq('id', returnId)
     return {
       ok: false,
-      reason: 'Order has no Stripe payment intent (manual refund required)',
+      reason: 'Order has no Mollie payment id (manual refund required)',
     }
   }
 
-  const refundAmountCents = Math.round(refundAmount * 100)
+  let refundId: string
+  let refundStatus: string
 
-  let refund: Stripe.Refund
   try {
-    refund = await stripe.refunds.create({
-      payment_intent: paymentIntentId,
-      amount: refundAmountCents,
-      reason: 'requested_by_customer',
-      metadata: {
-        return_id: returnId,
-        order_id: returnRecord.order_id,
-        type: 'return_refund',
-        refund_amount: refundAmount.toString(),
-      },
-    })
-  } catch (stripeErr: any) {
+    const mollie = getMollieClient()
+    const refund = (await Promise.resolve(
+      mollie.paymentRefunds.create({
+        paymentId,
+        amount: {
+          currency: 'EUR',
+          value: formatMollieAmount(refundAmount),
+        },
+        description: `Retour ${returnId.slice(0, 8).toUpperCase()}`,
+        metadata: {
+          return_id: returnId,
+          order_id: returnRecord.order_id,
+          type: 'return_refund',
+        },
+      })
+    )) as { id: string; status: string }
+    refundId = refund.id
+    refundStatus = refund.status
+  } catch (mollieErr: unknown) {
+    const errMsg =
+      mollieErr instanceof Error ? mollieErr.message : 'Mollie refund failed'
     console.error(
-      `[processReturnRefund] Stripe refund failed for return ${returnId}:`,
-      stripeErr
+      `[processReturnRefund] Mollie refund failed for return ${returnId}:`,
+      mollieErr
     )
-    // Persist the failure on the return so admins see it.
     await supabase
       .from('returns')
       .update({
         admin_notes: [
           returnRecord.admin_notes,
           options.adminNotes,
-          `⚠️ Auto-refund mislukt (${stripeErr?.message || 'onbekende fout'}). Probeer handmatig opnieuw via "Start Refund".`,
+          `⚠️ Auto-refund mislukt (${errMsg}). Probeer handmatig opnieuw via "Start Refund".`,
         ]
           .filter(Boolean)
           .join('\n')
           .trim(),
       })
       .eq('id', returnId)
-    return {
-      ok: false,
-      reason: stripeErr?.message || 'Stripe refund failed',
-      details: stripeErr,
-    }
+    return { ok: false, reason: errMsg, details: mollieErr }
   }
 
-  const refundSucceeded = refund.status === 'succeeded'
-
-  // Update return with refund info.
-  const baseUpdate: Record<string, any> = {
+  const refundSucceeded = refundStatus === 'refunded'
+  const baseUpdate: Record<string, unknown> = {
     status: refundSucceeded ? 'refunded' : 'refund_processing',
-    stripe_refund_id: refund.id,
-    stripe_refund_status: refund.status,
+    mollie_refund_id: refundId,
+    mollie_refund_status: refundStatus,
+    // Keep stripe_refund_* mirrored for admin UI that still reads those columns
+    stripe_refund_id: refundId,
+    stripe_refund_status: refundSucceeded ? 'succeeded' : refundStatus,
   }
   if (refundSucceeded) {
     baseUpdate.refunded_at = new Date().toISOString()
@@ -191,19 +167,16 @@ export async function processReturnRefund(
 
   if (updateError) {
     console.error(
-      `[processReturnRefund] Could not persist refund ${refund.id} on return ${returnId}:`,
+      `[processReturnRefund] Could not persist refund ${refundId} on return ${returnId}:`,
       updateError
     )
-    // Refund went through in Stripe — surface a soft failure but DO NOT
-    // throw, the webhook (charge.refunded) will eventually reconcile.
     return {
       ok: true,
       status: refundSucceeded ? 'refunded' : 'refund_processing',
-      refundId: refund.id,
+      refundId,
     }
   }
 
-  // Loyalty: claw back points proportional to refund (only when money actually refunded).
   if (refundSucceeded) {
     const order = returnRecord.orders as {
       email?: string
@@ -223,15 +196,6 @@ export async function processReturnRefund(
           console.log(
             `[processReturnRefund] Loyalty reversed ${loyaltyResult.pointsDeducted} pts for return ${returnId}`
           )
-        } else if (loyaltyResult.ok && 'skipped' in loyaltyResult) {
-          console.log(
-            `[processReturnRefund] Loyalty reversal skipped (${loyaltyResult.skipped}) return ${returnId}`
-          )
-        } else if (!loyaltyResult.ok) {
-          console.error(
-            `[processReturnRefund] Loyalty reversal failed:`,
-            loyaltyResult.error
-          )
         }
       } catch (loyaltyErr) {
         console.error('[processReturnRefund] Loyalty reversal error:', loyaltyErr)
@@ -239,7 +203,6 @@ export async function processReturnRefund(
     }
   }
 
-  // Sync order status.
   try {
     await updateOrderStatusForReturn(
       returnRecord.order_id,
@@ -249,7 +212,6 @@ export async function processReturnRefund(
     console.error('[processReturnRefund] order-status sync failed:', err)
   }
 
-  // Notify the customer.
   if (sendEmail && refundSucceeded) {
     try {
       const order = returnRecord.orders
@@ -278,6 +240,6 @@ export async function processReturnRefund(
   return {
     ok: true,
     status: refundSucceeded ? 'refunded' : 'refund_processing',
-    refundId: refund.id,
+    refundId,
   }
 }
