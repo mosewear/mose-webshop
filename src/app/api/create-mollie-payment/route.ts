@@ -4,6 +4,7 @@ import {
   asMolliePayment,
   formatMollieAmount,
   getMollieClient,
+  getMollieErrorInfo,
   getMollieWebhookUrl,
   getOrderPaymentRedirectUrl,
   mollieLocale,
@@ -195,11 +196,14 @@ export async function POST(req: NextRequest) {
       paymentId: payment.id,
     })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error)
-    console.error('[create-mollie-payment] Error:', message)
+    const { message, statusCode, field } = getMollieErrorInfo(error)
+    console.error('[create-mollie-payment] Error:', message, field ? { field } : '')
     return NextResponse.json(
-      { error: 'Er is een fout opgetreden bij het aanmaken van de betaling' },
-      { status: 500 }
+      {
+        error: message,
+        ...(field ? { field } : {}),
+      },
+      { status: statusCode }
     )
   }
 }

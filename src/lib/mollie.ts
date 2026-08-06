@@ -106,3 +106,51 @@ export function getReturnPaymentRedirectUrl(returnId: string, locale: string): s
 export async function asMolliePayment(value: unknown): Promise<MolliePaymentLike> {
   return (await Promise.resolve(value)) as MolliePaymentLike
 }
+
+export type MollieClientErrorInfo = {
+  message: string
+  /** HTTP status to return to the storefront (Mollie status when available). */
+  statusCode: number
+  field?: string
+}
+
+/**
+ * Normalize Mollie SDK / network errors into a toast-safe message + HTTP status.
+ * Mollie ApiError.message is the API `detail` string (e.g. method not activated).
+ */
+export function getMollieErrorInfo(error: unknown): MollieClientErrorInfo {
+  if (error && typeof error === 'object') {
+    const e = error as {
+      message?: unknown
+      statusCode?: unknown
+      field?: unknown
+      name?: unknown
+    }
+    const message =
+      typeof e.message === 'string' && e.message.trim()
+        ? e.message.trim()
+        : 'Mollie payment failed'
+    const mollieStatus =
+      typeof e.statusCode === 'number' && e.statusCode >= 400 && e.statusCode < 600
+        ? e.statusCode
+        : null
+    const field = typeof e.field === 'string' ? e.field : undefined
+
+    if (message.includes('MOLLIE_API_KEY')) {
+      return { message, statusCode: 503 }
+    }
+
+    // Prefer Mollie's status (422 validation / 401 auth / 404 etc.)
+    if (mollieStatus != null || e.name === 'ApiError') {
+      return {
+        message,
+        statusCode: mollieStatus ?? 502,
+        field,
+      }
+    }
+
+    return { message, statusCode: 500, field }
+  }
+
+  return { message: String(error), statusCode: 500 }
+}

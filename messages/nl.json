@@ -415,6 +415,8 @@
     "color": "Kleur",
     "selectColor": "Selecteer kleur {color}",
     "quantity": "Aantal",
+    "decrease": "Verlaag aantal",
+    "increase": "Verhoog aantal",
     "showMore": "Lees meer",
     "showLess": "Toon minder",
     "inclVat": "Incl. BTW",

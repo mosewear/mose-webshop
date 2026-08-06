@@ -415,6 +415,8 @@
     "color": "Color",
     "selectColor": "Select color {color}",
     "quantity": "Quantity",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
     "showMore": "Read more",
     "showLess": "Show less",
     "inclVat": "Incl. VAT",
