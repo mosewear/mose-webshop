@@ -9,6 +9,7 @@ import { sendOrderNotificationToAdmins } from '@/lib/push-notifications'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
 import { processGiftCardsForPaidOrder } from '@/lib/gift-card-processing'
+import { catalogContentId } from '@/lib/catalog-ids'
 import { sendServerPurchaseEvent } from '@/lib/meta/capi'
 
 export type FulfillPaidOrderResult =
@@ -169,6 +170,7 @@ export async function fulfillPaidOrder(
       product_id?: string | null
       variant_id?: string | null
       sku?: string | null
+      color?: string | null
       quantity?: number | string | null
       price_at_purchase?: number | string | null
     }
@@ -180,12 +182,20 @@ export async function fulfillPaidOrder(
     const lastName = rest.length ? rest.join(' ') : undefined
 
     const orderItems = (updatedOrder.order_items || []) as OrderItemShape[]
+    // Match feed g:id: UUID:colorSlug when color is present on the line.
+    // Bare product UUID still works for single-color / legacy lines.
     const purchaseContents = orderItems
-      .map((item) => ({
-        id: (item.product_id || item.variant_id || item.sku) ?? undefined,
-        quantity: Number(item.quantity) || 0,
-        item_price: Number(item.price_at_purchase) || 0,
-      }))
+      .map((item) => {
+        const base =
+          (item.product_id
+            ? catalogContentId(item.product_id, item.color)
+            : item.variant_id || item.sku) ?? undefined
+        return {
+          id: base,
+          quantity: Number(item.quantity) || 0,
+          item_price: Number(item.price_at_purchase) || 0,
+        }
+      })
       .filter(
         (c): c is { id: string; quantity: number; item_price: number } =>
           typeof c.id === 'string' && c.id.length > 0

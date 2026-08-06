@@ -297,6 +297,29 @@ export default function ConfigPage() {
       <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
         <SettingsIcon className="w-6 h-6" /> Configuratie
       </h1>
+
+      <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+        <p className="font-semibold mb-1">Meta productcatalogus (Advantage+ / DPA)</p>
+        <p className="text-amber-900/90">
+          De System User-token heeft nu <code className="text-xs">ads_*</code> +{' '}
+          <code className="text-xs">business_management</code>, maar géén{' '}
+          <code className="text-xs">catalog_management</code>. Catalogus aanmaken via API
+          lukt dus niet vanuit deze app. Maak catalogus <strong>MOSE</strong> in{' '}
+          <a
+            href="https://business.facebook.com/commerce"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Commerce Manager
+          </a>
+          , koppel Pixel <code className="text-xs">1447430483627328</code>, plan een feed
+          op <code className="text-xs">https://www.mosewear.com/google-shopping-feed.xml</code>
+          , en geef de System User <code className="text-xs">catalog_management</code> +
+          toegang tot die catalogus. Zet daarna optioneel <code className="text-xs">META_CATALOG_ID</code>{' '}
+          in Vercel env.
+        </p>
+      </div>
       <p className="text-sm text-gray-600 mt-1 max-w-2xl mb-6">
         Beheer de Meta System User token (RLS-veilig, alleen leesbaar via service-role) en kies welk
         AI-model de orchestrator gebruikt voor de dagelijkse audit.

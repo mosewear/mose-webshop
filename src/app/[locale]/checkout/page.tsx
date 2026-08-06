@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock, Gift as GiftIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { capitalizeName } from '@/lib/utils'
+import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
 import { calculateTierDiscount, getTierDiscountPercent, type LoyaltyTier } from '@/lib/loyalty'
@@ -541,12 +542,11 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Only track once and only if we have items
     if (!hasTrackedCheckout && items.length > 0 && total > 0) {
-      // Use product_id (catalog match) for content_ids and a per-line
-      // contents array so Meta can attribute revenue at SKU level.
+      // content_ids match shopping feed g:id (UUID or UUID:colorSlug).
       trackPixelEvent('InitiateCheckout', {
-        content_ids: items.map(item => item.productId),
-        contents: items.map(item => ({
-          id: item.productId,
+        content_ids: items.map((item) => catalogContentId(item.productId, item.color)),
+        contents: items.map((item) => ({
+          id: catalogContentId(item.productId, item.color),
           quantity: item.quantity,
           item_price: item.price,
         })),
@@ -1411,9 +1411,9 @@ export default function CheckoutPage() {
       
       // Track Facebook Pixel AddPaymentInfo event (with user data for CAPI)
       trackPixelEvent('AddPaymentInfo', {
-        content_ids: items.map(item => item.productId),
-        contents: items.map(item => ({
-          id: item.productId,
+        content_ids: items.map((item) => catalogContentId(item.productId, item.color)),
+        contents: items.map((item) => ({
+          id: catalogContentId(item.productId, item.color),
           quantity: item.quantity,
           item_price: item.price,
         })),

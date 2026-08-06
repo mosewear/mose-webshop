@@ -24,6 +24,7 @@ import PdpImageLightbox from '@/components/product/PdpImageLightbox'
 import { prefetchPdpLightboxXl } from '@/lib/pdp-lightbox-image'
 import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle, Plus } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
+import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackProductView, trackAddToCart } from '@/lib/analytics'
 import { addToRecentlyViewed } from '@/lib/recentlyViewed'
@@ -592,14 +593,26 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
       // Set page title
       document.title = `${data.name} - MOSE`
 
-      // Track Facebook Pixel ViewContent event. `content_ids` is the
-      // product_id (matches the Meta catalogue feed) and `contents`
-      // declares a single line so DPA / Catalogue Sales remarketing
-      // pools see the right SKU.
+      // Track Facebook Pixel ViewContent. content_ids must match the
+      // shopping feed / Meta catalogue (UUID, or UUID:colorSlug when
+      // the URL already selects a color on a multi-color product).
       const price = data.sale_price || data.base_price
+      const uniqueColors: string[] = Array.from(
+        new Set(
+          (data.product_variants || [])
+            .map((v: ProductVariant) => (v.color || '').trim())
+            .filter((c: string): c is string => Boolean(c)),
+        ),
+      )
+      // Match feed rows (`UUID:colorSlug`). Prefer ?color=, else first color.
+      const resolvedViewColor =
+        uniqueColors.find(
+          (c) => c.toLowerCase() === (requestedColorParam || '').toLowerCase(),
+        ) || uniqueColors[0] || null
+      const viewContentId = catalogContentId(data.id, resolvedViewColor)
       trackPixelEvent('ViewContent', {
-        content_ids: [data.id],
-        contents: [{ id: data.id, quantity: 1, item_price: price }],
+        content_ids: [viewContentId],
+        contents: [{ id: viewContentId, quantity: 1, item_price: price }],
         content_name: data.name,
         content_type: 'product',
         content_category: data.categories?.name,
@@ -912,12 +925,11 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       
-      // Use product_id for catalog-matched content_ids (consistent with
-      // ViewContent and the Purchase event). `contents` carries the per-
-      // line payload Meta uses for revenue attribution.
+      // Catalog id must match feed g:id (UUID:colorSlug).
+      const contentId = catalogContentId(product.id, selectedVariant.color)
       const addToCartParams = {
-        content_ids: [product.id],
-        contents: [{ id: product.id, quantity, item_price: finalPrice }],
+        content_ids: [contentId],
+        contents: [{ id: contentId, quantity, item_price: finalPrice }],
         content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
         content_type: 'product',
         content_category: product.categories?.name,
@@ -934,9 +946,10 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
       } : undefined)
     } catch (error) {
       // If user check fails, still track without userData
+      const contentId = catalogContentId(product.id, selectedVariant.color)
       trackPixelEvent('AddToCart', {
-        content_ids: [product.id],
-        contents: [{ id: product.id, quantity, item_price: finalPrice }],
+        content_ids: [contentId],
+        contents: [{ id: contentId, quantity, item_price: finalPrice }],
         content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
         content_type: 'product',
         content_category: product.categories?.name,

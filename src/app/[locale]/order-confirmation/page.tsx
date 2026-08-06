@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MessageCircle, CalendarClock } from 'lucide-react'
 import { useCart } from '@/store/cart'
+import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackPurchase } from '@/lib/analytics'
 import { getSiteSettings } from '@/lib/settings'
@@ -186,20 +187,26 @@ export default function OrderConfirmationPage({
         // Track Facebook Pixel Purchase event (MOST IMPORTANT!)
         // Dual tracking: Client + Server (CAPI) with user data.
         //
-        // `content_ids` and `contents[].id` MUST match the IDs in the
-        // Meta product catalogue feed so Catalogue Sales / DPA can
-        // attribute revenue. We use `product_id` (consistent with
-        // ViewContent) and fall back to `variant_id` / `sku` for the
-        // rare case where a legacy line is missing the snapshot.
+        // content_ids MUST match shopping feed g:id / Meta retailer_id
+        // (product UUID, or UUID:colorSlug for multi-color products).
         const purchaseContents = (data.items as OrderItem[])
-          .map((item) => ({
-            id: item.product_id || item.variant_id || item.sku,
-            quantity: item.quantity,
-            item_price: Number(item.price_at_purchase) || 0,
-          }))
-          .filter((c) => Boolean(c.id))
+          .map((item) => {
+            const baseId = item.product_id || item.variant_id || item.sku
+            if (!baseId) return null
+            const id = item.product_id
+              ? catalogContentId(item.product_id, item.color)
+              : baseId
+            return {
+              id,
+              quantity: item.quantity,
+              item_price: Number(item.price_at_purchase) || 0,
+            }
+          })
+          .filter((c): c is { id: string; quantity: number; item_price: number } =>
+            Boolean(c?.id),
+          )
 
-        const purchaseContentIds = purchaseContents.map((c) => c.id as string)
+        const purchaseContentIds = purchaseContents.map((c) => c.id)
 
         trackPixelEvent('Purchase', {
           content_ids: purchaseContentIds,

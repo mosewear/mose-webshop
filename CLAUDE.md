@@ -84,6 +84,13 @@ Cron routes authenticate via `CRON_SECRET` (Bearer header). Internal server-to-s
 ### Env vars
 Canonical list in `.env.example`. Production values are set in Vercel. `NEXT_PUBLIC_SITE_URL` must be the canonical storefront URL in prod (`https://www.mosewear.com`); email links and Stripe return URLs depend on it.
 
+### Google Shopping + Meta catalog IDs
+- Public feed: `https://www.mosewear.com/google-shopping-feed.xml` (`src/app/google-shopping-feed.xml/route.ts`).
+- Canonical content ids live in `src/lib/catalog-ids.ts`: product UUID, or `{uuid}:{colorSlug}` per color. `g:item_group_id` is always the product UUID.
+- Pixel + CAPI (`facebook-pixel.ts`, PDP/checkout/order-confirmation, `fulfill-paid-order.ts`) must use `catalogContentId()` so Advantage+/DPA can match the feed.
+- Meta System User token currently lacks `catalog_management` — create/link the catalog in Commerce Manager; optional env `META_CATALOG_ID` once it exists.
+- **Merchant Center cutover:** changing `g:id` from slug → UUID resets offer history; refetch the feed after deploy.
+
 ## Photoshoot pipeline (refresh imagery)
 
 When all storefront imagery is being replaced with a new shoot, follow this order — it is the only path that keeps Storage, DB, and `/public` fallbacks in lockstep. Every script reads `.env.local` and requires `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (the service-role key bypasses RLS for the `product-images` bucket and `product_images` table).
