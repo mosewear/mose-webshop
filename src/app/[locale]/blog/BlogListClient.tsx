@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter, usePathname } from '@/i18n/routing'
+import EditorialPageBanner, { PAGE_BANNER_IMAGES } from '@/components/EditorialPageBanner'
 
 interface BlogPost {
   id: string
@@ -88,20 +89,16 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
 
   return (
     <div className="bg-white">
-      <section className="relative h-48 md:h-80 overflow-hidden border-b-4 border-brand-primary">
-        <Image
-          src="/hero-desktop.webp"
-          alt="MOSE Blog"
-          fill
-          sizes="100vw"
-          className="object-cover object-[center_30%]"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
-        <div className="relative h-full flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="font-display text-7xl md:text-9xl tracking-tight">BLOG</h1>
-        </div>
-      </section>
+      <EditorialPageBanner
+        title={t('title')}
+        eyebrow={t('eyebrow')}
+        subtitle={t('heroSubtitle')}
+        imageSrc={PAGE_BANNER_IMAGES.blog.desktop}
+        imageSrcMobile={PAGE_BANNER_IMAGES.blog.mobile}
+        imageAlt={t('heroAlt')}
+        objectPosition="center 40%"
+        objectPositionMobile="center 35%"
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         <div className="flex flex-wrap gap-2 mb-8 md:mb-12" role="group" aria-label={t('title')}>

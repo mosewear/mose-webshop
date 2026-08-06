@@ -800,6 +800,8 @@
   },
   "shop": {
     "title": "Shop",
+    "eyebrow": "Collectie",
+    "heroSubtitle": "Streetwear uit Groningen — hoodies, sweats & tees.",
     "pageTitle": "Shop - MOSE",
     "categoryPageTitle": "{category} - MOSE",
     "heroAlt": "MOSE shop — streetwear uit Groningen",
@@ -2035,6 +2037,9 @@
   },
   "blog": {
     "title": "Blog",
+    "eyebrow": "Verhalen",
+    "heroSubtitle": "Drops, style & behind the scenes vanuit Groningen.",
+    "heroAlt": "MOSE blog — verhalen uit Groningen",
     "readMore": "Lees meer",
     "allCategories": "Alle",
     "minuteRead": "{minutes} min leestijd",
