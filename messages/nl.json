@@ -1177,8 +1177,8 @@
     },
     "lookbook": {
       "title": "Lookbook",
-      "description": "Campagnefoto's in Groningen: hoodie, sweater en tee, lokaal gemaakt. Shop de stukken uit deze shoot.",
-      "keywords": "MOSE lookbook, outfit inspiratie, premium basics, Groningen, streetwear, campagne"
+      "description": "Hoodie, sweater en tee, gefotografeerd in Groningen. Lokaal gemaakt. Shop de stukken uit de shoot.",
+      "keywords": "MOSE lookbook, outfit inspiratie, basics, Groningen, streetwear, campagne"
     },
     "product": {
       "notFound": "Product niet gevonden",
@@ -1258,7 +1258,7 @@
       },
       "cta2": {
         "text": "Bekijk Lookbook",
-        "aria": "Bekijk ons lookbook met MOSE outfit inspiratie"
+        "aria": "Bekijk het MOSE lookbook"
       },
       "scroll": "Scroll"
     },
@@ -2063,11 +2063,11 @@
     }
   },
   "lookbook": {
-    "eyebrow": "MOSE IN GRONINGEN",
+    "eyebrow": "MOSE UIT GRONINGEN",
     "chapterLabel": "HOOFDSTUK",
     "emptyState": {
-      "title": "Het volgende hoofdstuk komt eraan.",
-      "body": "Bekijk ondertussen de volledige collectie.",
+      "title": "Binnenkort meer.",
+      "body": "Bekijk ondertussen de collectie.",
       "cta": "Shop de collectie"
     },
     "finalCta": {
@@ -2082,9 +2082,9 @@
     },
     "shopModule": {
       "piece": {
-        "label": "HET ITEM",
-        "cta": "Shop dit item",
-        "crossSell": "Combineer met →"
+        "label": "DIT STUK",
+        "cta": "Shop dit stuk",
+        "crossSell": "Past bij"
       },
       "outfit": {
         "label": "DE OUTFIT",
@@ -2098,7 +2098,7 @@
       },
       "fallbackMeta": {
         "materialLabel": "MATERIAAL",
-        "materialValue": "Premium essentials",
+        "materialValue": "Goede basics",
         "madeInLabel": "GEMAAKT IN",
         "madeInValue": "Groningen, NL"
       }

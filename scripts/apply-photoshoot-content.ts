@@ -132,19 +132,19 @@ async function reseedLookbookChapters() {
       sort_order: 10,
       eyebrow_nl: null,
       eyebrow_en: null,
-      title_nl: 'GRONINGEN, GEWOON.',
-      title_en: 'JUST GRONINGEN.',
+      title_nl: 'HOODIE IN DE STAD.',
+      title_en: 'HOODIE IN THE CITY.',
       caption_nl:
-        'Geen witte studio. Deze foto\'s zijn gemaakt waar MOSE vandaan komt: baksteen, beton en kleur in de stad. Precies de plek voor onze hoodie.',
+        'Geen studio. Baksteen, beton, verf op de muur. Groningen, waar we vandaan komen. Precies waar onze hoodie thuishoort.',
       caption_en:
-        'No white studio. These shots are where MOSE comes from: brick, concrete and colour in the city. The right place for our hoodie.',
+        'No studio. Brick, concrete, paint on the wall. Groningen, where we come from. Exactly where our hoodie belongs.',
       hero_image_url: url('lookbook.01.city'),
       image_focal_x: 50,
       image_focal_y: 45,
       layout_variant: 'wide',
       meta: [
         { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '300 GSM OEKO-Tex joggingfleece katoen', value_en: '300 GSM OEKO-Tex jogging fleece cotton' },
-        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Regular fit', value_en: 'Regular fit' },
+        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Normale pasvorm', value_en: 'Regular fit' },
         { label_nl: 'GEMAAKT IN', label_en: 'MADE IN', value_nl: 'Groningen, NL', value_en: 'Groningen, NL' },
       ],
       is_active: true,
@@ -160,19 +160,19 @@ async function reseedLookbookChapters() {
       sort_order: 20,
       eyebrow_nl: null,
       eyebrow_en: null,
-      title_nl: 'LENTE OP DE GRACHT.',
-      title_en: 'SPRING BY THE CANAL.',
+      title_nl: 'TEE AAN HET WATER.',
+      title_en: 'TEE BY THE WATER.',
       caption_nl:
-        '240 gsm jersey: stevig genoeg om mooi te vallen, licht genoeg voor warmere dagen. Deze tee hoort bij de gracht, niet bij een moodboard.',
+        '240 gsm jersey. Valt lekker, voelt licht. Voor dagen waarop je langs het water loopt zonder jas.',
       caption_en:
-        '240 gsm jersey: enough body to hang well, light enough for warmer days. This tee belongs by the canal, not on a moodboard.',
+        '240 gsm jersey. Nice drape, feels light. For days you walk by the water without a jacket.',
       hero_image_url: url('lookbook.02.spring'),
       image_focal_x: 50,
       image_focal_y: 35,
       layout_variant: 'split-right',
       meta: [
         { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '240 GSM OEKO-Tex jersey', value_en: '240 GSM OEKO-Tex jersey' },
-        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Regular fit', value_en: 'Regular fit' },
+        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Normale pasvorm', value_en: 'Regular fit' },
         { label_nl: 'GEMAAKT IN', label_en: 'MADE IN', value_nl: 'Groningen, NL', value_en: 'Groningen, NL' },
       ],
       is_active: true,
@@ -181,26 +181,26 @@ async function reseedLookbookChapters() {
     .single()
   if (ch2.error || !ch2.data) throw new Error(`Chapter 2: ${ch2.error?.message}`)
 
-  // CHAPTER 03: Stone & Steel (Sweater)
+  // CHAPTER 03: Classic Sweater
   const ch3 = await supabase
     .from('lookbook_chapters')
     .insert({
       sort_order: 30,
       eyebrow_nl: null,
       eyebrow_en: null,
-      title_nl: 'STEEN & STAAL.',
-      title_en: 'STONE & STEEL.',
+      title_nl: 'DE CLASSIC SWEATER.',
+      title_en: 'THE CLASSIC SWEATER.',
       caption_nl:
-        'De Classic Sweater is onze rustige basis: strak logo, zachte fleece binnenin, een pasvorm die overal werkt. Meer verhaal hoeft er niet bij.',
+        'Strak logo, zachte fleece binnenin. Trek hem aan, ga de deur uit. Past overal.',
       caption_en:
-        'The Classic Sweater is our quiet base: clean logo, soft fleece inside, a fit that works anywhere. No extra story needed.',
+        'Clean logo, soft fleece inside. Pull it on, head out. Works anywhere.',
       hero_image_url: url('lookbook.03.stone'),
       image_focal_x: 50,
       image_focal_y: 50,
       layout_variant: 'wide',
       meta: [
         { label_nl: 'MATERIAAL', label_en: 'MATERIAL', value_nl: '300 GSM OEKO-Tex joggingfleece katoen', value_en: '300 GSM OEKO-Tex jogging fleece cotton' },
-        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Regular fit', value_en: 'Regular fit' },
+        { label_nl: 'PASVORM', label_en: 'FIT', value_nl: 'Normale pasvorm', value_en: 'Regular fit' },
         { label_nl: 'GEMAAKT IN', label_en: 'MADE IN', value_nl: 'Groningen, NL', value_en: 'Groningen, NL' },
       ],
       is_active: true,
@@ -216,12 +216,12 @@ async function reseedLookbookChapters() {
       sort_order: 40,
       eyebrow_nl: null,
       eyebrow_en: null,
-      title_nl: 'SAMEN OP DE TRAP.',
-      title_en: 'TOGETHER ON THE STEPS.',
+      title_nl: 'DIT ZIJN WIJ.',
+      title_en: 'THIS IS US.',
       caption_nl:
-        'Geen slogan nodig: dit zijn wij, in Groningen, in de kleding die we zelf maken. Als het hier goed zit, zit het de rest van de week ook goed.',
+        'Irma en Rick. Groningen. De kleding die we zelf maken. Als het hier goed zit, zit het de rest van de week ook goed.',
       caption_en:
-        'No slogan needed: this is us, in Groningen, in clothes we make ourselves. If it feels right here, it will feel right the rest of the week too.',
+        'Irma and Rick. Groningen. Clothes we make ourselves. If it sits right here, it sits right the rest of the week too.',
       hero_image_url: url('lookbook.03.closing'),
       image_focal_x: 50,
       image_focal_y: 30,
@@ -244,7 +244,7 @@ async function reseedLookbookChapters() {
     const linkRes = await supabase.from('lookbook_chapter_products').insert(links)
     if (linkRes.error) throw new Error(`Chapter products: ${linkRes.error.message}`)
   }
-  console.log(`   ✓ inserted 4 chapters (Groningen, Lente gracht, Steen & staal, Samen op de trap) and ${links.length} product links`)
+  console.log(`   ✓ inserted 4 chapters (Hoodie in de stad, Tee aan het water, Classic sweater, Dit zijn wij) and ${links.length} product links`)
 }
 
 // ---------------------------------------------------------------------------
