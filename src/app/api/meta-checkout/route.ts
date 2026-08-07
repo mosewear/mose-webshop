@@ -6,12 +6,24 @@ import {
 import { createServiceRoleClient } from '@/lib/supabase/server'
 
 /**
- * Resolve Meta Shop checkout `products=` content ids into cart line items.
- * Used by /[locale]/meta-checkout before redirecting to /checkout.
+ * Meta Shop checkout URL entrypoint.
  *
- * GET /api/meta-checkout?products=UUID:color:2,UUID:1
+ * Paste in Commerce Manager (base URL, no query string):
+ *   https://www.mosewear.com/api/meta-checkout
+ *
+ * Meta appends: ?products=ID:QTY,ID:QTY&coupon=CODE
+ *
+ * Browser / Meta crawler → 302 to /nl/meta-checkout (seeds Zustand cart → /checkout)
+ * JSON clients (Accept: application/json or ?format=json) → cart line items
  */
-export async function GET(request: NextRequest) {
+
+function wantsJson(request: NextRequest): boolean {
+  if (request.nextUrl.searchParams.get('format') === 'json') return true
+  const accept = request.headers.get('accept') || ''
+  return accept.includes('application/json') && !accept.includes('text/html')
+}
+
+async function resolveCart(request: NextRequest) {
   const productsParam =
     request.nextUrl.searchParams.get('products') ||
     request.nextUrl.searchParams.get('product') ||
@@ -19,20 +31,22 @@ export async function GET(request: NextRequest) {
 
   const requested = parseMetaProductsParam(productsParam)
   if (requested.length === 0) {
-    return NextResponse.json(
-      {
+    return {
+      ok: false as const,
+      status: 400,
+      body: {
         error: 'Missing or invalid products parameter',
         hint: 'Expected products=CONTENT_ID:QTY,CONTENT_ID:QTY',
+        items: [] as unknown[],
+        unresolved: [] as string[],
       },
-      { status: 400 },
-    )
+    }
   }
 
   const productIds = Array.from(
     new Set(
       requested
         .map((r) => {
-          // Lightweight extract — resolveMetaProductsToCartItems does full parse
           const m = r.contentId.match(
             /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
           )
@@ -43,10 +57,15 @@ export async function GET(request: NextRequest) {
   )
 
   if (productIds.length === 0) {
-    return NextResponse.json(
-      { error: 'No valid product ids in products parameter', items: [], unresolved: requested.map((r) => r.contentId) },
-      { status: 400 },
-    )
+    return {
+      ok: false as const,
+      status: 400,
+      body: {
+        error: 'No valid product ids in products parameter',
+        items: [],
+        unresolved: requested.map((r) => r.contentId),
+      },
+    }
   }
 
   const supabase = createServiceRoleClient()
@@ -73,24 +92,43 @@ export async function GET(request: NextRequest) {
     .eq('status', 'active')
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return {
+      ok: false as const,
+      status: 500,
+      body: { error: error.message, items: [], unresolved: requested.map((r) => r.contentId) },
+    }
   }
 
   const result = resolveMetaProductsToCartItems(data || [], requested)
-
-  return NextResponse.json(
-    {
+  return {
+    ok: true as const,
+    status: 200,
+    body: {
       items: result.items,
       unresolved: result.unresolved,
       warnings: result.warnings,
       coupon: request.nextUrl.searchParams.get('coupon') || null,
       cart_origin: request.nextUrl.searchParams.get('cart_origin') || null,
     },
-    {
-      headers: {
-        'Cache-Control': 'private, no-store',
-        'X-Robots-Tag': 'noindex',
-      },
+  }
+}
+
+export async function GET(request: NextRequest) {
+  // Meta / browsers: hand off to the locale page that seeds the client cart.
+  if (!wantsJson(request)) {
+    const target = new URL('/nl/meta-checkout', request.url)
+    request.nextUrl.searchParams.forEach((value, key) => {
+      target.searchParams.set(key, value)
+    })
+    return NextResponse.redirect(target, 302)
+  }
+
+  const result = await resolveCart(request)
+  return NextResponse.json(result.body, {
+    status: result.status,
+    headers: {
+      'Cache-Control': 'private, no-store',
+      'X-Robots-Tag': 'noindex',
     },
-  )
+  })
 }

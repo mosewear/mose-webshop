@@ -1,21 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
-import { useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/routing'
 import { useCart, type CartItem } from '@/store/cart'
 
 /**
- * Meta Commerce Manager checkout URL target.
+ * Meta Commerce Manager checkout URL target (client cart bridge).
  *
- * Configure in Commerce Manager → Instellingen → Algemeen → Betalen:
+ * Prefer configuring this base URL in Commerce Manager:
+ *   https://www.mosewear.com/api/meta-checkout
+ * (API 302s here with the same query string.)
+ *
+ * Also works directly:
  *   https://www.mosewear.com/nl/meta-checkout
  *
  * Meta appends ?products=CONTENT_ID:QTY&coupon=…&cart_origin=instagram
- * We resolve those ids, seed the Zustand cart, stash coupon, then go to /checkout.
  */
-export default function MetaCheckoutPage() {
+function MetaCheckoutInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const locale = useLocale()
@@ -40,11 +43,13 @@ export default function MetaCheckoutPage() {
       try {
         const qs = new URLSearchParams()
         qs.set('products', products)
+        qs.set('format', 'json')
         if (coupon) qs.set('coupon', coupon)
         if (cartOrigin) qs.set('cart_origin', cartOrigin)
 
         const res = await fetch(`/api/meta-checkout?${qs.toString()}`, {
           cache: 'no-store',
+          headers: { Accept: 'application/json' },
         })
         const data = (await res.json()) as {
           items?: CartItem[]
@@ -101,5 +106,19 @@ export default function MetaCheckoutPage() {
     <main className="min-h-[50vh] flex items-center justify-center px-6">
       <p className="text-sm tracking-wide text-neutral-600">{message}</p>
     </main>
+  )
+}
+
+export default function MetaCheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[50vh] flex items-center justify-center px-6">
+          <p className="text-sm tracking-wide text-neutral-600">Winkelwagen laden…</p>
+        </main>
+      }
+    >
+      <MetaCheckoutInner />
+    </Suspense>
   )
 }
