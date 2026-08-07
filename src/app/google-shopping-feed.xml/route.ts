@@ -231,7 +231,9 @@ export async function GET() {
           .filter((url): url is string => Boolean(url) && url !== primaryRaw)
           .map((url) => buildImageUrl(url))
 
-        const title = color ? `${productName} - ${color}` : productName
+        // Base product name only — color lives in g:color so Meta/Google
+        // item groups display "MOSE Tee" with color variants underneath.
+        const title = productName
 
         const link = color
           ? `${BASE_URL}/${DEFAULT_LOCALE}/product/${encodeURIComponent(product.slug)}?color=${encodeURIComponent(color)}`
