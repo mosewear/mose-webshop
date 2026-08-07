@@ -417,7 +417,7 @@ function Tile({
   const t = useTranslations('homepage.instagram')
   const caption = localizedCaption(post, locale)
   const ariaLabel = caption
-    ? `${t('viewPost')} — ${caption.slice(0, 120)}`
+    ? `${t('viewPost')}: ${caption.slice(0, 120)}`
     : t('viewPost')
 
   const isVideo = post.media_type === 'VIDEO'

@@ -964,7 +964,7 @@ export default function ShopPageClient() {
                             src={failedImages.has(tile.tileKey) ? '/placeholder-product.svg' : imageSrc}
                             alt={
                               colorLabel
-                                ? `${getProductName(product)} — ${colorLabel}`
+                                ? `${getProductName(product)}, ${colorLabel}`
                                 : getProductName(product)
                             }
                             fill

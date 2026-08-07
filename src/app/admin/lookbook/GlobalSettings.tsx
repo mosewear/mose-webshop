@@ -158,7 +158,7 @@ export default function GlobalSettings({ initial, activeLanguage }: GlobalSettin
           Een dunne editorial regel die tussen elk hoofdstuk verschijnt:
           <br />
           <span className="font-mono text-[11px] text-black">
-            {`{stempel}    ─────    VOLGEND — 02 / 04 · {volgende titel}`}
+            {`{stempel}    ─────    VOLGEND · 02 / 04 · {volgende titel}`}
           </span>
           <br />
           De rechterkant wordt automatisch gegenereerd op basis van het

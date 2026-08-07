@@ -417,9 +417,9 @@ export default function ReturnDetailsPage() {
             <div className="bg-green-50 border-2 border-green-500 p-6 mb-6">
               <h3 className="text-xl font-display mb-2">Gratis Retourlabel</h3>
               <p className="mb-4">
-                Voor deze retour hoef je niets te betalen — het retourlabel is onze
-                trakteren. Klik hieronder om het label aan te maken. Je ontvangt
-                het label daarna per mail en hier op deze pagina.
+                Voor deze retour hoef je niets te betalen. Het retourlabel is
+                onze trakteren. Klik hieronder om het label aan te maken. Je
+                ontvangt het label daarna per mail en hier op deze pagina.
               </p>
               <button
                 onClick={handleGenerateFreeLabel}

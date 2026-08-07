@@ -97,7 +97,7 @@ export default function PdpInstagramFeed({
           {posts.slice(0, 6).map((post, idx) => {
             const caption = localizedCaption(post, locale)
             const ariaLabel = caption
-              ? `${t('viewPost')} — ${caption.slice(0, 120)}`
+              ? `${t('viewPost')}: ${caption.slice(0, 120)}`
               : t('viewPost')
             const imageSrc =
               post.media_type === 'VIDEO' && post.thumbnail_url

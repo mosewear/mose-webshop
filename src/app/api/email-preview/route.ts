@@ -199,8 +199,8 @@ export async function GET(req: NextRequest) {
       subscriberCount: 1247,
       daysUntilLaunch: 7,
       storyContent:
-        'Het begon met een idee op het atelier in Groningen: streetwear die mee-groeit met wie het draagt. Dit seizoen zoomen we in op het verhaal achter onze nieuwste midweight hoodie — van stof tot stiksel.',
-      limitedItems: ['Essential Hoodie — Stone', 'Crewneck — Midnight', 'Cap — Forest'],
+        'Het begon met een idee op het atelier in Groningen: streetwear die mee-groeit met wie het draagt. Dit seizoen zoomen we in op het verhaal achter onze nieuwste midweight hoodie, van stof tot stiksel.',
+      limitedItems: ['Essential Hoodie, Stone', 'Crewneck, Midnight', 'Cap, Forest'],
       promoCodeValue: 'INSIDER10',
       promoExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     }

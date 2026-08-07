@@ -133,7 +133,7 @@
       "subline": "Gedragen door onze community",
       "viewAllShort": "Volg",
       "viewPost": "Bekijk post {index} op Instagram",
-      "empty": "Binnenkort hier — volg ons alvast"
+      "empty": "Binnenkort hier. Volg ons alvast."
     },
     "social": {
       "instagram": "Bekijk MOSE op Instagram",
@@ -143,7 +143,7 @@
       "label": "Taal",
       "switchTo": "Wissel naar {label}"
     },
-    "signature": "© {year} MOSE — MADE WITH 🐾"
+    "signature": "© {year} MOSE. MADE WITH 🐾"
   },
   "footer": {
     "tagline": "Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.",
@@ -801,10 +801,10 @@
   "shop": {
     "title": "Shop",
     "eyebrow": "Collectie",
-    "heroSubtitle": "Streetwear uit Groningen — hoodies, sweats & tees.",
+    "heroSubtitle": "Streetwear uit Groningen. Hoodies, sweats en tees.",
     "pageTitle": "Shop - MOSE",
     "categoryPageTitle": "{category} - MOSE",
-    "heroAlt": "MOSE shop — streetwear uit Groningen",
+    "heroAlt": "MOSE shop, streetwear uit Groningen",
     "loadError": "Producten konden niet worden geladen. Probeer het opnieuw.",
     "retry": "Opnieuw proberen",
     "filters": {
@@ -2039,7 +2039,7 @@
     "title": "Blog",
     "eyebrow": "Verhalen",
     "heroSubtitle": "Drops, style & behind the scenes vanuit Groningen.",
-    "heroAlt": "MOSE blog — verhalen uit Groningen",
+    "heroAlt": "MOSE blog, verhalen uit Groningen",
     "readMore": "Lees meer",
     "allCategories": "Alle",
     "minuteRead": "{minutes} min leestijd",

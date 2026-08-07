@@ -616,7 +616,7 @@ export default function CampaignForm({
 
                 <ToggleRow
                   label="Bezoeker mag banner sluiten"
-                  hint="Standaard uit voor campagnes — campagne is kort, banner moet zichtbaar blijven."
+                  hint="Standaard uit voor campagnes. Campagne is kort, banner moet zichtbaar blijven."
                   checked={state.banner_dismissable}
                   onChange={(v) => update('banner_dismissable', v)}
                 />
@@ -708,7 +708,7 @@ export default function CampaignForm({
                         onChange={(e) => update('popup_body_en', e.target.value)}
                         maxLength={400}
                         rows={3}
-                        placeholder="Celebrate with us — **15% off** today only."
+                        placeholder="Celebrate with us. **15% off** today only."
                         className="w-full px-3 py-2.5 border-2 border-gray-300 focus:border-brand-primary focus:outline-none resize-none"
                       />
                     </Field>
@@ -882,7 +882,7 @@ export default function CampaignForm({
                       {c.code} ({c.discount_type === 'percentage'
                         ? `${c.discount_value}%`
                         : `€${c.discount_value.toFixed(2)}`}
-                      ){!c.is_active ? ' — uitgeschakeld' : ''}
+                      ){!c.is_active ? ' (uitgeschakeld)' : ''}
                     </option>
                   ))}
                 </select>

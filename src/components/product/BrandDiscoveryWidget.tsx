@@ -704,7 +704,7 @@ function BrandDiscoveryModal({
                   {posts.map((post) => {
                     const caption = localizedCaption(post, locale)
                     const ariaLabel = caption
-                      ? `${tIgViewPost} — ${caption.slice(0, 80)}`
+                      ? `${tIgViewPost}: ${caption.slice(0, 80)}`
                       : tIgViewPost
                     const src =
                       post.media_type === 'VIDEO' && post.thumbnail_url

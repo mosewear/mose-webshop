@@ -536,7 +536,7 @@ export const modularNl: ModularDict = {
     badge: '▲ Cadeaubon',
     heroTitle: '{{amount}}\u000ategoed',
     heroSubtitle: 'Jouw persoonlijke MOSE-cadeaubon. Direct in te lossen bij afrekenen.',
-    heroSubtitleNamed: 'Voor {{name}} — geniet ervan.',
+    heroSubtitleNamed: 'Voor {{name}}. Geniet ervan.',
     preheader: 'Je MOSE cadeaubon van {{amount}} is klaar voor gebruik.',
     subject: 'Je MOSE cadeaubon van {{amount}}',
     messageTitle: 'Persoonlijk bericht',
@@ -546,7 +546,7 @@ export const modularNl: ModularDict = {
     bodyIntro:
       'Gebruik deze code tijdens het afrekenen om je bestelling geheel of gedeeltelijk te betalen. Het resterende saldo blijft op de bon staan voor een volgende keer.',
     cta: 'Shop nu',
-    footnote: 'Vragen? Mail ons op {{email}} — we helpen je graag.',
+    footnote: 'Vragen? Mail ons op {{email}}. We helpen je graag.',
   },
 }
 
@@ -1047,7 +1047,7 @@ export const modularEn: ModularDict = {
     badge: '▲ Gift Card',
     heroTitle: '{{amount}}\u000acredit',
     heroSubtitle: 'Your personal MOSE gift card. Redeem it directly at checkout.',
-    heroSubtitleNamed: 'For {{name}} — enjoy.',
+    heroSubtitleNamed: 'For {{name}}. Enjoy.',
     preheader: 'Your MOSE gift card of {{amount}} is ready to use.',
     subject: 'Your MOSE gift card of {{amount}}',
     messageTitle: 'A personal note',
@@ -1057,6 +1057,6 @@ export const modularEn: ModularDict = {
     bodyIntro:
       'Use this code at checkout to pay for your order in full or in part. Any remaining balance stays on the card for your next purchase.',
     cta: 'Shop now',
-    footnote: 'Questions? Email us at {{email}} — we are happy to help.',
+    footnote: 'Questions? Email us at {{email}}. We are happy to help.',
   },
 }

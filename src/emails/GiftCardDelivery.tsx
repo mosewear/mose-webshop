@@ -96,7 +96,7 @@ export default function GiftCardDeliveryEmail({
         subtitle={
           greetingName
             ? t('giftCardDelivery.heroSubtitleNamed', { name: greetingName }) ||
-              `Voor ${greetingName}${fromName ? ` — van ${fromName}` : ''}.`
+              `Voor ${greetingName}${fromName ? `, van ${fromName}` : ''}.`
             : t('giftCardDelivery.heroSubtitle') ||
               'Jouw persoonlijke MOSE-cadeaubon. Direct in te lossen bij afrekenen.'
         }
@@ -131,7 +131,7 @@ export default function GiftCardDeliveryEmail({
                   color: EMAIL_COLORS.textSubtle,
                 }}
               >
-                — {fromName}
+                Van {fromName}
               </div>
             ) : null}
           </div>

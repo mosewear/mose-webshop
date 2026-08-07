@@ -340,7 +340,7 @@ function InstagramThumb({
   const caption =
     locale === 'en' && post.caption_en ? post.caption_en : post.caption
   const enrichedLabel = caption
-    ? `${viewPostLabel} — ${caption.slice(0, 80)}`
+    ? `${viewPostLabel}: ${caption.slice(0, 80)}`
     : viewPostLabel
 
   return (

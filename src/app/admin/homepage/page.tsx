@@ -1048,7 +1048,7 @@ export default function HomepageSettingsPage() {
                           [activeLanguage === 'nl' ? 'newsletter_description2' : 'newsletter_description2_en']: e.target.value 
                         })}
                         className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
-                        placeholder={activeLanguage === 'nl' ? 'Geen spam — gewoon MOSE.' : 'No spam — just MOSE.'}
+                        placeholder={activeLanguage === 'nl' ? 'Geen spam. Gewoon MOSE.' : 'No spam. Just MOSE.'}
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

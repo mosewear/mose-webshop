@@ -1889,7 +1889,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
                       <div>
                         <div className="font-semibold text-yellow-800 uppercase tracking-wide text-xs">
-                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)} — {loyaltyTierDiscountPct}% korting
+                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)}: {loyaltyTierDiscountPct}% korting
                         </div>
                         <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
                       </div>
@@ -2796,7 +2796,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
                       <div>
                         <div className="font-semibold text-yellow-800 uppercase tracking-wide text-sm">
-                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)} — {loyaltyTierDiscountPct}% korting
+                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)}: {loyaltyTierDiscountPct}% korting
                         </div>
                         <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
                       </div>

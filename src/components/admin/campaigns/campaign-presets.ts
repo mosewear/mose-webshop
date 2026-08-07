@@ -58,7 +58,7 @@ export const CAMPAIGN_PRESETS: CampaignPreset[] = [
       popup_body_nl:
         'Vandaag vieren we het feest met **15% korting** op alle MOSE-stukken. Pak je favoriet, oranje optioneel.',
       popup_body_en:
-        'Celebrate with us — **15% off** every MOSE piece today. Orange is optional, MOSE is mandatory.',
+        'Celebrate with us. **15% off** every MOSE piece today. Orange is optional, MOSE is mandatory.',
       popup_cta_nl: 'Shop met 15% korting',
       popup_cta_en: 'Shop with 15% off',
       suggested_promo_code: 'KINGSDAY15',
@@ -82,9 +82,9 @@ export const CAMPAIGN_PRESETS: CampaignPreset[] = [
       popup_title_nl: 'Black Friday is hier',
       popup_title_en: 'Black Friday is on',
       popup_body_nl:
-        '**25% korting** op alles, alleen vandaag. Geen flits-deals, geen kunst — gewoon MOSE voor minder.',
+        '**25% korting** op alles, alleen vandaag. Geen flits-deals, geen kunst. Gewoon MOSE voor minder.',
       popup_body_en:
-        '**25% off everything**, today only. No gimmicks, no fluff — just MOSE for less.',
+        '**25% off everything**, today only. No gimmicks, no fluff. Just MOSE for less.',
       popup_cta_nl: 'Shop met 25% korting',
       popup_cta_en: 'Shop with 25% off',
       suggested_promo_code: 'BF25',

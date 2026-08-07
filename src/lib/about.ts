@@ -72,7 +72,7 @@ function fallback(locale: Locale): AboutSettings {
       hero_image_url_mobile: DEFAULT_HERO_MOBILE,
       image_focal_x: 50,
       image_focal_y: 30,
-      hero_alt: 'MOSE — worn in real life, made in Groningen',
+      hero_alt: 'MOSE, worn in real life, made in Groningen',
       hero_title: 'ABOUT MOSE',
       hero_subtitle: 'No nonsense. Pure character.',
       story_title: 'OUR STORY',
@@ -114,7 +114,7 @@ function fallback(locale: Locale): AboutSettings {
     hero_image_url_mobile: DEFAULT_HERO_MOBILE,
     image_focal_x: 50,
     image_focal_y: 30,
-    hero_alt: 'MOSE — gedragen in het echte leven, gemaakt in Groningen',
+    hero_alt: 'MOSE, gedragen in het echte leven, gemaakt in Groningen',
     hero_title: 'OVER MOSE',
     hero_subtitle: 'Geen poespas. Wel karakter.',
     story_title: 'ONS VERHAAL',
@@ -171,8 +171,8 @@ export async function getAboutSettings(
     // needs a string for a11y.
     const altFallback =
       lang === 'en'
-        ? 'MOSE — worn in real life, made in Groningen'
-        : 'MOSE — gedragen in het echte leven, gemaakt in Groningen'
+        ? 'MOSE, worn in real life, made in Groningen'
+        : 'MOSE, gedragen in het echte leven, gemaakt in Groningen'
 
     return {
       hero_image_url: data.hero_image_url || DEFAULT_HERO_DESKTOP,
