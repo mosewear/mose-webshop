@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { catalogContentId, slugifyCatalogColor } from '@/lib/catalog-ids'
+import {
+  catalogContentId,
+  parseCatalogContentId,
+  slugifyCatalogColor,
+} from '@/lib/catalog-ids'
 
 describe('catalogContentId', () => {
   const productId = '3692f227-52fc-41d5-911c-5c539448070b'
@@ -26,5 +30,16 @@ describe('slugifyCatalogColor', () => {
   it('normalizes accents and spaces', () => {
     expect(slugifyCatalogColor('  Off White ')).toBe('off-white')
     expect(slugifyCatalogColor('Zilver')).toBe('zilver')
+  })
+})
+
+describe('parseCatalogContentId', () => {
+  const productId = '3692f227-52fc-41d5-911c-5c539448070b'
+
+  it('round-trips catalogContentId', () => {
+    expect(parseCatalogContentId(catalogContentId(productId, 'Off White'))).toEqual({
+      productId,
+      colorSlug: 'off-white',
+    })
   })
 })
