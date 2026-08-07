@@ -5,7 +5,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/api/google-image', '/google-shopping-feed.xml', '/'],
+        allow: [
+          '/api/google-image',
+          '/google-shopping-feed.xml',
+          '/meta-offers-feed.csv',
+          '/',
+        ],
         disallow: ['/admin/', '/api/'],
       },
     ],
