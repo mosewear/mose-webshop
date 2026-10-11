@@ -30,6 +30,10 @@ interface AbandonedCartEmailProps {
   contactEmail?: string
   contactPhone?: string
   contactAddress?: string
+  /** Uit site_settings; de callout belooft anders gratis verzending zonder
+   *  minimum, wat niet klopt zodra er een drempel is ingesteld. */
+  freeShippingThreshold?: number
+  shippingCost?: number
 }
 
 function formatPrice(amount: number) {
@@ -47,6 +51,8 @@ export default function AbandonedCartEmail({
   contactEmail = EMAIL_DEFAULT_CONTACT.email,
   contactPhone = EMAIL_DEFAULT_CONTACT.phone,
   contactAddress = EMAIL_DEFAULT_CONTACT.address,
+  freeShippingThreshold = 150,
+  shippingCost = 6.95,
 }: AbandonedCartEmailProps) {
   const visibleItems = items.slice(0, 3)
   const hiddenCount = items.length > 3 ? items.length - 3 : 0
@@ -122,9 +128,17 @@ export default function AbandonedCartEmail({
         footnote={t('abandonedCart.ctaFootnote') || 'Jouw items wachten op je.'}
       />
 
-      <EmailCallout tone="success" title={t('abandonedCart.freeShippingTitle') || 'Altijd gratis verzending'}>
-        {t('abandonedCart.freeShipping') ||
-          'Bij elke bestelling, zonder minimum. Gewoon omdat het hoort.'}
+      <EmailCallout
+        tone="success"
+        title={
+          t('abandonedCart.freeShippingTitle', { threshold: freeShippingThreshold }) ||
+          `Gratis verzending vanaf €${freeShippingThreshold}`
+        }
+      >
+        {t('abandonedCart.freeShipping', {
+          threshold: freeShippingThreshold,
+          shippingCost: formatPrice(shippingCost).replace('€', '').trim(),
+        }) || 'Zit je daarboven, dan betaal je geen verzendkosten.'}
       </EmailCallout>
 
       <EmailShopMore siteUrl={siteUrl} locale={locale} />

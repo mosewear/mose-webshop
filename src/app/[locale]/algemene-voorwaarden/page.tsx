@@ -3,13 +3,20 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
+import { COMPANY, formatKvk } from '@/lib/company'
 import { useTranslations } from 'next-intl'
 
 export default function TermsPage() {
   const t = useTranslations('terms')
+  // Deze defaults stonden op 100 en 14 terwijl site_settings 150 en 30 zegt.
+  // Op de voorwaardenpagina is dat extra kwalijk: de eerste render, en dus ook
+  // wat een crawler ziet, beloofde een kortere bedenktijd dan je werkelijk
+  // biedt en een lagere gratis-verzendingsdrempel dan je hanteert.
   const [settings, setSettings] = useState({
-    free_shipping_threshold: 100,
-    return_days: 14,
+    free_shipping_threshold: 150,
+    return_days: 30,
+    shipping_cost: 6.95,
+    return_label_cost_incl_btw: 6.95,
     contact_email: 'info@mosewear.nl',
     contact_phone: '+31 50 211 1931',
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
@@ -20,6 +27,8 @@ export default function TermsPage() {
       setSettings({
         free_shipping_threshold: s.free_shipping_threshold,
         return_days: s.return_days,
+        shipping_cost: s.shipping_cost,
+        return_label_cost_incl_btw: s.return_label_cost_incl_btw,
         contact_email: s.contact_email,
         contact_phone: s.contact_phone,
         contact_address: s.contact_address,
@@ -94,7 +103,10 @@ export default function TermsPage() {
               {[0, 1, 2, 3].map((i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-brand-primary font-bold">•</span>
-                  <span>{t(`sections.shipping.items.${i}`, { threshold: settings.free_shipping_threshold })}</span>
+                  <span>{t(`sections.shipping.items.${i}`, {
+                    threshold: settings.free_shipping_threshold,
+                    cost: settings.shipping_cost.toFixed(2).replace('.', ','),
+                  })}</span>
                 </li>
               ))}
             </ul>
@@ -103,10 +115,15 @@ export default function TermsPage() {
           <div>
             <h2 className="text-3xl font-display mb-4">{t('sections.returns.title')}</h2>
             <ul className="space-y-2 text-gray-700">
-              {[0, 1, 2, 3].map((i) => (
+              {/* Afgeleid van de werkelijke lijstlengte; met de vaste reeks
+                  [0,1,2,3] viel de vijfde voorwaarde altijd weg. */}
+              {((t.raw('sections.returns.items') as string[]) ?? []).map((_, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-brand-primary font-bold">•</span>
-                  <span>{t(`sections.returns.items.${i}`, { days: settings.return_days })}</span>
+                  <span>{t(`sections.returns.items.${i}`, {
+                    days: settings.return_days,
+                    returnCost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ','),
+                  })}</span>
                 </li>
               ))}
             </ul>
@@ -140,6 +157,11 @@ export default function TermsPage() {
                 email: settings.contact_email, 
                 phone: settings.contact_phone 
               })}
+            </p>
+            {/* Wettelijk verplichte bedrijfsgegevens. Stonden nergens op de
+                site, ook niet in deze voorwaarden. */}
+            <p className="text-gray-700 leading-relaxed mt-4">
+              {COMPANY.legalName}, {settings.contact_address} &middot; {formatKvk()}
             </p>
           </div>
         </div>

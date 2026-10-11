@@ -13,6 +13,8 @@ import {
   computeCartStaffelBreakdown,
   type ProductQtyTierRow,
 } from '@/lib/cart-staffel-display'
+import { buttonVariants } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -937,7 +939,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <LocaleLink
                   href="/checkout"
                   onClick={onClose}
-                  className="block w-full py-3 bg-brand-primary text-white text-center font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors border-2 border-brand-primary"
+                  className={buttonVariants({ variant: 'primary', size: 'md', fullWidth: true })}
                 >
                   {t('checkout')}
                 </LocaleLink>
@@ -1118,7 +1120,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="flex gap-4">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-3 border-2 border-black font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
+                className={cn(buttonVariants({ variant: 'outline' }), 'flex-1')}
               >
                 {t('clearConfirm.cancel')}
               </button>
@@ -1127,7 +1129,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   clearCart()
                   setShowClearConfirm(false)
                 }}
-                className="flex-1 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className={cn(buttonVariants({ variant: 'danger' }), 'flex-1')}
               >
                 {t('clearConfirm.confirm')}
               </button>

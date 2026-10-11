@@ -163,6 +163,7 @@ export default function AdminDashboard() {
         ordersRes,
         customersRes,
         fulfillRes,
+        lowStockSettingRes,
       ] = await Promise.all([
         supabase.from('products').select('id', { count: 'exact', head: true }),
         supabase.from('categories').select('id', { count: 'exact', head: true }),
@@ -175,6 +176,10 @@ export default function AdminDashboard() {
           .select('id', { count: 'exact', head: true })
           .eq('payment_status', 'paid')
           .in('status', ['pending', 'paid', 'processing']),
+        // De drempel stond hier hardgecodeerd op 5, terwijl de voorraadpagina
+        // low_stock_threshold uit site_settings leest. De twee getallen
+        // spraken elkaar dus structureel tegen zodra de instelling afweek.
+        supabase.from('site_settings').select('value').eq('key', 'low_stock_threshold').maybeSingle(),
       ])
 
       setDbOnline(!productsRes.error && !ordersRes.error)
@@ -184,7 +189,13 @@ export default function AdminDashboard() {
       const variants = variantsRes.data || []
       const totalVariants = variants.length
       const totalStock = variants.reduce((sum: number, v: { stock_quantity: number }) => sum + v.stock_quantity, 0)
-      const lowStockCount = variants.filter((v: { stock_quantity: number }) => v.stock_quantity < 5).length
+      const parsedThreshold = parseInt(String(lowStockSettingRes?.data?.value ?? ''), 10)
+      const lowStockThreshold = Number.isFinite(parsedThreshold) && parsedThreshold > 0 ? parsedThreshold : 5
+      // Varianten met voorraad 0 zijn uitverkocht, niet "bijna op". De
+      // voorraadpagina sluit ze ook uit; hier werden ze meegeteld.
+      const lowStockCount = variants.filter(
+        (v: { stock_quantity: number }) => v.stock_quantity > 0 && v.stock_quantity < lowStockThreshold
+      ).length
       const totalCustomers = customersRes.count || 0
 
       const allOrders: OrderRow[] = ordersRes.data || []

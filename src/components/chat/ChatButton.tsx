@@ -75,7 +75,7 @@ export default function ChatButton() {
               })
             }
           }}
-          className={`fixed bottom-6 right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
+          className={`fixed bottom-[calc(1.5rem+var(--cookie-consent-height))] right-6 z-[9999] w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-black transition-all duration-300 flex items-center justify-center group ${
             isOpen 
               ? 'hidden md:flex bg-black border-brand-primary' 
               : 'bg-brand-primary chat-button-pulse md:hover:bg-black md:hover:border-brand-primary'

@@ -6,11 +6,14 @@ import { useTranslations, useLocale } from 'next-intl'
 
 export default function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  // Deze defaults weken alle vier af van site_settings (100/14/4,95/7,87 tegen
+  // 150/30/6,95/6,95). Ze zijn zichtbaar in de eerste render, dus een bezoeker
+  // zag kort een andere verzend- en retourbelofte dan de echte.
   const [settings, setSettings] = useState({
-    free_shipping_threshold: 100,
-    return_days: 14,
-    shipping_cost: 4.95,
-    return_label_cost_incl_btw: 7.87,
+    free_shipping_threshold: 150,
+    return_days: 30,
+    shipping_cost: 6.95,
+    return_label_cost_incl_btw: 6.95,
   })
   const t = useTranslations('faq')
   const locale = useLocale()
@@ -20,8 +23,8 @@ export default function FAQAccordion() {
       setSettings({
         free_shipping_threshold: s.free_shipping_threshold,
         return_days: s.return_days,
-        shipping_cost: s.shipping_cost || 4.95,
-        return_label_cost_incl_btw: s.return_label_cost_incl_btw || 7.87,
+        shipping_cost: s.shipping_cost || 6.95,
+        return_label_cost_incl_btw: s.return_label_cost_incl_btw || 6.95,
       })
     })
   }, [])

@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
 
     const abandonedHours = parseInt(settingsMap.abandoned_cart_hours || 24)
     const emailEnabled = settingsMap.abandoned_cart_email_enabled === 'true' || settingsMap.abandoned_cart_email_enabled === true
-    const freeShippingThreshold = parseFloat(settingsMap.free_shipping_threshold || 100)
-    const returnDays = parseInt(settingsMap.return_days || 14)
+    const freeShippingThreshold = parseFloat(settingsMap.free_shipping_threshold || 150)
+    const returnDays = parseInt(settingsMap.return_days || 30)
 
     if (!emailEnabled) {
       return NextResponse.json({ 

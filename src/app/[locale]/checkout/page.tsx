@@ -1064,15 +1064,15 @@ export default function CheckoutPage() {
           console.log('   Merged cart items:', mergedItems.length)
           setItems(mergedItems)
           
-          // Update user's saved cart in database with merged items
-          // Delete old cart items
-          await supabase
-            .from('cart_items')
-            .delete()
-            .eq('user_id', data.user!.id)
-          
-          // Insert merged cart items (skip gift cards: synthetic variant ids
-          // don't satisfy the product_variants FK).
+          // Update user's saved cart in database with merged items.
+          //
+          // Volgorde is hier belangrijk: eerst de nieuwe regels klaarzetten,
+          // dan pas verwijderen. De supabase-client GOOIT niet bij een fout,
+          // hij geeft { error } terug, en dat werd hier niet uitgelezen. Als de
+          // delete slaagde en de insert daarna faalde (RLS, een FK op
+          // variant_id, netwerk), was de bewaarde winkelwagen van de klant weg
+          // terwijl er "Cart merged and saved" werd gelogd. In productie wordt
+          // console.log gestript, dus er bleef geen enkel spoor over.
           const cartItemsToSave = mergedItems
             .filter((item) => !item.isGiftCard)
             .map(item => ({
@@ -1081,14 +1081,24 @@ export default function CheckoutPage() {
               quantity: item.quantity,
               price_at_add: item.price,
             }))
-          
-          if (cartItemsToSave.length > 0) {
-            await supabase
+
+          const { error: deleteCartError } = await supabase
+            .from('cart_items')
+            .delete()
+            .eq('user_id', data.user!.id)
+
+          if (deleteCartError) {
+            console.error('Kon de bewaarde winkelwagen niet legen:', deleteCartError)
+          } else if (cartItemsToSave.length > 0) {
+            const { error: insertCartError } = await supabase
               .from('cart_items')
               .insert(cartItemsToSave)
+            if (insertCartError) {
+              // De lokale winkelwagen (setItems hierboven) klopt nog, dus de
+              // klant kan gewoon afrekenen. Alleen de serverkopie ontbreekt.
+              console.error('Kon de samengevoegde winkelwagen niet opslaan:', insertCartError)
+            }
           }
-          
-          console.log('✅ Cart merged and saved to database')
         } else {
           console.log('   No saved cart, keeping guest cart')
           
@@ -1727,6 +1737,75 @@ export default function CheckoutPage() {
     )
   }
 
+
+  // De kortingscode, cadeaukaart en loyaliteitspunten zaten allemaal in de
+  // orderzijbalk, en die staat in `hidden lg:block`. Onder 1024px kon een
+  // klant met een code uit een nieuwsbrief of advertentie die dus nergens
+  // invoeren; de enige hint was teruggaan naar de winkelwagenlade, waar de
+  // invoer wél mobiel bestaat. Daarom nu één renderfunctie die zowel in de
+  // mobiele samenvatting als in de desktopzijbalk wordt gebruikt. De state is
+  // gedeeld, dus beide oppervlakken blijven vanzelf in sync.
+  const renderPromoCodeSection = () => (
+    <>
+    {/* Promo Code Section */}
+    {!promoCodeExpanded && promoDiscount === 0 ? (
+    <button
+    onClick={() => setPromoCodeExpanded(true)}
+    className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors border-t border-gray-200 pt-3"
+    >
+    <div className="flex items-center gap-2">
+    <Ticket size={16} />
+    <span>{t('promo.title')}</span>
+    </div>
+    <ChevronDown size={16} />
+    </button>
+    ) : promoDiscount === 0 ? (
+    <div className="space-y-2 border-t border-gray-200 pt-3">
+    <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2 text-sm font-semibold">
+    <Ticket size={16} />
+    <span>{t('promo.title')}</span>
+    </div>
+    <button
+    onClick={() => {
+    setPromoCodeExpanded(false)
+    setPromoError('')
+    setPromoCode('')
+    }}
+    className="p-1 hover:bg-gray-200 transition-colors rounded"
+    >
+    <ChevronUp size={16} />
+    </button>
+    </div>
+    <div className="flex gap-2">
+    <input
+      aria-label={t('promo.title')}
+    type="text"
+    value={promoCode}
+    onChange={(e) => {
+    setPromoCode(e.target.value.toUpperCase())
+    setPromoError('')
+    }}
+    onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+    placeholder={t('placeholder.promoCode')}
+    className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+    />
+    <button
+    onClick={handleApplyPromo}
+    disabled={!promoCode}
+    className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+    >
+    {t('promo.apply')}
+    </button>
+    </div>
+    {promoError && (
+    <p className="text-xs text-red-600 font-semibold">{promoError}</p>
+    )}
+    </div>
+    ) : null}
+    </>
+  )
+
   return (
       <div className="min-h-screen px-4 pb-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
@@ -1918,6 +1997,11 @@ export default function CheckoutPage() {
                   <span className="font-display text-lg uppercase tracking-wide">TOTAAL</span>
                   <span className="font-display text-2xl">€{total.toFixed(2)}</span>
                 </div>
+
+                {/* Kortingscode, ook op mobiel. Deze invoer zat alleen in de
+                    desktopzijbalk, waardoor een klant met een code op zijn
+                    telefoon niets kon doen. */}
+                {renderPromoCodeSection()}
               </div>
             </div>
           )}
@@ -1993,6 +2077,8 @@ export default function CheckoutPage() {
                             {t('login.email')}
                           </label>
                           <input
+                            aria-label={t('field.email')}
+                            autoComplete="email"
                             type="email"
                             value={loginForm.email}
                             onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
@@ -2007,6 +2093,8 @@ export default function CheckoutPage() {
                             {t('login.password')}
                           </label>
                           <input
+                            aria-label={t('login.password')}
+                            autoComplete="current-password"
                             type="password"
                             value={loginForm.password}
                             onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
@@ -2044,6 +2132,7 @@ export default function CheckoutPage() {
                     {t('section.contact')}
                   </h2>
                   <input
+                    aria-label={t('field.email')}
                     type="email"
                     value={form.email}
                     onChange={(e) => updateForm('email', e.target.value)}
@@ -2086,6 +2175,7 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <input
+                          aria-label={t('field.firstName')}
                           type="text"
                           value={form.firstName}
                           onChange={(e) => updateForm('firstName', e.target.value)}
@@ -2098,6 +2188,7 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <input
+                          aria-label={t('field.lastName')}
                           type="text"
                           value={form.lastName}
                           onChange={(e) => updateForm('lastName', e.target.value)}
@@ -2164,6 +2255,7 @@ export default function CheckoutPage() {
                             {t('field.postalCode')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
+                            aria-label={t('field.postalCode')}
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
@@ -2199,6 +2291,7 @@ export default function CheckoutPage() {
                             {t('field.houseNumber')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
+                            aria-label={t('field.houseNumber')}
                             type="text"
                             value={form.huisnummer}
                             onChange={(e) => {
@@ -2234,6 +2327,7 @@ export default function CheckoutPage() {
                             {t('field.addition')}
                           </label>
                           <input
+                            aria-label={t('field.addition')}
                             type="text"
                             value={form.toevoeging}
                             onChange={(e) => {
@@ -2298,6 +2392,7 @@ export default function CheckoutPage() {
                             {t('field.postalCode')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
+                            aria-label={t('field.postalCode')}
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
@@ -2324,6 +2419,7 @@ export default function CheckoutPage() {
                               {t('field.houseNumber')} <span className="text-red-600 ml-0.5">*</span>
                             </label>
                             <input
+                              aria-label={t('field.houseNumber')}
                               type="text"
                               value={form.huisnummer}
                               onChange={(e) => {
@@ -2348,6 +2444,7 @@ export default function CheckoutPage() {
                               {t('field.addition')}
                             </label>
                             <input
+                              aria-label={t('field.addition')}
                               type="text"
                               value={form.toevoeging}
                               onChange={(e) => {
@@ -2424,6 +2521,7 @@ export default function CheckoutPage() {
                             {t('field.postalCode')} <span className="text-red-600 ml-0.5">*</span>
                           </label>
                           <input
+                            aria-label={t('field.postalCode')}
                             type="text"
                             value={form.postalCode}
                             onChange={(e) => updateForm('postalCode', e.target.value)}
@@ -2449,6 +2547,7 @@ export default function CheckoutPage() {
                         {t('field.address')} <span className="text-red-600 ml-0.5">*</span>
                       </label>
                       <input
+                        aria-label={t('field.address')}
                         type="text"
                         value={form.address}
                         onChange={(e) => updateForm('address', e.target.value)}
@@ -2471,6 +2570,7 @@ export default function CheckoutPage() {
                         {t('field.city')} <span className="text-red-600 ml-0.5">*</span>
                       </label>
                       <input
+                        aria-label={t('field.city')}
                         type="text"
                         value={form.city}
                         onChange={(e) => updateForm('city', e.target.value)}
@@ -2496,6 +2596,7 @@ export default function CheckoutPage() {
                         </span>
                       </label>
                       <input
+                        aria-label={t('field.phone')}
                         type="tel"
                         inputMode="tel"
                         value={form.phone}
@@ -2820,61 +2921,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 
-                {/* Promo Code Section */}
-                {!promoCodeExpanded && promoDiscount === 0 ? (
-                  <button
-                    onClick={() => setPromoCodeExpanded(true)}
-                    className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors border-t border-gray-200 pt-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Ticket size={16} />
-                      <span>{t('promo.title')}</span>
-                    </div>
-                    <ChevronDown size={16} />
-                  </button>
-                ) : promoDiscount === 0 ? (
-                  <div className="space-y-2 border-t border-gray-200 pt-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <Ticket size={16} />
-                        <span>{t('promo.title')}</span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setPromoCodeExpanded(false)
-                          setPromoError('')
-                          setPromoCode('')
-                        }}
-                        className="p-1 hover:bg-gray-200 transition-colors rounded"
-                      >
-                        <ChevronUp size={16} />
-                      </button>
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => {
-                          setPromoCode(e.target.value.toUpperCase())
-                          setPromoError('')
-                        }}
-                        onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
-                        placeholder={t('placeholder.promoCode')}
-                        className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
-                      />
-                      <button
-                        onClick={handleApplyPromo}
-                        disabled={!promoCode}
-                        className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        {t('promo.apply')}
-                      </button>
-                    </div>
-                    {promoError && (
-                      <p className="text-xs text-red-600 font-semibold">{promoError}</p>
-                    )}
-                  </div>
-                ) : null}
+                {renderPromoCodeSection()}
 
                 {/* Gift Card Redemption Section */}
                 {giftCardEntries.length > 0 && (
@@ -2950,6 +2997,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex gap-2">
                       <input
+                        aria-label={t('giftCard.label')}
                         type="text"
                         value={giftCardInput}
                         onChange={(e) => {

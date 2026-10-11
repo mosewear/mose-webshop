@@ -51,8 +51,27 @@ async function fetchActiveCampaignFromDb(): Promise<ResolvedCampaign | null> {
   }
 }
 
+// LET OP: deze cache bepaalt feitelijk het ISR-venster van de HELE storefront.
+// getActiveMarketingCampaign() wordt in [locale]/layout.tsx aangeroepen, en
+// Next neemt de KORTSTE revalidate in een route. Met de vorige waarde van 30
+// seconden stond elke pagina in prerender-manifest.json op 30, ook de
+// homepage die 3600 declareert en de shop die 1800 declareert. Elke 30
+// seconden werd dus elke pagina opnieuw op de origin gerenderd, inclusief
+// alle Supabase-queries.
+//
+// 300 seconden is een afweging die de eigenaar heeft gemaakt: tien keer
+// minder origin-renders, en een geplande campagne die op datum actief wordt
+// kan tot vijf minuten later zichtbaar zijn. Handmatige wijzigingen in de
+// admin blijven direct zichtbaar, want die invalideren ACTIVE_CAMPAIGN_TAG
+// (zie src/app/api/admin/campaigns/**).
+//
+// Verhoog je dit verder, verifieer dan in .next/prerender-manifest.json wat
+// de routes daadwerkelijk krijgen; de declaraties in de pagina's zelf zijn
+// niet leidend.
+export const CAMPAIGN_CACHE_REVALIDATE_SECONDS = 300
+
 export const getActiveMarketingCampaign = unstable_cache(
   fetchActiveCampaignFromDb,
   ['marketing-campaign:active'],
-  { revalidate: 30, tags: [ACTIVE_CAMPAIGN_TAG] }
+  { revalidate: CAMPAIGN_CACHE_REVALIDATE_SECONDS, tags: [ACTIVE_CAMPAIGN_TAG] }
 )

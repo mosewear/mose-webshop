@@ -12,6 +12,8 @@ import {
 import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import { buttonVariants } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 
 export default function CartPage() {
   const t = useTranslations('cart')
@@ -110,7 +112,7 @@ export default function CartPage() {
             </p>
             <LocaleLink
               href="/shop"
-              className="inline-block px-12 py-4 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+              className={buttonVariants({ variant: 'primary', size: 'lg' })}
             >
               {t('empty.continue')}
             </LocaleLink>
@@ -338,13 +340,13 @@ export default function CartPage() {
             <div className="flex gap-4 pt-4">
               <LocaleLink
                 href="/checkout"
-                className="flex-1 py-4 bg-black text-white text-center font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className={cn(buttonVariants({ variant: 'primary', size: 'lg' }), 'flex-1')}
               >
                 {t('checkout')}
               </LocaleLink>
               <LocaleLink
                 href="/shop"
-                className="flex-1 py-4 border-2 border-black text-black text-center font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
+                className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'flex-1')}
               >
                 {t('empty.continue')}
               </LocaleLink>
@@ -374,7 +376,7 @@ export default function CartPage() {
             primaire actie deed dus iets anders dan hij beloofde. Nu zijn het
             twee losse controls: links het totaal dat de samenvatting opent,
             rechts een echte link naar /checkout. */}
-        <div className="md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 bg-black text-white z-40 safe-bottom flex items-stretch">
+        <div className="md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 bg-black text-white z-40 pb-[env(safe-area-inset-bottom)] flex items-stretch">
           <button
             onClick={() => setShowMobileSummary(true)}
             aria-expanded={showMobileSummary}
@@ -385,7 +387,7 @@ export default function CartPage() {
           </button>
           <LocaleLink
             href="/checkout"
-            className="flex items-center my-3 mr-4 px-6 min-h-[44px] bg-white text-black font-bold uppercase tracking-wider"
+            className={cn(buttonVariants({ variant: 'primary' }), 'my-3 mr-4')}
           >
             {t('checkout')} →
           </LocaleLink>
@@ -466,7 +468,7 @@ export default function CartPage() {
 
                 <LocaleLink
                   href="/checkout"
-                  className="block w-full py-4 bg-black text-white text-center font-bold uppercase tracking-wider mt-6"
+                  className={cn(buttonVariants({ variant: 'primary', size: 'lg', fullWidth: true }), 'mt-6')}
                   onClick={() => setShowMobileSummary(false)}
                 >
                   {t('checkout')}
@@ -503,7 +505,7 @@ export default function CartPage() {
             <div className="flex gap-4">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-3 border-2 border-black font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
+                className={cn(buttonVariants({ variant: 'outline' }), 'flex-1')}
               >
                 {t('clearConfirm.cancel')}
               </button>
@@ -512,7 +514,7 @@ export default function CartPage() {
                   clearCart()
                   setShowClearConfirm(false)
                 }}
-                className="flex-1 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className={cn(buttonVariants({ variant: 'danger' }), 'flex-1')}
               >
                 {t('clearConfirm.confirm')}
               </button>

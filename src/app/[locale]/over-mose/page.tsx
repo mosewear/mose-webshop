@@ -30,10 +30,10 @@ async function getReturnsAndShipping(): Promise<{
     return {
       return_days: parseInt(map.return_days || '30', 10) || 30,
       free_shipping_threshold:
-        parseFloat(map.free_shipping_threshold || '100') || 100,
+        parseFloat(map.free_shipping_threshold || '150') || 150,
     }
   } catch {
-    return { return_days: 30, free_shipping_threshold: 100 }
+    return { return_days: 30, free_shipping_threshold: 150 }
   }
 }
 

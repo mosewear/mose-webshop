@@ -5,6 +5,7 @@ import InstagramFeed from '@/components/home/InstagramFeed'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
+import { formatPromiseAmount } from '@/lib/settings-server'
 
 // ✅ ISR with On-Demand Revalidation
 // Homepage cached for 1 hour, auto-updates when admin saves changes
@@ -56,7 +57,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     "name": "MOSE",
     "image": "https://www.mosewear.com/logomose.png",
     "url": `https://www.mosewear.com/${locale}`,
-    "description": t('description'),
+    // siteSettings is hierboven al opgehaald; zonder { threshold } zou de
+    // letterlijke tekst "€{threshold}" in de JSON-LD naar Google gaan.
+    "description": t('description', { threshold: formatPromiseAmount(siteSettings.free_shipping_threshold, locale) }),
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Groningen",

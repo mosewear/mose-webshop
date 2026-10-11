@@ -55,6 +55,15 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'scale(0.92)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        // `animate-success` werd al gebruikt op de bevestiging van
+        // "toegevoegd aan winkelwagen" (PDP) en op het vinkje van de
+        // orderbevestiging, maar de keyframe bestond niet. De klasse deed
+        // daar dus stilletjes niets.
+        success: {
+          '0%': { transform: 'scale(1)' },
+          '40%': { transform: 'scale(1.04)' },
+          '100%': { transform: 'scale(1)' },
+        },
         // Marquee voor de TICKER brand-pill: content wordt 2x gerenderd
         // en animeert over -50% zodat de loop seamless overgaat. Linear
         // easing zodat de scroll-snelheid constant aanvoelt.
@@ -69,6 +78,7 @@ const config: Config = {
         slideInRight: 'slideInRight 0.3s ease-out',
         brandPulse: 'brandPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         bubblePop: 'bubblePop 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
+        success: 'success 0.42s cubic-bezier(0.16, 1, 0.3, 1)',
         marquee: 'marquee 14s linear infinite',
       },
     },

@@ -427,6 +427,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     shipping_cost: number
     show_preview_images_notice: boolean
     pdp_sticky_picker_enabled: boolean
+    return_label_cost_incl_btw: number
   } | null>(null)
   const [settingsLoading, setSettingsLoading] = useState(true)
 
@@ -459,6 +460,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         // wordt de sticky balk verborgen op de PDP.
         pdp_sticky_picker_enabled:
           siteSettings.pdp_sticky_picker_enabled !== false,
+        return_label_cost_incl_btw: siteSettings.return_label_cost_incl_btw,
       })
       setSettingsLoading(false)
     } catch (error) {
@@ -2014,6 +2016,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
               {hasAnyStock && (
                 <div className="border-2 border-black p-3 md:p-4">
                   <PdpTrustStrip
+                    freeShippingThreshold={settings.free_shipping_threshold}
                     signatureSpecs={
                       locale === 'en'
                         ? product.categories.pdp_signature_specs_en || product.categories.pdp_signature_specs || null
@@ -2221,7 +2224,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         }</p>
                         <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
-                        <p><span className="font-semibold">{t('returns.cost')}:</span> {t('returns.costValue')}</p>
+                        <p><span className="font-semibold">{t('returns.cost')}:</span> {t('returns.costValue', { cost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') })}</p>
                       </div>
                     )}
                   </div>
@@ -2299,7 +2302,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
 
           {/* PDP-specific FAQ - addresses the five most common conversion
               blockers (fit, delivery, exchanges, authenticity, payment). */}
-          <PdpFaq />
+          <PdpFaq
+            freeShippingThreshold={settings.free_shipping_threshold}
+            shippingCost={settings.shipping_cost}
+            returnDays={settings.return_days}
+            locale={locale}
+          />
         </div>
       </div>
 

@@ -5,6 +5,9 @@ const BASE = process.env.BASE || 'http://localhost:3000'
 const OUT = process.env.OUT || './shots'
 const TAG = process.env.TAG || 'before'
 
+// Admin draait achter requireAdmin(); zonder sessie verwachten we een redirect
+// naar de login. Dat is nog steeds nuttig: het bewijst dat de route bestaat,
+// bouwt en niet crasht. Pagina's die een sessie nodig hebben markeren we.
 const PAGES = [
   ['home', '/nl'],
   ['shop', '/nl/shop'],
@@ -18,6 +21,12 @@ const PAGES = [
   ['contact', '/nl/contact'],
   ['verzending', '/nl/verzending'],
   ['login', '/nl/login'],
+  ['en-home', '/en'],
+  ['en-pdp', '/en/product/mose-essential-hoodie'],
+  ['wishlist', '/nl/wishlist'],
+  ['track-order', '/nl/track-order'],
+  ['blog-post', '/nl/blog/de-perfecte-winter-hoodie-koopgids'],
+  ['admin-login', '/admin/login'],
 ]
 
 const VIEWPORTS = [

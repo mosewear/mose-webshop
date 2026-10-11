@@ -12,12 +12,37 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 
-export default function PdpFaq() {
+interface PdpFaqProps {
+  /** Uit site_settings. Het antwoord op de bezorgvraag beweerde eerder
+   *  "geen minimum bestelbedrag, verzending is altijd gratis", terwijl
+   *  free_shipping_threshold op 150 staat. Dat is precies de vraag die een
+   *  twijfelende koper stelt, dus die belofte moet kloppen. */
+  freeShippingThreshold: number
+  shippingCost: number
+  returnDays: number
+  locale: string
+}
+
+export default function PdpFaq({
+  freeShippingThreshold,
+  shippingCost,
+  returnDays,
+  locale,
+}: PdpFaqProps) {
   const t = useTranslations('product.pdpFaq')
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   const items = (t.raw('items') as Array<{ question: string; answer: string }>) || []
   if (!items.length) return null
+
+  // Zelfde substitutiepatroon als FAQAccordion, zodat beide FAQ's dezelfde
+  // bron gebruiken en niet uit elkaar kunnen lopen.
+  const money = (v: number) => (locale === 'nl' ? v.toFixed(2).replace('.', ',') : v.toFixed(2))
+  const fill = (text: string) =>
+    text
+      .replace('{freeShipping}', String(freeShippingThreshold))
+      .replace('{shippingCost}', money(shippingCost))
+      .replace('{returnDays}', String(returnDays))
 
   return (
     <section className="mt-12 md:mt-16 border-t-2 border-gray-200 pt-12 md:pt-16">
@@ -65,7 +90,7 @@ export default function PdpFaq() {
                 >
                   <div className="px-4 md:px-6 py-3.5 md:py-4 bg-gray-50 border-t-2 border-black">
                     <p className="text-sm md:text-base text-gray-700 leading-relaxed">
-                      {item.answer}
+                      {fill(item.answer)}
                     </p>
                   </div>
                 </div>

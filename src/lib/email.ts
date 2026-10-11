@@ -1220,6 +1220,10 @@ export async function sendAbandonedCartEmail(props: {
       contactEmail,
       contactPhone,
       contactAddress,
+      // Uit site_settings, met de prop als expliciete override. Zonder deze
+      // waarden belooft de callout gratis verzending zonder minimum.
+      freeShippingThreshold: props.freeShippingThreshold ?? settings.free_shipping_threshold,
+      shippingCost: settings.shipping_cost,
     })
   )
 
