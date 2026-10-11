@@ -925,7 +925,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="border-t-2 border-black pt-2">
                     <div className="flex justify-between items-baseline">
                       <span className="font-display text-xl uppercase tracking-wide">{t('total')}</span>
-                      <span className="font-display text-4xl font-bold">€{total.toFixed(2)}</span>
+                      <span className="font-display text-4xl">€{total.toFixed(2)}</span>
                     </div>
                     <p className="text-xs text-gray-500 text-right mt-1">
                       {t('totalInclusive')}
@@ -1058,7 +1058,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{t('total')}</div>
-                      <div className="font-display text-3xl font-bold">€{total.toFixed(2)}</div>
+                      <div className="font-display text-3xl">€{total.toFixed(2)}</div>
                       <div className="text-xs text-gray-400">
                         {t('totalInclusive')}
                       </div>

@@ -37,10 +37,10 @@ export async function generateMetadata({
       title: `${t('lookbook.title')} - MOSE`,
       description: t('lookbook.description'),
       type: 'website',
-      url: `https://mosewear.com/${locale}/lookbook`,
+      url: `https://www.mosewear.com/${locale}/lookbook`,
       images: [
         {
-          url: 'https://mosewear.com/og-default.jpg',
+          url: 'https://www.mosewear.com/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE Lookbook',
@@ -52,7 +52,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title: `${t('lookbook.title')} - MOSE`,
       description: t('lookbook.description'),
-      images: ['https://mosewear.com/og-default.jpg'],
+      images: ['https://www.mosewear.com/og-default.jpg'],
     },
     alternates: {
       canonical: `/${locale}/lookbook`,
@@ -88,19 +88,19 @@ export default async function LookbookPage({
     description:
       settings?.header_subtitle ??
       'Editorial chapters featuring the MOSE collection.',
-    url: `https://mosewear.com/${normalizedLocale}/lookbook`,
+    url: `https://www.mosewear.com/${normalizedLocale}/lookbook`,
     inLanguage: normalizedLocale,
     isPartOf: {
       '@type': 'WebSite',
       name: 'MOSE',
-      url: 'https://mosewear.com',
+      url: 'https://www.mosewear.com',
     },
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: uniqueProducts.map((p, idx) => ({
         '@type': 'ListItem',
         position: idx + 1,
-        url: `https://mosewear.com/${normalizedLocale}/product/${p.slug}`,
+        url: `https://www.mosewear.com/${normalizedLocale}/product/${p.slug}`,
         name:
           normalizedLocale === 'en' && p.name_en
             ? p.name_en

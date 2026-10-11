@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     for (const cart of abandonedCarts) {
       try {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
         const checkoutUrl = `${siteUrl}/checkout?recover=${cart.order_id}`
 
         const emailResult = await sendAbandonedCartEmail({

@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       siteName: 'MOSE',
       images: [
         {
-          url: '/logomose.png',
+          url: '/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE - Premium Basics',
@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: 'summary_large_image',
       title: t('title'),
       description: t('description'),
-      images: ['/logomose.png'],
+      images: ['/og-default.jpg'],
     },
     robots: {
       index: true,

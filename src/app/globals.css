@@ -64,6 +64,13 @@
      AnnouncementBannerClient (banner) and MainContentWrapper (header). */
   --announcement-banner-height: 40px; /* Mobile: py-2 (16px) + content (24px) */
   --header-total-height: 82px;        /* Mobile: py-4 (32px) + h-12 logo (48px) + 2px border */
+  /* Hoogte van de cookiebanner zolang die onderin staat; CookieConsent houdt
+     hem runtime bij met een ResizeObserver en zet hem op 0px zodra de balk weg
+     is. Vaste elementen onderaan (sticky koopbalk op de PDP, afrekenbalk in de
+     winkelwagen) gebruiken dit als bottom-offset zodat ze niet onder de banner
+     verdwijnen. De default MOET hier staan: een Tailwind-klasse als
+     bottom-[var(--x,0px)] wordt door de komma niet gegenereerd. */
+  --cookie-consent-height: 0px;
 }
 
 @media (min-width: 768px) {

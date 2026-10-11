@@ -1916,7 +1916,7 @@ export default function CheckoutPage() {
                 {/* Total */}
                 <div className="flex justify-between text-base border-t-2 border-black pt-3 mt-2">
                   <span className="font-display text-lg uppercase tracking-wide">TOTAAL</span>
-                  <span className="font-display font-bold text-2xl">€{total.toFixed(2)}</span>
+                  <span className="font-display text-2xl">€{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

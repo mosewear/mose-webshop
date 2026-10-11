@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       event_name,
       event_time: Math.floor(Date.now() / 1000),
       event_id,
-      event_source_url: event_source_url || 'https://mosewear.com',
+      event_source_url: event_source_url || 'https://www.mosewear.com',
       action_source: 'website',
       user_data: hashedUserData,
       custom_data: {

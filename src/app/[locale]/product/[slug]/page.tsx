@@ -74,7 +74,7 @@ export async function generateMetadata({
 
   // Get primary image or first image
   const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
-  const imageUrl = primaryImage?.url || 'https://mosewear.com/logomose.png'
+  const imageUrl = primaryImage?.url || 'https://www.mosewear.com/logomose.png'
 
   // Use custom meta or generate from product data. We avoid appending
   // "- MOSE" when the localized name already starts with the brand
@@ -97,10 +97,10 @@ export async function generateMetadata({
       title,
       description,
       type: 'website',
-      url: `https://mosewear.com/${locale}/product/${slug}`,
+      url: `https://www.mosewear.com/${locale}/product/${slug}`,
       images: [
         {
-          url: imageUrl.startsWith('http') ? imageUrl : `https://mosewear.com${imageUrl}`,
+          url: imageUrl.startsWith('http') ? imageUrl : `https://www.mosewear.com${imageUrl}`,
           width: 1200,
           height: 1200,
           alt: primaryImage?.alt_text || localizedProduct.name,
@@ -112,7 +112,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: [imageUrl.startsWith('http') ? imageUrl : `https://mosewear.com${imageUrl}`],
+      images: [imageUrl.startsWith('http') ? imageUrl : `https://www.mosewear.com${imageUrl}`],
     },
     alternates: {
       canonical: `/${locale}/product/${slug}`,
@@ -189,7 +189,7 @@ export default async function ProductPage({
       : null
     
     const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
-    const imageUrl = primaryImage?.url || 'https://mosewear.com/logomose.png'
+    const imageUrl = primaryImage?.url || 'https://www.mosewear.com/logomose.png'
     const price = product.sale_price || product.base_price
     
     // Check if product is in stock
@@ -200,14 +200,14 @@ export default async function ProductPage({
       '@type': 'Product',
       name: localizedProduct.name,
       description: localizedProduct.description,
-      image: imageUrl.startsWith('http') ? imageUrl : `https://mosewear.com${imageUrl}`,
+      image: imageUrl.startsWith('http') ? imageUrl : `https://www.mosewear.com${imageUrl}`,
       brand: {
         '@type': 'Brand',
         name: 'MOSE',
       },
       offers: {
         '@type': 'Offer',
-        url: `https://mosewear.com/${localeParam}/product/${slug}`,
+        url: `https://www.mosewear.com/${localeParam}/product/${slug}`,
         priceCurrency: 'EUR',
         price: price,
         availability: inStock
@@ -230,13 +230,13 @@ export default async function ProductPage({
         '@type': 'ListItem',
         position: 1,
         name: localeParam === 'en' ? 'Home' : 'Home',
-        item: `https://mosewear.com/${localeParam}`,
+        item: `https://www.mosewear.com/${localeParam}`,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Shop',
-        item: `https://mosewear.com/${localeParam}/shop`,
+        item: `https://www.mosewear.com/${localeParam}/shop`,
       },
     ]
     if (localizedCategory && category?.slug) {
@@ -244,14 +244,18 @@ export default async function ProductPage({
         '@type': 'ListItem',
         position: crumbs.length + 1,
         name: localizedCategory.name,
-        item: `https://mosewear.com/${localeParam}/shop/${category.slug}`,
+        // /shop/{slug} bestaat niet als route: filteren gebeurt client-side via
+        // searchparams. Een breadcrumb-item dat naar een 404 wijst maakt het
+        // hele BreadcrumbList-schema ongeldig, dus we verwijzen naar de
+        // gefilterde shop-URL die wel bestaat.
+        item: `https://www.mosewear.com/${localeParam}/shop?category=${category.slug}`,
       })
     }
     crumbs.push({
       '@type': 'ListItem',
       position: crumbs.length + 1,
       name: localizedProduct.name as string,
-      item: `https://mosewear.com/${localeParam}/product/${slug}`,
+      item: `https://www.mosewear.com/${localeParam}/product/${slug}`,
     })
 
     const breadcrumbStructuredData = {

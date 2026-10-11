@@ -53,7 +53,7 @@ export const EMAIL_COLORS = {
 } as const
 
 export const EMAIL_SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 
 export const EMAIL_DEFAULT_CONTACT = {
   email: 'info@mosewear.com',

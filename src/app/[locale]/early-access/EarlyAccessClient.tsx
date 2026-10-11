@@ -170,7 +170,7 @@ export default function EarlyAccessClient() {
           </motion.p>
 
           {/* Main title */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display mb-6 leading-tight">
             {t('hero.title')}
           </h1>
 

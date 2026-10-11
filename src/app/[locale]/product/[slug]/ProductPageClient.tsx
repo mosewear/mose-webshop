@@ -1008,22 +1008,27 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   }
 
   if (loading) {
+    // Raster, gaps, padding en beeldverhouding staan hier bewust exact gelijk
+    // aan de echte layout verderop. Ze liepen uiteen (md:grid-cols-2 tegen
+    // [1.2fr_1fr], gap-16 tegen gap-12, aspect-[3/4] tegen md:aspect-[3/3],
+    // plus een pt die daar niet bestaat), waardoor de pagina zichtbaar
+    // verschoof zodra de data binnenkwam. Wijzig je het een, wijzig het ander mee.
     return (
-      <div className="min-h-screen pt-6 md:pt-8 px-4">
+      <div className="min-h-screen px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-16">
+          <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
             <div className="space-y-4">
-              <div className="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+              <div className="aspect-[3/4] md:aspect-[3/3] bg-gray-100 animate-pulse"></div>
               <div className="grid grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+                  <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse"></div>
                 ))}
               </div>
             </div>
             <div className="space-y-6">
-              <div className="h-12 bg-gray-200 animate-pulse w-3/4"></div>
-              <div className="h-8 bg-gray-200 animate-pulse w-1/4"></div>
-              <div className="h-24 bg-gray-200 animate-pulse"></div>
+              <div className="h-12 bg-gray-100 animate-pulse w-3/4"></div>
+              <div className="h-8 bg-gray-100 animate-pulse w-1/4"></div>
+              <div className="h-24 bg-gray-100 animate-pulse"></div>
             </div>
           </div>
         </div>

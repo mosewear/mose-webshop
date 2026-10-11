@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title: `${t('shop.title')} - MOSE`,
       description: t('shop.description'),
       type: 'website',
-      url: `https://mosewear.com/${locale}/shop`,
+      url: `https://www.mosewear.com/${locale}/shop`,
       images: [
         {
-          url: 'https://mosewear.com/og-default.jpg',
+          url: 'https://www.mosewear.com/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE Shop',
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: 'summary_large_image',
       title: `${t('shop.title')} - MOSE`,
       description: t('shop.description'),
-      images: ['https://mosewear.com/og-default.jpg'],
+      images: ['https://www.mosewear.com/og-default.jpg'],
     },
     alternates: {
       canonical: `/${locale}/shop`,
@@ -60,7 +60,7 @@ export default async function ShopPage({ params }: { params: Promise<{ locale: s
     isPartOf: {
       '@type': 'WebSite',
       name: 'MOSE',
-      url: 'https://mosewear.com',
+      url: 'https://www.mosewear.com',
     },
     breadcrumb: {
       '@type': 'BreadcrumbList',

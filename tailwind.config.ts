@@ -22,6 +22,13 @@ const config: Config = {
         foreground: "var(--foreground)",
         'brand-primary': '#00A676',
         'brand-primary-hover': '#008f66',
+        // Lichte merktint voor geselecteerde en hover-vlakken. Werd al op vijf
+        // plekken in de retourflow als `bg-brand-light` gebruikt, maar stond
+        // niet in de config, dus Tailwind genereerde de klasse nooit en een
+        // geselecteerde retourregel kreeg alleen een rand en geen vulling.
+        // Waarde gelijk aan `successBg` in src/emails/tokens.ts, zodat web en
+        // e-mail dezelfde tint delen.
+        'brand-light': '#e6f6ef',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],

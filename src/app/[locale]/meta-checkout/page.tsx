@@ -103,9 +103,9 @@ function MetaCheckoutInner() {
   }, [searchParams, router, setItems, locale])
 
   return (
-    <main className="min-h-[50vh] flex items-center justify-center px-6">
+    <div className="min-h-[50vh] flex items-center justify-center px-6">
       <p className="text-sm tracking-wide text-neutral-600">{message}</p>
-    </main>
+    </div>
   )
 }
 
@@ -113,9 +113,9 @@ export default function MetaCheckoutPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-[50vh] flex items-center justify-center px-6">
+        <div className="min-h-[50vh] flex items-center justify-center px-6">
           <p className="text-sm tracking-wide text-neutral-600">Winkelwagen laden…</p>
-        </main>
+        </div>
       }
     >
       <MetaCheckoutInner />

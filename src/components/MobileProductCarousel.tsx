@@ -34,38 +34,13 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
   const tProduct = useTranslations('product')
   const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
 
-  // Fallback products (matching new Product interface)
-  const fallbackProducts: Product[] = [
-    {
-      id: '1',
-      name: 'MOSE Basic Hoodie',
-      slug: 'mose-classic-hoodie-zwart',
-      base_price: 79.99,
-      price: 79.99,
-      image_url: '/og-default.jpg',
-      product_images: [{ url: '/og-default.jpg' }],
-    },
-    {
-      id: '2',
-      name: 'MOSE Basic Tee',
-      slug: 'mose-essential-tee-zwart',
-      base_price: 34.99,
-      price: 34.99,
-      image_url: '/og-default.jpg',
-      product_images: [{ url: '/og-default.jpg' }],
-    },
-    {
-      id: '3',
-      name: 'MOSE Snapback',
-      slug: 'mose-classic-cap-zwart',
-      base_price: 29.99,
-      price: 29.99,
-      image_url: '/og-default.jpg',
-      product_images: [{ url: '/og-default.jpg' }],
-    },
-  ]
-
-  const products = propProducts && propProducts.length > 0 ? propProducts : fallbackProducts
+  // Geen verzonnen fallbackproducten meer. Hier stonden drie hardgecodeerde
+  // items ("MOSE Basic Hoodie" €79,99 enzovoort) met slugs die niet in de
+  // catalogus bestaan. Zodra de admin geen featured producten had ingesteld,
+  // stuurde de mobiele homepage bezoekers dus met verkeerde prijzen naar een
+  // 404, terwijl desktop netjes een lege staat toonde. Die fout faalde stil.
+  // Nu rendert mobiel niets wanneer er geen producten zijn, gelijk aan desktop.
+  const products = propProducts ?? []
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -100,12 +75,16 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
     })
   }
 
+  // Zonder producten niets renderen: de lege staat op de homepage is de taak
+  // van de aanroeper, die op desktop al een eigen boodschap toont.
+  if (products.length === 0) return null
+
   return (
     <div className="md:hidden">
       {/* Carousel Container */}
       <div
         ref={carouselRef}
-        className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-4 pb-4 scroll-smooth"
+        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 px-4 pb-4 scroll-smooth"
       >
         {products.map((product) => {
           // Support both old format (product_images) and new format (image_url or images)

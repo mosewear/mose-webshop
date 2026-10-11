@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
@@ -14,9 +14,12 @@ import { useTranslations, useLocale } from 'next-intl'
 export function Header() {
   const t = useTranslations('common')
   const locale = useLocale()
-  const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
+  // De voortgangsbalk wordt rechtstreeks op het DOM-element geschreven in
+  // plaats van via React-state. Een setState per scroll-event hertekende de
+  // hele Header inclusief MobileMenu, CartDrawer en SearchOverlay, puur om de
+  // breedte van een streepje van 3px bij te werken.
+  const progressRef = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const itemCount = useCart((state) => state.getItemCount())
@@ -27,21 +30,49 @@ export function Header() {
 
   useEffect(() => {
     setMounted(true)
-    
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-      
-      // Calculate scroll progress
-      const windowHeight = window.innerHeight
-      const documentHeight = document.documentElement.scrollHeight
-      const scrollTop = window.scrollY
-      const scrollableHeight = documentHeight - windowHeight
-      const progress = (scrollTop / scrollableHeight) * 100
-      setScrollProgress(Math.min(progress, 100))
+
+    // scrollHeight uitlezen forceert een layout. Dat gebeurde eerder bij elk
+    // scroll-event. Nu meten we alleen wanneer de paginahoogte echt verandert.
+    // Eén meting bij mount volstaat niet: de Header blijft gemount over
+    // client-side navigaties heen, en content laadt na (Instagram-marquee,
+    // gerelateerde producten). Zonder de ResizeObserver hieronder zou de balk
+    // na een navigatie met de hoogte van de vórige pagina rekenen en dus
+    // vollopen op 30 procent, of nooit 100 halen.
+    let scrollableHeight = document.documentElement.scrollHeight - window.innerHeight
+    let frame = 0
+
+    const render = () => {
+      frame = 0
+      if (!progressRef.current) return
+      const progress = scrollableHeight > 0
+        ? Math.min((window.scrollY / scrollableHeight) * 100, 100)
+        : 0
+      progressRef.current.style.width = `${progress}%`
     }
-    
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+
+    const handleScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(render)
+    }
+
+    const remeasure = () => {
+      scrollableHeight = document.documentElement.scrollHeight - window.innerHeight
+      handleScroll()
+    }
+
+    render()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', remeasure, { passive: true })
+
+    const heightObserver = new ResizeObserver(remeasure)
+    heightObserver.observe(document.body)
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', remeasure)
+      heightObserver.disconnect()
+    }
   }, [])
 
   return (
@@ -52,9 +83,10 @@ export function Header() {
         style={{ top: 'var(--announcement-banner-height, 0px)' }}
       >
         {/* Scroll Progress Indicator */}
-        <div 
-          className="absolute bottom-0 left-0 h-[3px] bg-brand-primary transition-all duration-150 ease-out"
-          style={{ width: `${scrollProgress}%` }}
+        <div
+          ref={progressRef}
+          className="absolute bottom-0 left-0 h-[3px] w-0 bg-brand-primary"
+          aria-hidden
         />
         
         <div className="max-w-7xl mx-auto px-4">

@@ -5,7 +5,7 @@ import webpush from 'web-push'
 // Generate keys with: npx web-push generate-vapid-keys
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY!
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY!
-const vapidSubject = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+const vapidSubject = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(

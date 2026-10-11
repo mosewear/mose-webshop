@@ -368,20 +368,27 @@ export default function CartPage() {
           </div>
         </div>
 
-        {/* Fixed Bottom Bar - Mobile */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-black text-white z-40 safe-bottom">
+        {/* Fixed Bottom Bar - Mobile
+            De balk was eerder één <button> die de samenvatting opende, met de
+            witte "afrekenen"-pil als <div> daarbinnen. Tappen op de visueel
+            primaire actie deed dus iets anders dan hij beloofde. Nu zijn het
+            twee losse controls: links het totaal dat de samenvatting opent,
+            rechts een echte link naar /checkout. */}
+        <div className="md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 bg-black text-white z-40 safe-bottom flex items-stretch">
           <button
             onClick={() => setShowMobileSummary(true)}
-            className="w-full px-4 py-4 flex items-center justify-between"
+            aria-expanded={showMobileSummary}
+            className="flex-1 min-h-[44px] pl-4 pr-2 py-4 text-left"
           >
-            <div className="text-left">
-              <div className="font-display text-2xl">€{total.toFixed(2)}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider">{t('mobile.tapDetails')}</div>
-            </div>
-            <div className="px-6 py-3 bg-white text-black font-bold uppercase tracking-wider">
-              {t('checkout')} →
-            </div>
+            <div className="font-display text-2xl">€{total.toFixed(2)}</div>
+            <div className="text-xs text-gray-300 uppercase tracking-wider">{t('mobile.tapDetails')}</div>
           </button>
+          <LocaleLink
+            href="/checkout"
+            className="flex items-center my-3 mr-4 px-6 min-h-[44px] bg-white text-black font-bold uppercase tracking-wider"
+          >
+            {t('checkout')} →
+          </LocaleLink>
         </div>
 
         {/* Mobile Summary Sheet */}

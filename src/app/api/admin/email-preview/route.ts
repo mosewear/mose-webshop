@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     const t = await getEmailT(locale)
     const settings = await getSiteSettings()
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
     const contactEmail = settings.contact_email
     const contactPhone = settings.contact_phone
     const contactAddress = settings.contact_address

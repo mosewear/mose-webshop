@@ -54,8 +54,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     "@context": "https://schema.org",
     "@type": "ClothingStore",
     "name": "MOSE",
-    "image": "https://mosewear.com/logomose.png",
-    "url": `https://mosewear.com/${locale}`,
+    "image": "https://www.mosewear.com/logomose.png",
+    "url": `https://www.mosewear.com/${locale}`,
     "description": t('description'),
     "address": {
       "@type": "PostalAddress",
