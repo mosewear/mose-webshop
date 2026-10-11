@@ -22,6 +22,13 @@ const config: Config = {
         foreground: "var(--foreground)",
         'brand-primary': '#00A676',
         'brand-primary-hover': '#008f66',
+        // Lichte merktint voor geselecteerde en hover-vlakken. Werd al op vijf
+        // plekken in de retourflow als `bg-brand-light` gebruikt, maar stond
+        // niet in de config, dus Tailwind genereerde de klasse nooit en een
+        // geselecteerde retourregel kreeg alleen een rand en geen vulling.
+        // Waarde gelijk aan `successBg` in src/emails/tokens.ts, zodat web en
+        // e-mail dezelfde tint delen.
+        'brand-light': '#e6f6ef',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
@@ -48,6 +55,15 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'scale(0.92)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        // `animate-success` werd al gebruikt op de bevestiging van
+        // "toegevoegd aan winkelwagen" (PDP) en op het vinkje van de
+        // orderbevestiging, maar de keyframe bestond niet. De klasse deed
+        // daar dus stilletjes niets.
+        success: {
+          '0%': { transform: 'scale(1)' },
+          '40%': { transform: 'scale(1.04)' },
+          '100%': { transform: 'scale(1)' },
+        },
         // Marquee voor de TICKER brand-pill: content wordt 2x gerenderd
         // en animeert over -50% zodat de loop seamless overgaat. Linear
         // easing zodat de scroll-snelheid constant aanvoelt.
@@ -62,6 +78,7 @@ const config: Config = {
         slideInRight: 'slideInRight 0.3s ease-out',
         brandPulse: 'brandPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         bubblePop: 'bubblePop 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
+        success: 'success 0.42s cubic-bezier(0.16, 1, 0.3, 1)',
         marquee: 'marquee 14s linear infinite',
       },
     },

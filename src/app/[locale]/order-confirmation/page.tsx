@@ -235,8 +235,18 @@ export default function OrderConfirmationPage({
           id: data.order.id,
           total: data.order.total,
           items_count: data.items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0),
+          // `id` is bewust product_id en niet item.id: get_product_performance()
+          // groepeert views en aankopen op dezelfde sleutel, dus een orderregel-id
+          // zou de omzet van dit product op een eigen rij zonder views parkeren.
           items: data.items.map((item: OrderItem) => ({
-            id: item.id,
+            // Geen variant_id in deze keten: een variant-id matcht niet met de
+            // views en is door de migratie ook niet te herleiden, want die joint
+            // op order_items.id. Zo'n sleutel zou opnieuw als losse regel zonder
+            // views verschijnen, precies het duplicaat dat we oplossen. item.id
+            // is als laatste redmiddel wel herleidbaar.
+            id: item.product_id || item.id,
+            product_id: item.product_id,
+            order_item_id: item.id,
             name: item.product_name,
             quantity: item.quantity,
             price: item.price_at_purchase,

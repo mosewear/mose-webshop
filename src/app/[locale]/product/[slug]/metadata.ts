@@ -55,7 +55,7 @@ export async function generateProductMetadata(slug: string): Promise<Metadata> {
       title,
       description,
       type: 'website',
-      url: `https://mosewear.com/product/${slug}`,
+      url: `https://www.mosewear.com/product/${slug}`,
       images: [
         {
           url: imageUrl,

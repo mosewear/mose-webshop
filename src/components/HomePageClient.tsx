@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { Button } from '@/components/ui/Button'
 import MobileProductCarousel from '@/components/MobileProductCarousel'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
@@ -337,8 +336,19 @@ export default function HomePageClient({
             </p>
           </div>
 
-          {/* Mobile: Snap Scroll Carousel */}
-          <MobileProductCarousel products={featuredProducts} />
+          {/* Mobile: Snap Scroll Carousel.
+              De carousel rendert null zonder producten, dus mobiel krijgt hier
+              dezelfde eerlijke lege staat als de desktopgrid hieronder. Eerder
+              vulde de carousel dat gat met drie verzonnen producten waarvan de
+              slugs niet in de catalogus bestonden. */}
+          {featuredProducts && featuredProducts.length > 0 ? (
+            <MobileProductCarousel products={featuredProducts} />
+          ) : (
+            <div className="md:hidden text-center py-12 px-4 text-gray-500">
+              <p className="text-lg">{t('featured.noProducts')}</p>
+              <p className="text-sm mt-2">{t('featured.noProductsDesc')}</p>
+            </div>
+          )}
 
           {/* Desktop: Grid - Dynamic Products */}
           <div className="hidden md:grid grid-cols-3 gap-8">

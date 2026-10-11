@@ -246,7 +246,9 @@ export default function CommandPalette() {
         const productItems: ResultItem[] = (productsRes.data || []).map(p => ({
           id: `product-${p.id}`,
           name: p.name,
-          href: `/admin/products/${p.id}`,
+          // /admin/products/[id] bestaat niet als route; onder [id] staan
+          // alleen edit, images en variants. Dit gaf een 404 vanuit Cmd+K.
+          href: `/admin/products/${p.id}/edit`,
           icon: 'product',
           category: 'Producten' as const,
         }))

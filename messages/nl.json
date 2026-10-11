@@ -609,13 +609,13 @@
       "info": "€{cost} • Gratis vanaf €{threshold}",
       "label": "Verzending",
       "deliveryTime": "Levertijd",
-      "deliveryTimeValue": "2 tot 3 werkdagen binnen Nederland"
+      "deliveryTimeValue": "Meestal de volgende werkdag, anders de dag erna"
     },
     "returns": {
       "info": "{days} dagen retour zonder gedoe",
       "label": "Retour",
       "cost": "Retourkosten",
-      "costValue": "€6,95 (excl. BTW)"
+      "costValue": "€{cost} (incl. btw)"
     },
     "warranty": {
       "info": "2 jaar fabrieksgarantie op alle producten"
@@ -673,16 +673,16 @@
       "sizeLabel": "Maat"
     },
     "shippingMicro": {
-      "beforeCutoff": "Voor 17:00 besteld? Morgen in huis. Altijd gratis bezorging.",
-      "afterCutoff": "Bestel vandaag, overmorgen in huis. Altijd gratis bezorging."
+      "beforeCutoff": "Voor 17:00 besteld? Meestal morgen in huis.",
+      "afterCutoff": "Bestel vandaag, dan is het meestal overmorgen in huis."
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
       "fallback": "Made in Groningen, première batch 2026."
     },
     "trustAnchor": {
-      "shippingBeforeCutoff": "Voor 17:00 besteld? Morgen in huis met gratis bezorging via DHL in NL en BE.",
-      "shippingAfterCutoff": "Bestel vandaag, overmorgen in huis met gratis bezorging via DHL in NL en BE.",
+      "shippingBeforeCutoff": "Voor 17:00 besteld? Meestal morgen in huis via DHL in NL en BE. Gratis bezorging vanaf €{threshold}.",
+      "shippingAfterCutoff": "Bestel vandaag, dan is het meestal overmorgen in huis via DHL in NL en BE. Gratis bezorging vanaf €{threshold}.",
       "returns": "30 dagen bedenktijd. Geld terug bij retour, zonder gedoe.",
       "madeInWithSpec": "Made in Groningen. {spec}.",
       "madeInBare": "Made in Groningen. Premium katoen, regular fit.",
@@ -705,7 +705,7 @@
         },
         {
           "question": "Wanneer is mijn bestelling in huis?",
-          "answer": "Bestel vandaag voor 17:00 en je hebt 'm morgen al in huis in NL en BE via DHL. Daarna 1 tot 3 werkdagen. Geen minimum bestelbedrag, verzending is altijd gratis."
+          "answer": "Bestel vandaag voor 17:00 en je hebt 'm meestal morgen al in huis in NL en BE via DHL, anders de dag erna. Verzending is gratis vanaf €{freeShipping}; daaronder reken je €{shippingCost}."
         },
         {
           "question": "Wat als de maat niet past?",
@@ -733,7 +733,7 @@
     "returnPolicy": "Items mogen binnen {days} dagen retour zonder gedoe",
     "freeFrom": "Gratis vanaf €{threshold}",
     "shipping": "Verzending",
-    "deliveryTime": "2-5 Dagen",
+    "deliveryTime": "1-2 werkdagen",
     "deliveryTimeLabel": "Levertijd",
     "returnDays": "{days} Dagen",
     "free": "Gratis",
@@ -756,7 +756,7 @@
     "step2Title": "Selecteer je order",
     "step2Text": "Kies de bestelling en selecteer de artikelen die je wilt retourneren.",
     "step3Title": "Betaal retourkosten",
-    "step3Text": "Betaal EUR 5,95 retourkosten direct online en download je retourlabel.",
+    "step3Text": "Betaal €{returnCost} retourkosten direct online en download je retourlabel.",
     "step4Title": "Pak je artikel(en) in",
     "step4Text": "Stop alles veilig in de originele verpakking of een stevige doos.",
     "step5Title": "Plak het label erop",
@@ -781,7 +781,7 @@
     "belgium": "België",
     "processing": "Verwerking: 1-2 dagen",
     "delivery": "Bezorging: 1-3 dagen",
-    "total": "Totaal: 2-5 werkdagen",
+    "total": "Totaal: meestal 1 werkdag, anders 2",
     "trackTrace": "Track & Trace",
     "viaDHL": "Via <strong>DHL</strong>. Je ontvangt:",
     "trackCode": "Track & trace code",
@@ -796,7 +796,7 @@
     "info": "{days} dagen bedenktijd",
     "label": "Retour",
     "cost": "Retourkosten",
-    "costValue": "€6,95 (excl. BTW)"
+    "costValue": "€{cost} (incl. btw)"
   },
   "shop": {
     "title": "Shop",
@@ -923,7 +923,7 @@
       "refundAmount": "Terug te betalen",
       "reason": "Reden:",
       "viewDetails": "Bekijk details",
-      "payForLabel": "Betaal voor label (€7,87)",
+      "payForLabel": "Betaal voor label (€{cost})",
       "downloadLabel": "Download label",
       "emptyMessage": "Je hebt nog geen retouren aangevraagd",
       "requestButton": "Retour Aanvragen"
@@ -1168,11 +1168,11 @@
   },
   "metadata": {
     "title": "MOSE | Kleding en accessoires voor mannen",
-    "description": "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
+    "description": "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €{threshold}.",
     "keywords": "MOSE, mannenkleding, premium basics, hoodies, t-shirts, Groningen, lokaal gemaakt",
     "shop": {
       "title": "Shop",
-      "description": "Ontdek onze collectie premium basics. Tijdloze kleding en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €75.",
+      "description": "Ontdek onze collectie premium basics. Tijdloze kleding en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €{threshold}.",
       "keywords": "MOSE shop, premium basics, hoodies, t-shirts, mannenkleding, Groningen, lokaal gemaakt, streetwear"
     },
     "lookbook": {
@@ -1366,7 +1366,7 @@
       },
       {
         "question": "Wat zijn de verzendkosten en levertijd?",
-        "answer": "Verzending binnen Nederland en België is altijd gratis, ongeacht het bestelbedrag. Bestellingen worden binnen 1-2 werkdagen verwerkt en verzonden. Levering duurt vervolgens 1-3 werkdagen via DHL."
+        "answer": "Verzending binnen Nederland en België is gratis vanaf €{freeShipping}. Daaronder reken je €{shippingCost}. Bestel je voor 17:00, dan gaat je pakket dezelfde dag de deur uit en heb je het meestal de volgende werkdag in huis, anders de dag erna."
       },
       {
         "question": "Kan ik mijn bestelling retourneren?",
@@ -1479,7 +1479,7 @@
       },
       "step3": {
         "title": "Verzending & tracking",
-        "description": "Track & trace code bij verzending. Levertijd: 2-3 werkdagen.",
+        "description": "Track & trace code bij verzending. Meestal de volgende werkdag in huis, anders de dag erna.",
         "pickupDescription": "We nemen contact op zodra je bestelling klaarstaat om af te halen in Groningen."
       }
     },
@@ -1607,9 +1607,9 @@
         "title": "5. VERZENDING",
         "items": [
           "Bestellingen binnen Nederland worden verzonden via DHL",
-          "Levertijd is 2-5 werkdagen binnen Nederland en België",
+          "Levertijd is meestal 1 werkdag, anders 2, binnen Nederland en België",
           "Je ontvangt een track & trace code bij verzending",
-          "Verzendkosten: €4,95 (gratis vanaf €{threshold})"
+          "Verzendkosten: €{cost} (gratis vanaf €{threshold})"
         ]
       },
       "returns": {
@@ -1618,7 +1618,7 @@
           "Je hebt {days} dagen bedenktijd vanaf ontvangst",
           "Producten moeten ongedragen en in originele staat zijn",
           "Retourzendingen binnen Nederland en België mogelijk",
-          "Retourkosten worden verrekend met je terugbetaling",
+          "Retourkosten van €{returnCost} worden verrekend met je terugbetaling",
           "Retourzendingen worden binnen 5 werkdagen verwerkt"
         ]
       },
@@ -1801,7 +1801,7 @@
     "moreItems": "+ {count} andere artikel(en)",
     "total": "Totaal",
     "ctaButton": "Afrekenen",
-    "freeShipping": "Gratis verzending vanaf €75!"
+    "freeShipping": "Gratis verzending vanaf €{threshold}!"
   },
   "contactForm": {
     "subject": "Nieuw contactformulier bericht van {name}",

@@ -167,12 +167,27 @@ export function trackCheckoutStarted(cart: {
 
 /**
  * Track purchase
+ *
+ * LET OP: `items[].id` MOET de product-UUID zijn, niet de order_items-rij-id.
+ * get_product_performance() groepeert views (event_properties->>'product_id')
+ * en aankopen (items[].id) op diezelfde ene sleutel. Gaat hier de orderregel-id
+ * mee, dan krijgt elke verkoop een sleutel die nooit met de views matcht en
+ * splitst het product in de admin in een rij met alle views en een rij met alle
+ * omzet. `product_id` gaat expliciet mee zodat de RPC niet hoeft te gokken,
+ * `order_item_id` blijft bewaard voor herleidbaarheid.
  */
 export function trackPurchase(order: {
   id: string
   total: number
   items_count: number
-  items: Array<{ id: string; name: string; quantity: number; price: number }>
+  items: Array<{
+    id: string
+    product_id?: string | null
+    order_item_id?: string
+    name: string
+    quantity: number
+    price: number
+  }>
 }) {
   trackEvent({
     event_name: 'purchase',

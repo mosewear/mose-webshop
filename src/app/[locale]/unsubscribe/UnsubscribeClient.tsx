@@ -54,7 +54,7 @@ export default function UnsubscribeClient() {
       <div className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center">
           <XCircle className="w-16 h-16 text-red-600 mx-auto mb-6" />
-          <h1 className="text-3xl font-display font-bold mb-4">Ongeldige Link</h1>
+          <h1 className="text-3xl font-display mb-4">Ongeldige Link</h1>
           <p className="text-gray-600 mb-8">
             Deze uitschrijflink is ongeldig. Controleer je email en probeer het opnieuw.
           </p>
@@ -74,7 +74,7 @@ export default function UnsubscribeClient() {
       <div className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center">
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
-          <h1 className="text-3xl font-display font-bold mb-4">Je Bent Uitgeschreven</h1>
+          <h1 className="text-3xl font-display mb-4">Je Bent Uitgeschreven</h1>
           <p className="text-gray-600 mb-4">
             Je ontvangt geen emails meer van ons. We vinden het jammer dat je gaat!
           </p>
@@ -97,7 +97,7 @@ export default function UnsubscribeClient() {
       <div className="max-w-md w-full">
         <div className="bg-white border-4 border-black p-8 text-center">
           <Mail className="w-16 h-16 text-brand-primary mx-auto mb-6" />
-          <h1 className="text-3xl font-display font-bold mb-4">Uitschrijven Van Nieuwsbrief</h1>
+          <h1 className="text-3xl font-display mb-4">Uitschrijven Van Nieuwsbrief</h1>
           <p className="text-gray-600 mb-2">
             Weet je zeker dat je geen updates meer wilt ontvangen van MOSE?
           </p>

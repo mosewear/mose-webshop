@@ -17,6 +17,7 @@ export default function VerzendingPage() {
     free_shipping_threshold: number
     shipping_cost: number
     return_days: number
+    return_label_cost_incl_btw: number
   } | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -26,6 +27,7 @@ export default function VerzendingPage() {
         free_shipping_threshold: s.free_shipping_threshold,
         shipping_cost: s.shipping_cost,
         return_days: s.return_days,
+        return_label_cost_incl_btw: s.return_label_cost_incl_btw,
       })
       setLoading(false)
     })
@@ -132,7 +134,7 @@ export default function VerzendingPage() {
                   </p>
                 ) : (
                   <p className="text-xl text-white/90">
-                    {t('shippingCost', { threshold: settings.free_shipping_threshold, cost: settings.shipping_cost.toFixed(2) })}
+                    {t('shippingCost', { threshold: settings.free_shipping_threshold, cost: settings.shipping_cost.toFixed(2).replace('.', ',') })}
                   </p>
                 )}
               </div>
@@ -302,7 +304,7 @@ export default function VerzendingPage() {
                 {
                   number: '3',
                   title: t('step3Title'),
-                  text: t('step3Text'),
+                  text: t('step3Text', { returnCost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') }),
                 },
                 {
                   number: '4',
@@ -341,7 +343,7 @@ export default function VerzendingPage() {
             </h3>
             <p className="text-lg mb-3">
               {t('returnCostsText')}{' '}
-              <strong className="text-xl">€5,95</strong>. {t('returnCostsFollowup')}
+              <strong className="text-xl">€{settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',')}</strong>. {t('returnCostsFollowup')}
             </p>
             <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
               <Check className="w-5 h-5" />

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from '@/i18n/routing'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteSettings } from '@/lib/settings'
 import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -93,8 +94,30 @@ export default function AccountPage() {
     is_default_billing: false,
   })
 
+  // De knoptekst "Betaal voor label" noemde een hardgecodeerd bedrag dat
+  // afweek van site_settings en van wat de retourpagina toont. Nu uit dezelfde
+  // bron als de rest van de site.
+  const [returnLabelCost, setReturnLabelCost] = useState(6.95)
+
   useEffect(() => {
     checkUser()
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    getSiteSettings()
+      .then((s) => {
+        if (mounted && typeof s.return_label_cost_incl_btw === 'number') {
+          setReturnLabelCost(s.return_label_cost_incl_btw)
+        }
+      })
+      .catch(() => {
+        // Val stil terug op de default; een knoplabel is het niet waard om
+        // de accountpagina op te laten vallen.
+      })
+    return () => {
+      mounted = false
+    }
   }, [])
 
   useEffect(() => {
@@ -1246,7 +1269,7 @@ export default function AccountPage() {
                                 href={`/returns/${returnItem.id}`}
                                 className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
                               >
-                                {t('returnLabels.payForLabel')}
+                                {t('returnLabels.payForLabel', { cost: returnLabelCost.toFixed(2).replace('.', ',') })}
                               </LocaleLink>
                             )}
                             {returnItem.status === 'return_label_generated' && returnItem.return_label_url && (

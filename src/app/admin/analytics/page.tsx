@@ -128,6 +128,7 @@ export default function AnalyticsPage() {
       const { data: productsData } = await supabase
         .from('order_items')
         .select(`
+          product_id,
           product_name,
           quantity,
           price_at_purchase,
@@ -137,21 +138,28 @@ export default function AnalyticsPage() {
         .gte('orders.created_at', rangeStart)
 
       if (productsData) {
-        const productStats: { [key: string]: { quantity: number; revenue: number } } = {}
-        
+        // Groeperen op product_id, niet op product_name. product_name is een
+        // snapshot van het moment van bestellen en verschilt per taal en na een
+        // hernoeming, waardoor hetzelfde product anders in meerdere regels viel.
+        // De naam dient nu alleen nog als label; we houden de laatst gebruikte
+        // aan zodat de tabel de actuele benaming toont.
+        const productStats: {
+          [key: string]: { name: string; quantity: number; revenue: number }
+        } = {}
+
         productsData.forEach((item: any) => {
           if (item.orders?.payment_status === 'paid') {
-            const name = item.product_name
-            if (!productStats[name]) {
-              productStats[name] = { quantity: 0, revenue: 0 }
+            const key = item.product_id || `naam:${item.product_name}`
+            if (!productStats[key]) {
+              productStats[key] = { name: item.product_name, quantity: 0, revenue: 0 }
             }
-            productStats[name].quantity += item.quantity
-            productStats[name].revenue += item.quantity * Number(item.price_at_purchase)
+            productStats[key].quantity += item.quantity
+            productStats[key].revenue += item.quantity * Number(item.price_at_purchase)
           }
         })
 
-        const products = Object.entries(productStats).map(([name, data]) => ({
-          product_name: name,
+        const products = Object.values(productStats).map((data) => ({
+          product_name: data.name,
           total_quantity: data.quantity,
           total_revenue: data.revenue,
         }))

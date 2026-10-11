@@ -832,10 +832,13 @@ export default function ShopPageClient() {
           </aside>
 
           {/* Main Content - Products Grid */}
-          <main className="flex-1">
+          {/* Geen <main>: de locale-layout levert er al een. Genest
+              main is ongeldige HTML en geeft twee main-landmarks, waardoor
+              de skip-link niet bij de productgrid uitkomt. */}
+          <section className="flex-1" aria-labelledby="shop-results-heading">
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b-2 border-gray-200">
-              <h2 className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
+              <h2 id="shop-results-heading" className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
                 {t('results', { count: shopTiles.length })}
                 {selectedCategory !== 'all' && (() => {
                   const category = categories.find(c => c.slug === selectedCategory)
@@ -860,7 +863,7 @@ export default function ShopPageClient() {
             {/* Load error (distinct from empty catalog / filters) */}
             {!loading && loadError && (
               <div className="text-center py-16 border-2 border-red-200 bg-red-50 px-4">
-                <h3 className="text-2xl font-display font-bold mb-2 text-red-800">
+                <h3 className="text-2xl font-display mb-2 text-red-800">
                   {loadError}
                 </h3>
                 <button
@@ -878,7 +881,7 @@ export default function ShopPageClient() {
                 <svg className="w-20 h-20 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
-                <h3 className="text-2xl font-display font-bold mb-2 text-gray-800">
+                <h3 className="text-2xl font-display mb-2 text-gray-800">
                   {t('noResults')}
                 </h3>
                 <p className="text-gray-600 mb-8">
@@ -1144,7 +1147,7 @@ export default function ShopPageClient() {
                 })}
               </div>
             )}
-          </main>
+          </section>
         </div>
 
         {/* Recently Viewed Products */}

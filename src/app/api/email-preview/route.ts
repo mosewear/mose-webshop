@@ -64,7 +64,7 @@ const LEGACY_TYPE_ALIASES: Record<string, string> = {
 async function getPreviewProductData() {
   try {
     const supabase = await createClient()
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 
     const { data: variants, error } = await supabase
       .from('product_variants')
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
 
   const slug = LEGACY_TYPE_ALIASES[rawType] || rawType
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = 'info@mosewear.com'
   const contactPhone = '+31 50 211 1931'
   const contactAddress = 'Stavangerweg 13, 9723 JC Groningen'
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
         },
       ],
       returnReason: 'Past niet goed',
-      labelUrl: 'https://mosewear.com/downloads/return-label-example.pdf',
+      labelUrl: 'https://www.mosewear.com/downloads/return-label-example.pdf',
       refundAmount: 69.95,
       rejectionReason: 'Product is beschadigd geretourneerd',
       productName: 'MOSE Essential Hoodie',
@@ -188,7 +188,7 @@ export async function GET(req: NextRequest) {
       subject: 'Vraag over bestelling',
       message:
         'Ik heb een vraag over mijn recente bestelling. Wanneer wordt deze verzonden?',
-      checkoutUrl: 'https://mosewear.com/checkout?session=abc123',
+      checkoutUrl: 'https://www.mosewear.com/checkout?session=abc123',
       reviewerName: 'Sanne K.',
       reviewerEmail: 'sanne@example.com',
       rating: 5,

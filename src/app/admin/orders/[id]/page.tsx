@@ -23,6 +23,13 @@ interface Order {
   total: number
   subtotal?: number
   shipping_cost?: number
+  /** Promocode- en staffelkorting op orderniveau. Stonden niet in deze
+   *  interface, waardoor de herberekening bij het bewerken van orderregels ze
+   *  negeerde en het totaal met het volledige kortingsbedrag omhoog sprong. */
+  discount_amount?: number | null
+  gift_card_discount?: number | null
+  loyalty_tier_discount?: number | null
+  promo_code?: string | null
   delivery_method?: 'shipping' | 'pickup'
   pickup_distance_km?: number | null
   pickup_location_name?: string | null
@@ -339,13 +346,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       if (error) throw error
 
       // Send email if checkbox is checked
+      let emailResult: { ok: true } | { ok: false; reason: string } | null = null
       if (sendEmailOnStatusChange) {
-        await handleSendStatusEmail(order.status, newStatus)
+        emailResult = await handleSendStatusEmail(order.status, newStatus)
       }
 
       await fetchOrder()
       await fetchStatusHistory()
-      alert('✅ Status bijgewerkt!')
+      // Het e-maillog op het scherm ververste hier niet mee, waardoor het ook
+      // na een geslaagde verzending verouderd bleef.
+      await fetchOrderEmails()
+
+      if (emailResult && !emailResult.ok) {
+        alert(
+          `Status is bijgewerkt, maar de e-mail naar de klant is NIET verzonden.\n\nReden: ${emailResult.reason}\n\nVerstuur hem handmatig of probeer het opnieuw.`
+        )
+      } else {
+        alert('✅ Status bijgewerkt!')
+      }
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
     } finally {
@@ -416,7 +434,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  const handleSendStatusEmail = async (oldStatus: string, newStatus: string) => {
+  /**
+   * Stuurt de statusmail en meldt TERUG of dat gelukt is.
+   *
+   * Hiervoor werd de fout alleen naar de console geschreven met de comment
+   * "Don't fail the status update if email fails". Dat eerste klopt, de
+   * statuswijziging zelf moet doorgaan, maar het gevolg was dat de beheerder
+   * "Status bijgewerkt!" zag terwijl de klant nooit iets hoorde. Het enige
+   * spoor zat in de browserconsole. Daarom geeft deze functie nu een
+   * resultaat terug dat de aanroeper in de melding verwerkt.
+   */
+  const handleSendStatusEmail = async (
+    oldStatus: string,
+    newStatus: string
+  ): Promise<{ ok: true } | { ok: false; reason: string }> => {
     try {
       const response = await fetch('/api/send-status-email', {
         method: 'POST',
@@ -429,13 +460,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to send email')
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || `HTTP ${response.status}`)
       }
 
+      return { ok: true }
     } catch (err: any) {
       console.error('Error sending status email:', err)
-      // Don't fail the status update if email fails
+      return { ok: false, reason: err?.message || 'onbekende fout' }
     }
   }
 
@@ -881,7 +913,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       const newSubtotal = editedItems.reduce((sum, i) => sum + (i.price_at_purchase * i.quantity), 0)
       const shippingCost = order.shipping_cost || 0
-      const newTotal = newSubtotal + shippingCost
+      // Korting MOET mee in het totaal. Stond hier niet, waardoor het totaal
+      // van een order met promocode, cadeaubon of loyalty-korting bij elke
+      // regelwijziging omhoog sprong met precies het kortingsbedrag. De
+      // serverkant (api/admin/orders/create) doet dit wel goed.
+      const discounts =
+        (Number(order.discount_amount) || 0) +
+        (Number(order.gift_card_discount) || 0) +
+        (Number(order.loyalty_tier_discount) || 0)
+      const newTotal = Math.max(0, newSubtotal + shippingCost - discounts)
       const { error: orderErr } = await supabase
         .from('orders')
         .update({ subtotal: newSubtotal, total: newTotal, updated_at: new Date().toISOString() })

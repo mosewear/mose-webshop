@@ -55,7 +55,7 @@ const SEND_CONCURRENCY = 6
 // ---------------------------------------------------------------------------
 
 function siteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 }
 
 function utm(mailNumber: 1 | 2 | 3, content?: string) {

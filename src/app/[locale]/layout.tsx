@@ -3,6 +3,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { notFound } from 'next/navigation'
 import Script from 'next/script'
 import { routing } from '@/i18n/routing'
+import { getCommercePromises, formatPromiseAmount } from '@/lib/settings-server'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import MainContentWrapper from '@/components/layout/MainContentWrapper'
@@ -31,13 +32,18 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 
   const t = await getTranslations({ locale, namespace: 'metadata' })
+  // De meta-description beloofde hardgecodeerd "gratis verzending vanaf €75",
+  // terwijl free_shipping_threshold in site_settings op 150 staat. Een snippet
+  // dat een gunstiger drempel belooft dan de checkout hanteert, kost orders.
+  const { free_shipping_threshold } = await getCommercePromises()
+  const threshold = formatPromiseAmount(free_shipping_threshold, locale)
 
   return {
     title: {
       default: t('title'),
       template: '%s - MOSE'
     },
-    description: t('description'),
+    description: t('description', { threshold }),
     keywords: t('keywords').split(', '),
     authors: [{ name: 'MOSE', url: 'https://www.mosewear.com' }],
     creator: 'MOSE',
@@ -55,11 +61,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       locale: locale === 'nl' ? 'nl_NL' : 'en_GB',
       url: `https://www.mosewear.com/${locale}`,
       title: t('title'),
-      description: t('description'),
+      description: t('description', { threshold }),
       siteName: 'MOSE',
       images: [
         {
-          url: '/logomose.png',
+          url: '/og-default.jpg',
           width: 1200,
           height: 630,
           alt: 'MOSE - Premium Basics',
@@ -69,8 +75,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     twitter: {
       card: 'summary_large_image',
       title: t('title'),
-      description: t('description'),
-      images: ['/logomose.png'],
+      description: t('description', { threshold }),
+      images: ['/og-default.jpg'],
     },
     robots: {
       index: true,

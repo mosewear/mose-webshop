@@ -451,7 +451,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="hidden md:flex fixed bottom-24 right-6 z-[9998] w-[400px] h-[600px] max-h-[80vh] bg-white border-2 border-black flex-col"
+        className="hidden md:flex fixed bottom-[calc(6rem+var(--cookie-consent-height))] right-6 z-[9998] w-[400px] h-[600px] max-h-[80vh] bg-white border-2 border-black flex-col"
       >
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-black px-4 py-3 flex items-center justify-between bg-white">

@@ -20,6 +20,11 @@ import { useTranslations } from 'next-intl'
 
 interface PdpTrustStripProps {
   signatureSpecs?: string | null
+  /** Uit site_settings. De verzendregel beloofde hardgecodeerd "gratis
+   *  bezorging", terwijl free_shipping_threshold op 150 staat. Dat is de
+   *  regel die pal boven de koopknop staat, dus precies de belofte die een
+   *  bezoeker meeneemt naar de checkout. */
+  freeShippingThreshold: number
 }
 
 const SHIPPING_CUTOFF_HOUR = 17 // local Europe/Amsterdam time
@@ -39,7 +44,7 @@ function isBeforeCutoffNL(): boolean {
   }
 }
 
-export default function PdpTrustStrip({ signatureSpecs }: PdpTrustStripProps) {
+export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold }: PdpTrustStripProps) {
   const t = useTranslations('product.trustAnchor')
   // Lazy-init runs once on first render. `Intl.DateTimeFormat` works on
   // both server and client so the SSR'd HTML matches the first client
@@ -57,7 +62,9 @@ export default function PdpTrustStrip({ signatureSpecs }: PdpTrustStripProps) {
   }, [])
 
   const lines = [
-    beforeCutoff ? t('shippingBeforeCutoff') : t('shippingAfterCutoff'),
+    beforeCutoff
+      ? t('shippingBeforeCutoff', { threshold: freeShippingThreshold })
+      : t('shippingAfterCutoff', { threshold: freeShippingThreshold }),
     t('returns'),
     signatureSpecs ? t('madeInWithSpec', { spec: signatureSpecs }) : t('madeInBare'),
     t('payment'),

@@ -160,7 +160,7 @@ export default function WishlistPage() {
     return (
       <div className="container mx-auto px-4 pb-8 md:pb-12 min-h-[60vh]">
         <div className="max-w-7xl mx-auto">
-          <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
+          <h1 className="font-display text-3xl md:text-4xl mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
           <div className="flex flex-col items-center justify-center py-16 md:py-24">
             <div className="inline-block animate-spin w-12 h-12 md:w-16 md:h-16 border-4 border-black border-t-brand-primary mb-4"></div>
             <p className="text-gray-600 font-bold uppercase tracking-wide text-sm">{t('loading')}</p>
@@ -174,14 +174,14 @@ export default function WishlistPage() {
     return (
       <div className="container mx-auto px-4 pb-8 md:pb-12 min-h-[60vh]">
         <div className="max-w-6xl mx-auto">
-          <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
+          <h1 className="font-display text-3xl md:text-4xl mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
           
           {/* MOSE Brutalist Empty State */}
           <div className="bg-white border-4 border-black p-8 md:p-12 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 border-4 border-black bg-gray-50 mb-6">
               <Heart className="w-10 h-10 md:w-12 md:h-12 text-gray-400" strokeWidth={2} />
             </div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold mb-4 uppercase tracking-wide">{t('empty.title')}</h2>
+            <h2 className="font-display text-2xl md:text-3xl mb-4 uppercase tracking-wide">{t('empty.title')}</h2>
             <p className="text-gray-600 mb-8 text-sm md:text-base max-w-md mx-auto">
               {t('empty.description')}
             </p>
@@ -202,7 +202,7 @@ export default function WishlistPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header - MOSE Style */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 gap-3">
-          <h1 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide">{t('title')}</h1>
+          <h1 className="font-display text-3xl md:text-4xl uppercase tracking-wide">{t('title')}</h1>
           <div className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black bg-white">
             <Heart className="w-5 h-5" strokeWidth={2} />
             <span className="font-bold text-sm md:text-base">{t('itemCount', { count: items.length })}</span>

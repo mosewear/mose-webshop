@@ -324,9 +324,13 @@ export const modularNl: ModularDict = {
     moreItems: '+ {{hiddenCount}} meer items',
     ctaButton: 'Ga terug naar je cart',
     ctaFootnote: 'Jouw items wachten op je.',
-    freeShippingTitle: 'Altijd gratis verzending',
+    // Stond hier als 'Altijd gratis verzending' / 'zonder minimum', terwijl
+    // free_shipping_threshold in site_settings op 150 staat. Dat is een
+    // belofte die in de checkout breekt, in precies de mail die mensen terug
+    // moet halen. De drempel komt nu uit de instellingen mee.
+    freeShippingTitle: 'Gratis verzending vanaf €{{threshold}}',
     freeShipping:
-      'Bij elke bestelling, zonder minimum. Gewoon omdat het hoort.',
+      'Zit je daarboven, dan betaal je geen verzendkosten. Scheelt je {{shippingCost}} euro.',
   },
 
   backInStock: {
@@ -842,9 +846,9 @@ export const modularEn: ModularDict = {
     moreItems: '+ {{hiddenCount}} more items',
     ctaButton: 'Back to your cart',
     ctaFootnote: 'Your items are waiting.',
-    freeShippingTitle: 'Always free shipping',
+    freeShippingTitle: 'Free shipping from €{{threshold}}',
     freeShipping:
-      'On every order, no minimum. Just because it should be.',
+      'Above that, shipping is on us. Saves you {{shippingCost}} euro.',
   },
 
   backInStock: {

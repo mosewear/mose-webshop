@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
         const customerName = (order.shipping_address as any)?.name || 'Klant'
         const customerEmail = order.email
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
         const locale = (order as any).locale || 'nl'
 
         const orderItems = (order.order_items || []).map((item: any) => ({

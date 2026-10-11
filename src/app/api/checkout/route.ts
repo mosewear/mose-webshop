@@ -386,7 +386,10 @@ export async function POST(request: Request) {
     for (const row of settingsRows || []) settings[row.key] = row.value
 
     const baseShippingCost = parseNumber(settings.shipping_cost, 0)
-    const freeShippingThreshold = parseNumber(settings.free_shipping_threshold, 100)
+    // Fallback gelijk aan site_settings (150). Stond op 100, dus bij een
+    // ontbrekende instelling rekende de checkout een andere drempel dan de
+    // hele storefront belooft.
+    const freeShippingThreshold = parseNumber(settings.free_shipping_threshold, 150)
     const pickupEnabled = parseBoolean(settings.pickup_enabled, true)
     const pickupMaxDistance = parseNumber(settings.pickup_max_distance_km, 50)
     const pickupLocationName =

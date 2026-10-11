@@ -44,6 +44,14 @@ export default function ChatButtonWrapper() {
       return
     }
 
+    // Hide on the cart page: die heeft op mobiel een vaste afrekenbalk
+    // rechtsonder, precies waar de 64px chatbubbel met z-[9999] staat. De
+    // bubbel ving daar taps af die voor "afrekenen" bedoeld waren.
+    if (pathname?.includes('/cart')) {
+      setShouldHide(true)
+      return
+    }
+
     // Show on all other pages
     setShouldHide(false)
   }, [pathname])

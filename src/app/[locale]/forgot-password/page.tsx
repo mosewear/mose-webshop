@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
 
         {/* Card */}
         <div className="bg-white border-2 border-black p-6 md:p-8">
-          <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">{t('title')}</h1>
+          <h1 className="text-3xl md:text-4xl font-display mb-2">{t('title')}</h1>
           <p className="text-gray-600 mb-6">
             {t('description')}
           </p>

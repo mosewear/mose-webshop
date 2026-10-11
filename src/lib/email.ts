@@ -430,7 +430,7 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 
   try {
     // DEBUG: Log presale detection
@@ -544,7 +544,7 @@ export async function sendShippingConfirmationEmail(props: {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 
   try {
     const html = await render(
@@ -595,7 +595,7 @@ export async function sendOrderProcessingEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -650,7 +650,7 @@ export async function sendOrderDeliveredEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -716,7 +716,7 @@ export async function sendOrderCancelledEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -777,7 +777,7 @@ export async function sendReturnRequestedEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
   
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -845,7 +845,7 @@ export async function sendReturnCreatedByAdminEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress =
@@ -924,7 +924,7 @@ export async function sendReturnLabelGeneratedEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1025,7 +1025,7 @@ export async function sendReturnApprovedEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1077,7 +1077,7 @@ export async function sendReturnRefundedEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1130,7 +1130,7 @@ export async function sendReturnRejectedEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1197,7 +1197,7 @@ export async function sendAbandonedCartEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1220,6 +1220,10 @@ export async function sendAbandonedCartEmail(props: {
       contactEmail,
       contactPhone,
       contactAddress,
+      // Uit site_settings, met de prop als expliciete override. Zonder deze
+      // waarden belooft de callout gratis verzending zonder minimum.
+      freeShippingThreshold: props.freeShippingThreshold ?? settings.free_shipping_threshold,
+      shippingCost: settings.shipping_cost,
     })
   )
 
@@ -1264,7 +1268,7 @@ export async function sendBackInStockEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1328,7 +1332,7 @@ export async function sendNewsletterWelcomeEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1388,7 +1392,7 @@ export async function sendNewReviewNotificationEmail(props: {
   const settings = await getSiteSettings()
   const adminEmail = process.env.CONTACT_EMAIL || settings.contact_email
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1451,7 +1455,7 @@ export async function sendContactFormEmail(props: {
   const settings = await getSiteSettings()
   const adminEmail = process.env.CONTACT_EMAIL || settings.contact_email
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1549,7 +1553,7 @@ export async function sendInsiderWelcomeEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1599,7 +1603,7 @@ export async function sendInsiderCommunityEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1687,7 +1691,7 @@ export async function sendInsiderBehindScenesEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1736,7 +1740,7 @@ export async function sendInsiderLaunchWeekEmail(props: {
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
@@ -1799,7 +1803,7 @@ export async function sendLoyaltyStatusUpdateEmail(props: {
   const locale = props.locale || 'nl'
   const settings = await getSiteSettings()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = settings.contact_email || 'info@mosewear.com'
   const contactPhone = settings.contact_phone || '+31 50 211 1931'
   const contactAddress =
@@ -1902,7 +1906,7 @@ export async function sendGiftCardDeliveryEmail(props: {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
   const settings = await getSiteSettings()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
 
   try {
     const html = await render(
@@ -2023,7 +2027,7 @@ export async function sendSpringDrop1LaunchEmail(
   const locale = props.locale || 'nl'
   const settings = await getSiteSettings()
   const siteUrl =
-    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail =
     props.contactEmail || settings.contact_email || 'info@mosewear.com'
   const contactPhone =
@@ -2094,7 +2098,7 @@ export async function sendSpringDrop2TeeEmail(
   const locale = props.locale || 'nl'
   const settings = await getSiteSettings()
   const siteUrl =
-    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail =
     props.contactEmail || settings.contact_email || 'info@mosewear.com'
   const contactPhone =
@@ -2168,7 +2172,7 @@ export async function sendSpringDrop3FoundersEmail(
   const locale = props.locale || 'nl'
   const settings = await getSiteSettings()
   const siteUrl =
-    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://mosewear.com'
+    props.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail =
     props.contactEmail || settings.contact_email || 'info@mosewear.com'
   const contactPhone =

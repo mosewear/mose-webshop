@@ -34,12 +34,12 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "MOSE - Kleding en accessoires voor mannen",
       template: "%s - MOSE"
     },
-    description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €75.",
+    description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €150.",
     keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "Groningen", "lokaal gemaakt", "Nederlands merk", "duurzame kleding", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
-    authors: [{ name: "MOSE", url: "https://mosewear.com" }],
+    authors: [{ name: "MOSE", url: "https://www.mosewear.com" }],
     creator: "MOSE",
     publisher: "MOSE",
-    metadataBase: new URL('https://mosewear.com'),
+    metadataBase: new URL('https://www.mosewear.com'),
     alternates: {
       canonical: '/',
     },
@@ -57,13 +57,13 @@ export async function generateMetadata(): Promise<Metadata> {
   openGraph: {
     type: "website",
     locale: "nl_NL",
-    url: "https://mosewear.com",
+    url: "https://www.mosewear.com",
     title: "MOSE - Kleding en accessoires voor mannen",
-    description: "Tijdloze basics zonder gedoe. Premium hoodies, t-shirts en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €75.",
+    description: "Tijdloze basics zonder gedoe. Premium hoodies, t-shirts en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €150.",
     siteName: "MOSE",
     images: [
       {
-        url: "/logomose.png",
+        url: "/og-default.jpg",
         width: 1200,
         height: 630,
         alt: "MOSE - Premium Basics",
@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
     card: "summary_large_image",
     title: "MOSE - Kleding en accessoires voor mannen",
     description: "Tijdloze basics zonder gedoe. Lokaal gemaakt in Groningen.",
-    images: ["/logomose.png"],
+    images: ["/og-default.jpg"],
   },
   robots: {
     index: true,
@@ -160,15 +160,16 @@ export default function RootLayout({
             `,
           }}
         />
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: 'none' }}
-            src="https://www.facebook.com/tr?id=1447430483627328&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
+        {/*
+          De noscript-fallbackpixel van Meta is bewust verwijderd. Hij stond
+          buiten de consentcheck hierboven en vuurde dus bij elke bezoeker,
+          ook bij wie "alleen noodzakelijke cookies" koos. Dat is in strijd met
+          de AVG/ePrivacy-toestemmingsplicht, en een noscript-img kan per
+          definitie niet op het mose-tracking-enabled-event wachten.
+          Gevolg: bezoekers zonder JavaScript worden niet meer getrackt. Dat is
+          een verwaarloosbaar deel van het verkeer, en zij gaven geen
+          toestemming die we konden uitlezen.
+        */}
       </head>
       <body className="antialiased font-sans">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">

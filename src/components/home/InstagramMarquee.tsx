@@ -341,7 +341,12 @@ export default function InstagramMarquee({
                   tileKey={key}
                   post={post}
                   locale={locale}
-                  isPriority={idx < 4}
+                  // Stond op `idx < 4`. Die vier tiles kregen `priority`, wat
+                  // vier <link rel="preload" as="image"> naar het Instagram-CDN
+                  // in de homepage-HTML zette voor beelden die ver onder de
+                  // vouw staan. Ze concurreerden daarmee rechtstreeks met de
+                  // hero om bandbreedte en verbindingen, en kostten dus LCP.
+                  isPriority={false}
                   expanded={expandedKey === key}
                   onToggleCaption={toggleCaption}
                   onImageFailed={markFailed}

@@ -82,7 +82,7 @@ export default function MobileMenu({
   // in respectievelijk de socials-rij en de gratis-verzending-pill. We
   // fetchen één keer bij mount en vallen netjes terug op sane defaults.
   const [contactEmail, setContactEmail] = useState('info@mosewear.nl')
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(100)
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(150)
 
   useEffect(() => {
     let cancelled = false
