@@ -2,22 +2,24 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
+import ChatHeader from './ChatHeader'
 import ChatTabs from './ChatTabs'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
 import TeamMoseTab from './TeamMoseTab'
-import { usePathname } from 'next/navigation'
+
+const THREAD_KEY = 'mose_chat_thread'
 
 // Get session ID (reuse analytics session ID if available)
 function getSessionId(): string {
   if (typeof window === 'undefined') return ''
-  
+
   let sessionId = sessionStorage.getItem('analytics_session_id')
   if (!sessionId) {
-    sessionId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    sessionId = `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
     sessionStorage.setItem('analytics_session_id', sessionId)
   }
   return sessionId
@@ -35,10 +37,36 @@ export interface Message {
   isTyping?: boolean
 }
 
+type BewaardBericht = { id: string; role: 'user' | 'assistant'; content: string; ts: string }
+type BewaardeDraad = { conversationId: string | null; messages: BewaardBericht[] }
+
+/**
+ * Leest het lopende gesprek terug uit sessionStorage.
+ *
+ * Zonder dit begon de chat bij elke heropening weer bij de begroeting. Dat is
+ * precies het moment waarop het misgaat: iemand sluit de chat om zijn
+ * ordernummer op te zoeken, komt terug, en moet zijn hele vraag opnieuw typen.
+ * De draad leeft zolang het tabblad leeft, net als de analytics-sessie.
+ */
+function leesDraad(): BewaardeDraad | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const rauw = sessionStorage.getItem(THREAD_KEY)
+    if (!rauw) return null
+    const draad = JSON.parse(rauw) as BewaardeDraad
+    if (!Array.isArray(draad.messages) || draad.messages.length === 0) return null
+    return draad
+  } catch {
+    return null
+  }
+}
+
 export default function ChatWindow({ onClose }: ChatWindowProps) {
   const t = useTranslations('chat')
   const [activeTab, setActiveTab] = useState<'ai' | 'team'>('ai')
   const portalEl = typeof document !== 'undefined' ? document.body : null
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const [keyboardOffsetPx, setKeyboardOffsetPx] = useState<number>(() => {
     if (typeof window === 'undefined') return 0
     const vv = window.visualViewport
@@ -48,24 +76,60 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     return Math.max(0, Math.round(innerH - vvH - vvTop))
   })
   const updateKeyboardOffsetRef = useRef<() => void>(() => {})
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: t('greeting'),
-      timestamp: new Date(),
-    },
-  ])
+
+  const hersteld = useRef<BewaardeDraad | null>(leesDraad())
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const draad = hersteld.current
+    if (draad) {
+      return draad.messages.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.ts),
+      }))
+    }
+    return [
+      {
+        id: '1',
+        role: 'assistant',
+        content: t('greeting'),
+        timestamp: new Date(),
+      },
+    ]
+  })
   const [isLoading, setIsLoading] = useState(false)
   const locale = useLocale()
   const pathname = usePathname()
-  const conversationIdRef = useRef<string | null>(null)
+  const conversationIdRef = useRef<string | null>(hersteld.current?.conversationId ?? null)
   const sessionIdRef = useRef<string>(getSessionId())
-  const greetingSavedRef = useRef<boolean>(false)
+  const greetingSavedRef = useRef<boolean>(Boolean(hersteld.current))
+
+  // Bewaar de draad bij elke wijziging. Het typ-ballonnetje slaan we over: dat
+  // is een tijdelijke weergave, geen bericht.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const draad: BewaardeDraad = {
+        conversationId: conversationIdRef.current,
+        messages: messages
+          .filter((m) => !m.isTyping)
+          .map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            ts: m.timestamp.toISOString(),
+          })),
+      }
+      sessionStorage.setItem(THREAD_KEY, JSON.stringify(draad))
+    } catch {
+      // Opslag vol of geblokkeerd: de chat werkt verder gewoon, alleen zonder
+      // geheugen. Geen reden om het gesprek te laten klappen.
+    }
+  }, [messages])
 
   // Get context for AI
   const getContext = () => {
-    const context: any = { locale }
+    const context: Record<string, unknown> = { locale }
 
     // Check if on product page
     if (pathname?.includes('/product/')) {
@@ -80,16 +144,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       try {
         const cartData = localStorage.getItem('mose-cart')
         if (cartData) {
-          const cart = JSON.parse(cartData)
-          const total = cart.reduce((sum: number, item: any) => {
-            return sum + (item.price * item.quantity)
-          }, 0)
+          const cart = JSON.parse(cartData) as Array<{ price: number; quantity: number }>
+          const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
           context.cart = {
             items: cart.length,
             total: total.toFixed(2),
           }
         }
-      } catch (e) {
+      } catch {
         // Ignore cart errors
       }
     }
@@ -98,7 +160,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   // Save message to database
-  const saveMessage = async (role: 'user' | 'assistant', content: string, metadata?: any) => {
+  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
     try {
       const response = await fetch('/api/chat/save-message', {
         method: 'POST',
@@ -108,7 +170,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           sessionId: sessionIdRef.current,
           role,
           content,
-          metadata: metadata || {},
+          metadata: {},
           pageUrl: typeof window !== 'undefined' ? window.location.href : null,
           deviceType: /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'mobile' : 'desktop',
           userAgent: typeof window !== 'undefined' ? navigator.userAgent : null,
@@ -152,10 +214,10 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         timestamp: new Date(),
       },
     ])
-    
+
     // Save user message to database
     await saveMessage('user', content.trim())
-    
+
     setIsLoading(true)
 
     try {
@@ -181,7 +243,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       const decoder = new TextDecoder()
       let aiContent = ''
       let buffer = ''
-      let hadStreamError = false
 
       // Read stream
       if (reader) {
@@ -212,8 +273,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
               } catch {
                 // Ignore malformed chunks
               }
-            } else if (rawLine.startsWith('3:')) {
-              hadStreamError = true
             }
           }
         }
@@ -231,11 +290,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           }
         }
 
-        // If the stream ended but we received no content, show a friendly fallback.
-        if (!aiContent.trim()) {
-          aiContent = hadStreamError ? t('aiOffline') : t('aiOffline')
-        }
-
         // Replace the typing bubble with the final answer (no word-by-word updates).
         const finalAnswer = aiContent.trim() || t('aiOffline')
         setMessages((prev) =>
@@ -251,7 +305,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       }
     } catch (error) {
       console.error('[Chat Error]:', error)
-      
+
       // Replace typing bubble with friendly error message
       setMessages((prev) =>
         prev.map((m) =>
@@ -265,21 +319,34 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }
 
-  // Save greeting message when chat opens
+  // Save greeting message when chat opens. Bij een herstelde draad staat de
+  // begroeting al in de database, dus die slaan we niet nog een keer op.
   useEffect(() => {
     if (!greetingSavedRef.current) {
       greetingSavedRef.current = true
       saveMessage('assistant', t('greeting'))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Escape sluit het paneel. Stond er niet, terwijl dit op desktop de snelste
+  // manier is om een overlay weg te krijgen.
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   // On mobile Safari, `overflow: hidden` alone is not a reliable scroll lock (especially with the keyboard).
   // We lock scroll by fixing the body in place and restoring scroll position on close.
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const isMobile = window.matchMedia('(max-width: 767px)').matches
-    if (!isMobile) return
+    const mobiel = window.matchMedia('(max-width: 767px)').matches
+    setIsMobile(mobiel)
+    if (!mobiel) return
 
     const body = document.body
     const html = document.documentElement
@@ -319,13 +386,42 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [])
 
+  // Focus vasthouden zolang het paneel het hele scherm vult. Op desktop juist
+  // niet: daar mag je gewoon verder bladeren terwijl de chat openstaat, en dat
+  // is precies waarvoor je hem gebruikt ("past deze hoodie mij?").
+  useEffect(() => {
+    if (!isMobile) return
+    const panel = panelRef.current
+    if (!panel) return
+
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const focusbaar = panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusbaar.length === 0) return
+      const eerste = focusbaar[0]
+      const laatste = focusbaar[focusbaar.length - 1]
+      if (e.shiftKey && document.activeElement === eerste) {
+        e.preventDefault()
+        laatste.focus()
+      } else if (!e.shiftKey && document.activeElement === laatste) {
+        e.preventDefault()
+        eerste.focus()
+      }
+    }
+
+    panel.addEventListener('keydown', onKey)
+    return () => panel.removeEventListener('keydown', onKey)
+  }, [isMobile])
+
   // Industry-standard approach for mobile modals:
   // keep the overlay fullscreen (`fixed inset-0`) and only offset the bottom area by keyboard height.
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return
 
-    const isMobile = window.matchMedia('(max-width: 767px)').matches
-    if (!isMobile) return
+    const mobiel = window.matchMedia('(max-width: 767px)').matches
+    if (!mobiel) return
 
     const vv = window.visualViewport
 
@@ -351,38 +447,20 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }
   }, [])
 
-  // Handle swipe down to close (mobile)
-  useEffect(() => {
-    let startY = 0
-    let currentY = 0
-
-    const handleTouchStart = (e: TouchEvent) => {
-      startY = e.touches[0].clientY
+  // Vegen om te sluiten, maar alleen vanaf de kop. Het luisterde eerder op het
+  // hele paneel: wie een lang antwoord teruglas en van boven naar beneden
+  // veegde terwijl de lijst al bovenaan stond, gooide zijn gesprek dicht.
+  const swipeStartRef = useRef<number | null>(null)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    swipeStartRef.current = e.touches[0].clientY
+  }
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (swipeStartRef.current === null) return
+    if (e.touches[0].clientY - swipeStartRef.current > 90) {
+      swipeStartRef.current = null
+      onClose()
     }
-
-    const handleTouchMove = (e: TouchEvent) => {
-      currentY = e.touches[0].clientY
-      const diff = currentY - startY
-
-      // Only close if swiping down from top
-      const scrollContainer = document.querySelector('[data-chat-scroll]') as HTMLElement | null
-      const atTop = !scrollContainer || scrollContainer.scrollTop === 0
-      if (diff > 100 && atTop) {
-        onClose()
-      }
-    }
-
-    const chatElement = document.getElementById('chat-window')
-    if (chatElement) {
-      chatElement.addEventListener('touchstart', handleTouchStart)
-      chatElement.addEventListener('touchmove', handleTouchMove)
-
-      return () => {
-        chatElement.removeEventListener('touchstart', handleTouchStart)
-        chatElement.removeEventListener('touchmove', handleTouchMove)
-      }
-    }
-  }, [onClose])
+  }
 
   const handleInputFocus = () => {
     // VisualViewport events sometimes arrive a tick later on iOS. This forces a fast re-measure.
@@ -391,102 +469,65 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   }
 
   const ui = (
-    <>
-      {/* Overlay - Desktop only */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="hidden md:block fixed inset-0 bg-black/30 z-[9997]"
-        onClick={onClose}
-      />
-
-      {/* Mobile: Fullscreen */}
-      <div
-        id="chat-window"
-        className="fixed inset-0 z-[9998] bg-white flex flex-col md:hidden overscroll-none"
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 border-b-2 border-black px-4 py-4 flex items-center justify-between bg-white">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-brand-primary border-2 border-black" />
-            <h2 className="font-display text-xl uppercase tracking-wide">{t('title')}</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center border-2 border-black hover:bg-gray-100 transition-colors"
-            aria-label={t('close')}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <ChatTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {activeTab === 'ai' ? (
-            <>
-              <ChatMessages messages={messages} />
-              <div
-                className="flex-shrink-0"
-                style={{
-                  paddingBottom: `calc(env(safe-area-inset-bottom) + ${keyboardOffsetPx}px)`,
-                }}
-              >
-                <ChatInput onSend={handleSendMessage} disabled={isLoading} onFocusInput={handleInputFocus} />
-              </div>
-            </>
-          ) : (
-            <TeamMoseTab />
-          )}
-        </div>
+    <motion.div
+      ref={panelRef}
+      id="chat-window"
+      role="dialog"
+      aria-modal={isMobile || undefined}
+      aria-label={t('title')}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 24 }}
+      transition={{ type: 'spring', damping: 26, stiffness: 260 }}
+      className="fixed inset-0 z-[9998] flex flex-col overscroll-none bg-white md:inset-auto md:bottom-[calc(6.5rem+var(--cookie-consent-height))] md:right-6 md:h-[640px] md:max-h-[calc(100vh-10rem)] md:w-[400px] md:border-2 md:border-black"
+    >
+      <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove}>
+        <ChatHeader onClose={onClose} />
       </div>
 
-      {/* Desktop: Window - MOSE Brutalist Style (no shadow) */}
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="hidden md:flex fixed bottom-[calc(6rem+var(--cookie-consent-height))] right-6 z-[9998] w-[400px] h-[600px] max-h-[80vh] bg-white border-2 border-black flex-col"
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 border-b-2 border-black px-4 py-3 flex items-center justify-between bg-white">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-brand-primary border-2 border-black" />
-            <h2 className="font-display text-lg uppercase tracking-wide">{t('title')}</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center border-2 border-black hover:bg-gray-100 transition-colors"
-            aria-label={t('close')}
+      <ChatTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {activeTab === 'ai' ? (
+          <div
+            id="chat-panel-ai"
+            role="tabpanel"
+            aria-labelledby="chat-tab-ai"
+            className="flex flex-1 flex-col overflow-hidden"
           >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <ChatTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {activeTab === 'ai' ? (
-            <>
-              <ChatMessages messages={messages} />
-              <ChatInput onSend={handleSendMessage} disabled={isLoading} />
-            </>
-          ) : (
+            <ChatMessages
+              messages={messages}
+              onPickStarter={handleSendMessage}
+              isLoading={isLoading}
+            />
+            <div
+              className="flex-shrink-0"
+              style={{
+                paddingBottom: isMobile
+                  ? `calc(env(safe-area-inset-bottom) + ${keyboardOffsetPx}px)`
+                  : undefined,
+              }}
+            >
+              <ChatInput onSend={handleSendMessage} disabled={isLoading} onFocusInput={handleInputFocus} />
+            </div>
+          </div>
+        ) : (
+          <div
+            id="chat-panel-team"
+            role="tabpanel"
+            aria-labelledby="chat-tab-team"
+            className="flex flex-1 flex-col overflow-hidden"
+            style={{
+              paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : undefined,
+            }}
+          >
             <TeamMoseTab />
-          )}
-        </div>
-      </motion.div>
-    </>
+          </div>
+        )}
+      </div>
+    </motion.div>
   )
 
   // Render as a portal so the modal isn't affected by transforms/stacking contexts higher up the tree.
   return portalEl ? createPortal(ui, portalEl) : ui
 }
-

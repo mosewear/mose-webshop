@@ -27,13 +27,22 @@ TONE OF VOICE:
 - Engels: casual but clear
 
 EXPERTISE:
-- Producten: Premium hoodies, sweaters, t-shirts, caps
-- Prijs range: €35-150
 - Made in Groningen, Nederland
+- Het complete assortiment met actuele prijzen staat hieronder onder LIVE
+  ASSORTIMENT. Noem nooit een product of een prijs die daar niet in staat, en
+  verzin geen prijsrange.
 - No-nonsense stijl (zonder poespas) & regular fits
 - Premium materialen:
   - Hoodies & sweaters: 300 GSM OEKO-Tex joggingfleece katoen, regular fit
   - T-shirts: 240 GSM OEKO-Tex jersey, regular fit
+
+OPMAAK:
+- Schrijf platte tekst. Geen markdown: geen sterretjes voor vet, geen koppen,
+  geen tabellen. Het chatvenster toont de tekst letterlijk, dus **zo** komt er
+  ook echt met sterretjes in beeld.
+- Een opsomming mag, met een streepje aan het begin van de regel.
+- Bedragen in het Nederlands met een komma en een euroteken (EUR 6.95 schrijf je
+  als €6,95), in het Engels met een punt (€6.95).
 
 GEDRAG:
 - Beantwoord vragen kort en direct
@@ -150,6 +159,39 @@ async function getProductDetails(productSlug: string, locale: 'nl' | 'en') {
   }
 }
 
+/**
+ * Compacte lijst van wat er echt te koop is.
+ *
+ * De systeemprompt noemde hiervoor "hoodies, sweaters, t-shirts, caps" en een
+ * prijsrange van 35 tot 150 euro. Geen van beide klopte: er zijn geen caps, er
+ * is wel een horloge van 199,95, en het goedkoopste stuk kost 50. Een assistent
+ * die prijzen uit zijn prompt citeert in plaats van uit de catalogus, noemt
+ * klanten vroeg of laat een bedrag dat bij het afrekenen niet klopt.
+ */
+async function getCatalogSummary(locale: 'nl' | 'en') {
+  try {
+    const supabase = createServiceRoleClient()
+    const { data } = await supabase
+      .from('products')
+      .select('name, name_en, slug, base_price, sale_price')
+      .eq('is_active', true)
+      .eq('status', 'active')
+      .order('base_price', { ascending: true })
+
+    if (!data || data.length === 0) return null
+
+    return data.map((p) => {
+      const naam = (locale === 'en' && p.name_en) ? p.name_en : p.name
+      const basis = Number(p.base_price || 0)
+      const aanbieding = p.sale_price === null || p.sale_price === undefined ? null : Number(p.sale_price)
+      const prijs = aanbieding !== null && aanbieding > 0 ? aanbieding : basis
+      return `${naam} (/product/${p.slug}): EUR ${formatEur(prijs)}${aanbieding !== null && aanbieding > 0 ? ` (was EUR ${formatEur(basis)})` : ''}`
+    })
+  } catch {
+    return null
+  }
+}
+
 // Function to check shipping costs
 async function calculateShipping(cartTotal: number) {
   const settings = await getSiteSettings()
@@ -218,11 +260,23 @@ export async function POST(req: Request) {
     contextPrompt += `\n- Verzendkosten: EUR ${formatEur(Number(settings.shipping_cost || 0))}`
     contextPrompt += `\n- Gratis verzending vanaf: EUR ${formatEur(Number(settings.free_shipping_threshold || 0))}`
     contextPrompt += `\n- Retourtermijn: ${Number(settings.return_days || 30)} dagen`
-    contextPrompt += `\n- Retourkosten: EUR ${formatEur(5.95)} (alleen gratis bij fabricagefout / verkeerde levering)`
+    // Stond hier als vaste 5,95 terwijl elke andere waarde op deze regels uit
+    // site_settings komt. De werkelijke prijs is 6,95, dus de assistent noemde
+    // klanten een euro te weinig: een toezegging die bij het retourlabel breekt.
+    contextPrompt += `\n- Retourkosten: EUR ${formatEur(Number(settings.return_label_cost_incl_btw || 6.95))} (alleen gratis bij fabricagefout / verkeerde levering)`
     contextPrompt += `\n- Pickup (Groningen): ${settings.pickup_enabled ? 'aan' : 'uit'} (max ${Number(settings.pickup_max_distance_km || 50)} km)`
     contextPrompt += `\n- Pickup locatie: ${settings.pickup_location_name || 'MOSE Groningen'}, ${settings.pickup_location_address || 'Groningen'}`
     contextPrompt += `\n- Contact: WhatsApp ${settings.contact_phone} • Email ${settings.contact_email}`
-    contextPrompt += `\n\nBELANGRIJKE PAGINAS: /verzending (shipping & returns), /contact, /shop`
+    // Verwijs met de NAAM van de pagina, niet met het pad. De assistent nam de
+    // paden letterlijk over en schreef antwoorden als "kijk op onze pagina
+    // /verzending", wat in een chatvenster niet aanklikbaar is en er bovendien
+    // uitziet als een foutmelding.
+    const catalogus = await getCatalogSummary(locale)
+    if (catalogus) {
+      contextPrompt += `\n\nLIVE ASSORTIMENT (dit is alles wat er te koop is):\n- ${catalogus.join('\n- ')}`
+    }
+
+    contextPrompt += `\n\nBELANGRIJKE PAGINAS (noem ze bij naam, nooit als pad): "Verzending & Retour" (/verzending), "Contact" (/contact), "Shop" (/shop)`
 
     if (context?.product) {
       if (context.product.slug) {
