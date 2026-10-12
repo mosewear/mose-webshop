@@ -1,0 +1,14 @@
+-- ADMINISTRATIEVE REGISTRATIE, GEEN WIJZIGING.
+--
+-- Zelfde situatie als 20260806095713: deze versie stond op de server
+-- geregistreerd zonder bestand in deze map.
+--
+-- Wat er op 2026-08-07 11:48:24 UTC is uitgevoerd, is de inhoud van
+-- 20260807140000_lookbook_copy_founder_voice.sql. Bevestigd in de database:
+-- lookbook_settings.updated_at staat op exact 2026-08-07 11:48:24, en
+-- header_subtitle, ticker_text_nl en final_cta_title komen letterlijk overeen
+-- met die migratie ("Gefotografeerd in Groningen", "GOEDE BASICS",
+-- "IN DE SHOP").
+--
+-- Dit bestand blijft leeg; de wijziging is al toegepast.
+SELECT 1;

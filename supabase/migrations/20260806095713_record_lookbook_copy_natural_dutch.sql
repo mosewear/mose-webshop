@@ -1,0 +1,16 @@
+-- ADMINISTRATIEVE REGISTRATIE, GEEN WIJZIGING.
+--
+-- Deze versie stond wel in supabase_migrations.schema_migrations op de server,
+-- maar had geen bestand in deze map. Daardoor weigerde `supabase db push` te
+-- draaien met "Remote migration versions not found in local migrations
+-- directory", en bleef de migratiegeschiedenis onbruikbaar.
+--
+-- Wat er op 2026-08-06 09:57:13 UTC daadwerkelijk is uitgevoerd, is de inhoud
+-- van 20260806120000_lookbook_copy_natural_dutch.sql, destijds via de SQL
+-- editor. Supabase registreerde dat onder het tijdstip van uitvoeren in plaats
+-- van onder de bestandsnaam.
+--
+-- Die teksten zijn inmiddels vervangen door
+-- 20260807140000_lookbook_copy_founder_voice.sql. Dit bestand blijft leeg:
+-- de oude copy opnieuw toepassen zou de huidige teksten terugdraaien.
+SELECT 1;
