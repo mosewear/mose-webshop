@@ -22,6 +22,14 @@ interface PromoCode {
 export default function PromoCodesPage() {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
   const [loading, setLoading] = useState(true)
+  // Paginering en zoeken. Zonder dit haalde de pagina alle 18.791 codes op
+  // (waarvan PostgREST er stil 1000 teruggaf) en rende daar ruim 6000 knoppen
+  // voor uit, in een scherm van 266.000 pixels hoog.
+  const [zoekterm, setZoekterm] = useState('')
+  const [zoektermDebounced, setZoektermDebounced] = useState('')
+  const [pagina, setPagina] = useState(1)
+  const [totaal, setTotaal] = useState(0)
+  const PER_PAGINA = 50
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -37,8 +45,17 @@ export default function PromoCodesPage() {
   })
 
   useEffect(() => {
+    const t = setTimeout(() => setZoektermDebounced(zoekterm), 300)
+    return () => clearTimeout(t)
+  }, [zoekterm])
+
+  useEffect(() => {
+    setPagina(1)
+  }, [zoektermDebounced])
+
+  useEffect(() => {
     fetchPromoCodes()
-  }, [])
+  }, [pagina, zoektermDebounced])
 
   const fetchPromoCodes = async () => {
     try {
@@ -53,7 +70,13 @@ export default function PromoCodesPage() {
       }
 
       // Fetch from API route (uses Service Role to bypass RLS)
-      const response = await fetch('/api/admin/promo-codes', {
+      const params = new URLSearchParams({
+        page: String(pagina),
+        limit: String(PER_PAGINA),
+      })
+      if (zoektermDebounced.trim()) params.set('q', zoektermDebounced.trim())
+
+      const response = await fetch(`/api/admin/promo-codes?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
@@ -66,6 +89,7 @@ export default function PromoCodesPage() {
       }
 
       setPromoCodes(result.data || [])
+      setTotaal(typeof result.total === 'number' ? result.total : (result.data || []).length)
     } catch (error) {
       console.error('Error fetching promo codes:', error)
     } finally {
@@ -210,7 +234,7 @@ export default function PromoCodesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-1 md:mb-2">{promoCodes.length}</div>
+          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-1 md:mb-2">{totaal}</div>
           <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Codes</div>
         </div>
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
@@ -384,6 +408,23 @@ export default function PromoCodesPage() {
           </form>
         </div>
       )}
+
+      {/* Zoeken en paginering. Beide ontbraken volledig, terwijl er 18.791
+          codes zijn: zoeken was de enige manier om er een terug te vinden. */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <input
+          type="search"
+          value={zoekterm}
+          onChange={(e) => setZoekterm(e.target.value)}
+          placeholder="Zoek op code…"
+          aria-label="Zoek promocode"
+          className="flex-1 min-h-[44px] px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-base"
+        />
+        <div className="text-sm text-gray-600 whitespace-nowrap">
+          <span className="font-bold text-black">{totaal}</span> {totaal === 1 ? 'code' : 'codes'}
+          {zoektermDebounced.trim() ? ` voor "${zoektermDebounced.trim()}"` : ''}
+        </div>
+      </div>
 
       {/* Promo Codes Table/Cards */}
       <div className="bg-white border-2 border-gray-200 overflow-hidden">
@@ -587,6 +628,29 @@ export default function PromoCodesPage() {
           </>
         )}
       </div>
+
+      {/* Bladeren */}
+      {totaal > PER_PAGINA && (
+        <div className="flex items-center justify-between gap-3 mt-6">
+          <button
+            onClick={() => setPagina((p) => Math.max(1, p - 1))}
+            disabled={pagina === 1 || loading}
+            className="min-h-[44px] px-4 border-2 border-gray-300 font-bold uppercase text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Vorige
+          </button>
+          <span className="text-sm text-gray-600">
+            Pagina {pagina} van {Math.max(1, Math.ceil(totaal / PER_PAGINA))}
+          </span>
+          <button
+            onClick={() => setPagina((p) => p + 1)}
+            disabled={pagina >= Math.ceil(totaal / PER_PAGINA) || loading}
+            className="min-h-[44px] px-4 border-2 border-gray-300 font-bold uppercase text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Volgende
+          </button>
+        </div>
+      )}
     </div>
   )
 }

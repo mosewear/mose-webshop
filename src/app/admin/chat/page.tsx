@@ -358,9 +358,13 @@ export default function ChatAdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* min-w-0 op de kolommen: grid-kinderen krijgen standaard
+            min-width:auto en kunnen dan niet krimpen onder de intrinsieke
+            breedte van hun inhoud. Daardoor werd deze pagina op een telefoon
+            1903px breed in een scherm van 390, ruim vijf keer te breed. */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Conversations List */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 min-w-0">
             <div className="bg-white border-2 border-gray-200 p-4">
               <h2 className="text-lg font-bold mb-4">Gesprekken ({conversations.length})</h2>
               <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto">
@@ -408,7 +412,7 @@ export default function ChatAdminPage() {
           </div>
 
           {/* Messages View */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             {selectedConversation && selectedConv ? (
               <div className="bg-white border-2 border-gray-200 p-6">
                 <div className="mb-6 pb-4 border-b-2 border-gray-200">

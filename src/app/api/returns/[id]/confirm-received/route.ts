@@ -25,7 +25,12 @@ export async function POST(
     // Haal retour op
     const { data: returnRecord, error: fetchError } = await supabase
       .from('returns')
-      .select('*, orders!inner(*)')
+      // order_items MOET genest worden meegehaald. `orders!inner(*)` levert
+      // alleen de kolommen van de orders-tabel, en order_items is een aparte
+      // tabel. Daardoor was returnRecord.orders.order_items undefined en gooide
+      // de .find() hieronder een TypeError: de retour bleef hangen op
+      // return_received, zonder voorraadcorrectie en zonder terugbetaling.
+      .select('*, orders!inner(*, order_items(*))')
       .eq('id', id)
       .single()
 
@@ -61,17 +66,35 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to confirm receipt' }, { status: 500 })
     }
 
-    // Update stock (items terug naar inventory)
-    const returnItems = returnRecord.return_items as any[]
+    // Update stock (items terug naar inventory).
+    //
+    // Per item afgeschermd: een mislukte voorraadcorrectie mag de
+    // terugbetaling hieronder NIET blokkeren. Precies dat ging eerder mis,
+    // waardoor een klant zijn geld niet terugkreeg omdat een voorraadregel
+    // struikelde.
+    const returnItems = (returnRecord.return_items as any[]) ?? []
+    const orderItems = (returnRecord.orders?.order_items as any[]) ?? []
+    const restockFouten: string[] = []
+
     for (const returnItem of returnItems) {
-      const orderItem = returnRecord.orders.order_items.find((item: any) => item.id === returnItem.order_item_id)
-      if (orderItem && orderItem.variant_id) {
-        // Verhoog stock van variant
-        await supabase.rpc('increment_variant_stock', {
+      try {
+        const orderItem = orderItems.find((item: any) => item.id === returnItem.order_item_id)
+        if (!orderItem?.variant_id) {
+          restockFouten.push(`orderregel ${returnItem.order_item_id} niet gevonden of zonder variant`)
+          continue
+        }
+        const { error: stockError } = await supabase.rpc('increment_variant_stock', {
           variant_id: orderItem.variant_id,
           quantity: returnItem.quantity,
         })
+        if (stockError) restockFouten.push(`${orderItem.variant_id}: ${stockError.message}`)
+      } catch (err: any) {
+        restockFouten.push(`${returnItem.order_item_id}: ${err?.message || 'onbekende fout'}`)
       }
+    }
+
+    if (restockFouten.length) {
+      console.error('Voorraadcorrectie bij retour deels mislukt:', restockFouten)
     }
 
     // Update order status naar return_received
@@ -103,6 +126,10 @@ export async function POST(
       success: true,
       return: finalReturn || updatedReturn,
       refund: refundOutcome,
+      // Expliciet teruggeven zodat de admin ziet dat de retour wél verwerkt is
+      // maar de voorraad handmatige aandacht nodig heeft, in plaats van dat
+      // stilletjes in de serverlog te laten verdwijnen.
+      restockWarnings: restockFouten.length ? restockFouten : undefined,
     })
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/confirm-received:', error)

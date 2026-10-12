@@ -406,14 +406,19 @@ export default function InventoryManager() {
     const busy = adjustingId === variant.id
     const presets = [-1, 1, 5, 10]
     return (
-      <div className="flex flex-wrap gap-1 mt-1">
+      // Deze knoppen boeken DIRECT voorraad af of bij, zonder bevestiging.
+      // Ze waren circa 22 bij 21 pixels met 4 pixels ertussen, dus "+10" lag
+      // een halve vingerbreedte van "+5". Eén mis-tap in de opslag corrigeerde
+      // echte voorraad de verkeerde kant op. Nu minimaal 44 pixels hoog, met
+      // touch-manipulation zodat iOS niet op dubbeltik-zoom wacht.
+      <div className="flex flex-wrap gap-1.5 mt-1.5">
         {presets.map((d) => (
           <button
             key={d}
             type="button"
             disabled={busy || (field === 'presale_stock' && !variant.presale_enabled)}
             onClick={() => handleQuickAdjust(variant, field, d)}
-            className="text-[10px] font-bold uppercase px-1.5 py-0.5 border border-gray-300 bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
+            className="min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-[32px] px-2 text-xs sm:text-[11px] font-bold uppercase border-2 border-gray-300 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-40 touch-manipulation"
           >
             {d > 0 ? `+${d}` : `${d}`}
           </button>

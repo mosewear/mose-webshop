@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { RefreshCw, Plus, Search, Printer, Tag, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import StatusBadge from '@/components/admin/StatusBadge'
+import { orderStatus } from '@/lib/status-registry'
 
 interface Order {
   id: string
@@ -130,46 +132,72 @@ export default function AdminOrdersPage() {
       setLoading(true)
       setRefreshing(true)
 
-      let countQuery = supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
+      const zoekterm = debouncedSearch.trim()
 
-      if (filter !== 'all') {
-        if (filter === 'returns') {
-          countQuery = countQuery.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
-        } else {
-          countQuery = countQuery.eq('status', filter)
+      // Zoeken gaat via de RPC admin_search_orders en NIET via een
+      // PostgREST-filter. De oude constructie was:
+      //   .or(`id.ilike.%${q}%,email.ilike.%${q}%`)
+      // en orders.id is een UUID, dus Postgres gaf daarop een harde fout
+      // (42883: operator does not exist: uuid ~~* unknown). Elke zoekopdracht
+      // faalde, en het client-side filter dat naam en tracking toevoegde keek
+      // alleen in de 25 al opgehaalde rijen. De RPC zoekt op order-id, e-mail,
+      // klantnaam uit het verzendadres en track-and-tracecode, over de hele
+      // tabel.
+      let data: any[] | null = null
+      let error: any = null
+
+      if (zoekterm) {
+        const [{ data: rpcData, error: rpcError }, { data: rpcCount }] = await Promise.all([
+          supabase.rpc('admin_search_orders', {
+            p_query: zoekterm,
+            p_limit: PAGE_SIZE,
+            p_offset: (page - 1) * PAGE_SIZE,
+          }),
+          supabase.rpc('admin_count_orders', { p_query: zoekterm }),
+        ])
+        error = rpcError
+        // Statusfilter blijft client-side gelden binnen het zoekresultaat.
+        const rows = (rpcData as any[] | null) ?? []
+        data = filter === 'all'
+          ? rows
+          : filter === 'returns'
+            ? rows.filter((o) => ['return_requested', 'return_in_transit', 'return_received', 'return_completed'].includes(o.status))
+            : rows.filter((o) => o.status === filter)
+        setTotalCount(typeof rpcCount === 'number' ? rpcCount : data.length)
+      } else {
+        let countQuery = supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+
+        if (filter !== 'all') {
+          if (filter === 'returns') {
+            countQuery = countQuery.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
+          } else {
+            countQuery = countQuery.eq('status', filter)
+          }
         }
-      }
 
-      if (debouncedSearch.trim()) {
-        const q = debouncedSearch.trim()
-        countQuery = countQuery.or(`id.ilike.%${q}%,email.ilike.%${q}%`)
-      }
+        const { count } = await countQuery
+        setTotalCount(count || 0)
 
-      const { count } = await countQuery
-      setTotalCount(count || 0)
+        let query = supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
-      let query = supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
-
-      if (filter !== 'all') {
-        if (filter === 'returns') {
-          query = query.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
-        } else {
-          query = query.eq('status', filter)
+        if (filter !== 'all') {
+          if (filter === 'returns') {
+            query = query.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
+          } else {
+            query = query.eq('status', filter)
+          }
         }
-      }
 
-      if (debouncedSearch.trim()) {
-        const q = debouncedSearch.trim()
-        query = query.or(`id.ilike.%${q}%,email.ilike.%${q}%`)
+        const res = await query
+        data = res.data
+        error = res.error
       }
-
-      const { data, error } = await query
 
       if (error) throw error
       setOrders(data || [])
@@ -211,63 +239,12 @@ export default function AdminOrdersPage() {
     })
   }, [orders, debouncedSearch])
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      paid: 'bg-blue-100 text-blue-700 border-blue-200',
-      processing: 'bg-purple-100 text-purple-700 border-purple-200',
-      shipped: 'bg-orange-100 text-orange-700 border-orange-200',
-      delivered: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
-      // Return statussen
-      return_requested: 'bg-amber-100 text-amber-700 border-amber-200',
-      return_in_transit: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      return_received: 'bg-slate-100 text-slate-700 border-slate-200',
-      return_completed: 'bg-teal-100 text-teal-700 border-teal-200',
-    }
-    return colors[status] || 'bg-gray-100 text-gray-700 border-gray-200'
-  }
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'In afwachting',
-      paid: 'Betaald',
-      processing: 'In behandeling',
-      shipped: 'Verzonden',
-      delivered: 'Afgeleverd',
-      cancelled: 'Geannuleerd',
-      // Return statussen
-      return_requested: 'Return aangevraagd',
-      return_in_transit: 'Return onderweg',
-      return_received: 'Return ontvangen',
-      return_completed: 'Return voltooid',
-    }
-    return labels[status] || status
-  }
-
-  const getPaymentStatusColor = (paymentStatus: string) => {
-    const colors: Record<string, string> = {
-      paid: 'bg-green-100 text-green-800 border-green-200',
-      unpaid: 'bg-gray-100 text-gray-600 border-gray-200',
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      failed: 'bg-red-100 text-red-700 border-red-200',
-      refunded: 'bg-purple-100 text-purple-700 border-purple-200',
-      expired: 'bg-gray-100 text-gray-500 border-gray-200',
-    }
-    return colors[paymentStatus] || 'bg-gray-100 text-gray-600 border-gray-200'
-  }
-
-  const getPaymentStatusLabel = (paymentStatus: string) => {
-    const labels: Record<string, string> = {
-      paid: '✓ Betaald',
-      unpaid: '○ Onbetaald',
-      pending: '⏳ Wacht op betaling',
-      failed: '✕ Betaling mislukt',
-      refunded: '↩ Terugbetaald',
-      expired: '⌛ Verlopen',
-    }
-    return labels[paymentStatus] || paymentStatus
-  }
+  // De vier lokale status-kaarten (getStatusColor, getStatusLabel,
+  // getPaymentStatusColor, getPaymentStatusLabel) zijn vervangen door
+  // src/lib/status-registry.ts. Er stonden vijf van zulke kaarten in de admin
+  // en die gaven voor dezelfde status verschillende kleuren en labels. Hier
+  // speelde bovendien dat `paid` als ORDERstatus blauw was en als BETAALstatus
+  // groen, twee centimeter uit elkaar in dezelfde rij.
 
   const handleSelectAll = () => {
     if (selectedOrders.length === filteredOrders.length) {
@@ -572,30 +549,24 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 md:mb-8">
-        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-brand-primary mb-2">{filteredOrders.length}</div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Totaal Orders</div>
-        </div>
-        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
-            {filteredOrders.filter(o => o.payment_status === 'paid').length}
-          </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Betaald</div>
-        </div>
-        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-yellow-600 mb-2">
-            {filteredOrders.filter(o => o.payment_status === 'pending').length}
-          </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Wacht op betaling</div>
-        </div>
-        <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
-          <div className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            €{filteredOrders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + Number(o.total), 0).toFixed(2)}
-          </div>
-          <div className="text-xs md:text-sm text-gray-600 uppercase tracking-wide">Omzet (Betaald)</div>
-        </div>
+      {/* Resultaatregel.
+          Hier stonden vier statkaarten die over `filteredOrders` rekenden, dus
+          over de maximaal 25 rijen van de HUIDIGE pagina, terwijl het label
+          "Totaal Orders" beloofde. Naast die kaarten tonen de filterknoppen
+          hierboven wél de echte tellingen uit de database, dus op pagina 2
+          stond er "25" naast een knop die "430" zei. Twee getallen voor
+          hetzelfde ding, die elkaar tegenspreken, op het eerste scherm van de
+          dag.
+          Vervangen door één regel met het echte totaal. Dat scheelt bovendien
+          circa 150px verticaal, goed voor ongeveer acht extra zichtbare
+          orderrijen. */}
+      <div className="flex items-baseline gap-2 mb-4 text-sm text-gray-600">
+        <span className="font-bold text-black text-base">{totalCount}</span>
+        <span className="uppercase tracking-wide">
+          {totalCount === 1 ? 'order' : 'orders'}
+          {filter !== 'all' ? ' in dit filter' : ''}
+          {debouncedSearch.trim() ? ` voor "${debouncedSearch.trim()}"` : ''}
+        </span>
       </div>
 
       {/* Orders Table */}
@@ -630,7 +601,7 @@ export default function AdminOrdersPage() {
       {showBulkConfirm && (
         <div className="bg-yellow-50 border-2 border-yellow-400 p-4 mb-4 flex flex-col md:flex-row md:items-center gap-3">
           <span className="font-bold text-yellow-800">
-            Weet je zeker dat je de status van {selectedOrders.length} order(s) wilt wijzigen naar &quot;{getStatusLabel(bulkAction)}&quot;?
+            Weet je zeker dat je de status van {selectedOrders.length} order(s) wilt wijzigen naar &quot;{orderStatus(bulkAction).label}&quot;?
           </span>
           <div className="flex gap-2">
             <button
@@ -738,12 +709,8 @@ export default function AdminOrdersPage() {
                   </div>
 
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <span className={`px-2 py-1 font-semibold border inline-block ${getPaymentStatusColor(order.payment_status || 'unpaid')}`}>
-                      {getPaymentStatusLabel(order.payment_status || 'unpaid')}
-                    </span>
-                    <span className={`px-2 py-1 font-semibold border inline-block ${getStatusColor(order.status)}`}>
-                      {getStatusLabel(order.status)}
-                    </span>
+                    <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
+                    <StatusBadge status={order.status} kind="order" />
                     <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
                     <div className="font-bold text-gray-900 text-right">€{Number(order.total).toFixed(2)}</div>
                     <div className="col-span-2">
@@ -839,14 +806,10 @@ export default function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${getPaymentStatusColor(order.payment_status || 'unpaid')}`}>
-                        {getPaymentStatusLabel(order.payment_status || 'unpaid')}
-                      </span>
+                      <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${getStatusColor(order.status)}`}>
-                        {getStatusLabel(order.status)}
-                      </span>
+                      <StatusBadge status={order.status} kind="order" />
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${

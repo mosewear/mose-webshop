@@ -43,9 +43,20 @@ export default function AdminHeader({ adminUser }: AdminHeaderProps) {
   return (
     <>
     <header className="bg-white/95 backdrop-blur border-b-2 border-gray-200 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between sticky top-0 z-30">
-      {/* Page Title Area */}
-      <div>
-        <h1 className="text-lg md:text-2xl font-display uppercase tracking-tight">Admin</h1>
+      {/* Menu + titel */}
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Menuknop, alleen op mobiel. Stond hiervoor als zwevende knop
+            rechtsonder en bedekte daar de opslaanbalken en modal-acties. */}
+        <button
+          onClick={() => window.dispatchEvent(new Event('admin-toggle-menu'))}
+          className="lg:hidden flex items-center justify-center w-11 h-11 -ml-1 border-2 border-gray-300 hover:border-black hover:bg-black hover:text-white transition-colors"
+          aria-label="Open menu"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <h1 className="text-lg md:text-2xl font-display uppercase tracking-tight truncate">Admin</h1>
       </div>
 
       {/* Actions */}

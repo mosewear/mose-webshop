@@ -313,9 +313,33 @@ export default function AdminReturnDetailsPage() {
     }
   }
 
+  const [notitiesOpslaan, setNotitiesOpslaan] = useState(false)
+
+  /**
+   * Slaat de interne notities ECHT op.
+   *
+   * Hiervoor toonde deze functie alleen een toast met "worden opgeslagen bij
+   * de volgende actie". Dat klopte deels (de notities gaan mee in de body van
+   * goedkeuren, afwijzen en refund), maar bij een retour in een eindstatus is
+   * er geen volgende actie meer. De tekst verdween dan bij de eerstvolgende
+   * verversing, en die komt vanzelf: deze pagina heeft een realtime-abonnement
+   * en een focus-handler.
+   */
   async function saveAdminNotes() {
-    // Admin notes worden automatisch opgeslagen bij andere acties
-    toast.success('Notities worden opgeslagen bij de volgende actie')
+    if (!returnData) return
+    setNotitiesOpslaan(true)
+    try {
+      const { error } = await supabase
+        .from('returns')
+        .update({ admin_notes: adminNotes })
+        .eq('id', returnData.id)
+      if (error) throw error
+      toast.success('Notities opgeslagen')
+    } catch (err: any) {
+      toast.error(`Opslaan mislukt: ${err?.message || 'onbekende fout'}`)
+    } finally {
+      setNotitiesOpslaan(false)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -708,9 +732,10 @@ export default function AdminReturnDetailsPage() {
             />
             <button
               onClick={saveAdminNotes}
-              className="mt-2 w-full px-4 py-2 bg-gray-200 text-gray-800 font-bold uppercase text-xs hover:bg-gray-300 transition-colors"
+              disabled={notitiesOpslaan}
+              className="mt-2 w-full px-4 py-2 min-h-[44px] bg-gray-200 text-gray-800 font-bold uppercase text-xs hover:bg-gray-300 transition-colors disabled:opacity-60"
             >
-              Opslaan (wordt opgeslagen bij actie)
+              {notitiesOpslaan ? 'Opslaan…' : 'Notities opslaan'}
             </button>
           </div>
 

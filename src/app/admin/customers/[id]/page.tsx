@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState, useRef, useCallback } from 'react'
+import StatusBadge from '@/components/admin/StatusBadge'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -174,24 +175,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      paid: 'bg-blue-100 text-blue-700 border-blue-200',
-      processing: 'bg-purple-100 text-purple-700 border-purple-200',
-      shipped: 'bg-orange-100 text-orange-700 border-orange-200',
-      delivered: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
-      return_requested: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      return_approved: 'bg-blue-100 text-blue-700 border-blue-200',
-      return_rejected: 'bg-red-100 text-red-700 border-red-200',
-      return_in_transit: 'bg-orange-100 text-orange-700 border-orange-200',
-      return_received: 'bg-green-100 text-green-700 border-green-200',
-      refunded: 'bg-green-100 text-green-700 border-green-200',
-      refund_processing: 'bg-purple-100 text-purple-700 border-purple-200',
-    }
-    return colors[status] || 'bg-gray-100 text-gray-700 border-gray-200'
-  }
 
   const getReturnStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
@@ -591,9 +574,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={`px-2 py-0.5 text-xs font-semibold border ${getStatusColor(entry.status)}`}>
-                              {entry.type === 'return' ? getReturnStatusLabel(entry.status) : entry.status.toUpperCase()}
-                            </span>
+                            <StatusBadge
+                              status={entry.status}
+                              kind={entry.type === 'return' ? 'return' : 'order'}
+                            />
                             {entry.amount > 0 && (
                               <span className={`text-sm font-bold ${entry.type === 'return' ? 'text-orange-600' : 'text-brand-primary'}`}>
                                 {entry.type === 'return' ? '-' : ''}€{entry.amount.toFixed(2)}
@@ -645,9 +629,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 text-xs font-semibold border-2 ${getStatusColor(order.status)}`}>
-                          {order.status.toUpperCase()}
-                        </span>
+                        <StatusBadge status={order.status} kind="order" />
                         <span className="text-lg font-bold text-brand-primary">
                           €{Number(order.total).toFixed(2)}
                         </span>
