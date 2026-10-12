@@ -64,3 +64,7 @@ photoshoot-2026/**/*.JPEG
 
 # Local MCP secrets (MOSE Supabase token) — do not commit
 .cursor/mcp.json
+
+# Uitvoer van de visuele controlescripts (npm run visual-check). Lokaal
+# bewijsmateriaal van 60MB aan schermafdrukken, hoort niet in de repo.
+shots/

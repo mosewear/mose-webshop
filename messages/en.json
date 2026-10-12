@@ -480,9 +480,9 @@
       "available": "PRESALE AVAILABLE",
       "expectedDelivery": "Expected delivery: {date}",
       "itemsAvailable": "{count} items available for pre-order",
-    "itemAvailable": "item available",
-    "itemsAvailableShort": "items available",
-    "previewNotice": "Preview images - product shoots coming soon (March 2nd)",
+      "itemAvailable": "item available",
+      "itemsAvailableShort": "items available",
+      "previewNotice": "Preview images - product shoots coming soon (March 2nd)",
       "comingSoon": "Coming soon",
       "reserveNow": "RESERVE NOW",
       "payNowReceiveLater": "Pay now, receive when in stock",
@@ -495,26 +495,57 @@
       "lowStock": "🔥 Last {count} pieces - Order now!"
     },
     "shipping": {
-      "title": "Shipping",
-      "nl": "€{price} (NL)",
-      "be": "€{price} (BE)",
-      "free": "Free shipping from €{threshold} (Netherlands only)"
+      "info": "€{cost} • Free from €{threshold}",
+      "label": "Shipping",
+      "deliveryTime": "Delivery time",
+      "deliveryTimeValue": "Usually the next business day, otherwise the day after"
     },
     "trust": {
-      "guarantee": "2 year warranty",
+      "localMade": "Locally made",
+      "freeShipping": "Free shipping from €{threshold}",
+      "returns": "{days} days return",
       "warranty": "2 year warranty",
-      "returns": "30 days return",
-      "freeShipping": "Free from €{amount}",
-      "secure": "Secure Payment"
+      "secure": "Secure payment"
     },
     "urgency": {
       "title": "POPULAR • Only {count} left in stock",
       "message": "Order now to avoid disappointment"
     },
     "reviews": {
-      "title": "Reviews",
-      "noReviews": "No reviews yet",
-      "write": "Write a review"
+      "beFirst": "Be the first to review",
+      "beFirstLong": "Be the first to write a review!",
+      "writeReview": "Write a review",
+      "close": "Close",
+      "yourReview": "Your review",
+      "rating": "Rating",
+      "name": "Name",
+      "email": "Email",
+      "emailNote": "(will not be published)",
+      "title": "Title",
+      "titlePlaceholder": "Summarize your experience",
+      "comment": "Your review",
+      "commentPlaceholder": "Tell us about your experience with this product",
+      "submit": "Submit review",
+      "submitting": "Submitting...",
+      "customerReviews": "Customer reviews",
+      "reviewsTagline": "Reviews",
+      "basedOn": "Based on {count} {count, plural, =1 {review} other {reviews}}",
+      "noReviews": "No reviews for this product yet.",
+      "optional": "(optional)",
+      "required": "*",
+      "stars": "{count, plural, =1 {star} other {stars}}",
+      "verifiedPurchase": "Verified purchase",
+      "addPhotos": "Add photos",
+      "addPhotosShort": "Photo",
+      "photosHelp": "Up to {count} photos. JPG, PNG or WebP, max 8 MB each.",
+      "imagesMax": "Up to {count} photos per review",
+      "imagesTooLarge": "Photo too large. Try a smaller image (max 8 MB).",
+      "fillRequired": "Please fill in all required fields",
+      "submitError": "Something went wrong while submitting your review",
+      "submitSuccess": "Thanks for your review! It will be approved within 24 hours.",
+      "showAll": "Show all {count} reviews",
+      "openPhoto": "Open photo",
+      "removePhoto": "Remove photo"
     },
     "description": {
       "title": "Description"
@@ -598,19 +629,6 @@
       "shippingReturns": "Shipping & Returns"
     },
     "madeLocally": "Made locally in the Netherlands",
-    "trust": {
-      "localMade": "Locally made",
-      "freeShipping": "Free shipping from €{threshold}",
-      "returns": "{days} days return",
-      "warranty": "2 year warranty",
-      "secure": "Secure payment"
-    },
-    "shipping": {
-      "info": "€{cost} • Free from €{threshold}",
-      "label": "Shipping",
-      "deliveryTime": "Delivery time",
-      "deliveryTimeValue": "Usually the next business day, otherwise the day after"
-    },
     "returns": {
       "info": "{days} days to return, no hassle",
       "label": "Returns",
@@ -625,42 +643,6 @@
     },
     "recentlyViewed": {
       "title": "Recently viewed"
-    },
-    "reviews": {
-      "beFirst": "Be the first to review",
-      "beFirstLong": "Be the first to write a review!",
-      "writeReview": "Write a review",
-      "close": "Close",
-      "yourReview": "Your review",
-      "rating": "Rating",
-      "name": "Name",
-      "email": "Email",
-      "emailNote": "(will not be published)",
-      "title": "Title",
-      "titlePlaceholder": "Summarize your experience",
-      "comment": "Your review",
-      "commentPlaceholder": "Tell us about your experience with this product",
-      "submit": "Submit review",
-      "submitting": "Submitting...",
-      "customerReviews": "Customer reviews",
-      "reviewsTagline": "Reviews",
-      "basedOn": "Based on {count} {count, plural, =1 {review} other {reviews}}",
-      "noReviews": "No reviews for this product yet.",
-      "optional": "(optional)",
-      "required": "*",
-      "stars": "{count, plural, =1 {star} other {stars}}",
-      "verifiedPurchase": "Verified purchase",
-      "addPhotos": "Add photos",
-      "addPhotosShort": "Photo",
-      "photosHelp": "Up to {count} photos. JPG, PNG or WebP, max 8 MB each.",
-      "imagesMax": "Up to {count} photos per review",
-      "imagesTooLarge": "Photo too large. Try a smaller image (max 8 MB).",
-      "fillRequired": "Please fill in all required fields",
-      "submitError": "Something went wrong while submitting your review",
-      "submitSuccess": "Thanks for your review! It will be approved within 24 hours.",
-      "showAll": "Show all {count} reviews",
-      "openPhoto": "Open photo",
-      "removePhoto": "Remove photo"
     },
     "sticky": {
       "addToCart": "Add to Cart",
@@ -705,7 +687,7 @@
         },
         {
           "question": "When will I receive my order?",
-          "answer": "Order before 5 PM and we ship the same day with DHL. Usually at your door the next business day in NL and BE, otherwise the day after. Shipping is free from \u20ac{freeShipping}; below that it is \u20ac{shippingCost}."
+          "answer": "Order before 5 PM and we ship the same day with DHL. Usually at your door the next business day in NL and BE, otherwise the day after. Shipping is free from €{freeShipping}; below that it is €{shippingCost}."
         },
         {
           "question": "What if the size doesn't fit?",
@@ -793,10 +775,19 @@
     "orUseTrack": "or use the track & trace link in your shipping confirmation."
   },
   "returns": {
-    "info": "{days} days return period",
-    "label": "Returns",
-    "cost": "Return costs",
-    "costValue": "€{cost} (incl. VAT)"
+    "title": "Return",
+    "new": "New Return",
+    "selectOrder": "Select Order",
+    "reason": "Reason",
+    "items": "Items",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "completed": "Completed"
+    },
+    "label": "Return Label",
+    "download": "Download Label"
   },
   "shop": {
     "title": "Shop",
@@ -1112,21 +1103,6 @@
       "email": "We've sent a confirmation to your email address."
     }
   },
-  "returns": {
-    "title": "Return",
-    "new": "New Return",
-    "selectOrder": "Select Order",
-    "reason": "Reason",
-    "items": "Items",
-    "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "completed": "Completed"
-    },
-    "label": "Return Label",
-    "download": "Download Label"
-  },
   "emails": {
     "orderConfirmation": {
       "subject": "Order Confirmed - #{orderId}",
@@ -1167,21 +1143,68 @@
     "questionsText": "We're happy to help! Contact us:"
   },
   "orderConfirmation": {
-    "subject": "Order Confirmed - #{orderId}",
-    "title": "ORDER CONFIRMED",
-    "subtitle": "THANK YOU FOR YOUR ORDER",
-    "heroText": "Thank you {name}! We have received and confirmed your order.",
-    "presaleNotice": "Pre-order item in your order",
-    "presaleNoticeText": "Please note: This order contains one or more pre-order items. Expected delivery: {date}",
-    "expected": "Expected",
-    "yourItems": "Your items",
-    "paymentSummary": "Payment summary",
-    "subtotal": "Subtotal (excl. VAT)",
-    "vat": "VAT (21%)",
-    "shipping": "Shipping",
-    "free": "Free",
-    "totalPaid": "Total paid (incl. VAT)",
-    "shippingAddress": "Shipping address"
+    "loading": "Loading order...",
+    "notFound": {
+      "title": "ORDER NOT FOUND",
+      "message": "We cannot find this order. Please check the link or contact us.",
+      "button": "Go to shop"
+    },
+    "success": {
+      "title": "THANK YOU!",
+      "subtitle": "Your order has been placed",
+      "emailSent": "We've sent a confirmation to",
+      "orderNumber": "Order number",
+      "scrollHint": "Scroll for details"
+    },
+    "items": {
+      "title": "YOUR ITEMS",
+      "size": "Size:",
+      "color": "Color:",
+      "quantity": "Quantity:"
+    },
+    "summary": {
+      "subtotal": "Subtotal",
+      "vat": "Including VAT (21%)",
+      "shipping": "Shipping",
+      "discount": "Discount",
+      "free": "FREE",
+      "pickup": "Pickup in Groningen",
+      "total": "Total",
+      "inclVat": "Incl. €{amount} VAT"
+    },
+    "delivery": {
+      "shippingAddress": "Shipping address",
+      "pickupLocation": "Pickup location",
+      "pickupHint": "We will contact you once your order is ready for pickup.",
+      "contact": "Contact"
+    },
+    "timeline": {
+      "title": "WHAT HAPPENS NOW?",
+      "step1": {
+        "title": "Email confirmation",
+        "description": "You'll receive a confirmation with all details within a few minutes."
+      },
+      "step2": {
+        "title": "We pack your order",
+        "description": "Within 1-2 business days we'll carefully pack everything."
+      },
+      "step3": {
+        "title": "Shipping & tracking",
+        "description": "Track & trace code upon shipping. Usually at your door the next business day, otherwise the day after.",
+        "pickupDescription": "We will contact you as soon as your order is ready for pickup in Groningen."
+      }
+    },
+    "actions": {
+      "continueShopping": "Continue shopping",
+      "contact": "Contact us"
+    },
+    "pickupWhatsapp": {
+      "badge": "Pickup in Groningen",
+      "title": "Schedule your pickup via WhatsApp",
+      "description": "Your order is paid. Send us a WhatsApp message and we will schedule a pickup time that works for you.",
+      "note": "We usually respond quickly on business days.",
+      "button": "WhatsApp us now"
+    }
   },
   "metadata": {
     "title": "MOSE | Clothing and accessories for men",
@@ -1256,38 +1279,6 @@
       "description": "We're happy to help! Contact us.",
       "button": "Contact Us"
     }
-  },
-  "orderConfirmation": {
-    "title": "Order Confirmed!",
-    "thankYou": "Thank you for your order!",
-    "orderNumber": "Order Number",
-    "orderDate": "Order Date",
-    "email": "Email Address",
-    "confirmationSent": "We've sent a confirmation to {email}",
-    "whatNow": "What happens now?",
-    "step1": {
-      "title": "1. We process your payment",
-      "description": "Your payment is being verified and approved."
-    },
-    "step2": {
-      "title": "2. We pack your order",
-      "description": "Your items are carefully packed in our workshop."
-    },
-    "step3": {
-      "title": "3. Your package is shipped",
-      "description": "You'll receive a Track & Trace code via email."
-    },
-    "items": "Your items",
-    "subtotal": "Subtotal",
-    "shipping": "Shipping",
-    "total": "Total",
-    "shippingAddress": "Shipping Address",
-    "billingAddress": "Billing Address",
-    "paymentMethod": "Payment Method",
-    "continueShopping": "Continue Shopping",
-    "viewAccount": "View My Account",
-    "loading": "Loading order...",
-    "error": "Something went wrong while fetching your order."
   },
   "language": {
     "selector": "Language",
@@ -1478,70 +1469,6 @@
         "description": "Check our FAQ first. Your answer might already be there!",
         "button": "To Terms & Conditions"
       }
-    }
-  },
-  "orderConfirmation": {
-    "loading": "Loading order...",
-    "notFound": {
-      "title": "ORDER NOT FOUND",
-      "message": "We cannot find this order. Please check the link or contact us.",
-      "button": "Go to shop"
-    },
-    "success": {
-      "title": "THANK YOU!",
-      "subtitle": "Your order has been placed",
-      "emailSent": "We've sent a confirmation to",
-      "orderNumber": "Order number",
-      "scrollHint": "Scroll for details"
-    },
-    "items": {
-      "title": "YOUR ITEMS",
-      "size": "Size:",
-      "color": "Color:",
-      "quantity": "Quantity:"
-    },
-    "summary": {
-      "subtotal": "Subtotal",
-      "vat": "Including VAT (21%)",
-      "shipping": "Shipping",
-      "discount": "Discount",
-      "free": "FREE",
-      "pickup": "Pickup in Groningen",
-      "total": "Total",
-      "inclVat": "Incl. €{amount} VAT"
-    },
-    "delivery": {
-      "shippingAddress": "Shipping address",
-      "pickupLocation": "Pickup location",
-      "pickupHint": "We will contact you once your order is ready for pickup.",
-      "contact": "Contact"
-    },
-    "timeline": {
-      "title": "WHAT HAPPENS NOW?",
-      "step1": {
-        "title": "Email confirmation",
-        "description": "You'll receive a confirmation with all details within a few minutes."
-      },
-      "step2": {
-        "title": "We pack your order",
-        "description": "Within 1-2 business days we'll carefully pack everything."
-      },
-      "step3": {
-        "title": "Shipping & tracking",
-        "description": "Track & trace code upon shipping. Usually at your door the next business day, otherwise the day after.",
-        "pickupDescription": "We will contact you as soon as your order is ready for pickup in Groningen."
-      }
-    },
-    "actions": {
-      "continueShopping": "Continue shopping",
-      "contact": "Contact us"
-    },
-    "pickupWhatsapp": {
-      "badge": "Pickup in Groningen",
-      "title": "Schedule your pickup via WhatsApp",
-      "description": "Your order is paid. Send us a WhatsApp message and we will schedule a pickup time that works for you.",
-      "note": "We usually respond quickly on business days.",
-      "button": "WhatsApp us now"
     }
   },
   "privacy": {
@@ -2009,16 +1936,17 @@
   },
   "chat": {
     "title": "MOSE SUPPORT",
-    "greeting": "Hi! 👋 How can I help you?",
-    "aiOffline": "🤖 Our AI assistant is currently offline\n\nWe are working on setting up our smart chatbot! Until then, our team is happy to help you personally.\n\n→ Click on \"TEAM MOSE\" for direct help",
+    "greeting": "Hi! How can I help? Ask me anything about sizing, fabric or your order.",
+    "aiOffline": "Something went wrong while fetching an answer. Please try again, or go to Team MOSE for personal contact.",
     "tabs": {
       "direct": "Direct answer",
       "team": "Team MOSE"
     },
     "input": {
-      "placeholder": "Type your question...",
+      "placeholder": "Type your question",
       "send": "Send",
-      "sendAria": "Send message"
+      "sendAria": "Send message",
+      "hint": "Enter sends, Shift+Enter for a new line"
     },
     "close": "Close chat",
     "teamMose": {
@@ -2044,6 +1972,17 @@
         "tracking": "Order status & tracking",
         "other": "Other questions"
       }
+    },
+    "subtitle": "Usually replies in a minute",
+    "online": "Online",
+    "assistant": "MOSE",
+    "retry": "Try again",
+    "starters": {
+      "intro": "Or pick a common question",
+      "size": "Which size do I need?",
+      "shipping": "What does shipping cost?",
+      "returns": "How do returns work?",
+      "material": "What is it made of?"
     }
   },
   "surveyPopup": {

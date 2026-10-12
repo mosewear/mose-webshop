@@ -480,9 +480,9 @@
       "available": "PRESALE BESCHIKBAAR",
       "expectedDelivery": "Verwachte levering: {date}",
       "itemsAvailable": "{count} stuks beschikbaar voor pre-order",
-    "itemAvailable": "stuk beschikbaar",
-    "itemsAvailableShort": "stuks beschikbaar",
-    "previewNotice": "Preview images - product shoots volgen zodra eerste drop binnen is (2 maart)",
+      "itemAvailable": "stuk beschikbaar",
+      "itemsAvailableShort": "stuks beschikbaar",
+      "previewNotice": "Preview images - product shoots volgen zodra eerste drop binnen is (2 maart)",
       "comingSoon": "Binnenkort",
       "reserveNow": "RESERVEER NU",
       "payNowReceiveLater": "Betaal nu, ontvang zodra binnen",
@@ -495,16 +495,16 @@
       "lowStock": "🔥 Laatste {count} stuks - Bestel snel!"
     },
     "shipping": {
-      "title": "Verzending",
-      "nl": "€{price} (NL)",
-      "be": "€{price} (BE)",
-      "free": "Gratis verzending vanaf €{threshold} (alleen Nederland)"
+      "info": "€{cost} • Gratis vanaf €{threshold}",
+      "label": "Verzending",
+      "deliveryTime": "Levertijd",
+      "deliveryTimeValue": "Meestal de volgende werkdag, anders de dag erna"
     },
     "trust": {
-      "guarantee": "2 jaar garantie",
+      "localMade": "Lokaal gemaakt",
+      "freeShipping": "Gratis verzending vanaf €{threshold}",
+      "returns": "{days} dagen retour",
       "warranty": "2 jaar garantie",
-      "returns": "30 dagen retour",
-      "freeShipping": "Gratis vanaf €{amount}",
       "secure": "Veilig betalen"
     },
     "urgency": {
@@ -512,9 +512,40 @@
       "message": "Bestel nu om teleurstelling te voorkomen"
     },
     "reviews": {
-      "title": "Reviews",
-      "noReviews": "Nog geen reviews",
-      "write": "Schrijf een review"
+      "beFirst": "Wees de eerste om te reviewen",
+      "beFirstLong": "Wees de eerste om een review te schrijven!",
+      "writeReview": "Schrijf een review",
+      "close": "Sluiten",
+      "yourReview": "Jouw review",
+      "rating": "Beoordeling",
+      "name": "Naam",
+      "email": "Email",
+      "emailNote": "(wordt niet gepubliceerd)",
+      "title": "Titel",
+      "titlePlaceholder": "Vat je ervaring samen",
+      "comment": "Jouw review",
+      "commentPlaceholder": "Vertel ons over je ervaring met dit product",
+      "submit": "Verstuur review",
+      "submitting": "Verzenden...",
+      "customerReviews": "Klantervaringen",
+      "reviewsTagline": "Reviews",
+      "basedOn": "Gebaseerd op {count} {count, plural, =1 {review} other {reviews}}",
+      "noReviews": "Nog geen reviews voor dit product.",
+      "optional": "(optioneel)",
+      "required": "*",
+      "stars": "{count, plural, =1 {ster} other {sterren}}",
+      "verifiedPurchase": "Geverifieerde koop",
+      "addPhotos": "Foto's toevoegen",
+      "addPhotosShort": "Foto",
+      "photosHelp": "Tot {count} foto's. JPG, PNG of WebP, max 8 MB elk.",
+      "imagesMax": "Maximaal {count} foto's per review",
+      "imagesTooLarge": "Foto te groot. Probeer een kleinere afbeelding (max 8 MB).",
+      "fillRequired": "Vul alle verplichte velden in",
+      "submitError": "Er ging iets mis bij het verzenden van je review",
+      "submitSuccess": "Bedankt voor je review! Hij wordt binnen 24 uur goedgekeurd.",
+      "showAll": "Toon alle {count} reviews",
+      "openPhoto": "Open foto",
+      "removePhoto": "Verwijder foto"
     },
     "description": {
       "title": "Beschrijving"
@@ -598,19 +629,6 @@
       "shippingReturns": "Verzending & retour"
     },
     "madeLocally": "Lokaal gemaakt in Nederland",
-    "trust": {
-      "localMade": "Lokaal gemaakt",
-      "freeShipping": "Gratis verzending vanaf €{threshold}",
-      "returns": "{days} dagen retour",
-      "warranty": "2 jaar garantie",
-      "secure": "Veilig betalen"
-    },
-    "shipping": {
-      "info": "€{cost} • Gratis vanaf €{threshold}",
-      "label": "Verzending",
-      "deliveryTime": "Levertijd",
-      "deliveryTimeValue": "Meestal de volgende werkdag, anders de dag erna"
-    },
     "returns": {
       "info": "{days} dagen retour zonder gedoe",
       "label": "Retour",
@@ -625,42 +643,6 @@
     },
     "recentlyViewed": {
       "title": "Recent bekeken"
-    },
-    "reviews": {
-      "beFirst": "Wees de eerste om te reviewen",
-      "beFirstLong": "Wees de eerste om een review te schrijven!",
-      "writeReview": "Schrijf een review",
-      "close": "Sluiten",
-      "yourReview": "Jouw review",
-      "rating": "Beoordeling",
-      "name": "Naam",
-      "email": "Email",
-      "emailNote": "(wordt niet gepubliceerd)",
-      "title": "Titel",
-      "titlePlaceholder": "Vat je ervaring samen",
-      "comment": "Jouw review",
-      "commentPlaceholder": "Vertel ons over je ervaring met dit product",
-      "submit": "Verstuur review",
-      "submitting": "Verzenden...",
-      "customerReviews": "Klantervaringen",
-      "reviewsTagline": "Reviews",
-      "basedOn": "Gebaseerd op {count} {count, plural, =1 {review} other {reviews}}",
-      "noReviews": "Nog geen reviews voor dit product.",
-      "optional": "(optioneel)",
-      "required": "*",
-      "stars": "{count, plural, =1 {ster} other {sterren}}",
-      "verifiedPurchase": "Geverifieerde koop",
-      "addPhotos": "Foto's toevoegen",
-      "addPhotosShort": "Foto",
-      "photosHelp": "Tot {count} foto's. JPG, PNG of WebP, max 8 MB elk.",
-      "imagesMax": "Maximaal {count} foto's per review",
-      "imagesTooLarge": "Foto te groot. Probeer een kleinere afbeelding (max 8 MB).",
-      "fillRequired": "Vul alle verplichte velden in",
-      "submitError": "Er ging iets mis bij het verzenden van je review",
-      "submitSuccess": "Bedankt voor je review! Hij wordt binnen 24 uur goedgekeurd.",
-      "showAll": "Toon alle {count} reviews",
-      "openPhoto": "Open foto",
-      "removePhoto": "Verwijder foto"
     },
     "sticky": {
       "addToCart": "In winkelwagen",
@@ -793,10 +775,19 @@
     "orUseTrack": "of gebruik de track & trace link in je verzendbevestiging."
   },
   "returns": {
-    "info": "{days} dagen bedenktijd",
-    "label": "Retour",
-    "cost": "Retourkosten",
-    "costValue": "€{cost} (incl. btw)"
+    "title": "Retourneren",
+    "new": "Nieuwe retour",
+    "selectOrder": "Selecteer bestelling",
+    "reason": "Reden",
+    "items": "Artikelen",
+    "status": {
+      "pending": "In behandeling",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "completed": "Voltooid"
+    },
+    "label": "Retourlabel",
+    "download": "Download label"
   },
   "shop": {
     "title": "Shop",
@@ -1111,21 +1102,6 @@
       "message": "Bedankt voor je bestelling!",
       "email": "We hebben een bevestiging naar je e-mailadres gestuurd."
     }
-  },
-  "returns": {
-    "title": "Retourneren",
-    "new": "Nieuwe retour",
-    "selectOrder": "Selecteer bestelling",
-    "reason": "Reden",
-    "items": "Artikelen",
-    "status": {
-      "pending": "In behandeling",
-      "approved": "Goedgekeurd",
-      "rejected": "Afgewezen",
-      "completed": "Voltooid"
-    },
-    "label": "Retourlabel",
-    "download": "Download label"
   },
   "emails": {
     "orderConfirmation": {
@@ -1647,7 +1623,7 @@
     },
     "story": {
       "title": "ONS VERHAAL",
-      "paragraph1": "Wij zijn Irma en Rick, de oprichters van MOSE.\n\nWe wonen met onze katten Bob en Marley en onze daggoe Guus in Groningen, in Helpman. Sinds september zijn we zelfs getrouwd. Wow, serieuze shit.\n\n\u201CWaarom MOSE?\u201D Onze overleden poes heette Mosie, we noemden haar Moos. Dit is ons eerbetoon. 🐱",
+      "paragraph1": "Wij zijn Irma en Rick, de oprichters van MOSE.\n\nWe wonen met onze katten Bob en Marley en onze daggoe Guus in Groningen, in Helpman. Sinds september zijn we zelfs getrouwd. Wow, serieuze shit.\n\n“Waarom MOSE?” Onze overleden poes heette Mosie, we noemden haar Moos. Dit is ons eerbetoon. 🐱",
       "paragraph2": "We zijn MOSE gestart omdat fast fashion ons irriteert. We kochten vaak dure t-shirts die na een paar keer wassen klaar waren voor de prullenbak. Daarom maken we kleding die blijft. Duurzaam, eerlijk en lokaal. Ook na tig keer wassen.\n\nLokaal? Ja. Gewoon gemaakt in het atelier in Groningen."
     },
     "local": {
@@ -1960,16 +1936,17 @@
   },
   "chat": {
     "title": "MOSE SUPPORT",
-    "greeting": "Hoi! 👋 Waar kan ik je mee helpen?",
-    "aiOffline": "🤖 Onze AI assistent is momenteel offline\n\nWe zijn druk bezig met het opzetten van onze slimme chatbot! Tot die tijd helpt ons team je graag persoonlijk verder.\n\n→ Klik op \"TEAM MOSE\" voor directe hulp",
+    "greeting": "Hoi! Waar kan ik je mee helpen? Vraag gerust iets over maten, materiaal of je bestelling.",
+    "aiOffline": "Er ging iets mis bij het ophalen van een antwoord. Probeer het nog een keer, of ga naar Team MOSE voor persoonlijk contact.",
     "tabs": {
       "direct": "Direct antwoord",
       "team": "Team MOSE"
     },
     "input": {
-      "placeholder": "Typ je vraag...",
+      "placeholder": "Typ je vraag",
       "send": "Verstuur",
-      "sendAria": "Verstuur bericht"
+      "sendAria": "Verstuur bericht",
+      "hint": "Enter verstuurt, Shift+Enter nieuwe regel"
     },
     "close": "Sluit chat",
     "teamMose": {
@@ -1995,6 +1972,17 @@
         "tracking": "Order status & tracking",
         "other": "Andere vragen"
       }
+    },
+    "subtitle": "Meestal binnen een minuut",
+    "online": "Online",
+    "assistant": "MOSE",
+    "retry": "Opnieuw proberen",
+    "starters": {
+      "intro": "Of kies een veelgestelde vraag",
+      "size": "Welke maat heb ik?",
+      "shipping": "Wat kost verzending?",
+      "returns": "Hoe werkt retourneren?",
+      "material": "Van welke stof is het gemaakt?"
     }
   },
   "surveyPopup": {
