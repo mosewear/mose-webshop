@@ -41,34 +41,50 @@ export default function CustomersPage() {
     }, 300)
   }
 
-  const filteredCustomers = useMemo(() => {
-    const q = debouncedQuery.toLowerCase().trim()
-    if (!q) return customers
-    return customers.filter((c) => {
-      const fields = [c.first_name, c.last_name, c.email, c.phone]
-      return fields.some((f) => f?.toLowerCase().includes(q))
-    })
-  }, [customers, debouncedQuery])
+  // De server filtert nu al; dit blijft staan als directe weergave van wat is
+  // opgehaald, zodat de rest van de pagina ongewijzigd kan blijven.
+  const filteredCustomers = customers
 
   useEffect(() => {
     fetchCustomers()
-  }, [page])
+  }, [page, debouncedQuery])
+
+  // Bij een nieuwe zoekterm terug naar pagina 1, anders kijk je in een lege
+  // pagina 3 van een resultaat dat er maar twee heeft.
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedQuery])
 
   const fetchCustomers = async () => {
     try {
       setLoading(true)
 
-      const { count } = await supabase
+      // Zoeken gaat naar de DATABASE, niet alleen over de geladen pagina.
+      // Het client-side filter hieronder keek in de 25 opgehaalde profielen,
+      // terwijl de placeholder zoeken op naam, e-mail en telefoon belooft.
+      // Stond de klant op pagina 4, dan vond je hem niet, en juist Klanten is
+      // de pagina waar men op terugvalt als het orderzoeken faalt.
+      const zoekterm = debouncedQuery.trim()
+      const zoekFilter = zoekterm
+        ? `first_name.ilike.%${zoekterm}%,last_name.ilike.%${zoekterm}%,email.ilike.%${zoekterm}%,phone.ilike.%${zoekterm}%`
+        : null
+
+      let countQuery = supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
+      if (zoekFilter) countQuery = countQuery.or(zoekFilter)
 
+      const { count } = await countQuery
       setTotalCount(count || 0)
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+      if (zoekFilter) query = query.or(zoekFilter)
+
+      const { data, error } = await query
 
       if (error) throw error
       setCustomers(data || [])

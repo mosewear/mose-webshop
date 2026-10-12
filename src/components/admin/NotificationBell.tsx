@@ -90,6 +90,17 @@ export default function NotificationBell() {
   const fetchNotifications = useCallback(async () => {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
+    // Voorraaddrempel uit site_settings in plaats van een hardgecodeerde 5.
+    // De voorraadpagina leest die instelling wél, dus de bel en de lijst
+    // spraken elkaar tegen zodra de drempel afweek.
+    const { data: drempelRij } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'low_stock_threshold')
+      .maybeSingle()
+    const geparsed = parseInt(String(drempelRij?.value ?? ''), 10)
+    const lageVoorraadDrempel = Number.isFinite(geparsed) && geparsed > 0 ? geparsed : 5
+
     const [ordersRes, returnsRes, stockRes, reviewsRes] = await Promise.all([
       supabase
         .from('orders')
@@ -100,13 +111,21 @@ export default function NotificationBell() {
       supabase
         .from('returns')
         .select('id, order_id, status, created_at')
-        .eq('status', 'pending')
+        // Stond op 'pending', een status die returns helemaal niet kent: de
+        // default is 'return_requested' (zie de migratie die de tabel maakt).
+        // Deze melding kon dus per definitie nooit verschijnen, waardoor
+        // retouren bleven liggen tot iemand er toevallig langsliep.
+        // 'return_received' zit erbij omdat die ook op actie wacht.
+        .in('status', ['return_requested', 'return_received'])
         .order('created_at', { ascending: false })
         .limit(5),
       supabase
         .from('product_variants')
         .select('id, size, color, stock_quantity, product:products(id, name)')
-        .lt('stock_quantity', 5)
+        // Uitverkocht (0) is geen "bijna op" maar een eigen situatie; de
+        // voorraadpagina sluit die ook uit.
+        .gt('stock_quantity', 0)
+        .lt('stock_quantity', lageVoorraadDrempel)
         .order('stock_quantity', { ascending: true })
         .limit(5),
       supabase

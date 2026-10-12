@@ -1,6 +1,8 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import StatusBadge from '@/components/admin/StatusBadge'
+import { orderStatus } from '@/lib/status-registry'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -331,7 +333,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const handleUpdateStatus = async () => {
     if (!order || newStatus === order.status) return
 
-    if (!confirm(`Status wijzigen naar "${getStatusLabel(newStatus)}"?`)) return
+    if (!confirm(`Status wijzigen naar "${orderStatus(newStatus).label}"?`)) return
 
     try {
       setUpdating(true)
@@ -942,20 +944,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const editedSubtotal = editedItems.reduce((sum, i) => sum + (i.price_at_purchase * i.quantity), 0)
   const editedTotal = editedSubtotal + (order?.shipping_cost || 0)
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      paid: 'bg-blue-100 text-blue-700 border-blue-200',
-      processing: 'bg-purple-100 text-purple-700 border-purple-200',
-      shipped: 'bg-orange-100 text-orange-700 border-orange-200',
-      delivered: 'bg-green-100 text-green-700 border-green-200',
-      cancelled: 'bg-red-100 text-red-700 border-red-200',
-      return_requested: 'bg-amber-100 text-amber-700 border-amber-200',
-      returned: 'bg-gray-100 text-gray-700 border-gray-200',
-      refunded: 'bg-pink-100 text-pink-700 border-pink-200',
-    }
-    return colors[status] || 'bg-gray-100 text-gray-700 border-gray-200'
-  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -977,20 +965,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      pending: 'In afwachting',
-      paid: 'Betaald',
-      processing: 'In behandeling',
-      shipped: 'Verzonden',
-      delivered: 'Afgeleverd',
-      cancelled: 'Geannuleerd',
-      return_requested: 'Retour aangevraagd',
-      returned: 'Geretourneerd',
-      refunded: 'Terugbetaald',
-    }
-    return labels[status] || status
-  }
 
   if (loading) {
     return (
@@ -1047,10 +1021,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <RotateCcw className="w-4 h-4 shrink-0" aria-hidden />
             Retour aanmaken
           </Link>
-          <span className={`px-4 py-2 text-sm font-semibold border-2 flex items-center justify-center gap-2 ${getStatusColor(order.status)}`}>
-            {getStatusIcon(order.status)}
-            {getStatusLabel(order.status).toUpperCase()}
-          </span>
+          <StatusBadge status={order.status} kind="order" size="md" />
         </div>
       </div>
 
@@ -1943,8 +1914,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                       <div className="flex-1 pb-4">
                         <div className="font-semibold">
-                          {history.old_status && `${getStatusLabel(history.old_status)} → `}
-                          {getStatusLabel(history.new_status)}
+                          {history.old_status && `${orderStatus(history.old_status).label} → `}
+                          {orderStatus(history.new_status).label}
                         </div>
                         <div className="text-sm text-gray-600">
                           {new Date(history.changed_at).toLocaleString('nl-NL')}

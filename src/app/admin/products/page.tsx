@@ -35,6 +35,8 @@ interface Product {
   product_images?: Array<{
     url: string
     is_primary?: boolean
+    media_type?: string | null
+    video_thumbnail_url?: string | null
   }>
   product_variants?: Array<{
     stock_quantity: number
@@ -53,6 +55,33 @@ type ReorderDirection = 'up' | 'down' | 'top' | 'bottom'
  */
 const resolveStatus = (p: Product): 'active' | 'draft' =>
   p.status === 'draft' || p.is_active === false ? 'draft' : 'active'
+
+/**
+ * Kiest een afbeelding die next/image daadwerkelijk kan verwerken.
+ *
+ * product_images bevat ook video's (media_type = 'video'). De lijst selecteerde
+ * eerder alleen url en is_primary en gaf de eerste de beste door aan
+ * <Image>. Bij een product waarvan de primaire media een video is, leverde dat
+ * een 400 van de image-optimizer op ("The requested resource isn't a valid
+ * image") en dus een kapotte thumbnail in de productlijst.
+ *
+ * Volgorde: de thumbnail van een primaire video, anders de primaire
+ * afbeelding, anders de eerste afbeelding, anders de eerste videothumbnail.
+ */
+function pickThumbnail(
+  media?: Array<{ url: string; is_primary?: boolean; media_type?: string | null; video_thumbnail_url?: string | null }>
+): string | null {
+  if (!media?.length) return null
+  const isVideo = (m: { media_type?: string | null }) => m.media_type === 'video'
+  const primary = media.find((m) => m.is_primary)
+  if (primary) {
+    if (!isVideo(primary)) return primary.url
+    if (primary.video_thumbnail_url) return primary.video_thumbnail_url
+  }
+  const firstImage = media.find((m) => !isVideo(m))
+  if (firstImage) return firstImage.url
+  return media.find((m) => m.video_thumbnail_url)?.video_thumbnail_url ?? null
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -95,7 +124,7 @@ export default function AdminProductsPage() {
         .select(`
           *,
           category:categories(name),
-          product_images(url, is_primary)
+          product_images(url, is_primary, media_type, video_thumbnail_url)
         `)
         .order('display_order', { ascending: true })
         .order('created_at', { ascending: false })
@@ -471,8 +500,7 @@ export default function AdminProductsPage() {
                     />
                     <div className="flex-shrink-0 h-14 w-14 bg-gray-100 border border-gray-200 overflow-hidden">
                       {(() => {
-                        const primaryImage = product.product_images?.find(img => img.is_primary)
-                        const imageUrl = primaryImage?.url || product.product_images?.[0]?.url
+                        const imageUrl = pickThumbnail(product.product_images)
 
                         if (imageUrl) {
                           return (
@@ -661,8 +689,7 @@ export default function AdminProductsPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-12 w-12 bg-gray-100 border border-gray-200 overflow-hidden">
                           {(() => {
-                            const primaryImage = product.product_images?.find(img => img.is_primary)
-                            const imageUrl = primaryImage?.url || product.product_images?.[0]?.url
+                            const imageUrl = pickThumbnail(product.product_images)
                             
                             if (imageUrl) {
                               return (

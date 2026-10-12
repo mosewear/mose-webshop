@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import StatusBadge from '@/components/admin/StatusBadge'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, RefreshCw } from 'lucide-react'
@@ -96,37 +97,7 @@ export default function AdminReturnsPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      return_requested: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      return_approved: 'bg-blue-100 text-blue-700 border-blue-200',
-      return_label_payment_pending: 'bg-orange-100 text-orange-700 border-orange-200',
-      return_label_payment_completed: 'bg-purple-100 text-purple-700 border-purple-200',
-      return_label_generated: 'bg-green-100 text-green-700 border-green-200',
-      return_in_transit: 'bg-brand-primary/20 text-brand-primary border-brand-primary/30',
-      return_received: 'bg-gray-100 text-gray-700 border-gray-200',
-      refund_processing: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      refunded: 'bg-gray-800 text-white border-gray-900',
-      return_rejected: 'bg-red-100 text-red-700 border-red-200',
-    }
-    return colors[status] || 'bg-gray-100 text-gray-700 border-gray-200'
-  }
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      return_requested: 'Aangevraagd',
-      return_approved: 'Goedgekeurd',
-      return_label_payment_pending: 'Betaling Label',
-      return_label_payment_completed: 'Label Betaald',
-      return_label_generated: 'Label Beschikbaar',
-      return_in_transit: 'Onderweg',
-      return_received: 'Ontvangen',
-      refund_processing: 'Refund Bezig',
-      refunded: 'Terugbetaald',
-      return_rejected: 'Afgewezen',
-    }
-    return labels[status] || status
-  }
 
   const filteredReturns = returns.filter((returnItem) => {
     if (searchTerm) {
@@ -271,9 +242,7 @@ export default function AdminReturnsPage() {
                     </div>
                   )}
                 </div>
-                <span className={`inline-block px-2 py-1 text-xs font-bold uppercase border ${getStatusColor(returnItem.status)}`}>
-                  {getStatusLabel(returnItem.status)}
-                </span>
+                <StatusBadge status={returnItem.status} kind="return" />
               </div>
 
               <div className="mt-3 text-sm">
@@ -349,9 +318,7 @@ export default function AdminReturnsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-1 text-xs font-bold uppercase border ${getStatusColor(returnItem.status)}`}>
-                      {getStatusLabel(returnItem.status)}
-                    </span>
+                    <StatusBadge status={returnItem.status} kind="return" />
                   </td>
                   <td className="px-4 py-3">
                     {returnItem.total_refund ? (

@@ -136,17 +136,34 @@ export default function BrandPillDesignSelector({
         exact wat de bezoeker op de productpagina ziet — inclusief
         roterende thumbnail, NIEUW-badge en live pulse-indicator.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      {/* Semantisch een keuzegroep, en daarom role="radiogroup" met
+          role="radio"-opties in plaats van <button>-elementen. De
+          voorbeeldbubbel rendert zelf een <button>; die zat daardoor genest in
+          een <button>, wat ongeldige HTML is en in React een hydratatiefout
+          gaf (zichtbaar in de console op /admin/settings). */}
+      <div
+        role="radiogroup"
+        aria-label="Ontwerp van de merkbubbel"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+      >
         {PILL_DESIGN_REGISTRY.map((meta) => {
           const Pill = getPillComponent(meta.id)
           const selected = value === meta.id
           return (
-            <button
+            <div
               key={meta.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => onChange(meta.id)}
-              aria-pressed={selected}
+              role="radio"
+              aria-checked={selected}
+              aria-disabled={disabled || undefined}
+              tabIndex={disabled ? -1 : selected ? 0 : -1}
+              onClick={() => !disabled && onChange(meta.id)}
+              onKeyDown={(e) => {
+                if (disabled) return
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault()
+                  onChange(meta.id)
+                }
+              }}
               className={`group relative flex flex-col items-stretch text-left bg-white border-2 transition-colors p-4 sm:p-5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary/40 ${
                 selected
                   ? 'border-black ring-2 ring-brand-primary'
@@ -166,7 +183,16 @@ export default function BrandPillDesignSelector({
               {/* Preview-zone — vaste min-height zodat alle cards
                   visueel dezelfde body hebben, ongeacht welk design
                   hoger of breder is. */}
-              <div className="flex items-center justify-center min-h-[200px] py-4">
+              {/* Puur een voorbeeld: niet klikbaar en niet bereikbaar met tab,
+                  zodat de knop binnenin de keuze niet kan onderscheppen. */}
+              {/* overflow-hidden: sommige pill-ontwerpen zijn intrinsiek breder
+                  dan een telefoonscherm en duwden de hele instellingenpagina
+                  over de rand (425px in 390px). Het voorbeeld mag gerust
+                  bijgesneden worden; het gaat om de stijl, niet om de inhoud. */}
+              <div
+                inert
+                className="flex items-center justify-center min-h-[200px] py-4 pointer-events-none overflow-hidden w-full"
+              >
                 <Pill {...sharedPreviewProps} />
               </div>
 
@@ -179,7 +205,7 @@ export default function BrandPillDesignSelector({
                   {meta.description}
                 </p>
               </div>
-            </button>
+            </div>
           )
         })}
       </div>
