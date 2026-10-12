@@ -119,7 +119,7 @@ export function calculateEstimatedDelivery(carrier?: string): string {
   }
   
   // Skip weekends
-  let deliveryDate = new Date(today)
+  const deliveryDate = new Date(today)
   deliveryDate.setDate(deliveryDate.getDate() + daysToAdd)
   
   // If delivery falls on weekend, move to Monday
@@ -151,7 +151,7 @@ export function calculateEstimatedDeliveryDate(carrier?: string): Date {
   }
   
   // Skip weekends
-  let deliveryDate = new Date(today)
+  const deliveryDate = new Date(today)
   deliveryDate.setDate(deliveryDate.getDate() + daysToAdd)
   
   // If delivery falls on weekend, move to Monday

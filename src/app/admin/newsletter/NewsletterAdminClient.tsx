@@ -577,7 +577,7 @@ export default function NewsletterAdminClient({
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab])
 
   const handleDeleteSubscriber = async (subscriberId: string, email: string) => {

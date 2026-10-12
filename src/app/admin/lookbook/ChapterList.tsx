@@ -159,7 +159,7 @@ export default function ChapterList({
     setBusy(true)
     try {
       for (const id of dirtyIds) {
-        // eslint-disable-next-line no-await-in-loop
+         
         await saveChapter(id)
       }
     } finally {

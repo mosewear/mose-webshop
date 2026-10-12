@@ -33,7 +33,7 @@ export default function DualRangeSlider({
     const rawValue = min + percentage * (max - min)
     const steppedValue = Math.round(rawValue / step) * step
 
-    let newValue: [number, number] = [...localValue]
+    const newValue: [number, number] = [...localValue]
 
     if (isDragging === 'min') {
       newValue[0] = Math.min(steppedValue, localValue[1] - step)

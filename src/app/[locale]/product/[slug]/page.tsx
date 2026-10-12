@@ -213,6 +213,11 @@ export default async function ProductPage({
         availability: inStock
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
+        // Dit is een server
+        // component: hij rendert één keer per request, er is geen re-render
+        // waarbij deze waarde kan verschuiven. priceValidUntil hoort juist
+        // relatief aan het moment van uitleveren te zijn.
+        // eslint-disable-next-line react-hooks/purity
         priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         seller: {
           '@type': 'Organization',

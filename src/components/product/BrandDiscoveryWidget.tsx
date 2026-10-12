@@ -487,6 +487,12 @@ export default function BrandDiscoveryWidget({
         className="fixed left-3 md:left-4 z-30 transition-[bottom] duration-300 ease-out motion-reduce:transition-none print:hidden"
         style={{ bottom: `${bottomPx}px` }}
       >
+        {/* eslint-disable-next-line react-hooks/static-components --
+            Dit MAAKT geen component tijdens de render. PillComponent is een
+            keuze uit bestaande, op moduleniveau gedefinieerde componenten:
+            getPillComponent() doet een opzoeking in COMPONENT_BY_ID (zie
+            ./brand-pill/index.ts) en geeft een stabiele referentie terug. De
+            regel kan die stabiliteit niet bewijzen en slaat daarom aan. */}
         <PillComponent
           posts={rotationPosts}
           currentIdx={currentIdx}

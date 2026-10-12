@@ -71,8 +71,11 @@ export default async function BrandDiscoveryFetcher({
     if (Number.isNaN(ts)) return latest
     return ts > latest ? ts : latest
   }, 0)
-  const isFresh =
-    newestTakenAtMs > 0 && Date.now() - newestTakenAtMs < FRESHNESS_WINDOW_MS
+  // Server component, rendert
+  // één keer per request. De versheid van de Instagram-posts hoort tegen het
+  // moment van uitleveren te worden bepaald.
+  // eslint-disable-next-line react-hooks/purity
+  const isFresh = newestTakenAtMs > 0 && Date.now() - newestTakenAtMs < FRESHNESS_WINDOW_MS
 
   return (
     <BrandDiscoveryWidget

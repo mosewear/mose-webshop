@@ -205,6 +205,11 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const scheduleValid =
     !isGift ||
     !scheduleEnabled ||
+    // Bewuste afweging: de
+    // vergelijking moet tegen het HUIDIGE moment gebeuren, niet tegen een
+    // waarde die bij mount is bevroren. Anders zou een formulier dat lang
+    // openstaat een inmiddels verstreken bezorgmoment blijven goedkeuren.
+    // eslint-disable-next-line react-hooks/purity
     (!!scheduleDate && new Date(scheduleDate).getTime() > Date.now())
 
   const canAdd = hasAmount && validCustom && presetSelected && recipientValid && scheduleValid
@@ -704,6 +709,10 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               <input
                 type="datetime-local"
                 value={scheduleDate}
+                // Zelfde reden
+                // als hierboven: de ondergrens van de datumkiezer is "over een
+                // uur", en die moet meeschuiven zolang het formulier openstaat.
+                // eslint-disable-next-line react-hooks/purity
                 min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
                 onChange={(e) => setScheduleDate(e.target.value)}
                 className="w-full border-2 border-gray-300 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
+import { Link as LocaleLink } from '@/i18n/routing'
+import { buttonVariants } from '@/components/ui/Button'
 
 export default function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -119,15 +121,19 @@ export default function FAQAccordion() {
           <p className="text-gray-600 mb-4">
             {t('contactCta')}
           </p>
-          <a
+          {/* Was een kale <a href="/contact">: dat herlaadde de hele pagina en
+              negeerde de locale, dus een Engelstalige bezoeker belandde op de
+              Nederlandse contactpagina. Dit is de enige rauwe anchor naar een
+              interne route in de storefront. */}
+          <LocaleLink
             href="/contact"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors active:scale-95"
+            className={buttonVariants({ variant: 'primary' })}
           >
             {t('contactButton')}
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </a>
+          </LocaleLink>
         </div>
       </div>
     </section>
