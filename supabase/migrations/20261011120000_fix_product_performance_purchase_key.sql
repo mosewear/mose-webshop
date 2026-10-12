@@ -142,10 +142,17 @@ $$;
 -- draait achter requireAdmin() met een ingelogde sessie, dus de rol is
 -- `authenticated` en anon heeft deze functie niet nodig.
 --
--- LET OP: PostgreSQL geeft EXECUTE op een nieuwe functie automatisch aan
--- PUBLIC. Alleen aan authenticated en service_role granten verwijdert dus
--- niets: anon zou via de PUBLIC-default nog steeds productomzet kunnen
--- opvragen zonder login. De REVOKE hieronder is wat het recht echt wegneemt,
--- en moet vóór de GRANT staan.
+-- LET OP, twee aparte bronnen van rechten, allebei nodig:
+--   1. PostgreSQL geeft EXECUTE op een nieuwe functie automatisch aan PUBLIC.
+--   2. Supabase heeft ALTER DEFAULT PRIVILEGES staan dat elke nieuwe functie
+--      in schema public ook expliciet aan anon, authenticated en service_role
+--      toekent. Dat gebeurt bij CREATE, dus ná de DROP hierboven.
+-- Alleen aan authenticated en service_role granten verwijdert dus niets: anon
+-- kon de omzetcijfers nog steeds zonder login opvragen. Beide REVOKE-regels
+-- hieronder zijn wat het recht echt wegneemt, en ze moeten vóór de GRANT staan.
+-- Geverifieerd op productie: proacl ging van
+--   {postgres,anon,authenticated,service_role} naar
+--   {postgres,authenticated,service_role}.
 REVOKE EXECUTE ON FUNCTION public.get_product_performance(TIMESTAMPTZ, TIMESTAMPTZ) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_product_performance(TIMESTAMPTZ, TIMESTAMPTZ) FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_product_performance(TIMESTAMPTZ, TIMESTAMPTZ) TO authenticated, service_role;
