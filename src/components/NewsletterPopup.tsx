@@ -17,6 +17,18 @@ interface NewsletterPopupProps {
   discountPercentage: number
 }
 
+/**
+ * Staat de chat open?
+ *
+ * De popup en het chatvenster hadden geen weet van elkaar. Wie een vraag stelde
+ * en op antwoord wachtte, kreeg er na de ingestelde vertraging een
+ * kortingsvenster overheen.
+ */
+function chatStaatOpen(): boolean {
+  if (typeof document === 'undefined') return false
+  return Boolean(document.getElementById('chat-window'))
+}
+
 export default function NewsletterPopup({
   enabled,
   trigger,
@@ -45,6 +57,11 @@ export default function NewsletterPopup({
   const shouldShowPopup = useCallback((): boolean => {
     if (!enabled) return false
     if (typeof window === 'undefined') return false
+
+    // Niet bovenop een lopend gesprek springen. De chat heeft z-[9998] en bleef
+    // dus gewoon bruikbaar, maar een kortingsvenster dat over je vraag heen
+    // valt terwijl je op antwoord wacht, is precies het verkeerde moment.
+    if (chatStaatOpen()) return false
     
     // Check if dismissed in this session
     if (isDismissedThisSession) return false
@@ -111,6 +128,7 @@ export default function NewsletterPopup({
     if (isDismissedThisSession) return
 
     const timer = setTimeout(() => {
+      if (chatStaatOpen()) return
       setIsVisible(true)
       setHasTriggeredTimer(true)
       trackPopupView()
@@ -129,6 +147,7 @@ export default function NewsletterPopup({
     const handleScroll = () => {
       const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
       if (scrolled >= scrollPercentage) {
+        if (chatStaatOpen()) return
         setIsVisible(true)
         setHasTriggeredScroll(true)
         trackPopupView()
@@ -150,6 +169,7 @@ export default function NewsletterPopup({
     const handleMouseLeave = (e: MouseEvent) => {
       // Only trigger if mouse leaves from top of viewport
       if (e.clientY <= 0) {
+        if (chatStaatOpen()) return
         setIsVisible(true)
         setHasTriggeredExit(true)
         trackPopupView()
