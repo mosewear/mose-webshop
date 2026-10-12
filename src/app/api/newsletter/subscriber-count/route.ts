@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Use service role to bypass RLS
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+import { createServiceClient } from '@/lib/supabase/service'
 
 export async function GET() {
   try {
-    const { count, error } = await supabaseAdmin
+    // Client hier aanmaken en niet op moduleniveau: anders voert Next dit
+    // bestand al uit tijdens de build en faalt die zonder service-role-sleutel.
+    const supabase = createServiceClient()
+
+    const { count, error } = await supabase
       .from('newsletter_subscribers')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active')
