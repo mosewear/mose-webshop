@@ -4,12 +4,7 @@
  * Synchroniseert order status met return status
  */
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { createServiceClient } from '@/lib/supabase/service'
 
 export async function updateOrderStatusForReturn(
   orderId: string,
@@ -39,6 +34,13 @@ export async function updateOrderStatusForReturn(
   }
 
   console.log(`📝 Updating order ${orderId} to status: ${newOrderStatus}`)
+
+  // De client wordt hier aangemaakt, niet op moduleniveau. Stond hij boven in
+  // dit bestand, dan voert Next dit bestand al uit bij het verzamelen van de
+  // routegegevens tijdens de build, en klapt de build eruit met
+  // "supabaseKey is required" zodra SUPABASE_SERVICE_ROLE_KEY ontbreekt. Dat
+  // maakte de build afhankelijk van een geheim dat hij niet nodig heeft.
+  const supabase = createServiceClient()
 
   const { error } = await supabase
     .from('orders')

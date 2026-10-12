@@ -415,7 +415,7 @@ export function parseCsvText(text: string): {
       dynamicTyping: false,
     })
 
-  let parsed = run(delimiter)
+  const parsed = run(delimiter)
   if (parsed.errors?.length) {
     for (const e of parsed.errors.slice(0, 5)) {
       issues.push({

@@ -36,15 +36,10 @@ export default function AdminReviewsPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all')
   const [counts, setCounts] = useState({ total: 0, pending: 0, approved: 0 })
 
-  useEffect(() => {
-    fetchReviews()
-  }, [filter])
-
-  useEffect(() => {
-    fetchCounts()
-  }, [])
-
-  const fetchCounts = async () => {
+  // Staat bewust vóór de effecten die hem aanroepen: react-hooks/immutability
+  // leest in bronvolgorde, dus een aanroep van een lager gedeclareerde functie
+  // wordt gemarkeerd, ook al is hij gehoist.
+  async function fetchCounts() {
     const res = await fetch('/api/admin/reviews?filter=all')
     if (res.ok) {
       const { reviews: all } = await res.json()
@@ -56,7 +51,10 @@ export default function AdminReviewsPage() {
     }
   }
 
-  const fetchReviews = async () => {
+  // Staat bewust vóór de effecten die hem aanroepen: react-hooks/immutability
+  // leest in bronvolgorde, dus een aanroep van een lager gedeclareerde functie
+  // wordt gemarkeerd, ook al is hij gehoist.
+  async function fetchReviews() {
     setLoading(true)
 
     const res = await fetch(`/api/admin/reviews?filter=${filter}`)
@@ -73,6 +71,16 @@ export default function AdminReviewsPage() {
     setReviews(data || [])
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchReviews()
+  }, [filter])
+
+  useEffect(() => {
+    fetchCounts()
+  }, [])
+
+
 
   const handleApprove = async (reviewId: string) => {
     const res = await fetch('/api/admin/reviews', {

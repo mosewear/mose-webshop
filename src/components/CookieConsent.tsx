@@ -10,6 +10,13 @@ export default function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false)
   const bannerRef = useRef<HTMLDivElement>(null)
 
+  // Staat bewust vóór de effecten die hem aanroepen. React's
+  // immutability-regel leest in bronvolgorde, dus een verwijzing naar een
+  // functie die lager staat wordt gemarkeerd, ook al is hij gehoist.
+  function loadTrackingScripts() {
+    window.dispatchEvent(new Event('mose-tracking-enabled'))
+  }
+
   // Publiceer de eigen hoogte als CSS-variabele zolang de balk staat. Andere
   // vaste elementen onderaan het scherm (de sticky koopbalk op de PDP, de
   // afrekenbalk in de winkelwagen) schuiven daarop mee in plaats van eronder te
@@ -51,10 +58,6 @@ export default function CookieConsent() {
       }
     }
   }, [])
-
-  const loadTrackingScripts = () => {
-    window.dispatchEvent(new Event('mose-tracking-enabled'))
-  }
 
   const handleAccept = (type: 'all' | 'necessary') => {
     if (type === 'all') {

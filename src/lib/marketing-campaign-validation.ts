@@ -161,7 +161,7 @@ export function validateCampaignPayload(input: unknown): ValidationResult {
   const name = asTrimmedString(raw.name)
   if (!name) errors.push('Naam is verplicht.')
 
-  let slug = asTrimmedString(raw.slug)?.toLowerCase() ?? null
+  const slug = asTrimmedString(raw.slug)?.toLowerCase() ?? null
   if (!slug) {
     errors.push('Slug is verplicht.')
   } else if (!SLUG_RE.test(slug) || slug.length > 80) {

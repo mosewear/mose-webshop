@@ -48,21 +48,10 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    loadWishlist()
-  }, [])
-
-  useEffect(() => {
-    if (items.length === 0) {
-      setProducts([])
-      setLoading(false)
-      return
-    }
-
-    fetchProducts()
-  }, [items])
-
-  const fetchProducts = async () => {
+  // Staat bewust vóór de effecten die hem aanroepen: react-hooks/immutability
+  // leest in bronvolgorde, dus een aanroep van een lager gedeclareerde functie
+  // wordt gemarkeerd, ook al is hij gehoist.
+  async function fetchProducts() {
     const supabase = createClient()
     const productIds = items.map((item) => item.product_id)
 
@@ -102,6 +91,21 @@ export default function WishlistPage() {
 
     setLoading(false)
   }
+
+  useEffect(() => {
+    loadWishlist()
+  }, [])
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setProducts([])
+      setLoading(false)
+      return
+    }
+
+    fetchProducts()
+  }, [items])
+
 
   const handleAddToCart = async (product: Product) => {
     // Get first available variant

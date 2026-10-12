@@ -66,42 +66,9 @@ export default function OrderConfirmationPage({
   const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
   const { clearCart } = useCart()
 
-  useEffect(() => {
-    clearCart()
-
-    localStorage.removeItem('mose_promo_code')
-    localStorage.removeItem('mose_promo_discount')
-    localStorage.removeItem('mose_promo_type')
-    localStorage.removeItem('mose_promo_value')
-
-    if (orderId || paymentId) {
-      fetchOrder()
-    } else {
-      setLoading(false)
-    }
-  }, [orderId, paymentId])
-
-  useEffect(() => {
-    let mounted = true
-
-    async function loadContactPhone() {
-      try {
-        const settings = await getSiteSettings()
-        if (mounted && settings.contact_phone) {
-          setContactPhone(settings.contact_phone)
-        }
-      } catch {
-        // Keep fallback phone number if settings fetch fails.
-      }
-    }
-
-    loadContactPhone()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
-
+  // Staat bewust vóór de effecten die hem aanroepen: react-hooks/immutability
+  // leest in bronvolgorde, dus een aanroep van een lager gedeclareerde functie
+  // wordt gemarkeerd, ook al is hij gehoist.
   async function fetchOrder() {
     try {
       console.log('═══════════════════════════════════════════')
@@ -272,6 +239,43 @@ export default function OrderConfirmationPage({
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    clearCart()
+
+    localStorage.removeItem('mose_promo_code')
+    localStorage.removeItem('mose_promo_discount')
+    localStorage.removeItem('mose_promo_type')
+    localStorage.removeItem('mose_promo_value')
+
+    if (orderId || paymentId) {
+      fetchOrder()
+    } else {
+      setLoading(false)
+    }
+  }, [orderId, paymentId])
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadContactPhone() {
+      try {
+        const settings = await getSiteSettings()
+        if (mounted && settings.contact_phone) {
+          setContactPhone(settings.contact_phone)
+        }
+      } catch {
+        // Keep fallback phone number if settings fetch fails.
+      }
+    }
+
+    loadContactPhone()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
 
   if (loading) {
     return (
