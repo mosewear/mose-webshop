@@ -33,7 +33,7 @@
 
 ### 3. **HARDCODED CONTACT INFO**
    - **Email:** info@mosewear.nl (hardcoded in emails, footer, etc.)
-   - **Phone:** +31 50 211 1931 (hardcoded in emails, footer, etc.)
+   - **Phone:** +31 50 234 0025 (hardcoded in emails, footer, etc.)
    - **Address:** Helper Brink 27a, 9722 EG Groningen (hardcoded in emails, footer)
 
    **Moet dynamic worden vanuit admin settings!**

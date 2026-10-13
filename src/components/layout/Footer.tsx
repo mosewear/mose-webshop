@@ -17,7 +17,7 @@ export function Footer() {
   // Helper for locale-aware links
   const [settings, setSettings] = useState({
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
-    contact_phone: '+31 50 211 1931',
+    contact_phone: '+31 50 234 0025',
     contact_email: 'info@mosewear.nl',
     tax_rate: 21,
     return_days: 14,

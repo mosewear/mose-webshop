@@ -63,7 +63,7 @@ export default function OrderConfirmationPage({
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
+  const [contactPhone, setContactPhone] = useState('+31 50 234 0025')
   const { clearCart } = useCart()
 
   // Staat bewust vóór de effecten die hem aanroepen: react-hooks/immutability

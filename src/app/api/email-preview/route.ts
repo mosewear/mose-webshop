@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com'
   const contactEmail = 'info@mosewear.com'
-  const contactPhone = '+31 50 211 1931'
+  const contactPhone = '+31 50 234 0025'
   const contactAddress = 'Stavangerweg 13, 9723 JC Groningen'
 
   try {

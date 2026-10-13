@@ -112,7 +112,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     cachedSettings = {
       site_name: settings.site_name || 'MOSE Wear',
       contact_email: settings.contact_email || 'info@mosewear.nl',
-      contact_phone: settings.contact_phone || '+31 50 211 1931',
+      contact_phone: settings.contact_phone || '+31 50 234 0025',
       contact_address: settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen',
       free_shipping_threshold: (settings.free_shipping_threshold !== null && settings.free_shipping_threshold !== undefined && !isNaN(parseFloat(settings.free_shipping_threshold))) ? parseFloat(settings.free_shipping_threshold) : 150,
       shipping_cost: (settings.shipping_cost !== null && settings.shipping_cost !== undefined && !isNaN(parseFloat(settings.shipping_cost))) ? parseFloat(settings.shipping_cost) : 6.95,
@@ -168,7 +168,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return {
       site_name: 'MOSE Wear',
       contact_email: 'info@mosewear.nl',
-      contact_phone: '+31 50 211 1931',
+      contact_phone: '+31 50 234 0025',
       contact_address: 'Stavangerweg 13, 9723 JC Groningen',
       free_shipping_threshold: 150,
       shipping_cost: 6.95,
