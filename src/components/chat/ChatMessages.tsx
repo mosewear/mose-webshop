@@ -61,15 +61,24 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
           return (
             <div key={message.id} className={eersteVanBlok && index > 0 ? 'pt-2' : undefined}>
               {eersteVanBlok && !vanBezoeker && (
-                <p className="mb-1.5 pl-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">
+                <p className="mb-1.5 pl-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-black/60">
                   {t('assistant')}
                 </p>
               )}
 
               <div className={`flex ${vanBezoeker ? 'justify-end' : 'justify-start'}`}>
+                {/* Een antwoord van MOSE mag op een telefoon de volle breedte
+                    pakken. Op 85% bleven er 35 tekens per regel over, en bij een
+                    uitleg van zes regels over retourneren leest dat hakkerig. Wie
+                    wat zei blijkt al uit de kleur, de uitlijning en het label
+                    erboven, dus de smalle marge voegde niets toe. Jouw eigen
+                    bericht blijft wel smaller: dat is meestal één zin, en de
+                    inspringing laat zien dat het van jou komt. */}
                 <div
-                  className={`max-w-[85%] px-4 py-3 ${
-                    vanBezoeker ? 'bg-black text-white' : 'bg-white text-black'
+                  className={`px-4 py-3 ${
+                    vanBezoeker
+                      ? 'max-w-[85%] bg-black text-white'
+                      : 'max-w-full bg-white text-black md:max-w-[85%]'
                   }`}
                 >
                   {message.isTyping ? (
@@ -83,7 +92,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                       ))}
                     </div>
                   ) : (
-                    <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.6]">
+                    <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.6] md:text-[14px]">
                       {zonderMarkdown(message.content)}
                     </p>
                   )}
@@ -92,7 +101,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
 
               {laatsteVanBlok && !message.isTyping && (
                 <p
-                  className={`mt-1.5 text-[10px] tabular-nums text-black/35 ${
+                  className={`mt-1.5 text-[11px] tabular-nums text-black/60 ${
                     vanBezoeker ? 'text-right' : 'pl-0.5'
                   }`}
                 >
