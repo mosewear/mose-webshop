@@ -17,7 +17,7 @@ export default function TermsPage() {
     return_days: 30,
     shipping_cost: 6.95,
     return_label_cost_incl_btw: 6.95,
-    contact_email: 'info@mosewear.nl',
+    contact_email: 'info@mosewear.com',
     contact_phone: '+31 50 234 0025',
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
   })

@@ -18,7 +18,7 @@ export function Footer() {
   const [settings, setSettings] = useState({
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
     contact_phone: '+31 50 234 0025',
-    contact_email: 'info@mosewear.nl',
+    contact_email: 'info@mosewear.com',
     tax_rate: 21,
     return_days: 14,
   })

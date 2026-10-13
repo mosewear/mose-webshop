@@ -12,33 +12,18 @@
 import { useEffect, useState } from 'react'
 import { Truck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-
-const SHIPPING_CUTOFF_HOUR = 17 // local Europe/Amsterdam time
-
-function isBeforeCutoffNL(): boolean {
-  try {
-    const fmt = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Amsterdam',
-      hour: 'numeric',
-      hour12: false,
-    })
-    const hour = parseInt(fmt.format(new Date()), 10)
-    return Number.isFinite(hour) && hour < SHIPPING_CUTOFF_HOUR
-  } catch {
-    return new Date().getHours() < SHIPPING_CUTOFF_HOUR
-  }
-}
+import { levertMorgen } from '@/lib/shipping-cutoff'
 
 export default function ShippingMicrocopy() {
   const t = useTranslations('product.shippingMicro')
 
   // Lazy-init: SSR + first client render produce the same value, then
   // we tick every 5 minutes so the promise auto-flips at 17:00.
-  const [beforeCutoff, setBeforeCutoff] = useState(isBeforeCutoffNL)
+  const [beforeCutoff, setBeforeCutoff] = useState(levertMorgen)
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      setBeforeCutoff(isBeforeCutoffNL())
+      setBeforeCutoff(levertMorgen())
     }, 5 * 60 * 1000)
     return () => window.clearInterval(id)
   }, [])

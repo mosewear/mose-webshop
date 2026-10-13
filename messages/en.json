@@ -112,12 +112,8 @@
     "closeShort": "Close",
     "closeAria": "Close menu",
     "tickerItems": [
-      "NO FAST FASHION",
-      "MADE IN GRONINGEN",
-      "BY IRMA & RICK",
-      "BUILT TO LAST",
-      "30-DAY RETURNS",
-      "SHIPS IN 1-2 DAYS"
+      "No fast fashion",
+      "Made in Groningen"
     ],
     "tickerAria": "MOSE values ticker",
     "navAria": "Main navigation",
@@ -150,16 +146,21 @@
     "cartAria": "Cart, {count, plural, one {# item} other {# items}}",
     "cartEmptyAria": "Cart, empty",
     "login": "Log in",
-    "fit": "True to size · 30 days to exchange or return",
+    "fit": "Fits true to size. Not right? Send it back.",
     "promise": {
-      "fast": "Order before 17:00, here tomorrow",
+      "fast": "Order before 5pm, here tomorrow",
       "toFree": "€{amount} to go for free shipping",
-      "freeIncluded": "Free shipping included"
+      "freeIncluded": "Free shipping included",
+      "sameDay": "Order today, shipped today",
+      "nextWorkday": "Shipped next working day"
     },
     "help": {
-      "track": "Track order",
-      "returns": "Returns"
-    }
+      "track": "Where's my parcel",
+      "returns": "Send it back"
+    },
+    "makers": "By Irma & Rick, in Groningen",
+    "wishlist": "Saved",
+    "contact": "Email us"
   },
   "footer": {
     "tagline": "Clothing without fuss. Locally made. Built to last.",

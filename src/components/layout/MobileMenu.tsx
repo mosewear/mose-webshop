@@ -19,6 +19,7 @@ import {
 import { getSiteSettings } from '@/lib/settings'
 import { useCart } from '@/store/cart'
 import { getMenuProducts, formatPrijs, type MenuProduct } from '@/lib/menu-products'
+import { levertMorgen, voorCutoff } from '@/lib/shipping-cutoff'
 import MobileMenuInstagramRow from '@/components/layout/MobileMenuInstagramRow'
 
 interface MobileMenuProps {
@@ -28,12 +29,6 @@ interface MobileMenuProps {
    *  (Header) toont de SearchOverlay; dit menu sluit zichzelf en delegeert. */
   onOpenSearch: () => void
 }
-
-/** Verhaal-links. Lookbook staat apart en zwaarder: dat is het merkverhaal. */
-const VERHAAL_ITEMS = [
-  { href: '/over-mose', labelKey: 'about' as const },
-  { href: '/blog', labelKey: 'blog' as const },
-]
 
 const LANGUAGES = [
   { code: 'nl', label: 'NL' },
@@ -93,12 +88,14 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
   const [contactEmail, setContactEmail] = useState('info@mosewear.com')
   const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(150)
   const [producten, setProducten] = useState<MenuProduct[]>([])
+  const [productenGeladen, setProductenGeladen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   const itemCount = useCart((s) => s.getItemCount())
   const cartTotal = useCart((s) => s.getTotal())
 
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
   const previousActiveRef = useRef<HTMLElement | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
 
@@ -138,7 +135,10 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
         if (!gestopt) setProducten(rijen)
       })
       .catch(() => {
-        // Zonder producten valt het raster weg en blijft "Shop alles" staan.
+        // Zonder producten blijft "Shop alles" staan als uitweg.
+      })
+      .finally(() => {
+        if (!gestopt) setProductenGeladen(true)
       })
     return () => {
       gestopt = true
@@ -152,6 +152,11 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
     previousActiveRef.current = document.activeElement as HTMLElement | null
     const vorigeOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+
+    // Terug naar boven. De lade blijft in de DOM staan, dus wie onderaan sloot,
+    // opende hem daarna opnieuw op 346px: voorbij het hele productraster, met
+    // zicht op de taalknoppen.
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
 
     requestAnimationFrame(() => {
       closeBtnRef.current?.focus({ preventScroll: true })
@@ -207,20 +212,27 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
    *  - erboven: de bevestiging
    */
   const belofte = useMemo(() => {
+    // Lege wagen: vertel over snelheid, maar alleen wat waar IS. De regel stond
+    // hier vast op "morgen in huis", ook op zaterdagavond. De gedeelde functie
+    // kijkt nu naar het uur EN de weekdag.
     if (!mounted || itemCount === 0 || freeShippingThreshold <= 0) {
-      return freeShippingThreshold <= 0 ? t('freeShipping.always') : t('promise.fast')
+      if (freeShippingThreshold <= 0) return t('freeShipping.always')
+      if (!mounted) return t('promise.fast')
+      if (levertMorgen()) return t('promise.fast')
+      if (voorCutoff()) return t('promise.sameDay')
+      return t('promise.nextWorkday')
     }
     const tekort = freeShippingThreshold - cartTotal
     if (tekort <= 0) return t('promise.freeIncluded')
     return t('promise.toFree', { amount: formatPrijs(tekort, locale) })
   }, [mounted, itemCount, cartTotal, freeShippingThreshold, locale, t])
 
-  const tickerItems = useMemo(() => {
+  const merkregel = useMemo(() => {
     try {
       const ruw = t.raw('tickerItems')
-      return Array.isArray(ruw) ? (ruw as string[]) : []
+      return Array.isArray(ruw) && ruw.length > 0 ? String(ruw[0]) : null
     } catch {
-      return []
+      return null
     }
   }, [t])
 
@@ -231,6 +243,25 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
   }
 
   const isHuidig = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+
+  // Naar rechts vegen sluit, maar alleen vanaf de kop. Op het scrollgebied zou
+  // het gebaar met horizontaal scrollende onderdelen vechten (de Instagram-rij),
+  // en wie een lijst doorleest wil niet dat een schuine veeg zijn menu dichtgooit.
+  const veegStartRef = useRef<{ x: number; y: number } | null>(null)
+  const bijVeegStart = (e: React.TouchEvent) => {
+    veegStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  const bijVegen = (e: React.TouchEvent) => {
+    const start = veegStartRef.current
+    if (!start) return
+    const dx = e.touches[0].clientX - start.x
+    const dy = Math.abs(e.touches[0].clientY - start.y)
+    // Duidelijk horizontaal, anders is het een scrollpoging.
+    if (dx > 70 && dy < 40) {
+      veegStartRef.current = null
+      onClose()
+    }
+  }
 
   const koptekstKnop =
     'flex h-11 w-11 flex-shrink-0 items-center justify-center text-white transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black'
@@ -250,13 +281,18 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
 
       <div
         ref={panelRef}
+        id="mobiel-menu"
         role="dialog"
         aria-modal="true"
         aria-label={t('ariaLabel')}
         aria-hidden={!isOpen}
         data-mobile-menu={isOpen ? 'open' : 'closed'}
-        className={`fixed inset-y-0 right-0 z-[110] flex w-full transform flex-col bg-white transition-transform duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:hidden ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+        // `inert` in plaats van alleen aria-hidden: met aria-hidden bleven de 22
+        // links en knoppen gewoon bereikbaar met Tab. Zeven keer Tab vanaf de
+        // pagina zette de focus op het logo ín het onzichtbare menu.
+        inert={!isOpen}
+        className={`fixed inset-y-0 right-0 z-[110] flex w-[90%] max-w-[430px] transform flex-col bg-white transition-transform duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:hidden ${
+          isOpen ? 'translate-x-0' : 'pointer-events-none translate-x-full'
         }`}
       >
         <h2 className="sr-only">{t('ariaLabel')}</h2>
@@ -265,7 +301,11 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
             De winkelwagen stond hier niet, terwijl het tasje in de sitekop
             achter deze lade verdwijnt zodra hij opent. Wie iets in zijn mandje
             had, moest eerst het menu sluiten om erbij te komen. */}
-        <header className="flex h-14 flex-shrink-0 items-center justify-between gap-2 border-b-[3px] border-brand-primary bg-black px-3 text-white">
+        <header
+          onTouchStart={bijVeegStart}
+          onTouchMove={bijVegen}
+          className="flex h-14 flex-shrink-0 items-center justify-between gap-2 border-b-[3px] border-brand-primary bg-black px-3 text-white"
+        >
           <LocaleLink href="/" onClick={onClose} className="flex h-11 items-center px-1" aria-label="MOSE">
             <Image
               src="/logomose.png"
@@ -327,26 +367,18 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
 
         {/* [2] WAARDENTICKER — stond al vertaald in nl.json en en.json maar
             werd nergens gerenderd. Eerst wie je bent, dan wat je verkoopt. */}
-        {tickerItems.length > 0 && (
-          <div
-            className="flex h-7 flex-shrink-0 items-center overflow-hidden border-b-2 border-black bg-black"
-            role="note"
-            aria-label={t('tickerAria')}
-          >
-            <div className={`flex whitespace-nowrap will-change-transform ${isOpen ? 'animate-marquee' : ''}`}>
-              {[0, 1].map((herhaling) => (
-                <div key={herhaling} className="flex shrink-0" aria-hidden={herhaling === 1}>
-                  {tickerItems.map((item) => (
-                    <span
-                      key={`${herhaling}-${item}`}
-                      className="px-4 font-display text-[11px] uppercase tracking-[0.2em] text-white"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
+        {/* [2] MERKREGEL — was een oneindig lopende marquee. Die begon bij
+            openen midden in een woord ("FASHION | GEMAAKT IN GRONINGEN"),
+            herhaalde beloftes die tien pixels lager nog een keer stonden
+            ("VERZENDING IN 1-2 DAGEN" pal boven "MORGEN IN HUIS"), en bewegende
+            tekst die langer dan vijf seconden doorloopt hoort een pauzeknop te
+            hebben. Eén vaste regel met de scherpste claim doet hetzelfde werk,
+            is op elk scherm volledig leesbaar en beweegt niet. */}
+        {merkregel && (
+          <div className="flex h-7 flex-shrink-0 items-center justify-center border-b-2 border-black bg-black px-3">
+            <span className="truncate font-display text-[11px] uppercase tracking-[0.2em] text-white">
+              {merkregel}
+            </span>
           </div>
         )}
 
@@ -358,7 +390,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
           {belofte}
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain">
           {/* [4] SHOP ALLES + PRODUCTRASTER */}
           <LocaleLink
             href="/shop"
@@ -377,7 +409,22 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
             />
           </LocaleLink>
 
-          {producten.length > 0 && (
+          {/* Plaatshouders zolang de producten onderweg zijn. Zonder dit zat er
+              een gat tussen "Shop alles" en de pasvormregel dat zich daarna
+              met 266px vulde, waardoor alles eronder versprong onder de duim
+              van iemand die al aan het tikken was. */}
+          {!productenGeladen && (
+            <div
+              aria-hidden="true"
+              className="grid grid-cols-2 gap-[2px] border-b-2 border-black bg-black [@media(max-height:480px)]:grid-cols-4"
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="aspect-[4/3] bg-neutral-800" />
+              ))}
+            </div>
+          )}
+
+          {productenGeladen && producten.length > 0 && (
             <ul
               aria-label={t('productsAria')}
               // Liggend 4:3 in plaats van vierkant: scheelt per rij tientallen
@@ -439,87 +486,116 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
             {t('fit')}
           </LocaleLink>
 
-          {/* [6] VERHAAL — Lookbook zwaarder dan de rest: dat is het merk. */}
+          {/* [6] VERHAAL — hier klapte de typografie om. Boven deze regel was
+              alles Anton in hoofdletters, eronder ging alles over op een gewone
+              letter met brede spatiëring, waarmee het merk halverwege het menu
+              ophield. Lookbook en Over MOSE blijven nu in het display-lettertype
+              en zijn duidelijk zwaarder dan de servicerijen eronder.
+
+              Over MOSE krijgt de makersregel mee. Vier producten en twee makers
+              is het enige in dit menu dat niemand kan kopiëren, en het stond
+              alleen verstopt in een ticker. */}
           <LocaleLink
             href="/lookbook"
             onClick={onClose}
             aria-current={isHuidig('/lookbook') ? 'page' : undefined}
-            className="group relative flex items-center justify-between gap-4 border-b-2 border-black px-4 py-3 transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
+            className="group relative flex min-h-[60px] items-center justify-between gap-4 border-b-2 border-black px-4 py-3.5 transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
           >
             <span
               aria-hidden="true"
               className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 bg-brand-primary transition-transform duration-200 group-hover:scale-y-100 group-focus-visible:scale-y-100 motion-reduce:transition-none"
             />
-            <span className="font-display text-xl uppercase leading-none tracking-tight">
+            <span className="font-display text-2xl uppercase leading-none tracking-tight">
               {tCommon('lookbook')}
             </span>
             <ArrowRight size={20} strokeWidth={2.5} className="flex-shrink-0" aria-hidden="true" />
           </LocaleLink>
 
-          <nav aria-label={t('navAria')}>
-            <ul className="grid grid-cols-2 border-b-2 border-black">
-              {VERHAAL_ITEMS.map((item, i) => (
-                <li key={item.href} className={i === 0 ? 'border-r-2 border-black' : undefined}>
+          <LocaleLink
+            href="/over-mose"
+            onClick={onClose}
+            aria-current={isHuidig('/over-mose') ? 'page' : undefined}
+            className="group relative flex min-h-[60px] items-center justify-between gap-4 border-b-2 border-black px-4 py-3 transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
+          >
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 bg-brand-primary transition-transform duration-200 group-hover:scale-y-100 group-focus-visible:scale-y-100 motion-reduce:transition-none"
+            />
+            <span className="min-w-0">
+              <span className="block font-display text-2xl uppercase leading-none tracking-tight">
+                {tCommon('about')}
+              </span>
+              <span className="mt-1.5 block text-[11px] leading-none text-black/60 group-hover:text-white/70 group-focus-visible:text-white/70">
+                {t('makers')}
+              </span>
+            </span>
+            <ArrowRight size={20} strokeWidth={2.5} className="flex-shrink-0" aria-hidden="true" />
+          </LocaleLink>
+
+          <LocaleLink
+            href="/blog"
+            onClick={onClose}
+            aria-current={isHuidig('/blog') ? 'page' : undefined}
+            className="group relative flex min-h-[48px] items-center justify-between gap-4 border-b-2 border-black px-4 py-2.5 transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
+          >
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 bg-brand-primary transition-transform duration-200 group-hover:scale-y-100 group-focus-visible:scale-y-100 motion-reduce:transition-none"
+            />
+            <span className="font-display text-lg uppercase leading-none tracking-tight">
+              {tCommon('blog')}
+            </span>
+            <ArrowRight size={18} strokeWidth={2.5} className="flex-shrink-0" aria-hidden="true" />
+          </LocaleLink>
+
+          {/* [7] SERVICE — eigen grijze ondergrond, zodat je in één oogopslag
+              ziet dat dit een ander soort links zijn dan het merkverhaal
+              erboven. Hiervoor stonden hier drie rasters van 50, 50 en 54px
+              met zeven labels in hetzelfde formaat: zeven regels die allemaal
+              even belangrijk leken.
+
+              "Waar is mijn pakket" krijgt de volle breedte, want dat is bij
+              verkeer uit advertenties de grootste echte taak in een menu. */}
+          <div className="border-b-2 border-black bg-[#F4F4F2]">
+            <LocaleLink
+              href="/track-order"
+              onClick={onClose}
+              className="flex min-h-[48px] items-center gap-2.5 border-b border-black/15 px-4 text-[12px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
+            >
+              <Package size={17} strokeWidth={2.5} className="flex-shrink-0" aria-hidden="true" />
+              <span className="leading-tight">{t('help.track')}</span>
+              <ArrowRight size={16} strokeWidth={2.5} className="ml-auto flex-shrink-0" aria-hidden="true" />
+            </LocaleLink>
+
+            <ul className="grid grid-cols-2">
+              {[
+                // `/returns` bestaat niet als pagina, alleen `/returns/new` en
+                // `/returns/[id]`. Een link naar `/returns` gaf een 404 die
+                // Next.js al bij het renderen ophaalde.
+                { href: '/returns/new', label: t('help.returns'), Icon: Undo2 },
+                { href: '/account', label: tCommon('account'), Icon: User },
+                { href: '/wishlist', label: t('wishlist'), Icon: Heart },
+                { href: '/contact', label: t('contact'), Icon: Mail },
+              ].map((item, i) => (
+                <li
+                  key={item.href}
+                  className={`${i % 2 === 0 ? 'border-r border-black/15' : ''} ${i < 2 ? 'border-b border-black/15' : ''}`}
+                >
                   <LocaleLink
                     href={item.href}
                     onClick={onClose}
                     aria-current={isHuidig(item.href) ? 'page' : undefined}
-                    className="flex min-h-[48px] items-center px-4 text-[13px] font-bold uppercase tracking-[0.1em] transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
+                    className="flex min-h-[52px] flex-row items-center justify-center gap-2 px-2 text-center transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
                   >
-                    {tCommon(item.labelKey)}
+                    <item.Icon size={17} strokeWidth={2.2} aria-hidden="true" />
+                    <span className="text-[11px] font-bold uppercase leading-tight tracking-[0.04em]">
+                      {item.label}
+                    </span>
                   </LocaleLink>
                 </li>
               ))}
             </ul>
-          </nav>
-
-          {/* [7] HULP — de grootste winst bij verkeer uit advertenties: een
-              groot deel van wie het menu opent heeft al besteld en zoekt zijn
-              pakket. Die moesten eerst helemaal naar de footer. */}
-          <ul className="grid grid-cols-2 border-b-2 border-black">
-            {[
-              { href: '/track-order', label: t('help.track'), Icon: Package },
-              // Let op: `/returns` bestaat niet als pagina, alleen `/returns/new`
-              // en `/returns/[id]`. Een link naar `/returns` gaf een 404, en
-              // Next.js haalt die bij het renderen van het menu al op, dus de
-              // fout stond in de console nog voordat iemand erop tikte.
-              { href: '/returns/new', label: t('help.returns'), Icon: Undo2 },
-            ].map((item, i) => (
-              <li key={item.href} className={i === 0 ? 'border-r-2 border-black' : undefined}>
-                <LocaleLink
-                  href={item.href}
-                  onClick={onClose}
-                  className="flex min-h-[48px] items-center gap-2 px-3 text-[11px] font-bold uppercase leading-tight tracking-[0.02em] transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
-                >
-                  <item.Icon size={16} strokeWidth={2.5} className="flex-shrink-0" aria-hidden="true" />
-                  <span className="leading-tight">{item.label}</span>
-                </LocaleLink>
-              </li>
-            ))}
-          </ul>
-
-          {/* [8] PERSOONLIJK */}
-          <ul className="grid grid-cols-3 border-b-2 border-black">
-            {[
-              { href: '/account', label: tCommon('account'), Icon: User },
-              { href: '/wishlist', label: tCommon('wishlist'), Icon: Heart },
-              { href: '/contact', label: tCommon('contact'), Icon: Mail },
-            ].map((item, i) => (
-              <li key={item.href} className={i < 2 ? 'border-r-2 border-black' : undefined}>
-                <LocaleLink
-                  href={item.href}
-                  onClick={onClose}
-                  aria-current={isHuidig(item.href) ? 'page' : undefined}
-                  className="flex min-h-[52px] flex-col items-center justify-center gap-1 px-1 transition-colors hover:bg-black hover:text-white focus-visible:bg-black focus-visible:text-white focus-visible:outline-none"
-                >
-                  <item.Icon size={18} strokeWidth={2.2} aria-hidden="true" />
-                  <span className="truncate text-[10px] font-bold uppercase tracking-[0.1em]">
-                    {item.label}
-                  </span>
-                </LocaleLink>
-              </li>
-            ))}
-          </ul>
+          </div>
 
           <MobileMenuInstagramRow isOpen={isOpen} />
 

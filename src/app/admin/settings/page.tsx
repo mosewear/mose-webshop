@@ -24,7 +24,7 @@ export default function SettingsPage() {
 
   // Form state
   const [siteName, setSiteName] = useState('MOSE Wear')
-  const [contactEmail, setContactEmail] = useState('info@mosewear.nl')
+  const [contactEmail, setContactEmail] = useState('info@mosewear.com')
   const [contactPhone, setContactPhone] = useState('+31 50 234 0025')
   const [contactAddress, setContactAddress] = useState('Helper Brink 27a, 9722 EG Groningen')
   const [freeShipping, setFreeShipping] = useState('100.00')

@@ -112,12 +112,8 @@
     "closeShort": "Sluit",
     "closeAria": "Menu sluiten",
     "tickerItems": [
-      "GEEN FAST FASHION",
-      "GEMAAKT IN GRONINGEN",
-      "DOOR IRMA & RICK",
-      "BUILT TO LAST",
-      "30 DAGEN BEDENKTIJD",
-      "VERZENDING IN 1-2 DAGEN"
+      "Geen fast fashion",
+      "Gemaakt in Groningen"
     ],
     "tickerAria": "MOSE waarden-ticker",
     "navAria": "Hoofdnavigatie",
@@ -150,16 +146,21 @@
     "cartAria": "Winkelwagen, {count, plural, one {# artikel} other {# artikelen}}",
     "cartEmptyAria": "Winkelwagen, leeg",
     "login": "Inloggen",
-    "fit": "True to size · 30 dagen ruilen of retour",
+    "fit": "Valt normaal. Past niet? Stuur 'm terug.",
     "promise": {
       "fast": "Voor 17:00 besteld? Morgen in huis",
       "toFree": "Nog €{amount} tot gratis verzending",
-      "freeIncluded": "Gratis verzending zit erin"
+      "freeIncluded": "Gratis verzending zit erin",
+      "sameDay": "Vandaag besteld, vandaag verstuurd",
+      "nextWorkday": "Volgende werkdag verstuurd"
     },
     "help": {
-      "track": "Volg bestelling",
-      "returns": "Retourneren"
-    }
+      "track": "Waar is mijn pakket",
+      "returns": "Terugsturen"
+    },
+    "makers": "Door Irma & Rick, in Groningen",
+    "wishlist": "Bewaard",
+    "contact": "Mail ons"
   },
   "footer": {
     "tagline": "Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.",
