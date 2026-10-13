@@ -68,3 +68,7 @@ photoshoot-2026/**/*.JPEG
 # Uitvoer van de visuele controlescripts (npm run visual-check). Lokaal
 # bewijsmateriaal van 60MB aan schermafdrukken, hoort niet in de repo.
 shots/
+
+# Tijdelijke scripts van verkennend werk in de projectwortel.
+/*-tmp.mjs
+/.*.mjs
