@@ -216,11 +216,14 @@ export default function MobileMenuInstagramRow({
       {/* Header-rij */}
       <div className="flex items-end justify-between gap-3 px-4 pt-4 pb-3">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
-            <Instagram size={14} strokeWidth={2.5} aria-hidden="true" />
+          {/* Merkgroen op wit haalt 3,13:1 en zakt daarmee onder de 4,5:1 die
+              tekst nodig heeft. De kleur blijft op het icoon staan, waar 3:1
+              wel volstaat; het woord zelf wordt zwart. */}
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-black leading-none">
+            <Instagram size={14} strokeWidth={2.5} className="text-brand-primary" aria-hidden="true" />
             <span>{t('eyebrow')}</span>
           </div>
-          <h2 className="mt-2 font-display text-2xl uppercase tracking-tight leading-none truncate">
+          <h2 className="mt-2 font-display text-xl uppercase tracking-tight leading-none truncate sm:text-2xl">
             {t('title', { username })}
           </h2>
           <p className="mt-1.5 text-[11px] text-gray-500 truncate">
@@ -232,7 +235,7 @@ export default function MobileMenuInstagramRow({
           href={ctaUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-black text-white border-2 border-black px-3 h-9 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-brand-primary hover:border-brand-primary focus-visible:bg-brand-primary focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-colors"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-black text-white border-2 border-black px-3 h-11 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-brand-primary hover:border-brand-primary focus-visible:bg-brand-primary focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-colors"
         >
           <span>{t('viewAllShort')}</span>
           <ArrowRight size={14} strokeWidth={2.5} aria-hidden="true" />
