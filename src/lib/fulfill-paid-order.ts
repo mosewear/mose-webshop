@@ -206,7 +206,7 @@ export async function fulfillPaidOrder(
       0
     )
 
-    await sendServerPurchaseEvent({
+    const capiResultaat = await sendServerPurchaseEvent({
       orderId: updatedOrder.id,
       value: Number(updatedOrder.total) || 0,
       currency: 'EUR',
@@ -224,6 +224,22 @@ export async function fulfillPaidOrder(
       contentIds: purchaseContents.map((c) => c.id),
       numItems,
     })
+
+    // De uitkomst werd weggegooid. Een aankoop die Meta weigerde, verdween
+    // daarmee zonder spoor: in de logs stond niets en in Meta stond niets.
+    if (!capiResultaat.ok) {
+      console.error('[fulfillPaidOrder] Meta CAPI weigerde de aankoop:', {
+        orderId: updatedOrder.id,
+        status: capiResultaat.status,
+        error: capiResultaat.error,
+        fbtrace_id: capiResultaat.fbtrace_id,
+      })
+    } else {
+      console.log('[fulfillPaidOrder] Meta CAPI aankoop verstuurd:', {
+        orderId: updatedOrder.id,
+        events_received: capiResultaat.events_received,
+      })
+    }
   } catch (capiError) {
     console.error('[fulfillPaidOrder] Meta CAPI failed:', capiError)
   }

@@ -129,13 +129,35 @@ interface TrackOptions {
 /**
  * Track standard Facebook Pixel event (DUAL: Client + Server)
  */
+/**
+ * Gebeurtenissen die ALTIJD ook server-side mee moeten.
+ *
+ * Dit stond eerder op "alleen als er klantgegevens of een transactie-id is".
+ * Gevolg: een bezoeker die niet is ingelogd leverde voor AddToCart helemaal
+ * geen server-side gebeurtenis op, en dus niets zodra zijn browser de pixel
+ * blokkeerde. Juist die gebeurtenissen zijn de belangrijkste voor Meta.
+ */
+const ALTIJD_OOK_SERVERSIDE = new Set<PixelEvent>([
+  'ViewContent',
+  'AddToCart',
+  'InitiateCheckout',
+  'AddPaymentInfo',
+  'Purchase',
+])
+
 export function trackPixelEvent(
   event: PixelEvent,
   params?: PixelParams,
   userData?: UserData,
   options?: TrackOptions
 ) {
-  if (typeof window === 'undefined' || !window.fbq) {
+  // Niet meer afbreken als `window.fbq` ontbreekt. Die controle stond hier
+  // bovenaan en sloeg daarmee OOK de server-side Conversions API over. Dat is
+  // precies verkeerd om: de Conversions API bestaat om door te meten wanneer
+  // de pixel geblokkeerd wordt, en hier was hij er juist van afhankelijk. Een
+  // bezoeker met een adblocker (in Nederland een flink deel van het verkeer)
+  // leverde zo geen enkele gebeurtenis op, langs geen van beide wegen.
+  if (typeof window === 'undefined') {
     return
   }
 
@@ -161,14 +183,20 @@ export function trackPixelEvent(
     if (params?.transaction_id) eventParams.transaction_id = params.transaction_id
     if (typeof params?.predicted_ltv === 'number') eventParams.predicted_ltv = params.predicted_ltv
     
-    // Add event_id for deduplication
-    eventParams.eventID = eventId
+    // 1. Client-side pixel, als die niet geblokkeerd is.
+    //
+    // Het event-id hoort in het VIERDE argument. Het stond hier als gewone
+    // parameter binnen de custom data (`eventParams.eventID`), waar Meta het
+    // als een losse eigenschap behandelt en niet als deduplicatiesleutel.
+    // Daardoor zag Meta een client- en een serverversie van dezelfde aankoop
+    // als twee losse gebeurtenissen. Nu dedupliceren ze zoals bedoeld, wat ook
+    // de voorwaarde is om beide wegen tegelijk te durven gebruiken.
+    if (window.fbq) {
+      window.fbq('track', event, eventParams, { eventID: eventId })
+    }
 
-    window.fbq('track', event, eventParams)
-    
-    // 2. Track server-side (Conversions API) - async, don't wait
-    if (userData || params?.transaction_id) {
-      // Only send to CAPI for important events with user data
+    // 2. Server-side (Conversions API), onafhankelijk van de pixel hierboven.
+    if (ALTIJD_OOK_SERVERSIDE.has(event) || userData || params?.transaction_id) {
       sendToConversionsAPI(event, params || {}, userData || {}, eventId)
     }
   } catch (error) {
