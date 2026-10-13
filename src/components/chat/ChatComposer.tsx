@@ -73,7 +73,7 @@ export default function ChatComposer({
     <div className="flex-shrink-0 bg-white">
       {toonSuggesties && (
         <div className="px-3 pt-3">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-black/40">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-black/60">
             {t('starters.intro')}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -83,7 +83,7 @@ export default function ChatComposer({
                 type="button"
                 disabled={disabled}
                 onClick={() => onSend(t(`starters.${key}`))}
-                className="flex min-h-[40px] items-center bg-black/[0.06] px-3.5 py-2 text-left text-[12px] font-semibold leading-snug text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[40px] items-center bg-black/[0.06] px-3.5 py-2 text-left text-[13px] font-semibold leading-snug text-black md:text-[12px] transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {t(`starters.${key}`)}
               </button>

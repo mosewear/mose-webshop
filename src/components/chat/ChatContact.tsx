@@ -53,10 +53,10 @@ export default function ChatContact() {
             </span>
             {/* Het nummer zelf erbij: wie liever belt dan appt, hoeft er niet
                 naar te zoeken, en je ziet waar de knop je heen stuurt. */}
-            <span className="mt-1.5 block truncate text-[13px] text-black/70">
+            <span className="mt-1.5 block truncate text-[14px] text-black/80 md:text-[13px]">
               {telefoon ?? '\u00A0'}
             </span>
-            <span className="mt-0.5 block truncate text-[11px] text-black/45">{t('whatsapp.hours')}</span>
+            <span className="mt-0.5 block truncate text-[11px] text-black/60">{t('whatsapp.hours')}</span>
           </span>
         </a>
 
@@ -72,19 +72,19 @@ export default function ChatContact() {
             <span className="block font-display text-base uppercase leading-none tracking-wide">
               {t('email.title')}
             </span>
-            <span className="mt-1.5 block truncate text-[13px] text-black/70">{email ?? '\u00A0'}</span>
-            <span className="mt-0.5 block truncate text-[11px] text-black/45">{t('email.response')}</span>
+            <span className="mt-1.5 block truncate text-[14px] text-black/80 md:text-[13px]">{email ?? '\u00A0'}</span>
+            <span className="mt-0.5 block truncate text-[11px] text-black/60">{t('email.response')}</span>
           </span>
         </a>
       </div>
 
       <div className="px-4 py-5">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-black/40">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-black/60">
           {t('help.intro')}
         </p>
         <ul className="space-y-2">
           {HULP_PUNTEN.map((punt) => (
-            <li key={punt} className="flex items-start gap-2.5 text-[13px] leading-snug text-black/75">
+            <li key={punt} className="flex items-start gap-2.5 text-[14px] leading-snug text-black/80 md:text-[13px]">
               <span className="mt-[7px] h-1.5 w-1.5 flex-shrink-0 bg-brand-primary" aria-hidden="true" />
               {t(`help.${punt}`)}
             </li>
