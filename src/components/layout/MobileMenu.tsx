@@ -479,7 +479,11 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
           <ul className="grid grid-cols-2 border-b-2 border-black">
             {[
               { href: '/track-order', label: t('help.track'), Icon: Package },
-              { href: '/returns', label: t('help.returns'), Icon: Undo2 },
+              // Let op: `/returns` bestaat niet als pagina, alleen `/returns/new`
+              // en `/returns/[id]`. Een link naar `/returns` gaf een 404, en
+              // Next.js haalt die bij het renderen van het menu al op, dus de
+              // fout stond in de console nog voordat iemand erop tikte.
+              { href: '/returns/new', label: t('help.returns'), Icon: Undo2 },
             ].map((item, i) => (
               <li key={item.href} className={i === 0 ? 'border-r-2 border-black' : undefined}>
                 <LocaleLink
