@@ -171,10 +171,14 @@ export function Header() {
               </button>
 
               {/* Mobile Menu Toggle - Always visible on mobile */}
+              {/* 40x40 was te klein (de norm is 44) en een schermlezer hoorde
+                  niet of het menu open of dicht stond. */}
               <button
-                className="md:hidden p-2"
+                className="md:hidden flex h-11 w-11 items-center justify-center"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label={t('menu')}
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="mobiel-menu"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path

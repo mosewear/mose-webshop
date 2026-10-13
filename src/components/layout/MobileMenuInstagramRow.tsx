@@ -214,21 +214,11 @@ export default function MobileMenuInstagramRow({
       className="border-b-2 border-black"
     >
       {/* Header-rij */}
-      <div className="flex items-end justify-between gap-3 px-4 pt-4 pb-3">
+      <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2.5">
         <div className="min-w-0">
-          {/* Merkgroen op wit haalt 3,13:1 en zakt daarmee onder de 4,5:1 die
-              tekst nodig heeft. De kleur blijft op het icoon staan, waar 3:1
-              wel volstaat; het woord zelf wordt zwart. */}
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-black leading-none">
-            <Instagram size={14} strokeWidth={2.5} className="text-brand-primary" aria-hidden="true" />
-            <span>{t('eyebrow')}</span>
-          </div>
-          <h2 className="mt-2 font-display text-xl uppercase tracking-tight leading-none truncate sm:text-2xl">
+          <h2 className="font-display text-lg uppercase tracking-tight leading-none truncate sm:text-2xl">
             {t('title', { username })}
           </h2>
-          <p className="mt-1.5 text-[11px] text-gray-500 truncate">
-            {t('subline')}
-          </p>
         </div>
 
         <a
@@ -282,6 +272,10 @@ export default function MobileMenuInstagramRow({
                   locale={locale}
                   viewPostLabel={t('viewPost', { index: (idx % posts.length) + 1 })}
                   onImageFailed={markFailed}
+                  // De tweede set is alleen een kopie om de loop naadloos te
+                  // laten lijken. Die hoort niet in de tabvolgorde en niet in
+                  // de schermlezer: 12 posts gaven anders 24 tabstops.
+                  isKopie={idx >= posts.length}
                 />
               ))}
             </ol>
@@ -323,6 +317,8 @@ interface InstagramThumbProps {
   index: number
   locale: string
   viewPostLabel: string
+  /** True voor de tweede, decoratieve helft van de naadloze loop. */
+  isKopie?: boolean
   /** Aangeroepen wanneer de IG-CDN URL faalt (404 op verwijderde
    *  post / verlopen media_url). Parent filtert dan de post weg. */
   onImageFailed: (postId: string) => void
@@ -333,6 +329,7 @@ function InstagramThumb({
   index,
   locale,
   viewPostLabel,
+  isKopie,
   onImageFailed,
 }: InstagramThumbProps) {
   const imageSrc =
@@ -347,20 +344,21 @@ function InstagramThumb({
     : viewPostLabel
 
   return (
-    <li className="flex-shrink-0">
+    <li className="flex-shrink-0" aria-hidden={isKopie || undefined}>
       <a
         href={post.permalink}
         target="_blank"
         rel="noopener noreferrer"
+        tabIndex={isKopie ? -1 : undefined}
         aria-label={enrichedLabel}
-        className="group relative block w-24 aspect-square border-2 border-black overflow-hidden bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+        className="group relative block w-20 aspect-square border-2 border-black overflow-hidden bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
         <Image
           src={imageSrc}
           alt=""
           fill
           unoptimized={!imageSrc.includes('supabase')}
-          sizes="96px"
+          sizes="80px"
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
           priority={index < 3}
           loading={index < 3 ? undefined : 'lazy'}

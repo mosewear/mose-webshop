@@ -111,7 +111,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
     cachedSettings = {
       site_name: settings.site_name || 'MOSE Wear',
-      contact_email: settings.contact_email || 'info@mosewear.nl',
+      contact_email: settings.contact_email || 'info@mosewear.com',
       contact_phone: settings.contact_phone || '+31 50 234 0025',
       contact_address: settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen',
       free_shipping_threshold: (settings.free_shipping_threshold !== null && settings.free_shipping_threshold !== undefined && !isNaN(parseFloat(settings.free_shipping_threshold))) ? parseFloat(settings.free_shipping_threshold) : 150,
@@ -167,7 +167,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
     return {
       site_name: 'MOSE Wear',
-      contact_email: 'info@mosewear.nl',
+      contact_email: 'info@mosewear.com',
       contact_phone: '+31 50 234 0025',
       contact_address: 'Stavangerweg 13, 9723 JC Groningen',
       free_shipping_threshold: 150,

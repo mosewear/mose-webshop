@@ -17,6 +17,7 @@
 import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { levertMorgen } from '@/lib/shipping-cutoff'
 
 interface PdpTrustStripProps {
   signatureSpecs?: string | null
@@ -27,36 +28,19 @@ interface PdpTrustStripProps {
   freeShippingThreshold: number
 }
 
-const SHIPPING_CUTOFF_HOUR = 17 // local Europe/Amsterdam time
-
-function isBeforeCutoffNL(): boolean {
-  // Amsterdam time via Intl. We rebuild the hour locally on every check.
-  try {
-    const fmt = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Amsterdam',
-      hour: 'numeric',
-      hour12: false,
-    })
-    const hour = parseInt(fmt.format(new Date()), 10)
-    return Number.isFinite(hour) && hour < SHIPPING_CUTOFF_HOUR
-  } catch {
-    return new Date().getHours() < SHIPPING_CUTOFF_HOUR
-  }
-}
-
 export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold }: PdpTrustStripProps) {
   const t = useTranslations('product.trustAnchor')
   // Lazy-init runs once on first render. `Intl.DateTimeFormat` works on
   // both server and client so the SSR'd HTML matches the first client
   // render and we never flicker.
-  const [beforeCutoff, setBeforeCutoff] = useState(isBeforeCutoffNL)
+  const [beforeCutoff, setBeforeCutoff] = useState(levertMorgen)
 
   useEffect(() => {
     // Subscribe to time-of-day changes via interval. The setState here
     // lives inside an external timer callback so it does not violate the
     // "no setState in effect body" rule.
     const id = window.setInterval(() => {
-      setBeforeCutoff(isBeforeCutoffNL())
+      setBeforeCutoff(levertMorgen())
     }, 5 * 60 * 1000)
     return () => window.clearInterval(id)
   }, [])

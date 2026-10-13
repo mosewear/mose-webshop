@@ -129,7 +129,7 @@ export async function createReturnLabelSimple(
       city: moseCity,
       postal_code: mosePostalCode,
       country: 'NL',
-      email: 'info@mosewear.nl',
+      email: 'info@mosewear.com',
       telephone: '+31502340025',
 
       // Sender address (gebruik configured sender)

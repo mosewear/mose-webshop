@@ -576,7 +576,7 @@ export async function createReturnLabel(
       // Use defaults if settings fetch fails
       settings = {
         contact_address: 'Stavangerweg 13, 9723 JC Groningen',
-        contact_email: 'info@mosewear.nl',
+        contact_email: 'info@mosewear.com',
         contact_phone: '+31 50 234 0025',
       }
     }
@@ -647,7 +647,7 @@ export async function createReturnLabel(
       city: moseCity,
       postalCode: mosePostalCode, // Behoud spatie in postcode (9723 JC)
       country: 'NL',
-      email: settings.contact_email || 'info@mosewear.nl',
+      email: settings.contact_email || 'info@mosewear.com',
       phone: settings.contact_phone,
     })
     
@@ -694,7 +694,7 @@ export async function createReturnLabel(
       city: moseAddress.city,
       postal_code: moseAddress.postal_code,
       country: moseAddress.country,
-      email: moseAddress.email || 'info@mosewear.nl',
+      email: moseAddress.email || 'info@mosewear.com',
       telephone: moseAddress.telephone || '',
       
       // From address (klant - waar het pakket vandaan komt) - VERPLICHT voor is_return!
