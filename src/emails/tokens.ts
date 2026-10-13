@@ -57,7 +57,7 @@ export const EMAIL_SITE_URL =
 
 export const EMAIL_DEFAULT_CONTACT = {
   email: 'info@mosewear.com',
-  phone: '+31 50 211 1931',
+  phone: '+31 50 234 0025',
   address: 'Stavangerweg 13, 9723 JC Groningen',
 } as const
 

@@ -545,10 +545,27 @@ export async function POST(request: Request) {
       console.log('✅ Customer profile upserted:', profileId)
     }
 
+    // IP en user agent van de koper vastleggen.
+    //
+    // Deze twee kolommen bestonden al in `orders` en worden door de Meta
+    // Conversions API uitgelezen in `fulfillPaidOrder`, maar er werd nooit iets
+    // in gezet: elke bestelling had ze op NULL. De server-side aankoop vertrok
+    // daardoor zonder `client_user_agent` en `client_ip_address`, de twee
+    // velden waarmee Meta een aankoop aan een advertentieklik koppelt. De
+    // gebeurtenis komt wel aan, maar zonder iets om op te matchen.
+    //
+    // Bewust uit de HEADERS en niet uit de body: de browser mag niet bepalen
+    // welk IP er van hem wordt vastgelegd.
+    const koperIp =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      null
+    const koperUserAgent = request.headers.get('user-agent') || null
+
     // Insert order
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
-      .insert([order])
+      .insert([{ ...order, ip_address: koperIp, user_agent: koperUserAgent }])
       .select()
       .single()
 

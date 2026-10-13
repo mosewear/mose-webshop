@@ -1971,7 +1971,9 @@
         "custom": "Custom requests",
         "tracking": "Order status & tracking",
         "other": "Andere vragen"
-      }
+      },
+      "headerTitle": "Team MOSE",
+      "headerSubtitle": "WhatsApp of e-mail"
     },
     "subtitle": "Meestal binnen een minuut",
     "online": "Online",
@@ -1983,7 +1985,9 @@
       "shipping": "Wat kost verzending?",
       "returns": "Hoe werkt retourneren?",
       "material": "Van welke stof is het gemaakt?"
-    }
+    },
+    "back": "Terug naar het gesprek",
+    "toHuman": "Liever een mens"
   },
   "surveyPopup": {
     "introTitle": "Mogen wij 1 minuutje van je tijd?",

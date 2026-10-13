@@ -20,7 +20,7 @@ export default function ContactPage() {
   const [error, setError] = useState('')
   const [settings, setSettings] = useState({
     contact_email: 'info@mosewear.nl',
-    contact_phone: '+31 50 211 1931',
+    contact_phone: '+31 50 234 0025',
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
   })
 

@@ -1971,7 +1971,9 @@
         "custom": "Custom requests",
         "tracking": "Order status & tracking",
         "other": "Other questions"
-      }
+      },
+      "headerTitle": "Team MOSE",
+      "headerSubtitle": "WhatsApp or email"
     },
     "subtitle": "Usually replies in a minute",
     "online": "Online",
@@ -1983,7 +1985,9 @@
       "shipping": "What does shipping cost?",
       "returns": "How do returns work?",
       "material": "What is it made of?"
-    }
+    },
+    "back": "Back to the conversation",
+    "toHuman": "Rather talk to a human"
   },
   "surveyPopup": {
     "introTitle": "Can we have 1 minute of your time?",

@@ -1024,7 +1024,7 @@ export default function AccountPage() {
                             value={addressForm.phone}
                             onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
                             className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                            placeholder="+31 50 211 1931"
+                            placeholder="+31 50 234 0025"
                           />
                         </div>
                         <div>

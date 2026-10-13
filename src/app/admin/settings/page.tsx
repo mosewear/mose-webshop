@@ -25,7 +25,7 @@ export default function SettingsPage() {
   // Form state
   const [siteName, setSiteName] = useState('MOSE Wear')
   const [contactEmail, setContactEmail] = useState('info@mosewear.nl')
-  const [contactPhone, setContactPhone] = useState('+31 50 211 1931')
+  const [contactPhone, setContactPhone] = useState('+31 50 234 0025')
   const [contactAddress, setContactAddress] = useState('Helper Brink 27a, 9722 EG Groningen')
   const [freeShipping, setFreeShipping] = useState('100.00')
   const [returnDays, setReturnDays] = useState('30')
@@ -474,7 +474,7 @@ export default function SettingsPage() {
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                placeholder="+31 50 211 1931"
+                placeholder="+31 50 234 0025"
               />
             </div>
 
