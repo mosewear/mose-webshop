@@ -54,6 +54,18 @@
     animation: none;
     transform: none;
   }
+
+  /* Dit blok dekte alleen de marquee af. De lade van het mobiele menu schoof
+     gewoon door en de items faadden gewoon in, terwijl iemand die
+     bewegingsreductie aanzet daar juist last van heeft. Tailwind's
+     motion-reduce-variant vangt de nieuwe componenten af, maar de bestaande
+     fade-animaties worden via klassenamen aangestuurd en moeten hier. */
+  .animate-fadeIn,
+  .animate-slideUp,
+  .animate-slideInRight,
+  .animate-bubblePop {
+    animation: none !important;
+  }
 }
 
 

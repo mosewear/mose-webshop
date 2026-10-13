@@ -143,7 +143,23 @@
       "label": "Language",
       "switchTo": "Switch to {label}"
     },
-    "signature": "© {year} MOSE. MADE WITH 🐾"
+    "signature": "© {year} MOSE. MADE WITH 🐾",
+    "shopAll": "Shop all",
+    "productsAria": "Our products",
+    "searchAria": "Open search",
+    "cartAria": "Cart, {count, plural, one {# item} other {# items}}",
+    "cartEmptyAria": "Cart, empty",
+    "login": "Log in",
+    "fit": "True to size · 30 days to exchange or return",
+    "promise": {
+      "fast": "Order before 17:00, here tomorrow",
+      "toFree": "€{amount} to go for free shipping",
+      "freeIncluded": "Free shipping included"
+    },
+    "help": {
+      "track": "Track order",
+      "returns": "Returns"
+    }
   },
   "footer": {
     "tagline": "Clothing without fuss. Locally made. Built to last.",

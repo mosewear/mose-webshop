@@ -143,7 +143,23 @@
       "label": "Taal",
       "switchTo": "Wissel naar {label}"
     },
-    "signature": "© {year} MOSE. MADE WITH 🐾"
+    "signature": "© {year} MOSE. MADE WITH 🐾",
+    "shopAll": "Shop alles",
+    "productsAria": "Onze producten",
+    "searchAria": "Zoeken openen",
+    "cartAria": "Winkelwagen, {count, plural, one {# artikel} other {# artikelen}}",
+    "cartEmptyAria": "Winkelwagen, leeg",
+    "login": "Inloggen",
+    "fit": "True to size · 30 dagen ruilen of retour",
+    "promise": {
+      "fast": "Voor 17:00 besteld? Morgen in huis",
+      "toFree": "Nog €{amount} tot gratis verzending",
+      "freeIncluded": "Gratis verzending zit erin"
+    },
+    "help": {
+      "track": "Volg bestelling",
+      "returns": "Retourneren"
+    }
   },
   "footer": {
     "tagline": "Kleding zonder poespas. Lokaal gemaakt. Gebouwd om lang mee te gaan.",
