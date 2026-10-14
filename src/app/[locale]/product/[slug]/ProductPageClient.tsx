@@ -682,17 +682,32 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           ),
           categories(name, name_en, slug)
         `)
-        .eq('category_id', data.category_id)
+        // GEEN filter op category_id meer. Dat stond er wel, en daardoor heeft
+        // dit blok nooit iets getoond: MOSE heeft vier categorieën met elk
+        // precies één product, dus "andere producten in dezelfde categorie"
+        // leverde altijd nul rijen op. Het blok was er, de query vond niets.
         .eq('is_active', true)
         .eq('status', 'active')
         .neq('id', data.id)
-        .limit(4)
+        .order('base_price', { ascending: true })
+        .limit(6)
 
       if (related) {
-        const productsWithSortedImages = related.map((p: any) => ({
-          ...p,
-          product_images: p.product_images.sort((a: ProductImage, b: ProductImage) => a.position - b.position)
-        }))
+        // Niets tonen dat meer dan het dubbele kost van wat iemand nu bekijkt.
+        // Een man die een shirt van €50 bekijkt, legt daar geen horloge van
+        // €199,95 bij; andersom werkt het wel. Op de horlogepagina vallen alle
+        // kledingstukken dus binnen de grens, op een shirtpagina het horloge
+        // niet.
+        const huidigePrijs = Number(data.sale_price ?? data.base_price ?? 0)
+        const plafond = huidigePrijs > 0 ? huidigePrijs * 2 : Infinity
+
+        const productsWithSortedImages = (related as any[])
+          .filter((p) => Number(p.sale_price ?? p.base_price ?? 0) <= plafond)
+          .slice(0, 4)
+          .map((p: any) => ({
+            ...p,
+            product_images: p.product_images.sort((a: ProductImage, b: ProductImage) => a.position - b.position)
+          }))
         setRelatedProducts(productsWithSortedImages)
       }
     }
@@ -1133,7 +1148,15 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 {/* Scroll Container with CSS Scroll-Snap */}
                 <div
                   ref={scrollContainerRef}
-                  className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide md:overflow-hidden group"
+                  // Op mobiel over de volle breedte, zonder kader. Hij was 354
+                  // van de 390px breed met een rand eromheen en was daarmee de
+                  // enige galerij van de acht onderzochte winkels die niet de
+                  // volle breedte pakt; dat kost presentiekracht precies waar
+                  // beeld het meeste werk doet. De verhouding gaat van 3:4 naar
+                  // 4:5 zodat hij breder wordt zonder ook hoger te worden en de
+                  // productnaam dus niet verder naar beneden schuift. Op desktop
+                  // blijft het kader staan, daar past hij naast de koopdoos.
+                  className="relative -mx-4 aspect-[4/5] bg-gray-100 border-y-2 border-black overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide group md:mx-0 md:aspect-[3/3] md:border-2 md:overflow-hidden"
                   style={{
                     scrollBehavior: 'smooth',
                     WebkitOverflowScrolling: 'touch',
@@ -1883,42 +1906,13 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                   PdpTrustStrip + ProductActivityStrip volgen ERONDER als
                   post-decision reassurance + sociale bewijsvoering. */}
               <div className="flex gap-2 md:gap-3">
-                {/* QUANTITY SELECTOR - Brutalist Stepper (MOSE Style) */}
-                <div className="flex border-2 border-black shrink-0">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1 || !hasAnyStock || !selectedVariant}
-                    className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
-                      quantity <= 1 || !hasAnyStock || !selectedVariant
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-black text-white hover:bg-gray-800'
-                    }`}
-                    aria-label={t('decrease')}
-                  >
-                    −
-                  </button>
-                  <div className="w-10 h-12 md:w-12 md:h-14 flex items-center justify-center border-x-2 border-black bg-white font-bold text-base md:text-lg">
-                    {quantity}
-                  </div>
-                  <button
-                    onClick={() => {
-                      const maxQty = selectedVariant?.presale_enabled
-                        ? selectedVariant.presale_stock_quantity
-                        : selectedVariant?.stock_quantity || 10
-                      setQuantity(Math.min(maxQty, quantity + 1))
-                    }}
-                    disabled={!hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)}
-                    className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
-                      !hasAnyStock || !selectedVariant || quantity >= (selectedVariant?.presale_enabled ? selectedVariant.presale_stock_quantity : selectedVariant?.stock_quantity || 10)
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-black text-white hover:bg-gray-800'
-                    }`}
-                    aria-label={t('increase')}
-                  >
-                    +
-                  </button>
-                </div>
-
+                {/* De aantalkiezer stond hier, naast de koopknop, en is weg.
+                    Geen van de zeven onderzochte concurrenten (Asket, Norse
+                    Projects, Carhartt WIP, Les Deux, Colorful Standard,
+                    Pockies, Suitsupply) zet er een boven de vouw. Het is een
+                    extra beslissing op het moment dat je er geen wilt, en het
+                    at de halve breedte van de koopknop op. Meer dan één stuk
+                    stel je in de winkelwagen in. */}
                 {/* IN WINKELMAND button - primary action.
                     data-pdp-main-atc: door BrandDiscoveryWidget gequery'd
                     via DOM zodat de widget weet wanneer de sticky variant-
@@ -2026,55 +2020,24 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 </div>
               )}
 
+              {/* Productbeschrijving op mobiel, NIET meer in een uitklapper.
+                  De oude tekst was 145 woorden en moest wel dichtgeklapt, anders
+                  duwde hij de hele pagina weg; je zag hem pas op 2,1 scherm en
+                  alleen na een tik. De nieuwe tekst is 71 tot 83 woorden en past
+                  hier gewoon, direct onder de koopknop en de vertrouwensregels.
+                  Op desktop staat hij al in de koopdoos naast de foto's. */}
+              <div className="md:hidden border-2 border-black p-4">
+                <div className="text-sm leading-relaxed text-gray-800">
+                  {formatBoldText(getLocalizedDescription(product))}
+                </div>
+              </div>
+
               {/* Live activity - only renders when thresholds are met */}
               {hasAnyStock && <ProductActivityStrip productId={product.id} />}
 
               {/* Product Tabs / Accordion */}
               <div className="border-t-2 border-gray-200 pt-6">
                 <div className="space-y-4">
-                  {/* Product Description Tab - Mobile only */}
-                  <div className="md:hidden border-2 border-black">
-                    <button
-                      data-tab="description"
-                      onClick={() => handleTabChange(activeTab === 'description' ? '' : 'description')}
-                      className="w-full px-4 py-3 flex items-center justify-between font-bold hover:bg-gray-50 transition-colors"
-                    >
-                      <span>{t('tabs.description')}</span>
-                      <svg
-                        className={`w-5 h-5 transition-transform ${activeTab === 'description' ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {activeTab === 'description' && (
-                      <div className="px-4 py-4 border-t-2 border-black bg-gray-50">
-                        <div className={`text-gray-700 leading-relaxed text-sm ${mobileDescriptionExpanded ? '' : 'line-clamp-6'}`}>
-                          {formatBoldText(getLocalizedDescription(product))}
-                        </div>
-                        {/* Show "lees meer" button if description is long enough */}
-                        {getLocalizedDescription(product) && getLocalizedDescription(product).length > 300 && (
-                          <button
-                            onClick={() => setMobileDescriptionExpanded(!mobileDescriptionExpanded)}
-                            className="text-xs text-brand-primary hover:underline font-semibold mt-3 inline-flex items-center gap-1"
-                          >
-                            {mobileDescriptionExpanded ? t('showLess') : t('showMore')}
-                            <svg
-                              className={`w-3 h-3 transition-transform ${mobileDescriptionExpanded ? 'rotate-180' : ''}`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
                   {/* Trust Badges Tab - Mobile only */}
                   <div className="md:hidden border-2 border-black">
                     <button
@@ -2294,20 +2257,22 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           {/* Product Reviews */}
           <ProductReviews productId={product.id} />
 
-          {/* Compact Instagram-grid van de PDP-fetcher (server). Dient
-              als visuele brand-break en vertrouwens-anker tussen reviews
-              en FAQ. Rendert volledig niets als de admin de IG-feed
-              niet heeft ingeschakeld of er geen posts zijn. */}
-          {instagramSlot}
-
-          {/* PDP-specific FAQ - addresses the five most common conversion
-              blockers (fit, delivery, exchanges, authenticity, payment). */}
+          {/* De veelgestelde vragen staan nu BOVEN het Instagram-blok.
+              Ze beantwoorden de vijf dingen waarop mensen afhaken (maat,
+              levertijd, ruilen, herkomst, betalen) en stonden op 5,2 scherm,
+              ná een blok dat niets verkoopt. Geen van de zeven onderzochte
+              concurrenten heeft zo'n product-FAQ; het is iets wat MOSE beter
+              doet, en dan moet het niet onderaan staan. */}
           <PdpFaq
             freeShippingThreshold={settings.free_shipping_threshold}
             shippingCost={settings.shipping_cost}
             returnDays={settings.return_days}
             locale={locale}
           />
+
+          {/* Instagram als laatste blok: visuele afsluiter, geen koopmoment.
+              Rendert niets als de admin de feed uit heeft staan. */}
+          {instagramSlot}
         </div>
       </div>
 

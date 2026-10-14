@@ -656,7 +656,7 @@
       "info": "2 year manufacturer warranty on all products"
     },
     "related": {
-      "title": "You might also like"
+      "title": "Complete the look"
     },
     "recentlyViewed": {
       "title": "Recently viewed"
@@ -685,7 +685,8 @@
       "returns": "Returns within 30 days. Full refund, no questions asked.",
       "madeInWithSpec": "Made in Groningen. {spec}.",
       "madeInBare": "Made in Groningen. Premium cotton, regular fit.",
-      "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card."
+      "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card.",
+      "warranty": "Two-year warranty on materials and workmanship."
     },
     "klarna": {
       "installment": "or 3× {amount} with Klarna, no interest"
