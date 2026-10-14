@@ -247,8 +247,21 @@ export default function StickyVariantPicker({
   // bar serves both worlds with appropriate styling per breakpoint.
   if (!onAllowedRoute || isCartOpen) return null
 
+  // Beide schermformaten volgen nu dezelfde regel: de balk is er zolang de
+  // ECHTE koopknop niet in beeld staat.
+  //
+  // Op mobiel stond hier `scrolledPastHero`: de balk verscheen zodra je voorbij
+  // de fotogalerij was, ongeacht waar de koopknop stond. Gevolg: zodra je bij
+  // de maatkiezer kwam stonden er twee identieke koopknoppen tegelijk in beeld,
+  // de een boven de ander. Dat is rommelig en het dwingt de bezoeker te kiezen
+  // tussen twee dingen die hetzelfde doen.
+  //
+  // Met deze regel is het koopmoment nog steeds nul schermen (bij het laden
+  // staat de knop onder de vouw, dus de balk staat er), verdwijnt de balk
+  // netjes zodra je de echte knop ziet, en komt hij terug als je verder
+  // scrollt. Dat is wat Les Deux, Suitsupply, Colorful Standard en Asket doen.
   const desktopVisible = !mainAtcInView
-  const mobileVisible = scrolledPastHero
+  const mobileVisible = !mainAtcInView
 
   return (
     <>
