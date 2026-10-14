@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { formatPrice, formatAmount } from '@/lib/format-price'
+import { trackAddToCart } from '@/lib/analytics'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
+import { catalogContentId } from '@/lib/catalog-ids'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { X, Minus, Plus, Trash2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
@@ -544,6 +547,36 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       image: miniatuur(product),
       sku: variant.sku,
       stock: variant.stock_quantity,
+    })
+
+    // Dit toevoegen werd nergens gemeld: niet aan Meta en niet aan onze eigen
+    // meting. Wie via "maak je look compleet" een tweede stuk in de mand legde,
+    // bestond in de cijfers niet. Dat kost twee dingen: je ziet niet of de
+    // kruisverkoop werkt, en Meta krijgt minder signaal om op te sturen.
+    const contentId = catalogContentId(product.id, variant.color)
+    trackPixelEvent('AddToCart', {
+      content_ids: [contentId],
+      contents: [{ id: contentId, quantity: 1, item_price: Number(product.base_price) }],
+      content_name: `${getProductName(product)} - ${variant.size} - ${variant.color}`,
+      content_type: 'product',
+      value: Number(product.base_price),
+      currency: 'EUR',
+      num_items: 1,
+    })
+
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      category: product.categories?.name || 'uncategorized',
+      price: Number(product.base_price),
+      quantity: 1,
+      color: variant.color,
+      size: variant.size,
+      variantId: variant.id,
+      sku: variant.sku,
+      source: 'cart_upsell',
+      sizeChosenByUser: true,
+      colorChosenByUser: false,
     })
 
     // Remove from upsell list

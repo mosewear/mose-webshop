@@ -345,6 +345,17 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState<string>('')
+
+  // Heeft de bezoeker maat en kleur zelf aangetikt, of staat er nog wat wij
+  // hebben voorgeselecteerd?
+  //
+  // De pagina kiest bij binnenkomst zelf de eerste leverbare variant. Iemand die
+  // vanuit een advertentie binnenkomt en meteen op de vaste koopbalk drukt, legt
+  // dus onze voorselectie in de mand zonder er iets aan te doen. Dat ziet er in
+  // de cijfers precies hetzelfde uit als een bewuste keuze voor dezelfde maat.
+  // Met deze twee vlaggen erbij is het verschil achteraf wél te zien.
+  const maatZelfGekozen = useRef(false)
+  const kleurZelfGekozen = useRef(false)
   const [selectedColor, setSelectedColor] = useState<string>('')
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
@@ -924,7 +935,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     toast.error(t('selectVariantFirst'))
   }
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (herkomst: 'hoofdknop' | 'vaste_balk' = 'hoofdknop') => {
     if (!product || !selectedVariant) return
 
     // Get first IMAGE (not video) for cart thumbnail
@@ -1002,6 +1013,15 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
       category: product.categories?.name || 'uncategorized',
       price: finalPrice,
       quantity: quantity,
+      color: selectedVariant.color,
+      size: selectedVariant.size,
+      variantId: selectedVariant.id,
+      sku: selectedVariant.sku,
+      source: 'pdp',
+      button: herkomst,
+      sizeChosenByUser: maatZelfGekozen.current,
+      colorChosenByUser: kleurZelfGekozen.current,
+      colorFromUrl: Boolean(requestedColorParam),
     })
 
     // Open cart drawer immediately
@@ -1709,6 +1729,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         const colorAvailable = hasStockInColor
                         const isSelected = selectedColor === color
                         const onPick = () => {
+                          kleurZelfGekozen.current = true
                           setSelectedColor(color)
                           setSelectedImage(0)
                           setQuantity(1)
@@ -1893,6 +1914,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         <button
                           key={size}
                           onClick={() => {
+                            maatZelfGekozen.current = true
                             setSelectedSize(size)
                             setQuantity(1) // Reset quantity when changing size
                             // Optie 1: Behoud kleurkeuze, laat beschikbaarheid zien
@@ -1940,7 +1962,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 <button
                   ref={mainAtcRef}
                   data-pdp-main-atc
-                  onClick={handleAddToCart}
+                  onClick={() => handleAddToCart('hoofdknop')}
                   disabled={!hasAnyStock || !selectedVariant || addedToCart}
                   className={`flex-1 min-w-0 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
                     addedToCart
@@ -2487,11 +2509,13 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           selectedColor={selectedColor}
           selectedSize={selectedSize}
           onSelectColor={(color) => {
+            kleurZelfGekozen.current = true
             setSelectedColor(color)
             setSelectedImage(0)
             setQuantity(1)
           }}
           onSelectSize={(size) => {
+            maatZelfGekozen.current = true
             setSelectedSize(size)
             setQuantity(1)
           }}
@@ -2505,7 +2529,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           hasAnyStock={hasAnyStock}
           isAdding={addedToCart}
           hasVariantSelected={Boolean(selectedVariant)}
-          onAddToCart={handleAddToCart}
+          onAddToCart={() => handleAddToCart('vaste_balk')}
           mainAtcRef={mainAtcRef}
           translateColor={getTranslatedColor}
         />

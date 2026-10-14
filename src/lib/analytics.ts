@@ -128,6 +128,15 @@ export function trackProductView(product: {
 
 /**
  * Track add to cart
+ *
+ * Kleur, maat en variant horen hier ook in. Zonder die drie staat er in de
+ * meting alleen "MOSE Essential Hoodie, 75 euro" en kun je niet nagaan welke
+ * kleur en welke maat de advertenties opleveren, terwijl de advertenties juist
+ * rechtstreeks naar een kleur linken. Naar Meta ging die informatie al mee in
+ * `content_name`; wij bewaarden hem zelf niet.
+ *
+ * `variant_id` en `sku` staan erbij zodat een mandje later aan de voorraad te
+ * koppelen is: dat is het niveau waarop uitverkocht raken gebeurt.
  */
 export function trackAddToCart(product: {
   id: string
@@ -135,6 +144,20 @@ export function trackAddToCart(product: {
   category: string
   price: number
   quantity: number
+  color?: string | null
+  size?: string | null
+  variantId?: string | null
+  sku?: string | null
+  /** Waar de klant hem in de mand legde: productpagina, winkelmand, verlanglijst. */
+  source?: 'pdp' | 'cart_upsell' | 'wishlist' | 'giftcard'
+  /** Op welke knop gedrukt is: de knop in de pagina of de vaste balk onderin. */
+  button?: 'hoofdknop' | 'vaste_balk'
+  /** Heeft de bezoeker de maat zelf aangetikt, of stond onze voorselectie er nog? */
+  sizeChosenByUser?: boolean
+  /** Idem voor de kleur. */
+  colorChosenByUser?: boolean
+  /** Kwam de kleur uit de link, zoals bij een advertentie die op ?color= landt? */
+  colorFromUrl?: boolean
 }) {
   trackEvent({
     event_name: 'add_to_cart',
@@ -145,6 +168,15 @@ export function trackAddToCart(product: {
       price: product.price,
       quantity: product.quantity,
       value: product.price * product.quantity,
+      color: product.color || null,
+      size: product.size || null,
+      variant_id: product.variantId || null,
+      sku: product.sku || null,
+      source: product.source || 'pdp',
+      button: product.button || null,
+      size_chosen_by_user: product.sizeChosenByUser ?? null,
+      color_chosen_by_user: product.colorChosenByUser ?? null,
+      color_from_url: product.colorFromUrl ?? null,
     },
   })
 }
