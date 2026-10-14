@@ -75,26 +75,48 @@ export default function ChatButton() {
     for (const el of balken) {
       const r = el.getBoundingClientRect()
       if (r.height === 0) continue
+      // Plakt hij tegen de onderrand, en staat hij ook echt in beeld? Een balk
+      // die met translate-y-full is weggeschoven heeft een top ONDER de vouw.
       if (r.bottom < window.innerHeight - 8) continue
-      hoogste = Math.max(hoogste, r.height)
+      if (r.top >= window.innerHeight - 8) continue
+      hoogste = Math.max(hoogste, window.innerHeight - r.top)
     }
     setOnderbalk(Math.round(hoogste))
   }, [])
 
   useEffect(() => {
-    meetOnderbalk()
-    const observer = new MutationObserver(meetOnderbalk)
+    // Meet niet één keer, maar ook ná de schuifbeweging.
+    //
+    // De koopbalk komt omhoog met een overgang van 200ms. De klassewijziging die
+    // dat in gang zet, is het moment waarop de waarnemer afgaat, en op dát
+    // moment staat de balk nog onder de vouw: je meet dan nul. Daarna gebeurde
+    // er niets meer, dus de knop bleef onderin staan en viel over de koopbalk.
+    // Op desktop viel dat niet op omdat de balk daar bij het laden nog weg is.
+    const timers: ReturnType<typeof setTimeout>[] = []
+    const planMeting = () => {
+      timers.forEach(clearTimeout)
+      timers.length = 0
+      meetOnderbalk()
+      timers.push(setTimeout(meetOnderbalk, 260), setTimeout(meetOnderbalk, 520))
+    }
+
+    planMeting()
+    const observer = new MutationObserver(planMeting)
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['class', 'style'],
     })
-    window.addEventListener('resize', meetOnderbalk)
+    // transitionend bubbelt, dus één luisteraar op het document vangt elke balk.
+    document.addEventListener('transitionend', meetOnderbalk, true)
+    window.addEventListener('resize', planMeting)
     window.addEventListener('scroll', meetOnderbalk, { passive: true })
     return () => {
+      timers.forEach(clearTimeout)
       observer.disconnect()
-      window.removeEventListener('resize', meetOnderbalk)
+      document.removeEventListener('transitionend', meetOnderbalk, true)
+      window.removeEventListener('resize', planMeting)
       window.removeEventListener('scroll', meetOnderbalk)
     }
   }, [meetOnderbalk])
