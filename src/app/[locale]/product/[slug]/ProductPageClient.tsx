@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect, useRef, ReactElement } from 'react'
+import { use, useState, useEffect, useRef, useCallback, ReactElement } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -432,7 +432,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   const [settingsLoading, setSettingsLoading] = useState(true)
 
   // Ref for scroll container (CSS scroll-snap)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   // Ref for the main Add-to-Cart button - StickyVariantPicker observes
   // this so the sticky strip only appears once the in-page button has
   // scrolled out of view.
@@ -866,24 +866,47 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     }
   }
 
-  // Sync dots with scroll position (CSS scroll-snap)
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
+  /**
+   * Houdt bij naar welke foto je gescrold hebt.
+   *
+   * Dit stond in een useEffect met `[displayImages.length, selectedImage]` als
+   * afhankelijkheden, en dat werkte nooit. Het effect liep twee keer: één keer
+   * zonder foto's en één keer met zestien foto's, maar op dat tweede moment
+   * stond de galerij nog niet in de DOM, want de pagina toonde toen nog het
+   * laadscherm. Toen de galerij er even later wél stond, veranderde geen van de
+   * twee afhankelijkheden, dus liep het effect niet opnieuw en werd de
+   * luisteraar nooit opgehangen.
+   *
+   * Gevolg voor elke bezoeker op een telefoon: je kon vegen door alle foto's,
+   * maar de teller, de actieve miniatuur en de pasvormtag bleven op foto 1
+   * staan, en een foto aantikken opende de vergroting niet, want dat is
+   * afgeschermd met `index === selectedImage`.
+   *
+   * Een ref met een functie lost dat op: die draait precies op het moment dat
+   * het element in de DOM komt en opnieuw als het eruit gaat.
+   */
+  const aantalFotosRef = useRef(0)
+  aantalFotosRef.current = displayImages.length
+  const losScrollLuisteraar = useRef<(() => void) | null>(null)
 
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft
-      const imageWidth = container.clientWidth
-      const newIndex = Math.round(scrollLeft / imageWidth)
-      
-      if (newIndex !== selectedImage && newIndex >= 0 && newIndex < displayImages.length) {
-        setSelectedImage(newIndex)
-      }
+  const galerijRef = useCallback((node: HTMLDivElement | null) => {
+    losScrollLuisteraar.current?.()
+    losScrollLuisteraar.current = null
+    scrollContainerRef.current = node
+    if (!node) return
+
+    const bijScroll = () => {
+      const breedte = node.clientWidth
+      if (breedte === 0) return
+      const laatste = aantalFotosRef.current - 1
+      if (laatste < 0) return
+      const nieuw = Math.min(Math.max(Math.round(node.scrollLeft / breedte), 0), laatste)
+      setSelectedImage((huidig) => (huidig === nieuw ? huidig : nieuw))
     }
 
-    container.addEventListener('scroll', handleScroll, { passive: true })
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [displayImages.length, selectedImage])
+    node.addEventListener('scroll', bijScroll, { passive: true })
+    losScrollLuisteraar.current = () => node.removeEventListener('scroll', bijScroll)
+  }, [])
 
   const handleVariantRequired = () => {
     // Scroll to variant selector
@@ -1150,7 +1173,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
               <div className="relative -mx-4 md:mx-0">
                 {/* Scroll Container with CSS Scroll-Snap */}
                 <div
-                  ref={scrollContainerRef}
+                  ref={galerijRef}
                   // Op mobiel over de volle breedte, zonder kader. Hij was 354
                   // van de 390px breed met een rand eromheen en was daarmee de
                   // enige galerij van de acht onderzochte winkels die niet de
@@ -1236,26 +1259,19 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                   />
                 ) : null}
 
-                {/* Dots Indicator - Mobile only, only if multiple images.
-                    Worden hoger geplaatst (bottom-12) als de pasvorm-
-                    tag actief is, zodat de twee elementen niet over
-                    elkaar heen vallen op smalle schermen. */}
+                {/* Tellertje rechtsboven in plaats van stippen onderin.
+                    De stippen stonden onder aan het beeld en vielen daarmee
+                    achter de vaste koopbalk. Bovendien werden negen stippen van
+                    anderhalve pixel een streepje: je zag niet waar je was en al
+                    helemaal niet hoeveel er nog kwamen. Een teller zegt beide,
+                    blijft leesbaar bij elk aantal en botst niet met de
+                    pasvormtag linksboven. */}
                 {displayImages.length > 1 && (
                   <div
-                    className={`absolute ${
-                      modelOverlayProps ? 'bottom-12' : 'bottom-3'
-                    } left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none z-10`}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-3 top-3 z-10 bg-black/70 px-2 py-1 text-[11px] font-bold tabular-nums leading-none text-white backdrop-blur-sm md:hidden"
                   >
-                    {displayImages.map((_, index) => (
-                      <div
-                        key={index}
-                        className={`rounded-full transition-all duration-300 ${
-                          index === selectedImage
-                            ? 'bg-brand-primary w-6 h-1.5'
-                            : 'bg-white/60 w-1.5 h-1.5'
-                        }`}
-                      />
-                    ))}
+                    {selectedImage + 1} / {displayImages.length}
                   </div>
                 )}
               </div>
@@ -1518,12 +1534,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               </span>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs md:text-sm font-bold">
-                                  {t('quantityDiscount.perPiece', { price: `€${finalPrice.toFixed(2)}` })}
+                                  {t('quantityDiscount.perPiece', { price: formatPrice(finalPrice, locale) })}
                                 </span>
                                 <span className="inline-flex items-center px-2 py-0.5 bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-wide">
                                   {tier.discount_type === 'percentage'
                                     ? `-${tier.discount_value}%`
-                                    : `-€${tier.discount_value.toFixed(2)}`}
+                                    : `-${formatPrice(tier.discount_value, locale)}`}
                                 </span>
                               </div>
                             </div>
@@ -2239,12 +2255,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                             if (hasDiscount && relProd.sale_price) {
                               return (
                                 <div className="flex items-center gap-2">
-                                  <p className="text-lg font-bold text-brand-primary">€{relProd.sale_price.toFixed(2)}</p>
-                                  <p className="text-sm text-gray-500 line-through">€{relProd.base_price.toFixed(2)}</p>
+                                  <p className="text-lg font-bold text-brand-primary">{formatPrice(relProd.sale_price, locale)}</p>
+                                  <p className="text-sm text-gray-500 line-through">{formatPrice(relProd.base_price, locale)}</p>
                                 </div>
                               )
                             }
-                            return <p className="text-lg font-bold">€{relProd.base_price.toFixed(2)}</p>
+                            return <p className="text-lg font-bold">{formatPrice(relProd.base_price, locale)}</p>
                           })()}
                         </div>
                       </div>

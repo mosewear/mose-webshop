@@ -72,3 +72,4 @@ shots/
 # Tijdelijke scripts van verkennend werk in de projectwortel.
 /*-tmp.mjs
 /.*.mjs
+.controle/

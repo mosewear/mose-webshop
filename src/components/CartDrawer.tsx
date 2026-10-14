@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { formatPrice } from '@/lib/format-price'
+import { formatPrice, formatAmount } from '@/lib/format-price'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { X, Minus, Plus, Trash2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
@@ -657,7 +657,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         ) : (
           <>
             {/* Items Area - Scrollable */}
-            <div className="flex-1 overflow-y-auto pb-6 md:pb-[160px]">
+            <div className="flex-1 overflow-y-auto pb-6">
               <div className="p-4 md:p-6 space-y-0">
                 {items.map((item, index) => (
                   <div key={item.variantId}>
@@ -776,29 +776,32 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               </button>
                             </div>
 
-                            {/* Zegt waaróm de plusknop uitstaat. Vier varianten
-                                staan op nul en drie op één, dus dit is geen
-                                theoretisch geval. */}
-                            {maxAantal(item) !== null && maxAantal(item)! <= 3 && (
-                              <p className="mt-1 text-[11px] font-semibold text-amber-700">
-                                {maxAantal(item) === 1
-                                  ? t('lastOne')
-                                  : t('onlyLeft', { count: maxAantal(item)! })}
-                              </p>
-                            )}
-
                             {/* Price */}
                             <div className="text-right">
                               <div className="font-bold text-lg">{formatPrice((item.price * item.quantity), locale)}</div>
                               {(staffelBreakdown.lineSavingByVariantId[item.variantId] ?? 0) > 0 && (
                                 <p className="text-xs text-gray-600 mt-1 max-w-[200px] ml-auto leading-snug">
                                   {t('staffel.lineSaving', {
-                                    amount: staffelBreakdown.lineSavingByVariantId[item.variantId].toFixed(2),
+                                    amount: formatAmount(staffelBreakdown.lineSavingByVariantId[item.variantId], locale),
                                   })}
                                 </p>
                               )}
                             </div>
                           </div>
+
+                          {/* Zegt waaróm de plusknop uitstaat. Vier varianten
+                              staan op nul en drie op één, dus dit is geen
+                              theoretisch geval. Op een eigen regel onder de
+                              knoppen: ingeklemd tussen het aantal en de prijs
+                              brak "Laatste exemplaar" over twee regels en liep
+                              het tegen het bedrag aan. */}
+                          {maxAantal(item) !== null && maxAantal(item)! <= 3 && (
+                            <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                              {maxAantal(item) === 1
+                                ? t('lastOne')
+                                : t('onlyLeft', { count: maxAantal(item)! })}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -810,7 +813,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <div className="hidden md:block px-4 md:px-6 pb-4">
                 <button
                   onClick={() => setShowClearConfirm(true)}
-                  className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
+                  className="flex min-h-[44px] items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
                 >
                   <Trash2 size={16} />
                   <span>{t('clearCart')}</span>
@@ -954,7 +957,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-gray-600">
-                        {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2) })}
+                        {t('freeShippingProgress', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale) })}
                       </p>
                       <span className="text-xs font-bold text-brand-primary">
                         {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%
@@ -1103,7 +1106,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-semibold uppercase tracking-wide">{t('shipping')}</span>
                     <span className="font-bold text-brand-primary">
-                      {shipping === 0 ? t('shippingFree') : `€${shipping.toFixed(2)}`}
+                      {shipping === 0 ? t('shippingFree') : formatPrice(shipping, locale)}
                     </span>
                   </div>
 
@@ -1262,7 +1265,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div className="border-t border-gray-700 pt-2">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-xs text-gray-400">
-                          {t('freeShippingProgressMobile', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2) })}
+                          {t('freeShippingProgressMobile', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale) })}
                         </p>
                         <span className="text-xs font-bold text-brand-primary">
                           {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%

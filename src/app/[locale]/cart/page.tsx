@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { formatPrice } from '@/lib/format-price'
+import { formatPrice, formatAmount } from '@/lib/format-price'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
@@ -254,7 +254,7 @@ export default function CartPage() {
                         {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
                           <p className="text-xs text-gray-600 mt-1 max-w-[220px] ml-auto leading-snug">
                             {t('staffel.lineSaving', {
-                              amount: lineStaffelByVariant[item.variantId].toFixed(2),
+                              amount: formatAmount(lineStaffelByVariant[item.variantId], locale),
                             })}
                           </p>
                         )}
@@ -308,7 +308,7 @@ export default function CartPage() {
                   {shipping === 0 ? (
                     <span className="text-brand-primary">{t('shippingFree')}</span>
                   ) : (
-                    `€${shipping.toFixed(2)}`
+                    formatPrice(shipping, locale)
                   )}
                 </span>
               </div>
@@ -319,7 +319,7 @@ export default function CartPage() {
               <div className="bg-white border-l-4 border-brand-primary px-4 py-3">
                 <p className="text-sm text-gray-600">
                   {t('freeShippingProgress', {
-                    amount: (freeShippingThreshold - subtotalAfterStaffel).toFixed(2),
+                    amount: formatAmount(freeShippingThreshold - subtotalAfterStaffel, locale),
                   })}
                 </p>
               </div>
@@ -357,7 +357,7 @@ export default function CartPage() {
             <div className="pt-6 space-y-3 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <Truck size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">{t('trust.freeShipping', { amount: freeShippingThreshold.toFixed(2) })}</span>
+                <span className="uppercase tracking-wider">{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock size={18} className="flex-shrink-0" />
@@ -442,7 +442,7 @@ export default function CartPage() {
                     {shipping === 0 ? (
                       <span className="text-brand-primary">{t('shippingFree')}</span>
                     ) : (
-                      `€${shipping.toFixed(2)}`
+                      formatPrice(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -451,7 +451,7 @@ export default function CartPage() {
                   <div className="bg-gray-50 border-l-4 border-brand-primary px-4 py-3">
                     <p className="text-sm text-gray-600">
                       {t('freeShippingProgress', {
-                        amount: (freeShippingThreshold - subtotalAfterStaffel).toFixed(2),
+                        amount: formatAmount(freeShippingThreshold - subtotalAfterStaffel, locale),
                       })}
                     </p>
                   </div>
@@ -463,7 +463,7 @@ export default function CartPage() {
                     <span className="font-display text-3xl">{formatPrice(total, locale)}</span>
                   </div>
                   <p className="text-sm text-gray-500 text-right">
-                    {locale === 'en' ? `Incl. €${totalBtw.toFixed(2)} VAT` : `Incl. €${totalBtw.toFixed(2)} BTW`}
+                    {locale === 'en' ? `Incl. €${formatAmount(totalBtw, locale)} VAT` : `Incl. €${formatAmount(totalBtw, locale)} BTW`}
                   </p>
                 </div>
 
@@ -478,7 +478,7 @@ export default function CartPage() {
                 <div className="pt-4 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Truck size={18} className="flex-shrink-0" />
-                    <span>{t('trust.freeShipping', { amount: freeShippingThreshold.toFixed(2) })}</span>
+                    <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock size={18} className="flex-shrink-0" />

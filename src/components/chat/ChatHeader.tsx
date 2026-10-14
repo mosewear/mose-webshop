@@ -43,17 +43,13 @@ export default function ChatHeader({ weergave, onClose, onNaarContact, onTerug }
             <ArrowLeft className="h-5 w-5" strokeWidth={2.5} />
           </button>
         ) : (
-          /* Het merkteken met het groene stipje in de hoek, zoals een contact
-             in een berichtenapp. Hier stond alleen een los groen blokje: dat
-             zei wel "online", maar niet wie er online was. */
-          <span className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center">
+          /* Het merkteken, zoals een contactfoto in een berichtenapp. Hier
+             stond alleen een los groen blokje: dat zei wel "online", maar niet
+             wie er online was. Het stipje staat nu bij de statusregel, want
+             over het portret heen werd het op een groene achtergrond een zwart
+             blokje in de hoek. */
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center">
             <ChatAvatar maat={36} />
-            <span className="absolute bottom-[6px] right-[5px] flex h-3 w-3 items-center justify-center bg-black">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inset-0 bg-brand-primary opacity-60 motion-safe:animate-ping" />
-                <span className="relative h-2 w-2 bg-brand-primary" />
-              </span>
-            </span>
           </span>
         )}
 
@@ -61,7 +57,13 @@ export default function ChatHeader({ weergave, onClose, onNaarContact, onTerug }
           <h2 className="truncate font-display text-base uppercase leading-none tracking-wide md:text-lg">
             {opContact ? t('teamMose.headerTitle') : t('title')}
           </h2>
-          <p className="mt-1 truncate text-[11px] leading-none text-white/55">
+          <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] leading-none text-white/55">
+            {!opContact && (
+              <span className="relative flex h-1.5 w-1.5 flex-shrink-0" aria-hidden="true">
+                <span className="absolute inset-0 bg-brand-primary opacity-60 motion-safe:animate-ping" />
+                <span className="relative h-1.5 w-1.5 bg-brand-primary" />
+              </span>
+            )}
             {opContact ? t('teamMose.headerSubtitle') : t('subtitle')}
           </p>
         </div>

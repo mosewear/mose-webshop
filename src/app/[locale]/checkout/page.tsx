@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { formatPrice } from '@/lib/format-price'
+import { formatPrice, formatAmount } from '@/lib/format-price'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -1988,7 +1988,7 @@ export default function CheckoutPage() {
                     ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
-                      `€${shipping.toFixed(2)}`
+                      formatPrice(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -2917,7 +2917,7 @@ export default function CheckoutPage() {
                     ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
-                      `€${shipping.toFixed(2)}`
+                      formatPrice(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -3077,7 +3077,7 @@ export default function CheckoutPage() {
                             <option key={pts} value={pts}>
                               {tLoyalty('pointsOption', {
                                 points: pts,
-                                discount: (pts / 100 * 5).toFixed(2),
+                                discount: formatAmount(pts / 100 * 5, locale),
                               })}
                             </option>
                           ))}
@@ -3119,7 +3119,7 @@ export default function CheckoutPage() {
                 
                 {subtotalAfterDiscount < freeShippingThreshold && subtotalAfterDiscount > 0 && (
                   <div className="bg-gray-100 border border-gray-300 p-2 text-xs text-gray-900 font-semibold">
-                    {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2), ns: 'cart' })}
+                    {t('freeShippingProgress', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale), ns: 'cart' })}
                   </div>
                 )}
               </div>
@@ -3130,7 +3130,7 @@ export default function CheckoutPage() {
                 <span className="text-2xl font-display">{formatPrice(total, locale)}</span>
               </div>
               <p className="text-xs text-gray-500 text-right mt-1">
-                {locale === 'nl' ? `Incl. €${totalBtw.toFixed(2)} BTW` : `Incl. €${totalBtw.toFixed(2)} VAT`}
+                {locale === 'nl' ? `Incl. €${formatAmount(totalBtw, locale)} BTW` : `Incl. €${formatAmount(totalBtw, locale)} VAT`}
               </p>
 
               {/* Submit Button - Desktop */}

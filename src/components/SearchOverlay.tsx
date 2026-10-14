@@ -199,6 +199,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
       <div
         ref={paneelRef}
+        data-search-overlay
         role="dialog"
         aria-modal="true"
         aria-label={t('emptyTitle')}
