@@ -7,12 +7,17 @@ interface TableData {
   columns: string[]
   rows: string[][]
   how_to_measure?: { label: string; description: string }[]
+  /** Eén zin over hoe het kledingstuk valt. Staat bovenaan, want dat is de
+   *  vraag waarmee iemand deze maatgids opent: welke maat moet ik hebben. */
+  fit_note?: string
 }
 
 interface SpecsData {
   type: 'specs'
   fields: { label: string; value: string }[]
   care_instructions?: { label: string; description: string }[]
+  /** Zelfde rol als bij de maattabel: één zin over hoe het valt of past. */
+  fit_note?: string
 }
 
 type SizeGuideContent = TableData | SpecsData
@@ -49,6 +54,14 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
             </button>
           </div>
           
+          {/* Pasvormregel bovenaan: wie de maatgids opent wil eerst weten of
+              het kledingstuk normaal valt, en pas daarna de centimeters. */}
+          {content.fit_note && (
+            <p className="mb-3 sm:mb-4 border-l-4 border-brand-primary bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-black sm:text-sm">
+              {content.fit_note}
+            </p>
+          )}
+
           {/* Scroll hint for mobile */}
           <div className="sm:hidden mb-2 text-xs text-gray-600 flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,6 +142,12 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
             </button>
           </div>
           
+          {content.fit_note && (
+            <p className="mb-4 border-l-4 border-brand-primary bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-black sm:text-sm">
+              {content.fit_note}
+            </p>
+          )}
+
           <div className="space-y-3">
             {content.fields.map((field, i) => (
               <div key={i} className="grid grid-cols-[140px_1fr] sm:grid-cols-[180px_1fr] gap-3 py-3 border-b-2 border-gray-200 last:border-b-0">
