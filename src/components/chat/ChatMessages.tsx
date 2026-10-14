@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Message } from './ChatWindow'
+import ChatAvatar from './ChatAvatar'
 
 interface ChatMessagesProps {
   messages: Message[]
@@ -60,13 +61,21 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
 
           return (
             <div key={message.id} className={eersteVanBlok && index > 0 ? 'pt-2' : undefined}>
-              {eersteVanBlok && !vanBezoeker && (
-                <p className="mb-1.5 pl-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-black/60">
-                  {t('assistant')}
-                </p>
-              )}
+              {eersteVanBlok && !vanBezoeker && <span className="sr-only">{t('assistant')}</span>}
 
-              <div className={`flex ${vanBezoeker ? 'justify-end' : 'justify-start'}`}>
+              {/* Het portret staat naast het eerste bericht van een blok, net
+                  als in de berichtenapps die iedereen gebruikt. Volgende
+                  bubbels van hetzelfde blok springen even ver in, zodat de
+                  linkerrand één doorlopende lijn blijft. Hierboven stond een
+                  los tekstlabel "MOSE"; dat kostte een regel en gaf het gesprek
+                  geen gezicht. */}
+              <div className={`flex items-end gap-2 ${vanBezoeker ? 'justify-end' : 'justify-start'}`}>
+                {!vanBezoeker &&
+                  (eersteVanBlok ? (
+                    <ChatAvatar maat={32} className="mb-[2px]" />
+                  ) : (
+                    <span aria-hidden="true" className="w-8 flex-shrink-0" />
+                  ))}
                 {/* Een antwoord van MOSE mag op een telefoon de volle breedte
                     pakken. Op 85% bleven er 35 tekens per regel over, en bij een
                     uitleg van zes regels over retourneren leest dat hakkerig. Wie
@@ -78,7 +87,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                   className={`px-4 py-3 ${
                     vanBezoeker
                       ? 'max-w-[85%] bg-black text-white'
-                      : 'max-w-full bg-white text-black md:max-w-[85%]'
+                      : 'max-w-[calc(100%-2.5rem)] bg-white text-black md:max-w-[80%]'
                   }`}
                 >
                   {message.isTyping ? (
@@ -102,7 +111,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
               {laatsteVanBlok && !message.isTyping && (
                 <p
                   className={`mt-1.5 text-[11px] tabular-nums text-black/60 ${
-                    vanBezoeker ? 'text-right' : 'pl-0.5'
+                    vanBezoeker ? 'text-right' : 'pl-10'
                   }`}
                 >
                   {message.timestamp.toLocaleTimeString(locale === 'en' ? 'en-GB' : 'nl-NL', {

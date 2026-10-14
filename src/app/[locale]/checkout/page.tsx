@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { formatPrice, formatAmount } from '@/lib/format-price'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -1853,7 +1854,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-bold text-xl">€{total.toFixed(2)}</span>
+              <span className="font-bold text-xl">{formatPrice(total, locale)}</span>
               <ChevronDown 
                 size={20} 
                 className={`text-gray-600 transition-transform ${showOrderSummary ? 'rotate-180' : ''}`}
@@ -1885,7 +1886,7 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-500">
                         {item.size} • {item.color}
                       </p>
-                      <p className="font-bold text-sm mt-0.5">€{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-sm mt-0.5">{formatPrice((item.price * item.quantity), locale)}</p>
                     </div>
                   </div>
                 ))}
@@ -1896,7 +1897,7 @@ export default function CheckoutPage() {
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
-                  <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
                 </div>
 
                 {/* Staffelkorting - Mobile */}
@@ -1905,7 +1906,7 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
                       <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
-                      <span className="font-bold text-black text-xs">-€{staffelSavings.toFixed(2)}</span>
+                      <span className="font-bold text-black text-xs">-{formatPrice(staffelSavings, locale)}</span>
                     </div>
                   </>
                 )}
@@ -1932,7 +1933,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                       </div>
-                      <span className="font-bold text-brand-primary">-€{promoDiscount.toFixed(2)}</span>
+                      <span className="font-bold text-brand-primary">-{formatPrice(promoDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -1955,7 +1956,7 @@ export default function CheckoutPage() {
                           </button>
                         </div>
                       </div>
-                      <span className="font-bold text-yellow-800 text-sm">-€{loyaltyDiscount.toFixed(2)}</span>
+                      <span className="font-bold text-yellow-800 text-sm">-{formatPrice(loyaltyDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -1972,7 +1973,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
                       </div>
-                      <span className="font-bold text-yellow-800 text-sm">-€{loyaltyTierDiscount.toFixed(2)}</span>
+                      <span className="font-bold text-yellow-800 text-sm">-{formatPrice(loyaltyTierDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -1987,7 +1988,7 @@ export default function CheckoutPage() {
                     ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
-                      `€${shipping.toFixed(2)}`
+                      formatPrice(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -1995,7 +1996,7 @@ export default function CheckoutPage() {
                 {/* Total */}
                 <div className="flex justify-between text-base border-t-2 border-black pt-3 mt-2">
                   <span className="font-display text-lg uppercase tracking-wide">TOTAAL</span>
-                  <span className="font-display text-2xl">€{total.toFixed(2)}</span>
+                  <span className="font-display text-2xl">{formatPrice(total, locale)}</span>
                 </div>
 
                 {/* Kortingscode, ook op mobiel. Deze invoer zat alleen in de
@@ -2808,7 +2809,7 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-600">
                         {item.size} • {item.color}
                       </p>
-                      <p className="font-bold text-sm mt-1">€{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-sm mt-1">{formatPrice((item.price * item.quantity), locale)}</p>
                     </div>
                   </div>
                 ))}
@@ -2819,13 +2820,13 @@ export default function CheckoutPage() {
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
-                  <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">
                     {locale === 'nl' ? 'Waarvan BTW (21%)' : 'Including VAT (21%)'}
                   </span>
-                  <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
+                  <span className="text-gray-500">{formatPrice(btwAmount, locale)}</span>
                 </div>
 
                 {/* Staffelkorting - Desktop */}
@@ -2834,7 +2835,7 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
                       <span className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
-                      <span className="font-bold text-black text-sm">-€{staffelSavings.toFixed(2)}</span>
+                      <span className="font-bold text-black text-sm">-{formatPrice(staffelSavings, locale)}</span>
                     </div>
                   </>
                 )}
@@ -2861,7 +2862,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                       </div>
-                      <span className="font-bold text-brand-primary">-€{promoDiscount.toFixed(2)}</span>
+                      <span className="font-bold text-brand-primary">-{formatPrice(promoDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2884,7 +2885,7 @@ export default function CheckoutPage() {
                           </button>
                         </div>
                       </div>
-                      <span className="font-bold text-yellow-800">-€{loyaltyDiscount.toFixed(2)}</span>
+                      <span className="font-bold text-yellow-800">-{formatPrice(loyaltyDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2901,7 +2902,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
                       </div>
-                      <span className="font-bold text-yellow-800">-€{loyaltyTierDiscount.toFixed(2)}</span>
+                      <span className="font-bold text-yellow-800">-{formatPrice(loyaltyTierDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2916,7 +2917,7 @@ export default function CheckoutPage() {
                     ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
-                      `€${shipping.toFixed(2)}`
+                      formatPrice(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -2939,7 +2940,7 @@ export default function CheckoutPage() {
                             </span>
                           </div>
                           <div className="text-[11px] md:text-xs text-gray-600 mt-0.5">
-                            {t('giftCard.balance')}: €{gc.balance.toFixed(2)}
+                            {t('giftCard.balance')}: {formatPrice(gc.balance, locale)}
                             {' • '}
                             <button
                               type="button"
@@ -2957,7 +2958,7 @@ export default function CheckoutPage() {
                         <span className="uppercase tracking-wide">
                           {t('giftCard.applied')}
                         </span>
-                        <span>-€{giftCardDiscount.toFixed(2)}</span>
+                        <span>-{formatPrice(giftCardDiscount, locale)}</span>
                       </div>
                     )}
                   </div>
@@ -3076,7 +3077,7 @@ export default function CheckoutPage() {
                             <option key={pts} value={pts}>
                               {tLoyalty('pointsOption', {
                                 points: pts,
-                                discount: (pts / 100 * 5).toFixed(2),
+                                discount: formatAmount(pts / 100 * 5, locale),
                               })}
                             </option>
                           ))}
@@ -3118,7 +3119,7 @@ export default function CheckoutPage() {
                 
                 {subtotalAfterDiscount < freeShippingThreshold && subtotalAfterDiscount > 0 && (
                   <div className="bg-gray-100 border border-gray-300 p-2 text-xs text-gray-900 font-semibold">
-                    {t('freeShippingProgress', { amount: (freeShippingThreshold - subtotalAfterDiscount).toFixed(2), ns: 'cart' })}
+                    {t('freeShippingProgress', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale), ns: 'cart' })}
                   </div>
                 )}
               </div>
@@ -3126,10 +3127,10 @@ export default function CheckoutPage() {
               {/* Total - Prominent */}
               <div className="flex justify-between items-center border-t-2 border-black pt-4">
                 <span className="text-lg font-bold">{t('total')}</span>
-                <span className="text-2xl font-display">€{total.toFixed(2)}</span>
+                <span className="text-2xl font-display">{formatPrice(total, locale)}</span>
               </div>
               <p className="text-xs text-gray-500 text-right mt-1">
-                {locale === 'nl' ? `Incl. €${totalBtw.toFixed(2)} BTW` : `Incl. €${totalBtw.toFixed(2)} VAT`}
+                {locale === 'nl' ? `Incl. €${formatAmount(totalBtw, locale)} BTW` : `Incl. €${formatAmount(totalBtw, locale)} VAT`}
               </p>
 
               {/* Submit Button - Desktop */}

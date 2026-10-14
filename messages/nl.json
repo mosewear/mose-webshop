@@ -317,7 +317,7 @@
     "securePayment": "Veilig betalen",
     "daysReturn": "{days} dagen retour",
     "sslSecured": "SSL beveiligd",
-    "items": "{count} {count, plural, one {Item} other {Items}}",
+    "items": "{count} {count, plural, one {artikel} other {artikelen}}",
     "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
     "orFillIn": "of vul in",
     "progress": {
@@ -345,12 +345,13 @@
   },
   "cart": {
     "title": "Winkelwagen",
-    "items": "{count} {count, plural, one {Item} other {Items}}",
+    "items": "{count} {count, plural, one {artikel} other {artikelen}}",
     "close": "Sluit winkelwagen",
     "empty": {
       "title": "Leeg",
       "message": "Je winkelwagen is leeg",
-      "continue": "Verder shoppen"
+      "continue": "Verder shoppen",
+      "popular": "Populair bij MOSE"
     },
     "remove": "Verwijder item",
     "size": "Maat",
@@ -413,7 +414,12 @@
       "label": "Staffelkorting",
       "lineSaving": "Staffel op dit item: −€{amount}",
       "nextTier": "{product}: nog {needed} voor {discount} staffelkorting"
-    }
+    },
+    "lastOne": "Laatste exemplaar",
+    "onlyLeft": "Nog {count} op voorraad",
+    "maxReached": "Dit is alles wat we hebben",
+    "freeShippingReached": "Je krijgt gratis verzending!",
+    "clearCart": "Winkelmand legen"
   },
   "product": {
     "notFound": "Product niet gevonden",
@@ -1345,7 +1351,11 @@
     "emptyTitle": "Zoek MOSE-producten",
     "emptyDescription": "Type om te beginnen met zoeken",
     "closeHint": "om te sluiten",
-    "resultCount": "{count} {count, plural, =1 {resultaat} other {resultaten}}"
+    "resultCount": "{count} {count, plural, =1 {resultaat} other {resultaten}}",
+    "popular": "Populair bij MOSE",
+    "alsoAvailable": "Dit ligt er wel",
+    "navigateHint": "bladeren",
+    "openHint": "openen"
   },
   "faq": {
     "badge": "Vragen?",

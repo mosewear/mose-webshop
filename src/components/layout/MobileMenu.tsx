@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { useCart } from '@/store/cart'
+import { useCartDrawer } from '@/store/cartDrawer'
 import { getMenuProducts, formatPrijs, type MenuProduct } from '@/lib/menu-products'
 import { levertMorgen, voorCutoff } from '@/lib/shipping-cutoff'
 import MobileMenuInstagramRow from '@/components/layout/MobileMenuInstagramRow'
@@ -92,6 +93,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
   const [mounted, setMounted] = useState(false)
 
   const itemCount = useCart((s) => s.getItemCount())
+  const openDrawer = useCartDrawer((s) => s.openDrawer)
   const cartTotal = useCart((s) => s.getTotal())
 
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -330,11 +332,21 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
               <SearchIcon size={20} strokeWidth={2.5} aria-hidden="true" />
             </button>
 
-            <LocaleLink
-              href="/cart"
-              onClick={onClose}
+            {/* Het tasje opent de winkelmandlade, net als in de header en net
+                als bij elke grote herenwinkel. Het linkte hiervoor door naar
+                /cart: je sprong dan uit het menu naar een hele pagina, en bij
+                een lege mand stond je op een scherm zonder sluitknop en zonder
+                weg terug, want een pagina heeft geen kruisje. De lade legt zich
+                over de pagina waar je al was, en je sluit hem met het kruisje,
+                met Escape of door naast de lade te tikken. */}
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                openDrawer()
+              }}
               // Het aantal hoort in de NAAM, niet alleen in een badge: een
-              // schermlezer leest een los getal naast een link niet voor.
+              // schermlezer leest een los getal naast een knop niet voor.
               aria-label={
                 mounted && itemCount > 0
                   ? t('cartAria', { count: itemCount })
@@ -351,7 +363,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
-            </LocaleLink>
+            </button>
 
             <button
               ref={closeBtnRef}

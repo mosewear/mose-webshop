@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatPrice, formatAmount } from '@/lib/format-price'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
@@ -192,7 +193,7 @@ export default function CartPage() {
                             <span className="uppercase tracking-[0.15em] text-[11px] text-gray-500 mr-1.5">
                               {t('giftCard.value', { defaultValue: 'Waarde' })}
                             </span>
-                            <span className="font-medium">€{Number(item.giftCardAmount ?? item.price).toFixed(2)}</span>
+                            <span className="font-medium">{formatPrice(Number(item.giftCardAmount ?? item.price), locale)}</span>
                           </div>
                           {item.giftCardRecipient?.recipientName ? (
                             <div className="text-xs md:text-sm text-gray-600">
@@ -221,7 +222,7 @@ export default function CartPage() {
                           <span>•</span>
                           <span>{t('size')} {item.size}</span>
                           <span className="hidden md:inline">•</span>
-                          <span className="hidden md:inline">€{item.price.toFixed(2)}</span>
+                          <span className="hidden md:inline">{formatPrice(item.price, locale)}</span>
                         </div>
                       )}
                     </div>
@@ -249,11 +250,11 @@ export default function CartPage() {
 
                       {/* Price */}
                       <div className="text-right">
-                        <div className="font-bold text-xl md:text-2xl">€{(item.price * item.quantity).toFixed(2)}</div>
+                        <div className="font-bold text-xl md:text-2xl">{formatPrice((item.price * item.quantity), locale)}</div>
                         {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
                           <p className="text-xs text-gray-600 mt-1 max-w-[220px] ml-auto leading-snug">
                             {t('staffel.lineSaving', {
-                              amount: lineStaffelByVariant[item.variantId].toFixed(2),
+                              amount: formatAmount(lineStaffelByVariant[item.variantId], locale),
                             })}
                           </p>
                         )}
@@ -276,12 +277,12 @@ export default function CartPage() {
             <div className="space-y-3 text-lg">
               <div className="flex justify-between">
                 <span className="text-gray-600 uppercase tracking-wider">{t('subtotal')}</span>
-                <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
               </div>
               {staffelSavings > 0 && (
                 <div className="flex justify-between text-base">
                   <span className="text-gray-600 uppercase tracking-wider">{t('staffel.label')}</span>
-                  <span className="font-semibold">−€{staffelSavings.toFixed(2)}</span>
+                  <span className="font-semibold">−{formatPrice(staffelSavings, locale)}</span>
                 </div>
               )}
               {staffelHints.length > 0 && (
@@ -299,7 +300,7 @@ export default function CartPage() {
               )}
               <div className="flex justify-between text-base">
                 <span className="text-gray-500 uppercase tracking-wider">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
-                <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
+                <span className="text-gray-500">{formatPrice(btwAmount, locale)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 uppercase tracking-wider">{t('shipping')}</span>
@@ -307,7 +308,7 @@ export default function CartPage() {
                   {shipping === 0 ? (
                     <span className="text-brand-primary">{t('shippingFree')}</span>
                   ) : (
-                    `€${shipping.toFixed(2)}`
+                    formatPrice(shipping, locale)
                   )}
                 </span>
               </div>
@@ -318,7 +319,7 @@ export default function CartPage() {
               <div className="bg-white border-l-4 border-brand-primary px-4 py-3">
                 <p className="text-sm text-gray-600">
                   {t('freeShippingProgress', {
-                    amount: (freeShippingThreshold - subtotalAfterStaffel).toFixed(2),
+                    amount: formatAmount(freeShippingThreshold - subtotalAfterStaffel, locale),
                   })}
                 </p>
               </div>
@@ -330,7 +331,7 @@ export default function CartPage() {
             {/* Total */}
             <div className="flex justify-between items-baseline">
               <span className="font-display text-2xl uppercase">{t('total')}</span>
-              <span className="font-display text-4xl">€{total.toFixed(2)}</span>
+              <span className="font-display text-4xl">{formatPrice(total, locale)}</span>
             </div>
             <p className="text-sm text-gray-500 text-right uppercase tracking-wider">
               {t('totalInclusive')}
@@ -356,7 +357,7 @@ export default function CartPage() {
             <div className="pt-6 space-y-3 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <Truck size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">{t('trust.freeShipping', { amount: freeShippingThreshold.toFixed(2) })}</span>
+                <span className="uppercase tracking-wider">{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock size={18} className="flex-shrink-0" />
@@ -382,7 +383,7 @@ export default function CartPage() {
             aria-expanded={showMobileSummary}
             className="flex-1 min-h-[44px] pl-4 pr-2 py-4 text-left"
           >
-            <div className="font-display text-2xl">€{total.toFixed(2)}</div>
+            <div className="font-display text-2xl">{formatPrice(total, locale)}</div>
             <div className="text-xs text-gray-300 uppercase tracking-wider">{t('mobile.tapDetails')}</div>
           </button>
           <LocaleLink
@@ -410,12 +411,12 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between text-lg">
                   <span className="text-gray-600">{t('subtotal')}</span>
-                  <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
                 </div>
                 {staffelSavings > 0 && (
                   <div className="flex justify-between text-base">
                     <span className="text-gray-600">{t('staffel.label')}</span>
-                    <span className="font-semibold">−€{staffelSavings.toFixed(2)}</span>
+                    <span className="font-semibold">−{formatPrice(staffelSavings, locale)}</span>
                   </div>
                 )}
                 {staffelHints.length > 0 && (
@@ -433,7 +434,7 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
-                  <span className="text-gray-500">€{btwAmount.toFixed(2)}</span>
+                  <span className="text-gray-500">{formatPrice(btwAmount, locale)}</span>
                 </div>
                 <div className="flex justify-between text-lg">
                   <span className="text-gray-600">{t('shipping')}</span>
@@ -441,7 +442,7 @@ export default function CartPage() {
                     {shipping === 0 ? (
                       <span className="text-brand-primary">{t('shippingFree')}</span>
                     ) : (
-                      `€${shipping.toFixed(2)}`
+                      formatPrice(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -450,7 +451,7 @@ export default function CartPage() {
                   <div className="bg-gray-50 border-l-4 border-brand-primary px-4 py-3">
                     <p className="text-sm text-gray-600">
                       {t('freeShippingProgress', {
-                        amount: (freeShippingThreshold - subtotalAfterStaffel).toFixed(2),
+                        amount: formatAmount(freeShippingThreshold - subtotalAfterStaffel, locale),
                       })}
                     </p>
                   </div>
@@ -459,10 +460,10 @@ export default function CartPage() {
                 <div className="border-t-2 border-black pt-4">
                   <div className="flex justify-between items-baseline mb-2">
                     <span className="font-display text-xl uppercase">{t('total')}</span>
-                    <span className="font-display text-3xl">€{total.toFixed(2)}</span>
+                    <span className="font-display text-3xl">{formatPrice(total, locale)}</span>
                   </div>
                   <p className="text-sm text-gray-500 text-right">
-                    {locale === 'en' ? `Incl. €${totalBtw.toFixed(2)} VAT` : `Incl. €${totalBtw.toFixed(2)} BTW`}
+                    {locale === 'en' ? `Incl. €${formatAmount(totalBtw, locale)} VAT` : `Incl. €${formatAmount(totalBtw, locale)} BTW`}
                   </p>
                 </div>
 
@@ -477,7 +478,7 @@ export default function CartPage() {
                 <div className="pt-4 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Truck size={18} className="flex-shrink-0" />
-                    <span>{t('trust.freeShipping', { amount: freeShippingThreshold.toFixed(2) })}</span>
+                    <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock size={18} className="flex-shrink-0" />
