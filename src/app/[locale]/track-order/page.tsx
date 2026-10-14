@@ -285,7 +285,11 @@ export default function TrackOrderPage() {
                       {t('tracking.via')} {orderData.carrier}
                     </p>
                   )}
-                  <p className="text-2xl font-mono font-bold mb-4 tracking-wider">
+                  {/* De trackingcode is een lange reeks zonder spaties en liep
+                      op een telefoon buiten het scherm, mét een letterafstand
+                      die dat nog verergerde. Nu schaalt hij mee met de breedte
+                      en mag hij afbreken. */}
+                  <p className="mb-4 break-all font-mono text-lg font-bold leading-snug sm:text-2xl sm:tracking-wider">
                     {orderData.tracking_code}
                   </p>
                   {orderData.tracking_url && (

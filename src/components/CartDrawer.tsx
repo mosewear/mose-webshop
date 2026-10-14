@@ -226,6 +226,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     })
   }, [])
 
+  /** Bestanden die in product_images staan maar geen afbeelding zijn. Een
+   *  <Image> kan ze niet tonen en levert een leeg grijs vlak op: dat gebeurde
+   *  met het horloge, waarvan de primaire "afbeelding" een .mp4 was. */
+  const isVideoBestand = (url?: string | null) => !!url && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url)
+
+  /** Eerste bruikbare miniatuur van een product. */
+  const miniatuur = (product: { product_images?: { url: string }[] }) =>
+    product.product_images?.find((b) => !isVideoBestand(b?.url))?.url || '/placeholder-product.svg'
+
   // Fetch upsell products
   useEffect(() => {
     if (!isOpen || items.length === 0) {
@@ -430,7 +439,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       colorHex: variant.color_hex || '#000000',
       price: product.base_price,
       quantity: 1,
-      image: product.product_images[0]?.url || '/placeholder-product.svg',
+      image: miniatuur(product),
       sku: variant.sku,
       stock: variant.stock_quantity,
     })
@@ -681,7 +690,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
                             >
                               <Image
-                                src={product.product_images[0]?.url || '/placeholder-product.svg'}
+                                src={miniatuur(product)}
                                 alt={getProductName(product)}
                                 fill
                                 sizes="60px"

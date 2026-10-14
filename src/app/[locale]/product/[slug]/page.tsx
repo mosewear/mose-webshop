@@ -31,6 +31,8 @@ export async function generateMetadata({
       sale_price,
       meta_title,
       meta_description,
+      meta_title_en,
+      meta_description_en,
       category_id,
       product_images (
         url,
@@ -84,8 +86,16 @@ export async function generateMetadata({
       ? localizedName
       : `${localizedName} | MOSE`
     : 'MOSE'
-  const title = product.meta_title || fallbackTitle
-  const description = product.meta_description ||
+  // Engelse meta per product. Die bestond niet: de Engelse pagina's kregen de
+  // Nederlandse zoekresultaattekst, of een afgekapte productbeschrijving.
+  const isEn = locale === "en"
+  const title =
+    (isEn ? product.meta_title_en || product.meta_title : product.meta_title) ||
+    fallbackTitle
+  const description =
+    (isEn
+      ? product.meta_description_en || product.meta_description
+      : product.meta_description) ||
     `${localizedProduct.description?.substring(0, 155) ?? ''}${(localizedProduct.description?.length ?? 0) > 155 ? '...' : ''}`
   
   return {
