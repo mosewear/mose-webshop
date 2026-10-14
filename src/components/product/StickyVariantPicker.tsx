@@ -268,6 +268,7 @@ export default function StickyVariantPicker({
       {/* Desktop variant: visible when main ATC is out of view */}
       <div
         aria-hidden={!desktopVisible}
+        data-onderbalk
         className={`hidden md:block fixed bottom-[var(--cookie-consent-height)] left-0 right-0 z-40 bg-white border-t-2 border-black shadow-[0_-4px_20px_rgba(0,0,0,0.12)] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ${
           desktopVisible
             ? 'translate-y-0 opacity-100 pointer-events-auto'
@@ -303,6 +304,7 @@ export default function StickyVariantPicker({
           rij 2 = full-width brand-primary CTA zonder prijs. */}
       <div
         aria-hidden={!mobileVisible}
+        data-onderbalk
         className={`md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 z-40 bg-white border-t-2 border-black shadow-[0_-4px_20px_rgba(0,0,0,0.12)] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ${
           mobileVisible
             ? 'translate-y-0 opacity-100 pointer-events-auto'

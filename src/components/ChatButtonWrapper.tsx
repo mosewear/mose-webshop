@@ -24,36 +24,29 @@ export default function ChatButtonWrapper() {
       })
   }, [])
 
-  // Hide chat button in specific situations
+  /**
+   * Waar de chat wél en niet hoort.
+   *
+   * De productpagina en de winkelwagen stonden hier op verbergen, omdat de
+   * zwevende knop daar over de vaste koopbalk viel en taps opving die voor
+   * "afrekenen" bedoeld waren. Dat probleem was echt, maar de oplossing kostte
+   * meer dan hij opleverde: de productpagina is precies waar de maatvraag
+   * ontstaat, en "welke maat heb ik" is de eerste vraag die de chat zelf
+   * aanbiedt. De knop was weg op de twee pagina's waar hij het meeste waard is.
+   *
+   * De knop schuift nu zelf boven elke vaste balk met `data-onderbalk`, dus hij
+   * kan daar gewoon staan.
+   *
+   * Afrekenen en betalen blijven wél vrij. Wie daar is, heeft de keuze gemaakt;
+   * een zwevende laag over een formulier met adresvelden en een betaalknop
+   * levert daar vooral misklikken op. Hulp staat daar in de voettekst.
+   */
   useEffect(() => {
-    // Hide on product pages (has sticky buy button)
-    if (pathname?.includes('/product/')) {
-      setShouldHide(true)
-      return
-    }
-
-    // Hide on admin pages
-    if (pathname?.includes('/admin')) {
-      setShouldHide(true)
-      return
-    }
-
-    // Hide on checkout/payment pages
-    if (pathname?.includes('/checkout') || pathname?.includes('/payment')) {
-      setShouldHide(true)
-      return
-    }
-
-    // Hide on the cart page: die heeft op mobiel een vaste afrekenbalk
-    // rechtsonder, precies waar de 64px chatbubbel met z-[9999] staat. De
-    // bubbel ving daar taps af die voor "afrekenen" bedoeld waren.
-    if (pathname?.includes('/cart')) {
-      setShouldHide(true)
-      return
-    }
-
-    // Show on all other pages
-    setShouldHide(false)
+    const verbergen =
+      Boolean(pathname?.includes('/admin')) ||
+      Boolean(pathname?.includes('/checkout')) ||
+      Boolean(pathname?.includes('/payment'))
+    setShouldHide(verbergen)
   }, [pathname])
 
   // Don't render while loading, if disabled, or if should hide

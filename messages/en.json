@@ -2015,7 +2015,13 @@
       "material": "What is it made of?"
     },
     "back": "Back to the conversation",
-    "toHuman": "Rather talk to a human"
+    "toHuman": "Rather talk to a human",
+    "launcher": "Ask us",
+    "nudge": {
+      "size": "Not sure about your size? Ask us, we usually answer within a minute.",
+      "general": "A question about sizing, shipping or returns? Just ask.",
+      "dismiss": "Dismiss tip"
+    }
   },
   "surveyPopup": {
     "introTitle": "Can we have 1 minute of your time?",

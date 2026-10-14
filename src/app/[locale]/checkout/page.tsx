@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from '@/i18n/routing'
-import { useCart } from '@/store/cart'
+import { useCart, useCartGehydrateerd } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
@@ -80,6 +80,7 @@ export default function CheckoutPage() {
   const [loginError, setLoginError] = useState('')
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [isRecovering, setIsRecovering] = useState(false)
+  const mandGeladen = useCartGehydrateerd()
   
   const [form, setForm] = useState<CheckoutForm>({
     email: '',
@@ -806,11 +807,14 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    // Redirect to cart if empty (but not when recovering)
-    if (items.length === 0 && !isRecovering) {
+    // Terug naar de winkelwagen als de mand leeg is, maar pas als de mand
+    // daadwerkelijk uit localStorage is teruggelezen. Zonder die voorwaarde
+    // draaide dit bij elke volledige paginalading vóór het terugleren, en werd
+    // een klant met een volle mand weggestuurd van het afrekenscherm.
+    if (mandGeladen && items.length === 0 && !isRecovering) {
       router.push('/cart')
     }
-  }, [items, router, isRecovering])
+  }, [items, router, isRecovering, mandGeladen])
 
   // Helper functies voor land-specifieke informatie
   const getPostcodeInfo = (country: string): { placeholder: string; format: string; help: string; example: string; showLookup: boolean; helpText: string } => {
@@ -1720,6 +1724,18 @@ export default function CheckoutPage() {
     setAddressLookup({ isLookingUp: false, isLookedUp: false, error: null })
     // Optioneel: clear address/city voor fresh start
     // setForm((prev) => ({ ...prev, address: '', city: '' }))
+  }
+
+  // Zolang de mand nog teruggelezen wordt, niets beweren over wat erin zit.
+  if (!mandGeladen) {
+    return (
+      <div className="min-h-screen px-4 pb-16 bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4" />
+          <p className="text-gray-600">{tCommon('loading')}</p>
+        </div>
+      </div>
+    )
   }
 
   if (items.length === 0 && !isRecovering) {

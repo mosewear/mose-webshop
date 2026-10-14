@@ -1,20 +1,33 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { MessageSquare, X } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { X } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import ChatWindow from './ChatWindow'
+import ChatAvatar from './ChatAvatar'
 import { trackEvent } from '@/lib/analytics'
 
 const GEOPEND_KEY = 'mose_chat_opened'
+const TIP_KEY = 'mose_chat_tip_gezien'
+/** Zoveel milliseconden op dezelfde pagina blijven hangen, dan pas de tip. */
+const TIP_NA_MS = 22000
 
 export default function ChatButton() {
+  const t = useTranslations('chat')
+  const pathname = usePathname()
+  const verminderdeBeweging = useReducedMotion()
+
   const [isOpen, setIsOpen] = useState(false)
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [magPulseren, setMagPulseren] = useState(false)
+  const [onderbalk, setOnderbalk] = useState(0)
+  const [tipZichtbaar, setTipZichtbaar] = useState(false)
   const knopRef = useRef<HTMLButtonElement>(null)
+
+  const opProductpagina = Boolean(pathname?.includes('/product/'))
 
   // Eén MutationObserver voor alle drawer-detecties: één DOM-traversal
   // per mutatie i.p.v. drie aparte observers. Een gewijzigd attribute
@@ -27,9 +40,7 @@ export default function ChatButton() {
       setIsCartDrawerOpen(!!document.querySelector('[data-cart-drawer]'))
       // Mobile menu staat permanent in de DOM (translate off-canvas),
       // dus we checken op de attribuut-WAARDE i.p.v. enkel presence.
-      setIsMobileMenuOpen(
-        !!document.querySelector('[data-mobile-menu="open"]')
-      )
+      setIsMobileMenuOpen(!!document.querySelector('[data-mobile-menu="open"]'))
     }
 
     checkAllDrawers()
@@ -44,20 +55,93 @@ export default function ChatButton() {
     return () => observer.disconnect()
   }, [])
 
-  // De knop pulseerde onafgebroken, bij elke bezoeker, op elke pagina. Nu alleen
-  // zolang iemand de chat in deze sessie nog niet heeft geopend: wie hem al kent
-  // hoeft er niet opnieuw naartoe getrokken te worden.
+  /**
+   * Blijf boven de vaste balk onderaan het scherm.
+   *
+   * Hiervoor werd de chatknop op de productpagina en in de winkelwagen gewoon
+   * WEGGELATEN, omdat hij daar over de koopbalk viel. Dat is precies verkeerd
+   * om: de productpagina is waar de maatvraag ontstaat, en "welke maat heb ik"
+   * is de eerste vraag die de chat zelf voorstelt. De knop verdween dus op de
+   * twee pagina's waar hij het meeste waard is.
+   *
+   * Elke vaste balk onderaan draagt nu `data-onderbalk`. Hieronder meten we hoe
+   * hoog de balk is die daadwerkelijk tegen de onderrand plakt; de knop schuift
+   * daarboven. Een balk die weggeschoven is (translate-y-full) staat onder de
+   * vouw en telt dus niet mee.
+   */
+  const meetOnderbalk = useCallback(() => {
+    const balken = Array.from(document.querySelectorAll('[data-onderbalk]'))
+    let hoogste = 0
+    for (const el of balken) {
+      const r = el.getBoundingClientRect()
+      if (r.height === 0) continue
+      if (r.bottom < window.innerHeight - 8) continue
+      hoogste = Math.max(hoogste, r.height)
+    }
+    setOnderbalk(Math.round(hoogste))
+  }, [])
+
   useEffect(() => {
+    meetOnderbalk()
+    const observer = new MutationObserver(meetOnderbalk)
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    })
+    window.addEventListener('resize', meetOnderbalk)
+    window.addEventListener('scroll', meetOnderbalk, { passive: true })
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', meetOnderbalk)
+      window.removeEventListener('scroll', meetOnderbalk)
+    }
+  }, [meetOnderbalk])
+
+  /**
+   * Eén keer per bezoek een tip, op een moment van twijfel.
+   *
+   * De knop pulseerde hiervoor onafgebroken. Dat werkt één keer en daarna leert
+   * iedereen hem wegkijken, en het is precies wat WCAG 2.2.2 bedoelt met
+   * bewegende inhoud die je niet kunt stoppen. Eén zin met een concrete vraag,
+   * nadat iemand twintig seconden op dezelfde pagina is blijven hangen, doet
+   * wat een pulsering niet doet: een reden geven om te klikken. Daarna nooit
+   * meer, en met een kruisje erop.
+   */
+  useEffect(() => {
+    if (isOpen) return
+    let gezien = false
     try {
-      setMagPulseren(sessionStorage.getItem(GEOPEND_KEY) !== '1')
+      gezien =
+        sessionStorage.getItem(TIP_KEY) === '1' || sessionStorage.getItem(GEOPEND_KEY) === '1'
     } catch {
-      setMagPulseren(true)
+      gezien = false
+    }
+    if (gezien) return
+
+    const timer = setTimeout(() => setTipZichtbaar(true), TIP_NA_MS)
+    return () => clearTimeout(timer)
+  }, [isOpen, pathname])
+
+  const sluitTip = useCallback((reden: 'weggeklikt' | 'gebruikt') => {
+    setTipZichtbaar(false)
+    try {
+      sessionStorage.setItem(TIP_KEY, '1')
+    } catch {
+      // Opslag geblokkeerd: dan kan de tip volgende sessie opnieuw komen.
+    }
+    if (reden === 'weggeklikt') {
+      trackEvent({
+        event_name: 'chat_closed',
+        properties: { source: 'tip_dismissed', page_url: window.location.href },
+      })
     }
   }, [])
 
-  // Verberg de chat-knop wanneer een full-screen overlay open staat
-  // (filter-drawer, cart-drawer, of mobile-menu). De chat-bubble heeft
-  // z-[9999] en zou anders door alle drawers heen prikken.
+  // Verberg de knop wanneer een schermvullende laag open staat (filterlade,
+  // winkelmandlade of mobiel menu). De knop heeft z-[9999] en zou er anders
+  // doorheen prikken.
   const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isMobileMenuOpen
 
   const handleToggle = () => {
@@ -65,11 +149,11 @@ export default function ChatButton() {
     setIsOpen(!wasOpen)
 
     if (!wasOpen) {
-      setMagPulseren(false)
+      sluitTip('gebruikt')
       try {
         sessionStorage.setItem(GEOPEND_KEY, '1')
       } catch {
-        // Opslag geblokkeerd: dan pulseert hij de volgende sessie weer.
+        // Opslag geblokkeerd: dan mag de tip volgende sessie weer komen.
       }
     }
 
@@ -89,82 +173,81 @@ export default function ChatButton() {
     requestAnimationFrame(() => knopRef.current?.focus())
   }
 
+  // Anderhalve rem lucht, plus de cookiebalk, plus de koopbalk als die er staat.
+  const onderMarge = `calc(1.5rem + var(--cookie-consent-height, 0px) + ${onderbalk}px)`
+
   return (
     <>
-      {/* Zwevende chatknop.
-          Was een ronde bubbel van 64/80px met een rand van 4px en een
-          pulsering in rgba(180, 255, 57) — fel limoengroen uit een oud palet,
-          niet het merkgroen #00A676. Hij week daarmee op twee manieren af van
-          de rest van de shop, die overal rechte hoeken en randen van 2px
-          gebruikt. Nu een vierkante knop in merkgroen, zelfde taal als elke
-          andere knop op de site. */}
       {!shouldHideButton && (
-        <button
-          ref={knopRef}
-          onClick={handleToggle}
-          className={`fixed bottom-[calc(1.5rem+var(--cookie-consent-height))] right-4 z-[9999] flex h-14 w-14 items-center justify-center border-2 border-black transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 md:right-6 md:h-16 md:w-16 ${
-            isOpen
-              ? 'hidden bg-black text-brand-primary md:flex'
-              : `bg-brand-primary text-white hover:bg-black hover:text-brand-primary ${magPulseren ? 'chat-button-pulse' : ''}`
-          }`}
-          aria-label={isOpen ? 'Sluit chat' : 'Open chat'}
-          aria-expanded={isOpen}
-          aria-controls="chat-window"
+        <div
+          className="fixed right-4 z-[9999] flex flex-col items-end gap-2 md:right-6"
+          style={{ bottom: onderMarge }}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {isOpen ? (
-              <motion.span
-                key="close"
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
-                transition={{ duration: 0.15 }}
+          {/* De tip, boven de knop. */}
+          <AnimatePresence>
+            {tipZichtbaar && !isOpen && (
+              <motion.div
+                initial={verminderdeBeweging ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={verminderdeBeweging ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className="relative max-w-[17rem] border-2 border-black bg-white p-3 pr-10 shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
+                role="status"
               >
-                <X className="h-6 w-6 md:h-7 md:w-7" strokeWidth={3} />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="chat"
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
-                transition={{ duration: 0.15 }}
-              >
-                <MessageSquare className="h-6 w-6 md:h-7 md:w-7" strokeWidth={2.5} />
-              </motion.span>
+                <button
+                  type="button"
+                  onClick={handleToggle}
+                  className="block text-left text-[13px] leading-snug text-black"
+                >
+                  {opProductpagina ? t('nudge.size') : t('nudge.general')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sluitTip('weggeklikt')}
+                  aria-label={t('nudge.dismiss')}
+                  className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black"
+                >
+                  <X className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+              </motion.div>
             )}
           </AnimatePresence>
-        </button>
+
+          {/* De knop zelf. Was een vierkantje met een tekstballon: een icoon dat
+              op elke website iets anders betekent. Nu het merkteken met een
+              woord ernaast, zodat je ziet wat je krijgt als je klikt. Zwart met
+              wit, niet groen: het groen is van de koopknop, en de chat hoort
+              daar niet mee te concurreren. */}
+          <button
+            ref={knopRef}
+            onClick={handleToggle}
+            className={`flex items-center border-2 border-black transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${
+              isOpen
+                ? 'hidden h-14 w-14 items-center justify-center bg-black text-brand-primary md:flex'
+                : 'h-14 gap-2.5 bg-black pl-2 pr-4 text-white hover:bg-brand-primary hover:text-black'
+            }`}
+            aria-label={isOpen ? t('close') : t('launcher')}
+            aria-expanded={isOpen}
+            aria-controls="chat-window"
+          >
+            {isOpen ? (
+              <X className="h-6 w-6 md:h-7 md:w-7" strokeWidth={3} />
+            ) : (
+              <>
+                <ChatAvatar maat={36} />
+                <span className="font-display text-sm uppercase leading-none tracking-wide md:text-base">
+                  {t('launcher')}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
       )}
 
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && <ChatWindow onClose={handleClose} />}
       </AnimatePresence>
-
-      {/* Pulsering in merkgroen, vierkant zoals de knop zelf. Staat uit zodra
-          iemand de chat heeft geopend en bij `prefers-reduced-motion`. */}
-      <style jsx global>{`
-        @keyframes chat-pulse {
-          0%,
-          100% {
-            box-shadow: 0 0 0 0 rgba(0, 166, 118, 0.55);
-          }
-          50% {
-            box-shadow: 0 0 0 10px rgba(0, 166, 118, 0);
-          }
-        }
-
-        @media (prefers-reduced-motion: no-preference) {
-          .chat-button-pulse {
-            animation: chat-pulse 2.4s ease-in-out infinite;
-          }
-        }
-
-        .chat-button-pulse:hover {
-          animation: none;
-        }
-      `}</style>
     </>
   )
 }

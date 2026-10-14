@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { formatPrice, formatAmount } from '@/lib/format-price'
 import Image from 'next/image'
-import { useCart } from '@/store/cart'
+import { useCart, useCartGehydrateerd } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -20,6 +20,7 @@ export default function CartPage() {
   const t = useTranslations('cart')
   const locale = useLocale()
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount } = useCart()
+  const mandGeladen = useCartGehydrateerd()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
@@ -86,6 +87,19 @@ export default function CartPage() {
     }
     calc()
   }, [items])
+
+  // Niet "leeg" roepen zolang de mand nog uit localStorage wordt teruggelezen.
+  // Bij een volledige paginalading met een gevulde mand flitste hier eerst het
+  // lege scherm voorbij.
+  if (!mandGeladen) {
+    return (
+      <div className="min-h-screen px-4 pb-16">
+        <div className="max-w-4xl mx-auto py-24 text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-brand-primary" />
+        </div>
+      </div>
+    )
+  }
 
   if (items.length === 0) {
     return (
@@ -377,7 +391,7 @@ export default function CartPage() {
             primaire actie deed dus iets anders dan hij beloofde. Nu zijn het
             twee losse controls: links het totaal dat de samenvatting opent,
             rechts een echte link naar /checkout. */}
-        <div className="md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 bg-black text-white z-40 pb-[env(safe-area-inset-bottom)] flex items-stretch">
+        <div data-onderbalk className="md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 bg-black text-white z-40 pb-[env(safe-area-inset-bottom)] flex items-stretch">
           <button
             onClick={() => setShowMobileSummary(true)}
             aria-expanded={showMobileSummary}

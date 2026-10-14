@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -193,6 +194,31 @@ export const useCart = create<CartStore>()(
   )
 )
 
+/**
+ * Is de winkelmand al uit localStorage teruggelezen?
+ *
+ * Zustand doet dat ná de eerste render. Tot dat moment is `items` leeg, ook als
+ * er wel degelijk iets in de mand zit. Het afrekenscherm trok daar meteen een
+ * conclusie uit:
+ *
+ *     if (items.length === 0 && !isRecovering) router.push('/cart')
+ *
+ * Bij een gewone klik vanaf de winkelwagen valt dat niet op, want dan staat de
+ * mand al in het geheugen. Maar bij een volledige paginalading van /checkout
+ * (een bladwijzer, een verversing, of terugkomen van een betaalpagina) draaide
+ * die regel vóór het terugleren en werd de klant teruggestuurd naar de
+ * winkelwagen met een volle mand. Precies op de laatste stap.
+ *
+ * Met deze hook wacht het scherm tot de mand echt geladen is.
+ */
+export function useCartGehydrateerd(): boolean {
+  const [gehydrateerd, setGehydrateerd] = useState(() => useCart.persist.hasHydrated())
 
+  useEffect(() => {
+    const stopFinish = useCart.persist.onFinishHydration(() => setGehydrateerd(true))
+    if (useCart.persist.hasHydrated()) setGehydrateerd(true)
+    return stopFinish
+  }, [])
 
-
+  return gehydrateerd
+}

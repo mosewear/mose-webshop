@@ -2015,7 +2015,13 @@
       "material": "Van welke stof is het gemaakt?"
     },
     "back": "Terug naar het gesprek",
-    "toHuman": "Liever een mens"
+    "toHuman": "Liever een mens",
+    "launcher": "Vraag het ons",
+    "nudge": {
+      "size": "Twijfel je over je maat? Stel je vraag, meestal antwoorden we binnen een minuut.",
+      "general": "Een vraag over maten, verzending of retourneren? Stel hem gerust.",
+      "dismiss": "Tip sluiten"
+    }
   },
   "surveyPopup": {
     "introTitle": "Mogen wij 1 minuutje van je tijd?",
