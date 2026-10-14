@@ -2,6 +2,7 @@
 
 import { X, ArrowLeft, Headphones } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import ChatAvatar from './ChatAvatar'
 
 interface ChatHeaderProps {
   weergave: 'gesprek' | 'contact'
@@ -42,10 +43,16 @@ export default function ChatHeader({ weergave, onClose, onNaarContact, onTerug }
             <ArrowLeft className="h-5 w-5" strokeWidth={2.5} />
           </button>
         ) : (
-          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center" aria-hidden="true">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inset-0 bg-brand-primary opacity-60 motion-safe:animate-ping" />
-              <span className="relative h-2.5 w-2.5 bg-brand-primary" />
+          /* Het merkteken met het groene stipje in de hoek, zoals een contact
+             in een berichtenapp. Hier stond alleen een los groen blokje: dat
+             zei wel "online", maar niet wie er online was. */
+          <span className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center">
+            <ChatAvatar maat={36} />
+            <span className="absolute bottom-[6px] right-[5px] flex h-3 w-3 items-center justify-center bg-black">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inset-0 bg-brand-primary opacity-60 motion-safe:animate-ping" />
+                <span className="relative h-2 w-2 bg-brand-primary" />
+              </span>
             </span>
           </span>
         )}

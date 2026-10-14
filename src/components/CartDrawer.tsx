@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { formatPrice } from '@/lib/format-price'
 import Image from 'next/image'
 import { useCart } from '@/store/cart'
 import { X, Minus, Plus, Trash2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
@@ -226,6 +227,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     })
   }, [])
 
+  /**
+   * Hoeveel er nog van deze regel bij kan. `null` betekent onbeperkt
+   * (cadeaubonnen hebben geen voorraad).
+   */
+  const maxAantal = (item: { stock: number; isPresale?: boolean; presaleStock?: number; isGiftCard?: boolean }) => {
+    if (item.isGiftCard) return null
+    const max = item.isPresale ? (item.presaleStock ?? 0) : item.stock
+    return Number.isFinite(max) && max > 0 ? max : null
+  }
+
   /** Bestanden die in product_images staan maar geen afbeelding zijn. Een
    *  <Image> kan ze niet tonen en levert een leeg grijs vlak op: dat gebeurde
    *  met het horloge, waarvan de primaire "afbeelding" een .mp4 was. */
@@ -235,9 +246,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const miniatuur = (product: { product_images?: { url: string }[] }) =>
     product.product_images?.find((b) => !isVideoBestand(b?.url))?.url || '/placeholder-product.svg'
 
-  // Fetch upsell products
+  // Suggesties ophalen.
+  //
+  // Dit liep alleen bij een gevulde mand. Een lege mand toonde dus een leeg
+  // scherm met één knop "verder shoppen" en verder niets: precies het moment
+  // waarop iemand wél wil kijken, en precies het moment waarop de winkel niets
+  // laat zien. Nu halen we ze ook op als de mand leeg is, zonder uitsluitingen.
   useEffect(() => {
-    if (!isOpen || items.length === 0) {
+    if (!isOpen) {
       setUpsellProducts([])
       return
     }
@@ -249,7 +265,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       const cartProductIds = items.map(item => item.productId)
       
       // Fetch 3 random products not in cart with all variants
-      const { data, error } = await supabase
+      let query = supabase
         .from('products')
         .select(`
           id,
@@ -260,14 +276,35 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           product_images!inner(url, is_primary),
           product_variants!inner(id, sku, size, color, color_hex, stock_quantity, is_available)
         `)
-        .not('id', 'in', `(${cartProductIds.join(',')})`)
         .gt('product_variants.stock_quantity', 0)
         .eq('product_images.is_primary', true)
         .eq('product_variants.is_available', true)
-        .limit(3)
+        // Was `.limit(3)` zonder ordening, dus de volgorde was willekeurig. Bij
+        // een mand van €50 verscheen het horloge als eerste
+        // suggestie: vier keer de mandwaarde, en geen kledingstuk. Dat breekt de
+        // belofte "maak je look compleet".
+        .order('base_price', { ascending: true })
+        .limit(6)
+
+      // `in ()` met een lege lijst is geen geldige sql, dus alleen uitsluiten
+      // als er daadwerkelijk iets in de mand zit.
+      if (cartProductIds.length > 0) {
+        query = query.not('id', 'in', `(${cartProductIds.join(',')})`)
+      }
+
+      const { data, error } = await query
 
       if (!error && data) {
-        setUpsellProducts(data)
+        // Plafond op het dubbele van de mandwaarde: bij €50 in de mand zie je
+        // de sweater en de hoodie, niet het duurste stuk. Omgekeerd,
+        // vanaf een gevulde mand, mag duurder wel. Daarna de drie goedkoopste,
+        // want dat zijn de meest waarschijnlijke bijkopen richting de drempel.
+        const mandwaarde = getTotal()
+        const plafond = mandwaarde > 0 ? mandwaarde * 2 : Infinity
+        const passend = (data as any[]).filter(
+          (p) => Number(p.sale_price ?? p.base_price ?? 0) <= plafond
+        )
+        setUpsellProducts((passend.length > 0 ? passend : (data as any[])).slice(0, 3))
         
         // Set default selected size for each product (first available size)
         const defaultSizes: Record<string, string> = {}
@@ -345,15 +382,80 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
   }, [isOpen])
 
-  // Close on ESC key
+  // Wat er in de mand verandert, wordt hardop gemeld.
+  //
+  // De lade had geen enkel meldingsgebied. Wie met een schermlezer een maat
+  // toevoegde of een regel verwijderde, hoorde niets: de knop werd ingedrukt en
+  // daarna bleef het stil, terwijl het totaal en het aantal wel veranderden.
+  const [melding, setMelding] = useState('')
+  const vorigAantal = useRef<number | null>(null)
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+    const aantal = getItemCount()
+    if (!isOpen) {
+      vorigAantal.current = null
+      setMelding('')
+      return
+    }
+    if (vorigAantal.current === null) {
+      vorigAantal.current = aantal
+      return
+    }
+    if (aantal !== vorigAantal.current) {
+      vorigAantal.current = aantal
+      setMelding(
+        aantal === 0
+          ? t('empty.message')
+          : `${t('items', { count: aantal })}. ${t('subtotal')} ${formatPrice(getTotal(), locale)}`
+      )
+    }
+  }, [isOpen, items, getItemCount, getTotal, locale, t])
+
+  // Escape sluit, en de focus blijft binnen de lade.
+  //
+  // Dat laatste ontbrak: na het toevoegen van een artikel bleef de focus op de
+  // knop "In winkelmand" op de pagina eróchter staan. Wie met het toetsenbord
+  // verder tabte, liep zo de onzichtbare pagina in terwijl de lade open stond.
+  const ladeRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!isOpen) return
+
+    const vorigeFocus = document.activeElement as HTMLElement | null
+    requestAnimationFrame(() => {
+      const paneel = ladeRef.current
+      const eerste = paneel?.querySelector<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      eerste?.focus({ preventScroll: true })
+    })
+
+    const bijToets = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const paneel = ladeRef.current
+      if (!paneel) return
+      const focusbaar = paneel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusbaar.length === 0) return
+      const eerste = focusbaar[0]
+      const laatste = focusbaar[focusbaar.length - 1]
+      if (e.shiftKey && document.activeElement === eerste) {
+        e.preventDefault()
+        laatste.focus()
+      } else if (!e.shiftKey && document.activeElement === laatste) {
+        e.preventDefault()
+        eerste.focus()
       }
     }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+
+    document.addEventListener('keydown', bijToets)
+    return () => {
+      document.removeEventListener('keydown', bijToets)
+      vorigeFocus?.focus({ preventScroll: true })
+    }
   }, [isOpen, onClose])
 
   // Handle promo code
@@ -470,6 +572,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
       {/* Drawer */}
       <div
+        ref={ladeRef}
         data-cart-drawer
         className="fixed inset-y-0 right-0 w-full md:w-[520px] bg-white border-l-4 border-black z-50 flex flex-col animate-slideInRight"
         role="dialog"
@@ -488,32 +591,73 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
+            className="w-11 h-11 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
             aria-label={t('close')}
           >
             <X size={24} />
           </button>
         </div>
 
+        <div role="status" aria-live="polite" className="sr-only">
+          {melding}
+        </div>
+
         {items.length === 0 ? (
-          /* Empty State */
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 border-4 border-gray-300 flex items-center justify-center mb-6">
-              <ShoppingBag size={40} className="text-gray-300" />
+          /* Lege mand: niet alleen een melding, maar ook een weg verder. */
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex flex-col items-center p-8 pb-6 text-center">
+              <div className="w-20 h-20 border-4 border-gray-300 flex items-center justify-center mb-6">
+                <ShoppingBag size={40} className="text-gray-300" />
+              </div>
+              <h3 className="font-display text-2xl uppercase mb-2">{t('empty.title')}</h3>
+              <p className="text-gray-600 mb-6">{t('empty.message')}</p>
+              <button
+                onClick={onClose}
+                className="min-h-[44px] px-8 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+              >
+                {t('empty.continue')}
+              </button>
             </div>
-            <h3 className="font-display text-2xl uppercase mb-2">{t('empty.title')}</h3>
-            <p className="text-gray-600 mb-6">{t('empty.message')}</p>
-            <button
-              onClick={onClose}
-              className="px-8 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
-            >
-              {t('empty.continue')}
-            </button>
+
+            {upsellProducts.length > 0 && (
+              <div className="border-t-2 border-gray-200 px-4 py-4 md:px-6">
+                <h4 className="font-display text-base uppercase tracking-wide mb-3">
+                  {t('empty.popular')}
+                </h4>
+                <ul className="space-y-2">
+                  {upsellProducts.map((product: any) => (
+                    <li key={product.id}>
+                      <LocaleLink
+                        href={`/product/${product.slug}`}
+                        onClick={onClose}
+                        className="flex items-center gap-3 border-2 border-gray-200 p-2 hover:border-black transition-colors"
+                      >
+                        <div className="relative h-16 w-14 flex-shrink-0 bg-gray-100">
+                          <Image
+                            src={miniatuur(product)}
+                            alt=""
+                            fill
+                            sizes="56px"
+                            className="object-cover"
+                          />
+                        </div>
+                        <span className="flex-1 text-sm font-semibold leading-snug">
+                          {locale === 'en' && product.name_en ? product.name_en : product.name}
+                        </span>
+                        <span className="text-sm font-bold text-brand-primary">
+                          {formatPrice(product.base_price, locale)}
+                        </span>
+                      </LocaleLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           <>
             {/* Items Area - Scrollable */}
-            <div className="flex-1 overflow-y-auto pb-[280px] md:pb-[160px]">
+            <div className="flex-1 overflow-y-auto pb-6 md:pb-[160px]">
               <div className="p-4 md:p-6 space-y-0">
                 {items.map((item, index) => (
                   <div key={item.variantId}>
@@ -551,7 +695,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               </LocaleLink>
                               <button
                                 onClick={() => removeItem(item.variantId)}
-                                className="flex-shrink-0 w-8 h-8 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
+                                className="flex-shrink-0 w-11 h-11 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
                                 aria-label={t('remove')}
                               >
                                 <X size={16} />
@@ -563,7 +707,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   <span className="uppercase tracking-[0.15em] text-[11px] text-gray-500 mr-1.5">
                                     {t('giftCard.value', { defaultValue: 'Waarde' })}
                                   </span>
-                                  <span className="font-medium">€{Number(item.giftCardAmount ?? item.price).toFixed(2)}</span>
+                                  <span className="font-medium">{formatPrice(Number(item.giftCardAmount ?? item.price), locale)}</span>
                                 </div>
                                 {item.giftCardRecipient?.recipientName ? (
                                   <div className="text-xs text-gray-600">
@@ -598,27 +742,54 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           {/* Bottom Section - Quantity & Price */}
                           <div className="flex items-center justify-between mt-3">
                             {/* Quantity Controls */}
+                            {/* De plusknop faalde stil zodra de voorraad bereikt
+                                was: updateQuantity doet Math.min(aantal, voorraad),
+                                dus bij een artikel met voorraad 1 gebeurde er
+                                niets en kreeg de klant geen enkele uitleg. Precies
+                                op het moment dat hij méér wilde kopen. De knop is
+                                nu zichtbaar uitgeschakeld met de reden eronder.
+                                De minknop op 1 deed ook niets; die verwijdert nu. */}
                             <div className="flex items-center border border-black">
                               <button
-                                onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
+                                onClick={() =>
+                                  item.quantity <= 1
+                                    ? removeItem(item.variantId)
+                                    : updateQuantity(item.variantId, item.quantity - 1)
+                                }
                                 className="w-11 h-11 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                                aria-label={t('decrease')}
+                                aria-label={item.quantity <= 1 ? t('remove') : t('decrease')}
                               >
-                                <Minus size={16} />
+                                {item.quantity <= 1 ? <Trash2 size={16} /> : <Minus size={16} />}
                               </button>
                               <span className="w-11 text-center font-bold">{item.quantity}</span>
                               <button
                                 onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                                className="w-11 h-11 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
+                                disabled={maxAantal(item) !== null && item.quantity >= maxAantal(item)!}
+                                className={`w-11 h-11 flex items-center justify-center transition-colors ${
+                                  maxAantal(item) !== null && item.quantity >= maxAantal(item)!
+                                    ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                    : 'hover:bg-black hover:text-white'
+                                }`}
                                 aria-label={t('increase')}
                               >
                                 <Plus size={16} />
                               </button>
                             </div>
 
+                            {/* Zegt waaróm de plusknop uitstaat. Vier varianten
+                                staan op nul en drie op één, dus dit is geen
+                                theoretisch geval. */}
+                            {maxAantal(item) !== null && maxAantal(item)! <= 3 && (
+                              <p className="mt-1 text-[11px] font-semibold text-amber-700">
+                                {maxAantal(item) === 1
+                                  ? t('lastOne')
+                                  : t('onlyLeft', { count: maxAantal(item)! })}
+                              </p>
+                            )}
+
                             {/* Price */}
                             <div className="text-right">
-                              <div className="font-bold text-lg">€{(item.price * item.quantity).toFixed(2)}</div>
+                              <div className="font-bold text-lg">{formatPrice((item.price * item.quantity), locale)}</div>
                               {(staffelBreakdown.lineSavingByVariantId[item.variantId] ?? 0) > 0 && (
                                 <p className="text-xs text-gray-600 mt-1 max-w-[200px] ml-auto leading-snug">
                                   {t('staffel.lineSaving', {
@@ -642,7 +813,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm uppercase tracking-wider font-semibold"
                 >
                   <Trash2 size={16} />
-                  <span>{t('remove')}</span>
+                  <span>{t('clearCart')}</span>
                 </button>
               </div>
 
@@ -652,7 +823,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <h3 className="font-display text-base uppercase mb-3 tracking-wide">
                     {t('upsell.completeLook')}
                   </h3>
-                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
+                  {/* Snappen per kaart, en de derde kaart loopt zichtbaar het
+                      beeld uit zodat je ziet dat er meer naast staat. Zonder die
+                      aanzet eindigt de rij precies op de rand en lijkt het één
+                      suggestie. */}
+                  <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
                     {upsellProducts.map((product) => {
                       const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
                       const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))] as string[]
@@ -679,7 +854,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       return (
                         <div
                           key={product.id}
-                          className="flex-shrink-0 w-[280px] md:w-[320px] border-2 border-gray-200 hover:border-black transition-all p-2 group"
+                          className="flex-shrink-0 snap-start w-[280px] md:w-[320px] border-2 border-gray-200 hover:border-black transition-all p-2 group"
                         >
                           {/* Top Row: Image + Info */}
                           <div className="flex items-start gap-3 mb-2">
@@ -709,7 +884,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 {getProductName(product)}
                               </LocaleLink>
                               <span className="text-brand-primary font-bold text-sm">
-                                €{product.base_price.toFixed(2)}
+                                {formatPrice(product.base_price, locale)}
                               </span>
                             </div>
                           </div>
@@ -723,7 +898,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                   key={size}
                                   onClick={() => setSelectedUpsellSizes(prev => ({ ...prev, [product.id]: size }))}
                                   className={`
-                                    flex-1 px-2 py-1.5 text-[10px] font-bold uppercase border-2 transition-all
+                                    flex-1 min-h-[44px] px-2 text-[11px] font-bold uppercase border-2 transition-all
                                     ${selectedSize === size
                                       ? 'border-black bg-black text-white'
                                       : 'border-gray-300 hover:border-black'
@@ -740,7 +915,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               onClick={() => handleQuickAdd(product)}
                               disabled={addingProduct === product.id || !selectedSize}
                               className={`
-                                flex-shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase transition-all whitespace-nowrap
+                                flex-shrink-0 min-h-[44px] px-4 text-[11px] font-bold uppercase transition-all whitespace-nowrap
                                 ${addingProduct === product.id
                                   ? 'bg-brand-primary text-white'
                                   : !selectedSize
@@ -802,7 +977,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      Je krijgt gratis verzending!
+                      {t('freeShippingReached')}
                     </p>
                   </div>
                 )}
@@ -812,7 +987,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {!promoCodeExpanded && promoDiscount === 0 ? (
                     <button
                       onClick={() => setPromoCodeExpanded(true)}
-                      className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors"
+                      className="w-full flex min-h-[44px] items-center justify-between text-sm font-semibold text-gray-700 hover:text-black transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <Ticket size={16} />
@@ -848,12 +1023,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           }}
                           onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
                           placeholder={t('placeholder.promoCode', { ns: 'checkout' })}
-                          className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                          className="flex-1 min-h-[44px] px-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
                         />
                         <button
                           onClick={handleApplyPromo}
                           disabled={!promoCode}
-                          className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="min-h-[44px] px-4 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {t('promo.apply')}
                         </button>
@@ -870,14 +1045,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {/* Subtotal */}
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-semibold uppercase tracking-wide">{t('subtotal')}</span>
-                    <span className="font-bold">€{subtotal.toFixed(2)}</span>
+                    <span className="font-bold">{formatPrice(subtotal, locale)}</span>
                   </div>
 
                   {/* Staffelkorting */}
                   {staffelBreakdown.totalSavings > 0 && (
                     <div className="flex justify-between items-center text-sm px-2 py-1.5 bg-gray-50 border-l-2 border-black">
                       <span className="font-semibold text-gray-800 uppercase tracking-wide text-xs">{t('staffel.label')}</span>
-                      <span className="font-bold text-black">-€{staffelBreakdown.totalSavings.toFixed(2)}</span>
+                      <span className="font-bold text-black">-{formatPrice(staffelBreakdown.totalSavings, locale)}</span>
                     </div>
                   )}
 
@@ -918,7 +1093,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </div>
                           </div>
                         </div>
-                        <span className="font-bold text-black">-€{promoDiscount.toFixed(2)}</span>
+                        <span className="font-bold text-black">-{formatPrice(promoDiscount, locale)}</span>
                       </div>
                       <div className="h-px bg-gray-300"></div>
                     </>
@@ -936,7 +1111,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="border-t-2 border-black pt-2">
                     <div className="flex justify-between items-baseline">
                       <span className="font-display text-xl uppercase tracking-wide">{t('total')}</span>
-                      <span className="font-display text-4xl">€{total.toFixed(2)}</span>
+                      <span className="font-display text-4xl">{formatPrice(total, locale)}</span>
                     </div>
                     <p className="text-xs text-gray-500 text-right mt-1">
                       {t('totalInclusive')}
@@ -961,7 +1136,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {!promoCodeExpanded && promoDiscount === 0 ? (
                     <button
                       onClick={() => setPromoCodeExpanded(true)}
-                      className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-black transition-colors"
+                      className="w-full flex min-h-[44px] items-center justify-between text-sm font-semibold text-gray-700 hover:text-black transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <Ticket size={16} />
@@ -997,12 +1172,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           }}
                           onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
                           placeholder={t('placeholder.promoCode', { ns: 'checkout' })}
-                          className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
+                          className="flex-1 min-h-[44px] px-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm uppercase tracking-wider"
                         />
                         <button
                           onClick={handleApplyPromo}
                           disabled={!promoCode}
-                          className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="min-h-[44px] px-4 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {t('promo.apply')}
                         </button>
@@ -1035,7 +1210,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-black">
-                          -€{promoDiscount.toFixed(2)}
+                          -{formatPrice(promoDiscount, locale)}
                         </div>
                       </div>
                     </div>
@@ -1060,7 +1235,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 {staffelBreakdown.totalSavings > 0 && (
                   <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                     <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{t('staffel.label')}</span>
-                    <span className="text-xs font-bold text-black">-€{staffelBreakdown.totalSavings.toFixed(2)}</span>
+                    <span className="text-xs font-bold text-black">-{formatPrice(staffelBreakdown.totalSavings, locale)}</span>
                   </div>
                 )}
 
@@ -1069,7 +1244,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{t('total')}</div>
-                      <div className="font-display text-3xl">€{total.toFixed(2)}</div>
+                      <div className="font-display text-3xl">{formatPrice(total, locale)}</div>
                       <div className="text-xs text-gray-400">
                         {t('totalInclusive')}
                       </div>
@@ -1107,7 +1282,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Je krijgt gratis verzending!
+                        {t('freeShippingReached')}
                       </p>
                     </div>
                   )}

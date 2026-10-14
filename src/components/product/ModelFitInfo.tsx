@@ -56,10 +56,7 @@ export default function ModelFitInfo({
       })
 
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)]"
-    >
+    <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)]">
       <span className="inline-block bg-black/70 text-white border-2 border-black/80 backdrop-blur-sm px-2.5 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.22)]">
         <span className="block text-[10px] md:text-[11px] font-bold uppercase tracking-[0.05em] leading-snug whitespace-normal">
           {line}

@@ -350,7 +350,8 @@
     "empty": {
       "title": "Empty",
       "message": "Your cart is empty",
-      "continue": "Continue Shopping"
+      "continue": "Continue Shopping",
+      "popular": "Popular at MOSE"
     },
     "remove": "Remove item",
     "size": "Size",
@@ -413,7 +414,12 @@
       "label": "Volume discount",
       "lineSaving": "Volume discount on this line: −€{amount}",
       "nextTier": "{product}: add {needed} more for {discount} volume pricing"
-    }
+    },
+    "lastOne": "Last one",
+    "onlyLeft": "Only {count} left",
+    "maxReached": "That's all we have",
+    "freeShippingReached": "Your shipping is free!",
+    "clearCart": "Empty cart"
   },
   "product": {
     "notFound": "Product not found",
@@ -1409,7 +1415,11 @@
     "emptyTitle": "Search MOSE Products",
     "emptyDescription": "Type to start searching",
     "closeHint": "to close",
-    "resultCount": "{count} {count, plural, =1 {result} other {results}}"
+    "resultCount": "{count} {count, plural, =1 {result} other {results}}",
+    "popular": "Popular at MOSE",
+    "alsoAvailable": "What we do have",
+    "navigateHint": "to browse",
+    "openHint": "to open"
   },
   "faq": {
     "badge": "Questions?",

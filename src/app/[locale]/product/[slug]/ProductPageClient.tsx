@@ -799,43 +799,39 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   
   const displayImages = getDisplayImages()
 
-  /** PDP-overlay: per afbeelding als lengte+maat op die rij staan, anders productvelden. */
+  /**
+   * Pasvormtag bij de getoonde foto.
+   *
+   * UITSLUITEND uit de rij van de foto zelf. De terugval op de productvelden
+   * is eruit gehaald, want die vertelde op elke foto zonder eigen gegevens het
+   * verhaal van iemand anders: op de groene hoodie stond op foto 1 "Marlon is
+   * 1,88 m en draagt maat L" en op foto 2 "Model is 1,86, normaal, draagt maat
+   * M", terwijl op beide foto's dezelfde man staat. Eén productveld kan ook
+   * niet kloppen voor een shoot waarin elke kleur door een ander model wordt
+   * gedragen.
+   *
+   * Geen gegevens op de rij betekent dus geen tag. Op groepsfoto's, waar twee
+   * of meer modellen staan, laten we de velden daarom bewust leeg: één naam
+   * en één maat zeggen daar niets.
+   */
   const modelOverlayProps = (() => {
     if (!product || displayImages.length === 0) return null
     const media = displayImages[selectedImage]
     if (!media) return null
 
-    const imgComplete =
-      !!media.model_height?.trim() && !!media.model_size_worn?.trim()
-    if (imgComplete) {
-      const build =
-        locale === 'en'
-          ? media.model_build_en?.trim() || media.model_build?.trim() || null
-          : media.model_build?.trim() || null
-      return {
-        name: media.model_name?.trim() || product.model_name,
-        height: media.model_height!.trim(),
-        sizeWorn: media.model_size_worn!.trim(),
-        build,
-      }
-    }
+    if (!media.model_height?.trim() || !media.model_size_worn?.trim()) return null
 
-    const prodComplete =
-      !!product.model_height?.trim() && !!product.model_size_worn?.trim()
-    if (prodComplete) {
-      const build =
-        locale === 'en'
-          ? product.model_build_en?.trim() || product.model_build?.trim() || null
-          : product.model_build?.trim() || null
-      return {
-        name: product.model_name,
-        height: product.model_height!.trim(),
-        sizeWorn: product.model_size_worn!.trim(),
-        build,
-      }
-    }
+    const build =
+      locale === 'en'
+        ? media.model_build_en?.trim() || media.model_build?.trim() || null
+        : media.model_build?.trim() || null
 
-    return null
+    return {
+      name: media.model_name?.trim() || null,
+      height: media.model_height.trim(),
+      sizeWorn: media.model_size_worn.trim(),
+      build,
+    }
   })()
 
   // Warm XL lightbox assets (CDN) for current + adjacent slides before tap.
@@ -1144,7 +1140,14 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
             {/* LEFT: Image Gallery (55% width) */}
             <div className="space-y-4">
               {/* Main Media Display - Native CSS Scroll-Snap Gallery */}
-              <div className="relative">
+              {/* De uitloop over de schermbreedte zit op DEZE wrapper, niet op
+                  de scroller eronder. Alles wat vast over het beeld moet staan
+                  (pasvormtag, stippen, uitverkocht-waas) hangt hieraan vast.
+                  Stond dat binnen de scroller, dan schoof het bij de eerste
+                  veegbeweging mee naar links het beeld uit: op foto 2 was de
+                  tag weg en waren de stippen weg, terwijl ze op desktop bleven
+                  staan omdat daar niet horizontaal gescrold wordt. */}
+              <div className="relative -mx-4 md:mx-0">
                 {/* Scroll Container with CSS Scroll-Snap */}
                 <div
                   ref={scrollContainerRef}
@@ -1156,7 +1159,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                   // 4:5 zodat hij breder wordt zonder ook hoger te worden en de
                   // productnaam dus niet verder naar beneden schuift. Op desktop
                   // blijft het kader staan, daar past hij naast de koopdoos.
-                  className="relative -mx-4 aspect-[4/5] bg-gray-100 border-y-2 border-black overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide group md:mx-0 md:aspect-[3/3] md:border-2 md:overflow-hidden"
+                  className="relative aspect-[4/5] bg-gray-100 border-y-2 border-black overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide group md:aspect-[3/3] md:border-2 md:overflow-hidden"
                   style={{
                     scrollBehavior: 'smooth',
                     WebkitOverflowScrolling: 'touch',
@@ -1211,49 +1214,50 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     </div>
                   )}
 
-                  {/* Out of Stock OR Presale Overlay */}
-                  {!hasAnyStock && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none z-10">
-                      <span className="text-white text-2xl md:text-4xl font-display">{t('stock.outOfStock').toUpperCase()}</span>
-                    </div>
-                  )}
-
-                  {/* Pasvorm-referentie tag — linksonder op het beeld.
-                      Vervangt de oude bulk-card onder de maatkiezer.
-                      Renders alleen als zowel lengte als gedragen maat
-                      ingevuld zijn in de admin (dus geen lege tag). */}
-                  {modelOverlayProps ? (
-                    <ModelFitInfo
-                      name={modelOverlayProps.name}
-                      height={modelOverlayProps.height}
-                      build={modelOverlayProps.build}
-                      sizeWorn={modelOverlayProps.sizeWorn}
-                    />
-                  ) : null}
-
-                  {/* Dots Indicator - Mobile only, only if multiple images.
-                      Worden hoger geplaatst (bottom-12) als de pasvorm-
-                      tag actief is, zodat de twee elementen niet over
-                      elkaar heen vallen op smalle schermen. */}
-                  {displayImages.length > 1 && (
-                    <div
-                      className={`absolute ${
-                        modelOverlayProps ? 'bottom-12' : 'bottom-3'
-                      } left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none z-10`}
-                    >
-                      {displayImages.map((_, index) => (
-                        <div
-                          key={index}
-                          className={`rounded-full transition-all duration-300 ${
-                            index === selectedImage
-                              ? 'bg-brand-primary w-6 h-1.5'
-                              : 'bg-white/60 w-1.5 h-1.5'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
+
+                {/* Out of Stock OR Presale Overlay */}
+                {!hasAnyStock && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none z-10">
+                    <span className="text-white text-2xl md:text-4xl font-display">{t('stock.outOfStock').toUpperCase()}</span>
+                  </div>
+                )}
+
+                {/* Pasvorm-referentie tag — linksonder op het beeld.
+                    Vervangt de oude bulk-card onder de maatkiezer.
+                    Renders alleen als zowel lengte als gedragen maat
+                    ingevuld zijn in de admin (dus geen lege tag). */}
+                {modelOverlayProps ? (
+                  <ModelFitInfo
+                    name={modelOverlayProps.name}
+                    height={modelOverlayProps.height}
+                    build={modelOverlayProps.build}
+                    sizeWorn={modelOverlayProps.sizeWorn}
+                  />
+                ) : null}
+
+                {/* Dots Indicator - Mobile only, only if multiple images.
+                    Worden hoger geplaatst (bottom-12) als de pasvorm-
+                    tag actief is, zodat de twee elementen niet over
+                    elkaar heen vallen op smalle schermen. */}
+                {displayImages.length > 1 && (
+                  <div
+                    className={`absolute ${
+                      modelOverlayProps ? 'bottom-12' : 'bottom-3'
+                    } left-0 right-0 flex justify-center gap-2 md:hidden pointer-events-none z-10`}
+                  >
+                    {displayImages.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`rounded-full transition-all duration-300 ${
+                          index === selectedImage
+                            ? 'bg-brand-primary w-6 h-1.5'
+                            : 'bg-white/60 w-1.5 h-1.5'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Thumbnails — gecapt op MAX 4 tegels (1 rij op elke device).
