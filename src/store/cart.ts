@@ -212,12 +212,30 @@ export const useCart = create<CartStore>()(
  * Met deze hook wacht het scherm tot de mand echt geladen is.
  */
 export function useCartGehydrateerd(): boolean {
-  const [gehydrateerd, setGehydrateerd] = useState(() => useCart.persist.hasHydrated())
+  // Begint op false, ook op de server. De `persist`-api van zustand bestaat
+  // tijdens het prerenderen niet, en een beginwaarde die op server en client
+  // verschilt levert sowieso een hydratatieverschil op.
+  const [gehydrateerd, setGehydrateerd] = useState(false)
 
   useEffect(() => {
-    const stopFinish = useCart.persist.onFinishHydration(() => setGehydrateerd(true))
-    if (useCart.persist.hasHydrated()) setGehydrateerd(true)
-    return stopFinish
+    const opslag = (useCart as unknown as { persist?: {
+      hasHydrated: () => boolean
+      onFinishHydration: (cb: () => void) => () => void
+    } }).persist
+
+    // Geen persist-api (bijvoorbeeld in een test): dan is er niets om op te
+    // wachten en gaan we uit van geladen.
+    if (!opslag) {
+      setGehydrateerd(true)
+      return
+    }
+
+    if (opslag.hasHydrated()) {
+      setGehydrateerd(true)
+      return
+    }
+
+    return opslag.onFinishHydration(() => setGehydrateerd(true))
   }, [])
 
   return gehydrateerd
