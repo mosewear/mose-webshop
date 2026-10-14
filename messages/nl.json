@@ -656,7 +656,7 @@
       "info": "2 jaar fabrieksgarantie op alle producten"
     },
     "related": {
-      "title": "Dit vind je ook leuk"
+      "title": "Maak het af"
     },
     "recentlyViewed": {
       "title": "Recent bekeken"
@@ -685,7 +685,8 @@
       "returns": "30 dagen bedenktijd. Geld terug bij retour, zonder gedoe.",
       "madeInWithSpec": "Made in Groningen. {spec}.",
       "madeInBare": "Made in Groningen. Premium katoen, regular fit.",
-      "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard."
+      "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard.",
+      "warranty": "Twee jaar garantie op materiaal en afwerking."
     },
     "klarna": {
       "installment": "of 3× {amount} met Klarna, geen rente"

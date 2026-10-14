@@ -403,28 +403,38 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             </span>
           </div>
 
-          <div className="flex-1 px-4 py-3 md:px-6 md:py-4 flex flex-col justify-center gap-1.5 md:gap-2">
-            {[5, 4, 3, 2, 1].map((rating) => {
-              const count = ratingDistribution[rating - 1]
-              const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0
-              return (
-                <div key={rating} className="flex items-center gap-2 md:gap-3">
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider w-3 text-gray-700">
-                    {rating}
-                  </span>
-                  <div className="flex-1 bg-gray-100 h-1.5 overflow-hidden">
-                    <div
-                      className="bg-brand-primary h-full transition-[width] duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
+          {/* Het staafdiagram met vijf balken stond hier en is weg zolang er
+              weinig reviews zijn. Met 2 reviews toonde het 5 sterren = 2 en
+              vier lege balken: dat adverteert de dunheid in plaats van het
+              oordeel, en het kostte 1,2 scherm. Vanaf tien reviews zegt de
+              verdeling wel iets, dus dan komt hij vanzelf terug. */}
+          {totalReviews >= 10 && (
+            <div className="flex-1 px-4 py-3 md:px-6 md:py-4 flex flex-col justify-center gap-1.5 md:gap-2">
+              {[5, 4, 3, 2, 1].map((rating) => {
+                const count = ratingDistribution[rating - 1]
+                const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0
+                return (
+                  <div key={rating} className="flex items-center gap-2 md:gap-3">
+                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider w-3 text-gray-700">
+                      {rating}
+                    </span>
+                    <div className="flex-1 bg-gray-100 h-1.5 overflow-hidden">
+                      <div
+                        className="bg-brand-primary h-full transition-[width] duration-500"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] md:text-xs text-gray-500 w-6 text-right tabular-nums">
+                      {count}
+                    </span>
                   </div>
-                  <span className="text-[10px] md:text-xs text-gray-500 w-6 text-right tabular-nums">
-                    {count}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Bij weinig reviews vult de ruimte zich met het oordeel zelf. */}
+          {totalReviews < 10 && <div className="flex-1" />}
 
           <button
             type="button"

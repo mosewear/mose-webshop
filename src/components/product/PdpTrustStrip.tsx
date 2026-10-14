@@ -50,6 +50,10 @@ export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold }:
       ? t('shippingBeforeCutoff', { threshold: freeShippingThreshold })
       : t('shippingAfterCutoff', { threshold: freeShippingThreshold }),
     t('returns'),
+    // Twee jaar garantie stond alleen in de veelgestelde vragen, op 5,2 scherm.
+    // Dat is een van de sterkste redenen om bij een onbekend merk te kopen en
+    // hij hoort hier, binnen één scherm van de koopknop.
+    t('warranty'),
     signatureSpecs ? t('madeInWithSpec', { spec: signatureSpecs }) : t('madeInBare'),
     t('payment'),
   ]
