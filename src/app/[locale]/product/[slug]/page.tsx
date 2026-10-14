@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { createAnonClient } from '@/lib/supabase/server'
 import ProductPageClient from './ProductPageClient'
-import BrandDiscoveryFetcher from '@/components/product/BrandDiscoveryFetcher'
 import PdpInstagramFetcher from '@/components/product/PdpInstagramFetcher'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
@@ -306,7 +305,19 @@ export default async function ProductPage({
           afwezig is. In Suspense gewikkeld zodat een trage IG-fetch
           nooit het hoofd-content render blokkeert (LCP-veilig). */}
       <Suspense fallback={null}>
-        <BrandDiscoveryFetcher locale={localeParam} />
+        {/* De zwevende "WIE ZIJN WIJ?"-balk is hier weg. Hij stond links
+            onderin als tweede vast element naast de koopbalk, schoof alleen
+            omhoog in plaats van te verdwijnen, en lag daardoor over de
+            vertrouwensregels en de producttekst heen. Van de zeven onderzochte
+            productpagina's (Asket, Norse Projects, Carhartt WIP, Les Deux,
+            Colorful Standard, Pockies, Suitsupply) heeft er geen enkele twee
+            zwevende elementen: op een productpagina is het koopmoment het enige
+            dat mag blijven staan.
+
+            Het merkverhaal is niet verdwenen: "MADE IN GRONINGEN" staat als
+            label onder de prijs, de vertrouwensregels onder de koopknop noemen
+            het atelier, en de veelgestelde vragen beantwoorden "Is dit echt in
+            Groningen gemaakt?". */}
       </Suspense>
     </>
   )
