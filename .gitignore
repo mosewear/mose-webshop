@@ -73,3 +73,6 @@ shots/
 /*-tmp.mjs
 /.*.mjs
 .controle/
+
+# Tijdelijke meetscripts (Playwright, mailrenders)
+.tmp-*/
