@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X } from 'lucide-react'
+import { X, MessageCircle } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import ChatWindow from './ChatWindow'
-import ChatAvatar from './ChatAvatar'
 import { trackEvent } from '@/lib/analytics'
 
 const GEOPEND_KEY = 'mose_chat_opened'
@@ -25,6 +24,7 @@ export default function ChatButton() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [onderbalk, setOnderbalk] = useState(0)
   const [tipZichtbaar, setTipZichtbaar] = useState(false)
+  const [magPulseren, setMagPulseren] = useState(false)
   const knopRef = useRef<HTMLButtonElement>(null)
 
   const opProductpagina = Boolean(pathname?.includes('/product/'))
@@ -146,6 +146,22 @@ export default function ChatButton() {
     return () => clearTimeout(timer)
   }, [isOpen, pathname])
 
+  /**
+   * De ring pulseert tot iemand de chat in dit bezoek één keer heeft geopend.
+   *
+   * Hij stopt dus uit zichzelf, en bij `prefers-reduced-motion` begint hij
+   * niet. Dat is het verschil met de vorige pulsering, die op elke pagina
+   * oneindig doorging en daardoor precies het tegenovergestelde deed: wat
+   * altijd beweegt, kijk je weg.
+   */
+  useEffect(() => {
+    try {
+      setMagPulseren(sessionStorage.getItem(GEOPEND_KEY) !== '1')
+    } catch {
+      setMagPulseren(true)
+    }
+  }, [])
+
   const sluitTip = useCallback((reden: 'weggeklikt' | 'gebruikt') => {
     setTipZichtbaar(false)
     try {
@@ -171,6 +187,7 @@ export default function ChatButton() {
     setIsOpen(!wasOpen)
 
     if (!wasOpen) {
+      setMagPulseren(false)
       sluitTip('gebruikt')
       try {
         sessionStorage.setItem(GEOPEND_KEY, '1')
@@ -240,14 +257,31 @@ export default function ChatButton() {
               woord ernaast, zodat je ziet wat je krijgt als je klikt. Zwart met
               wit, niet groen: het groen is van de koopknop, en de chat hoort
               daar niet mee te concurreren. */}
+          {/* Rond, merkgroen, met een witte ring en een pulserende halo.
+              
+              Waarom rond: de hele winkel bestaat uit vierkanten met een rand
+              van 2px. Een zwart vierkant met een zwarte rand verdwijnt daarin,
+              hoe hoog het contrast op papier ook is. De ronde vorm komt nergens
+              anders voor en is bovendien wat mensen van een chatknop verwachten.
+
+              Waarom groen en niet zwart: zwart op wit haalt wel 21 op 1, maar
+              die combinatie staat al op elke knop en elk kader. Merkgroen in een
+              massief vlak staat nergens anders in dit formaat.
+
+              De witte ring is er voor de momenten dat de knop over een donkere
+              productfoto schuift; zonder die ring loopt hij daar in weg.
+
+              Tekst alleen op desktop. Op een telefoon van 390 pixels vecht elke
+              pixel van een zwevend element met de pagina eronder, en daar lag de
+              bredere versie over de knop waar de pagina zelf om vraagt. */}
           <button
             ref={knopRef}
             onClick={handleToggle}
-            className={`flex items-center border-2 border-black transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${
+            className={`chat-knop group relative flex items-center justify-center rounded-full transition-transform duration-200 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black/70 focus-visible:ring-offset-2 ${
               isOpen
-                ? 'hidden h-14 w-14 items-center justify-center bg-black text-brand-primary md:flex'
-                : 'h-14 w-14 justify-center bg-black text-white hover:bg-brand-primary hover:text-black md:w-auto md:justify-start md:gap-2.5 md:pl-2 md:pr-4'
-            }`}
+                ? 'hidden h-14 w-14 bg-black text-brand-primary md:flex'
+                : 'h-16 w-16 bg-brand-primary text-black md:h-[60px] md:w-auto md:gap-3 md:pl-3 md:pr-6'
+            } ${!isOpen && magPulseren ? 'chat-knop-pulse' : ''}`}
             aria-label={isOpen ? t('close') : t('launcher')}
             aria-expanded={isOpen}
             aria-controls="chat-window"
@@ -256,14 +290,10 @@ export default function ChatButton() {
               <X className="h-6 w-6 md:h-7 md:w-7" strokeWidth={3} />
             ) : (
               <>
-                {/* Op een telefoon alleen het merkteken. Met het woord erbij was
-                    de knop 157 van de 390 pixels breed en lag hij over de knop
-                    waar de pagina zelf om vraagt, zoals "start met shoppen" in
-                    een lege bestellijst. De tip die één keer verschijnt, vertelt
-                    al wat je aan de chat hebt. Op desktop is er ruimte genoeg,
-                    dus daar blijft het woord staan. */}
-                <ChatAvatar maat={36} />
-                <span className="hidden font-display text-sm uppercase leading-none tracking-wide md:inline md:text-base">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-black text-brand-primary md:h-10 md:w-10">
+                  <MessageCircle className="h-6 w-6 md:h-5 md:w-5" strokeWidth={2.4} />
+                </span>
+                <span className="hidden font-display text-base uppercase leading-none tracking-wide text-black md:inline">
                   {t('launcher')}
                 </span>
               </>
@@ -276,6 +306,49 @@ export default function ChatButton() {
       <AnimatePresence>
         {isOpen && <ChatWindow onClose={handleClose} />}
       </AnimatePresence>
+
+      {/* De witte ring en de zweefschaduw staan altijd, de halo alleen zolang
+          de chat nog niet geopend is. De halo loopt via box-shadow en werkt
+          daardoor net zo goed om een cirkel als om een pil. */}
+      <style jsx global>{`
+        .chat-knop {
+          box-shadow:
+            0 0 0 3px #ffffff,
+            0 10px 26px rgba(0, 0, 0, 0.32),
+            0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes chat-halo {
+          0% {
+            box-shadow:
+              0 0 0 3px #ffffff,
+              0 0 0 3px rgba(0, 166, 118, 0.55),
+              0 10px 26px rgba(0, 0, 0, 0.32);
+          }
+          70% {
+            box-shadow:
+              0 0 0 3px #ffffff,
+              0 0 0 18px rgba(0, 166, 118, 0),
+              0 10px 26px rgba(0, 0, 0, 0.32);
+          }
+          100% {
+            box-shadow:
+              0 0 0 3px #ffffff,
+              0 0 0 0 rgba(0, 166, 118, 0),
+              0 10px 26px rgba(0, 0, 0, 0.32);
+          }
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+          .chat-knop-pulse {
+            animation: chat-halo 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          }
+        }
+
+        .chat-knop-pulse:hover {
+          animation: none;
+        }
+      `}</style>
     </>
   )
 }
