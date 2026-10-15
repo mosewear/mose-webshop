@@ -407,7 +407,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       vorigAantal.current = aantal
       setMelding(
         aantal === 0
-          ? t('empty.message')
+          // Eigen zin voor de voorlezer. `empty.message` nodigt uit om iets uit
+          // te kiezen en is daarmee geen melding van wat er zojuist gebeurde.
+          ? t('empty.announce')
           : `${t('items', { count: aantal })}. ${t('subtotal')} ${formatPrice(getTotal(), locale)}`
       )
     }

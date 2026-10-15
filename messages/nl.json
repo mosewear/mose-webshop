@@ -349,9 +349,10 @@
     "close": "Sluit winkelwagen",
     "empty": {
       "title": "Leeg",
-      "message": "Je winkelwagen is leeg",
+      "message": "Zodra je iets uitkiest, staat het hier klaar.",
       "continue": "Verder shoppen",
-      "popular": "Populair bij MOSE"
+      "popular": "Populair bij MOSE",
+      "announce": "Je winkelwagen is leeg"
     },
     "remove": "Verwijder item",
     "size": "Maat",
