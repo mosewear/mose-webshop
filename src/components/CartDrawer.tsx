@@ -19,6 +19,7 @@ import {
 } from '@/lib/cart-staffel-display'
 import { buttonVariants } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { vertaalKleur } from '@/lib/kleurnaam'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -36,37 +37,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const getProductName = (product: any) => 
     locale === 'en' && product.name_en ? product.name_en : product.name
   
-  // Helper function to translate color names
-  const getTranslatedColor = (color: string) => {
-    const colorMap: { [key: string]: { nl: string; en: string } } = {
-      'zwart': { nl: 'Zwart', en: 'Black' },
-      'wit': { nl: 'Wit', en: 'White' },
-      'grijs': { nl: 'Grijs', en: 'Grey' },
-      'blauw': { nl: 'Blauw', en: 'Blue' },
-      'rood': { nl: 'Rood', en: 'Red' },
-      'groen': { nl: 'Groen', en: 'Green' },
-      'geel': { nl: 'Geel', en: 'Yellow' },
-      'bruin': { nl: 'Bruin', en: 'Brown' },
-      'beige': { nl: 'Beige', en: 'Beige' },
-      'roze': { nl: 'Roze', en: 'Pink' },
-      'paars': { nl: 'Paars', en: 'Purple' },
-      'oranje': { nl: 'Oranje', en: 'Orange' },
-    }
-    
-    const colorLower = color.toLowerCase()
-    if (colorMap[colorLower]) {
-      return locale === 'en' ? colorMap[colorLower].en : colorMap[colorLower].nl
-    }
-    
-    // Fallback: capitalize first letter
-    return color.charAt(0).toUpperCase() + color.slice(1).toLowerCase()
-  }
+  // Zie src/lib/kleurnaam.ts. Dezelfde omzettabel stond hier en in de
+  // productpagina, met verschillende uitkomsten, en de terugval maakte van
+  // "Off White" nog eens "Off white".
+  const getTranslatedColor = (color: string) => vertaalKleur(color, locale)
   
   const { items, removeItem, updateQuantity, clearCart, getTotal, getItemCount, addItem } = useCart()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [shippingCost, setShippingCost] = useState(0)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
-  const [returnDays, setReturnDays] = useState(14)
+  // 30, niet 14: dat is wat de winkel belooft. Tot de instellingen
+  // binnen zijn, stond hier een termijn die we niet meer hanteren.
+  const [returnDays, setReturnDays] = useState(30)
   const [promoCodeExpanded, setPromoCodeExpanded] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [promoError, setPromoError] = useState('')

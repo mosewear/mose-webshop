@@ -16,6 +16,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { buttonVariants } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { vertaalKleur } from '@/lib/kleurnaam'
 
 export default function CartPage() {
   const t = useTranslations('cart')
@@ -355,7 +356,7 @@ export default function CartPage() {
                                  telefoon zag je alleen het regeltotaal. Bij twee stuks
                                  was dan niet te zien wat één exemplaar kost. */
                               <p className="mt-1.5 text-sm text-gray-600">
-                                {item.color} · {t('size')} {item.size} · {formatPrice(item.price, locale)}
+                                {vertaalKleur(item.color, locale)} · {t('size')} {item.size} · {formatPrice(item.price, locale)}
                               </p>
                             )}
 

@@ -33,6 +33,7 @@ import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import GiftCardProductView from '@/components/product/GiftCardProductView'
+import { vertaalKleur } from '@/lib/kleurnaam'
 
 const supabase = createClient()
 
@@ -725,31 +726,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     setLoading(false)
   }
 
-  // Helper function to translate color names
-  const getTranslatedColor = (color: string) => {
-    const colorMap: { [key: string]: { nl: string; en: string } } = {
-      'zwart': { nl: 'ZWART', en: 'BLACK' },
-      'wit': { nl: 'WIT', en: 'WHITE' },
-      'grijs': { nl: 'GRIJS', en: 'GREY' },
-      'blauw': { nl: 'BLAUW', en: 'BLUE' },
-      'rood': { nl: 'ROOD', en: 'RED' },
-      'groen': { nl: 'GROEN', en: 'GREEN' },
-      'geel': { nl: 'GEEL', en: 'YELLOW' },
-      'bruin': { nl: 'BRUIN', en: 'BROWN' },
-      'beige': { nl: 'BEIGE', en: 'BEIGE' },
-      'roze': { nl: 'ROZE', en: 'PINK' },
-      'paars': { nl: 'PAARS', en: 'PURPLE' },
-      'oranje': { nl: 'ORANJE', en: 'ORANGE' },
-    }
-    
-    const colorLower = color.toLowerCase()
-    if (colorMap[colorLower]) {
-      return locale === 'en' ? colorMap[colorLower].en : colorMap[colorLower].nl
-    }
-    
-    // Fallback to uppercase if no translation
-    return color.toUpperCase()
-  }
+  /**
+   * De kleur in de taal van de bezoeker, in hoofdletters zoals de koptekst
+   * hem toont. De omzettabel stond hier en nog een keer in de winkelmandla,
+   * met verschillende uitkomsten. Nu staat hij in src/lib/kleurnaam.ts.
+   */
+  const getTranslatedColor = (color: string) => vertaalKleur(color, locale).toUpperCase()
 
   const selectedVariant = product?.product_variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor
