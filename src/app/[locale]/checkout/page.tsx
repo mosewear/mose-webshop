@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 import { UserCircle2, ShoppingBag, Ticket, ChevronDown, ChevronUp, Search, Edit2, Check, CreditCard, Lock, Gift as GiftIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { capitalizeName } from '@/lib/utils'
+import Betaalmethoden from '@/components/Betaalmethoden'
 import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackCheckoutStarted } from '@/lib/analytics'
@@ -166,7 +167,9 @@ export default function CheckoutPage() {
   const [loyaltyTier, setLoyaltyTier] = useState<LoyaltyTier>('bronze')
 
   // Newsletter subscription state
-  const [newsletterOptIn, setNewsletterOptIn] = useState(true)
+  // Standaard UIT. Een vooraf aangevinkt hokje is onder de AVG geen geldige
+  // toestemming: die moet een actieve handeling zijn. Dit stond op true.
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false)
   const [newsletterSubscribing, setNewsletterSubscribing] = useState(false)
 
   // Subscribe to newsletter (async, non-blocking)
@@ -1824,7 +1827,7 @@ export default function CheckoutPage() {
   )
 
   return (
-      <div className="min-h-screen px-4 pb-16 bg-gray-50">
+      <div className="min-h-screen px-4 pt-6 pb-16 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -2383,7 +2386,7 @@ export default function CheckoutPage() {
                               type="button"
                               onClick={handleAddressLookup}
                               disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                              className="w-full px-4 py-3 border-2 border-brand-primary bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover hover:border-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                              className="w-full px-4 py-3 border-2 border-brand-primary bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover hover:border-brand-primary-hover transition-colors disabled:border-gray-300 disabled:bg-white disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                               {addressLookup.isLookingUp ? (
                                 <>
@@ -2488,7 +2491,7 @@ export default function CheckoutPage() {
                             type="button"
                             onClick={handleAddressLookup}
                             disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                            className="w-full px-4 py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full px-4 py-3 border-2 border-brand-primary bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:border-gray-300 disabled:bg-white disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                           >
                             {addressLookup.isLookingUp ? (
                               <>
@@ -2628,9 +2631,24 @@ export default function CheckoutPage() {
                       {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
                     </div>
 
-                    {/* Delivery method */}
+                    {/* Delivery method.
+                        Zolang afhalen niet beschikbaar is, is dit geen keuze.
+                        Een keuzerondje met precies één optie laat het formulier
+                        onaf lijken en vraagt om een handeling die niets doet.
+                        Dan staat er gewoon één regel: hoe het bezorgd wordt.
+                        Zodra het adres binnen de afhaalstraal ligt, verschijnt
+                        de echte keuze alsnog. */}
                     <div className="border-2 border-gray-200 p-4 sm:p-5 space-y-3">
                       <h3 className="text-sm font-bold uppercase tracking-wide">{t('deliveryMethod.title')}</h3>
+                      {!pickupEligibility.eligible && !pickupEligibility.loading ? (
+                        <div className="flex items-start gap-3 border-2 border-gray-200 p-3">
+                          <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-primary" strokeWidth={3} aria-hidden="true" />
+                          <div>
+                            <p className="font-semibold">{t('deliveryMethod.shipping')}</p>
+                            <p className="text-xs text-gray-600">{t('deliveryMethod.shippingDesc')}</p>
+                          </div>
+                        </div>
+                      ) : (
                       <label className={`flex items-start gap-3 border-2 p-3 cursor-pointer transition-colors ${
                         deliveryMethod === 'shipping' ? 'border-brand-primary bg-brand-primary/5' : 'border-gray-200'
                       }`}>
@@ -2646,6 +2664,7 @@ export default function CheckoutPage() {
                           <p className="text-xs text-gray-600">{t('deliveryMethod.shippingDesc')}</p>
                         </div>
                       </label>
+                      )}
 
                       {pickupEligibility.loading && (
                         <div className="text-xs text-gray-500">{t('deliveryMethod.checking')}</div>
@@ -2714,6 +2733,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Submit Button - Mobile */}
+                <Betaalmethoden className="mb-3 justify-center lg:hidden" />
                 <button
                   type="submit"
                   disabled={loading}
@@ -3151,14 +3171,19 @@ export default function CheckoutPage() {
 
               {/* Submit Button - Desktop */}
               {currentStep === 'details' && (
-                <button
-                  type="submit"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="hidden lg:block w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {loading ? t('submitting') : t('submit')}
-                </button>
+                <>
+                  {/* De betaallogo's staan voor de knop, niet erna. Dit is het
+                      moment waarop iemand besluit of hij zijn adres achterlaat. */}
+                  <Betaalmethoden className="hidden justify-center lg:flex" />
+                  <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="hidden lg:block w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {loading ? t('submitting') : t('submit')}
+                  </button>
+                </>
               )}
             </div>
           </div>

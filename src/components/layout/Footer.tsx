@@ -114,7 +114,8 @@ export function Footer() {
             <ul className="space-y-2">
               <li><LocaleLink href="/shop?category=hoodies" className="text-gray-400 hover:text-white transition-colors">{t('shop.hoodies')}</LocaleLink></li>
               <li><LocaleLink href="/shop?category=t-shirts" className="text-gray-400 hover:text-white transition-colors">{t('shop.tshirts')}</LocaleLink></li>
-              <li><LocaleLink href="/shop?category=caps" className="text-gray-400 hover:text-white transition-colors">{t('shop.caps')}</LocaleLink></li>
+              {/* Caps stond hier, maar die categorie heeft geen producten.
+                  Een lege categorie in de voettekst is een doodlopende klik. */}
               <li><LocaleLink href="/shop" className="text-gray-400 hover:text-white transition-colors">{t('shop.all')}</LocaleLink></li>
             </ul>
           </div>

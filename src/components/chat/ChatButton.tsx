@@ -280,7 +280,7 @@ export default function ChatButton() {
             className={`chat-knop group relative flex items-center justify-center rounded-full transition-transform duration-200 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black/70 focus-visible:ring-offset-2 ${
               isOpen
                 ? 'hidden h-14 w-14 bg-black text-brand-primary md:flex'
-                : 'h-16 w-16 bg-brand-primary text-black md:h-[60px] md:w-auto md:gap-3 md:pl-3 md:pr-6'
+                : 'h-[60px] w-[60px] bg-brand-primary text-black md:h-14 md:w-auto md:gap-2.5 md:px-6'
             } ${!isOpen && magPulseren ? 'chat-knop-pulse' : ''}`}
             aria-label={isOpen ? t('close') : t('launcher')}
             aria-expanded={isOpen}
@@ -290,10 +290,12 @@ export default function ChatButton() {
               <X className="h-6 w-6 md:h-7 md:w-7" strokeWidth={3} />
             ) : (
               <>
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-black text-brand-primary md:h-10 md:w-10">
-                  <MessageCircle className="h-6 w-6 md:h-5 md:w-5" strokeWidth={2.4} />
-                </span>
-                <span className="hidden font-display text-base uppercase leading-none tracking-wide text-black md:inline">
+                {/* Eén vorm, één vulling, één icoon. Hier stond een groene
+                    cirkel om een zwarte cirkel om een groen icoon: drie vormen
+                    en twee kleuromslagen op 64 pixels. Dat oogt goedkoop en het
+                    maakt de knop niet beter zichtbaar, alleen drukker. */}
+                <MessageCircle className="h-7 w-7 md:h-6 md:w-6" strokeWidth={2.2} aria-hidden="true" />
+                <span className="hidden font-display text-base uppercase leading-none tracking-wide md:inline">
                   {t('launcher')}
                 </span>
               </>
@@ -311,31 +313,34 @@ export default function ChatButton() {
           de chat nog niet geopend is. De halo loopt via box-shadow en werkt
           daardoor net zo goed om een cirkel als om een pil. */}
       <style jsx global>{`
+        /* Een dunne witte rand voor de momenten dat de knop over een donkere
+           productfoto schuift, en daaronder een diepe zachte schaduw zodat hij
+           boven de pagina zweeft in plaats van erin te liggen. */
         .chat-knop {
           box-shadow:
-            0 0 0 3px #ffffff,
-            0 10px 26px rgba(0, 0, 0, 0.32),
-            0 2px 6px rgba(0, 0, 0, 0.2);
+            0 0 0 2px #ffffff,
+            0 14px 32px rgba(0, 0, 0, 0.26),
+            0 4px 10px rgba(0, 0, 0, 0.14);
         }
 
         @keyframes chat-halo {
           0% {
             box-shadow:
-              0 0 0 3px #ffffff,
-              0 0 0 3px rgba(0, 166, 118, 0.55),
-              0 10px 26px rgba(0, 0, 0, 0.32);
+              0 0 0 2px #ffffff,
+              0 0 0 2px rgba(0, 166, 118, 0.5),
+              0 14px 32px rgba(0, 0, 0, 0.26);
           }
           70% {
             box-shadow:
-              0 0 0 3px #ffffff,
-              0 0 0 18px rgba(0, 166, 118, 0),
-              0 10px 26px rgba(0, 0, 0, 0.32);
+              0 0 0 2px #ffffff,
+              0 0 0 20px rgba(0, 166, 118, 0),
+              0 14px 32px rgba(0, 0, 0, 0.26);
           }
           100% {
             box-shadow:
-              0 0 0 3px #ffffff,
+              0 0 0 2px #ffffff,
               0 0 0 0 rgba(0, 166, 118, 0),
-              0 10px 26px rgba(0, 0, 0, 0.32);
+              0 14px 32px rgba(0, 0, 0, 0.26);
           }
         }
 

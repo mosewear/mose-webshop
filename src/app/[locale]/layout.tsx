@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import MainContentWrapper from '@/components/layout/MainContentWrapper'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
+import { BuitenAfrekenen, AfrekenKop } from '@/components/AfrekenChrome'
 import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 import SurveyPopupWrapper from '@/components/SurveyPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
@@ -127,13 +128,20 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <CampaignThemeProvider color={campaignThemeColor} />
       <CampaignAutoApply />
-      <AnnouncementBanner />
-      <Header />
+      {/* Op het afrekenscherm vervangt een kale kop de volledige navigatie,
+          en blijven de voettekst en de popups weg. Zie AfrekenChrome. */}
+      <BuitenAfrekenen>
+        <AnnouncementBanner />
+        <Header />
+      </BuitenAfrekenen>
+      <AfrekenKop />
       <MainContentWrapper>{children}</MainContentWrapper>
-      <Footer />
-      <CampaignPopupWrapper />
-      <NewsletterPopupWrapper />
-      <SurveyPopupWrapper />
+      <BuitenAfrekenen>
+        <Footer />
+        <CampaignPopupWrapper />
+        <NewsletterPopupWrapper />
+        <SurveyPopupWrapper />
+      </BuitenAfrekenen>
       <CookieConsent />
       <ChatButtonWrapper />
       <PaginaWeergaveMeter />
