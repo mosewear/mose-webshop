@@ -853,7 +853,8 @@
     "inCategory": "in {category}",
     "lastItems": "LAATSTE ITEMS",
     "discount": "KORTING",
-    "outOfStock": "UITVERKOCHT"
+    "outOfStock": "UITVERKOCHT",
+    "colorCount": "{count} kleuren"
   },
   "errors": {
     "required": "Verplicht veld",

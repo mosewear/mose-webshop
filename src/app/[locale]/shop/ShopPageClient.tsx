@@ -94,6 +94,18 @@ export default function ShopPageClient() {
   // Helper to get localized names
   const getProductName = (product: Product) => 
     locale === 'en' && product.name_en ? product.name_en : product.name
+
+  /**
+   * De naam zoals hij op een tegel staat, zonder het merk ervoor.
+   *
+   * Op mosewear.com begint elke productnaam met "MOSE", dus elke tegel in de
+   * grid begon met hetzelfde woord. Dat kost een halve regel op een tegel van
+   * 175 pixels breed en laat vier verschillende producten identiek beginnen.
+   * In de paginatitel, de productpagina en de Google-feed blijft het merk wel
+   * staan; daar staat de naam zonder context.
+   */
+  const getTileName = (product: Product) =>
+    getProductName(product).replace(/^MOSE\s+/i, '')
   const getCategoryName = (category: Category | { name: string; name_en?: string }) => 
     locale === 'en' && category.name_en ? category.name_en : category.name
   
@@ -401,6 +413,22 @@ export default function ShopPageClient() {
     setShowInStockOnly(false)
   }
 
+  /**
+   * Het filterapparaat staat uit zolang de catalogus klein is.
+   *
+   * Nagemeten: vier producten, vier categorieën met elk precies één artikel,
+   * plus een lege categorie. Een filter dat van tien tegels naar één gaat is
+   * geen filter maar een omweg. Op mobiel was het zwarte blok bovendien het
+   * zwaarste vlak op het scherm, in precies de vormtaal van de koopknop, dus
+   * de eerste tik ging naar een lade met filters in plaats van naar een
+   * product. Samen met de resultaatkop kostte dat 153 van de 540 bruikbare
+   * pixels.
+   *
+   * De markup blijft staan. Zet deze constante op true zodra het assortiment
+   * groeit en alles komt terug zoals het was.
+   */
+  const TOON_FILTERS = false
+
   return (
     <div className="bg-white">
       <EditorialPageBanner
@@ -412,11 +440,12 @@ export default function ShopPageClient() {
         imageAlt={t('heroAlt')}
         objectPosition="center 45%"
         objectPositionMobile="center 28%"
+        hoogte="h-40 md:h-72 lg:h-80"
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
         {/* Mobile Filter Button - Inline (bold & brutalist) */}
-        <button
+        {TOON_FILTERS && <button
           onClick={() => setMobileFiltersOpen(true)}
           className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors relative z-20 cursor-pointer"
         >
@@ -427,7 +456,7 @@ export default function ShopPageClient() {
               {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + ((priceRange[0] !== minPrice || priceRange[1] !== maxPrice) ? 1 : 0) + (showInStockOnly ? 1 : 0)}
             </span>
           )}
-        </button>
+        </button>}
 
         {/* Mobile Filter Drawer — rendered via a portal on <body> so it is
             never trapped inside a parent stacking context (the surrounding
@@ -515,6 +544,9 @@ export default function ShopPageClient() {
                     </button>
                     {categories.map(category => {
                       const count = products.filter(p => p.category?.slug === category.slug).length
+                      // Een categorie zonder producten is een doodlopende klik. "CAPS (0)"
+                      // stond hier gewoon tussen de andere knoppen.
+                      if (count === 0) return null
                       return (
                         <button
                           key={category.id}
@@ -653,7 +685,7 @@ export default function ShopPageClient() {
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Sidebar - Filters (hidden on mobile) */}
-          <aside className="hidden lg:block lg:w-64 lg:flex-shrink-0">
+          {TOON_FILTERS && <aside className="hidden lg:block lg:w-64 lg:flex-shrink-0">
             <div className="space-y-6 lg:sticky lg:top-24">
               {/* Search */}
               <div>
@@ -705,6 +737,9 @@ export default function ShopPageClient() {
                   </button>
                   {categories.map(category => {
                     const count = products.filter(p => p.category?.slug === category.slug).length
+                    // Een categorie zonder producten is een doodlopende klik. "CAPS (0)"
+                    // stond hier gewoon tussen de andere knoppen.
+                    if (count === 0) return null
                     return (
                       <button
                         key={category.id}
@@ -829,31 +864,35 @@ export default function ShopPageClient() {
                 </div>
               )}
             </div>
-          </aside>
+          </aside>}
 
           {/* Main Content - Products Grid */}
           {/* Geen <main>: de locale-layout levert er al een. Genest
               main is ongeldige HTML en geeft twee main-landmarks, waardoor
               de skip-link niet bij de productgrid uitkomt. */}
           <section className="flex-1" aria-labelledby="shop-results-heading">
-            {/* Results Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b-2 border-gray-200">
-              <h2 id="shop-results-heading" className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
+            {/* De resultaatkop stond hier. Bij vier tegels telt niemand
+                producten, en hij zei bovendien iets anders dan het filter
+                ernaast: "10 producten gevonden" naast "ALLE PRODUCTEN (4)".
+                Komt terug zodra er gefilterd kan worden. */}
+            {TOON_FILTERS ? (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b-2 border-gray-200">
+                <h2 id="shop-results-heading" className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
+                  {t('results', { count: shopTiles.length })}
+                </h2>
+              </div>
+            ) : (
+              // Onzichtbaar, maar wel aanwezig: de sectie verwijst er met
+              // aria-labelledby naar, en een schermlezer hoort zo nog steeds
+              // hoeveel er staat.
+              <h2 id="shop-results-heading" className="sr-only">
                 {t('results', { count: shopTiles.length })}
-                {selectedCategory !== 'all' && (() => {
-                  const category = categories.find(c => c.slug === selectedCategory)
-                  return category ? (
-                    <span className="text-brand-primary ml-2">
-                      {t('inCategory', { category: getCategoryName(category) })}
-                    </span>
-                  ) : null
-                })()}
               </h2>
-            </div>
+            )}
 
             {/* Loading State */}
             {loading && (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className={`grid grid-cols-2 gap-4 md:gap-6 ${shopTiles.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} className="bg-gray-100 aspect-[3/4] animate-pulse" />
                 ))}
@@ -899,7 +938,7 @@ export default function ShopPageClient() {
             {/* Products Grid */}
             {!loading && shopTiles.length > 0 && (
               <div
-                className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+                className={`grid grid-cols-2 gap-4 md:gap-6 ${shopTiles.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}
                 style={{
                   contain: 'layout style paint',
                   contentVisibility: 'auto'
@@ -1065,7 +1104,7 @@ export default function ShopPageClient() {
                         {/* Product Info - Smaller padding on mobile */}
                         <div className="p-2 md:p-4 flex flex-col flex-grow">
                           <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
-                            {getProductName(product)}
+                            {getTileName(product)}
                           </h3>
 
                           {/* Color row.
@@ -1098,19 +1137,28 @@ export default function ShopPageClient() {
                               )
                               if (uniqueColors.length <= 1) return null
                               return (
+                                /* De blokjes plus het aantal. Met vier tegels
+                                   in de grid zijn de kleuren de enige breedte
+                                   die de winkel nog laat zien, dus die mag je
+                                   niet alleen impliciet tonen. Het aantal
+                                   staat er daarom in letters bij. */
                                 <div className="flex items-center gap-1.5 mb-2">
                                   {uniqueColors.map(c => {
                                     const variant = product.variants?.find(v => v.color === c)
                                     const hex = variant?.color_hex || '#000000'
                                     return (
-                                      <div
+                                      <span
                                         key={c}
+                                        aria-hidden="true"
                                         className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
                                         style={{ backgroundColor: hex }}
-                                        title={c}
+                                        title={formatColorLabel(c, locale)}
                                       />
                                     )
                                   })}
+                                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-700">
+                                    {t('colorCount', { count: uniqueColors.length })}
+                                  </span>
                                 </div>
                               )
                             })()
@@ -1123,7 +1171,7 @@ export default function ShopPageClient() {
                               if (hasDiscount && product.sale_price) {
                                 return (
                                   <div className="flex flex-col gap-1">
-                                    <span className="text-base md:text-2xl font-bold text-brand-primary">
+                                    <span className="text-lg md:text-2xl font-bold text-brand-primary-hover">
                                       {formatPrice(product.sale_price, locale)}
                                     </span>
                                     <span className="text-xs md:text-sm text-gray-500 line-through">
@@ -1134,7 +1182,13 @@ export default function ShopPageClient() {
                               }
 
                               return (
-                                <span className="text-base md:text-2xl font-bold text-brand-primary">
+                                /* Zwart, niet merkgroen. Groen op wit haalt bij
+                                   16px vet een contrast van 3,13 terwijl 4,5
+                                   nodig is, en de prijs is na het beeld het
+                                   eerste waar iemand naar kijkt. Groen blijft
+                                   voor een afgeprijsde regel, waar het iets
+                                   betekent. */
+                                <span className="text-lg md:text-2xl font-bold text-black">
                                   {formatPrice(product.base_price, locale)}
                                 </span>
                               )

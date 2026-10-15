@@ -853,7 +853,8 @@
     "inCategory": "in {category}",
     "lastItems": "LAST ITEMS",
     "discount": "OFF",
-    "outOfStock": "OUT OF STOCK"
+    "outOfStock": "OUT OF STOCK",
+    "colorCount": "{count} colours"
   },
   "errors": {
     "required": "Required field",

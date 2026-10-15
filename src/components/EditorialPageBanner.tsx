@@ -15,6 +15,14 @@ export type EditorialPageBannerProps = {
   objectPosition?: string
   objectPositionMobile?: string
   priority?: boolean
+  /**
+   * Hoogteklassen van de band. Standaard de ruime variant, zodat de blogpagina
+   * blijft zoals hij was. De shoppagina geeft een compacte waarde mee: daar
+   * stond de sfeerfoto 290px hoog op een scherm van 664, en samen met de balken
+   * eromheen begon het eerste product pas op 611px. Dus geen enkel product in
+   * beeld op de pagina die juist producten moet laten zien.
+   */
+  hoogte?: string
 }
 
 export default function EditorialPageBanner({
@@ -27,12 +35,14 @@ export default function EditorialPageBanner({
   objectPosition = 'center 42%',
   objectPositionMobile,
   priority = true,
+
+  hoogte = 'h-72 md:h-[24rem] lg:h-[28rem]',
 }: EditorialPageBannerProps) {
   const mobileSrc = imageSrcMobile || imageSrc
   const mobilePosition = objectPositionMobile || objectPosition
 
   return (
-    <section className="relative h-72 md:h-[24rem] lg:h-[28rem] overflow-hidden border-b-4 border-brand-primary bg-neutral-900">
+    <section className={`relative ${hoogte} overflow-hidden border-b-4 border-brand-primary bg-neutral-900`}>
       <Image
         src={imageSrc}
         alt={imageAlt}
@@ -58,8 +68,11 @@ export default function EditorialPageBanner({
         className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black/55 via-black/20 to-transparent"
       />
 
-      <div className="relative h-full flex items-end">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pb-8 md:pb-12 animate-fadeInUp">
+      {/* De onderrand schaalt mee met de bandhoogte. Met een vaste pb-8 liep
+          de titel bij een compacte band (128px op de shop) aan de bovenkant
+          het beeld uit: van "SHOP" zag je alleen de onderste helft. */}
+      <div className="relative h-full flex items-end overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pb-4 md:pb-10 lg:pb-12 animate-fadeInUp">
           {/* Local scrim so type reads without muddying the whole banner */}
           <div className="relative max-w-xl md:max-w-2xl">
             <div

@@ -27,6 +27,7 @@ function countryFromRequest(request: NextRequest): string | null {
 // either a bug or someone poking the endpoint and gets rejected before it
 // pollutes the Live Event Feed.
 const ALLOWED_EVENTS = new Set<string>([
+  'page_view',
   'product_view',
   'add_to_cart',
   'checkout_started',

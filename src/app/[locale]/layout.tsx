@@ -12,6 +12,7 @@ import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 import SurveyPopupWrapper from '@/components/SurveyPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
 import ChatButtonWrapper from '@/components/ChatButtonWrapper'
+import PaginaWeergaveMeter from '@/components/PaginaWeergaveMeter'
 import CampaignPopupWrapper from '@/components/campaign/CampaignPopupWrapper'
 import CampaignAutoApply from '@/components/campaign/CampaignAutoApply'
 import CampaignThemeProvider from '@/components/campaign/CampaignThemeProvider'
@@ -135,6 +136,7 @@ export default async function LocaleLayout({
       <SurveyPopupWrapper />
       <CookieConsent />
       <ChatButtonWrapper />
+      <PaginaWeergaveMeter />
     </NextIntlClientProvider>
   )
 }
