@@ -54,7 +54,7 @@ export function AfrekenKop() {
           className="flex min-h-[44px] items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-black/70 transition-colors hover:text-black"
         >
           <ChevronLeft className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
-          <span className="hidden sm:inline">{tc('cart')}</span>
+          <span className="sr-only sm:not-sr-only">{tc('cart')}</span>
         </Link>
 
         <Link href="/cart" aria-label="MOSE" className="flex items-center">
@@ -63,7 +63,7 @@ export function AfrekenKop() {
 
         <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-black/70">
           <Lock className="h-4 w-4 text-brand-primary" strokeWidth={2.5} aria-hidden="true" />
-          <span className="hidden sm:inline">{t('section.secure')}</span>
+          <span className="sr-only sm:not-sr-only">{t('section.secure')}</span>
         </span>
       </div>
     </header>
