@@ -10,7 +10,7 @@ import {
   computeCartStaffelBreakdown,
   type StaffelHint,
 } from '@/lib/cart-staffel-display'
-import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw, ArrowLeft } from 'lucide-react'
+import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw, ArrowLeft, ShoppingBag } from 'lucide-react'
 import Betaalmethoden from '@/components/Betaalmethoden'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -102,35 +102,40 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen px-4 pb-16">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-16 md:py-24">
-            <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-8 border-4 border-gray-300 flex items-center justify-center">
-              <svg
-                className="w-16 h-16 md:w-20 md:h-20 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                />
-              </svg>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-display mb-4 uppercase">{t('empty.title')}</h1>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-              {t('empty.message')}
-            </p>
-            <LocaleLink
-              href="/shop"
-              className={buttonVariants({ variant: 'primary', size: 'lg' })}
-            >
+      <div className="min-h-screen px-4 pb-20">
+        <div className="mx-auto max-w-xl py-16 text-center md:py-24">
+          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center border-2 border-gray-300 md:h-24 md:w-24">
+            <ShoppingBag className="h-10 w-10 text-gray-300 md:h-12 md:w-12" strokeWidth={1.5} aria-hidden="true" />
+          </div>
+          <h1 className="mb-3 font-display text-4xl uppercase md:text-5xl">{t('empty.title')}</h1>
+          <p className="mx-auto mb-8 max-w-sm text-gray-600">{t('empty.message')}</p>
+
+          {/* Twee uitgangen in plaats van een. Wie hier belandt is niet altijd
+              op zoek naar de hele collectie; een deel van het verkeer komt
+              vanuit de lookbook binnen. */}
+          <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row">
+            <LocaleLink href="/shop" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
               {t('empty.continue')}
             </LocaleLink>
+            <LocaleLink href="/lookbook" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+              Lookbook
+            </LocaleLink>
           </div>
+
+          <ul className="mx-auto mt-12 max-w-xs space-y-2.5 border-t border-gray-200 pt-8 text-left text-sm text-gray-600">
+            <li className="flex items-center gap-2.5">
+              <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
+              <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <Lock size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
+              <span>{t('trust.secure')}</span>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <RotateCcw size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
+              <span>{t('trust.returns', { days: returnDays })}</span>
+            </li>
+          </ul>
         </div>
       </div>
     )
@@ -256,13 +261,13 @@ export default function CartPage() {
        beeld stond. Zes rem dekt de balk van ongeveer 72px met marge; meer
        levert een zichtbaar gat boven de voettekst op. */
     <div className="min-h-screen pb-[calc(6rem+var(--cookie-consent-height,0px))] md:pb-20">
-      <div className="mx-auto max-w-6xl px-4 pt-8 md:pt-12">
+      <div className="mx-auto max-w-6xl px-4 pt-5 md:pt-12">
 
         {/* Kop */}
-        <div className="mb-8 md:mb-12">
+        <div className="mb-6 md:mb-12">
           <LocaleLink
             href="/shop"
-            className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-gray-600 transition-colors hover:text-black"
+            className="mb-2 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-gray-600 transition-colors hover:text-black"
           >
             <ArrowLeft size={16} strokeWidth={2.5} aria-hidden="true" />
             {t('empty.continue')}
