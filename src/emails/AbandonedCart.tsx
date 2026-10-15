@@ -137,8 +137,18 @@ function Vertrouwensrij({
   )
 }
 
-function formatPrice(amount: number) {
-  return `€${amount.toFixed(2).replace('.', ',')}`
+/**
+ * Zelfde schrijfwijze als in de winkel.
+ *
+ * De winkel schrijft ronde bedragen zonder decimalen (€145) en de rest met
+ * (€81,95). Deze mail deed er altijd twee nullen achter, dus wie in het
+ * afrekenscherm €145 zag staan kreeg een herinnering over €145,00. Klein
+ * verschil, maar het is precies het bedrag waar iemand op let.
+ */
+function maakPrijs(amount: number, locale: string) {
+  if (amount % 1 === 0) return `€${Math.round(amount)}`
+  const vast = amount.toFixed(2)
+  return locale === 'en' ? `€${vast}` : `€${vast.replace('.', ',')}`
 }
 
 /**
@@ -174,6 +184,8 @@ export default function AbandonedCartEmail({
   returnDays = 30,
   unsubscribeUrl,
 }: AbandonedCartEmailProps) {
+  const formatPrice = (bedrag: number) => maakPrijs(bedrag, locale)
+
   const visibleItems = items.slice(0, 3)
   const hiddenCount = items.length > 3 ? items.length - 3 : 0
   const aantalStuks = items.reduce((som, item) => som + (item.quantity || 1), 0)
