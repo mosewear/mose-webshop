@@ -75,9 +75,16 @@ export default function ChatButton() {
     for (const el of balken) {
       const r = el.getBoundingClientRect()
       if (r.height === 0) continue
-      // Plakt hij tegen de onderrand, en staat hij ook echt in beeld? Een balk
-      // die met translate-y-full is weggeschoven heeft een top ONDER de vouw.
-      if (r.bottom < window.innerHeight - 8) continue
+      // Staat hij onderin beeld? Een balk die met translate-y-full is
+      // weggeschoven heeft een top ONDER de vouw en telt niet mee.
+      //
+      // De marge van 240px is nodig omdat elke vaste balk op
+      // `bottom: var(--cookie-consent-height)` staat. Zolang de cookiebalk in
+      // beeld is, raakt de koopbalk de onderrand dus niet, en met de oude
+      // controle (`bottom < innerHeight - 8`) viel hij volledig buiten de
+      // meting. De chatknop ging dan alleen boven de cookiebalk staan en lag
+      // precies over de afrekenknop heen.
+      if (window.innerHeight - r.bottom > 240) continue
       if (r.top >= window.innerHeight - 8) continue
       hoogste = Math.max(hoogste, window.innerHeight - r.top)
     }
@@ -213,7 +220,10 @@ export default function ChatButton() {
   }
 
   // Anderhalve rem lucht, plus de cookiebalk, plus de koopbalk als die er staat.
-  const onderMarge = `calc(1.5rem + var(--cookie-consent-height, 0px) + ${onderbalk}px)`
+  // `onderbalk` is gemeten vanaf de onderrand van het venster en bevat de
+  // cookiebalk dus al zodra er een koopbalk staat. Optellen zou die hoogte twee
+  // keer meenemen; daarom het grootste van de twee.
+  const onderMarge = `calc(1.5rem + max(var(--cookie-consent-height, 0px), ${onderbalk}px))`
 
   return (
     <>

@@ -10,7 +10,8 @@ import {
   computeCartStaffelBreakdown,
   type StaffelHint,
 } from '@/lib/cart-staffel-display'
-import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw } from 'lucide-react'
+import { Trash2, X, Minus, Plus, Truck, Lock, RotateCcw, ArrowLeft } from 'lucide-react'
+import Betaalmethoden from '@/components/Betaalmethoden'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { buttonVariants } from '@/components/ui/Button'
@@ -25,7 +26,6 @@ export default function CartPage() {
   const [shippingCost, setShippingCost] = useState(0)
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(100)
   const [returnDays, setReturnDays] = useState(30)
-  const [showMobileSummary, setShowMobileSummary] = useState(false)
   const [staffelSavings, setStaffelSavings] = useState(0)
   const [lineStaffelByVariant, setLineStaffelByVariant] = useState<Record<string, number>>({})
   const [staffelHints, setStaffelHints] = useState<StaffelHint[]>([])
@@ -34,12 +34,11 @@ export default function CartPage() {
   const subtotalAfterStaffel = subtotal - staffelSavings
   const shipping = subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
   
+  // De BTW zit in de prijzen, dus hier wordt hij eruit gerekend en niet
+  // opgeteld. Hij stond als losse regel tussen subtotaal en verzending, waar
+  // hij las alsof hij er nog bovenop kwam. Nu staat hij onder het totaal.
   const vatRate = 0.21
-  const subtotalExclBtw = subtotalAfterStaffel / (1 + vatRate)
-  const btwAmount = subtotalAfterStaffel - subtotalExclBtw
-  const shippingExclBtw = shipping / (1 + vatRate)
-  const shippingBtw = shipping - shippingExclBtw
-  const totalBtw = btwAmount + shippingBtw
+  const totalBtw = (subtotalAfterStaffel + shipping) * (vatRate / (1 + vatRate))
   
   const total = subtotalAfterStaffel + shipping
 
@@ -137,386 +136,373 @@ export default function CartPage() {
     )
   }
 
-  return (
-    <div className="min-h-screen px-4 pb-32 md:pb-16">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-12 md:mb-16">
-          <div>
-            <h1 className="text-5xl md:text-7xl font-display uppercase mb-2">{t('title')}</h1>
-            <p className="text-gray-600 text-lg uppercase tracking-wider">
-              {t('items', { count: getItemCount() })}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors group mt-2"
-            aria-label={t('remove')}
-          >
-            <Trash2 size={20} className="group-hover:scale-110 transition-transform" />
-            <span className="hidden md:inline text-sm uppercase tracking-wider font-semibold">{t('remove')}</span>
-          </button>
+  /**
+   * Hoeveel er nog van deze regel bij kan. `null` is onbeperkt (cadeaubonnen
+   * hebben geen voorraad). Zonder deze grens kon je hier met de plusknop tien
+   * stuks van een laatste exemplaar bestellen; in de la zat die grens wel.
+   */
+  const maxAantal = (item: { stock: number; isPresale?: boolean; presaleStock?: number; isGiftCard?: boolean }) => {
+    if (item.isGiftCard) return null
+    const max = item.isPresale ? (item.presaleStock ?? 0) : item.stock
+    return Number.isFinite(max) && max > 0 ? max : null
+  }
+
+  const tekortVoorGratis = Math.max(0, freeShippingThreshold - subtotalAfterStaffel)
+  const voortgang = freeShippingThreshold > 0
+    ? Math.min(100, Math.round((subtotalAfterStaffel / freeShippingThreshold) * 100))
+    : 100
+
+  /**
+   * De prijsopbouw, één keer geschreven en op beide kolombreedtes gebruikt.
+   *
+   * Hiervoor stond deze lijst drie keer in het bestand: een desktopversie, een
+   * versie in het mobiele uitschuifpaneel, en losse regels in de vaste balk.
+   * Drie plekken die uit elkaar liepen; de BTW stond in de ene als losse regel
+   * tussen subtotaal en verzending, alsof hij er nog bij kwam.
+   */
+  const Prijsopbouw = () => (
+    <div className="space-y-3">
+      <div className="flex justify-between text-base">
+        <span className="uppercase tracking-wider text-gray-600">{t('subtotal')}</span>
+        <span className="font-semibold tabular-nums">{formatPrice(subtotal, locale)}</span>
+      </div>
+
+      {staffelSavings > 0 && (
+        <div className="flex justify-between text-base">
+          <span className="uppercase tracking-wider text-gray-600">{t('staffel.label')}</span>
+          <span className="font-semibold tabular-nums text-brand-primary">
+            −{formatPrice(staffelSavings, locale)}
+          </span>
         </div>
+      )}
 
-        {/* Cart Items */}
-        <div className="space-y-0">
-          {items.map((item, index) => (
-            <div key={item.variantId}>
-              {/* Divider */}
-              {index > 0 && <div className="border-t-2 border-gray-300" />}
-              
-              {/* Item Row */}
-              <div className="py-8 md:py-10 group hover:bg-gray-50 transition-colors">
-                <div className="flex gap-4 md:gap-8">
-                  {/* Product Image */}
-                  <LocaleLink
-                    href={`/product/${item.slug || item.productId}`}
-                    className="relative w-24 h-32 md:w-36 md:h-48 bg-gray-100 flex-shrink-0 overflow-hidden"
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      sizes="(max-width: 768px) 96px, 144px"
-                      className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </LocaleLink>
-
-                  {/* Product Info */}
-                  <div className="flex-1 flex flex-col justify-between min-w-0">
-                    {/* Top Section */}
-                    <div>
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <LocaleLink
-                          href={`/product/${item.slug || item.productId}`}
-                          className="font-display text-xl md:text-3xl uppercase hover:text-brand-primary transition-colors leading-tight"
-                        >
-                          {item.name}
-                        </LocaleLink>
-                        <button
-                          onClick={() => removeItem(item.variantId)}
-                          className="flex-shrink-0 w-8 h-8 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                          aria-label={t('remove')}
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                      {item.isGiftCard ? (
-                        <div className="text-gray-600 text-sm md:text-base space-y-0.5">
-                          <div>
-                            <span className="uppercase tracking-[0.15em] text-[11px] text-gray-500 mr-1.5">
-                              {t('giftCard.value', { defaultValue: 'Waarde' })}
-                            </span>
-                            <span className="font-medium">{formatPrice(Number(item.giftCardAmount ?? item.price), locale)}</span>
-                          </div>
-                          {item.giftCardRecipient?.recipientName ? (
-                            <div className="text-xs md:text-sm text-gray-600">
-                              {t('giftCard.for', { defaultValue: 'Voor' })}{' '}
-                              <span className="font-medium">{item.giftCardRecipient.recipientName}</span>
-                              {item.giftCardRecipient.recipientEmail ? ` · ${item.giftCardRecipient.recipientEmail}` : ''}
-                            </div>
-                          ) : (
-                            <div className="text-xs md:text-sm text-gray-500">
-                              {t('giftCard.selfDelivery', { defaultValue: 'Code wordt naar jou verstuurd' })}
-                            </div>
-                          )}
-                          {item.giftCardRecipient?.scheduledSendAt ? (
-                            <div className="text-xs text-gray-500">
-                              {t('giftCard.scheduled', { defaultValue: 'Verzending op' })}{' '}
-                              {new Date(item.giftCardRecipient.scheduledSendAt).toLocaleString(undefined, {
-                                dateStyle: 'medium',
-                                timeStyle: 'short',
-                              })}
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className="text-gray-600 text-sm md:text-base space-x-2">
-                          <span>{item.color}</span>
-                          <span>•</span>
-                          <span>{t('size')} {item.size}</span>
-                          <span className="hidden md:inline">•</span>
-                          <span className="hidden md:inline">{formatPrice(item.price, locale)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Section - Quantity & Price */}
-                    <div className="flex items-center justify-between mt-4 md:mt-0">
-                      {/* Quantity Controls */}
-                      <div className="flex items-center border border-black">
-                        <button
-                          onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
-                          className="w-11 h-11 md:w-12 md:h-12 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                          aria-label={t('decrease')}
-                        >
-                          <Minus size={18} />
-                        </button>
-                        <span className="w-11 md:w-12 text-center font-bold text-lg">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                          className="w-11 h-11 md:w-12 md:h-12 flex items-center justify-center hover:bg-black hover:text-white transition-colors"
-                          aria-label={t('increase')}
-                        >
-                          <Plus size={18} />
-                        </button>
-                      </div>
-
-                      {/* Price */}
-                      <div className="text-right">
-                        <div className="font-bold text-xl md:text-2xl">{formatPrice((item.price * item.quantity), locale)}</div>
-                        {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
-                          <p className="text-xs text-gray-600 mt-1 max-w-[220px] ml-auto leading-snug">
-                            {t('staffel.lineSaving', {
-                              amount: formatAmount(lineStaffelByVariant[item.variantId], locale),
-                            })}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {staffelHints.length > 0 && (
+        <div className="space-y-1 border-l-2 border-gray-300 pl-3 py-1 text-sm text-gray-600">
+          {staffelHints.map((h, i) => (
+            <p key={`${h.productId}-${i}`} className="leading-snug">
+              {t('staffel.nextTier', {
+                product: h.productName,
+                needed: h.needed,
+                discount: h.discountLabel,
+              })}
+            </p>
           ))}
         </div>
+      )}
 
-        {/* Bottom Divider */}
-        <div className="border-t-2 border-black mt-0" />
+      <div className="flex justify-between text-base">
+        <span className="uppercase tracking-wider text-gray-600">{t('shipping')}</span>
+        <span className="font-semibold tabular-nums">
+          {shipping === 0 ? (
+            <span className="text-brand-primary">{t('shippingFree')}</span>
+          ) : (
+            formatPrice(shipping, locale)
+          )}
+        </span>
+      </div>
+    </div>
+  )
 
-        {/* Summary Section - Desktop */}
-        <div className="hidden md:block bg-gray-50 px-8 md:px-12 py-8 md:py-10 mt-0">
-          <div className="max-w-2xl ml-auto space-y-6">
-            {/* Price Breakdown */}
-            <div className="space-y-3 text-lg">
-              <div className="flex justify-between">
-                <span className="text-gray-600 uppercase tracking-wider">{t('subtotal')}</span>
-                <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
+  /**
+   * De voortgang naar gratis verzending, als balk in plaats van als zin.
+   *
+   * "Nog €25 tot gratis verzending" was alleen tekst. Een balk laat in één
+   * oogopslag zien hoe dichtbij je bent, en dat is precies het moment waarop
+   * iemand besluit er nog iets bij te leggen.
+   */
+  const Verzendbalk = () => (
+    <div className="border border-gray-200 bg-white px-4 py-3">
+      <p className="text-sm text-gray-700">
+        {tekortVoorGratis > 0
+          ? t('freeShippingProgress', { amount: formatAmount(tekortVoorGratis, locale) })
+          : t('freeShippingReached')}
+      </p>
+      <div
+        className="mt-2 h-1.5 w-full bg-gray-200"
+        role="progressbar"
+        aria-valuenow={voortgang}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={t('freeShippingProgress', { amount: formatAmount(tekortVoorGratis, locale) })}
+      >
+        <div
+          className="h-full bg-brand-primary transition-[width] duration-500"
+          style={{ width: `${voortgang}%` }}
+        />
+      </div>
+    </div>
+  )
+
+  const Vertrouwen = () => (
+    <ul className="space-y-2.5 text-sm text-gray-600">
+      <li className="flex items-center gap-2.5">
+        <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
+        <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
+      </li>
+      <li className="flex items-center gap-2.5">
+        <Lock size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
+        <span>{t('trust.secure')}</span>
+      </li>
+      <li className="flex items-center gap-2.5">
+        <RotateCcw size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
+        <span>{t('trust.returns', { days: returnDays })}</span>
+      </li>
+    </ul>
+  )
+
+  return (
+    /* De onderruimte op mobiel moet de vaste balk én de cookiebalk vrijhouden.
+       Met pb-32 verdween het laatste artikel eronder zodra de cookiebalk in
+       beeld stond. */
+    <div className="min-h-screen pb-[calc(10rem+var(--cookie-consent-height,0px))] md:pb-20">
+      <div className="mx-auto max-w-6xl px-4 pt-8 md:pt-12">
+
+        {/* Kop */}
+        <div className="mb-8 md:mb-12">
+          <LocaleLink
+            href="/shop"
+            className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-gray-600 transition-colors hover:text-black"
+          >
+            <ArrowLeft size={16} strokeWidth={2.5} aria-hidden="true" />
+            {t('empty.continue')}
+          </LocaleLink>
+          <h1 className="font-display text-4xl uppercase leading-none md:text-6xl">{t('title')}</h1>
+          <p className="mt-2 text-sm uppercase tracking-wider text-gray-600">
+            {t('items', { count: getItemCount() })}
+          </p>
+        </div>
+
+        {/* Twee kolommen op desktop: artikelen links, samenvatting rechts en
+            meelopend. Hiervoor stond de samenvatting ónder de volledige lijst,
+            waardoor je op een breed scherm langs alles moest scrollen om bij de
+            afrekenknop te komen, met een half lege grijze band ernaast. */}
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_368px] lg:gap-14 lg:items-start">
+
+          {/* Artikelen */}
+          <section aria-label={t('title')}>
+            <ul className="border-t-2 border-black">
+              {items.map((item) => {
+                const max = maxAantal(item)
+                const opMaximum = max !== null && item.quantity >= max
+                const bijnaOp = max !== null && max <= 3
+                return (
+                  <li key={item.variantId} className="border-b border-gray-200 py-5 md:py-6">
+                    <div className="flex gap-4 md:gap-6">
+                      <LocaleLink
+                        href={`/product/${item.slug || item.productId}`}
+                        className="relative h-[128px] w-[96px] flex-shrink-0 overflow-hidden bg-gray-100 md:h-[160px] md:w-[120px]"
+                      >
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 768px) 96px, 120px"
+                          className="object-cover object-center"
+                        />
+                      </LocaleLink>
+
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <LocaleLink
+                              href={`/product/${item.slug || item.productId}`}
+                              className="font-display text-lg uppercase leading-tight transition-colors hover:text-brand-primary md:text-2xl"
+                            >
+                              {item.name}
+                            </LocaleLink>
+
+                            {item.isGiftCard ? (
+                              <div className="mt-1.5 space-y-0.5 text-sm text-gray-600">
+                                <div>
+                                  <span className="mr-1.5 text-[11px] uppercase tracking-[0.15em] text-gray-500">
+                                    {t('giftCard.value')}
+                                  </span>
+                                  <span className="font-medium">
+                                    {formatPrice(Number(item.giftCardAmount ?? item.price), locale)}
+                                  </span>
+                                </div>
+                                {item.giftCardRecipient?.recipientName ? (
+                                  <div className="text-xs text-gray-600 md:text-sm">
+                                    {t('giftCard.for')}{' '}
+                                    <span className="font-medium">{item.giftCardRecipient.recipientName}</span>
+                                    {item.giftCardRecipient.recipientEmail
+                                      ? ` · ${item.giftCardRecipient.recipientEmail}`
+                                      : ''}
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-gray-500 md:text-sm">
+                                    {t('giftCard.selfDelivery')}
+                                  </div>
+                                )}
+                                {item.giftCardRecipient?.scheduledSendAt ? (
+                                  <div className="text-xs text-gray-500">
+                                    {t('giftCard.scheduled')}{' '}
+                                    {new Date(item.giftCardRecipient.scheduledSendAt).toLocaleString(undefined, {
+                                      dateStyle: 'medium',
+                                      timeStyle: 'short',
+                                    })}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              /* De stukprijs stond hier met `hidden md:inline`, dus op
+                                 telefoon zag je alleen het regeltotaal. Bij twee stuks
+                                 was dan niet te zien wat één exemplaar kost. */
+                              <p className="mt-1.5 text-sm text-gray-600">
+                                {item.color} · {t('size')} {item.size} · {formatPrice(item.price, locale)}
+                              </p>
+                            )}
+
+                            {bijnaOp && (
+                              <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-brand-primary">
+                                {max === 1 ? t('lastOne') : t('onlyLeft', { count: max })}
+                              </p>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => removeItem(item.variantId)}
+                            className="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-500 transition-colors hover:bg-black hover:text-white"
+                            aria-label={`${t('remove')}: ${item.name}`}
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
+
+                        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                          <div>
+                            <div className="flex w-max items-center border border-black">
+                              <button
+                                onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
+                                disabled={item.quantity <= 1}
+                                className="flex h-11 w-11 items-center justify-center transition-colors hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-black"
+                                aria-label={t('decrease')}
+                              >
+                                <Minus size={16} />
+                              </button>
+                              <span className="w-10 text-center font-bold tabular-nums">{item.quantity}</span>
+                              <button
+                                onClick={() =>
+                                  updateQuantity(
+                                    item.variantId,
+                                    max === null ? item.quantity + 1 : Math.min(max, item.quantity + 1)
+                                  )
+                                }
+                                disabled={opMaximum}
+                                className="flex h-11 w-11 items-center justify-center transition-colors hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-black"
+                                aria-label={t('increase')}
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                            {opMaximum && (
+                              <p className="mt-1.5 text-xs text-gray-500">{t('maxReached')}</p>
+                            )}
+                          </div>
+
+                          <div className="text-right">
+                            <div className="font-display text-xl tabular-nums md:text-2xl">
+                              {formatPrice(item.price * item.quantity, locale)}
+                            </div>
+                            {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
+                              <p className="ml-auto mt-1 max-w-[200px] text-xs leading-snug text-gray-600">
+                                {t('staffel.lineSaving', {
+                                  amount: formatAmount(lineStaffelByVariant[item.variantId], locale),
+                                })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+
+            {/* Legen staat onderaan en rustig. Hij stond rechtsboven naast de
+                titel, met een prullenbak ernaast: de meest opvallende knop van
+                de pagina was de enige die je mand weggooit. */}
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="mt-5 inline-flex min-h-[44px] items-center gap-2 text-sm text-gray-500 underline-offset-4 transition-colors hover:text-black hover:underline"
+            >
+              <Trash2 size={15} aria-hidden="true" />
+              {t('clearCart')}
+            </button>
+          </section>
+
+          {/* Samenvatting */}
+          <aside
+            aria-label={t('total')}
+            className="lg:sticky lg:top-[calc(var(--header-total-height,90px)+1.5rem)]"
+          >
+            <div className="border-2 border-black bg-gray-50 p-6">
+              <Prijsopbouw />
+
+              <div className="mt-5">
+                <Verzendbalk />
               </div>
-              {staffelSavings > 0 && (
-                <div className="flex justify-between text-base">
-                  <span className="text-gray-600 uppercase tracking-wider">{t('staffel.label')}</span>
-                  <span className="font-semibold">−{formatPrice(staffelSavings, locale)}</span>
+
+              <div className="mt-5 border-t-2 border-black pt-5">
+                <div className="flex items-baseline justify-between">
+                  <span className="font-display text-xl uppercase">{t('total')}</span>
+                  <span className="font-display text-3xl tabular-nums">{formatPrice(total, locale)}</span>
                 </div>
-              )}
-              {staffelHints.length > 0 && (
-                <div className="text-sm text-gray-600 space-y-1 border-l-2 border-gray-300 pl-3 py-1">
-                  {staffelHints.map((h, i) => (
-                    <p key={`${h.productId}-d-${i}`} className="leading-snug">
-                      {t('staffel.nextTier', {
-                        product: h.productName,
-                        needed: h.needed,
-                        discount: h.discountLabel,
-                      })}
-                    </p>
-                  ))}
-                </div>
-              )}
-              <div className="flex justify-between text-base">
-                <span className="text-gray-500 uppercase tracking-wider">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
-                <span className="text-gray-500">{formatPrice(btwAmount, locale)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 uppercase tracking-wider">{t('shipping')}</span>
-                <span className="font-semibold">
-                  {shipping === 0 ? (
-                    <span className="text-brand-primary">{t('shippingFree')}</span>
-                  ) : (
-                    formatPrice(shipping, locale)
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {/* Progress to Free Shipping */}
-            {subtotalAfterStaffel < freeShippingThreshold && (
-              <div className="bg-white border-l-4 border-brand-primary px-4 py-3">
-                <p className="text-sm text-gray-600">
-                  {t('freeShippingProgress', {
-                    amount: formatAmount(freeShippingThreshold - subtotalAfterStaffel, locale),
-                  })}
+                <p className="mt-1 text-right text-xs uppercase tracking-wider text-gray-500">
+                  {t('totalInclusive')} · {locale === 'en' ? 'VAT' : 'BTW'}{' '}
+                  {formatPrice(totalBtw, locale)}
                 </p>
               </div>
-            )}
 
-            {/* Divider */}
-            <div className="border-t-2 border-black" />
-
-            {/* Total */}
-            <div className="flex justify-between items-baseline">
-              <span className="font-display text-2xl uppercase">{t('total')}</span>
-              <span className="font-display text-4xl">{formatPrice(total, locale)}</span>
-            </div>
-            <p className="text-sm text-gray-500 text-right uppercase tracking-wider">
-              {t('totalInclusive')}
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex gap-4 pt-4">
               <LocaleLink
                 href="/checkout"
-                className={cn(buttonVariants({ variant: 'primary', size: 'lg' }), 'flex-1')}
+                className={cn(buttonVariants({ variant: 'primary', size: 'lg', fullWidth: true }), 'mt-5')}
               >
                 {t('checkout')}
               </LocaleLink>
-              <LocaleLink
-                href="/shop"
-                className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'flex-1')}
-              >
-                {t('empty.continue')}
-              </LocaleLink>
-            </div>
 
-            {/* Trust Badges */}
-            <div className="pt-6 space-y-3 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Truck size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Lock size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">{t('trust.secure')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <RotateCcw size={18} className="flex-shrink-0" />
-                <span className="uppercase tracking-wider">{t('trust.returns', { days: returnDays })}</span>
+              <Betaalmethoden className="mt-4 justify-center" />
+
+              <div className="mt-5 border-t border-gray-200 pt-5">
+                <Vertrouwen />
               </div>
             </div>
-          </div>
+          </aside>
         </div>
-
-        {/* Fixed Bottom Bar - Mobile
-            De balk was eerder één <button> die de samenvatting opende, met de
-            witte "afrekenen"-pil als <div> daarbinnen. Tappen op de visueel
-            primaire actie deed dus iets anders dan hij beloofde. Nu zijn het
-            twee losse controls: links het totaal dat de samenvatting opent,
-            rechts een echte link naar /checkout. */}
-        <div data-onderbalk className="md:hidden fixed bottom-[var(--cookie-consent-height)] left-0 right-0 bg-black text-white z-40 pb-[env(safe-area-inset-bottom)] flex items-stretch">
-          <button
-            onClick={() => setShowMobileSummary(true)}
-            aria-expanded={showMobileSummary}
-            className="flex-1 min-h-[44px] pl-4 pr-2 py-4 text-left"
-          >
-            <div className="font-display text-2xl">{formatPrice(total, locale)}</div>
-            <div className="text-xs text-gray-300 uppercase tracking-wider">{t('mobile.tapDetails')}</div>
-          </button>
-          <LocaleLink
-            href="/checkout"
-            className={cn(buttonVariants({ variant: 'primary' }), 'my-3 mr-4')}
-          >
-            {t('checkout')} →
-          </LocaleLink>
-        </div>
-
-        {/* Mobile Summary Sheet */}
-        {showMobileSummary && (
-          <div className="md:hidden fixed inset-0 bg-black/50 z-50 flex items-end animate-fadeIn">
-            <div className="bg-white w-full rounded-t-2xl p-6 pb-8 animate-slideUp max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-display text-2xl uppercase">{t('title')}</h3>
-                <button
-                  onClick={() => setShowMobileSummary(false)}
-                  className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">{t('subtotal')}</span>
-                  <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
-                </div>
-                {staffelSavings > 0 && (
-                  <div className="flex justify-between text-base">
-                    <span className="text-gray-600">{t('staffel.label')}</span>
-                    <span className="font-semibold">−{formatPrice(staffelSavings, locale)}</span>
-                  </div>
-                )}
-                {staffelHints.length > 0 && (
-                  <div className="text-xs text-gray-600 space-y-1 border-l-2 border-gray-300 pl-3">
-                    {staffelHints.map((h, i) => (
-                      <p key={`${h.productId}-m-${i}`} className="leading-snug">
-                        {t('staffel.nextTier', {
-                          product: h.productName,
-                          needed: h.needed,
-                          discount: h.discountLabel,
-                        })}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{locale === 'en' ? 'VAT 21%' : 'BTW 21%'}</span>
-                  <span className="text-gray-500">{formatPrice(btwAmount, locale)}</span>
-                </div>
-                <div className="flex justify-between text-lg">
-                  <span className="text-gray-600">{t('shipping')}</span>
-                  <span className="font-semibold">
-                    {shipping === 0 ? (
-                      <span className="text-brand-primary">{t('shippingFree')}</span>
-                    ) : (
-                      formatPrice(shipping, locale)
-                    )}
-                  </span>
-                </div>
-
-                {subtotalAfterStaffel < freeShippingThreshold && (
-                  <div className="bg-gray-50 border-l-4 border-brand-primary px-4 py-3">
-                    <p className="text-sm text-gray-600">
-                      {t('freeShippingProgress', {
-                        amount: formatAmount(freeShippingThreshold - subtotalAfterStaffel, locale),
-                      })}
-                    </p>
-                  </div>
-                )}
-
-                <div className="border-t-2 border-black pt-4">
-                  <div className="flex justify-between items-baseline mb-2">
-                    <span className="font-display text-xl uppercase">{t('total')}</span>
-                    <span className="font-display text-3xl">{formatPrice(total, locale)}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 text-right">
-                    {locale === 'en' ? `Incl. €${formatAmount(totalBtw, locale)} VAT` : `Incl. €${formatAmount(totalBtw, locale)} BTW`}
-                  </p>
-                </div>
-
-                <LocaleLink
-                  href="/checkout"
-                  className={cn(buttonVariants({ variant: 'primary', size: 'lg', fullWidth: true }), 'mt-6')}
-                  onClick={() => setShowMobileSummary(false)}
-                >
-                  {t('checkout')}
-                </LocaleLink>
-
-                <div className="pt-4 space-y-3 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Truck size={18} className="flex-shrink-0" />
-                    <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Lock size={18} className="flex-shrink-0" />
-                    <span>{t('trust.secure')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RotateCcw size={18} className="flex-shrink-0" />
-                    <span>{t('trust.returns', { days: returnDays })}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Clear Cart Confirmation Modal */}
+      {/* Vaste balk op mobiel.
+          Het uitschuifpaneel met de prijsopbouw is vervallen: die opbouw staat
+          nu gewoon op de pagina, een stukje naar beneden. Een paneel dat
+          dezelfde regels nog een keer toont, is een extra tik voor informatie
+          die er al staat. */}
+      <div
+        data-onderbalk
+        className="fixed bottom-[var(--cookie-consent-height)] left-0 right-0 z-40 flex items-stretch bg-black pb-[env(safe-area-inset-bottom)] text-white md:hidden"
+      >
+        <div className="flex-1 py-3 pl-4 pr-2">
+          <div className="font-display text-2xl leading-tight tabular-nums">{formatPrice(total, locale)}</div>
+          <div className="text-[11px] uppercase tracking-wider text-gray-300">
+            {tekortVoorGratis > 0
+              ? t('freeShippingProgressMobile', { amount: formatAmount(tekortVoorGratis, locale) })
+              : t('freeShippingReached')}
+          </div>
+        </div>
+        <LocaleLink
+          href="/checkout"
+          className={cn(buttonVariants({ variant: 'primary' }), 'my-3 mr-4 self-center')}
+        >
+          {t('checkout')} →
+        </LocaleLink>
+      </div>
+
+      {/* Bevestiging voor het legen */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white border-4 border-black p-8 max-w-md w-full">
-            <h3 className="font-display text-3xl mb-4 uppercase">{t('clearConfirm.title')}</h3>
-            <p className="text-gray-600 mb-8 text-lg">
-              {t('clearConfirm.message')}
-            </p>
+        <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md border-4 border-black bg-white p-8">
+            <h3 className="mb-4 font-display text-2xl uppercase md:text-3xl">{t('clearConfirm.title')}</h3>
+            <p className="mb-8 text-gray-600">{t('clearConfirm.message')}</p>
             <div className="flex gap-4">
               <button
                 onClick={() => setShowClearConfirm(false)}
