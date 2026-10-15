@@ -104,27 +104,27 @@ export default function EditorialPageBanner({
 /** Photoshoot-2026 editorial frames sized for wide page banners. */
 export const PAGE_BANNER_IMAGES = {
   /**
-   * Shop: drie hoodies in drie kleuren, liggend, tegen de graffitimuur.
+   * Shop: de stof zelf, met het ingeperste MOSE-logo.
    *
-   * De band is extreem breed en laag: 4,5 op 1 op desktop en 2,4 op 1 op
-   * mobiel. Daar blijft een derde van de hoogte van de bron over, en dat
-   * maakt de keuze. De vorige desktopfoto sneed de hoofden eraf; de vorige
-   * mobiele foto was staand, werd dus tot 27% van zijn hoogte teruggesneden,
-   * en kwam bovendien uit de homepageserie, zodat wie via de voorpagina
-   * binnenkwam hem twee keer zag.
+   * De band is 4,5 op 1 op desktop en 2,4 op 1 op mobiel. Daar blijft een
+   * derde van de hoogte van de bron over, en dat is de hele afweging. Elke
+   * foto waarop mensen de hoogte vullen, wordt in die strook een rij koppen
+   * die bovenaan en onderaan is afgesneden. Dat gebeurde met het lookbookframe
+   * dat er eerst stond en ook met de groepsfoto die ik er daarna in zette.
    *
-   * Deze foto is liggend, heeft drie onderwerpen naast elkaar en dus de
-   * horizontale spreiding die een strook nodig heeft, en toont in één beeld
-   * de drie kleuren van het product dat vooraan in de grid staat. Dezelfde
-   * bron op beide schermen: hij werkt op elke breedte, en Next schaalt zelf
-   * naar wat het scherm vraagt.
+   * Een stofopname heeft dat probleem per definitie niet: er is geen onderwerp
+   * dat je kunt onthoofden, dus elke uitsnede werkt. Bijkomend voordeel: hij
+   * laat zien waar de hele winkel over gaat, joggingfleece van 300 gram met
+   * een geperst logo, en hij concurreert niet met de productfoto's eronder.
+   * De onderste helft is donker genoeg voor de witte titel.
    */
   shop: {
     desktop:
-      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-laughing-landscape-desktop.webp',
+      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-close-desktop.webp',
     mobile:
-      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-laughing-landscape-desktop.webp',
+      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-close-desktop.webp',
   },
+
   blog: {
     desktop:
       'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/03-stone-desktop.webp',

@@ -438,11 +438,10 @@ export default function ShopPageClient() {
         imageSrc={PAGE_BANNER_IMAGES.shop.desktop}
         imageSrcMobile={PAGE_BANNER_IMAGES.shop.mobile}
         imageAlt={t('heroAlt')}
-        /* 30% vanaf de bovenkant. Nagelopen op 10, 20, 30 en 40 procent: bij
-           40 gaan de kruinen eraf, bij 10 en 20 zit er te veel muur boven de
-           hoofden en zakken de gezichten tegen de onderrand. */
-        objectPosition="center 30%"
-        objectPositionMobile="center 30%"
+        /* Midden. Daar zit het geperste logo in de bovenste helft van de
+           strook en blijft de onderste helft rustig voor de titel. */
+        objectPosition="center 50%"
+        objectPositionMobile="center 50%"
         hoogte="h-40 md:h-72 lg:h-80"
       />
 
