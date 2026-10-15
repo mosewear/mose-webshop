@@ -103,12 +103,27 @@ export default function EditorialPageBanner({
 
 /** Photoshoot-2026 editorial frames sized for wide page banners. */
 export const PAGE_BANNER_IMAGES = {
+  /**
+   * Shop: drie hoodies in drie kleuren, liggend, tegen de graffitimuur.
+   *
+   * De band is extreem breed en laag: 4,5 op 1 op desktop en 2,4 op 1 op
+   * mobiel. Daar blijft een derde van de hoogte van de bron over, en dat
+   * maakt de keuze. De vorige desktopfoto sneed de hoofden eraf; de vorige
+   * mobiele foto was staand, werd dus tot 27% van zijn hoogte teruggesneden,
+   * en kwam bovendien uit de homepageserie, zodat wie via de voorpagina
+   * binnenkwam hem twee keer zag.
+   *
+   * Deze foto is liggend, heeft drie onderwerpen naast elkaar en dus de
+   * horizontale spreiding die een strook nodig heeft, en toont in één beeld
+   * de drie kleuren van het product dat vooraan in de grid staat. Dezelfde
+   * bron op beide schermen: hij werkt op elke breedte, en Next schaalt zelf
+   * naar wat het scherm vraagt.
+   */
   shop: {
     desktop:
-      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp',
-    /** Portrait trio — stronger on short mobile banners than a landscape crop. */
+      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-laughing-landscape-desktop.webp',
     mobile:
-      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/homepage/hero-mobile-mobile.webp',
+      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/multi/trio-laughing-landscape-desktop.webp',
   },
   blog: {
     desktop:
