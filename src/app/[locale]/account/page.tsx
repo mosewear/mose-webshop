@@ -568,7 +568,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen px-4 flex items-center justify-center">
+      <div className="min-h-screen pt-6 px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">{t('loading')}</p>
@@ -578,7 +578,10 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 pb-16">
+    // pt-6 zoals op de inlog- en retourpagina. Zonder die bovenmarge liep de
+    // kop "Mijn account" achter de vaste bovenbalk en was de bovenste rij
+    // letters afgesneden.
+    <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">

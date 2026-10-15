@@ -101,7 +101,7 @@ export async function GET() {
 
   const lines: string[] = [HEADERS.join(',')]
 
-  // Honest site-wide free-shipping threshold from admin settings (€150 today).
+  // Honest site-wide free-shipping threshold from admin settings (€100 today).
   // If settings are unavailable, serve a valid headers-only CSV so Meta accepts
   // the URL without inventing fake product discounts.
   if (threshold !== null) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { getSiteSettings } from '@/lib/settings'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
 import { calculateReturnRefundWithDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
@@ -291,11 +292,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create return' }, { status: 500 })
     }
 
-    // Update order has_returns flag EN status
-    await supabase
+    // Vanaf hier schrijven we met de servicesleutel.
+    //
+    // Deze twee schrijfacties liepen over de sessie van de klant. Dat werkte bij
+    // `orders` alleen omdat daar een regel stond die iedere ingelogde bezoeker
+    // ELKE bestelling liet wijzigen, en bij `returns` werkte het helemaal niet:
+    // een klant mag retourregels aanmaken maar niet bijwerken, dus de
+    // betaalgegevens van het retourlabel werden stilzwijgend geweigerd. Geen
+    // enkele retour in de database had een betaal-id.
+    //
+    // De route heeft op dit punt al vastgesteld dat deze gebruiker bij deze
+    // bestelling hoort, dus de schrijfactie hoort hier thuis en niet bij de
+    // rechten van de bezoeker.
+    const service = createServiceClient()
+
+    const { error: vlagFout } = await service
       .from('orders')
       .update({ has_returns: true })
       .eq('id', order_id)
+    if (vlagFout) {
+      console.error('Kon has_returns niet zetten op order', order_id, vlagFout)
+    }
     
     // Update order status naar return_requested
     try {
@@ -328,13 +345,16 @@ export async function POST(req: NextRequest) {
         })
       )
 
-      await supabase
+      const { error: betaalFout } = await service
         .from('returns')
         .update({
           return_label_payment_intent_id: payment.id,
           return_label_payment_status: 'pending',
         })
         .eq('id', returnRecord.id)
+      if (betaalFout) {
+        console.error('Kon betaalgegevens niet opslaan bij retour', returnRecord.id, betaalFout)
+      }
     } catch (piError) {
       console.error('Error creating Mollie payment on return creation:', piError)
       // Soft fail — customer can recreate via return details page

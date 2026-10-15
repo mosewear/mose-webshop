@@ -698,7 +698,7 @@ const nl: EmailTranslationKeys = {
     total: 'Totaal',
     ctaButton: 'MAAK BESTELLING AF',
     moreItems: '+ {{count}} meer items',
-    freeShipping: 'Gratis verzending vanaf €150',
+    freeShipping: 'Gratis verzending vanaf €100',
   },
   backInStock: {
     subject: '{{productName}} is weer op voorraad! | MOSE',
@@ -1130,7 +1130,7 @@ const en: EmailTranslationKeys = {
     total: 'Total',
     ctaButton: 'COMPLETE ORDER',
     moreItems: '+ {{count}} more items',
-    freeShipping: 'Free shipping from €150',
+    freeShipping: 'Free shipping from €100',
   },
   backInStock: {
     subject: '{{productName}} is back in stock! | MOSE',

@@ -1104,7 +1104,13 @@
       "passwordTooShort": "Wachtwoord moet minimaal 6 karakters zijn",
       "passwordMinLength": "Wachtwoord moet minimaal 6 karakters lang zijn",
       "invalidSession": "Ongeldige sessie",
-      "somethingWrong": "Er ging iets mis"
+      "somethingWrong": "Er ging iets mis",
+      "invalidCredentials": "Dit e-mailadres en wachtwoord horen niet bij elkaar. Controleer ze nog even.",
+      "emailExists": "Er bestaat al een account met dit e-mailadres. Log in of vraag een nieuw wachtwoord aan.",
+      "emailInvalid": "Dit e-mailadres lijkt niet te kloppen.",
+      "notConfirmed": "Je account is nog niet bevestigd. Kijk even in je mailbox.",
+      "tooManyRequests": "Te veel pogingen achter elkaar. Probeer het over een minuutje opnieuw.",
+      "serverProblem": "Er ging iets mis aan onze kant. Probeer het zo nog eens, of mail ons op info@mosewear.com."
     }
   },
   "orders": {

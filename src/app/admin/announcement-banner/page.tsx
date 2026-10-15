@@ -391,7 +391,7 @@ export default function AnnouncementBannerAdmin() {
                               setMessages(updated)
                             }}
                             className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                            placeholder="GRATIS VERZENDING BOVEN €150"
+                            placeholder="GRATIS VERZENDING BOVEN €100"
                           />
                         </div>
                         <div>
@@ -408,7 +408,7 @@ export default function AnnouncementBannerAdmin() {
                               setMessages(updated)
                             }}
                             className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm"
-                            placeholder="FREE SHIPPING OVER €150"
+                            placeholder="FREE SHIPPING OVER €100"
                           />
                           <p className="text-xs text-gray-500 mt-1">Leeg = valt terug op NL tekst</p>
                         </div>

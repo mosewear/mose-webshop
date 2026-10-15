@@ -246,7 +246,7 @@ export default function ChatButton() {
             className={`flex items-center border-2 border-black transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${
               isOpen
                 ? 'hidden h-14 w-14 items-center justify-center bg-black text-brand-primary md:flex'
-                : 'h-14 gap-2.5 bg-black pl-2 pr-4 text-white hover:bg-brand-primary hover:text-black'
+                : 'h-14 w-14 justify-center bg-black text-white hover:bg-brand-primary hover:text-black md:w-auto md:justify-start md:gap-2.5 md:pl-2 md:pr-4'
             }`}
             aria-label={isOpen ? t('close') : t('launcher')}
             aria-expanded={isOpen}
@@ -256,8 +256,14 @@ export default function ChatButton() {
               <X className="h-6 w-6 md:h-7 md:w-7" strokeWidth={3} />
             ) : (
               <>
+                {/* Op een telefoon alleen het merkteken. Met het woord erbij was
+                    de knop 157 van de 390 pixels breed en lag hij over de knop
+                    waar de pagina zelf om vraagt, zoals "start met shoppen" in
+                    een lege bestellijst. De tip die één keer verschijnt, vertelt
+                    al wat je aan de chat hebt. Op desktop is er ruimte genoeg,
+                    dus daar blijft het woord staan. */}
                 <ChatAvatar maat={36} />
-                <span className="font-display text-sm uppercase leading-none tracking-wide md:text-base">
+                <span className="hidden font-display text-sm uppercase leading-none tracking-wide md:inline md:text-base">
                   {t('launcher')}
                 </span>
               </>

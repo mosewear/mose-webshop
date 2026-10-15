@@ -22,7 +22,7 @@ export type CommercePromises = {
 }
 
 const DEFAULTS: CommercePromises = {
-  free_shipping_threshold: 150,
+  free_shipping_threshold: 100,
   shipping_cost: 6.95,
   return_days: 30,
   return_label_cost_incl_btw: 6.95,

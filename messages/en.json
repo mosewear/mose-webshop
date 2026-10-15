@@ -801,7 +801,7 @@
   "returns": {
     "title": "Return",
     "new": "New Return",
-    "selectOrder": "Select Order",
+    "selectOrder": "Select order",
     "reason": "Reason",
     "items": "Items",
     "status": {
@@ -1104,7 +1104,13 @@
       "passwordTooShort": "Password must be at least 6 characters",
       "passwordMinLength": "Password must be at least 6 characters long",
       "invalidSession": "Invalid session",
-      "somethingWrong": "Something went wrong"
+      "somethingWrong": "Something went wrong",
+      "invalidCredentials": "That email and password do not match. Please check them.",
+      "emailExists": "An account with this email already exists. Log in or reset your password.",
+      "emailInvalid": "That email address does not look right.",
+      "notConfirmed": "Your account has not been confirmed yet. Please check your inbox.",
+      "tooManyRequests": "Too many attempts in a row. Please try again in a minute.",
+      "serverProblem": "Something went wrong on our side. Try again shortly, or email us at info@mosewear.com."
     }
   },
   "orders": {

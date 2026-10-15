@@ -23,6 +23,57 @@ export default function LoginPage() {
 
   const localeLink = (path: string) => `/${locale}${path}`
 
+
+  /**
+
+   * Vertaalt een technische foutmelding naar iets wat een klant snapt.
+
+   *
+
+   * Hier stond `setError(err.message)`, dus de rauwe tekst van Supabase kwam
+
+   * letterlijk op het scherm. Een klant die een account wilde maken om een
+
+   * retour aan te melden, las "Database error saving new user": Engels,
+
+   * technisch, en zonder enige aanwijzing wat hij nu moest doen.
+
+   */
+
+  const leesbareFout = (err: any): string => {
+
+    const ruw = String(err?.message || '').toLowerCase()
+
+    const code = String(err?.code || err?.error_code || '').toLowerCase()
+
+
+    // Meldingen die we zelf gooien zijn al vertaald; die laten we staan.
+
+    if (err?.vertaald) return err.message
+
+
+    if (code === 'invalid_credentials' || ruw.includes('invalid login credentials')) return t('errors.invalidCredentials')
+
+    if (code === 'user_already_exists' || ruw.includes('already registered') || ruw.includes('already been registered')) return t('errors.emailExists')
+
+    if (code === 'email_address_invalid' || ruw.includes('email address') && ruw.includes('invalid')) return t('errors.emailInvalid')
+
+    if (code === 'email_not_confirmed' || ruw.includes('not confirmed')) return t('errors.notConfirmed')
+
+    if (code === 'over_request_rate_limit' || ruw.includes('rate limit') || ruw.includes('too many')) return t('errors.tooManyRequests')
+
+    if (ruw.includes('database error') || ruw.includes('unexpected_failure') || ruw.includes('internal')) return t('errors.serverProblem')
+
+
+    // Alles wat we niet kennen, komt niet rauw op het scherm.
+
+    if (ruw && !/[^\x00-\x7F]/.test(ruw) && /[a-z]/.test(ruw) && ruw.length > 60) return t('errors.serverProblem')
+
+    return err?.message || t('errors.generic')
+
+  }
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -69,7 +120,7 @@ export default function LoginPage() {
         setIsLogin(true)
       }
     } catch (err: any) {
-      setError(err.message || t('errors.generic'))
+      setError(leesbareFout(err))
     } finally {
       setLoading(false)
     }

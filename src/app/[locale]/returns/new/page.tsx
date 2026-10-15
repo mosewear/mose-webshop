@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteSettings } from '@/lib/settings'
 import toast from 'react-hot-toast'
 import { calculateReturnRefundWithDiscount, findApplicableTier, type QuantityDiscountTier } from '@/lib/quantity-discount'
 
@@ -177,7 +178,14 @@ export default function NewReturnPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [returnDays, setReturnDays] = useState(14)
+  // Retourtermijn uit de instellingen, niet uit deze regel.
+  //
+  // Hier stond 14, hardgecodeerd, terwijl de winkel overal 30 dagen belooft: op
+  // de productpagina, in de voorwaarden, in de bevestigingsmail en in de chat.
+  // Wie na 20 dagen een retour wilde aanmelden, kreeg te horen dat hij geen
+  // bestellingen had die in aanmerking kwamen. Dat is een retour weigeren waar
+  // de klant volgens onze eigen voorwaarden recht op heeft.
+  const [returnDays, setReturnDays] = useState(30)
   
   const [selectedItems, setSelectedItems] = useState<Record<string, {
     quantity: number
@@ -190,7 +198,15 @@ export default function NewReturnPage() {
 
   useEffect(() => {
     checkUser()
-    setReturnDays(14)
+    getSiteSettings()
+      .then((instellingen) => {
+        const dagen = Number(instellingen?.return_days)
+        if (Number.isFinite(dagen) && dagen > 0) setReturnDays(dagen)
+      })
+      .catch(() => {
+        // Instellingen niet bereikbaar: dan blijft de 30 uit de beginwaarde
+        // staan, want dat is wat we de klant beloven.
+      })
   }, [])
 
   useEffect(() => {
@@ -449,7 +465,7 @@ export default function NewReturnPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen px-4 flex items-center justify-center">
+      <div className="min-h-screen pt-6 px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Laden...</p>
@@ -482,7 +498,7 @@ export default function NewReturnPage() {
             </div>
           ) : (
             <div className="bg-white border-2 border-black p-6 mb-6">
-              <h2 className="text-2xl font-display mb-4">Selecteer een Bestelling</h2>
+              <h2 className="text-2xl font-display mb-4">Selecteer een bestelling</h2>
               <p className="text-gray-600 mb-6">
                 Kies een geleverde bestelling om een retour voor aan te vragen. Je hebt {returnDays} dagen vanaf de leverdatum om een retour aan te vragen.
               </p>
@@ -509,7 +525,7 @@ export default function NewReturnPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen px-4">
+      <div className="min-h-screen pt-6 md:pt-8 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
             <p className="text-gray-600 mb-6 text-lg">Order niet gevonden</p>
@@ -560,7 +576,7 @@ export default function NewReturnPage() {
 
         {/* Select Items */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Selecteer Items</h2>
+          <h2 className="text-2xl font-display mb-4">Selecteer items</h2>
           <div className="space-y-4">
             {order.order_items.map((item) => {
               const isSelected = !!selectedItems[item.id]
@@ -644,7 +660,7 @@ export default function NewReturnPage() {
 
         {/* Return Reason */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Retour Reden</h2>
+          <h2 className="text-2xl font-display mb-4">Reden van retour</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold mb-2">
@@ -688,7 +704,7 @@ export default function NewReturnPage() {
 
         {/* Summary */}
         <div className="bg-black text-white p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Refund Overzicht</h2>
+          <h2 className="text-2xl font-display mb-4">Overzicht terugbetaling</h2>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Terug te betalen (items)</span>
