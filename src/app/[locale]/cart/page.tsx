@@ -253,8 +253,9 @@ export default function CartPage() {
   return (
     /* De onderruimte op mobiel moet de vaste balk én de cookiebalk vrijhouden.
        Met pb-32 verdween het laatste artikel eronder zodra de cookiebalk in
-       beeld stond. */
-    <div className="min-h-screen pb-[calc(10rem+var(--cookie-consent-height,0px))] md:pb-20">
+       beeld stond. Zes rem dekt de balk van ongeveer 72px met marge; meer
+       levert een zichtbaar gat boven de voettekst op. */
+    <div className="min-h-screen pb-[calc(6rem+var(--cookie-consent-height,0px))] md:pb-20">
       <div className="mx-auto max-w-6xl px-4 pt-8 md:pt-12">
 
         {/* Kop */}
