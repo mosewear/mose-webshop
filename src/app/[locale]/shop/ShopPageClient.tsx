@@ -438,10 +438,12 @@ export default function ShopPageClient() {
         imageSrc={PAGE_BANNER_IMAGES.shop.desktop}
         imageSrcMobile={PAGE_BANNER_IMAGES.shop.mobile}
         imageAlt={t('heroAlt')}
-        /* Midden. Daar zit het geperste logo in de bovenste helft van de
-           strook en blijft de onderste helft rustig voor de titel. */
-        objectPosition="center 50%"
-        objectPositionMobile="center 50%"
+        /* 42%. Nagelopen van 34 tot 68 procent: op 50 werd het geperste logo
+           bovenaan afgesneden, vanaf 52 verdween het helemaal uit beeld en
+           bleef er kale stof over. Op 42 staat het logo volledig in de
+           bovenste helft en blijft de onderste helft rustig voor de titel. */
+        objectPosition="center 42%"
+        objectPositionMobile="center 42%"
         hoogte="h-40 md:h-72 lg:h-80"
       />
 
