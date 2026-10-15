@@ -6,7 +6,7 @@
 'use client'
 
 import posthog from '@/lib/posthog-client'
-import { isClientAutomationBrowser } from '@/lib/bot-detection'
+import { magMeten } from '@/lib/meting-uitsluiten'
 
 // Get or create session ID
 function getSessionId(): string {
@@ -64,7 +64,12 @@ export async function trackEvent({ event_name, properties = {}, user_id }: Track
     // browsers (Selenium / Puppeteer / Playwright / headless Chrome) or
     // from obvious bot UAs. The server filters the same traffic again as
     // a safety net, but stopping here also saves the network round-trip.
-    if (typeof window !== 'undefined' && isClientAutomationBrowser()) {
+    //
+    // Sinds de Meta-telling naast onze eigen administratie bleek te lopen,
+    // gaat dit via dezelfde poort als de pixel. Twee systemen die hetzelfde
+    // moeten meten, moeten precies hetzelfde weigeren: automatisering, eigen
+    // beheersessies, en alles wat niet op het echte winkeldomein staat.
+    if (!magMeten().mag) {
       return
     }
 

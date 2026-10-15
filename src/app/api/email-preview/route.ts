@@ -421,13 +421,18 @@ export async function GET(req: NextRequest) {
         html = await render(
           AbandonedCartEmail({
             customerName: dummyData.customerName,
+            // Maat en kleur horen in deze mail thuis; zonder die twee toont
+            // de voorvertoning iets anders dan wat de klant krijgt.
             items: dummyData.orderItems.map((item) => ({
               name: item.name,
               price: item.price,
               imageUrl: item.imageUrl,
               quantity: item.quantity,
+              size: item.size,
+              color: item.color,
             })),
             totalAmount: dummyData.orderTotal,
+            subtotal: dummyData.subtotal,
             cartUrl: dummyData.checkoutUrl,
             t,
             siteUrl,
@@ -435,6 +440,7 @@ export async function GET(req: NextRequest) {
             contactPhone,
             contactAddress,
             locale,
+            unsubscribeUrl: `${siteUrl}/${locale}/unsubscribe?email=${encodeURIComponent(dummyData.customerEmail)}`,
           })
         )
         break

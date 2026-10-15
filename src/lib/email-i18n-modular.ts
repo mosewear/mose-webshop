@@ -308,29 +308,48 @@ export const modularNl: ModularDict = {
   // Abandoned cart & back in stock
   // ────────────────────────────────────────────────────────────────
   abandonedCart: {
-    status: 'Cart Reminder',
-    badge: '▲ Still Yours',
-    heroTitle: 'Don\u2019t Forget.',
+    status: 'Winkelmand',
+    badge: 'Nog van jou',
+    heroTitle: 'Niet\nvergeten',
     subtitle:
-      '{{customerName}}, je winkelwagen staat nog voor je klaar. Niet voor altijd, dus pak je moment.',
+      '{{customerName}}, je winkelmand staat nog klaar. Niet voor altijd, dus pak je moment.',
     preheader:
-      '{{customerName}}, je winkelwagen wacht nog op je.',
+      '{{customerName}}, je winkelmand staat nog klaar. Afrekenen kost je een minuut.',
     description:
-      'Je hebt items achtergelaten in je winkelwagen. Rond je bestelling af voordat je maat wegraakt.',
-    itemsTitle: 'In je cart',
-    itemsMeta: 'items',
+      'Je bent bij het afrekenen gestopt. Je artikel staat nog precies zoals je het had klaargelegd, dus je hoeft niet opnieuw te beginnen.',
+    descriptionPlural:
+      'Je bent bij het afrekenen gestopt. Je {{count}} artikelen staan nog precies zoals je ze had klaargelegd, dus je hoeft niet opnieuw te beginnen.',
+    itemsTitle: 'In je winkelmand',
+    itemsMeta: 'artikel',
+    size: 'Maat',
     quantity: 'Aantal',
+    subtotal: 'Artikelen',
+    shipping: 'Verzending',
+    shippingFree: 'Gratis',
     total: 'Totaal',
-    moreItems: '+ {{hiddenCount}} meer items',
-    ctaButton: 'Ga terug naar je cart',
-    ctaFootnote: 'Jouw items wachten op je.',
+    moreItems: '+ nog {{hiddenCount}} artikel',
+    ctaButton: 'Bestelling afronden',
+    ctaFootnote: 'Je gegevens staan al ingevuld. Je hoeft alleen nog te betalen.',
     // Stond hier als 'Altijd gratis verzending' / 'zonder minimum', terwijl
-    // free_shipping_threshold in site_settings op 150 staat. Dat is een
+    // free_shipping_threshold in site_settings een drempel heeft. Dat is een
     // belofte die in de checkout breekt, in precies de mail die mensen terug
-    // moet halen. De drempel komt nu uit de instellingen mee.
-    freeShippingTitle: 'Gratis verzending vanaf €{{threshold}}',
+    // moet halen. De drempel komt nu uit de instellingen mee, en het bedrag
+    // dat er nog aan ontbreekt staat erbij: dat is een reden, geen mededeling.
+    freeShippingTitle: 'Nog {{amount}} tot gratis verzending',
     freeShipping:
-      'Zit je daarboven, dan betaal je geen verzendkosten. Scheelt je {{shippingCost}} euro.',
+      'Vanaf \u20ac{{threshold}} verzenden we gratis. Nu staat er {{shippingCost}} aan verzendkosten op je bestelling.',
+    freeShippingReachedTitle: 'De verzending is gratis',
+    freeShippingReached:
+      'Je zit boven de \u20ac{{threshold}}, dus je betaalt geen verzendkosten.',
+    trustReturnLabel: 'Retour',
+    trustReturnValue: '{{days}} dagen bedenktijd',
+    trustDeliveryLabel: 'Levering',
+    trustDeliveryValue: '1 tot 2 werkdagen',
+    trustOriginLabel: 'Herkomst',
+    trustOriginValue: 'Atelier in Groningen',
+    help: 'Twijfel je over je maat? Mail {{email}} en we denken met je mee.',
+    unsubscribePrompt: 'Geen herinneringen meer ontvangen?',
+    unsubscribeLabel: 'Uitschrijven',
   },
 
   backInStock: {
@@ -830,25 +849,43 @@ export const modularEn: ModularDict = {
   },
 
   abandonedCart: {
-    status: 'Cart Reminder',
-    badge: '▲ Still Yours',
-    heroTitle: "Don't Forget.",
+    status: 'Your cart',
+    badge: 'Still yours',
+    heroTitle: 'Still\nhere.',
     subtitle:
       "{{customerName}}, your cart is still here. It won't wait forever.",
     preheader:
-      '{{customerName}}, your cart is still waiting for you.',
+      '{{customerName}}, your cart is still here. Checking out takes a minute.',
     description:
-      'You left items in your cart. Complete your order before your size sells out.',
+      'You stopped at checkout. Your item is still exactly where you left it, so you do not have to start over.',
+    descriptionPlural:
+      'You stopped at checkout. Your {{count}} items are still exactly where you left them, so you do not have to start over.',
     itemsTitle: 'In your cart',
-    itemsMeta: 'items',
+    itemsMeta: 'item',
+    size: 'Size',
     quantity: 'Qty',
+    subtotal: 'Items',
+    shipping: 'Shipping',
+    shippingFree: 'Free',
     total: 'Total',
-    moreItems: '+ {{hiddenCount}} more items',
-    ctaButton: 'Back to your cart',
-    ctaFootnote: 'Your items are waiting.',
-    freeShippingTitle: 'Free shipping from €{{threshold}}',
+    moreItems: '+ {{hiddenCount}} more',
+    ctaButton: 'Complete your order',
+    ctaFootnote: 'Your details are already filled in. All that is left is paying.',
+    freeShippingTitle: '{{amount}} to go for free shipping',
     freeShipping:
-      'Above that, shipping is on us. Saves you {{shippingCost}} euro.',
+      'We ship free from \u20ac{{threshold}}. Right now your order carries {{shippingCost}} in shipping.',
+    freeShippingReachedTitle: 'Shipping is on us',
+    freeShippingReached:
+      'You are above \u20ac{{threshold}}, so you pay no shipping.',
+    trustReturnLabel: 'Returns',
+    trustReturnValue: '{{days}} days to change your mind',
+    trustDeliveryLabel: 'Delivery',
+    trustDeliveryValue: '1 to 2 working days',
+    trustOriginLabel: 'Origin',
+    trustOriginValue: 'Atelier in Groningen',
+    help: 'Not sure about your size? Mail {{email}} and we will think along.',
+    unsubscribePrompt: 'No more reminders?',
+    unsubscribeLabel: 'Unsubscribe',
   },
 
   backInStock: {

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader from '@/components/admin/AdminHeader'
 import CommandPalette from '@/components/admin/CommandPalette'
+import InterneSessieMarkering from '@/components/admin/InterneSessieMarkering'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default async function AdminLayout({
 
       {/* Global Command Palette */}
       <CommandPalette />
+      <InterneSessieMarkering />
     </div>
   )
 }

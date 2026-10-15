@@ -111,6 +111,14 @@ body {
   padding-top: calc(var(--announcement-banner-height, 0px) + var(--header-total-height, 0px));
 }
 
+/* Het afrekenscherm heeft geen vaste balken boven zich: daar staat een kale
+   kop in de normale stroom (zie AfrekenChrome). De opvulling hierboven zou
+   daar een lege witte band worden van ruim honderd pixels, inclusief een
+   achtergebleven waarde van de aankondigingsbalk die er niet meer staat. */
+html[data-afrekenen] #main-content[data-site-chrome] {
+  padding-top: 0;
+}
+
 /* Opt-out for pages that intentionally want full-bleed content behind the
    fixed chrome (e.g. the homepage hero video). Usage: add
    `data-full-bleed-top` to the page's root element. */

@@ -1192,6 +1192,10 @@ export async function sendAbandonedCartEmail(props: {
   freeShippingThreshold?: number
   returnDays?: number
   locale?: string
+  /** Artikelwaarde van de bestelling, zonder verzendkosten. */
+  subtotal?: number
+  /** Kortingen bij elkaar (code, loyaliteit, cadeaukaart). */
+  discount?: number
 }) {
   const locale = props.locale || 'nl'
   const t = await getEmailT(locale)
@@ -1202,20 +1206,39 @@ export async function sendAbandonedCartEmail(props: {
   const contactPhone = settings.contact_phone || '+31 50 234 0025'
   const contactAddress = settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen'
 
+  // Maat en kleur gaan mee naar de template. Ze stonden wel in de bestelling
+  // maar werden hier weggegooid, waardoor de mail alleen "Aantal: 1" toonde.
   const items = props.orderItems.map(item => ({
     name: item.name,
     price: item.price,
     imageUrl: normalizeImageUrl(item.imageUrl, siteUrl),
-    quantity: item.quantity
+    quantity: item.quantity,
+    size: item.size,
+    color: item.color,
   }))
+
+  const artikelbedrag =
+    typeof props.subtotal === 'number'
+      ? props.subtotal
+      : items.reduce((som, item) => som + item.price * (item.quantity || 1), 0)
+
+  const voornaam = (props.customerName || '').trim().split(/\s+/)[0] || props.customerName
+
+  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.customerEmail)
 
   const html = await render(
     AbandonedCartEmail({
       customerName: props.customerName,
       items,
       totalAmount: props.orderTotal,
+      subtotal: artikelbedrag,
+      discount: props.discount ?? 0,
       cartUrl: props.checkoutUrl,
       t,
+      // De taal van de bestelling, niet altijd Nederlands. Dit werd nooit
+      // doorgegeven, dus een Engelse klant kreeg een Nederlandse huid om
+      // Engelse teksten heen.
+      locale,
       siteUrl,
       contactEmail,
       contactPhone,
@@ -1224,16 +1247,18 @@ export async function sendAbandonedCartEmail(props: {
       // waarden belooft de callout gratis verzending zonder minimum.
       freeShippingThreshold: props.freeShippingThreshold ?? settings.free_shipping_threshold,
       shippingCost: settings.shipping_cost,
+      returnDays: props.returnDays ?? settings.return_days,
+      unsubscribeUrl,
     })
   )
-
-  const unsubscribeUrl = buildUnsubscribeUrl(siteUrl, locale, props.customerEmail)
 
   return await sendAndLog(
     {
       from: 'MOSE Cart <orders@mosewear.com>',
       to: [props.customerEmail],
-      subject: t('abandonedCart.subject'),
+      // De naam MOET hier mee. Zonder opties bleef de placeholder staan en
+      // ging het onderwerp letterlijk als "{{name}}, ..." de deur uit.
+      subject: t('abandonedCart.subject', { name: voornaam }),
       html,
       headers: buildListUnsubscribeHeaders(unsubscribeUrl, contactEmail),
     },

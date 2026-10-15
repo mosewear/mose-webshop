@@ -3,6 +3,8 @@
  * Dual Tracking: Client-Side Pixel + Server-Side CAPI
  */
 
+import { magMeten } from '@/lib/meting-uitsluiten'
+
 type PixelEvent = 
   | 'ViewContent'
   | 'AddToCart'
@@ -158,6 +160,18 @@ export function trackPixelEvent(
   // bezoeker met een adblocker (in Nederland een flink deel van het verkeer)
   // leverde zo geen enkele gebeurtenis op, langs geen van beide wegen.
   if (typeof window === 'undefined') {
+    return
+  }
+
+  // Dezelfde poort als onze eigen meting. Die filterde automatiseringsbrowsers
+  // al, de pixel niet, en dat is precies waarom Meta meer mandjes telde dan de
+  // administratie: elke test leverde Meta een echte AddToCart op. Zie
+  // meting-uitsluiten.ts voor de drie uitsluitingen.
+  const poort = magMeten()
+  if (!poort.mag) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info(`[FB Pixel] ${event} niet verstuurd (${poort.reden})`)
+    }
     return
   }
 

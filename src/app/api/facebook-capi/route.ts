@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { isLikelyBotRequest } from '@/lib/bot-detection'
 
 /**
  * Facebook Conversions API (Server-Side Events)
@@ -90,11 +91,47 @@ function checkRateLimit(ip: string): boolean {
   return entry.count <= RATE_LIMIT
 }
 
+/**
+ * Alleen de echte winkel mag hier gebeurtenissen inleggen.
+ *
+ * `localhost` stond hier eerder bij, en elke voorvertoning op een
+ * vercel.app-domein kwam er via de lege-origin-tak gewoon langs. Daarmee
+ * stuurden een ontwikkelserver en elke testomgeving net zo hard echte
+ * AddToCart-gebeurtenissen naar Meta. Dat is een van de redenen dat de
+ * campagne meer mandjes telde dan onze eigen administratie.
+ *
+ * De betaalwebhook raakt deze route niet (die praat via src/lib/meta/capi.ts
+ * rechtstreeks met Meta), dus we mogen hier streng zijn: dit is per definitie
+ * een browser op de winkel.
+ */
+function isWinkelOrigin(origin: string): boolean {
+  if (!origin) return false
+  try {
+    const host = new URL(origin).hostname
+    return host === 'www.mosewear.com' || host === 'mosewear.com'
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const origin = request.headers.get('origin') || ''
-    if (origin && !origin.includes('mosewear.com') && !origin.includes('localhost')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!isWinkelOrigin(origin)) {
+      // 200, zodat een echte bezoeker geen fout in zijn console krijgt en niet
+      // opnieuw probeert. Niets gaat de deur uit.
+      return NextResponse.json({ ok: true, filtered: 'origin' })
+    }
+
+    // Dezelfde botfilter als onze eigen meting. Die zat hier niet, en daardoor
+    // werd elke geautomatiseerde sessie (test, crawler, scraper) wél bij Meta
+    // geteld en niet bij ons. Twee systemen die hetzelfde moeten meten, moeten
+    // ook hetzelfde weigeren.
+    const userAgent = request.headers.get('user-agent')
+    const countryCode =
+      request.headers.get('x-vercel-ip-country') || request.headers.get('cf-ipcountry')
+    if (isLikelyBotRequest({ userAgent, countryCode })) {
+      return NextResponse.json({ ok: true, filtered: 'bot' })
     }
 
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'

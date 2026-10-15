@@ -671,7 +671,7 @@ const nl: EmailTranslationKeys = {
     ctaButton: 'VERDER SHOPPEN',
   },
   abandonedCart: {
-    subject: '{{name}}, je MOSE items wachten nog op je!',
+    subject: '{{name}}, je winkelmand staat nog klaar',
     title: 'NIET VERGETEN?',
     subtitle: 'Je winkelwagen wacht op je',
     heroText: 'Hey {{name}}, je hebt nog {{count}} item in je winkelwagen!',
@@ -1103,7 +1103,7 @@ const en: EmailTranslationKeys = {
     ctaButton: 'SHOP MORE',
   },
   abandonedCart: {
-    subject: '{{name}}, your MOSE items are still waiting for you!',
+    subject: '{{name}}, your cart is still here',
     title: 'FORGOT SOMETHING?',
     subtitle: 'Your Cart Is Waiting For You',
     heroText: 'Hey {{name}}, you still have {{count}} item in your cart!',

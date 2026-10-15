@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Lock, ChevronLeft } from 'lucide-react'
@@ -31,7 +32,26 @@ function isAfrekenen(pathname: string | null): boolean {
 /** Rendert zijn inhoud overal BEHALVE op het afrekenscherm. */
 export function BuitenAfrekenen({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  if (isAfrekenen(pathname)) return null
+  const opAfrekenen = isAfrekenen(pathname)
+
+  /**
+   * Markeer de pagina, zodat de opvulling boven de inhoud weg kan.
+   *
+   * `#main-content` krijgt standaard een opvulling ter hoogte van de
+   * aankondigingsbalk plus de vaste kop, want die twee liggen daar overheen.
+   * Op het afrekenscherm staan ze er niet: de kale kop staat gewoon in de
+   * stroom. De opvulling bleef wel staan en werd daarmee een lege witte band
+   * van 106px op mobiel en 114px op desktop, met daarin ook nog een
+   * achtergebleven waarde van de verdwenen aankondigingsbalk.
+   */
+  useEffect(() => {
+    const el = document.documentElement
+    if (opAfrekenen) el.setAttribute('data-afrekenen', '')
+    else el.removeAttribute('data-afrekenen')
+    return () => el.removeAttribute('data-afrekenen')
+  }, [opAfrekenen])
+
+  if (opAfrekenen) return null
   return <>{children}</>
 }
 

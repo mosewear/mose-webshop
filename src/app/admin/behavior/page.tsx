@@ -86,6 +86,15 @@ function formatEventDetail(event: RecentEvent): string {
     }
     case 'product_view':
       return typeof props.product_name === 'string' && props.product_name ? props.product_name : '—'
+    case 'page_view': {
+      // De route zonder taalprefix, zodat /nl/shop en /en/shop hetzelfde lezen.
+      // Zonder deze tak viel page_view in de default, die naar
+      // `props.page_url` kijkt. Dat veld staat als KOLOM op de rij en niet in
+      // de eigenschappen, dus elke paginaweergave toonde een streepje.
+      const route = typeof props.route === 'string' ? props.route : null
+      const path = typeof props.path === 'string' ? props.path : null
+      return route || path || '—'
+    }
     case 'checkout_started': {
       const value = typeof props.value === 'number' ? CURRENCY_FMT.format(props.value) : null
       const items = typeof props.items_count === 'number' ? `${props.items_count} items` : null
@@ -106,6 +115,7 @@ const EVENT_FILTERS: Array<{ value: 'all' | string; label: string }> = [
   { value: 'checkout_started', label: 'checkout_started' },
   { value: 'add_to_cart', label: 'add_to_cart' },
   { value: 'product_view', label: 'product_view' },
+  { value: 'page_view', label: 'page_view' },
   { value: 'chat_opened', label: 'chat_opened' },
   { value: 'chat_closed', label: 'chat_closed' },
 ]
@@ -144,11 +154,18 @@ export default function BehaviorAnalyticsPage() {
   const refreshFeed = async () => {
     setFeedRefreshing(true)
     try {
-      const { data: events, error: eventsError } = await supabase
+      // Het filter gaat MEE in de query. Hiervoor werden de laatste 50
+      // gebeurtenissen opgehaald en daarna pas gefilterd, dus wie op
+      // add_to_cart filterde kreeg alleen de mandjes die tussen die 50 zaten.
+      // Sinds er ook paginaweergaven worden gemeten, is dat de meest
+      // voorkomende gebeurtenis en bleef er van de rest niets over.
+      let query = supabase
         .from('analytics_events')
         .select('id, created_at, event_name, event_properties, device_type, country_code')
         .order('created_at', { ascending: false })
         .limit(FEED_LIMIT)
+      if (eventFilter !== 'all') query = query.eq('event_name', eventFilter)
+      const { data: events, error: eventsError } = await query
       if (eventsError) {
         console.error('Error refreshing feed:', eventsError)
       } else {
@@ -161,16 +178,16 @@ export default function BehaviorAnalyticsPage() {
   }
 
   useEffect(() => {
+    refreshFeed()
     feedIntervalRef.current = setInterval(refreshFeed, FEED_REFRESH_MS)
     return () => {
       if (feedIntervalRef.current) clearInterval(feedIntervalRef.current)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventFilter])
 
-  const filteredEvents = useMemo(() => {
-    if (eventFilter === 'all') return recentEvents
-    return recentEvents.filter((e) => e.event_name === eventFilter)
-  }, [recentEvents, eventFilter])
+  // De query levert al precies wat gevraagd is.
+  const filteredEvents = recentEvents
 
   const fetchAnalytics = async () => {
     setLoading(true)

@@ -968,13 +968,36 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     // Reset quantity to 1 after successful add
     setQuantity(1)
 
-    // Track Facebook Pixel AddToCart event with user data if logged in
+    // Track Facebook Pixel AddToCart event with user data if logged in.
+    //
+    // Eén aanroep, niet twee. Hier stond de volledige aanroep in zowel het
+    // try- als het catch-blok, met dezelfde parameters. Zolang alleen
+    // `getUser()` kon falen ging dat goed, maar elke regel die er later
+    // tussen zou komen maakte een dubbele AddToCart mogelijk: één verzonden,
+    // dan een fout, dan nog een. Bij een telling die bij Meta al niet
+    // overeenkwam met de onze is dat precies het soort fout dat je niet wilt
+    // laten liggen. Nu kan alleen het opzoeken van de gebruiker mislukken, en
+    // dan gaat de gebeurtenis zonder klantgegevens de deur uit.
+    let klantgegevens: { email?: string; firstName?: string; lastName?: string; phone?: string } | undefined
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
-      // Catalog id must match feed g:id (UUID:colorSlug).
-      const contentId = catalogContentId(product.id, selectedVariant.color)
-      const addToCartParams = {
+      if (user) {
+        klantgegevens = {
+          email: user.email || undefined,
+          firstName: user.user_metadata?.first_name || undefined,
+          lastName: user.user_metadata?.last_name || undefined,
+          phone: user.phone || undefined,
+        }
+      }
+    } catch {
+      // Niet ingelogd of sessie niet op te halen: dan meten we zonder.
+    }
+
+    // Catalog id must match feed g:id (UUID:colorSlug).
+    const contentId = catalogContentId(product.id, selectedVariant.color)
+    trackPixelEvent(
+      'AddToCart',
+      {
         content_ids: [contentId],
         contents: [{ id: contentId, quantity, item_price: finalPrice }],
         content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
@@ -983,28 +1006,9 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         value: finalPrice * quantity,
         currency: 'EUR',
         num_items: quantity,
-      }
-
-      trackPixelEvent('AddToCart', addToCartParams, user ? {
-        email: user.email || undefined,
-        firstName: user.user_metadata?.first_name || undefined,
-        lastName: user.user_metadata?.last_name || undefined,
-        phone: user.phone || undefined
-      } : undefined)
-    } catch (error) {
-      // If user check fails, still track without userData
-      const contentId = catalogContentId(product.id, selectedVariant.color)
-      trackPixelEvent('AddToCart', {
-        content_ids: [contentId],
-        contents: [{ id: contentId, quantity, item_price: finalPrice }],
-        content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
-        content_type: 'product',
-        content_category: product.categories?.name,
-        value: finalPrice * quantity,
-        currency: 'EUR',
-        num_items: quantity
-      })
-    }
+      },
+      klantgegevens
+    )
     
     // Track custom analytics AddToCart event
     trackAddToCart({

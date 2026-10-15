@@ -102,7 +102,10 @@ export default function EmailItemRow({
                 </tbody>
               </table>
             </td>
-            <td valign="middle" style={{ verticalAlign: 'middle' }}>
+            {/* Rechterruimte is nodig: zonder deze marge plakte de prijs
+                tegen de productnaam aan, wat er uitzag als
+                "MOSE ESSENTIAL HOODIE€75,00". */}
+            <td valign="middle" style={{ verticalAlign: 'middle', paddingRight: '18px' }}>
               <div
                 style={{
                   fontFamily: EMAIL_FONTS.display,
@@ -111,8 +114,11 @@ export default function EmailItemRow({
                   textTransform: 'uppercase',
                   color: EMAIL_COLORS.ink,
                   lineHeight: 1.15,
-                  wordBreak: 'break-word',
-                  overflowWrap: 'anywhere',
+                  // 'anywhere' brak woorden middenin af: op een smal scherm
+                  // stond er "MOSE ESSENTIA / L HOODIE". Nu breekt een woord
+                  // alleen als het in zijn geheel echt niet past.
+                  wordBreak: 'normal',
+                  overflowWrap: 'break-word',
                 }}
               >
                 {name}
