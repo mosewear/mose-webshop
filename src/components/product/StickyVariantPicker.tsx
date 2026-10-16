@@ -183,9 +183,17 @@ export default function StickyVariantPicker({
     return 'add'
   })()
 
-  // Desktop CTA toont prijs; mobile CTA niet (prijs staat al in PDP-body
-  // en in de tweerijs layout willen we de groene knop niet visueel laten
-  // concurreren met de prijsregel boven).
+  // Beide knoppen tonen nu de prijs.
+  //
+  // De mobiele knop was bewust zonder prijs gebouwd, met als redenering dat de
+  // prijs al in de pagina staat. Op een telefoon klopt dat niet: de leesbare
+  // prijs staat op 859 pixels en het scherm is er 664 hoog, dus je moet ervoor
+  // scrollen. Wat je op het eerste scherm wél ziet is deze knop, en daar komen
+  // volgens de meting drie van de vier mandjes vandaan. Dan hoort de prijs
+  // daarin te staan.
+  //
+  // Het label wordt daarvoor ingekort van "Voeg toe aan winkelmand" naar
+  // "In winkelmand", dezelfde tekst als de knop halverwege de pagina.
   const ctaLabelDesktop = (() => {
     switch (ctaState) {
       case 'adding':
@@ -214,9 +222,15 @@ export default function StickyVariantPicker({
         return t('pickSize')
       case 'add':
       default:
-        return t('addToCartFull')
+        return tProduct('addToCartCTA')
     }
   })()
+
+  /**
+   * De prijs naast het label, alleen wanneer er ook echt iets te kopen valt.
+   * Bij "Kies maat" of "Uitverkocht" zegt een bedrag niets.
+   */
+  const ctaPrijsMobile = ctaState === 'add' ? formatPrice(finalPrice, locale) : undefined
 
   const ctaDisabled = ctaState === 'oos' || ctaState === 'adding'
   const ctaPulse = ctaState === 'pickColor' || ctaState === 'pickSize'
@@ -321,6 +335,7 @@ export default function StickyVariantPicker({
           colorAvailability={colorAvailability}
           sizeAvailability={sizeAvailability}
           ctaLabel={ctaLabelMobile}
+          ctaPrice={ctaPrijsMobile}
           ctaState={ctaState}
           ctaDisabled={ctaDisabled}
           ctaPulse={ctaPulse}
@@ -499,6 +514,8 @@ function StickyContent({
 }
 
 interface StickyMobileTwoRowProps {
+  /** Geformatteerde prijs naast het label; leeg als er niets te kopen valt. */
+  ctaPrice?: string
   availableColors: AvailableColor[]
   availableSizes: string[]
   selectedColor: string
@@ -531,6 +548,7 @@ function StickyMobileTwoRow({
   colorAvailability,
   sizeAvailability,
   ctaLabel,
+  ctaPrice,
   ctaState,
   ctaDisabled,
   ctaPulse,
@@ -637,10 +655,20 @@ function StickyMobileTwoRow({
             ? 'bg-brand-primary text-white active:bg-brand-primary-hover active:scale-[0.99]'
             : 'bg-black text-white active:bg-gray-800 active:scale-[0.99]'
         } ${ctaPulse ? 'animate-pulse-subtle' : ''}`}
-        aria-label={ctaLabel}
+        aria-label={ctaPrice ? `${ctaLabel} · ${ctaPrice}` : ctaLabel}
       >
         <ShoppingCart className="w-4 h-4 shrink-0" />
         <span>{ctaLabel}</span>
+        {ctaPrice && (
+          <>
+            {/* Het scheidingsteken is versiering, geen tekst: een voorlezer
+                hoort het bedrag al via aria-label hierboven. */}
+            <span className="font-normal opacity-60" aria-hidden="true">
+              ·
+            </span>
+            <span className="font-extrabold">{ctaPrice}</span>
+          </>
+        )}
       </button>
     </div>
   )
