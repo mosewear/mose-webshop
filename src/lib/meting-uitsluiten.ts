@@ -31,6 +31,9 @@ import { isClientAutomationBrowser } from '@/lib/bot-detection'
 
 export const INTERNE_SESSIE_SLEUTEL = 'mose_interne_sessie'
 
+/** De parameter waarmee je een apparaat buiten de meting zet: ?meting=uit */
+export const MEETPARAMETER = 'meting'
+
 /**
  * Het echte winkeldomein. Alles wat hier niet onder valt is localhost of een
  * voorvertoning op vercel.app, en dat is geen klant.
@@ -39,6 +42,32 @@ export const INTERNE_SESSIE_SLEUTEL = 'mose_interne_sessie'
  * het kale domein hoort er dan vanzelf bij, een voorvertoning nooit.
  */
 const WINKELDOMEIN = 'mosewear.com'
+
+/**
+ * Staat er `?meting=uit` in de link waarmee deze pagina is geopend?
+ *
+ * Dit wordt los van het opgeslagen vlaggetje gecontroleerd, zodat ook de
+ * ALLEREERSTE paginaweergave al buiten de meting valt. Zou alleen het
+ * vlaggetje tellen, dan hangt het van de volgorde van de effecten af of die
+ * eerste weergave nog net wordt meegeteld.
+ */
+export function metingUitViaLink(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return new URLSearchParams(window.location.search).get(MEETPARAMETER) === 'uit'
+  } catch {
+    return false
+  }
+}
+
+export function wisInterneSessie(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(INTERNE_SESSIE_SLEUTEL)
+  } catch {
+    // Opslag geblokkeerd: dan was er ook niets opgeslagen.
+  }
+}
 
 export function isInterneSessie(): boolean {
   if (typeof window === 'undefined') return false
@@ -73,6 +102,7 @@ export function isEchteWinkel(): boolean {
  */
 export function magMeten(): { mag: boolean; reden?: string } {
   if (typeof window === 'undefined') return { mag: false, reden: 'server' }
+  if (metingUitViaLink()) return { mag: false, reden: 'link' }
   if (isClientAutomationBrowser()) return { mag: false, reden: 'automatisering' }
   if (isInterneSessie()) return { mag: false, reden: 'interne sessie' }
   if (!isEchteWinkel()) return { mag: false, reden: 'geen productie' }

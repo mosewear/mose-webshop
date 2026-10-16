@@ -14,6 +14,7 @@ import SurveyPopupWrapper from '@/components/SurveyPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
 import ChatButtonWrapper from '@/components/ChatButtonWrapper'
 import PaginaWeergaveMeter from '@/components/PaginaWeergaveMeter'
+import MetingSchakelaar from '@/components/MetingSchakelaar'
 import CampaignPopupWrapper from '@/components/campaign/CampaignPopupWrapper'
 import CampaignAutoApply from '@/components/campaign/CampaignAutoApply'
 import CampaignThemeProvider from '@/components/campaign/CampaignThemeProvider'
@@ -145,6 +146,7 @@ export default async function LocaleLayout({
       <CookieConsent />
       <ChatButtonWrapper />
       <PaginaWeergaveMeter />
+      <MetingSchakelaar />
     </NextIntlClientProvider>
   )
 }
