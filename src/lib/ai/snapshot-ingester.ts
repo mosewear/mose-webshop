@@ -33,8 +33,30 @@ interface IngestSummary {
   errors: string[]
 }
 
+/**
+ * De tijdzone van het advertentieaccount. Meta rekent `date_preset: 'today'`
+ * in de tijdzone van het account, niet in UTC.
+ */
+const ADVERTENTIE_TIJDZONE = 'Europe/Amsterdam'
+
+/**
+ * De datum waaronder we de cijfers wegschrijven, in de tijdzone van het
+ * advertentieaccount.
+ *
+ * Dit stond op `new Date().toISOString().slice(0, 10)`, dus op UTC. De run
+ * draait elk uur en overschrijft de rij van die dag. Om 22:00 en 23:00 UTC is
+ * het in Amsterdam al de volgende dag, dus Meta gaf toen de cijfers van de
+ * NIEUWE dag terug terwijl wij ze onder de OUDE datum wegschreven. Elke
+ * dagrij eindigde zo met alleen het eerste uur van de dag erna.
+ *
+ * Wat dat opleverde: 13 oktober stond op 60 vertoningen, 14 oktober op 85 met
+ * een doorklikratio van 10,6 procent, en 15 oktober op 808 vertoningen en
+ * €6,69 aan uitgaven. Dat zijn geen dagen maar losse uren, en het maakte het
+ * onmogelijk om te zien wat een campagne werkelijk heeft gekost.
+ */
 function todayDate(): string {
-  return new Date().toISOString().slice(0, 10)
+  // en-CA geeft het formaat jjjj-mm-dd.
+  return new Intl.DateTimeFormat('en-CA', { timeZone: ADVERTENTIE_TIJDZONE }).format(new Date())
 }
 
 function sumActions(actions: InsightRow['actions'], type: string): number {
