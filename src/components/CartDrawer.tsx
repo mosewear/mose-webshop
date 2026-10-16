@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { formatPrice, formatAmount } from '@/lib/format-price'
+import { formatPrice, formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import { trackAddToCart } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { catalogContentId } from '@/lib/catalog-ids'
@@ -392,7 +392,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           // Eigen zin voor de voorlezer. `empty.message` nodigt uit om iets uit
           // te kiezen en is daarmee geen melding van wat er zojuist gebeurde.
           ? t('empty.announce')
-          : `${t('items', { count: aantal })}. ${t('subtotal')} ${formatPrice(getTotal(), locale)}`
+          : `${t('items', { count: aantal })}. ${t('subtotal')} ${formatBedrag(getTotal(), locale)}`
       )
     }
   }, [isOpen, items, getItemCount, getTotal, locale, t])
@@ -795,11 +795,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                             {/* Price */}
                             <div className="text-right">
-                              <div className="font-bold text-lg">{formatPrice((item.price * item.quantity), locale)}</div>
+                              <div className="font-bold text-lg">{formatBedrag((item.price * item.quantity), locale)}</div>
                               {(staffelBreakdown.lineSavingByVariantId[item.variantId] ?? 0) > 0 && (
                                 <p className="text-xs text-gray-600 mt-1 max-w-[200px] ml-auto leading-snug">
                                   {t('staffel.lineSaving', {
-                                    amount: formatAmount(staffelBreakdown.lineSavingByVariantId[item.variantId], locale),
+                                    amount: formatBedragKaal(staffelBreakdown.lineSavingByVariantId[item.variantId], locale),
                                   })}
                                 </p>
                               )}
@@ -974,7 +974,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-gray-600">
-                        {t('freeShippingProgress', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale) })}
+                        {t('freeShippingProgress', { amount: formatBedragKaal(freeShippingThreshold - subtotalAfterDiscount, locale) })}
                       </p>
                       <span className="text-xs font-bold text-brand-primary">
                         {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%
@@ -1065,14 +1065,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {/* Subtotal */}
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-semibold uppercase tracking-wide">{t('subtotal')}</span>
-                    <span className="font-bold">{formatPrice(subtotal, locale)}</span>
+                    <span className="font-bold">{formatBedrag(subtotal, locale)}</span>
                   </div>
 
                   {/* Staffelkorting */}
                   {staffelBreakdown.totalSavings > 0 && (
                     <div className="flex justify-between items-center text-sm px-2 py-1.5 bg-gray-50 border-l-2 border-black">
                       <span className="font-semibold text-gray-800 uppercase tracking-wide text-xs">{t('staffel.label')}</span>
-                      <span className="font-bold text-black">-{formatPrice(staffelBreakdown.totalSavings, locale)}</span>
+                      <span className="font-bold text-black">-{formatBedrag(staffelBreakdown.totalSavings, locale)}</span>
                     </div>
                   )}
 
@@ -1113,7 +1113,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </div>
                           </div>
                         </div>
-                        <span className="font-bold text-black">-{formatPrice(promoDiscount, locale)}</span>
+                        <span className="font-bold text-black">-{formatBedrag(promoDiscount, locale)}</span>
                       </div>
                       <div className="h-px bg-gray-300"></div>
                     </>
@@ -1123,7 +1123,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-semibold uppercase tracking-wide">{t('shipping')}</span>
                     <span className="font-bold text-brand-primary">
-                      {shipping === 0 ? t('shippingFree') : formatPrice(shipping, locale)}
+                      {shipping === 0 ? t('shippingFree') : formatBedrag(shipping, locale)}
                     </span>
                   </div>
 
@@ -1131,7 +1131,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="border-t-2 border-black pt-2">
                     <div className="flex justify-between items-baseline">
                       <span className="font-display text-xl uppercase tracking-wide">{t('total')}</span>
-                      <span className="font-display text-4xl">{formatPrice(total, locale)}</span>
+                      <span className="font-display text-4xl">{formatBedrag(total, locale)}</span>
                     </div>
                     <p className="text-xs text-gray-500 text-right mt-1">
                       {t('totalInclusive')}
@@ -1230,7 +1230,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-black">
-                          -{formatPrice(promoDiscount, locale)}
+                          -{formatBedrag(promoDiscount, locale)}
                         </div>
                       </div>
                     </div>
@@ -1255,7 +1255,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 {staffelBreakdown.totalSavings > 0 && (
                   <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                     <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{t('staffel.label')}</span>
-                    <span className="text-xs font-bold text-black">-{formatPrice(staffelBreakdown.totalSavings, locale)}</span>
+                    <span className="text-xs font-bold text-black">-{formatBedrag(staffelBreakdown.totalSavings, locale)}</span>
                   </div>
                 )}
 
@@ -1264,7 +1264,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{t('total')}</div>
-                      <div className="font-display text-3xl">{formatPrice(total, locale)}</div>
+                      <div className="font-display text-3xl">{formatBedrag(total, locale)}</div>
                       <div className="text-xs text-gray-400">
                         {t('totalInclusive')}
                       </div>
@@ -1282,7 +1282,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div className="border-t border-gray-700 pt-2">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-xs text-gray-400">
-                          {t('freeShippingProgressMobile', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale) })}
+                          {t('freeShippingProgressMobile', { amount: formatBedragKaal(freeShippingThreshold - subtotalAfterDiscount, locale) })}
                         </p>
                         <span className="text-xs font-bold text-brand-primary">
                           {Math.round((subtotalAfterDiscount / freeShippingThreshold) * 100)}%

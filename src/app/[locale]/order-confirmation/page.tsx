@@ -11,7 +11,7 @@ import { trackPurchase } from '@/lib/analytics'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations } from 'next-intl'
 import { useParams } from 'next/navigation'
-import { formatPrice, formatAmount } from '@/lib/format-price'
+import { formatBedrag, formatBedragKaal } from '@/lib/format-price'
 
 interface Order {
   id: string
@@ -397,7 +397,7 @@ export default function OrderConfirmationPage({
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-xl">{formatPrice(item.subtotal, locale)}</p>
+                    <p className="font-display text-xl">{formatBedrag(item.subtotal, locale)}</p>
                   </div>
                 </div>
               ))}
@@ -409,11 +409,11 @@ export default function OrderConfirmationPage({
             <div className="max-w-md ml-auto space-y-4">
               <div className="flex justify-between text-lg">
                 <span>{t('summary.subtotal')}</span>
-                <span className="font-semibold">{formatPrice(order.subtotal, locale)}</span>
+                <span className="font-semibold">{formatBedrag(order.subtotal, locale)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-300">{t('summary.vat')}</span>
-                <span className="text-gray-300">{formatPrice(order.subtotal - order.subtotal / 1.21, locale)}</span>
+                <span className="text-gray-300">{formatBedrag(order.subtotal - order.subtotal / 1.21, locale)}</span>
               </div>
               <div className="flex justify-between text-lg">
                 <span>{t('summary.shipping')}</span>
@@ -423,28 +423,28 @@ export default function OrderConfirmationPage({
                   ) : order.shipping_cost === 0 ? (
                     <span className="text-brand-primary">{t('summary.free')}</span>
                   ) : (
-                    formatPrice(order.shipping_cost, locale)
+                    formatBedrag(order.shipping_cost, locale)
                   )}
                 </span>
               </div>
               {order.promo_code && order.discount_amount && order.discount_amount > 0 && (
                 <div className="flex justify-between text-lg text-brand-primary">
                   <span>🎟️ {t('summary.discount')} ({order.promo_code})</span>
-                  <span className="font-semibold">-{formatPrice(order.discount_amount, locale)}</span>
+                  <span className="font-semibold">-{formatBedrag(order.discount_amount, locale)}</span>
                 </div>
               )}
               {order.loyalty_tier_discount && order.loyalty_tier_discount > 0 ? (
                 <div className="flex justify-between text-lg text-yellow-400">
                   <span>Loyalty korting</span>
-                  <span className="font-semibold">-{formatPrice(order.loyalty_tier_discount, locale)}</span>
+                  <span className="font-semibold">-{formatBedrag(order.loyalty_tier_discount, locale)}</span>
                 </div>
               ) : null}
               <div className="border-t-2 border-white pt-4 flex justify-between items-center text-2xl md:text-3xl">
                 <span className="font-display">{t('summary.total')}</span>
-                <span className="font-display">{formatPrice(order.total, locale)}</span>
+                <span className="font-display">{formatBedrag(order.total, locale)}</span>
               </div>
               <p className="text-xs text-gray-300 text-right">
-                {t('summary.inclVat', { amount: formatAmount(order.total - order.total / 1.21, locale) })}
+                {t('summary.inclVat', { amount: formatBedragKaal(order.total - order.total / 1.21, locale) })}
               </p>
             </div>
           </div>

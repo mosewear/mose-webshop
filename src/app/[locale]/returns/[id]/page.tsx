@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { useLocale } from 'next-intl'
-import { formatPrice } from '@/lib/format-price'
+import { formatBedrag } from '@/lib/format-price'
 
 interface ReturnData {
   id: string
@@ -404,7 +404,7 @@ export default function ReturnDetailsPage() {
             </div>
             {returnData.total_refund && (
               <div className="text-left md:text-right">
-                <p className="text-2xl font-display">{formatPrice(returnData.total_refund, locale)}</p>
+                <p className="text-2xl font-display">{formatBedrag(returnData.total_refund, locale)}</p>
                 <p className="text-sm text-gray-600">Terug te betalen</p>
               </div>
             )}
@@ -472,7 +472,7 @@ export default function ReturnDetailsPage() {
           <div className="bg-orange-50 border-2 border-orange-500 p-6 mb-6">
             <h3 className="text-xl font-display mb-4">Betaal voor Retourlabel</h3>
             <p className="mb-4">
-              Om je retourlabel te ontvangen, betaal je eerst {formatPrice(returnData.return_label_cost_incl_btw, locale)} voor de retourverzending. 
+              Om je retourlabel te ontvangen, betaal je eerst {formatBedrag(returnData.return_label_cost_incl_btw, locale)} voor de retourverzending. 
               Na betaling wordt je retourlabel automatisch gegenereerd.
             </p>
             {paymentLoading ? (
@@ -485,7 +485,7 @@ export default function ReturnDetailsPage() {
                 onClick={startMolliePayment}
                 className="w-full px-8 py-4 bg-orange-500 text-white font-bold uppercase tracking-wider hover:bg-orange-600 transition-colors"
               >
-                Betaal {formatPrice(returnData.return_label_cost_incl_btw, locale)} via Mollie
+                Betaal {formatBedrag(returnData.return_label_cost_incl_btw, locale)} via Mollie
               </button>
             )}
           </div>
@@ -600,7 +600,7 @@ export default function ReturnDetailsPage() {
                     <p className="text-sm text-gray-600">
                       <strong>Reden:</strong> {returnItem.reason}
                     </p>
-                    <p className="font-bold mt-2">{formatPrice((orderItem.price_at_purchase * returnItem.quantity), locale)}</p>
+                    <p className="font-bold mt-2">{formatBedrag((orderItem.price_at_purchase * returnItem.quantity), locale)}</p>
                   </div>
                 </div>
               )
@@ -630,16 +630,16 @@ export default function ReturnDetailsPage() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Terug te betalen (items)</span>
-              <span className="font-bold">{formatPrice(returnData.refund_amount, locale)}</span>
+              <span className="font-bold">{formatBedrag(returnData.refund_amount, locale)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-400">
               <span>Retourlabel kosten (al betaald)</span>
-              <span>{formatPrice(returnData.return_label_cost_incl_btw, locale)}</span>
+              <span>{formatBedrag(returnData.return_label_cost_incl_btw, locale)}</span>
             </div>
             <div className="border-t-2 border-gray-600 pt-2 mt-2">
               <div className="flex justify-between text-xl font-display">
                 <span>Terug te betalen</span>
-                <span>{formatPrice(returnData.total_refund, locale)}</span>
+                <span>{formatBedrag(returnData.total_refund, locale)}</span>
               </div>
               <p className="text-xs text-gray-400 mt-1">
                 (Na ontvangst retour)

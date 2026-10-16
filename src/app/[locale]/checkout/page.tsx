@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { formatPrice, formatAmount } from '@/lib/format-price'
+import { formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -1873,7 +1873,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-bold text-xl">{formatPrice(total, locale)}</span>
+              <span className="font-bold text-xl">{formatBedrag(total, locale)}</span>
               <ChevronDown 
                 size={20} 
                 className={`text-gray-600 transition-transform ${showOrderSummary ? 'rotate-180' : ''}`}
@@ -1905,7 +1905,7 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-500">
                         {item.size} • {item.color}
                       </p>
-                      <p className="font-bold text-sm mt-0.5">{formatPrice((item.price * item.quantity), locale)}</p>
+                      <p className="font-bold text-sm mt-0.5">{formatBedrag((item.price * item.quantity), locale)}</p>
                     </div>
                   </div>
                 ))}
@@ -1916,7 +1916,7 @@ export default function CheckoutPage() {
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
-                  <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
+                  <span className="font-semibold">{formatBedrag(subtotal, locale)}</span>
                 </div>
 
                 {/* Staffelkorting - Mobile */}
@@ -1925,7 +1925,7 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
                       <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
-                      <span className="font-bold text-black text-xs">-{formatPrice(staffelSavings, locale)}</span>
+                      <span className="font-bold text-black text-xs">-{formatBedrag(staffelSavings, locale)}</span>
                     </div>
                   </>
                 )}
@@ -1952,7 +1952,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                       </div>
-                      <span className="font-bold text-brand-primary">-{formatPrice(promoDiscount, locale)}</span>
+                      <span className="font-bold text-brand-primary">-{formatBedrag(promoDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -1975,7 +1975,7 @@ export default function CheckoutPage() {
                           </button>
                         </div>
                       </div>
-                      <span className="font-bold text-yellow-800 text-sm">-{formatPrice(loyaltyDiscount, locale)}</span>
+                      <span className="font-bold text-yellow-800 text-sm">-{formatBedrag(loyaltyDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -1992,7 +1992,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
                       </div>
-                      <span className="font-bold text-yellow-800 text-sm">-{formatPrice(loyaltyTierDiscount, locale)}</span>
+                      <span className="font-bold text-yellow-800 text-sm">-{formatBedrag(loyaltyTierDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2007,7 +2007,7 @@ export default function CheckoutPage() {
                     ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
-                      formatPrice(shipping, locale)
+                      formatBedrag(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -2015,7 +2015,7 @@ export default function CheckoutPage() {
                 {/* Total */}
                 <div className="flex justify-between text-base border-t-2 border-black pt-3 mt-2">
                   <span className="font-display text-lg uppercase tracking-wide">TOTAAL</span>
-                  <span className="font-display text-2xl">{formatPrice(total, locale)}</span>
+                  <span className="font-display text-2xl">{formatBedrag(total, locale)}</span>
                 </div>
 
                 {/* Kortingscode, ook op mobiel. Deze invoer zat alleen in de
@@ -2845,7 +2845,7 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-600">
                         {item.size} • {item.color}
                       </p>
-                      <p className="font-bold text-sm mt-1">{formatPrice((item.price * item.quantity), locale)}</p>
+                      <p className="font-bold text-sm mt-1">{formatBedrag((item.price * item.quantity), locale)}</p>
                     </div>
                   </div>
                 ))}
@@ -2856,13 +2856,13 @@ export default function CheckoutPage() {
                 {/* Subtotal */}
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold uppercase tracking-wide">{tCart('subtotal')}</span>
-                  <span className="font-semibold">{formatPrice(subtotal, locale)}</span>
+                  <span className="font-semibold">{formatBedrag(subtotal, locale)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">
                     {locale === 'nl' ? 'Waarvan BTW (21%)' : 'Including VAT (21%)'}
                   </span>
-                  <span className="text-gray-500">{formatPrice(btwAmount, locale)}</span>
+                  <span className="text-gray-500">{formatBedrag(btwAmount, locale)}</span>
                 </div>
 
                 {/* Staffelkorting - Desktop */}
@@ -2871,7 +2871,7 @@ export default function CheckoutPage() {
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
                       <span className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
-                      <span className="font-bold text-black text-sm">-{formatPrice(staffelSavings, locale)}</span>
+                      <span className="font-bold text-black text-sm">-{formatBedrag(staffelSavings, locale)}</span>
                     </div>
                   </>
                 )}
@@ -2898,7 +2898,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                       </div>
-                      <span className="font-bold text-brand-primary">-{formatPrice(promoDiscount, locale)}</span>
+                      <span className="font-bold text-brand-primary">-{formatBedrag(promoDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2921,7 +2921,7 @@ export default function CheckoutPage() {
                           </button>
                         </div>
                       </div>
-                      <span className="font-bold text-yellow-800">-{formatPrice(loyaltyDiscount, locale)}</span>
+                      <span className="font-bold text-yellow-800">-{formatBedrag(loyaltyDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2938,7 +2938,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
                       </div>
-                      <span className="font-bold text-yellow-800">-{formatPrice(loyaltyTierDiscount, locale)}</span>
+                      <span className="font-bold text-yellow-800">-{formatBedrag(loyaltyTierDiscount, locale)}</span>
                     </div>
                     <div className="h-px bg-gray-200"></div>
                   </>
@@ -2953,7 +2953,7 @@ export default function CheckoutPage() {
                     ) : shipping === 0 ? (
                       <span className="text-brand-primary font-bold">{tCart('shippingFree')}</span>
                     ) : (
-                      formatPrice(shipping, locale)
+                      formatBedrag(shipping, locale)
                     )}
                   </span>
                 </div>
@@ -2976,7 +2976,7 @@ export default function CheckoutPage() {
                             </span>
                           </div>
                           <div className="text-[11px] md:text-xs text-gray-600 mt-0.5">
-                            {t('giftCard.balance')}: {formatPrice(gc.balance, locale)}
+                            {t('giftCard.balance')}: {formatBedrag(gc.balance, locale)}
                             {' • '}
                             <button
                               type="button"
@@ -2994,7 +2994,7 @@ export default function CheckoutPage() {
                         <span className="uppercase tracking-wide">
                           {t('giftCard.applied')}
                         </span>
-                        <span>-{formatPrice(giftCardDiscount, locale)}</span>
+                        <span>-{formatBedrag(giftCardDiscount, locale)}</span>
                       </div>
                     )}
                   </div>
@@ -3113,7 +3113,7 @@ export default function CheckoutPage() {
                             <option key={pts} value={pts}>
                               {tLoyalty('pointsOption', {
                                 points: pts,
-                                discount: formatAmount(pts / 100 * 5, locale),
+                                discount: formatBedragKaal(pts / 100 * 5, locale),
                               })}
                             </option>
                           ))}
@@ -3155,7 +3155,7 @@ export default function CheckoutPage() {
                 
                 {subtotalAfterDiscount < freeShippingThreshold && subtotalAfterDiscount > 0 && (
                   <div className="bg-gray-100 border border-gray-300 p-2 text-xs text-gray-900 font-semibold">
-                    {t('freeShippingProgress', { amount: formatAmount(freeShippingThreshold - subtotalAfterDiscount, locale), ns: 'cart' })}
+                    {t('freeShippingProgress', { amount: formatBedragKaal(freeShippingThreshold - subtotalAfterDiscount, locale), ns: 'cart' })}
                   </div>
                 )}
               </div>
@@ -3163,10 +3163,10 @@ export default function CheckoutPage() {
               {/* Total - Prominent */}
               <div className="flex justify-between items-center border-t-2 border-black pt-4">
                 <span className="text-lg font-bold">{t('total')}</span>
-                <span className="text-2xl font-display">{formatPrice(total, locale)}</span>
+                <span className="text-2xl font-display">{formatBedrag(total, locale)}</span>
               </div>
               <p className="text-xs text-gray-500 text-right mt-1">
-                {locale === 'nl' ? `Incl. €${formatAmount(totalBtw, locale)} BTW` : `Incl. €${formatAmount(totalBtw, locale)} VAT`}
+                {locale === 'nl' ? `Incl. €${formatBedragKaal(totalBtw, locale)} BTW` : `Incl. €${formatBedragKaal(totalBtw, locale)} VAT`}
               </p>
 
               {/* Submit Button - Desktop */}

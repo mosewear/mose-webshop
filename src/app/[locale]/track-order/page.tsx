@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Package, Truck, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
-import { formatPrice } from '@/lib/format-price'
+import { formatBedrag } from '@/lib/format-price'
 
 interface OrderTrackingData {
   id: string
@@ -341,7 +341,7 @@ export default function TrackOrderPage() {
               <div className="mt-6 pt-4 border-t-2 border-gray-200 flex justify-between items-center">
                 <span className="font-bold text-lg">{t('items.total')}</span>
                 <span className="text-2xl font-bold text-brand-primary">
-                  {formatPrice(orderData.total, locale)}
+                  {formatBedrag(orderData.total, locale)}
                 </span>
               </div>
             </div>

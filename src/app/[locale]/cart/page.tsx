@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { formatPrice, formatAmount } from '@/lib/format-price'
+import { formatPrice, formatAmount, formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import Image from 'next/image'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
@@ -170,14 +170,14 @@ export default function CartPage() {
     <div className="space-y-3">
       <div className="flex justify-between text-base">
         <span className="uppercase tracking-wider text-gray-600">{t('subtotal')}</span>
-        <span className="font-semibold tabular-nums">{formatPrice(subtotal, locale)}</span>
+        <span className="font-semibold tabular-nums">{formatBedrag(subtotal, locale)}</span>
       </div>
 
       {staffelSavings > 0 && (
         <div className="flex justify-between text-base">
           <span className="uppercase tracking-wider text-gray-600">{t('staffel.label')}</span>
           <span className="font-semibold tabular-nums text-brand-primary">
-            −{formatPrice(staffelSavings, locale)}
+            −{formatBedrag(staffelSavings, locale)}
           </span>
         </div>
       )}
@@ -202,7 +202,7 @@ export default function CartPage() {
           {shipping === 0 ? (
             <span className="text-brand-primary">{t('shippingFree')}</span>
           ) : (
-            formatPrice(shipping, locale)
+            formatBedrag(shipping, locale)
           )}
         </span>
       </div>
@@ -220,7 +220,7 @@ export default function CartPage() {
     <div className="border border-gray-200 bg-white px-4 py-3">
       <p className="text-sm text-gray-700">
         {tekortVoorGratis > 0
-          ? t('freeShippingProgress', { amount: formatAmount(tekortVoorGratis, locale) })
+          ? t('freeShippingProgress', { amount: formatBedragKaal(tekortVoorGratis, locale) })
           : t('freeShippingReached')}
       </p>
       <div
@@ -229,7 +229,7 @@ export default function CartPage() {
         aria-valuenow={voortgang}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={t('freeShippingProgress', { amount: formatAmount(tekortVoorGratis, locale) })}
+        aria-label={t('freeShippingProgress', { amount: formatBedragKaal(tekortVoorGratis, locale) })}
       >
         <div
           className="h-full bg-brand-primary transition-[width] duration-500"
@@ -409,12 +409,12 @@ export default function CartPage() {
 
                           <div className="text-right">
                             <div className="font-display text-xl tabular-nums md:text-2xl">
-                              {formatPrice(item.price * item.quantity, locale)}
+                              {formatBedrag(item.price * item.quantity, locale)}
                             </div>
                             {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
                               <p className="ml-auto mt-1 max-w-[200px] text-xs leading-snug text-gray-600">
                                 {t('staffel.lineSaving', {
-                                  amount: formatAmount(lineStaffelByVariant[item.variantId], locale),
+                                  amount: formatBedragKaal(lineStaffelByVariant[item.variantId], locale),
                                 })}
                               </p>
                             )}
@@ -454,11 +454,11 @@ export default function CartPage() {
               <div className="mt-5 border-t-2 border-black pt-5">
                 <div className="flex items-baseline justify-between">
                   <span className="font-display text-xl uppercase">{t('total')}</span>
-                  <span className="font-display text-3xl tabular-nums">{formatPrice(total, locale)}</span>
+                  <span className="font-display text-3xl tabular-nums">{formatBedrag(total, locale)}</span>
                 </div>
                 <p className="mt-1 text-right text-xs uppercase tracking-wider text-gray-500">
                   {t('totalInclusive')} · {locale === 'en' ? 'VAT' : 'BTW'}{' '}
-                  {formatPrice(totalBtw, locale)}
+                  {formatBedrag(totalBtw, locale)}
                 </p>
               </div>
 
@@ -489,10 +489,10 @@ export default function CartPage() {
         className="fixed bottom-[var(--cookie-consent-height)] left-0 right-0 z-40 flex items-stretch bg-black pb-[env(safe-area-inset-bottom)] text-white md:hidden"
       >
         <div className="flex-1 py-3 pl-4 pr-2">
-          <div className="font-display text-2xl leading-tight tabular-nums">{formatPrice(total, locale)}</div>
+          <div className="font-display text-2xl leading-tight tabular-nums">{formatBedrag(total, locale)}</div>
           <div className="text-[11px] uppercase tracking-wider text-gray-300">
             {tekortVoorGratis > 0
-              ? t('freeShippingProgressMobile', { amount: formatAmount(tekortVoorGratis, locale) })
+              ? t('freeShippingProgressMobile', { amount: formatBedragKaal(tekortVoorGratis, locale) })
               : t('freeShippingReached')}
           </div>
         </div>

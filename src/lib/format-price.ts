@@ -37,3 +37,29 @@ export function formatPrice(price: number, locale: string = 'nl'): string {
 export function formatAmount(amount: number, locale: string = 'nl'): string {
   return formatPrice(amount, locale).replace('€', '')
 }
+
+/**
+ * Een bedrag dat GEEN productprijs is: een subtotaal, verzendkosten, korting,
+ * btw, een ordertotaal of een terugbetaling.
+ *
+ * Het verschil met `formatPrice` is bewust. Een productprijs laten we kaal
+ * staan: €75 leest prettiger dan €75,00 op een tegel of een knop. Maar een
+ * bedrag op een bestelling of een retour hoort er wél uit te zien als een
+ * bedrag, met twee decimalen, zoals op elke bon. "Totaal €145" en
+ * "Terugbetaald €150" lezen als afgeronde schattingen; dat moet niet.
+ *
+ * Het decimaalteken volgt de taal: komma in het Nederlands, punt in het
+ * Engels.
+ */
+export function formatBedrag(amount: number, locale: string = 'nl'): string {
+  const vast = Number(amount).toFixed(2)
+  return locale === 'en' ? `\u20ac${vast}` : `\u20ac${vast.replace('.', ',')}`
+}
+
+/**
+ * Hetzelfde bedrag zonder euroteken, voor zinnen waarin het teken al in de
+ * vertaling staat.
+ */
+export function formatBedragKaal(amount: number, locale: string = 'nl'): string {
+  return formatBedrag(amount, locale).replace('\u20ac', '')
+}

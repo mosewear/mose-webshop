@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import LoyaltyTab from '@/components/LoyaltyTab'
-import { formatPrice, formatAmount } from '@/lib/format-price'
+import { formatBedrag, formatBedragKaal } from '@/lib/format-price'
 
 interface Order {
   id: string
@@ -763,7 +763,7 @@ export default function AccountPage() {
                             </p>
                           </div>
                           <div className="text-left md:text-right">
-                            <p className="text-2xl md:text-3xl font-display mb-1">{formatPrice(order.total, locale)}</p>
+                            <p className="text-2xl md:text-3xl font-display mb-1">{formatBedrag(order.total, locale)}</p>
                             <p className="text-sm text-gray-600">
                               {order.order_items.reduce((sum, item) => sum + item.quantity, 0)} item(s)
                             </p>
@@ -799,7 +799,7 @@ export default function AccountPage() {
                                 <p className="text-sm text-gray-600 mb-2">
                                   {item.size} • {item.color} • x{item.quantity}
                                 </p>
-                                <p className="font-bold text-lg">{formatPrice(item.subtotal, locale)}</p>
+                                <p className="font-bold text-lg">{formatBedrag(item.subtotal, locale)}</p>
                               </div>
                             </div>
                           ))}
@@ -1248,7 +1248,7 @@ export default function AccountPage() {
                             </div>
                             {returnItem.total_refund && (
                               <div className="text-left md:text-right">
-                                <p className="text-2xl md:text-3xl font-display mb-1">{formatPrice(returnItem.total_refund, locale)}</p>
+                                <p className="text-2xl md:text-3xl font-display mb-1">{formatBedrag(returnItem.total_refund, locale)}</p>
                                 <p className="text-sm text-gray-600">{t('returnLabels.refundAmount')}</p>
                               </div>
                             )}
@@ -1273,7 +1273,7 @@ export default function AccountPage() {
                                 href={`/returns/${returnItem.id}`}
                                 className="px-6 py-3 border-2 border-black font-bold uppercase text-sm hover:bg-black hover:text-white transition-colors text-center"
                               >
-                                {t('returnLabels.payForLabel', { cost: formatAmount(returnLabelCost, locale) })}
+                                {t('returnLabels.payForLabel', { cost: formatBedragKaal(returnLabelCost, locale) })}
                               </LocaleLink>
                             )}
                             {returnItem.status === 'return_label_generated' && returnItem.return_label_url && (
