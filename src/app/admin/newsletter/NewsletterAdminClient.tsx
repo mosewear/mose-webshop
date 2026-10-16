@@ -965,8 +965,10 @@ export default function NewsletterAdminClient({
                 </span>
               </div>
             ) : null}
-            <div className="hidden md:block bg-white border-2 border-black overflow-hidden">
-            <table className="w-full">
+            {/* overflow-hidden knipte de tabel af in plaats van hem te laten
+                scrollen, waardoor de pagina op een tablet zijwaarts schoof. */}
+            <div className="hidden md:block bg-white border-2 border-black overflow-x-auto">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-black text-white">
                 <tr>
                   <th className="px-4 py-3 text-left font-bold uppercase tracking-wider text-sm">Email</th>

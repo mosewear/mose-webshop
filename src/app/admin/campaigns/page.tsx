@@ -284,8 +284,12 @@ export default function CampaignsListPage() {
               })}
             </ul>
 
-            {/* Desktop table */}
-            <table className="hidden md:table w-full">
+            {/* Desktop table.
+                Op een tablet van 768 pixels was deze tabel 993 breed, waardoor
+                de hele pagina zijwaarts schoof in plaats van alleen de tabel.
+                Nu scrolt de tabel in zijn eigen doos. */}
+            <div className="hidden md:block overflow-x-auto">
+            <table className="w-full min-w-[720px]">
               <thead className="border-b-2 border-gray-200 bg-gray-50">
                 <tr>
                   <th className="text-left text-xs font-bold uppercase tracking-wider text-gray-700 px-4 py-3">
@@ -387,6 +391,7 @@ export default function CampaignsListPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </>
         )}
       </div>
