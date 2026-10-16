@@ -41,6 +41,7 @@ interface Product {
   }>
   product_variants?: Array<{
     stock_quantity: number
+    price_adjustment?: number | null
   }>
 }
 
@@ -125,7 +126,8 @@ export default function AdminProductsPage() {
         .select(`
           *,
           category:categories(name),
-          product_images(url, is_primary, media_type, video_thumbnail_url)
+          product_images(url, is_primary, media_type, video_thumbnail_url),
+          product_variants(stock_quantity, price_adjustment)
         `)
         .order('display_order', { ascending: true })
         .order('created_at', { ascending: false })
@@ -402,9 +404,26 @@ export default function AdminProductsPage() {
         </div>
         <div className="bg-white p-4 sm:p-6 border-2 border-gray-200">
           <div className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2 truncate">
-            {formatBedrag(products.reduce((sum, p) => sum + Number(p.sale_price || p.base_price), 0))}
+            {formatBedrag(
+              products.reduce(
+                (som, p) =>
+                  som +
+                  (p.product_variants ?? []).reduce(
+                    (regel, v) =>
+                      regel +
+                      Number(v.stock_quantity || 0) *
+                        (Number(p.sale_price || p.base_price) + Number(v.price_adjustment || 0)),
+                    0
+                  ),
+                0
+              )
+            )}
           </div>
-          <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Totale Waarde</div>
+          {/* Hier stond de som van de vijf prijskaartjes, €365, met het label
+              "Totale Waarde". Dat is geen waarde van iets: het telt wat één
+              exemplaar van elk product kost. De voorraad die er werkelijk ligt
+              is een veelvoud daarvan. Nu prijs maal voorraad per variant. */}
+          <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Voorraadwaarde</div>
         </div>
       </div>
 
