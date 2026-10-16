@@ -824,12 +824,12 @@ export default function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-gray-900">
                         {formatBedrag(Number(order.total))}
                       </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} kind="order" />
