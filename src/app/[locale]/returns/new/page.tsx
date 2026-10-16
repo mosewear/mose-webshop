@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client'
 import { getSiteSettings } from '@/lib/settings'
 import toast from 'react-hot-toast'
 import { calculateReturnRefundWithDiscount, findApplicableTier, type QuantityDiscountTier } from '@/lib/quantity-discount'
+import { formatPrice } from '@/lib/format-price'
+import { useLocale } from 'next-intl'
 
 interface Order {
   id: string
@@ -40,6 +42,7 @@ const RETURN_REASONS = [
 
 // Component voor order selectie lijst
 function OrderSelectionList({ returnDays }: { returnDays: number }) {
+  const locale = useLocale()
   const [orders, setOrders] = useState<Order[]>([])
   const [loadingOrders, setLoadingOrders] = useState(true)
   const supabase = createClient()
@@ -153,7 +156,7 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
                   }) : 'N/A'}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {order.order_items?.length || 0} item{(order.order_items?.length || 0) !== 1 ? 's' : ''} • €{order.total.toFixed(2)}
+                  {order.order_items?.length || 0} item{(order.order_items?.length || 0) !== 1 ? 's' : ''} • {formatPrice(order.total, locale)}
                 </p>
               </div>
               <div className="text-right">
@@ -170,6 +173,7 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
 }
 
 export default function NewReturnPage() {
+  const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
   const orderId = searchParams.get('order_id')
@@ -569,7 +573,7 @@ export default function NewReturnPage() {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-display">€{order.total.toFixed(2)}</p>
+              <p className="text-2xl font-display">{formatPrice(order.total, locale)}</p>
             </div>
           </div>
         </div>
@@ -614,7 +618,7 @@ export default function NewReturnPage() {
                           <p className="text-sm text-gray-600 mb-2">
                             Maat {item.size} • {item.color} • {item.quantity}x stuks
                           </p>
-                          <p className="font-bold">€{item.subtotal.toFixed(2)}</p>
+                          <p className="font-bold">{formatPrice(item.subtotal, locale)}</p>
                         </div>
                       </div>
 
@@ -708,7 +712,7 @@ export default function NewReturnPage() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Terug te betalen (items)</span>
-              <span className="font-bold">€{refundAmount.toFixed(2)}</span>
+              <span className="font-bold">{formatPrice(refundAmount, locale)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-400">
               <span>Retourlabel kosten</span>
@@ -717,7 +721,7 @@ export default function NewReturnPage() {
             <div className="border-t-2 border-gray-600 pt-2 mt-2">
               <div className="flex justify-between text-xl font-display">
                 <span>Terug te betalen</span>
-                <span>€{refundAmount.toFixed(2)}</span>
+                <span>{formatPrice(refundAmount, locale)}</span>
               </div>
               <p className="text-xs text-gray-400 mt-1">
                 (Na ontvangst retour, label kosten zijn al betaald)
