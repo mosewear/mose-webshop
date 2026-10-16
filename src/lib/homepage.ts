@@ -232,7 +232,7 @@ export async function getHomepageSettings(locale: string = 'nl'): Promise<Homepa
       story_badge: 'Ons Verhaal',
       story_title_line1: 'GEMAAKT IN',
       story_title_line2: 'GRONINGEN',
-      story_paragraph1: 'Geen poespas. Alleen karakter. We maken kleding die lang meegaat, lokaal geproduceerd zonder compromissen op kwaliteit.',
+      story_paragraph1: 'Geen poespas. Alleen karakter. We maken kleding die lang meegaat, lokaal geproduceerd en geen compromissen op kwaliteit.',
       story_paragraph2: 'Premium basics met een ziel. Gebouwd voor het echte leven.',
       story_stat1_label: '100% Lokaal',
       story_stat1_sublabel: 'Made in NL',
