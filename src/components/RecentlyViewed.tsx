@@ -5,11 +5,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getRecentlyViewed, type RecentlyViewedProduct } from '@/lib/recentlyViewed'
 import { createClient } from '@/lib/supabase/client'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { formatPrice } from '@/lib/format-price'
 
 interface Product {
   id: string
   name: string
+  name_en: string | null
   slug: string
   base_price: number
   sale_price: number | null
@@ -23,6 +25,7 @@ interface Product {
 
 export default function RecentlyViewed({ currentProductId }: { currentProductId?: string }) {
   const t = useTranslations('product.recentlyViewed')
+  const locale = useLocale()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
@@ -52,6 +55,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
         .select(`
           id,
           name,
+          name_en,
           slug,
           base_price,
           sale_price,
@@ -110,20 +114,25 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
                 </div>
                 <div className="p-2 md:p-3">
                   <h3 className="font-bold text-xs md:text-sm mb-1 line-clamp-2 min-h-[2rem]">
-                    {product.name}
+                    {locale === 'en' && product.name_en ? product.name_en : product.name}
                   </h3>
+                  {/* Via formatPrice, net als de rest van de winkel. Hier stond
+                      `toFixed(2)`, wat twee dingen fout deed: ronde bedragen
+                      kregen nullen achter de komma (€150.00 waar de shoppagina
+                      €150 toont) en het decimaalteken was een punt in plaats van
+                      een komma. */}
                   {hasDiscount && product.sale_price ? (
                     <div className="flex items-center gap-2">
                       <p className="text-sm md:text-base font-bold text-red-600">
-                        €{product.sale_price.toFixed(2)}
+                        {formatPrice(product.sale_price, locale)}
                       </p>
                       <p className="text-xs text-gray-500 line-through">
-                        €{product.base_price.toFixed(2)}
+                        {formatPrice(product.base_price, locale)}
                       </p>
                     </div>
                   ) : (
                     <p className="text-sm md:text-base font-bold">
-                      €{product.base_price.toFixed(2)}
+                      {formatPrice(product.base_price, locale)}
                     </p>
                   )}
                 </div>
