@@ -734,7 +734,9 @@ export default function NewsletterAdminClient({
   return (
     <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
+      {/* Mag afbreken: vanaf md werd dit een rij die op een tablet van 768
+          pixels niet paste, waardoor de hele pagina zijwaarts schoof. */}
+      <div className="flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-between mb-6 md:mb-8 gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">
             Nieuwsbrief Beheer
@@ -878,7 +880,7 @@ export default function NewsletterAdminClient({
 
           {/* Filters */}
           <div className="bg-white border-2 border-black p-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-3 md:gap-4">
               {/* Search */}
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
