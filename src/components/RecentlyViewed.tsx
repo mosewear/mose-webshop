@@ -62,6 +62,12 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
           product_images(url, alt_text, is_primary, media_type)
         `)
         .in('id', filtered.map(p => p.id))
+        // Alleen gepubliceerde producten. Dit filter ontbrak, waardoor een
+        // product dat op concept staat hier gewoon met prijs en al in de winkel
+        // verscheen zodra iemand de pagina ooit had geopend. Het horloge stond
+        // zo op de productpagina terwijl het niet te koop is.
+        .eq('is_active', true)
+        .eq('status', 'active')
 
       if (error) throw error
 
