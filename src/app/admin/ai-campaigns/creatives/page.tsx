@@ -20,6 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
+import { formatBedrag } from '@/lib/format-price'
 
 interface ProductOption {
   id: string
@@ -721,7 +722,7 @@ export default function CreativesPage() {
                   {offerPreview.has_active_sale && offerPreview.base_price && (
                     <span className="text-blue-700">
                       {' '}
-                      (sale, -{offerPreview.sale_off_pct}% van €{offerPreview.base_price.toFixed(2)})
+                      (sale, -{offerPreview.sale_off_pct}% van {formatBedrag(offerPreview.base_price)})
                     </span>
                   )}
                 </div>

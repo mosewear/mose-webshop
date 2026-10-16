@@ -7,6 +7,7 @@ import IconSelector from '@/components/admin/IconSelector'
 import RevalidateButton from '@/components/admin/RevalidateButton'
 import LanguageTabs from '@/components/admin/LanguageTabs'
 import MediaPicker from '@/components/admin/MediaPicker'
+import { formatBedrag } from '@/lib/format-price'
 
 interface HomepageSettings {
   id: string
@@ -629,7 +630,7 @@ export default function HomepageSettingsPage() {
                           <option value="">Geen product</option>
                           {products.map((product) => (
                             <option key={product.id} value={product.id}>
-                              {product.name} - €{product.base_price.toFixed(2)}
+                              {product.name} - {formatBedrag(product.base_price)}
                             </option>
                           ))}
                         </select>
@@ -644,7 +645,7 @@ export default function HomepageSettingsPage() {
                           <option value="">Geen product</option>
                           {products.map((product) => (
                             <option key={product.id} value={product.id}>
-                              {product.name} - €{product.base_price.toFixed(2)}
+                              {product.name} - {formatBedrag(product.base_price)}
                             </option>
                           ))}
                         </select>
@@ -659,7 +660,7 @@ export default function HomepageSettingsPage() {
                           <option value="">Geen product</option>
                           {products.map((product) => (
                             <option key={product.id} value={product.id}>
-                              {product.name} - €{product.base_price.toFixed(2)}
+                              {product.name} - {formatBedrag(product.base_price)}
                             </option>
                           ))}
                         </select>

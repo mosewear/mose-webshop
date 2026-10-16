@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Package, Search } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 type LabelMode =
   | 'admin_generated'
@@ -389,7 +390,7 @@ function AdminCreateReturnPageContent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold">€{order.total.toFixed(2)}</div>
+                      <div className="font-bold">{formatBedrag(order.total)}</div>
                       <div className="text-xs text-gray-500">
                         {order.order_items?.length || 0} items
                       </div>
@@ -464,7 +465,7 @@ function AdminCreateReturnPageContent() {
                           {item.size} · {item.color} · {item.quantity}× besteld
                         </div>
                         <div className="text-sm font-bold mt-1">
-                          €{item.price_at_purchase.toFixed(2)}
+                          {formatBedrag(item.price_at_purchase)}
                         </div>
                       </div>
                     </label>
@@ -560,7 +561,7 @@ function AdminCreateReturnPageContent() {
                 className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Berekende refund: €{refundPreview.toFixed(2)}
+                Berekende refund: {formatBedrag(refundPreview)}
               </p>
             </div>
           </div>
@@ -708,7 +709,7 @@ function AdminCreateReturnPageContent() {
             </div>
             <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-700">
               <span>Refund</span>
-              <span>€{refundPreview.toFixed(2)}</span>
+              <span>{formatBedrag(refundPreview)}</span>
             </div>
           </div>
 

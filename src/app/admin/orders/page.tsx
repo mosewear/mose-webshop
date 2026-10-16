@@ -8,6 +8,7 @@ import { RefreshCw, Plus, Search, Printer, Tag, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StatusBadge from '@/components/admin/StatusBadge'
 import { orderStatus } from '@/lib/status-registry'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Order {
   id: string
@@ -428,15 +429,32 @@ export default function AdminOrdersPage() {
     window.open(`/admin/orders/picklist?ids=${ids}`, '_blank')
   }
 
-  const filters = [
+  /**
+   * Tabs die niets te tonen hebben, tonen we niet.
+   *
+   * Deze lijst filtert op `status`, en die kolom heeft in de hele winkel nooit
+   * de waarde 'paid' of 'processing' gehad. Er stond dus permanent
+   * "Betaald (0)" en "In behandeling (0)", pal naast een lijst waarin bij
+   * eenenvijftig bestellingen BETAALD staat. Dat is het soort tegenspraak waar
+   * je even over struikelt, elke keer opnieuw: die badge toont `payment_status`
+   * en deze tab `status`, twee verschillende velden met hetzelfde woord.
+   *
+   * De lege tabs verdwijnen nu vanzelf, en komen vanzelf terug zodra een
+   * status wél voorkomt. Alles en de tab waar je op staat blijven altijd staan.
+   */
+  const alleFilters = [
     { value: 'all', label: 'Alle Orders', count: statusCounts['all'] || 0 },
     { value: 'pending', label: 'In afwachting', count: statusCounts['pending'] || 0 },
     { value: 'paid', label: 'Betaald', count: statusCounts['paid'] || 0 },
     { value: 'processing', label: 'In behandeling', count: statusCounts['processing'] || 0 },
     { value: 'shipped', label: 'Verzonden', count: statusCounts['shipped'] || 0 },
     { value: 'delivered', label: 'Afgeleverd', count: statusCounts['delivered'] || 0 },
-    { value: 'returns', label: 'Returns', count: statusCounts['returns'] || 0 },
+    { value: 'returns', label: 'Retouren', count: statusCounts['returns'] || 0 },
   ]
+
+  const filters = alleFilters.filter(
+    (f) => f.value === 'all' || f.value === filter || f.count > 0
+  )
 
   if (loading && orders.length === 0) {
     return (
@@ -491,7 +509,7 @@ export default function AdminOrdersPage() {
                   o.status,
                   o.payment_status || 'unpaid',
                   o.delivery_method === 'pickup' ? 'Afhalen' : 'Verzending',
-                  `€${Number(o.total).toFixed(2)}`,
+                  `${formatBedrag(Number(o.total))}`,
                   new Date(o.created_at).toLocaleDateString('nl-NL'),
                 ].map(val => `"${val}"`).join(','))
               ]
@@ -712,7 +730,7 @@ export default function AdminOrdersPage() {
                     <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
                     <StatusBadge status={order.status} kind="order" />
                     <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
-                    <div className="font-bold text-gray-900 text-right">€{Number(order.total).toFixed(2)}</div>
+                    <div className="font-bold text-gray-900 text-right">{formatBedrag(Number(order.total))}</div>
                     <div className="col-span-2">
                       <span className={`px-2 py-1 font-semibold border inline-block ${
                         order.delivery_method === 'pickup'
@@ -765,6 +783,9 @@ export default function AdminOrdersPage() {
                       Klant
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Totaal
+                    </th>
+                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Betaling
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -772,9 +793,6 @@ export default function AdminOrdersPage() {
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Levering
-                    </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Totaal
                     </th>
                     <th className="px-4 md:px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                       Datum
@@ -809,6 +827,11 @@ export default function AdminOrdersPage() {
                       <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-bold text-gray-900">
+                        {formatBedrag(Number(order.total))}
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} kind="order" />
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
@@ -819,11 +842,6 @@ export default function AdminOrdersPage() {
                       }`}>
                         {order.delivery_method === 'pickup' ? 'Afhalen' : 'Verzending'}
                       </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">
-                        €{Number(order.total).toFixed(2)}
-                      </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                       {new Date(order.created_at).toLocaleDateString('nl-NL')}

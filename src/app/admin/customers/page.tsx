@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Customer {
   id: string
@@ -111,7 +112,7 @@ export default function CustomersPage() {
         customer.last_name || '',
         customer.phone || '',
         customer.total_orders || '0',
-        customer.total_spent ? `€${customer.total_spent.toFixed(2)}` : '€0.00',
+        customer.total_spent ? `${formatBedrag(customer.total_spent)}` : '€0,00',
         new Date(customer.created_at).toLocaleDateString('nl-NL'),
         customer.last_order_at ? new Date(customer.last_order_at).toLocaleDateString('nl-NL') : 'Nooit',
       ].map(val => `"${val}"`).join(','))
@@ -243,7 +244,7 @@ export default function CustomersPage() {
                         <span className="font-semibold">Orders:</span> {customer.total_orders || 0}
                       </div>
                       <div>
-                        <span className="font-semibold">Uitgegeven:</span> €{(customer.total_spent || 0).toFixed(2)}
+                        <span className="font-semibold">Uitgegeven:</span> {formatBedrag((customer.total_spent || 0))}
                       </div>
                       <div className="col-span-2">
                         <span className="font-semibold">Aangemaakt:</span> {new Date(customer.created_at).toLocaleDateString('nl-NL')}
@@ -330,7 +331,7 @@ export default function CustomersPage() {
                       <span className="font-bold text-brand-primary">{customer.total_orders || 0}</span>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden xl:table-cell">
-                      <span className="font-bold text-green-600">€{(customer.total_spent || 0).toFixed(2)}</span>
+                      <span className="font-bold text-green-600">{formatBedrag((customer.total_spent || 0))}</span>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                       {new Date(customer.created_at).toLocaleDateString('nl-NL')}

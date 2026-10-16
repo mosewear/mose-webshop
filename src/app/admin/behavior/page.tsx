@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, TrendingUp, Eye, ShoppingCart, Package, Play, MousePointer, MessageCircle, MapPin, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import { formatBedrag } from '@/lib/format-price'
 
 interface ProductPerformance {
   product_id: string
@@ -574,7 +575,7 @@ export default function BehaviorAnalyticsPage() {
                             {Number(product.purchase_rate).toFixed(1)}%
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-right font-bold border-b border-gray-200">€{Number(product.revenue).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm text-right font-bold border-b border-gray-200">{formatBedrag(Number(product.revenue))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -619,7 +620,7 @@ export default function BehaviorAnalyticsPage() {
                       </div>
                       <div>
                         <div className="text-gray-500 uppercase font-semibold mb-1">Revenue</div>
-                        <div className="font-bold text-brand-primary">€{Number(product.revenue).toFixed(2)}</div>
+                        <div className="font-bold text-brand-primary">{formatBedrag(Number(product.revenue))}</div>
                       </div>
                     </div>
                   </div>

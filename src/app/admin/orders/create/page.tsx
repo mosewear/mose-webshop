@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Plus, Trash2, Package, User, Truck, CreditCard, Minus } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 const COUNTRY_OPTIONS = [
   { value: 'NL', label: 'Nederland' },
@@ -462,7 +463,7 @@ export default function CreateOrderPage() {
                 <option value="">— Selecteer product —</option>
                 {products.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.name} — €{(p.sale_price ?? p.base_price).toFixed(2)}
+                    {p.name} — {formatBedrag((p.sale_price ?? p.base_price))}
                   </option>
                 ))}
               </select>
@@ -498,9 +499,9 @@ export default function CreateOrderPage() {
 
           {selectedProduct && selectedVariant && (
             <div className="mt-3 text-sm text-gray-600">
-              Prijs per stuk: <span className="font-bold text-gray-900">€{getProductPrice(selectedProduct, selectedVariant).toFixed(2)}</span>
+              Prijs per stuk: <span className="font-bold text-gray-900">{formatBedrag(getProductPrice(selectedProduct, selectedVariant))}</span>
               {selectedVariant.price_adjustment !== 0 && (
-                <span className="text-gray-400 ml-1">(incl. variant toeslag €{selectedVariant.price_adjustment.toFixed(2)})</span>
+                <span className="text-gray-400 ml-1">(incl. variant toeslag {formatBedrag(selectedVariant.price_adjustment)})</span>
               )}
             </div>
           )}
@@ -537,10 +538,10 @@ export default function CreateOrderPage() {
                       </button>
                     </div>
                     <div className="text-sm text-gray-600 flex-shrink-0 hidden md:block">
-                      €{li.price_at_purchase.toFixed(2)}/st
+                      {formatBedrag(li.price_at_purchase)}/st
                     </div>
                     <div className="font-bold text-sm flex-shrink-0 w-16 md:w-20 text-right">
-                      €{(li.price_at_purchase * li.quantity).toFixed(2)}
+                      {formatBedrag((li.price_at_purchase * li.quantity))}
                     </div>
                     <button type="button" onClick={() => handleRemoveItem(li.key)}
                       className="text-red-500 hover:text-red-700 p-1 flex-shrink-0">
@@ -629,12 +630,12 @@ export default function CreateOrderPage() {
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Subtotaal ({lineItems.reduce((s, li) => s + li.quantity, 0)} items)</span>
-                <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                <span className="font-semibold">{formatBedrag(subtotal)}</span>
               </div>
               {deliveryMethod === 'shipping' && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Verzendkosten</span>
-                  <span className="font-semibold">{shippingCost === 0 ? 'Gratis' : `€${shippingCost.toFixed(2)}`}</span>
+                  <span className="font-semibold">{shippingCost === 0 ? 'Gratis' : `${formatBedrag(shippingCost)}`}</span>
                 </div>
               )}
               {deliveryMethod === 'pickup' && (
@@ -645,7 +646,7 @@ export default function CreateOrderPage() {
               )}
               <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
                 <span>Totaal</span>
-                <span>€{total.toFixed(2)}</span>
+                <span>{formatBedrag(total)}</span>
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import GiftCardDenominationsManager from '@/components/admin/GiftCardDenominationsManager'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Product {
   id: string
@@ -359,7 +360,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
             {product ? (
               <p className="text-sm md:text-base text-gray-600">
                 {product.name}{' '}
-                <span className="text-brand-primary">€{product.base_price.toFixed(2)}</span>
+                <span className="text-brand-primary">{formatBedrag(product.base_price)}</span>
                 {product.is_gift_card && (
                   <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20 uppercase tracking-wider">
                     Cadeaubon
@@ -674,7 +675,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         )}
                         {product && (
                           <div className="text-sm font-bold text-gray-900 mb-2">
-                            €{(product.base_price + variant.price_adjustment).toFixed(2)}
+                            {formatBedrag((product.base_price + variant.price_adjustment))}
                           </div>
                         )}
                       </div>
@@ -950,14 +951,14 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       {product ? (
                         <div className="text-xs md:text-sm font-bold text-gray-900">
-                          €{(product.base_price + variant.price_adjustment).toFixed(2)}
+                          {formatBedrag((product.base_price + variant.price_adjustment))}
                         </div>
                       ) : (
                         <div className="text-xs md:text-sm text-gray-400">-</div>
                       )}
                       {product && variant.price_adjustment !== 0 && (
                         <div className="text-xs text-gray-500">
-                          ({variant.price_adjustment > 0 ? '+' : ''}€{variant.price_adjustment.toFixed(2)})
+                          ({variant.price_adjustment > 0 ? '+' : ''}{formatBedrag(variant.price_adjustment)})
                         </div>
                       )}
                     </td>

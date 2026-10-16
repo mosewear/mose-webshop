@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronUp, ChevronDown, Trash2, Plus, Gift } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Variant {
   id: string
@@ -32,7 +33,7 @@ function parseAmount(value: string): number {
 }
 
 function formatEuro(amount: number): string {
-  return `€${amount.toFixed(2)}`
+  return `${formatBedrag(amount)}`
 }
 
 function buildSku(productName: string, amount: number): string {

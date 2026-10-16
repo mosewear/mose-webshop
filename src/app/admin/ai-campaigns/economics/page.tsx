@@ -15,6 +15,7 @@ import {
   Info,
 } from 'lucide-react'
 import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
+import { formatBedrag } from '@/lib/format-price'
 
 interface VariantRow {
   id: string
@@ -352,9 +353,9 @@ export default function EconomicsPage() {
                     <div>
                       <div className="font-semibold text-gray-900">{product.name}</div>
                       <div className="text-xs text-gray-500">
-                        Basisprijs €{product.base_price.toFixed(2)}
+                        Basisprijs {formatBedrag(product.base_price)}
                         {product.sale_price !== null && product.sale_price !== undefined && (
-                          <> — actieprijs €{Number(product.sale_price).toFixed(2)}</>
+                          <> — actieprijs {formatBedrag(Number(product.sale_price))}</>
                         )}{' '}
                         · {product.product_variants.length} varianten · {variantCoveredCount} met
                         economics
@@ -488,7 +489,7 @@ function EconomicsRowEditor({
             <span className="text-gray-400">—</span>
           ) : (
             <span className={marginPerUnit >= 0 ? 'text-green-700' : 'text-red-700'}>
-              €{marginPerUnit.toFixed(2)} / stuk
+              {formatBedrag(marginPerUnit)} / stuk
               {marginPct !== null && <> ({(marginPct * 100).toFixed(1)} %)</>}
             </span>
           )}

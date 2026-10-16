@@ -7,6 +7,7 @@ import Link from 'next/link'
 import LanguageTabs from '@/components/admin/LanguageTabs'
 import GiftCardFields, { type GiftCardFieldsValue } from '@/components/admin/GiftCardFields'
 import { Trash2, Plus, Image as ImageIcon, Layers } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Category {
   id: string
@@ -573,14 +574,14 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   </p>
                   <div className="flex items-baseline gap-3">
                     <p className="text-3xl font-bold text-red-600">
-                      €{parseFloat(formData.sale_price).toFixed(2)}
+                      {formatBedrag(parseFloat(formData.sale_price))}
                     </p>
                     <p className="text-xl line-through text-gray-400">
-                      €{parseFloat(formData.base_price).toFixed(2)}
+                      {formatBedrag(parseFloat(formData.base_price))}
                     </p>
                   </div>
                   <p className="text-sm text-green-600 font-semibold mt-1">
-                    Klant bespaart: €{(parseFloat(formData.base_price) - parseFloat(formData.sale_price)).toFixed(2)}
+                    Klant bespaart: {formatBedrag((parseFloat(formData.base_price) - parseFloat(formData.sale_price)))}
                   </p>
                 </div>
               </div>
@@ -613,15 +614,15 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                         <span className="text-sm font-bold text-black">
                           {tier.discount_type === 'percentage'
                             ? `${tier.discount_value}% korting`
-                            : `€${Number(tier.discount_value).toFixed(2)} korting per stuk`}
+                            : `${formatBedrag(Number(tier.discount_value))} korting per stuk`}
                         </span>
                         {formData.base_price && (
                           <span className="text-xs text-gray-400 ml-1.5">
-                            (€{(
+                            ({formatBedrag((
                               tier.discount_type === 'percentage'
                                 ? parseFloat(formData.base_price) * (1 - tier.discount_value / 100)
                                 : parseFloat(formData.base_price) - tier.discount_value
-                            ).toFixed(2)} p/s)
+                            ))} p/s)
                           </span>
                         )}
                       </div>

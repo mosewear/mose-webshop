@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { formatBedrag } from '@/lib/format-price'
 
 type DateRange = 'today' | '7d' | '30d' | '90d' | 'year' | 'all'
 
@@ -361,7 +362,7 @@ export default function AdminDashboard() {
             </div>
             <div className="text-right min-w-0">
               <div className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display group-hover:scale-105 transition-transform truncate">
-                €{stats.totalRevenue.toFixed(2)}
+                {formatBedrag(stats.totalRevenue)}
               </div>
               <DeltaBadge current={stats.totalRevenue} previous={prevStats.totalRevenue} disabled={dateRange === 'all'} />
             </div>
@@ -374,7 +375,7 @@ export default function AdminDashboard() {
           </div>
           <div className="text-sm text-white/80 mt-2 space-y-1">
             <div>✓ {stats.paidOrders} betaalde orders</div>
-            <div>Ø €{stats.avgOrderValue.toFixed(2)} per order</div>
+            <div>Ø {formatBedrag(stats.avgOrderValue)} per order</div>
             <div className="mt-3 text-white/60 text-xs uppercase tracking-wide group-hover:text-white/90 transition-colors">
               → Klik voor uitgebreide analytics
             </div>
@@ -488,7 +489,7 @@ export default function AdminDashboard() {
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Gem. Orderwaarde</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
-              <span className="text-xl sm:text-3xl font-bold text-brand-primary">€{stats.avgOrderValue.toFixed(2)}</span>
+              <span className="text-xl sm:text-3xl font-bold text-brand-primary">{formatBedrag(stats.avgOrderValue)}</span>
               <DeltaBadge current={stats.avgOrderValue} previous={prevStats.avgOrderValue} disabled={dateRange === 'all'} />
             </div>
             <div className="text-xs text-gray-500 mt-2">Per betaalde order</div>

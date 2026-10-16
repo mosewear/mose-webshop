@@ -5,6 +5,7 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Customer {
   id: string
@@ -285,7 +286,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             Totaal besteed
           </div>
           <div className="text-2xl font-bold text-green-600">
-            €{totalSpent.toFixed(2)}
+            {formatBedrag(totalSpent)}
           </div>
         </div>
         <div className="bg-white border-2 border-gray-200 p-4">
@@ -293,7 +294,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             Gem. orderwaarde
           </div>
           <div className="text-2xl font-bold text-brand-primary">
-            €{avgOrderValue.toFixed(2)}
+            {formatBedrag(avgOrderValue)}
           </div>
         </div>
         <div className="bg-white border-2 border-gray-200 p-4">
@@ -580,7 +581,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                             />
                             {entry.amount > 0 && (
                               <span className={`text-sm font-bold ${entry.type === 'return' ? 'text-orange-600' : 'text-brand-primary'}`}>
-                                {entry.type === 'return' ? '-' : ''}€{entry.amount.toFixed(2)}
+                                {entry.type === 'return' ? '-' : ''}{formatBedrag(entry.amount)}
                               </span>
                             )}
                           </div>
@@ -631,7 +632,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       <div className="flex items-center gap-3">
                         <StatusBadge status={order.status} kind="order" />
                         <span className="text-lg font-bold text-brand-primary">
-                          €{Number(order.total).toFixed(2)}
+                          {formatBedrag(Number(order.total))}
                         </span>
                       </div>
                     </div>

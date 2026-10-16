@@ -9,6 +9,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2, Plus, Minus, RotateCcw } from 'lucide-react'
 import { getCarrierOptions, generateTrackingUrl, calculateEstimatedDelivery } from '@/lib/order-utils'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Order {
   id: string
@@ -1215,20 +1216,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="text-right">
                         {item.quantity_discount_amount && item.quantity_discount_amount > 0 && item.original_price ? (
                           <>
-                            <div className="text-xs text-gray-400 line-through">€{Number(item.original_price).toFixed(2)}</div>
-                            <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                            <div className="text-xs text-gray-400 line-through">{formatBedrag(Number(item.original_price))}</div>
+                            <div className="font-bold text-sm md:text-base">{formatBedrag(Number(item.price_at_purchase))}</div>
                             <div className="text-[10px] text-gray-500 font-semibold">
                               <span className="inline-flex items-center px-1 py-0.5 bg-gray-100 text-gray-600">
-                                Staffelkorting -€{Number(item.quantity_discount_amount).toFixed(2)}/stuk
+                                Staffelkorting -{formatBedrag(Number(item.quantity_discount_amount))}/stuk
                               </span>
                             </div>
                           </>
                         ) : (
-                          <div className="font-bold text-sm md:text-base">€{Number(item.price_at_purchase).toFixed(2)}</div>
+                          <div className="font-bold text-sm md:text-base">{formatBedrag(Number(item.price_at_purchase))}</div>
                         )}
                         <div className="text-xs md:text-sm text-gray-600">Aantal: {item.quantity}</div>
                         <div className="text-xs md:text-sm font-semibold text-brand-primary mt-1">
-                          €{(Number(item.price_at_purchase) * item.quantity).toFixed(2)}
+                          {formatBedrag((Number(item.price_at_purchase) * item.quantity))}
                         </div>
                       </div>
                     </div>
@@ -1239,22 +1240,22 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Subtotaal</span>
-                        <span className="font-semibold">€{(Number(order.subtotal || 0) || (Number(order.total) - Number(order.shipping_cost || 0))).toFixed(2)}</span>
+                        <span className="font-semibold">{formatBedrag((Number(order.subtotal || 0) || (Number(order.total) - Number(order.shipping_cost || 0))))}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Verzendkosten</span>
-                        <span className="font-semibold">€{Number(order.shipping_cost).toFixed(2)}</span>
+                        <span className="font-semibold">{formatBedrag(Number(order.shipping_cost))}</span>
                       </div>
                     </>
                   )}
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Waarvan BTW (21%)</span>
-                    <span className="text-gray-500">€{(Number(order.total) - Number(order.total) / 1.21).toFixed(2)}</span>
+                    <span className="text-gray-500">{formatBedrag((Number(order.total) - Number(order.total) / 1.21))}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                     <span className="text-lg font-bold">Totaal (incl. BTW)</span>
                     <span className="text-2xl md:text-3xl font-bold text-brand-primary">
-                      €{Number(order.total).toFixed(2)}
+                      {formatBedrag(Number(order.total))}
                     </span>
                   </div>
                 </div>
@@ -1302,7 +1303,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         </button>
                       </div>
                       <div className="text-right text-sm font-semibold w-16 flex-shrink-0">
-                        €{(item.price_at_purchase * item.quantity).toFixed(2)}
+                        {formatBedrag((item.price_at_purchase * item.quantity))}
                       </div>
                       <button type="button" onClick={() => handleDeleteItem(item.id)}
                         className="w-7 h-7 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
@@ -1325,7 +1326,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       className="w-full px-3 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none text-sm bg-white">
                       <option value="">— Kies product —</option>
                       {availableProducts.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} — €{(p.sale_price ?? p.base_price).toFixed(2)}</option>
+                        <option key={p.id} value={p.id}>{p.name} — {formatBedrag((p.sale_price ?? p.base_price))}</option>
                       ))}
                     </select>
                     {selectedProductId && (
@@ -1362,27 +1363,27 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="mt-6 pt-4 border-t-2 border-gray-200 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotaal producten</span>
-                    <span className="font-semibold">€{editedSubtotal.toFixed(2)}</span>
+                    <span className="font-semibold">{formatBedrag(editedSubtotal)}</span>
                   </div>
                   {(order.shipping_cost || 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Verzendkosten</span>
-                      <span className="font-semibold">€{Number(order.shipping_cost).toFixed(2)}</span>
+                      <span className="font-semibold">{formatBedrag(Number(order.shipping_cost))}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Waarvan BTW (21%)</span>
-                    <span className="text-gray-500">€{(editedTotal - editedTotal / 1.21).toFixed(2)}</span>
+                    <span className="text-gray-500">{formatBedrag((editedTotal - editedTotal / 1.21))}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                     <span className="text-lg font-bold">Nieuw totaal</span>
                     <span className="text-2xl md:text-3xl font-bold text-brand-primary">
-                      €{editedTotal.toFixed(2)}
+                      {formatBedrag(editedTotal)}
                     </span>
                   </div>
                   {editedTotal !== Number(order.total) && (
                     <div className="text-xs text-amber-600 font-medium">
-                      Verschil: {editedTotal > Number(order.total) ? '+' : ''}€{(editedTotal - Number(order.total)).toFixed(2)}
+                      Verschil: {editedTotal > Number(order.total) ? '+' : ''}{formatBedrag((editedTotal - Number(order.total)))}
                     </div>
                   )}
                 </div>
@@ -2343,7 +2344,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               )}
               <div className="flex justify-between pt-2 border-t border-gray-300">
                 <span className="text-gray-600">Totaal bedrag:</span>
-                <span className="font-bold text-brand-primary">€{Number(order.total).toFixed(2)}</span>
+                <span className="font-bold text-brand-primary">{formatBedrag(Number(order.total))}</span>
               </div>
             </div>
           </div>

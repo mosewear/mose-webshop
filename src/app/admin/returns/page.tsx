@@ -5,6 +5,7 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, RefreshCw } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Return {
   id: string
@@ -257,7 +258,7 @@ export default function AdminReturnsPage() {
 
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-sm font-bold">
-                  {returnItem.total_refund ? `€${returnItem.total_refund.toFixed(2)}` : '-'}
+                  {returnItem.total_refund ? `${formatBedrag(returnItem.total_refund)}` : '-'}
                 </span>
                 <Link
                   href={`/admin/returns/${returnItem.id}`}
@@ -322,7 +323,7 @@ export default function AdminReturnsPage() {
                   </td>
                   <td className="px-4 py-3">
                     {returnItem.total_refund ? (
-                      <span className="font-bold">€{returnItem.total_refund.toFixed(2)}</span>
+                      <span className="font-bold">{formatBedrag(returnItem.total_refund)}</span>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}

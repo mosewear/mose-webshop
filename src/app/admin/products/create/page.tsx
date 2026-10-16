@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import LanguageTabs from '@/components/admin/LanguageTabs'
 import GiftCardFields, { type GiftCardFieldsValue } from '@/components/admin/GiftCardFields'
+import { formatBedrag } from '@/lib/format-price'
 
 interface Category {
   id: string
@@ -395,14 +396,14 @@ export default function CreateProductPage() {
                   </p>
                   <div className="flex items-baseline gap-3">
                     <p className="text-3xl font-bold text-red-600">
-                      €{parseFloat(formData.sale_price).toFixed(2)}
+                      {formatBedrag(parseFloat(formData.sale_price))}
                     </p>
                     <p className="text-xl line-through text-gray-400">
-                      €{parseFloat(formData.base_price).toFixed(2)}
+                      {formatBedrag(parseFloat(formData.base_price))}
                     </p>
                   </div>
                   <p className="text-sm text-green-600 font-semibold mt-1">
-                    Klant bespaart: €{(parseFloat(formData.base_price) - parseFloat(formData.sale_price)).toFixed(2)}
+                    Klant bespaart: {formatBedrag((parseFloat(formData.base_price) - parseFloat(formData.sale_price)))}
                   </p>
                 </div>
               </div>

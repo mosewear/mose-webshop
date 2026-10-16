@@ -28,6 +28,7 @@ import {
 import CampaignPreview from './CampaignPreview'
 import QuickPromoCodeModal from './QuickPromoCodeModal'
 import type { CampaignFormState } from './CampaignFormTypes'
+import { formatBedrag } from '@/lib/format-price'
 
 interface CampaignFormProps {
   mode: 'create' | 'edit'
@@ -232,7 +233,7 @@ export default function CampaignForm({
     if (promoCode.discount_type === 'percentage') {
       return `${promoCode.discount_value}% korting`
     }
-    return `€${promoCode.discount_value.toFixed(2)} korting`
+    return `${formatBedrag(promoCode.discount_value)} korting`
   }, [promoCode])
 
   const promoStatus = useMemo(() => {
@@ -881,7 +882,7 @@ export default function CampaignForm({
                     <option key={c.id} value={c.id}>
                       {c.code} ({c.discount_type === 'percentage'
                         ? `${c.discount_value}%`
-                        : `€${c.discount_value.toFixed(2)}`}
+                        : `${formatBedrag(c.discount_value)}`}
                       ){!c.is_active ? ' (uitgeschakeld)' : ''}
                     </option>
                   ))}

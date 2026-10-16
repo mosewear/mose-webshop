@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Gift, Plus, Search, Copy, X, Mail, ArrowRight } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 interface GiftCard {
   id: string
@@ -43,7 +44,7 @@ function fmtMoney(v: number, c: string = 'EUR') {
   try {
     return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: c }).format(v)
   } catch {
-    return `€${Number(v).toFixed(2)}`
+    return `${formatBedrag(Number(v))}`
   }
 }
 

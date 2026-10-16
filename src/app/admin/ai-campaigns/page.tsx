@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useAutoDismiss } from '@/app/admin/ai-campaigns/_lib/use-auto-dismiss'
+import { formatBedrag } from '@/lib/format-price'
 
 type AutopilotMode = 'advisory' | 'bounded' | 'full'
 
@@ -530,7 +531,7 @@ function MetaConnectionTester() {
               <div className="text-xs mt-0.5">
                 <strong>{result.name}</strong> · <code>act_{result.id}</code> · {result.currency} ·
                 tz {result.tz}
-                {result.spent && <> · lifetime spend €{(Number(result.spent) / 100).toFixed(2)}</>}
+                {result.spent && <> · lifetime spend {formatBedrag((Number(result.spent) / 100))}</>}
               </div>
             </div>
           ) : (

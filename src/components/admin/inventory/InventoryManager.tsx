@@ -14,6 +14,7 @@ import {
   sortVariantsByColorSize,
   sortVariantsByProductColorSize,
 } from '@/lib/variant-sort'
+import { formatBedrag } from '@/lib/format-price'
 
 export interface VariantWithProduct {
   id: string
@@ -803,7 +804,7 @@ export default function InventoryManager() {
                     <div>
                       <span className="font-semibold text-gray-900">{product.name}</span>
                       <span className="ml-2 text-sm text-gray-500">
-                        €{product.base_price.toFixed(2)}
+                        {formatBedrag(product.base_price)}
                       </span>
                     </div>
                     <Link
@@ -993,7 +994,7 @@ export default function InventoryManager() {
                           {variant.product.name}
                         </div>
                         <div className="text-xs text-gray-500">
-                          €{(variant.product.base_price + variant.price_adjustment).toFixed(2)}
+                          {formatBedrag((variant.product.base_price + variant.price_adjustment))}
                         </div>
                         {renderHistorySection(variant)}
                       </td>

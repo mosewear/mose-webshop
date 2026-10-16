@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { formatBedrag } from '@/lib/format-price'
 
 interface OrderNotification {
   type: 'order'
@@ -526,7 +527,7 @@ export default function NotificationBell() {
                             <div className="flex items-center gap-2 min-w-0">
                               {isUnread && <span className="w-2 h-2 bg-red-500 rounded-full shrink-0" />}
                               <div className="min-w-0">
-                                <span className="font-bold block truncate">€{order.total.toFixed(2)}</span>
+                                <span className="font-bold block truncate">{formatBedrag(order.total)}</span>
                                 <span className="text-gray-500 block truncate">{order.email}</span>
                               </div>
                             </div>

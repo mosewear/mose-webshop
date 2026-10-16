@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { Package, CheckCircle, XCircle, Download, RefreshCw, DollarSign } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
+import { formatBedrag } from '@/lib/format-price'
 
 interface ReturnData {
   id: string
@@ -504,7 +505,7 @@ export default function AdminReturnDetailsPage() {
                         <strong>Reden:</strong> {returnItem.reason}
                       </div>
                       <div className="font-bold text-sm md:text-base mt-2">
-                        €{(orderItem.price_at_purchase * returnItem.quantity).toFixed(2)}
+                        {formatBedrag((orderItem.price_at_purchase * returnItem.quantity))}
                       </div>
                     </div>
                   </div>
@@ -574,7 +575,7 @@ export default function AdminReturnDetailsPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Refund bedrag (items)</span>
-                <span className="font-bold">€{returnData.refund_amount.toFixed(2)}</span>
+                <span className="font-bold">{formatBedrag(returnData.refund_amount)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Label kosten</span>
@@ -585,7 +586,7 @@ export default function AdminReturnDetailsPage() {
                     ? 'text-orange-600'
                     : 'text-gray-600'
                 }`}>
-                  €{returnData.return_label_cost_incl_btw.toFixed(2)}
+                  {formatBedrag(returnData.return_label_cost_incl_btw)}
                   {returnData.return_label_payment_status === 'completed' && ' ✓'}
                   {returnData.return_label_payment_status === 'pending' && ' ⏳'}
                 </span>
@@ -598,7 +599,7 @@ export default function AdminReturnDetailsPage() {
               <div className="border-t-2 border-gray-200 pt-2 mt-2">
                 <div className="flex justify-between font-bold">
                   <span>Terug te betalen</span>
-                  <span>€{returnData.total_refund.toFixed(2)}</span>
+                  <span>{formatBedrag(returnData.total_refund)}</span>
                 </div>
               </div>
               {returnData.stripe_refund_id && (

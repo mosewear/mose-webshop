@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Mail, Save, Ban, RotateCcw, Gift } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 interface GiftCardDetail {
   id: string
@@ -51,7 +52,7 @@ function fmtMoney(v: number, c: string = 'EUR') {
   try {
     return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: c }).format(v)
   } catch {
-    return `€${Number(v).toFixed(2)}`
+    return `${formatBedrag(Number(v))}`
   }
 }
 

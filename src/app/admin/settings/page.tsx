@@ -7,6 +7,7 @@ import MediaPicker from '@/components/admin/MediaPicker'
 import BrandPillDesignSelector from '@/components/admin/BrandPillDesignSelector'
 import type { PillDesignId } from '@/components/product/brand-pill'
 import { PILL_DESIGN_IDS } from '@/components/product/brand-pill'
+import { formatBedrag } from '@/lib/format-price'
 
 interface SiteSetting {
   key: string
@@ -1001,7 +1002,7 @@ export default function SettingsPage() {
                     Deze kosten worden gebruikt wanneer klanten een retour aanvragen en betalen voor hun retourlabel.
                   </p>
                   <p className="mb-2">
-                    <strong>Huidige waarde:</strong> €{parseFloat(returnLabelCostExclBtw || '0').toFixed(2)} excl. BTW / €{parseFloat(returnLabelCostInclBtw || '0').toFixed(2)} incl. BTW
+                    <strong>Huidige waarde:</strong> {formatBedrag(parseFloat(returnLabelCostExclBtw || '0'))} excl. BTW / {formatBedrag(parseFloat(returnLabelCostInclBtw || '0'))} incl. BTW
                   </p>
                   <p>
                     Deze instellingen worden alleen toegepast op <strong>nieuwe retouren</strong>. 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, ShoppingCart, Package, CreditCard, DollarSign, Clock, AlertCircle, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { formatBedrag } from '@/lib/format-price'
 
 interface AnalyticsStats {
   totalOrders: number
@@ -313,7 +314,7 @@ export default function AnalyticsPage() {
               <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Totale Omzet</div>
               <DollarSign size={20} className="text-green-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-800">€{stats.totalRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-gray-800">{formatBedrag(stats.totalRevenue)}</div>
             <div className="text-xs text-gray-500 mt-1">{stats.paidOrdersCount} betaalde orders</div>
           </div>
 
@@ -322,7 +323,7 @@ export default function AnalyticsPage() {
               <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Gem. Orderwaarde</div>
               <ShoppingCart size={20} className="text-blue-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-800">€{stats.avgOrderValue.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-gray-800">{formatBedrag(stats.avgOrderValue)}</div>
             <div className="text-xs text-gray-500 mt-1">Per betaalde order</div>
           </div>
 
@@ -496,7 +497,7 @@ export default function AnalyticsPage() {
                           style={{ width: `${(method.revenue / stats.totalRevenue) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="font-bold text-gray-800 text-sm">€{method.revenue.toFixed(2)}</span>
+                      <span className="font-bold text-gray-800 text-sm">{formatBedrag(method.revenue)}</span>
                     </div>
                   </div>
                 ))}
@@ -532,7 +533,7 @@ export default function AnalyticsPage() {
                           style={{ width: `${(product.total_revenue / topProducts[0].total_revenue) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="font-bold text-gray-800 text-sm">€{product.total_revenue.toFixed(2)}</span>
+                      <span className="font-bold text-gray-800 text-sm">{formatBedrag(product.total_revenue)}</span>
                     </div>
                   </div>
                 ))}
@@ -562,7 +563,7 @@ export default function AnalyticsPage() {
                       <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group relative min-w-[8px]">
                         <div className="absolute bottom-full mb-1 hidden group-hover:block z-20 pointer-events-none">
                           <div className="bg-gray-900 text-white text-xs font-bold px-2 py-1 whitespace-nowrap border-2 border-gray-900">
-                            {day.date}: €{day.revenue.toFixed(2)}
+                            {day.date}: {formatBedrag(day.revenue)}
                           </div>
                         </div>
                         <div

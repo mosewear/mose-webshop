@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Ticket, Plus, Trash2, Edit } from 'lucide-react'
+import { formatBedrag } from '@/lib/format-price'
 
 interface PromoCode {
   id: string
@@ -474,13 +475,13 @@ export default function PromoCodesPage() {
                     <div>
                       <span className="text-xs text-gray-500 uppercase">Korting</span>
                       <div className="font-bold text-gray-900">
-                        {code.discount_type === 'percentage' ? `${code.discount_value}%` : `€${code.discount_value.toFixed(2)}`}
+                        {code.discount_type === 'percentage' ? `${code.discount_value}%` : `${formatBedrag(code.discount_value)}`}
                       </div>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500 uppercase">Min. Order</span>
                       <div className="font-bold text-gray-900">
-                        {code.min_order_value > 0 ? `€${code.min_order_value.toFixed(2)}` : '-'}
+                        {code.min_order_value > 0 ? `${formatBedrag(code.min_order_value)}` : '-'}
                       </div>
                     </div>
                     <div>
@@ -559,12 +560,12 @@ export default function PromoCodesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-bold text-gray-900">
-                          {code.discount_type === 'percentage' ? `${code.discount_value}%` : `€${code.discount_value.toFixed(2)}`}
+                          {code.discount_type === 'percentage' ? `${code.discount_value}%` : `${formatBedrag(code.discount_value)}`}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {code.min_order_value > 0 ? (
-                          <span className="text-sm text-gray-900">€{code.min_order_value.toFixed(2)}</span>
+                          <span className="text-sm text-gray-900">{formatBedrag(code.min_order_value)}</span>
                         ) : (
                           <span className="text-sm text-gray-400">-</span>
                         )}
