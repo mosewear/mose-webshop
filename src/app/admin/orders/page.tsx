@@ -472,7 +472,10 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-display font-bold mb-2">Orders</h1>
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
         </div>
-        <div className="grid grid-cols-3 md:flex md:w-auto gap-2 w-full">
+        {/* Laat de knoppen afbreken. Vanaf md werden het er vier naast elkaar op
+            volle tekstbreedte, en op een tablet van 768 pixels stak de knop
+            Exporteren daardoor 129 pixels buiten het scherm. */}
+        <div className="grid grid-cols-3 md:flex md:flex-wrap md:justify-end md:w-auto gap-2 w-full">
           <Link
             href="/admin/orders/create"
             className="bg-black hover:bg-gray-800 text-white font-bold py-2 md:py-3 px-3 md:px-6 text-xs md:text-base uppercase tracking-wider transition-colors active:scale-95 flex items-center justify-center gap-1.5 md:gap-2"
