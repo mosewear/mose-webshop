@@ -8,21 +8,19 @@ export function formatPrice(price: number, locale: string = 'nl'): string {
   // Check if price has decimals
   const hasDecimals = price % 1 !== 0
   
+  // Duizendtallen krijgen een scheidingsteken: €1.299 leest beter dan €1299.
+  const taal = locale === 'en' ? 'en-GB' : 'nl-NL'
+
   if (!hasDecimals) {
-    // Whole number: €150
-    return `€${Math.round(price)}`
+    // Rond bedrag: €150
+    return `€${new Intl.NumberFormat(taal, { maximumFractionDigits: 0 }).format(Math.round(price))}`
   }
-  
-  // Has decimals: format according to locale
-  const formatted = price.toFixed(2)
-  
-  if (locale === 'en') {
-    // English: €149.95
-    return `€${formatted}`
-  }
-  
-  // Dutch: €149,95 (replace dot with comma)
-  return `€${formatted.replace('.', ',')}`
+
+  // Met decimalen: €149,95 in het Nederlands, €149.95 in het Engels
+  return `€${new Intl.NumberFormat(taal, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price)}`
 }
 
 /**
@@ -52,8 +50,13 @@ export function formatAmount(amount: number, locale: string = 'nl'): string {
  * Engels.
  */
 export function formatBedrag(amount: number, locale: string = 'nl'): string {
-  const vast = Number(amount).toFixed(2)
-  return locale === 'en' ? `\u20ac${vast}` : `\u20ac${vast.replace('.', ',')}`
+  // Met duizendtallen. Zonder scheiding stond er op de productenpagina
+  // "€12690,00", en dat lees je drie keer voor je het goed hebt.
+  const opmaak = new Intl.NumberFormat(locale === 'en' ? 'en-GB' : 'nl-NL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  return `€${opmaak.format(Number(amount) || 0)}`
 }
 
 /**
@@ -61,5 +64,5 @@ export function formatBedrag(amount: number, locale: string = 'nl'): string {
  * vertaling staat.
  */
 export function formatBedragKaal(amount: number, locale: string = 'nl'): string {
-  return formatBedrag(amount, locale).replace('\u20ac', '')
+  return formatBedrag(amount, locale).replace('€', '')
 }
