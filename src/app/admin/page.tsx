@@ -47,6 +47,8 @@ interface OrderRow {
   total: number
   checkout_started_at: string | null
   created_at: string
+  /** Nodig om te zien of dezelfde klant het alsnog heeft gekocht. */
+  email: string | null
 }
 
 interface PeriodStats {
@@ -97,12 +99,42 @@ function computePeriodStats(orders: OrderRow[]): PeriodStats {
     ? (paid.length / withCheckout.length) * 100
     : 0
 
+  /**
+   * Verlaten winkelwagens, met dezelfde definitie als de herinneringsmail.
+   *
+   * Hier stond simpelweg "ouder dan 24 uur en niet betaald". Dat telde er 21,
+   * terwijl er 1 echt verlaten was. In die 21 zaten vijf bestellingen met
+   * status `refunded`, dus klanten die gewoon gekocht hebben en later hebben
+   * geretourneerd, acht mislukte betaalpogingen, en acht onbetaalde regels die
+   * stuk voor stuk een dubbele waren: dezelfde klant rondde minuten later een
+   * nieuwe bestelling wel af.
+   *
+   * Een getal dat twintig keer te hoog staat is erger dan geen getal, want je
+   * gaat erop sturen. Nu dezelfde drie regels als in get_abandoned_carts:
+   * alleen onbetaald, niet geannuleerd, geen eigen adres, en niemand die het
+   * daarna alsnog heeft gekocht.
+   */
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const abandonedCarts = orders.filter(o =>
-    o.checkout_started_at &&
-    new Date(o.checkout_started_at) < cutoff &&
-    o.payment_status !== 'paid'
-  ).length
+  const betaaldPerAdres = new Map<string, number>()
+  for (const o of orders) {
+    if (o.payment_status !== 'paid' || !o.email) continue
+    const sleutel = o.email.toLowerCase()
+    const t = new Date(o.created_at).getTime()
+    betaaldPerAdres.set(sleutel, Math.max(betaaldPerAdres.get(sleutel) ?? 0, t))
+  }
+
+  const abandonedCarts = orders.filter((o) => {
+    if (!o.checkout_started_at) return false
+    if (new Date(o.checkout_started_at) >= cutoff) return false
+    if (o.payment_status !== 'unpaid' && o.payment_status !== 'pending') return false
+    if (o.status === 'cancelled') return false
+    if (!o.email || o.email.toLowerCase().endsWith('@mosewear.com')) return false
+    // Heeft dit adres rond of na dit moment alsnog betaald? Dan is het geen
+    // verlaten mand maar een tweede poging die wel is gelukt.
+    const laatstBetaald = betaaldPerAdres.get(o.email.toLowerCase())
+    if (laatstBetaald && laatstBetaald >= new Date(o.created_at).getTime() - 30 * 60 * 1000) return false
+    return true
+  }).length
 
   return {
     totalOrders,
@@ -154,7 +186,7 @@ export default function AdminDashboard() {
     try {
       const { currentStart, prevStart } = resolveDateWindow(range)
       const ordersQuery = supabase.from('orders')
-        .select('status, payment_status, total, checkout_started_at, created_at')
+        .select('status, payment_status, total, checkout_started_at, created_at, email')
 
       const [
         productsRes,
