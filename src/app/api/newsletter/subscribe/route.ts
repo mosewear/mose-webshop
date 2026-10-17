@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient, createClient } from '@/lib/supabase/server'
 import { sendNewsletterWelcomeEmail, sendInsiderWelcomeEmail } from '@/lib/email'
 import { generateNewsletterPromoCode } from '@/lib/promo-code-utils'
+import { zetContact } from '@/lib/brevo'
 
 // NOTE: In-memory rate limiter resets on each cold start and is per-instance only.
 // For Vercel serverless, this provides basic protection but is not cross-instance.
@@ -143,6 +144,15 @@ export async function POST(req: NextRequest) {
           )
         }
 
+
+        // Naar Brevo, voor de nieuwsbrief. Bewust na de eigen tabel en met een
+        // eigen try: onze database is leidend, en een storing bij Brevo mag een
+        // inschrijving op de site nooit laten mislukken.
+        try {
+          await zetContact({ email: email.toLowerCase(), locale, source })
+        } catch (brevoFout) {
+          console.error('[Brevo] Inschrijving niet gesynchroniseerd:', brevoFout)
+        }
         // Send welcome email
         try {
           // Generate promo code for resubscriber
@@ -206,6 +216,16 @@ export async function POST(req: NextRequest) {
         { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
         { status: 500 }
       )
+    }
+
+
+    // Naar Brevo, voor de nieuwsbrief. Bewust na de eigen tabel en met een
+    // eigen try: onze database is leidend, en een storing bij Brevo mag een
+    // inschrijving op de site nooit laten mislukken.
+    try {
+      await zetContact({ email: email.toLowerCase(), locale, source })
+    } catch (brevoFout) {
+      console.error('[Brevo] Inschrijving niet gesynchroniseerd:', brevoFout)
     }
 
     // Generate promo code for new subscriber
