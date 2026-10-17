@@ -655,6 +655,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             alt=""
                             fill
                             sizes="56px"
+                            quality={90}
                             className="object-cover"
                           />
                         </div>
@@ -693,6 +694,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             alt={item.name}
                             fill
                             sizes="100px"
+                            quality={90}
                             className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.svg' }}
                           />
@@ -889,6 +891,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 alt={getProductName(product)}
                                 fill
                                 sizes="60px"
+                                quality={90}
                                 className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                                 onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.svg' }}
                               />

@@ -783,6 +783,7 @@ export default function AccountPage() {
                                       alt={item.product_name}
                                       fill
                                       sizes="96px"
+                                      quality={90}
                                       className="object-cover"
                                     />
                                   </div>

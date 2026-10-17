@@ -840,6 +840,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
                   alt={primaryImage?.alt_text || displayName}
                   fill
                   sizes="(max-width: 768px) 100vw, 55vw"
+                  quality={90}
                   className="object-cover object-center"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}

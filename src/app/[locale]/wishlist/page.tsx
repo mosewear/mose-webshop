@@ -241,6 +241,7 @@ export default function WishlistPage() {
                       alt={product.product_images[0].alt_text || displayName}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      quality={90}
                       className="object-contain group-hover:scale-105 transition-transform duration-500"
                       onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                     />

@@ -23,6 +23,14 @@ export type EditorialPageBannerProps = {
    * beeld op de pagina die juist producten moet laten zien.
    */
   hoogte?: string
+  /**
+   * Smalle band: kleinere koptekst en minder onderruimte op telefoon.
+   *
+   * Nodig zodra de band de verhouding van het beeld volgt in plaats van een
+   * vaste hoogte. De shopbanner is op telefoon 160 pixels hoog, en daar vult
+   * een titel van 48 pixels plus een ondertitel van twee regels het hele vlak.
+   */
+  smal?: boolean
 }
 
 export default function EditorialPageBanner({
@@ -37,6 +45,7 @@ export default function EditorialPageBanner({
   priority = true,
 
   hoogte = 'h-72 md:h-[24rem] lg:h-[28rem]',
+  smal = false,
 }: EditorialPageBannerProps) {
   const mobileSrc = imageSrcMobile || imageSrc
   const mobilePosition = objectPositionMobile || objectPosition
@@ -48,6 +57,7 @@ export default function EditorialPageBanner({
         alt={imageAlt}
         fill
         sizes="(max-width: 767px) 0px, 100vw"
+        quality={90}
         className="hidden md:block object-cover"
         style={{ objectPosition }}
         priority={priority}
@@ -57,6 +67,7 @@ export default function EditorialPageBanner({
         alt={imageAlt}
         fill
         sizes="(min-width: 768px) 0px, 100vw"
+        quality={90}
         className="block md:hidden object-cover"
         style={{ objectPosition: mobilePosition }}
         priority={priority}
@@ -72,7 +83,7 @@ export default function EditorialPageBanner({
           de titel bij een compacte band (128px op de shop) aan de bovenkant
           het beeld uit: van "SHOP" zag je alleen de onderste helft. */}
       <div className="relative h-full flex items-end overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pb-4 md:pb-10 lg:pb-12 animate-fadeInUp">
+        <div className={`w-full max-w-7xl mx-auto px-4 md:px-6 ${smal ? 'pb-3' : 'pb-4'} md:pb-10 lg:pb-12 animate-fadeInUp`}>
           {/* Local scrim so type reads without muddying the whole banner */}
           <div className="relative max-w-xl md:max-w-2xl">
             <div
@@ -81,15 +92,15 @@ export default function EditorialPageBanner({
             />
             <div className="relative">
               {eyebrow ? (
-                <p className="text-[11px] md:text-xs font-bold uppercase tracking-[0.28em] text-brand-primary mb-2 md:mb-3">
+                <p className={`${smal ? 'text-[10px] mb-1' : 'text-[11px] mb-2'} md:text-xs font-bold uppercase tracking-[0.28em] text-brand-primary md:mb-3`}>
                   {eyebrow}
                 </p>
               ) : null}
-              <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight uppercase text-white leading-[0.92]">
+              <h1 className={`font-display ${smal ? 'text-3xl' : 'text-5xl'} sm:text-6xl md:text-7xl lg:text-8xl tracking-tight uppercase text-white leading-[0.92]`}>
                 {title}
               </h1>
               {subtitle ? (
-                <p className="mt-3 md:mt-4 max-w-xl text-sm md:text-base text-white/90 font-medium leading-relaxed">
+                <p className={`${smal ? 'mt-1 text-xs' : 'mt-3 text-sm'} md:mt-4 max-w-xl md:text-base text-white/90 font-medium leading-relaxed`}>
                   {subtitle}
                 </p>
               ) : null}

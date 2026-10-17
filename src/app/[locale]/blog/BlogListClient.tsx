@@ -152,6 +152,7 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
                     alt={getTitle(featuredPost)}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
+                    quality={90}
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     onError={() => setFailedImages((prev) => new Set(prev).add(featuredPost.id))}
                   />
@@ -211,6 +212,7 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
                         alt={getTitle(post)}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        quality={90}
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                         onError={() => setFailedImages((prev) => new Set(prev).add(post.id))}
                       />

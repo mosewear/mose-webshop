@@ -70,6 +70,7 @@ export default function PillPolaroid({
               alt=""
               fill
               sizes="120px"
+              quality={90}
               unoptimized={!src.includes('supabase')}
               priority
               className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${

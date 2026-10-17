@@ -193,6 +193,7 @@ export function ParallaxImage({
           alt={alt}
           fill
           sizes={sizes}
+          quality={90}
           priority={priority}
           className="object-cover"
           style={{ objectPosition }}

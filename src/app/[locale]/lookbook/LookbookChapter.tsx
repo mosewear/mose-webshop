@@ -149,6 +149,7 @@ function WideLayout({
               alt={title}
               fill
               sizes="(max-width: 1280px) 100vw, 1280px"
+              quality={90}
               style={{ objectPosition }}
               className="object-cover"
               priority
@@ -224,6 +225,7 @@ function SplitLayout({
             alt={title}
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"
+            quality={90}
             style={{ objectPosition }}
             className="object-cover"
             priority
@@ -318,6 +320,7 @@ function DarkLayout({
             alt={title}
             fill
             sizes="(max-width: 1280px) 100vw, 1280px"
+            quality={90}
             style={{ objectPosition }}
             className="object-cover"
             priority

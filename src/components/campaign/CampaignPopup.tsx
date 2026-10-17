@@ -206,6 +206,7 @@ export default function CampaignPopup({ campaign }: CampaignPopupProps) {
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 480px"
+                  quality={90}
                   priority
                 />
               </div>

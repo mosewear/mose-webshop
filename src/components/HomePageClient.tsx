@@ -130,6 +130,7 @@ export default function HomePageClient({
             alt={t('hero.imageAlt')}
             fill
             sizes="(max-width: 767px) 0px, 100vw"
+            quality={90}
             className="hidden md:block object-cover object-center scale-105"
             priority
             onError={() => {
@@ -144,6 +145,7 @@ export default function HomePageClient({
             alt={t('hero.imageAlt')}
             fill
             sizes="(min-width: 768px) 0px, 100vw"
+            quality={90}
             className="block md:hidden object-cover object-center scale-105"
             priority
             onError={() => {
@@ -370,6 +372,7 @@ export default function HomePageClient({
                         alt={product.name}
                         fill
                         sizes="(max-width: 768px) 50vw, 33vw"
+                        quality={90}
                         className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
                         onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                       />
@@ -556,6 +559,7 @@ export default function HomePageClient({
                       alt={category.name}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
+                      quality={90}
                       className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                       onError={() => setFailedImages(prev => new Set(prev).add(category.id))}
                     />
@@ -696,6 +700,7 @@ export default function HomePageClient({
                   alt="MOSE, gedragen in het echte leven"
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
+                  quality={90}
                   className="object-cover"
                 />
                 <div aria-hidden="true" className="absolute inset-0 border-2 md:border-4 border-brand-primary pointer-events-none" />

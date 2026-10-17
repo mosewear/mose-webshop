@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from '@/i18n/routing'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -20,6 +20,18 @@ export default function LoginPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [bevestigd, setBevestigd] = useState(false)
+
+  // Bewust window.location in plaats van useSearchParams: dat laatste dwingt
+  // een Suspense-grens af rond de hele loginpagina.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('bevestigd') !== '1') return
+    setBevestigd(true)
+    setIsLogin(true)
+    const schoon = window.location.pathname + window.location.hash
+    window.history.replaceState(null, '', schoon)
+  }, [])
 
   const localeLink = (path: string) => `/${locale}${path}`
 
@@ -107,6 +119,10 @@ export default function LoginPage() {
           email: form.email,
           password: form.password,
           options: {
+            // Zonder deze regel valt Supabase terug op de Site URL van het
+            // project, en die wees lang naar localhost. De bevestigingslink in
+            // de klantmail opende dan de computer van de klant zelf.
+            emailRedirectTo: `${window.location.origin}/${locale}/login?bevestigd=1`,
             data: {
               name: form.name,
             },
@@ -141,6 +157,15 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="bg-white border-2 border-black p-6 md:p-8">
+          {bevestigd && (
+            <div
+              role="status"
+              className="mb-6 p-4 bg-brand-light border-2 border-brand-primary text-brand-primary-hover font-medium"
+            >
+              {t('login.confirmed')}
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-2 border-red-600 text-red-800">
               {error}

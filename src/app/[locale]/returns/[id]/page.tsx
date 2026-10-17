@@ -588,6 +588,7 @@ export default function ReturnDetailsPage() {
                         alt={orderItem.product_name}
                         fill
                         sizes="96px"
+                        quality={90}
                         className="object-cover"
                       />
                     </div>

@@ -288,6 +288,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                           alt=""
                           fill
                           sizes="80px"
+                          quality={90}
                           className="object-cover"
                         />
                       </div>

@@ -1032,6 +1032,7 @@
   },
   "auth": {
     "login": {
+      "confirmed": "Je e-mailadres is bevestigd. Log hieronder in om verder te gaan.",
       "title": "INLOGGEN",
       "titleAlt": "Inloggen",
       "welcome": "Welkom terug!",

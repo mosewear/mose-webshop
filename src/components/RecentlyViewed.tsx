@@ -114,6 +114,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
                     alt={product.name}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
+                    quality={90}
                     className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
                     onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                   />

@@ -443,6 +443,7 @@ export default function ShopPageClient() {
            was nodig om het logo uit een stofopname in beeld te houden. */
         objectPosition="center"
         hoogte="aspect-[1170/480] md:aspect-[2103/467]"
+        smal
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
@@ -1013,6 +1014,7 @@ export default function ShopPageClient() {
                             }
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            quality={90}
                             className="object-cover object-center"
                             priority={isPriority}
                             loading={isPriority ? 'eager' : 'lazy'}

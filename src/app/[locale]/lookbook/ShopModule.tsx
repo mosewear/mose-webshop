@@ -164,6 +164,7 @@ function ThePiece({
             alt={name}
             fill
             sizes="(max-width: 768px) 100vw, 45vw"
+            quality={90}
             className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
           />
         ) : null}
@@ -293,6 +294,7 @@ function TheOutfit({
                       alt={name}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
+                      quality={90}
                       className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                     />
                   ) : null}
@@ -425,6 +427,7 @@ function ShopTheLook({
                     alt={name}
                     fill
                     sizes="(max-width: 768px) 70vw, 320px"
+                    quality={90}
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 ) : null}

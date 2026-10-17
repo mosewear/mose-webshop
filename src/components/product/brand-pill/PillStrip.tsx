@@ -79,6 +79,7 @@ export default function PillStrip({
                 alt=""
                 fill
                 sizes="(min-width: 768px) 48px, 40px"
+                quality={90}
                 unoptimized={!src.includes('supabase')}
                 priority
                 className="object-cover"

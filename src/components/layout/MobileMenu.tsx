@@ -457,6 +457,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
                         alt=""
                         fill
                         sizes="50vw"
+                        quality={90}
                         className="object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
                       />
                     )}

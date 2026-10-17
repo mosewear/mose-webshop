@@ -84,6 +84,7 @@ export default async function AboutPage({
             alt={about.hero_alt}
             fill
             sizes="(min-width: 768px) 1px, 100vw"
+            quality={90}
             className="md:hidden object-cover"
             style={{ objectPosition: focal }}
             priority
@@ -94,6 +95,7 @@ export default async function AboutPage({
             alt={about.hero_alt}
             fill
             sizes="(min-width: 768px) 896px, 1px"
+            quality={90}
             className="hidden md:block object-cover"
             style={{ objectPosition: focal }}
             priority

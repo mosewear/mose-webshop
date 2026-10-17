@@ -1032,6 +1032,7 @@
   },
   "auth": {
     "login": {
+      "confirmed": "Your email address is confirmed. Sign in below to continue.",
       "title": "LOGIN",
       "titleAlt": "Login",
       "welcome": "Welcome back!",

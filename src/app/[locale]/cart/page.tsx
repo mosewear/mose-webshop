@@ -304,6 +304,7 @@ export default function CartPage() {
                           alt={item.name}
                           fill
                           sizes="(max-width: 768px) 96px, 120px"
+                          quality={90}
                           className="object-cover object-center"
                         />
                       </LocaleLink>

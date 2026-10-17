@@ -120,6 +120,7 @@ export default function PdpInstagramFeed({
                   fill
                   unoptimized={!imageSrc.includes('supabase')}
                   sizes="(min-width: 768px) 16vw, (min-width: 640px) 33vw, 50vw"
+                  quality={90}
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   priority={isPriority}
                   loading={isPriority ? undefined : 'lazy'}

@@ -1259,6 +1259,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               alt={media.alt_text || product.name}
                               fill
                               sizes="(max-width: 768px) 100vw, 50vw"
+                              quality={90}
                               className="object-contain object-center"
                               priority={index === 0}
                               placeholder="blur"
@@ -1398,6 +1399,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                             alt={media.alt_text || product.name}
                             fill
                             sizes="(max-width: 768px) 25vw, 12vw"
+                            quality={90}
                             className="object-cover object-center"
                           />
                         </button>
@@ -1419,6 +1421,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                             aria-hidden="true"
                             fill
                             sizes="(max-width: 768px) 25vw, 12vw"
+                            quality={90}
                             className="object-cover object-center opacity-30 group-hover:opacity-40 transition-opacity"
                           />
                         )}
@@ -1838,6 +1841,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                                   alt={getTranslatedColor(color)}
                                   fill
                                   sizes="64px"
+                                  quality={90}
                                   className="object-cover object-center"
                                 />
                               ) : (
@@ -2308,6 +2312,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               alt={relProd.name}
                               fill
                               sizes="(max-width: 640px) 50vw, 25vw"
+                              quality={90}
                               className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
                             />
                           )}

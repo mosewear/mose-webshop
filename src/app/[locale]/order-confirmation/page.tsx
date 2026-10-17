@@ -382,6 +382,7 @@ export default function OrderConfirmationPage({
                         alt={item.product_name}
                         fill
                         sizes="(max-width: 768px) 96px, 128px"
+                        quality={90}
                         className="object-cover object-center"
                       />
                     ) : (

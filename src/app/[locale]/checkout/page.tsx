@@ -1894,6 +1894,7 @@ export default function CheckoutPage() {
                         alt={item.name}
                         fill
                         sizes="56px"
+                        quality={90}
                         className="object-cover object-center"
                       />
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md border border-white">
@@ -2834,6 +2835,7 @@ export default function CheckoutPage() {
                         alt={item.name}
                         fill
                         sizes="64px"
+                        quality={90}
                         className="object-cover object-center"
                       />
                       <div className="absolute -top-1 -right-1 w-6 h-6 bg-brand-primary text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white">

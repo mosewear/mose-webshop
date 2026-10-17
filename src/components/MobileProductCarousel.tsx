@@ -108,6 +108,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                     alt={product.name}
                     fill
                     sizes="(max-width: 768px) 80vw, 280px"
+                    quality={90}
                     className="object-cover object-center"
                     onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
                   />

@@ -33,6 +33,7 @@ export default function ChatAvatar({ maat = 32, className = '' }: ChatAvatarProp
         alt=""
         fill
         sizes={`${maat}px`}
+        quality={90}
         className="object-cover"
         priority
       />
