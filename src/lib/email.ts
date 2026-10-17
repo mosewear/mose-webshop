@@ -498,8 +498,11 @@ export async function sendOrderConfirmationEmail(props: OrderEmailProps) {
           contactAddress: settings.contact_address,
         })
       )
-      subject = t('orderConfirmation.subject', { 
-        orderId: props.orderId.slice(0, 8).toUpperCase() 
+      // Het sjabloon is 'Bestelling bevestiging #{{orderNumber}} | MOSE'.
+      // Stond hier orderId, en interpolate() vervangt een onbekende naam stil
+      // door een lege string. Elke klant kreeg dus '#' zonder nummer.
+      subject = t('orderConfirmation.subject', {
+        orderNumber: props.orderId.slice(0, 8).toUpperCase(),
       })
     }
 
@@ -1512,7 +1515,7 @@ export async function sendContactFormEmail(props: {
       from: 'MOSE Contact <info@mosewear.com>',
       to: [adminEmail],
       replyTo: props.email,
-      subject: t('contact.subject', { name: props.name }),
+      subject: t('contact.subject', { name: props.name, subject: props.subject }),
       html,
       headers: {
         'X-Entity-Ref-ID': `contact-${Date.now()}`,

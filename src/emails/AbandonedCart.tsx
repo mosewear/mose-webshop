@@ -272,7 +272,7 @@ export default function AbandonedCartEmail({
           ))}
           {hiddenCount > 0 ? (
             <EmailParagraph tone="muted" align="center" mt={10} mb={0}>
-              {t('abandonedCart.moreItems', { hiddenCount }) ||
+              {t('abandonedCart.moreItems', { count: hiddenCount }) ||
                 `+ nog ${hiddenCount} artikel`}
             </EmailParagraph>
           ) : null}
