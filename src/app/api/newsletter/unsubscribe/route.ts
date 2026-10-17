@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { schrijfContactUit } from '@/lib/brevo'
 
 export async function POST(req: NextRequest) {
@@ -15,7 +15,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    // Service role, net als de inschrijfroute. Met de gewone client blokkeert
+    // RLS het lezen van newsletter_subscribers, waardoor elke uitschrijving
+    // een 404 kreeg en niemand zich kon afmelden.
+    const supabase = createServiceRoleClient()
 
     // Check if email exists
     const { data: existing, error: checkError } = await supabase
