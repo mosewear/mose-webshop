@@ -67,12 +67,35 @@ export interface ApplyResult {
 }
 
 /**
+ * Hoe ver een order in het proces is. Sendcloud meldt een pas aangemaakt
+ * label als "Announced", en dat vertaalt naar `processing`. Zonder deze
+ * rangorde zette de halfuurlijkse sync een order die al op `shipped` stond
+ * en waarvan de klant al een verzendmail had, telkens terug naar
+ * "In behandeling" tot DHL het pakket had opgehaald.
+ */
+const STATUS_RANG: Record<string, number> = {
+  pending: 0,
+  processing: 1,
+  shipped: 2,
+  delivered: 3,
+}
+
+/** Een order mag vooruit, en mag altijd naar een eindstatus zoals geannuleerd. */
+function isTerugval(oudeStatus: string, nieuweStatus: string): boolean {
+  const oud = STATUS_RANG[oudeStatus]
+  const nieuw = STATUS_RANG[nieuweStatus]
+  if (oud === undefined || nieuw === undefined) return false
+  return nieuw < oud
+}
+
+/**
  * Pas een Sendcloud parcel-status update toe op één order.
  *
  * Bevat alle business-rules die ook in de webhook gelden:
  *  - Stuur geen update als de status onveranderd is
- *  - Downgrade `delivered` → `shipped` is verboden (race tussen carrier
- *    "out for delivery" en "delivered" updates)
+ *  - Een order gaat nooit achteruit: niet van `delivered` naar `shipped`
+ *    (race tussen carrier-updates) en niet van `shipped` naar
+ *    `processing` (Sendcloud meldt een vers label als "Announced")
  *  - Stamp `shipped_at` / `delivered_at` op de eerste transitie
  *  - Update tracking_code/url/carrier als die nog niet bekend zijn
  *  - Stuur delivered-mail (incl. atomic Trustpilot-claim) bij overgang
@@ -100,7 +123,25 @@ export async function applyParcelStatusUpdate(
     }
   }
 
-  if (oldStatus === 'delivered' && newStatus === 'shipped') {
+  if (isTerugval(oldStatus, newStatus)) {
+    // Status laten staan, maar de trackinggegevens wel overnemen: die zijn
+    // ook bij een "Announced" al bruikbaar voor de klant.
+    const tracking: Record<string, unknown> = {}
+    if (parcel.tracking_number && !order.tracking_code) {
+      tracking.tracking_code = parcel.tracking_number
+    }
+    if (parcel.tracking_url && !order.tracking_url) {
+      tracking.tracking_url = parcel.tracking_url
+    }
+    if (parcel.carrier?.name && !order.carrier) {
+      tracking.carrier = parcel.carrier.name
+    }
+    if (Object.keys(tracking).length > 0) {
+      await supabase
+        .from('orders')
+        .update({ ...tracking, updated_at: new Date().toISOString() })
+        .eq('id', order.id)
+    }
     return {
       orderId: order.id,
       changed: false,
