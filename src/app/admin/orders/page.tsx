@@ -24,6 +24,7 @@ interface Order {
   billing_address: any
   payment_intent_id: string | null
   tracking_code: string | null
+  label_url: string | null
   created_at: string
   updated_at: string
 }
@@ -731,7 +732,17 @@ export default function AdminOrdersPage() {
 
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                     <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
-                    <StatusBadge status={order.status} kind="order" />
+                    <div className="flex items-center flex-wrap gap-1">
+                      <StatusBadge status={order.status} kind="order" />
+                      {order.label_url && order.status === 'processing' ? (
+                      <span
+                        title="Label aangemaakt, wacht op ophalen door DHL"
+                        className="ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border border-gray-400 text-gray-600 bg-gray-50 whitespace-nowrap"
+                      >
+                        label klaar
+                      </span>
+                    ) : null}
+                    </div>
                     <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
                     <div className="font-bold text-gray-900 text-right">{formatBedrag(Number(order.total))}</div>
                     <div className="col-span-2">
@@ -836,6 +847,14 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} kind="order" />
+                      {order.label_url && order.status === 'processing' ? (
+                      <span
+                        title="Label aangemaakt, wacht op ophalen door DHL"
+                        className="ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border border-gray-400 text-gray-600 bg-gray-50 whitespace-nowrap"
+                      >
+                        label klaar
+                      </span>
+                    ) : null}
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-semibold border-2 inline-block ${

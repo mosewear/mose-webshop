@@ -28,7 +28,7 @@ import {
   mapSendcloudStatus,
   type SendcloudParcel,
 } from '@/lib/sendcloud'
-import { sendOrderDeliveredEmail } from '@/lib/email'
+import { sendOrderDeliveredEmail, sendShippingConfirmationEmail } from '@/lib/email'
 import { logEmail } from '@/lib/email-logger'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 
@@ -60,8 +60,8 @@ export interface ApplyResult {
   changed: boolean
   oldStatus: string
   newStatus: string
-  /** "delivered" als we een delivered-email triggerden, anders undefined. */
-  emailSent?: 'delivered' | null
+  /** Welke mail we triggerden, als we er een stuurden. */
+  emailSent?: 'delivered' | 'shipped' | null
   reason?: string
   error?: string
 }
@@ -194,6 +194,17 @@ export async function applyParcelStatusUpdate(
   )
 
   let emailSent: ApplyResult['emailSent']
+  if (newStatus === 'shipped' && oldStatus !== 'shipped') {
+    // Dit is het moment waarop DHL het pakket echt heeft gescand. Nu pas is
+    // de tracklink bruikbaar, dus nu pas gaat de verzendmail eruit.
+    const verstuurd = await stuurVerzendmailIndienNodig(supabase, {
+      ...order,
+      tracking_code: (update.tracking_code as string) || order.tracking_code,
+      tracking_url: (update.tracking_url as string) || order.tracking_url,
+      carrier: (update.carrier as string) || order.carrier,
+    })
+    emailSent = verstuurd ? 'shipped' : null
+  }
   if (newStatus === 'delivered' && oldStatus !== 'delivered') {
     const sent = await sendDeliveredEmailIfNeeded(supabase, {
       ...order,
@@ -209,6 +220,85 @@ export async function applyParcelStatusUpdate(
     oldStatus,
     newStatus,
     emailSent,
+  }
+}
+
+/**
+ * Verstuur de verzendmail, maar alleen als die nog nooit is verstuurd.
+ *
+ * Idempotentie loopt via `order_emails`: een order kan meermaals van
+ * `processing` naar `shipped` bewegen als een koerier statussen terugdraait,
+ * en dan mag de klant niet twee keer hetzelfde horen.
+ */
+export async function stuurVerzendmailIndienNodig(
+  supabase: SupabaseClient,
+  order: OrderRow
+): Promise<boolean> {
+  const orderKort = order.id.slice(0, 8)
+
+  const { data: eerder } = await supabase
+    .from('order_emails')
+    .select('id')
+    .eq('order_id', order.id)
+    .in('template_key', ['shipped', 'shipping_confirmation'])
+    .eq('status', 'sent')
+    .limit(1)
+
+  if (eerder && eerder.length > 0) {
+    console.log(
+      `[Sendcloud Sync] Verzendmail voor order ${orderKort} is al eerder verstuurd, overgeslagen`
+    )
+    return false
+  }
+
+  if (!order.tracking_code) {
+    console.log(
+      `[Sendcloud Sync] Geen tracking voor order ${orderKort}, verzendmail overgeslagen`
+    )
+    return false
+  }
+
+  try {
+    const klantnaam =
+      (order.shipping_address as { name?: string } | null)?.name || 'Klant'
+
+    const resultaat = await sendShippingConfirmationEmail({
+      customerEmail: order.email,
+      customerName: klantnaam,
+      orderId: order.id,
+      trackingCode: order.tracking_code,
+      trackingUrl: order.tracking_url || '',
+      carrier: order.carrier || 'DHL',
+      estimatedDelivery: order.delivered_at || undefined,
+      locale: order.locale || 'nl',
+    })
+
+    await logEmail({
+      orderId: order.id,
+      emailType: 'shipped',
+      recipientEmail: order.email,
+      subject: `Je MOSE bestelling #${order.id.slice(0, 8).toUpperCase()} is onderweg`,
+      status: resultaat.success ? 'sent' : 'failed',
+      errorMessage: resultaat.error ? String(resultaat.error) : undefined,
+    })
+
+    if (!resultaat.success) return false
+
+    await supabase
+      .from('orders')
+      .update({
+        last_email_sent_at: new Date().toISOString(),
+        last_email_type: 'shipped',
+      })
+      .eq('id', order.id)
+
+    return true
+  } catch (err) {
+    console.error(
+      `[Sendcloud Sync] Verzendmail voor order ${orderKort} mislukt:`,
+      err instanceof Error ? err.message : err
+    )
+    return false
   }
 }
 

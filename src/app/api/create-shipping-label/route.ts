@@ -8,7 +8,7 @@ import {
   estimateClothingWeight,
   isSendcloudConfigured,
 } from '@/lib/sendcloud'
-import { sendShippingConfirmationEmail } from '@/lib/email'
+import { sendOrderProcessingEmail } from '@/lib/email'
 import { logEmail } from '@/lib/email-logger'
 import { calculateEstimatedDeliveryDate } from '@/lib/order-utils'
 
@@ -142,7 +142,10 @@ export async function POST(req: NextRequest) {
         tracking_url: parcel.tracking_url,
         carrier: parcel.carrier.name,
         label_url: labelUrl,
-        status: 'shipped',
+        // Bewust geen status 'shipped' hier. Het label is aangemaakt, maar het
+        // pakket ligt nog bij ons; Sendcloud meldt het dan als "Announced".
+        // De halfuurlijkse sync zet de order op 'shipped' zodra DHL het
+        // daadwerkelijk scant, en stuurt dan pas de track-en-trace mail.
         estimated_delivery_date: estimatedDelivery.toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
       })
@@ -156,35 +159,35 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Stuur shipping email als gevraagd
+    // Melden dat het pakket is ingepakt en klaarstaat. De mail met de
+    // track-en-trace volgt pas als DHL het pakket echt heeft opgehaald,
+    // want tot die scan toont de tracklink nog niets.
     if (sendEmail) {
       const customerName = shippingAddress.name || 'Klant'
 
-      const emailResult = await sendShippingConfirmationEmail({
+      const emailResult = await sendOrderProcessingEmail({
         customerEmail: order.email,
         customerName,
         orderId: order.id,
-        trackingCode: parcel.tracking_number,
-        trackingUrl: parcel.tracking_url,
-        carrier: parcel.carrier.name,
-        estimatedDelivery: estimatedDelivery.toISOString(),
+        orderTotal: Number(order.total) || 0,
+        estimatedShipDate: estimatedDelivery.toISOString(),
+        locale: order.locale || 'nl',
       })
 
       await logEmail({
         orderId: order.id,
-        emailType: 'shipped',
+        emailType: 'processing',
         recipientEmail: order.email,
-        subject: `📦 Je MOSE bestelling #${order.id.slice(0, 8).toUpperCase()} is verzonden!`,
+        subject: `Je MOSE bestelling #${order.id.slice(0, 8).toUpperCase()} staat klaar voor verzending`,
         status: emailResult.success ? 'sent' : 'failed',
         errorMessage: emailResult.error ? String(emailResult.error) : undefined,
       })
 
-      // Update last_email_sent
       await supabase
         .from('orders')
         .update({
           last_email_sent_at: new Date().toISOString(),
-          last_email_type: 'shipped',
+          last_email_type: 'processing',
         })
         .eq('id', orderId)
     }

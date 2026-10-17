@@ -9,6 +9,8 @@ import {
   isSendcloudConfigured,
 } from '@/lib/sendcloud'
 import { calculateEstimatedDeliveryDate } from '@/lib/order-utils'
+import { sendOrderProcessingEmail } from '@/lib/email'
+import { logEmail } from '@/lib/email-logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -139,9 +141,40 @@ export async function POST(req: NextRequest) {
             tracking_url: parcel.tracking_url,
             carrier: parcel.carrier.name,
             label_url: labelUrl,
-            status: 'shipped',
+            // Geen 'shipped': het pakket ligt nog hier. De sync zet dat zodra
+            // DHL scant. Zie create-shipping-label voor dezelfde afweging.
             estimated_delivery_date: estimatedDelivery.toISOString().split('T')[0],
             updated_at: new Date().toISOString(),
+          })
+          .eq('id', order.id)
+
+        // Deze route stuurde tot nu toe helemaal geen mail, waardoor een klant
+        // bij een bulkronde niets hoorde. Nu dezelfde melding als bij een los
+        // label.
+        const klantnaam = shippingAddress.name || 'Klant'
+        const mailResultaat = await sendOrderProcessingEmail({
+          customerEmail: order.email,
+          customerName: klantnaam,
+          orderId: order.id,
+          orderTotal: Number(order.total) || 0,
+          estimatedShipDate: estimatedDelivery.toISOString(),
+          locale: order.locale || 'nl',
+        })
+
+        await logEmail({
+          orderId: order.id,
+          emailType: 'processing',
+          recipientEmail: order.email,
+          subject: `Je MOSE bestelling #${order.id.slice(0, 8).toUpperCase()} staat klaar voor verzending`,
+          status: mailResultaat.success ? 'sent' : 'failed',
+          errorMessage: mailResultaat.error ? String(mailResultaat.error) : undefined,
+        })
+
+        await supabase
+          .from('orders')
+          .update({
+            last_email_sent_at: new Date().toISOString(),
+            last_email_type: 'processing',
           })
           .eq('id', order.id)
 
