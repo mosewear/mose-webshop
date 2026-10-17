@@ -468,7 +468,8 @@
       "openPhoto": "Open photo {index} of {total}",
       "current": "Now viewing",
       "prev": "Previous photo",
-      "next": "Next photo"
+      "next": "Next image",
+      "previous": "Previous image"
     },
     "brandWidget": {
       "headline": "WHO ARE WE?",

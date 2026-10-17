@@ -438,13 +438,11 @@ export default function ShopPageClient() {
         imageSrc={PAGE_BANNER_IMAGES.shop.desktop}
         imageSrcMobile={PAGE_BANNER_IMAGES.shop.mobile}
         imageAlt={t('heroAlt')}
-        /* 42%. Nagelopen van 34 tot 68 procent: op 50 werd het geperste logo
-           bovenaan afgesneden, vanaf 52 verdween het helemaal uit beeld en
-           bleef er kale stof over. Op 42 staat het logo volledig in de
-           bovenste helft en blijft de onderste helft rustig voor de titel. */
-        objectPosition="center 42%"
-        objectPositionMobile="center 42%"
-        hoogte="h-40 md:h-72 lg:h-80"
+        /* Geen uitsnede nodig: de band staat op precies de verhouding van de
+           aangeleverde beelden, dus 'center' laat alles heel. De 42% hiervoor
+           was nodig om het logo uit een stofopname in beeld te houden. */
+        objectPosition="center"
+        hoogte="aspect-[1170/480] md:aspect-[2103/467]"
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">

@@ -468,7 +468,8 @@
       "openPhoto": "Open foto {index} van {total}",
       "current": "Nu in beeld",
       "prev": "Vorige foto",
-      "next": "Volgende foto"
+      "next": "Volgende foto",
+      "previous": "Vorige foto"
     },
     "brandWidget": {
       "headline": "WIE ZIJN WIJ?",

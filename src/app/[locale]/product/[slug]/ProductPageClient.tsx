@@ -22,7 +22,7 @@ import RecentlyViewed from '@/components/RecentlyViewed'
 import PdpGalleryLightbox from '@/components/product/PdpGalleryLightbox'
 import PdpImageLightbox from '@/components/product/PdpImageLightbox'
 import { prefetchPdpLightboxXl } from '@/lib/pdp-lightbox-image'
-import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle, Plus } from 'lucide-react'
+import { Truck, RotateCcw, MapPin, Video, Shield, Package, Lock, AlertCircle, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
 import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -839,6 +839,42 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     }
   }, [product, selectedImage, selectedColor, selectedSize])
 
+  /**
+   * Een beeld terug of verder.
+   *
+   * Op desktop was de galerij alleen met de miniaturen te bedienen, en daar
+   * passen er vier in de rij terwijl elke galerij er zes heeft. De laatste
+   * twee waren dus alleen te bereiken via "bekijk alles". Met pijlen en met de
+   * pijltjestoetsen loop je er gewoon doorheen. Op telefoon blijft vegen de
+   * manier; daar staan de pijlen niet.
+   */
+  const stapBeeld = (richting: -1 | 1) => {
+    const aantal = displayImages.length
+    if (aantal < 2) return
+    const nieuw = (selectedImage + richting + aantal) % aantal
+    scrollToImage(nieuw)
+  }
+
+  /**
+   * Pijltjestoetsen bedienen de galerij.
+   *
+   * Niet wanneer de lightbox openstaat (die heeft zijn eigen afhandeling) en
+   * niet terwijl iemand in een invoerveld staat, want dan verspringt het beeld
+   * onder je handen terwijl je een kortingscode typt.
+   */
+  useEffect(() => {
+    const bijToets = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      if (showLightbox) return
+      const el = document.activeElement as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+      e.preventDefault()
+      stapBeeld(e.key === 'ArrowLeft' ? -1 : 1)
+    }
+    window.addEventListener('keydown', bijToets)
+    return () => window.removeEventListener('keydown', bijToets)
+  })
+
   const scrollToImage = (index: number) => {
     const container = scrollContainerRef.current
     if (!container) return
@@ -1233,6 +1269,31 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                       </div>
                     ))}
                   </div>
+
+                  {/* Vorige en volgende, alleen op desktop: op telefoon veeg je.
+                      Ze staan altijd zichtbaar en niet pas bij hover, want een
+                      bedieningselement dat je moet ontdekken wordt niet
+                      gebruikt. */}
+                  {displayImages.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => stapBeeld(-1)}
+                        aria-label={t('gallery.previous')}
+                        className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center border-2 border-black bg-white/90 text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary"
+                      >
+                        <ChevronLeft className="h-6 w-6" strokeWidth={2.5} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => stapBeeld(1)}
+                        aria-label={t('gallery.next')}
+                        className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center border-2 border-black bg-white/90 text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary"
+                      >
+                        <ChevronRight className="h-6 w-6" strokeWidth={2.5} aria-hidden="true" />
+                      </button>
+                    </>
+                  )}
 
                   {/* Zoom hint - only for images, desktop only */}
                   {displayImages[selectedImage]?.media_type === 'image' && (

@@ -118,11 +118,25 @@ export const PAGE_BANNER_IMAGES = {
    * een geperst logo, en hij concurreert niet met de productfoto's eronder.
    * De onderste helft is donker genoeg voor de witte titel.
    */
+  /**
+   * Shop: de nieuwe shopbanner, aangeleverd op 17 oktober 2026.
+   *
+   * Twee aparte uitsneden, elk op maat gemaakt voor zijn eigen band: 2103 bij
+   * 467 voor desktop (4,5 op 1) en 1170 bij 480 voor mobiel (2,44 op 1). Omdat
+   * de beelden al op die verhouding staan, zetten we de band op precies
+   * dezelfde verhouding. Dan hoeft er niets te worden bijgesneden en blijven
+   * beide mannen en de gracht volledig in beeld.
+   *
+   * Dat verving een stofopname. Die was gekozen omdat elke foto met mensen in
+   * een strook van 4,5 op 1 een rij afgesneden koppen werd. Dat probleem
+   * bestaat hier niet meer: de uitsnede is al gemaakt, wij hoeven hem alleen
+   * niet opnieuw te maken.
+   */
   shop: {
     desktop:
-      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-close-desktop.webp',
+      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/shopbanners-2026-10-17/shop-desktop.webp',
     mobile:
-      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/photoshoot-2026/hoodie/groen/detail-puff-close-desktop.webp',
+      'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/shopbanners-2026-10-17/shop-mobiel.webp',
   },
 
   blog: {
