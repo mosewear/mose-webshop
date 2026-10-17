@@ -58,7 +58,9 @@ const nextConfig: NextConfig = {
     // includes 3840 which we never serve, and skipping unused sizes
     // reduces the srcset payload Next emits in the HTML.
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
-    qualities: [75, 90],
+    // 95 is er voor de beelden waar het echt op aankomt: de
+    // shopbanner en de productgalerij. Zie het commentaar daar.
+    qualities: [75, 90, 95],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

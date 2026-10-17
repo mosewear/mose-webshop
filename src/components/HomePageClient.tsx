@@ -130,7 +130,7 @@ export default function HomePageClient({
             alt={t('hero.imageAlt')}
             fill
             sizes="(max-width: 767px) 0px, 100vw"
-            quality={90}
+            quality={95}
             className="hidden md:block object-cover object-center scale-105"
             priority
             onError={() => {
@@ -145,7 +145,7 @@ export default function HomePageClient({
             alt={t('hero.imageAlt')}
             fill
             sizes="(min-width: 768px) 0px, 100vw"
-            quality={90}
+            quality={95}
             className="block md:hidden object-cover object-center scale-105"
             priority
             onError={() => {

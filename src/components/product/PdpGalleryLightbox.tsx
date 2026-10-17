@@ -174,7 +174,7 @@ export default function PdpGalleryLightbox({
                         alt={item.alt_text || productName}
                         fill
                         sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-                        quality={90}
+                        quality={95}
                         className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
                       />
                     ) : (

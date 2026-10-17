@@ -1259,7 +1259,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               alt={media.alt_text || product.name}
                               fill
                               sizes="(max-width: 768px) 100vw, 50vw"
-                              quality={90}
+                              quality={95}
                               className="object-contain object-center"
                               priority={index === 0}
                               placeholder="blur"

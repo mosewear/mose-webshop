@@ -57,7 +57,7 @@ export default function EditorialPageBanner({
         alt={imageAlt}
         fill
         sizes="(max-width: 767px) 0px, 100vw"
-        quality={90}
+        quality={95}
         className="hidden md:block object-cover"
         style={{ objectPosition }}
         priority={priority}
@@ -67,7 +67,7 @@ export default function EditorialPageBanner({
         alt={imageAlt}
         fill
         sizes="(min-width: 768px) 0px, 100vw"
-        quality={90}
+        quality={95}
         className="block md:hidden object-cover"
         style={{ objectPosition: mobilePosition }}
         priority={priority}
