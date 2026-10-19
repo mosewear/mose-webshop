@@ -252,7 +252,9 @@ export default function CartPage() {
     <ul className="space-y-2.5 text-sm text-gray-600">
       <li className="flex items-center gap-2.5">
         <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
-        <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
+        <span>{altijdGratisVerzending
+          ? t('trust.freeShippingAltijd')
+          : t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
       </li>
       <li className="flex items-center gap-2.5">
         <Lock size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
