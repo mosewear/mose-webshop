@@ -844,7 +844,8 @@
       "price": "Prijsrange",
       "inStockOnly": "Alleen op voorraad",
       "active": "Actieve filters",
-      "close": "Sluit filters"
+      "close": "Sluit filters",
+      "allShort": "Alles"
     },
     "sort": {
       "title": "Sorteren",

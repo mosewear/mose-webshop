@@ -844,7 +844,8 @@
       "price": "Price Range",
       "inStockOnly": "In Stock Only",
       "active": "Active Filters",
-      "close": "Close filters"
+      "close": "Close filters",
+      "allShort": "All"
     },
     "sort": {
       "title": "Sort",

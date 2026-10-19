@@ -25,6 +25,7 @@ import {
   getHoverImageForColor,
 } from '@/lib/product-display'
 import EditorialPageBanner, { PAGE_BANNER_IMAGES } from '@/components/EditorialPageBanner'
+import CategorieKiezer, { type CategorieItem } from '@/components/shop/CategorieKiezer'
 
 interface Product {
   id: string
@@ -384,6 +385,28 @@ export default function ShopPageClient() {
    * same product remain — without this the product-level filter
    * above would keep the OOS color visible.
    */
+  /**
+   * Kaarten voor de categorierij. Alleen categorieën met voorraad, want een
+   * lege ingang is een doodlopende weg. Het beeld komt van het eerste product
+   * in die categorie, zodat de kaart toont wat erachter zit.
+   */
+  const categorieKaarten = useMemo<CategorieItem[]>(() => {
+    return categories
+      .map<CategorieItem | null>((categorie) => {
+        const vanCategorie = products.filter((p) => p.category?.slug === categorie.slug)
+        if (vanCategorie.length === 0) return null
+        const aantalTegels = expandToShopTiles(vanCategorie).length
+        const eerste = vanCategorie[0]
+        return {
+          slug: categorie.slug,
+          naam: getCategoryName(categorie),
+          beeld: getImageForColor(eerste.images, null),
+          aantal: aantalTegels,
+        }
+      })
+      .filter((x): x is CategorieItem => x !== null)
+  }, [categories, products, locale])
+
   const shopTiles = useMemo(() => {
     const tiles = expandToShopTiles(filteredProducts)
     if (!showInStockOnly) return tiles
@@ -937,6 +960,17 @@ export default function ShopPageClient() {
                   {t('filters.clear')}
                 </button>
               </div>
+            )}
+
+            {/* Categorierij: filtert het raster, navigeert niet weg. */}
+            {!loading && categorieKaarten.length > 1 && (
+              <CategorieKiezer
+                items={categorieKaarten}
+                actief={selectedCategory}
+                onKies={setSelectedCategory}
+                allesLabel={t('filters.allShort')}
+                totaalAantal={expandToShopTiles(products).length}
+              />
             )}
 
             {/* Products Grid */}
