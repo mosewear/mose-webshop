@@ -969,6 +969,7 @@ export default function ShopPageClient() {
                 actief={selectedCategory}
                 onKies={setSelectedCategory}
                 allesLabel={t('filters.allShort')}
+                allesBeeld="https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/shop-categorieen/alles.webp"
                 totaalAantal={expandToShopTiles(products).length}
               />
             )}

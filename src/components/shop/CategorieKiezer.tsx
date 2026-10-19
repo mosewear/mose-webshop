@@ -58,8 +58,10 @@ export default function CategorieKiezer({
 
   if (items.length === 0) return null
 
-  // De Alles-kaart krijgt bewust geen foto. Met het beeld van de eerste
-  // categorie stonden er twee identieke kaarten naast elkaar.
+  // De Alles-kaart heeft een eigen beeld: twee personen naast elkaar, wat
+  // past bij "de hele collectie" en duidelijk verschilt van de
+  // categoriekaarten die er allemaal één tonen. Zonder beeld viel hij als
+  // zwart gat tussen de andere drie.
   const kaarten: CategorieItem[] = [
     { slug: 'all', naam: allesLabel, beeld: allesBeeld ?? null, aantal: totaalAantal },
     ...items,

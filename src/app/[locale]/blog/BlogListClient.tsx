@@ -96,8 +96,12 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
         imageSrc={PAGE_BANNER_IMAGES.blog.desktop}
         imageSrcMobile={PAGE_BANNER_IMAGES.blog.mobile}
         imageAlt={t('heroAlt')}
-        objectPosition="center 40%"
-        objectPositionMobile="center 35%"
+        // De band is 3,2 op 1 en de foto 1,5 op 1, dus er blijft 47 procent van
+        // de hoogte over. Op 40 procent sneed dat de vier mannen rond het middel
+        // af en viel de titel over een gezicht. Hoger in het beeld staat de
+        // poort boven hun hoofden: rustiger, en de linkerhoek blijft vrij.
+        objectPosition="center 12%"
+        objectPositionMobile="center 14%"
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">

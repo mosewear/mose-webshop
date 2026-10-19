@@ -13,6 +13,16 @@ const TIP_KEY = 'mose_chat_tip_gezien'
 /** Zoveel milliseconden op dezelfde pagina blijven hangen, dan pas de tip. */
 const TIP_NA_MS = 22000
 
+/**
+ * De tip boven de chatknop staat uit.
+ *
+ * Rick ziet dat vrijwel iedereen hem wegklikt in plaats van opent, en dan is
+ * het een onderbreking zonder opbrengst. De knop zelf blijft gewoon staan, dus
+ * wie een vraag heeft kan die nog steeds stellen. Op true zetten brengt de tip
+ * terug zoals hij was.
+ */
+const TIP_AAN = false
+
 export default function ChatButton() {
   const t = useTranslations('chat')
   const pathname = usePathname()
@@ -139,6 +149,7 @@ export default function ChatButton() {
    * meer, en met een kruisje erop.
    */
   useEffect(() => {
+    if (!TIP_AAN) return
     if (isOpen) return
     let gezien = false
     try {
