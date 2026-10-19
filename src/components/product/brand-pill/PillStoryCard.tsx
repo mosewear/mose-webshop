@@ -68,7 +68,6 @@ export default function PillStoryCard({
               fill
               sizes="(min-width: 768px) 130px, 110px"
               quality={90}
-              unoptimized={!src.includes('supabase')}
               priority
               className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                 active ? 'opacity-100' : 'opacity-0'

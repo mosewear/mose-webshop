@@ -69,7 +69,6 @@ export default function PillAvatar({
                 fill
                 sizes="48px"
                 quality={90}
-                unoptimized={!src.includes('supabase')}
                 priority
                 className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                   active ? 'opacity-100' : 'opacity-0'

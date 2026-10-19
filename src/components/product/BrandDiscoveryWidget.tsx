@@ -673,7 +673,6 @@ function BrandDiscoveryModal({
               fill
               sizes="(min-width: 768px) 672px, 100vw"
               quality={90}
-              unoptimized={!heroSrc.includes('supabase')}
               priority
               className="object-cover"
             />
@@ -732,7 +731,6 @@ function BrandDiscoveryModal({
                           fill
                           sizes="(min-width: 768px) 200px, 33vw"
                           quality={90}
-                          unoptimized={!src.includes('supabase')}
                           loading="lazy"
                           className="object-cover transition-transform duration-500 motion-reduce:transition-none group-hover:scale-105"
                           onError={() => onImageFailed(post.id)}

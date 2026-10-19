@@ -100,7 +100,6 @@ export default function PillTicker({
               fill
               sizes="(min-width: 768px) 48px, 40px"
               quality={90}
-              unoptimized={!src.includes('supabase')}
               priority
               className={`object-cover transition-opacity duration-700 motion-reduce:transition-none ${
                 active ? 'opacity-100' : 'opacity-0'

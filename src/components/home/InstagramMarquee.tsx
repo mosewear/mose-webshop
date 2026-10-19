@@ -456,7 +456,6 @@ function Tile({
             src={imageSrc}
             alt=""
             fill
-            unoptimized={!imageSrc.includes('supabase')}
             sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 768px) 28vw, (min-width: 640px) 40vw, 60vw"
             quality={90}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -651,7 +650,6 @@ function VideoTile({
         src={poster}
         alt=""
         fill
-        unoptimized={!poster.includes('supabase')}
         sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 768px) 28vw, (min-width: 640px) 40vw, 60vw"
         quality={90}
         className={`absolute inset-0 object-cover transition-opacity duration-200 group-hover:scale-105 ${

@@ -357,7 +357,6 @@ function InstagramThumb({
           src={imageSrc}
           alt=""
           fill
-          unoptimized={!imageSrc.includes('supabase')}
           sizes="80px"
           quality={90}
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
