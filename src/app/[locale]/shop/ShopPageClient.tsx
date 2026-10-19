@@ -22,6 +22,7 @@ import {
   formatColorLabel,
   getColorStock,
   getImageForColor,
+  getHoverImageForColor,
 } from '@/lib/product-display'
 import EditorialPageBanner, { PAGE_BANNER_IMAGES } from '@/components/EditorialPageBanner'
 
@@ -966,6 +967,9 @@ export default function ShopPageClient() {
                   // through the same shared helper so a tile and its
                   // PDP always lead with the same image.
                   const imageSrc = getImageForColor(product.images, color)
+                  // Tweede beeld voor de muis-wissel. Alleen op desktop zichtbaar:
+                  // op touch bestaat hover niet en zou het beeld nooit wisselen.
+                  const hoverSrc = getHoverImageForColor(product.images, color, imageSrc)
 
                   // PDP link: appends `?color=<color>` only when the
                   // tile represents a specific color, which the PDP
@@ -1002,7 +1006,7 @@ export default function ShopPageClient() {
                         opacity: 1
                       }}
                     >
-                      <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
+                      <div className="group bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
                         {/* Image - Larger on mobile */}
                         <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
                           <Image
@@ -1022,6 +1026,19 @@ export default function ShopPageClient() {
                             blurDataURL={BLUR_DATA_URL}
                             onError={() => setFailedImages(prev => new Set(prev).add(tile.tileKey))}
                           />
+
+                          {hoverSrc && !failedImages.has(tile.tileKey) && (
+                            <Image
+                              src={hoverSrc}
+                              alt=""
+                              aria-hidden="true"
+                              fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              quality={90}
+                              loading="lazy"
+                              className="hidden md:block object-cover object-center opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-100 motion-reduce:transition-none"
+                            />
+                          )}
 
                           {/* Stock Badge */}
                           {hasPresale && !inStock && (

@@ -148,6 +148,37 @@ export function getImageForColor(
   return first?.url || PLACEHOLDER
 }
 
+/**
+ * De foto die verschijnt als je met de muis over een shoptegel gaat.
+ *
+ * Het raster toont bewust overal dezelfde compositie, want een overzicht is
+ * een vergelijkingsinstrument: wisselende hoeken maken kleur en pasvorm
+ * moeilijker naast elkaar te leggen. De tweede foto geeft het raster leven
+ * zonder die vergelijkbaarheid op te offeren.
+ *
+ * Detailfoto's worden overgeslagen zolang er een draagbeeld beschikbaar is.
+ * Een uitvergroot logo zegt bij het eerste kijken niets over het kledingstuk.
+ */
+export function getHoverImageForColor(
+  images: readonly ProductDisplayImage[] | null | undefined,
+  color: string | null | undefined,
+  primaryUrl: string,
+): string | null {
+  if (!images || images.length === 0) return null
+
+  const photos = images
+    .filter((img) => img.media_type !== 'video' && img.url && img.url !== primaryUrl)
+    .sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER))
+
+  const vanKleur = color ? photos.filter((img) => img.color === color) : photos
+  const kandidaten = vanKleur.length > 0 ? vanKleur : photos
+  if (kandidaten.length === 0) return null
+
+  const isDetail = (url: string) => /detail|close-?up|manchet|pufflogo/i.test(url)
+  const draagbeeld = kandidaten.find((img) => !isDetail(img.url))
+  return (draagbeeld ?? kandidaten[0]).url
+}
+
 export interface ColorStock {
   /** Sum of regular stock across all size variants of this color. */
   stock_quantity: number
