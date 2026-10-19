@@ -17,6 +17,7 @@ import { Link as LocaleLink } from '@/i18n/routing'
 import { buttonVariants } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { vertaalKleur } from '@/lib/kleurnaam'
+import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 export default function CartPage() {
   const t = useTranslations('cart')
@@ -34,6 +35,10 @@ export default function CartPage() {
   const subtotal = getTotal()
   const subtotalAfterStaffel = subtotal - staffelSavings
   const shipping = subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
+  // Bij altijd gratis verzending heeft een voortgangsbalk geen betekenis meer:
+  // hij zou permanent op honderd procent staan met "nog €0 te gaan".
+  const altijdGratisVerzending = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
+
   
   // De BTW zit in de prijzen, dus hier wordt hij eruit gerekend en niet
   // opgeteld. Hij stond als losse regel tussen subtotaal en verzending, waar
@@ -126,7 +131,9 @@ export default function CartPage() {
           <ul className="mx-auto mt-12 max-w-xs space-y-2.5 border-t border-gray-200 pt-8 text-left text-sm text-gray-600">
             <li className="flex items-center gap-2.5">
               <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
-              <span>{t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
+              <span>{altijdGratisVerzending
+                  ? t('trust.freeShippingAltijd')
+                  : t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
             </li>
             <li className="flex items-center gap-2.5">
               <Lock size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
@@ -153,7 +160,9 @@ export default function CartPage() {
     return Number.isFinite(max) && max > 0 ? max : null
   }
 
-  const tekortVoorGratis = Math.max(0, freeShippingThreshold - subtotalAfterStaffel)
+  const tekortVoorGratis = altijdGratisVerzending
+    ? 0
+    : Math.max(0, freeShippingThreshold - subtotalAfterStaffel)
   const voortgang = freeShippingThreshold > 0
     ? Math.min(100, Math.round((subtotalAfterStaffel / freeShippingThreshold) * 100))
     : 100
@@ -449,7 +458,7 @@ export default function CartPage() {
               <Prijsopbouw />
 
               <div className="mt-5">
-                <Verzendbalk />
+                {!altijdGratisVerzending && <Verzendbalk />}
               </div>
 
               <div className="mt-5 border-t-2 border-black pt-5">

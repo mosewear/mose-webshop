@@ -11,6 +11,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 interface PdpFaqProps {
   /** Uit site_settings. Het antwoord op de bezorgvraag beweerde eerder
@@ -38,11 +39,19 @@ export default function PdpFaq({
   // Zelfde substitutiepatroon als FAQAccordion, zodat beide FAQ's dezelfde
   // bron gebruiken en niet uit elkaar kunnen lopen.
   const money = (v: number) => (locale === 'nl' ? v.toFixed(2).replace('.', ',') : v.toFixed(2))
-  const fill = (text: string) =>
-    text
+
+  // Is verzending altijd gratis, dan slaat een antwoord met een drempel nergens
+  // op. Het hele antwoord wordt dan vervangen in plaats van de waarden ingevuld.
+  const altijdGratis = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
+  const fill = (text: string) => {
+    if (altijdGratis && text.includes('{freeShipping}')) {
+      return t('answerVerzendingAltijd').replace('{returnDays}', String(returnDays))
+    }
+    return text
       .replace('{freeShipping}', String(freeShippingThreshold))
       .replace('{shippingCost}', money(shippingCost))
       .replace('{returnDays}', String(returnDays))
+  }
 
   return (
     <section className="mt-12 md:mt-16 border-t-2 border-gray-200 pt-12 md:pt-16">

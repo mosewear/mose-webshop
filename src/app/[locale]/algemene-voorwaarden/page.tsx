@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
 import { COMPANY, formatKvk } from '@/lib/company'
 import { useTranslations } from 'next-intl'
+import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 export default function TermsPage() {
   const t = useTranslations('terms')
@@ -21,6 +22,11 @@ export default function TermsPage() {
     contact_phone: '+31 50 234 0025',
     contact_address: 'Stavangerweg 13, 9723 JC Groningen',
   })
+
+  const altijdGratisVerzending = isAltijdGratisUitWaarden(
+    settings.free_shipping_threshold,
+    settings.shipping_cost
+  )
 
   useEffect(() => {
     getSiteSettings().then((s) => {
@@ -69,7 +75,9 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
-                <span>{t('sections.pricing.items.2', { threshold: settings.free_shipping_threshold })}</span>
+                <span>{altijdGratisVerzending
+                  ? t('sections.pricing.itemAltijd')
+                  : t('sections.pricing.items.2', { threshold: settings.free_shipping_threshold })}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-primary font-bold">•</span>
@@ -103,10 +111,12 @@ export default function TermsPage() {
               {[0, 1, 2, 3].map((i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-brand-primary font-bold">•</span>
-                  <span>{t(`sections.shipping.items.${i}`, {
-                    threshold: settings.free_shipping_threshold,
-                    cost: settings.shipping_cost.toFixed(2).replace('.', ','),
-                  })}</span>
+                  <span>{altijdGratisVerzending && i === 3
+                    ? t('sections.shipping.itemAltijd')
+                    : t(`sections.shipping.items.${i}`, {
+                        threshold: settings.free_shipping_threshold,
+                        cost: settings.shipping_cost.toFixed(2).replace('.', ','),
+                      })}</span>
                 </li>
               ))}
             </ul>

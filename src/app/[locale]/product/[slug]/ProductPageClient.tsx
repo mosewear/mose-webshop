@@ -2104,6 +2104,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 <div className="border-2 border-black p-3 md:p-4">
                   <PdpTrustStrip
                     freeShippingThreshold={settings.free_shipping_threshold}
+                    shippingCost={settings.shipping_cost}
                     signatureSpecs={
                       locale === 'en'
                         ? product.categories.pdp_signature_specs_en || product.categories.pdp_signature_specs || null

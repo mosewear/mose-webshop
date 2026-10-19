@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { levertMorgen } from '@/lib/shipping-cutoff'
+import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 interface PdpTrustStripProps {
   signatureSpecs?: string | null
@@ -26,9 +27,11 @@ interface PdpTrustStripProps {
    *  regel die pal boven de koopknop staat, dus precies de belofte die een
    *  bezoeker meeneemt naar de checkout. */
   freeShippingThreshold: number
+  /** Nodig om te zien of verzending altijd gratis is. */
+  shippingCost?: number
 }
 
-export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold }: PdpTrustStripProps) {
+export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, shippingCost = 0 }: PdpTrustStripProps) {
   const t = useTranslations('product.trustAnchor')
   // Lazy-init runs once on first render. `Intl.DateTimeFormat` works on
   // both server and client so the SSR'd HTML matches the first client
@@ -45,10 +48,18 @@ export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold }:
     return () => window.clearInterval(id)
   }, [])
 
+  // Deze strip zit binnen één scherm van de koopknop, dus de belofte moet
+  // kloppen met wat de checkout rekent.
+  const altijdGratis = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
+
   const lines = [
     beforeCutoff
-      ? t('shippingBeforeCutoff', { threshold: freeShippingThreshold })
-      : t('shippingAfterCutoff', { threshold: freeShippingThreshold }),
+      ? (altijdGratis
+          ? t('shippingBeforeCutoffAltijd')
+          : t('shippingBeforeCutoff', { threshold: freeShippingThreshold }))
+      : (altijdGratis
+          ? t('shippingAfterCutoffAltijd')
+          : t('shippingAfterCutoff', { threshold: freeShippingThreshold })),
     t('returns'),
     // Twee jaar garantie stond alleen in de veelgestelde vragen, op 5,2 scherm.
     // Dat is een van de sterkste redenen om bij een onbekend merk te kopen en

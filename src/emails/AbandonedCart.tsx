@@ -11,6 +11,7 @@ import EmailCallout from './components/EmailCallout'
 import EmailShopMore from './components/EmailShopMore'
 import EmailParagraph from './components/EmailParagraph'
 import { EMAIL_COLORS, EMAIL_FONTS, EMAIL_DEFAULT_CONTACT, EMAIL_SITE_URL } from './tokens'
+import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 interface CartItem {
   name: string
@@ -212,7 +213,10 @@ export default function AbandonedCartEmail({
   const verzendingGratis = artikelbedrag - discount >= freeShippingThreshold
   const verzendkosten = verzendingGratis ? 0 : shippingCost
   const teBetalen = Math.max(0, artikelbedrag - discount + verzendkosten)
-  const tekortVoorGratis = Math.max(0, freeShippingThreshold - (artikelbedrag - discount))
+  const altijdGratis = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
+  const tekortVoorGratis = altijdGratis
+    ? 0
+    : Math.max(0, freeShippingThreshold - (artikelbedrag - discount))
 
   const regel = (item: CartItem) => {
     const delen: string[] = []
@@ -328,7 +332,7 @@ export default function AbandonedCartEmail({
       <EmailCallout
         tone="success"
         title={
-          verzendingGratis
+          altijdGratis || verzendingGratis
             ? t('abandonedCart.freeShippingReachedTitle') ||
               'De verzending is gratis'
             : t('abandonedCart.freeShippingTitle', {
@@ -336,7 +340,9 @@ export default function AbandonedCartEmail({
               }) || `Nog ${formatPrice(tekortVoorGratis)} tot gratis verzending`
         }
       >
-        {verzendingGratis
+        {altijdGratis
+          ? t('abandonedCart.freeShippingAltijd') || 'Altijd gratis verzending!'
+          : verzendingGratis
           ? t('abandonedCart.freeShippingReached', {
               threshold: freeShippingThreshold,
             }) ||

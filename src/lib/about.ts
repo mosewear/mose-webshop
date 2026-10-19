@@ -211,13 +211,25 @@ export async function getAboutSettings(
   }
 }
 
-/** Substitute {days} and {threshold} into the no-hassle copy. */
+/**
+ * Vult {days} en {threshold} in de no-hassle tekst.
+ *
+ * Is verzending altijd gratis, dan vervalt de drempel helemaal. "Gratis
+ * verzending vanaf €0" is geen belofte maar een rekenfout, dus die zinsnede
+ * wordt dan herschreven in plaats van gevuld.
+ */
 export function renderNoHassleText(
   template: string,
   days: number,
   threshold: number,
+  shippingCost = 0,
 ): string {
-  return template
-    .replaceAll('{days}', String(days))
-    .replaceAll('{threshold}', String(threshold))
+  const altijdGratis = (threshold ?? 0) <= 0 && (shippingCost ?? 0) <= 0
+  const basis = altijdGratis
+    ? template
+        .replace(/gratis verzending vanaf €?\{threshold\}/gi, 'altijd gratis verzending')
+        .replace(/free shipping from €?\{threshold\}/gi, 'free shipping, always')
+        .replaceAll('{threshold}', String(threshold))
+    : template.replaceAll('{threshold}', String(threshold))
+  return basis.replaceAll('{days}', String(days))
 }

@@ -402,7 +402,8 @@
       "secure": "Secure Payment",
       "returns": "{days} days return",
       "ssl": "SSL secured",
-      "freeShipping": "Free shipping from €{amount}"
+      "freeShipping": "Free shipping from €{amount}",
+      "freeShippingAltijd": "Free shipping, always"
     },
     "upsell": {
       "title": "You might also like",
@@ -523,14 +524,16 @@
       "info": "€{cost} • Free from €{threshold}",
       "label": "Shipping",
       "deliveryTime": "Delivery time",
-      "deliveryTimeValue": "Usually the next business day, otherwise the day after"
+      "deliveryTimeValue": "Usually the next business day, otherwise the day after",
+      "infoAltijd": "Free shipping, always"
     },
     "trust": {
       "localMade": "Locally made",
       "freeShipping": "Free shipping from €{threshold}",
       "returns": "{days} days return",
       "warranty": "2 year warranty",
-      "secure": "Secure payment"
+      "secure": "Secure payment",
+      "freeShippingAltijd": "Free shipping, always"
     },
     "urgency": {
       "title": "POPULAR • Only {count} left in stock",
@@ -694,7 +697,9 @@
       "madeInWithSpec": "Made in Groningen. {spec}.",
       "madeInBare": "Made in Groningen. Premium cotton, regular fit.",
       "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card.",
-      "warranty": "Two-year manufacturer warranty against material and manufacturing defects."
+      "warranty": "Two-year manufacturer warranty against material and manufacturing defects.",
+      "shippingBeforeCutoffAltijd": "Ordered before 17:00? Usually delivered tomorrow via DHL in NL and BE. Shipping is always free.",
+      "shippingAfterCutoffAltijd": "Order today and it usually arrives the day after tomorrow via DHL in NL and BE. Shipping is always free."
     },
     "klarna": {
       "installment": "or 3× {amount} with Klarna, no interest"
@@ -727,7 +732,8 @@
           "question": "Can I pay in installments?",
           "answer": "Yes. With Klarna you can split your purchase into 3 payments at zero interest, or pay later within 14 days. Both options appear at checkout."
         }
-      ]
+      ],
+      "answerVerzendingAltijd": "Order today before 17:00 and it usually arrives tomorrow in NL and BE via DHL, otherwise the day after. Shipping is always free, with no minimum."
     }
   },
   "shipping": {
@@ -798,7 +804,8 @@
     "trackOrder": "Track your order?",
     "goToAccount": "Go to your",
     "account": "account",
-    "orUseTrack": "or use the track & trace link in your shipping confirmation."
+    "orUseTrack": "or use the track & trace link in your shipping confirmation.",
+    "freeFromAltijd": "Always free"
   },
   "returns": {
     "title": "Return",
@@ -1345,7 +1352,8 @@
       "local": "Locally made",
       "freeShipping": "Free shipping from €{threshold}",
       "returns": "{days} days return",
-      "secure": "Secure payment"
+      "secure": "Secure payment",
+      "freeShippingAltijd": "Free shipping, always"
     },
     "featured": {
       "label": "Bestsellers",
@@ -1462,7 +1470,8 @@
         "question": "Which payment methods do you accept?",
         "answer": "We accept iDEAL, Mastercard, Visa, American Express, PayPal and Bancontact. All payments are securely processed via Mollie. Your payment details are always protected."
       }
-    ]
+    ],
+    "answerVerzendingAltijd": "Shipping within the Netherlands and Belgium is always free, with no minimum order value. Order before 17:00 and your parcel usually arrives the next working day."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -1602,7 +1611,8 @@
           "Shipping costs are listed separately at checkout",
           "Free shipping from €{threshold} within the Netherlands and Belgium",
           "Prices and stock may change without prior notice"
-        ]
+        ],
+        "itemAltijd": "Free shipping within the Netherlands and Belgium, no minimum order value"
       },
       "ordering": {
         "title": "3. ORDERING",
@@ -1624,7 +1634,8 @@
           "Delivery time is usually 1 business day, otherwise 2, within the Netherlands and Belgium",
           "You will receive a track & trace code upon shipment",
           "Shipping costs: €{cost} (free from €{threshold})"
-        ]
+        ],
+        "itemAltijd": "Shipping costs: free within the Netherlands and Belgium"
       },
       "returns": {
         "title": "6. RETURNS",
@@ -1684,7 +1695,8 @@
       },
       "noHassle": {
         "title": "No hassle",
-        "text": "{days} days return policy, free shipping from €{threshold}, and fast customer service. Simple."
+        "text": "{days} days return policy, free shipping from €{threshold}, and fast customer service. Simple.",
+        "textAltijd": "{days} days to return, shipping is always free, and quick customer service. Simple."
       }
     },
     "why": {
@@ -1815,7 +1827,8 @@
     "moreItems": "+ {count} other item(s)",
     "total": "Total",
     "ctaButton": "Checkout",
-    "freeShipping": "Free shipping from €{threshold}!"
+    "freeShipping": "Free shipping from €{threshold}!",
+    "freeShippingAltijd": "Free shipping, always!"
   },
   "contactForm": {
     "subject": "New contact form message from {name}",

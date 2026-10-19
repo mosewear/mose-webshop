@@ -5,6 +5,7 @@ import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { buttonVariants } from '@/components/ui/Button'
+import { isAltijdGratis } from '@/lib/verzendbelofte'
 
 export default function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -45,6 +46,12 @@ export default function FAQAccordion() {
       return locale === 'nl' 
         ? price.toFixed(2).replace('.', ',') 
         : price.toFixed(2)
+    }
+
+    // Zelfde regel als in PdpFaq: bij altijd gratis verzending vervangen we het
+    // hele antwoord, anders zou er "gratis vanaf €0" komen te staan.
+    if (isAltijdGratis(settings) && answer.includes('{freeShipping}')) {
+      return t('answerVerzendingAltijd').replace('{returnDays}', settings.return_days.toString())
     }
 
     return answer

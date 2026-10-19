@@ -14,13 +14,14 @@ export async function generateStaticParams() {
 async function getReturnsAndShipping(): Promise<{
   return_days: number
   free_shipping_threshold: number
+  shipping_cost: number
 }> {
   try {
     const supabase = createAnonClient()
     const { data } = await supabase
       .from('site_settings')
       .select('key, value')
-      .in('key', ['return_days', 'free_shipping_threshold'])
+      .in('key', ['return_days', 'free_shipping_threshold', 'shipping_cost'])
 
     const map: Record<string, string | undefined> = {}
     ;(data ?? []).forEach((row: { key: string; value: string }) => {
@@ -31,9 +32,10 @@ async function getReturnsAndShipping(): Promise<{
       return_days: parseInt(map.return_days || '30', 10) || 30,
       free_shipping_threshold:
         parseFloat(map.free_shipping_threshold || '150') || 150,
+      shipping_cost: parseFloat(map.shipping_cost || '6.95') || 0,
     }
   } catch {
-    return { return_days: 30, free_shipping_threshold: 150 }
+    return { return_days: 30, free_shipping_threshold: 150, shipping_cost: 6.95 }
   }
 }
 
@@ -55,6 +57,7 @@ export default async function AboutPage({
     about.value_no_hassle_text,
     shipping.return_days,
     shipping.free_shipping_threshold,
+    shipping.shipping_cost,
   )
 
   const whyBullets = [

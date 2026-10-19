@@ -402,7 +402,8 @@
       "secure": "Veilig betalen",
       "returns": "{days} dagen retour",
       "ssl": "SSL beveiligd",
-      "freeShipping": "Gratis verzending vanaf €{amount}"
+      "freeShipping": "Gratis verzending vanaf €{amount}",
+      "freeShippingAltijd": "Altijd gratis verzending"
     },
     "upsell": {
       "title": "Misschien vind je dit ook leuk",
@@ -523,14 +524,16 @@
       "info": "€{cost} • Gratis vanaf €{threshold}",
       "label": "Verzending",
       "deliveryTime": "Levertijd",
-      "deliveryTimeValue": "Meestal de volgende werkdag, anders de dag erna"
+      "deliveryTimeValue": "Meestal de volgende werkdag, anders de dag erna",
+      "infoAltijd": "Altijd gratis verzending"
     },
     "trust": {
       "localMade": "Lokaal gemaakt",
       "freeShipping": "Gratis verzending vanaf €{threshold}",
       "returns": "{days} dagen retour",
       "warranty": "2 jaar garantie",
-      "secure": "Veilig betalen"
+      "secure": "Veilig betalen",
+      "freeShippingAltijd": "Altijd gratis verzending"
     },
     "urgency": {
       "title": "POPULAIR • Nog {count} stuks op voorraad",
@@ -694,7 +697,9 @@
       "madeInWithSpec": "Made in Groningen. {spec}.",
       "madeInBare": "Made in Groningen. Premium katoen, regular fit.",
       "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard.",
-      "warranty": "Twee jaar fabrieksgarantie tegen materiaal- en fabricagefouten."
+      "warranty": "Twee jaar fabrieksgarantie tegen materiaal- en fabricagefouten.",
+      "shippingBeforeCutoffAltijd": "Voor 17:00 besteld? Meestal morgen in huis via DHL in NL en BE. Bezorging is altijd gratis.",
+      "shippingAfterCutoffAltijd": "Bestel vandaag, dan is het meestal overmorgen in huis via DHL in NL en BE. Bezorging is altijd gratis."
     },
     "klarna": {
       "installment": "of 3× {amount} met Klarna, geen rente"
@@ -727,7 +732,8 @@
           "question": "Kan ik in termijnen betalen?",
           "answer": "Ja. Bij Klarna kies je voor 3× betalen zonder rente of betaal je achteraf binnen 14 dagen. Beide opties krijg je tijdens het afrekenen."
         }
-      ]
+      ],
+      "answerVerzendingAltijd": "Bestel vandaag voor 17:00 en je hebt 'm meestal morgen al in huis in NL en BE via DHL, anders de dag erna. Verzending is altijd gratis, zonder minimumbedrag."
     }
   },
   "shipping": {
@@ -798,7 +804,8 @@
     "trackOrder": "Bestelling volgen?",
     "goToAccount": "Ga naar je",
     "account": "account",
-    "orUseTrack": "of gebruik de track & trace link in je verzendbevestiging."
+    "orUseTrack": "of gebruik de track & trace link in je verzendbevestiging.",
+    "freeFromAltijd": "Altijd gratis"
   },
   "returns": {
     "title": "Retourneren",
@@ -1281,7 +1288,8 @@
       "local": "Lokaal gemaakt",
       "freeShipping": "Gratis verzending vanaf €{threshold}",
       "returns": "{days} dagen retour",
-      "secure": "Veilig betalen"
+      "secure": "Veilig betalen",
+      "freeShippingAltijd": "Altijd gratis verzending"
     },
     "featured": {
       "label": "Bestsellers",
@@ -1398,7 +1406,8 @@
         "question": "Welke betaalmethoden accepteren jullie?",
         "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Mollie. Je betaalgegevens zijn altijd beschermd."
       }
-    ]
+    ],
+    "answerVerzendingAltijd": "Verzending binnen Nederland en België is altijd gratis, zonder minimumbedrag. Bestel je voor 17:00, dan ligt je pakket er meestal de volgende werkdag."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -1602,7 +1611,8 @@
           "Verzendkosten worden apart vermeld bij het afrekenen",
           "Gratis verzending vanaf €{threshold} binnen Nederland en België",
           "Prijzen en voorraad kunnen wijzigen zonder voorafgaande kennisgeving"
-        ]
+        ],
+        "itemAltijd": "Gratis verzending binnen Nederland en België, zonder minimumbedrag"
       },
       "ordering": {
         "title": "3. BESTELLEN",
@@ -1624,7 +1634,8 @@
           "Levertijd is meestal 1 werkdag, anders 2, binnen Nederland en België",
           "Je ontvangt een track & trace code bij verzending",
           "Verzendkosten: €{cost} (gratis vanaf €{threshold})"
-        ]
+        ],
+        "itemAltijd": "Verzendkosten: gratis binnen Nederland en België"
       },
       "returns": {
         "title": "6. RETOURNEREN",
@@ -1684,7 +1695,8 @@
       },
       "noHassle": {
         "title": "Geen gedoe",
-        "text": "{days} dagen retour, gratis verzending vanaf €{threshold}, en snelle klantenservice. Simpel."
+        "text": "{days} dagen retour, gratis verzending vanaf €{threshold}, en snelle klantenservice. Simpel.",
+        "textAltijd": "{days} dagen retour, altijd gratis verzending, en snelle klantenservice. Simpel."
       }
     },
     "why": {
@@ -1815,7 +1827,8 @@
     "moreItems": "+ {count} andere artikel(en)",
     "total": "Totaal",
     "ctaButton": "Afrekenen",
-    "freeShipping": "Gratis verzending vanaf €{threshold}!"
+    "freeShipping": "Gratis verzending vanaf €{threshold}!",
+    "freeShippingAltijd": "Altijd gratis verzending!"
   },
   "contactForm": {
     "subject": "Nieuw contactformulier bericht van {name}",
