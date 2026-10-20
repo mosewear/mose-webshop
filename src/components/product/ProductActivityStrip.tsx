@@ -41,30 +41,6 @@ const VERKOOPVENSTERS: { sleutel: Verkoopsleutel; drempel: number }[] = [
   { sleutel: 'sold24h', drempel: 2 },
 ]
 
-/**
- * Testweergave, alleen voor wie hem zelf aanzet. Open een productpagina met
- * ?testverkoop=5 en deze browser telt er 5 bij op; ?testverkoop=0 zet het
- * uit. Opgeslagen in localStorage van dat ene apparaat, dus bezoekers zien
- * altijd het echte aantal. Bedoeld om de weergave te beoordelen, niet om
- * cijfers te tonen.
- */
-const TEST_SLEUTEL = 'mose_test_verkoop'
-
-function leesTestOphoging(): number {
-  if (typeof window === 'undefined') return 0
-  try {
-    const param = new URLSearchParams(window.location.search).get('testverkoop')
-    if (param !== null) {
-      const n = Math.max(0, Math.min(50, parseInt(param, 10) || 0))
-      if (n > 0) window.localStorage.setItem(TEST_SLEUTEL, String(n))
-      else window.localStorage.removeItem(TEST_SLEUTEL)
-    }
-    return parseInt(window.localStorage.getItem(TEST_SLEUTEL) || '0', 10) || 0
-  } catch {
-    return 0
-  }
-}
-
 const LEEG: ActivityData = { activeViewers: 0, sold24h: 0, sold7d: 0, sold30d: 0 }
 
 function getOrCreateSessionId(): string {
@@ -115,10 +91,9 @@ export default function ProductActivityStrip({ productId }: ProductActivityStrip
         if (!res.ok) return
         const json = (await res.json()) as ActivityData
         if (cancelled) return
-        const test = leesTestOphoging()
         setData({
           activeViewers: Number(json.activeViewers) || 0,
-          sold24h: (Number(json.sold24h) || 0) + test,
+          sold24h: Number(json.sold24h) || 0,
           sold7d: Number(json.sold7d) || 0,
           sold30d: Number(json.sold30d) || 0,
         })
