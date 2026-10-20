@@ -503,6 +503,24 @@ export default function ShopPageClient() {
           <p className="mt-3 max-w-prose text-[15px] leading-relaxed text-gray-600 md:text-base">
             {t('heroSubtitle')}
           </p>
+
+          {/* Categorierij in de kop in plaats van eronder. Los op wit hing
+              hij tussen kop en raster in; hier hoort hij bij de paginatitel
+              en begint het raster direct na het blok. De vaste minimale
+              hoogte houdt het blok even hoog tijdens het laden, zodat de
+              producten niet verspringen als de knoppen verschijnen. */}
+          <div className="mt-6 min-h-[96px] sm:min-h-[44px] md:mt-7">
+            {!loading && categorieKaarten.length > 1 && (
+              <CategorieKiezer
+                items={categorieKaarten}
+                actief={selectedCategory}
+                onKies={kiesCategorie}
+                allesLabel={t('filters.allShort')}
+                groepLabel={t('categorieLabel')}
+                totaalAantal={expandToShopTiles(products).length}
+              />
+            )}
+          </div>
         </div>
       </header>
 
@@ -996,18 +1014,6 @@ export default function ShopPageClient() {
                   {t('filters.clear')}
                 </button>
               </div>
-            )}
-
-            {/* Categorierij: filtert het raster, navigeert niet weg. */}
-            {!loading && categorieKaarten.length > 1 && (
-              <CategorieKiezer
-                items={categorieKaarten}
-                actief={selectedCategory}
-                onKies={kiesCategorie}
-                allesLabel={t('filters.allShort')}
-                groepLabel={t('categorieLabel')}
-                totaalAantal={expandToShopTiles(products).length}
-              />
             )}
 
             {/* Products Grid */}

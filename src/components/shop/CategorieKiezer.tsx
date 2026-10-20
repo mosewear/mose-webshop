@@ -5,9 +5,8 @@
  *
  * Compacte knoppen, geen fototegels en geen horizontale strook. De vorige
  * versie scrollde zijwaarts, waardoor de laatste categorie op een telefoon
- * buiten beeld begon en makkelijk gemist werd. Deze rij loopt over twee
- * regels door zodra hij niet past, zodat alle categorieën altijd zichtbaar
- * zijn.
+ * buiten beeld begon en makkelijk gemist werd. Alle categorieën zijn altijd
+ * zichtbaar: twee kolommen op telefoon, één rij vanaf sm.
  *
  * Het filtert op dezelfde pagina en navigeert niet weg: met drie producten
  * die samen op één scherm passen zou een tussenpagina de weg naar het
@@ -46,9 +45,12 @@ export default function CategorieKiezer({
   ]
 
   return (
-    <nav aria-label={groepLabel} className="mb-6 md:mb-8">
-      {/* flex-wrap in plaats van overflow-x: alles blijft in beeld. */}
-      <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
+    <nav aria-label={groepLabel}>
+      {/* Op telefoon een vast raster van twee kolommen. Met flex-wrap viel
+          de rij per schermbreedte anders uit: 2+2 op 390, maar 3+1 op 430,
+          met één knop alleen op de tweede regel. Vanaf sm passen ze naast
+          elkaar en worden het gewone knoppen op hun eigen breedte. */}
+      <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0 sm:flex sm:flex-wrap">
         {kaarten.map((kaart) => {
           const isActief = kaart.slug === actief
           return (
@@ -57,7 +59,7 @@ export default function CategorieKiezer({
                 type="button"
                 onClick={() => onKies(kaart.slug)}
                 aria-current={isActief ? 'true' : undefined}
-                className={`inline-flex min-h-[44px] items-center gap-1.5 border-2 px-4 py-2.5 text-[13px] font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+                className={`inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 sm:w-auto border-2 px-4 py-2.5 text-[13px] font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
                   isActief
                     ? 'border-black bg-black text-white'
                     : 'border-gray-300 bg-white text-black hover:border-black'

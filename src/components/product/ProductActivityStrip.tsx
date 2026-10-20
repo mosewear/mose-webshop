@@ -4,8 +4,14 @@
  * Honest "live" activity strip:
  *   * pulses a heartbeat every 30s so the server can count distinct visitors
  *   * polls the activity endpoint every 60s for fresh counts
- *   * thresholds: only show "X people viewing" when >= 4, and "Y sold today"
- *     when >= 2, so the strip never says something embarrassing or fake
+ *   * thresholds: only show "X people viewing" when >= 4, so the strip never
+ *     says something embarrassing or fake
+ *
+ * Verkoop: altijd een echt getal, nooit opgehoogd. Wel kiezen we de periode
+ * die het sterkste ware getal geeft. "2 keer in 24 uur" overtuigt niemand,
+ * "6 keer in de afgelopen 7 dagen" over dezelfde hoodie wel, en het klopt
+ * allebei. Een verzonnen getal is in de EU een oneerlijke handelspraktijk
+ * en de ACM handhaaft daar actief op.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -20,12 +26,29 @@ const POLL_INTERVAL_MS = 60_000
 const SESSION_KEY = 'mose:product-activity:session'
 
 const VIEWER_THRESHOLD = 4
-const SOLD_THRESHOLD = 2
 
 interface ActivityData {
   activeViewers: number
   sold24h: number
+  sold7d: number
+  sold30d: number
 }
+
+type Verkoopsleutel = 'sold24h' | 'sold7d' | 'sold30d'
+
+/**
+ * Kortste periode eerst: die klinkt het meest actueel. Een periode telt pas
+ * mee boven de drempel, zodat er nooit "1 keer in 30 dagen" staat. De drempel
+ * voor 30 dagen is hoger omdat een lang venster met een laag getal juist
+ * stilte uitstraalt.
+ */
+const VERKOOPVENSTERS: { sleutel: Verkoopsleutel; drempel: number }[] = [
+  { sleutel: 'sold24h', drempel: 3 },
+  { sleutel: 'sold7d', drempel: 3 },
+  { sleutel: 'sold30d', drempel: 5 },
+]
+
+const LEEG: ActivityData = { activeViewers: 0, sold24h: 0, sold7d: 0, sold30d: 0 }
 
 function getOrCreateSessionId(): string {
   if (typeof window === 'undefined') return ''
@@ -45,7 +68,7 @@ function getOrCreateSessionId(): string {
 
 export default function ProductActivityStrip({ productId }: ProductActivityStripProps) {
   const t = useTranslations('product.activity')
-  const [data, setData] = useState<ActivityData>({ activeViewers: 0, sold24h: 0 })
+  const [data, setData] = useState<ActivityData>(LEEG)
   const sessionIdRef = useRef<string>('')
 
   useEffect(() => {
@@ -78,6 +101,8 @@ export default function ProductActivityStrip({ productId }: ProductActivityStrip
         setData({
           activeViewers: Number(json.activeViewers) || 0,
           sold24h: Number(json.sold24h) || 0,
+          sold7d: Number(json.sold7d) || 0,
+          sold30d: Number(json.sold30d) || 0,
         })
       } catch {
         // ignore
@@ -99,12 +124,16 @@ export default function ProductActivityStrip({ productId }: ProductActivityStrip
   }, [productId])
 
   const showViewers = data.activeViewers >= VIEWER_THRESHOLD
-  const showSold = data.sold24h >= SOLD_THRESHOLD
+  const venster = VERKOOPVENSTERS.find((v) => data[v.sleutel] >= v.drempel)
+  const showSold = Boolean(venster)
 
   if (!showViewers && !showSold) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs md:text-[13px] text-gray-700">
+    <div
+      className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] md:text-sm text-gray-800"
+      aria-live="polite"
+    >
       {showViewers && (
         <span className="inline-flex items-center gap-1.5 font-medium">
           <span className="relative flex h-2 w-2">
@@ -115,9 +144,9 @@ export default function ProductActivityStrip({ productId }: ProductActivityStrip
         </span>
       )}
       {showSold && (
-        <span className="inline-flex items-center gap-1.5 font-medium">
+        <span className="inline-flex items-center gap-2 font-semibold">
           <svg
-            className="w-3.5 h-3.5 text-brand-primary"
+            className="w-4 h-4 shrink-0 text-brand-primary"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.5"
@@ -126,7 +155,7 @@ export default function ProductActivityStrip({ productId }: ProductActivityStrip
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293A1 1 0 005.414 17H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          {t('sold24h', { count: data.sold24h })}
+          {venster && t(venster.sleutel, { count: data[venster.sleutel] })}
         </span>
       )}
     </div>

@@ -707,7 +707,9 @@
     "madeInGroningenBadge": "Made in Groningen",
     "activity": {
       "viewing": "{count} mensen bekijken dit nu",
-      "sold24h": "{count, plural, =1 {1 keer} other {{count} keer}} besteld in de afgelopen 24 uur"
+      "sold24h": "{count, plural, =1 {1 keer} other {{count} keer}} besteld in de afgelopen 24 uur",
+      "sold7d": "{count} keer besteld in de afgelopen 7 dagen",
+      "sold30d": "{count} keer besteld in de afgelopen 30 dagen"
     },
     "pdpFaq": {
       "title": "Veelgestelde vragen",
@@ -825,7 +827,7 @@
   "shop": {
     "title": "Shop",
     "eyebrow": "Collectie",
-    "heroSubtitle": "Streetwear uit Groningen. Hoodies, sweaters en tees.",
+    "heroSubtitle": "Streetwear uit Groningen.",
     "pageTitle": "Shop - MOSE",
     "categoryPageTitle": "{category} - MOSE",
     "heroAlt": "MOSE shop, streetwear uit Groningen",

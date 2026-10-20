@@ -2061,6 +2061,13 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 </button>
               </div>
 
+              {/* Verkoopregel direct onder de koopknop, op telefoon en desktop.
+                  Hij stond onder de productbeschrijving, na de vertrouwensdoos;
+                  daar las je hem pas als je al besloten had, of nooit. Hier
+                  staat hij op het moment dat je twijfelt. Rendert niets als
+                  geen enkele periode boven de drempel komt. */}
+              {hasAnyStock && <ProductActivityStrip productId={product.id} />}
+
               {/* Back in Stock Notification — alternatief CTA wanneer de
                   ATC-knop disabled is. Staat direct onder de disabled knop
                   zodat de klant meteen z'n e-mailadres kan achterlaten. */}
@@ -2125,9 +2132,6 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                   {formatBoldText(getLocalizedDescription(product))}
                 </div>
               </div>
-
-              {/* Live activity - only renders when thresholds are met */}
-              {hasAnyStock && <ProductActivityStrip productId={product.id} />}
 
               {/* Product Tabs / Accordion */}
               <div className="border-t-2 border-gray-200 pt-6">
