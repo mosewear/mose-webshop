@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
@@ -24,8 +24,8 @@ import {
   getImageForColor,
   getHoverImageForColor,
 } from '@/lib/product-display'
-import EditorialPageBanner, { PAGE_BANNER_IMAGES } from '@/components/EditorialPageBanner'
 import CategorieKiezer, { type CategorieItem } from '@/components/shop/CategorieKiezer'
+import DetailBlok from '@/components/shop/DetailBlok'
 
 interface Product {
   id: string
@@ -396,16 +396,45 @@ export default function ShopPageClient() {
         const vanCategorie = products.filter((p) => p.category?.slug === categorie.slug)
         if (vanCategorie.length === 0) return null
         const aantalTegels = expandToShopTiles(vanCategorie).length
-        const eerste = vanCategorie[0]
         return {
           slug: categorie.slug,
           naam: getCategoryName(categorie),
-          beeld: getImageForColor(eerste.images, null),
           aantal: aantalTegels,
         }
       })
       .filter((x): x is CategorieItem => x !== null)
   }, [categories, products, locale])
+
+  /**
+   * Categorie kiezen en de URL meeschrijven.
+   *
+   * Zonder dit is een gefilterde weergave niet te delen en springt de
+   * terugknop meteen de hele pagina uit. replaceState bij 'all' houdt de
+   * geschiedenis schoon; bij een echte categorie gebruiken we pushState zodat
+   * terug netjes naar de vorige keuze gaat.
+   */
+  const kiesCategorie = useCallback((slug: string) => {
+    setSelectedCategory(slug)
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (slug === 'all') {
+      url.searchParams.delete('category')
+      window.history.replaceState({ category: 'all' }, '', url.pathname + url.search)
+    } else {
+      url.searchParams.set('category', slug)
+      window.history.pushState({ category: slug }, '', url.pathname + url.search)
+    }
+  }, [])
+
+  // Terug- en vooruitknop van de browser volgen.
+  useEffect(() => {
+    const bijNavigatie = () => {
+      const params = new URLSearchParams(window.location.search)
+      setSelectedCategory(params.get('category') || 'all')
+    }
+    window.addEventListener('popstate', bijNavigatie)
+    return () => window.removeEventListener('popstate', bijNavigatie)
+  }, [])
 
   const shopTiles = useMemo(() => {
     const tiles = expandToShopTiles(filteredProducts)
@@ -455,20 +484,19 @@ export default function ShopPageClient() {
 
   return (
     <div className="bg-white">
-      <EditorialPageBanner
-        title={t('title')}
-        eyebrow={t('eyebrow')}
-        subtitle={t('heroSubtitle')}
-        imageSrc={PAGE_BANNER_IMAGES.shop.desktop}
-        imageSrcMobile={PAGE_BANNER_IMAGES.shop.mobile}
-        imageAlt={t('heroAlt')}
-        /* Geen uitsnede nodig: de band staat op precies de verhouding van de
-           aangeleverde beelden, dus 'center' laat alles heel. De 42% hiervoor
-           was nodig om het logo uit een stofopname in beeld te houden. */
-        objectPosition="center"
-        hoogte="aspect-[1170/480] md:aspect-[2103/467]"
-        smal
-      />
+      {/* Compacte collectieheader in plaats van de fotobanner. Die kostte op
+          desktop 320 pixels voordat het eerste kledingstuk in beeld kwam; de
+          beelden blijven bestaan en worden elders nog gebruikt. */}
+      <header className="border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 pb-7 pt-8 md:pb-9 md:pt-12">
+          <h1 className="font-display text-4xl uppercase leading-none tracking-tight text-black md:text-5xl">
+            {t('title')}
+          </h1>
+          <p className="mt-3 max-w-prose text-[15px] leading-relaxed text-gray-600 md:text-base">
+            {t('heroSubtitle')}
+          </p>
+        </div>
+      </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
         {/* Mobile Filter Button - Inline (bold & brutalist) */}
@@ -919,7 +947,7 @@ export default function ShopPageClient() {
 
             {/* Loading State */}
             {loading && (
-              <div className={`grid grid-cols-2 gap-4 md:gap-6 ${shopTiles.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+              <div className={'grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3'}>
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} className="bg-gray-100 aspect-[3/4] animate-pulse" />
                 ))}
@@ -967,9 +995,9 @@ export default function ShopPageClient() {
               <CategorieKiezer
                 items={categorieKaarten}
                 actief={selectedCategory}
-                onKies={setSelectedCategory}
+                onKies={kiesCategorie}
                 allesLabel={t('filters.allShort')}
-                allesBeeld="https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/shop-categorieen/alles.webp"
+                groepLabel={t('categorieLabel')}
                 totaalAantal={expandToShopTiles(products).length}
               />
             )}
@@ -977,7 +1005,7 @@ export default function ShopPageClient() {
             {/* Products Grid */}
             {!loading && shopTiles.length > 0 && (
               <div
-                className={`grid grid-cols-2 gap-4 md:gap-6 ${shopTiles.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}
+                className={'grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3'}
                 style={{
                   contain: 'layout style paint',
                   contentVisibility: 'auto'
@@ -1259,6 +1287,9 @@ export default function ShopPageClient() {
             )}
           </section>
         </div>
+
+        {/* Eén rustig detailblok na de producten, voor de vervolgsecties. */}
+        {!loading && <DetailBlok />}
 
         {/* Recently Viewed Products */}
         <div>

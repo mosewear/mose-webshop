@@ -825,7 +825,7 @@
   "shop": {
     "title": "Shop",
     "eyebrow": "Collectie",
-    "heroSubtitle": "Streetwear uit Groningen. Hoodies, sweats en tees.",
+    "heroSubtitle": "Streetwear uit Groningen. Hoodies, sweaters en tees.",
     "pageTitle": "Shop - MOSE",
     "categoryPageTitle": "{category} - MOSE",
     "heroAlt": "MOSE shop, streetwear uit Groningen",
@@ -864,7 +864,14 @@
     "lastItems": "LAATSTE ITEMS",
     "discount": "KORTING",
     "outOfStock": "UITVERKOCHT",
-    "colorCount": "{count} kleuren"
+    "colorCount": "{count} kleuren",
+    "detailBlok": {
+      "titel": "Het zit 'm in de details.",
+      "tekst": "Bekijk de stof, boorden en subtiele MOSE-print van dichtbij.",
+      "knop": "Bekijk de hoodie",
+      "beeldAlt": "Close-up van de bruine MOSE Essential Hoodie: de puff-print op de borst, de mouw en de geribde boord"
+    },
+    "categorieLabel": "Categorie"
   },
   "errors": {
     "required": "Verplicht veld",

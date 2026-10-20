@@ -825,7 +825,7 @@
   "shop": {
     "title": "Shop",
     "eyebrow": "Collection",
-    "heroSubtitle": "Streetwear from Groningen. Hoodies, sweats and tees.",
+    "heroSubtitle": "Streetwear from Groningen. Hoodies, sweaters and tees.",
     "pageTitle": "Shop - MOSE",
     "categoryPageTitle": "{category} - MOSE",
     "heroAlt": "MOSE shop, streetwear from Groningen",
@@ -864,7 +864,14 @@
     "lastItems": "LAST ITEMS",
     "discount": "OFF",
     "outOfStock": "OUT OF STOCK",
-    "colorCount": "{count} colours"
+    "colorCount": "{count} colours",
+    "detailBlok": {
+      "titel": "It's all in the details.",
+      "tekst": "Take a closer look at the fabric, the ribbing and the subtle MOSE print.",
+      "knop": "View the hoodie",
+      "beeldAlt": "Close-up of the brown MOSE Essential Hoodie: the puff print on the chest, the sleeve and the ribbed cuff"
+    },
+    "categorieLabel": "Category"
   },
   "errors": {
     "required": "Required field",
