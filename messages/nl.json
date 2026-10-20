@@ -2449,5 +2449,23 @@
     "redirectCheckout": "Doorsturen naar afrekenen…",
     "loadFailed": "De producten uit de Meta Shop konden niet worden geladen. Je wordt doorgestuurd…",
     "genericError": "Er ging iets mis. Je wordt doorgestuurd naar de shop…"
+  },
+  "toestemming": {
+    "metaTitel": "Blijf je op de lijst? - MOSE",
+    "titel": "Blijf je op de lijst?",
+    "tekst": "Bevestig dat je mail van MOSE wilt blijven krijgen over nieuwe drops en restocks. Afmelden kan altijd.",
+    "knop": "Ja, ik blijf op de lijst",
+    "bezig": "Even geduld",
+    "klaarTitel": "Top, je blijft op de lijst",
+    "klaarTekst": "Je hoort van ons zodra er iets nieuws is. Niet vaker dan dat.",
+    "naarShop": "Bekijk de shop",
+    "afmeldTitel": "Afmelden",
+    "afmeldTekst": "Weet je het zeker? Daarna krijg je geen mail meer van MOSE.",
+    "afmeldKnop": "Ja, meld me af",
+    "tochBlijven": "Toch blijven",
+    "afgemeldTitel": "Je bent afgemeld",
+    "afgemeldTekst": "Je krijgt geen mail meer van ons. Toch spijt? Klik hieronder en je staat er weer op.",
+    "fout": "Deze link werkt niet. Open de volledige link uit de mail, of mail ons op info@mosewear.com.",
+    "netwerkFout": "Dat lukte niet. Probeer het nog een keer."
   }
 }

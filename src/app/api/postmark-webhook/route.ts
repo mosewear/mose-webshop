@@ -28,6 +28,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addSuppression, type SuppressionReason } from '@/lib/email-suppression'
 import { createServiceClient } from '@/lib/supabase/service'
+import { TOESTEMMING_STREAM, verwerkSignaal } from '@/lib/toestemming'
 
 export const runtime = 'nodejs'
 
@@ -152,6 +153,29 @@ export async function POST(req: NextRequest) {
     typeof payload?.RecordType === 'string' ? payload.RecordType : null
 
   try {
+    // Signalen van de toestemmingsronde gaan ook naar de stopregels daarvan.
+    // De gewone afhandeling hieronder loopt daarna gewoon door.
+    if ((payload as { MessageStream?: string }).MessageStream === TOESTEMMING_STREAM) {
+      const p = payload as unknown as {
+        Email?: string
+        Recipient?: string
+        Type?: string
+        SuppressSending?: boolean
+      }
+      const adres = p.Email || p.Recipient || ''
+      const soort =
+        recordType === 'SpamComplaint' || (recordType === 'Bounce' && p.Type === 'SpamNotification')
+          ? 'klacht'
+          : recordType === 'Bounce' && (!p.Type || HARD_BOUNCE_TYPES.has(p.Type))
+            ? 'bounce'
+            : recordType === 'SubscriptionChange' && p.SuppressSending
+              ? 'afgemeld'
+              : null
+      if (adres && soort) {
+        await verwerkSignaal(adres, soort).catch((e) => console.error('[postmark-webhook] toestemming', e))
+      }
+    }
+
     if (recordType === 'Bounce') {
       const p = payload as BouncePayload
       if (!p.Email) {

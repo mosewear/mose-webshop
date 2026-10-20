@@ -150,6 +150,30 @@ export async function schrijfContactUit(
   return { ok: true }
 }
 
+/**
+ * Zet een bestaand contact in een extra lijst. Gebruikt door de
+ * toestemmingsronde om bevestigde adressen apart te verzamelen.
+ */
+export async function voegToeAanLijst(
+  email: string,
+  lijstId: number
+): Promise<{ ok: boolean; fout?: string }> {
+  const adres = email.trim().toLowerCase()
+  if (!adres || !lijstId) return { ok: false, fout: 'adres of lijst ontbreekt' }
+
+  // Eerst zeker weten dat het contact bestaat en niet geblokkeerd staat: wie
+  // zelf op "ja" klikt, mag een eerdere blokkade opheffen.
+  const zet = await roep('/contacts', {
+    methode: 'POST',
+    body: { email: adres, updateEnabled: true, emailBlacklisted: false, listIds: [lijstId] },
+  })
+  if (!zet.ok) {
+    console.error(`[Brevo] ${adres} niet in lijst ${lijstId}: ${zet.fout}`)
+    return { ok: false, fout: zet.fout }
+  }
+  return { ok: true }
+}
+
 /** Haalt de lijsten op, zodat de admin kan tonen waar contacten belanden. */
 export async function haalLijsten(): Promise<
   { ok: boolean; lijsten?: Array<{ id: number; name: string; aantal: number }>; fout?: string }
