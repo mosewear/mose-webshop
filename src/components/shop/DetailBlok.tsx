@@ -13,10 +13,18 @@
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import { buildPdpHref } from '@/lib/product-display'
 
 /** Vaste bron uit de goedgekeurde fotografie van oktober 2026. */
 const DETAILBEELD =
   'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/product-images/webshopfotografie-2026-10-v3/01-hoodie-bruin/04-origineel-logo-en-mouw.webp'
+
+/**
+ * De kleur op de foto hierboven. De knop moet op dezelfde kleur uitkomen als
+ * het kledingstuk dat ernaast staat; anders klik je op bruin en krijg je zwart.
+ * Houd deze waarde gelijk aan DETAILBEELD en aan product_variants.color.
+ */
+const DETAILKLEUR = 'Bruin'
 
 export default function DetailBlok() {
   const t = useTranslations('shop.detailBlok')
@@ -47,7 +55,7 @@ export default function DetailBlok() {
             {t('tekst')}
           </p>
           <LocaleLink
-            href="/product/mose-essential-hoodie"
+            href={buildPdpHref('mose-essential-hoodie', DETAILKLEUR)}
             className="mt-6 inline-flex min-h-[44px] items-center border-2 border-black bg-white px-6 py-3 text-[13px] font-bold uppercase tracking-wider text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             {t('knop')}

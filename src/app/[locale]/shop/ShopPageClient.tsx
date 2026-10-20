@@ -486,8 +486,16 @@ export default function ShopPageClient() {
     <div className="bg-white">
       {/* Compacte collectieheader in plaats van de fotobanner. Die kostte op
           desktop 320 pixels voordat het eerste kledingstuk in beeld kwam; de
-          beelden blijven bestaan en worden elders nog gebruikt. */}
-      <header className="border-b border-gray-200 bg-white">
+          beelden blijven bestaan en worden elders nog gebruikt.
+
+          De zachte warme tint zet dit blok apart van de sitekop erboven en het
+          raster eronder. Zonder die tint staan er drie witte banen op elkaar
+          met alleen een grijs lijntje ertussen. Bewust geen zwart (vecht met
+          de actieve categorieknop er vlak onder) en geen merkgroen (de
+          mededelingenbalk erboven is al groen, en groen botst met de olijven
+          bruine hoodies in het raster). Het lijntje onderaan kan weg, de
+          kleurovergang doet dat werk nu. */}
+      <header className="bg-[#F5F4F1]">
         <div className="mx-auto max-w-7xl px-4 pb-7 pt-8 md:pb-9 md:pt-12">
           <h1 className="font-display text-4xl uppercase leading-none tracking-tight text-black md:text-5xl">
             {t('title')}
