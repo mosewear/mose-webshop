@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/routing'
 import { useCart, type CartItem } from '@/store/cart'
 
@@ -22,8 +22,9 @@ function MetaCheckoutInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const locale = useLocale()
+  const t = useTranslations('metaCheckout')
   const setItems = useCart((s) => s.setItems)
-  const [message, setMessage] = useState('Winkelwagen laden…')
+  const [message, setMessage] = useState(t('loadingCart'))
 
   useEffect(() => {
     let cancelled = false
@@ -35,7 +36,7 @@ function MetaCheckoutInner() {
 
       if (!products) {
         // Meta validation sometimes hits the bare URL first.
-        setMessage('Doorsturen naar checkout…')
+        setMessage(t('redirectCheckout'))
         router.replace('/checkout')
         return
       }
@@ -63,7 +64,7 @@ function MetaCheckoutInner() {
         if (!res.ok || !data.items?.length) {
           setMessage(
             data.error ||
-              'Producten uit Meta Shop konden niet worden geladen. Je wordt doorgestuurd…',
+              t('loadFailed'),
           )
           window.setTimeout(() => router.replace('/shop'), 1800)
           return
@@ -87,11 +88,11 @@ function MetaCheckoutInner() {
           }
         }
 
-        setMessage('Doorsturen naar afrekenen…')
+        setMessage(t('redirectCheckout'))
         router.replace('/checkout')
       } catch {
         if (cancelled) return
-        setMessage('Er ging iets mis. Je wordt doorgestuurd naar de shop…')
+        setMessage(t('genericError'))
         window.setTimeout(() => router.replace('/shop'), 1800)
       }
     }
@@ -109,14 +110,19 @@ function MetaCheckoutInner() {
   )
 }
 
+function LoadingFallback() {
+  const t = useTranslations('metaCheckout')
+  return (
+    <div className="min-h-[50vh] flex items-center justify-center px-6">
+      <p className="text-sm tracking-wide text-neutral-600">{t('loadingCart')}</p>
+    </div>
+  )
+}
+
 export default function MetaCheckoutPage() {
   return (
     <Suspense
-      fallback={
-        <div className="min-h-[50vh] flex items-center justify-center px-6">
-          <p className="text-sm tracking-wide text-neutral-600">Winkelwagen laden…</p>
-        </div>
-      }
+      fallback={<LoadingFallback />}
     >
       <MetaCheckoutInner />
     </Suspense>

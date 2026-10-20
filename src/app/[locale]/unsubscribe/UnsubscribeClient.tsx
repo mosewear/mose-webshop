@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 import { CheckCircle, XCircle, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function UnsubscribeClient() {
+  const t = useTranslations('unsubscribe')
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
   
@@ -32,18 +34,18 @@ export default function UnsubscribeClient() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        setError(data.error || 'Er ging iets mis. Probeer het opnieuw.')
-        toast.error(data.error || 'Er ging iets mis')
+        setError(data.error || t('errorRetry'))
+        toast.error(data.error || t('error'))
         setLoading(false)
         return
       }
 
       setUnsubscribed(true)
-      toast.success('Je bent uitgeschreven')
+      toast.success(t('successToast'))
     } catch (err) {
       console.error('Unsubscribe error:', err)
-      setError('Er ging iets mis. Probeer het opnieuw.')
-      toast.error('Er ging iets mis')
+      setError(t('errorRetry'))
+      toast.error(t('error'))
     } finally {
       setLoading(false)
     }
@@ -54,15 +56,15 @@ export default function UnsubscribeClient() {
       <div className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center">
           <XCircle className="w-16 h-16 text-red-600 mx-auto mb-6" />
-          <h1 className="text-3xl font-display mb-4">Ongeldige Link</h1>
+          <h1 className="text-3xl font-display mb-4">{t('invalidTitle')}</h1>
           <p className="text-gray-600 mb-8">
-            Deze uitschrijflink is ongeldig. Controleer je email en probeer het opnieuw.
+            {t('invalidText')}
           </p>
           <Link
             href="/"
             className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
           >
-            Terug naar home
+            {t('backHome')}
           </Link>
         </div>
       </div>
@@ -74,18 +76,18 @@ export default function UnsubscribeClient() {
       <div className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center">
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
-          <h1 className="text-3xl font-display mb-4">Je Bent Uitgeschreven</h1>
+          <h1 className="text-3xl font-display mb-4">{t('doneTitle')}</h1>
           <p className="text-gray-600 mb-4">
-            Je ontvangt geen emails meer van ons. We vinden het jammer dat je gaat!
+            {t('doneText')}
           </p>
           <p className="text-sm text-gray-500 mb-8">
-            Mocht je je bedenken, dan kun je je altijd weer inschrijven via onze homepage.
+            {t('doneHint')}
           </p>
           <Link
             href="/"
             className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
           >
-            Terug naar home
+            {t('backHome')}
           </Link>
         </div>
       </div>
@@ -97,12 +99,12 @@ export default function UnsubscribeClient() {
       <div className="max-w-md w-full">
         <div className="bg-white border-4 border-black p-8 text-center">
           <Mail className="w-16 h-16 text-brand-primary mx-auto mb-6" />
-          <h1 className="text-3xl font-display mb-4">Uitschrijven Van Nieuwsbrief</h1>
+          <h1 className="text-3xl font-display mb-4">{t('title')}</h1>
           <p className="text-gray-600 mb-2">
-            Weet je zeker dat je geen updates meer wilt ontvangen van MOSE?
+            {t('confirmText')}
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            Email: <span className="font-semibold">{email}</span>
+            {t('emailLabel')} <span className="font-semibold">{email}</span>
           </p>
 
           {error && (
@@ -123,17 +125,17 @@ export default function UnsubscribeClient() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Bezig...
+                  {t('busy')}
                 </span>
               ) : (
-                'Ja, uitschrijven'
+                t('confirmButton')
               )}
             </button>
             <Link
               href="/"
               className="w-full px-8 py-4 bg-gray-200 text-black font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors text-center"
             >
-              Nee, hou me ingeschreven
+              {t('keepButton')}
             </Link>
           </div>
         </div>

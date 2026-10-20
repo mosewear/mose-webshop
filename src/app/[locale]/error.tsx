@@ -36,7 +36,7 @@ export default function LocaleError({
 
         <div className="border-4 border-black p-8 md:p-12">
           <h1 className="text-5xl md:text-7xl font-display tracking-tight mb-4">
-            Oeps!
+            {t('oops')}
           </h1>
           <div className="h-1 w-20 bg-brand-primary mx-auto mb-6" />
           <p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">

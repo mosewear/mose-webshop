@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useParams, useSearchParams } from 'next/navigation'
+import { Link, useRouter } from '@/i18n/routing'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatBedrag } from '@/lib/format-price'
 
 interface ReturnData {
@@ -53,7 +53,20 @@ export default function ReturnDetailsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const locale = useLocale()
+  const t = useTranslations('returnFlow')
+  const dateLocale = locale === 'en' ? 'en-GB' : 'nl-NL'
   const returnId = params.id as string
+
+  // Opgeslagen redenen zijn Nederlands; toon ze in de taal van de site.
+  const reasonKeys: Record<string, string> = {
+    'Past niet goed': 'doesNotFit',
+    'Niet wat ik verwachtte': 'notAsExpected',
+    'Defect product': 'defective',
+    'Verkeerde maat/kleur geleverd': 'wrongItem',
+    'Anders': 'other',
+  }
+  const reasonLabel = (reason: string) =>
+    reasonKeys[reason] ? t(`reasons.${reasonKeys[reason]}`) : reason
 
   const [user, setUser] = useState<any>(null)
   const [returnData, setReturnData] = useState<ReturnData | null>(null)
@@ -89,7 +102,7 @@ export default function ReturnDetailsPage() {
         const data = await res.json()
         if (cancelled) return
         if (data.status === 'succeeded' || data.mollie_status === 'paid') {
-          toast.success('Betaling succesvol! Je retourlabel wordt nu gegenereerd...')
+          toast.success(t('paymentSucceededToast'))
           await fetchReturn()
           if (!isPollingRef.current) startPollingForLabel()
         }
@@ -175,14 +188,14 @@ export default function ReturnDetailsPage() {
           // Als label is gegenereerd, stop polling
           if (data.return.status === 'return_label_generated' && data.return.return_label_url) {
             stopPolling()
-            toast.success('Je retourlabel is klaar!')
+            toast.success(t('labelReadyToast'))
             return
           }
           
           // Als max attempts bereikt, stop polling
           if (maxAttemptsRef.current >= MAX_ATTEMPTS) {
             stopPolling()
-            toast.error('Het genereren van het label duurt langer dan verwacht. Neem contact op met de klantenservice als het label niet verschijnt.')
+            toast.error(t('labelSlowToast'))
             return
           }
           
@@ -247,7 +260,7 @@ export default function ReturnDetailsPage() {
       // Return data voor gebruikers van deze functie
       return data.return
     } catch (error: any) {
-      toast.error(error.message || 'Kon retour niet laden')
+      toast.error(error.message || t('returnLoadFailed'))
       router.push('/account')
       return null
     } finally {
@@ -264,12 +277,12 @@ export default function ReturnDetailsPage() {
       })
       const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.error || 'Kon label niet aanmaken')
+        throw new Error(data.error || t('labelCreateFailed'))
       }
-      toast.success('Retourlabel aangemaakt!')
+      toast.success(t('labelCreatedToast'))
       await fetchReturn()
     } catch (err: any) {
-      toast.error(err.message || 'Kon label niet aanmaken')
+      toast.error(err.message || t('labelCreateFailed'))
     } finally {
       setGeneratingFreeLabel(false)
     }
@@ -291,12 +304,12 @@ export default function ReturnDetailsPage() {
       }
 
       if (!data.checkoutUrl) {
-        throw new Error('Geen Mollie checkout URL ontvangen')
+        throw new Error(t('noCheckoutUrl'))
       }
 
       window.location.href = data.checkoutUrl
     } catch (error: any) {
-      toast.error(error.message || 'Kon betaling niet voorbereiden')
+      toast.error(error.message || t('paymentPrepareFailed'))
       setPaymentLoading(false)
     }
   }
@@ -329,19 +342,19 @@ export default function ReturnDetailsPage() {
   }
 
   const getStatusText = (status: string) => {
-    const labels: Record<string, string> = {
-      return_requested: 'Aangevraagd',
-      return_approved: 'Goedgekeurd',
-      return_label_payment_pending: 'Betaling Label',
-      return_label_payment_completed: 'Label Betaald',
-      return_label_generated: 'Label Beschikbaar',
-      return_in_transit: 'Onderweg',
-      return_received: 'Ontvangen',
-      refund_processing: 'Refund Bezig',
-      refunded: 'Terugbetaald',
-      return_rejected: 'Afgewezen',
-    }
-    return labels[status] || status
+    const known = [
+      'return_requested',
+      'return_approved',
+      'return_label_payment_pending',
+      'return_label_payment_completed',
+      'return_label_generated',
+      'return_in_transit',
+      'return_received',
+      'refund_processing',
+      'refunded',
+      'return_rejected',
+    ]
+    return known.includes(status) ? t(`status.${status}`) : status
   }
 
   if (loading) {
@@ -349,7 +362,7 @@ export default function ReturnDetailsPage() {
       <div className="min-h-screen px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Laden...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     )
@@ -360,12 +373,12 @@ export default function ReturnDetailsPage() {
       <div className="min-h-screen px-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
-            <p className="text-gray-600 mb-6 text-lg">Retour niet gevonden</p>
+            <p className="text-gray-600 mb-6 text-lg">{t('returnNotFound')}</p>
             <Link
               href="/account"
               className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
             >
-              Terug naar account
+              {t('backToAccount')}
             </Link>
           </div>
         </div>
@@ -388,7 +401,7 @@ export default function ReturnDetailsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </Link>
-          <h1 className="text-4xl md:text-5xl font-display">RETOUR DETAILS</h1>
+          <h1 className="text-4xl md:text-5xl font-display">{t('detailsTitle')}</h1>
         </div>
 
         {/* Status */}
@@ -396,7 +409,7 @@ export default function ReturnDetailsPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h2 className="font-bold text-xl mb-2">
-                Retour #{returnData.id.slice(0, 8).toUpperCase()}
+                {t('returnNumber', { id: returnData.id.slice(0, 8).toUpperCase() })}
               </h2>
               <span className={`inline-block px-4 py-2 text-sm font-bold uppercase ${getStatusColor(returnData.status)}`}>
                 {getStatusText(returnData.status)}
@@ -405,7 +418,7 @@ export default function ReturnDetailsPage() {
             {returnData.total_refund && (
               <div className="text-left md:text-right">
                 <p className="text-2xl font-display">{formatBedrag(returnData.total_refund, locale)}</p>
-                <p className="text-sm text-gray-600">Terug te betalen</p>
+                <p className="text-sm text-gray-600">{t('refundTotal')}</p>
               </div>
             )}
           </div>
@@ -416,18 +429,16 @@ export default function ReturnDetailsPage() {
           returnData.status === 'return_label_payment_completed' &&
           !returnData.return_label_url && (
             <div className="bg-green-50 border-2 border-green-500 p-6 mb-6">
-              <h3 className="text-xl font-display mb-2">Gratis Retourlabel</h3>
+              <h3 className="text-xl font-display mb-2">{t('freeLabelTitle')}</h3>
               <p className="mb-4">
-                Voor deze retour hoef je niets te betalen. Het retourlabel is
-                onze trakteren. Klik hieronder om het label aan te maken. Je
-                ontvangt het label daarna per mail en hier op deze pagina.
+                {t('freeLabelText')}
               </p>
               <button
                 onClick={handleGenerateFreeLabel}
                 disabled={generatingFreeLabel}
                 className="w-full px-8 py-4 bg-green-600 text-white font-bold uppercase tracking-wider hover:bg-green-700 transition-colors disabled:opacity-50"
               >
-                {generatingFreeLabel ? 'Label wordt aangemaakt...' : 'Retourlabel Aanmaken'}
+                {generatingFreeLabel ? t('creatingLabel') : t('createLabel')}
               </button>
             </div>
           )}
@@ -436,21 +447,24 @@ export default function ReturnDetailsPage() {
         {returnData.label_mode === 'in_store' &&
           returnData.status === 'return_approved' && (
             <div className="bg-yellow-50 border-2 border-yellow-500 p-6 mb-6">
-              <h3 className="text-xl font-display mb-2">Breng Langs In De Winkel</h3>
+              <h3 className="text-xl font-display mb-2">{t('inStoreTitle')}</h3>
               <p className="mb-3">
-                Deze retour handelen we in de winkel af. Kom langs met je items en
-                vermeld je retour-nummer{' '}
-                <span className="font-mono font-bold">
-                  #{returnData.id.slice(0, 8).toUpperCase()}
-                </span>{' '}
-                aan de balie.
+                {t.rich('inStoreText', {
+                  number: () => (
+                    <span className="font-mono font-bold">
+                      #{returnData.id.slice(0, 8).toUpperCase()}
+                    </span>
+                  ),
+                })}
               </p>
               <p className="text-sm text-gray-600">
-                Openingstijden en adres vind je op{' '}
-                <Link href="/contact" className="underline font-bold">
-                  onze contactpagina
-                </Link>
-                .
+                {t.rich('inStoreContact', {
+                  link: (chunks) => (
+                    <Link href="/contact" className="underline font-bold">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </p>
             </div>
           )}
@@ -458,11 +472,9 @@ export default function ReturnDetailsPage() {
         {returnData.label_mode === 'in_store' &&
           returnData.status === 'return_received' && (
             <div className="bg-blue-50 border-2 border-blue-500 p-6 mb-6">
-              <h3 className="text-xl font-display mb-2">Retour Ontvangen</h3>
+              <h3 className="text-xl font-display mb-2">{t('inStoreReceivedTitle')}</h3>
               <p>
-                We hebben je retour in de winkel ontvangen. Onze collega's
-                controleren de items op schade en volledigheid. Binnen 3 werkdagen
-                storten we je refund terug op dezelfde betaalmethode.
+                {t('inStoreReceivedText')}
               </p>
             </div>
           )}
@@ -470,22 +482,21 @@ export default function ReturnDetailsPage() {
         {/* Payment Section - Klant moet direct betalen na aanvraag */}
         {returnData.status === 'return_label_payment_pending' && (
           <div className="bg-orange-50 border-2 border-orange-500 p-6 mb-6">
-            <h3 className="text-xl font-display mb-4">Betaal voor Retourlabel</h3>
+            <h3 className="text-xl font-display mb-4">{t('payLabelTitle')}</h3>
             <p className="mb-4">
-              Om je retourlabel te ontvangen, betaal je eerst {formatBedrag(returnData.return_label_cost_incl_btw, locale)} voor de retourverzending. 
-              Na betaling wordt je retourlabel automatisch gegenereerd.
+              {t('payLabelText', { amount: formatBedrag(returnData.return_label_cost_incl_btw, locale) })}
             </p>
             {paymentLoading ? (
               <div className="text-center py-4">
                 <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Doorsturen naar Mollie...</p>
+                <p className="text-sm text-gray-600">{t('redirectingMollie')}</p>
               </div>
             ) : (
               <button
                 onClick={startMolliePayment}
                 className="w-full px-8 py-4 bg-orange-500 text-white font-bold uppercase tracking-wider hover:bg-orange-600 transition-colors"
               >
-                Betaal {formatBedrag(returnData.return_label_cost_incl_btw, locale)} via Mollie
+                {t('payViaMollie', { amount: formatBedrag(returnData.return_label_cost_incl_btw, locale) })}
               </button>
             )}
           </div>
@@ -496,15 +507,15 @@ export default function ReturnDetailsPage() {
           !returnData.return_label_url &&
           returnData.label_mode !== 'customer_free' && (
           <div className="bg-purple-50 border-2 border-purple-500 p-6 mb-6">
-            <h3 className="text-xl font-display mb-4">Betaling Voltooid</h3>
+            <h3 className="text-xl font-display mb-4">{t('paymentCompletedTitle')}</h3>
             <p className="mb-4">
-              Je betaling is succesvol ontvangen! We genereren nu je retourlabel. Dit kan een paar momenten duren.
+              {t('paymentCompletedText')}
             </p>
             {pollingLabel && (
               <div className="text-center py-4">
                 <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Retourlabel wordt gegenereerd...</p>
-                <p className="text-xs text-gray-500 mt-2">De pagina wordt automatisch bijgewerkt zodra het label klaar is.</p>
+                <p className="text-sm text-gray-600">{t('generatingLabel')}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('autoRefresh')}</p>
               </div>
             )}
             {!pollingLabel && (
@@ -517,7 +528,7 @@ export default function ReturnDetailsPage() {
                 }}
                 className="w-full px-8 py-4 bg-purple-500 text-white font-bold uppercase tracking-wider hover:bg-purple-600 transition-colors"
               >
-                Status Vernieuwen
+                {t('refreshStatus')}
               </button>
             )}
           </div>
@@ -526,9 +537,9 @@ export default function ReturnDetailsPage() {
         {/* Label Generated */}
         {returnData.status === 'return_label_generated' && returnData.return_label_url && (
           <div className="bg-green-50 border-2 border-green-500 p-6 mb-6">
-            <h3 className="text-xl font-display mb-4">Retourlabel Beschikbaar</h3>
+            <h3 className="text-xl font-display mb-4">{t('labelAvailableTitle')}</h3>
             <p className="mb-4">
-              Je retourlabel is klaar! Download het label en plak het op je pakket.
+              {t('labelAvailableText')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a
@@ -537,7 +548,7 @@ export default function ReturnDetailsPage() {
                 rel="noopener noreferrer"
                 className="px-8 py-4 bg-green-500 text-white font-bold uppercase tracking-wider hover:bg-green-600 transition-colors text-center"
               >
-                Download Retourlabel
+                {t('downloadLabel')}
               </a>
               {returnData.return_tracking_url && (
                 <a
@@ -546,13 +557,13 @@ export default function ReturnDetailsPage() {
                   rel="noopener noreferrer"
                   className="px-8 py-4 border-2 border-green-500 text-green-700 font-bold uppercase tracking-wider hover:bg-green-500 hover:text-white transition-colors text-center"
                 >
-                  Volg Retour
+                  {t('trackReturn')}
                 </a>
               )}
             </div>
             {returnData.return_tracking_code && (
               <p className="mt-4 text-sm text-gray-600">
-                Tracking code: <span className="font-mono font-bold">{returnData.return_tracking_code}</span>
+                {t('trackingCode')} <span className="font-mono font-bold">{returnData.return_tracking_code}</span>
               </p>
             )}
           </div>
@@ -560,10 +571,10 @@ export default function ReturnDetailsPage() {
 
         {/* Order Info */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Order Informatie</h2>
+          <h2 className="text-2xl font-display mb-4">{t('orderInfo')}</h2>
           <div className="space-y-2">
-            <p><strong>Order nummer:</strong> #{returnData.orders.id.slice(0, 8).toUpperCase()}</p>
-            <p><strong>Geleverd op:</strong> {returnData.orders.delivered_at ? new Date(returnData.orders.delivered_at).toLocaleDateString('nl-NL', {
+            <p><strong>{t('orderNumberLabel')}</strong> #{returnData.orders.id.slice(0, 8).toUpperCase()}</p>
+            <p><strong>{t('deliveredOnLabel')}</strong> {returnData.orders.delivered_at ? new Date(returnData.orders.delivered_at).toLocaleDateString(dateLocale, {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -573,7 +584,7 @@ export default function ReturnDetailsPage() {
 
         {/* Return Items */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Retour Items</h2>
+          <h2 className="text-2xl font-display mb-4">{t('returnItems')}</h2>
           <div className="space-y-4">
             {returnItems.map((returnItem, idx) => {
               const orderItem = orderItems.find((item) => item.id === returnItem.order_item_id)
@@ -596,10 +607,10 @@ export default function ReturnDetailsPage() {
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1">{orderItem.product_name}</h3>
                     <p className="text-sm text-gray-600 mb-2">
-                      Maat {orderItem.size} • {orderItem.color} • {returnItem.quantity}x stuks
+                      {t('itemMeta', { size: orderItem.size, color: orderItem.color, quantity: returnItem.quantity })}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <strong>Reden:</strong> {returnItem.reason}
+                      <strong>{t('reasonLabel')}</strong> {reasonLabel(returnItem.reason)}
                     </p>
                     <p className="font-bold mt-2">{formatBedrag((orderItem.price_at_purchase * returnItem.quantity), locale)}</p>
                   </div>
@@ -611,13 +622,13 @@ export default function ReturnDetailsPage() {
 
         {/* Return Info */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Retour Informatie</h2>
+          <h2 className="text-2xl font-display mb-4">{t('returnInfo')}</h2>
           <div className="space-y-2">
-            <p><strong>Reden:</strong> {returnData.return_reason}</p>
+            <p><strong>{t('reasonLabel')}</strong> {reasonLabel(returnData.return_reason)}</p>
             {returnData.customer_notes && (
-              <p><strong>Notities:</strong> {returnData.customer_notes}</p>
+              <p><strong>{t('notesLabel')}</strong> {returnData.customer_notes}</p>
             )}
-            <p><strong>Aangevraagd op:</strong> {new Date(returnData.created_at).toLocaleDateString('nl-NL', {
+            <p><strong>{t('requestedOnLabel')}</strong> {new Date(returnData.created_at).toLocaleDateString(dateLocale, {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -627,23 +638,23 @@ export default function ReturnDetailsPage() {
 
         {/* Refund Summary */}
         <div className="bg-black text-white p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Refund Overzicht</h2>
+          <h2 className="text-2xl font-display mb-4">{t('refundSummary')}</h2>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span>Terug te betalen (items)</span>
+              <span>{t('refundItems')}</span>
               <span className="font-bold">{formatBedrag(returnData.refund_amount, locale)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-400">
-              <span>Retourlabel kosten (al betaald)</span>
+              <span>{t('labelCostPaid')}</span>
               <span>{formatBedrag(returnData.return_label_cost_incl_btw, locale)}</span>
             </div>
             <div className="border-t-2 border-gray-600 pt-2 mt-2">
               <div className="flex justify-between text-xl font-display">
-                <span>Terug te betalen</span>
+                <span>{t('refundTotal')}</span>
                 <span>{formatBedrag(returnData.total_refund, locale)}</span>
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                (Na ontvangst retour)
+                {t('refundNote')}
               </p>
             </div>
           </div>
@@ -655,7 +666,7 @@ export default function ReturnDetailsPage() {
             href="/account?tab=returns"
             className="px-8 py-4 border-2 border-black font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors text-center"
           >
-            Terug naar Retouren
+            {t('backToReturns')}
           </Link>
         </div>
       </div>

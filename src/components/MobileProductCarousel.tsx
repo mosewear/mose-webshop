@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatPrice } from '@/lib/format-price'
@@ -248,7 +248,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                 ? 'w-8 h-2 bg-brand-primary' 
                 : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
             }`}
-            aria-label={`Ga naar slide ${idx + 1}`}
+            aria-label={t('carouselGoTo', { n: idx + 1 })}
           />
         ))}
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface DualRangeSliderProps {
   min: number
@@ -17,6 +18,7 @@ export default function DualRangeSlider({
   onChange,
   step = 1
 }: DualRangeSliderProps) {
+  const t = useTranslations('shop')
   const [localValue, setLocalValue] = useState(value)
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null)
   const sliderRef = useRef<HTMLDivElement>(null)
@@ -132,7 +134,7 @@ export default function DualRangeSlider({
               aria-valuemin={min}
               aria-valuemax={max}
               aria-valuenow={localValue[0]}
-              aria-label="Minimum prijs"
+              aria-label={t('priceMin')}
               tabIndex={0}
               style={{ touchAction: 'none' }}
             />
@@ -164,7 +166,7 @@ export default function DualRangeSlider({
               aria-valuemin={min}
               aria-valuemax={max}
               aria-valuenow={localValue[1]}
-              aria-label="Maximum prijs"
+              aria-label={t('priceMax')}
               tabIndex={0}
               style={{ touchAction: 'none' }}
             />

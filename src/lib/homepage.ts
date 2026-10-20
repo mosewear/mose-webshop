@@ -273,7 +273,11 @@ export async function getFeaturedProducts(productIds: (string | null)[], locale:
       supabase
         .from('products')
         .select('id, name, name_en, slug, base_price, sale_price')
-        .in('id', validIds),
+        .in('id', validIds)
+        // Een uitgelicht product dat later op concept gaat, verdwijnt zo
+        // vanzelf van de homepage in plaats van naar een dode pagina te linken.
+        .eq('is_active', true)
+        .eq('status', 'active'),
       supabase
         .from('product_images')
         .select('product_id, url, is_primary, media_type')

@@ -575,7 +575,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               setLightboxImages(null)
             }}
             className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
-            aria-label="Sluiten"
+            aria-label={t('close')}
           >
             <X className="w-8 h-8" />
           </button>
@@ -586,7 +586,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={lightboxImages[lightboxIndex].url}
-              alt="Review foto"
+              alt={t('photoAlt')}
               className="max-w-full max-h-full object-contain"
             />
           </div>

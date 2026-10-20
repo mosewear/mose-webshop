@@ -697,7 +697,7 @@ export default function HomePageClient({
               <div className="relative aspect-square overflow-hidden border-2 border-white">
                 <Image
                   src={homepageSettings?.story_image_url || '/og-default.jpg'}
-                  alt="MOSE, gedragen in het echte leven"
+                  alt={t('story.imageAlt')}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   quality={90}
@@ -752,7 +752,7 @@ export default function HomePageClient({
           <div
             className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-black border-2 border-white mb-8"
             role="img"
-            aria-label="Nieuwsbrief email icoon"
+            aria-label={t('newsletter.iconAria')}
           >
             <Mail className="w-8 h-8 md:w-10 md:h-10 text-white" strokeWidth={2} aria-hidden="true" />
           </div>
@@ -767,9 +767,9 @@ export default function HomePageClient({
             <span className="font-bold">{t('newsletter.noSpam')}</span>
           </p>
 
-          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label="Nieuwsbrief inschrijving" onSubmit={handleNewsletterSubmit}>
+          <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label={t('newsletter.formAria')} onSubmit={handleNewsletterSubmit}>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-0">
-              <label htmlFor="newsletter-email" className="sr-only">E-mailadres voor nieuwsbrief</label>
+              <label htmlFor="newsletter-email" className="sr-only">{t('newsletter.emailLabel')}</label>
               <input
                 id="newsletter-email"
                 name="email"
@@ -785,7 +785,7 @@ export default function HomePageClient({
               />
               <button
                 type="submit"
-                aria-label="Schrijf je in voor de MOSE nieuwsbrief"
+                aria-label={t('newsletter.submitAria')}
                 disabled={newsletterLoading || newsletterSuccess}
                 className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 transition-colors flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
               >

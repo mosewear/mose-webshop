@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import { getSiteSettings } from '@/lib/settings'
 import { COMPANY, formatKvk } from '@/lib/company'
 import { useTranslations } from 'next-intl'

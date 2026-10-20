@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import { MessageCircle, CalendarClock } from 'lucide-react'
 import { useCart } from '@/store/cart'
 import { catalogContentId } from '@/lib/catalog-ids'
@@ -436,7 +436,7 @@ export default function OrderConfirmationPage({
               )}
               {order.loyalty_tier_discount && order.loyalty_tier_discount > 0 ? (
                 <div className="flex justify-between text-lg text-yellow-400">
-                  <span>Loyalty korting</span>
+                  <span>{t('loyaltyDiscount')}</span>
                   <span className="font-semibold">-{formatBedrag(order.loyalty_tier_discount, locale)}</span>
                 </div>
               ) : null}

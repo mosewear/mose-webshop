@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { LOYALTY_CONFIG, type LoyaltyTier } from '@/lib/loyalty'
 
 interface LoyaltyData {
@@ -30,12 +31,15 @@ const tierColors: Record<LoyaltyTier, { bg: string; text: string; border: string
   gold: { bg: 'bg-yellow-50', text: 'text-yellow-800', border: 'border-yellow-400', accent: 'bg-yellow-500' },
 }
 
-const tierBenefitLabels: Record<string, string> = {
-  discount_5_percent: '5% korting op alle bestellingen',
-  discount_10_percent: '10% korting op alle bestellingen',
+const tierBenefitKeys: Record<string, string> = {
+  discount_5_percent: 'benefitDiscount5',
+  discount_10_percent: 'benefitDiscount10',
 }
 
 export default function LoyaltyTab() {
+  const t = useTranslations('loyalty')
+  const locale = useLocale()
+  const numberLocale = locale === 'en' ? 'en-GB' : 'nl-NL'
   const [data, setData] = useState<LoyaltyData | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,7 +92,7 @@ export default function LoyaltyTab() {
     return (
       <div className="text-center py-12">
         <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Laden...</p>
+        <p className="text-gray-600">{t('tab.loading')}</p>
       </div>
     )
   }
@@ -96,7 +100,7 @@ export default function LoyaltyTab() {
   if (!data) {
     return (
       <div className="bg-gray-50 border-2 border-gray-300 p-8 text-center">
-        <p className="text-gray-600">Kan loyalty gegevens niet laden.</p>
+        <p className="text-gray-600">{t('tab.loadFailed')}</p>
       </div>
     )
   }
@@ -107,7 +111,7 @@ export default function LoyaltyTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl md:text-3xl font-display mb-6">Loyalty Programma</h2>
+      <h2 className="text-2xl md:text-3xl font-display mb-6">{t('tab.title')}</h2>
 
       {/* Tier Badge & Points */}
       <div className={`border-2 ${colors.border} ${colors.bg} p-6 md:p-8`}>
@@ -117,15 +121,15 @@ export default function LoyaltyTab() {
               <span className={`px-4 py-2 font-bold uppercase text-sm tracking-wider border-2 ${colors.border} ${colors.text}`}>
                 {data.tier}
               </span>
-              <span className="text-sm text-gray-600">Lid</span>
+              <span className="text-sm text-gray-600">{t('tab.member')}</span>
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              {data.lifetime_points.toLocaleString('nl-NL')} lifetime punten
+              {t('tab.lifetimePoints', { points: data.lifetime_points.toLocaleString(numberLocale) })}
             </p>
           </div>
           <div className="text-left md:text-right">
-            <div className="text-4xl md:text-5xl font-display">{data.points_balance.toLocaleString('nl-NL')}</div>
-            <div className="text-sm text-gray-600 font-bold uppercase tracking-wide">Beschikbare punten</div>
+            <div className="text-4xl md:text-5xl font-display">{data.points_balance.toLocaleString(numberLocale)}</div>
+            <div className="text-sm text-gray-600 font-bold uppercase tracking-wide">{t('tab.availablePoints')}</div>
           </div>
         </div>
 
@@ -143,8 +147,12 @@ export default function LoyaltyTab() {
               />
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              Nog <span className="font-bold">{data.progress.pointsNeeded}</span> punten tot{' '}
-              <span className="font-bold capitalize">{data.progress.nextTier}</span>
+              {t.rich('tab.pointsToNext', {
+                points: data.progress.pointsNeeded,
+                tier: data.progress.nextTier,
+                b: (chunks) => <span className="font-bold">{chunks}</span>,
+                tierWrap: (chunks) => <span className="font-bold capitalize">{chunks}</span>,
+              })}
             </p>
           </div>
         )}
@@ -152,7 +160,7 @@ export default function LoyaltyTab() {
 
       {/* Tier Benefits */}
       <div className="bg-white border-2 border-black p-6 md:p-8">
-        <h3 className="text-xl font-display mb-4">Jouw voordelen</h3>
+        <h3 className="text-xl font-display mb-4">{t('tab.yourBenefits')}</h3>
         {benefits.length > 0 ? (
           <ul className="space-y-3">
             {benefits.map((benefit) => (
@@ -160,29 +168,29 @@ export default function LoyaltyTab() {
                 <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="font-semibold">{tierBenefitLabels[benefit] || benefit}</span>
+                <span className="font-semibold">{tierBenefitKeys[benefit] ? t(`tab.${tierBenefitKeys[benefit]}`) : benefit}</span>
               </li>
             ))}
           </ul>
         ) : (
           <p className="text-gray-600">
-            Bij Bronze heb je nog geen extra voordelen. Verdien meer punten om Silver of Gold te bereiken!
+            {t('tab.noBenefits')}
           </p>
         )}
 
         <div className="mt-6 pt-4 border-t border-gray-200">
-          <h4 className="font-bold text-sm uppercase tracking-wider text-gray-600 mb-3">Alle tiers</h4>
+          <h4 className="font-bold text-sm uppercase tracking-wider text-gray-600 mb-3">{t('tab.allTiers')}</h4>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className={`p-3 border-2 ${data.tier === 'bronze' ? 'border-amber-400 bg-amber-50' : 'border-gray-200'}`}>
-              <div className="font-bold text-sm">Bronze</div>
+              <div className="font-bold text-sm">{t('bronze')}</div>
               <div className="text-xs text-gray-500">0 - 499</div>
             </div>
             <div className={`p-3 border-2 ${data.tier === 'silver' ? 'border-gray-400 bg-gray-100' : 'border-gray-200'}`}>
-              <div className="font-bold text-sm">Silver</div>
+              <div className="font-bold text-sm">{t('silver')}</div>
               <div className="text-xs text-gray-500">500 - 999</div>
             </div>
             <div className={`p-3 border-2 ${data.tier === 'gold' ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200'}`}>
-              <div className="font-bold text-sm">Gold</div>
+              <div className="font-bold text-sm">{t('gold')}</div>
               <div className="text-xs text-gray-500">1000+</div>
             </div>
           </div>
@@ -191,21 +199,20 @@ export default function LoyaltyTab() {
 
       {/* How It Works */}
       <div className="bg-brand-primary/5 border-2 border-brand-primary/20 p-6 md:p-8">
-        <h3 className="text-xl font-display mb-3">Hoe werkt het?</h3>
+        <h3 className="text-xl font-display mb-3">{t('tab.howItWorks')}</h3>
         <ul className="space-y-2 text-sm text-gray-700">
           <li className="flex items-start gap-2">
             <span className="font-bold text-brand-primary mt-0.5">1.</span>
-            <span>Verdien <strong>1 punt per euro</strong> bij elke bestelling</span>
+            <span>{t.rich('tab.step1', { strong: (chunks) => <strong>{chunks}</strong> })}</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="font-bold text-brand-primary mt-0.5">2.</span>
-            <span>Wissel <strong>100 punten</strong> in voor <strong>€5 korting</strong></span>
+            <span>{t.rich('tab.step2', { strong: (chunks) => <strong>{chunks}</strong> })}</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="font-bold text-brand-primary mt-0.5">3.</span>
             <span>
-              Bereik <strong>Silver</strong> (500 pt) voor <strong>5% korting</strong> of{' '}
-              <strong>Gold</strong> (1000 pt) voor <strong>10% korting</strong> op alle bestellingen
+              {t.rich('tab.step3', { strong: (chunks) => <strong>{chunks}</strong> })}
             </span>
           </li>
         </ul>
@@ -213,13 +220,13 @@ export default function LoyaltyTab() {
 
       {/* Transaction History */}
       <div className="bg-white border-2 border-black p-6 md:p-8">
-        <h3 className="text-xl font-display mb-4">Transactiegeschiedenis</h3>
+        <h3 className="text-xl font-display mb-4">{t('tab.history')}</h3>
         {txLoading ? (
           <div className="flex justify-center py-8">
             <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : transactions.length === 0 ? (
-          <p className="text-gray-600 text-center py-4">Nog geen transacties. Verdien punten bij elke bestelling!</p>
+          <p className="text-gray-600 text-center py-4">{t('tab.noTransactions')}</p>
         ) : (
           <div className="space-y-3">
             {transactions.map((tx) => (
@@ -232,13 +239,13 @@ export default function LoyaltyTab() {
                       tx.type === 'adjusted' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                       'bg-red-50 text-red-700 border-red-200'
                     }`}>
-                      {tx.type === 'earned' ? 'Verdiend' :
-                       tx.type === 'redeemed' ? 'Ingewisseld' :
-                       tx.type === 'adjusted' ? 'Aangepast' :
-                       'Verlopen'}
+                      {tx.type === 'earned' ? t('earned') :
+                       tx.type === 'redeemed' ? t('redeemed') :
+                       tx.type === 'adjusted' ? t('adjusted') :
+                       t('tab.expired')}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {new Date(tx.created_at).toLocaleDateString('nl-NL', {
+                      {new Date(tx.created_at).toLocaleDateString(numberLocale, {
                         day: 'numeric', month: 'short', year: 'numeric',
                       })}
                     </span>
@@ -256,9 +263,9 @@ export default function LoyaltyTab() {
 
       {/* CTA */}
       <div className="text-center py-4">
-        <p className="text-lg font-display mb-2">Verdien punten bij elke bestelling!</p>
+        <p className="text-lg font-display mb-2">{t('earnPoints')}</p>
         <p className="text-sm text-gray-600">
-          Elke euro die je besteedt levert je 1 loyaltypunt op. Spaar en profiteer!
+          {t('tab.ctaText')}
         </p>
       </div>
     </div>

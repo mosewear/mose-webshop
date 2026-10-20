@@ -265,6 +265,7 @@ function VideoThumbnail({
   isSelected: boolean
   onClick: () => void 
 }) {
+  const t = useTranslations('product')
   return (
     <button
       onClick={onClick}
@@ -279,7 +280,7 @@ function VideoThumbnail({
         // Use saved poster/thumbnail if available
         <Image
           src={posterUrl}
-          alt="Video thumbnail"
+          alt={t('video.thumbnail')}
           fill
           className="object-cover object-center"
         />
@@ -321,6 +322,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   const t = useTranslations('product')
   const tShipping = useTranslations('shipping')
   const tCommon = useTranslations('common')
+  const tCheckout = useTranslations('checkout')
   const locale = useLocale()
   const { slug } = use(params)
   // ?color=<exact-or-case-insensitive-color> opens the PDP with that
@@ -1544,7 +1546,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               {formatPrice(salePrice, locale)}
                             </p>
                             <span className="inline-flex items-center px-3 py-1 text-sm font-bold bg-black text-white border-2 border-black">
-                              -{discountPercentage}% KORTING
+                              {t('discountBadge', { pct: discountPercentage })}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -1552,7 +1554,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               {formatPrice(basePrice, locale)}
                             </p>
                             <p className="text-sm text-brand-primary font-semibold">
-                              Je bespaart {formatPrice(basePrice - salePrice, locale)}
+                              {t('youSave', { amount: formatPrice(basePrice - salePrice, locale) })}
                             </p>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{t('inclVat')}</p>
@@ -2088,7 +2090,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         type="email"
                         value={notifyEmail}
                         onChange={(e) => setNotifyEmail(e.target.value)}
-                        placeholder={t('placeholder.email', { ns: 'checkout' })}
+                        placeholder={tCheckout('placeholder.email')}
                         className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                       />
                       <button
@@ -2485,17 +2487,17 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
-                <span>Swipe naar links voor meer →</span>
+                <span>{t('sizeGuide.swipeHint')}</span>
               </div>
               
               <div className="overflow-x-auto -mx-2 px-2">
                 <table className="w-full border-2 border-black min-w-[500px]">
                   <thead>
                     <tr className="bg-black text-white">
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Maat</th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Borst (cm)</th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Lengte (cm)</th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">Schouders (cm)</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">{t('sizeGuide.colSize')}</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">{t('sizeGuide.colChest')}</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">{t('sizeGuide.colLength')}</th>
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left font-bold text-xs sm:text-sm">{t('sizeGuide.colShoulders')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-xs sm:text-sm">
@@ -2534,17 +2536,17 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
               </div>
 
               <div className="mt-4 sm:mt-6 bg-gray-50 border-2 border-gray-300 p-3 sm:p-4 text-xs sm:text-sm space-y-2">
-                <h3 className="font-bold text-sm sm:text-base">Hoe meet je?</h3>
-                <p><span className="font-semibold">Borst:</span> Meet rond de breedste punt van je borst</p>
-                <p><span className="font-semibold">Lengte:</span> Meet vanaf de halsnaad tot aan de onderkant</p>
-                <p><span className="font-semibold">Schouders:</span> Meet van schouder tot schouder over de rug</p>
+                <h3 className="font-bold text-sm sm:text-base">{t('sizeGuide.howToMeasure')}</h3>
+                <p><span className="font-semibold">{t('sizeGuide.chestLabel')}</span> {t('sizeGuide.chestHow')}</p>
+                <p><span className="font-semibold">{t('sizeGuide.lengthLabel')}</span> {t('sizeGuide.lengthHow')}</p>
+                <p><span className="font-semibold">{t('sizeGuide.shouldersLabel')}</span> {t('sizeGuide.shouldersHow')}</p>
               </div>
 
               <button
                 onClick={() => setShowSizeGuide(false)}
                 className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
               >
-                Sluiten
+                {t('sizeGuide.closeButton')}
               </button>
             </div>
           </div>

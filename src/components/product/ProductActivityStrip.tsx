@@ -7,11 +7,7 @@
  *   * thresholds: only show "X people viewing" when >= 4, so the strip never
  *     says something embarrassing or fake
  *
- * Verkoop: altijd een echt getal, nooit opgehoogd. Wel kiezen we de periode
- * die het sterkste ware getal geeft. "2 keer in 24 uur" overtuigt niemand,
- * "6 keer in de afgelopen 7 dagen" over dezelfde hoodie wel, en het klopt
- * allebei. Een verzonnen getal is in de EU een oneerlijke handelspraktijk
- * en de ACM handhaaft daar actief op.
+ * Verkoop: het echte aantal betaalde stuks uit de database.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -37,15 +33,12 @@ interface ActivityData {
 type Verkoopsleutel = 'sold24h' | 'sold7d' | 'sold30d'
 
 /**
- * Kortste periode eerst: die klinkt het meest actueel. Een periode telt pas
- * mee boven de drempel, zodat er nooit "1 keer in 30 dagen" staat. De drempel
- * voor 30 dagen is hoger omdat een lang venster met een laag getal juist
- * stilte uitstraalt.
+ * Alleen per dag, op verzoek van Rick (20-10-2026). De API levert ook 7 en
+ * 30 dagen; zet die hier terug in de lijst als je een langere periode wilt
+ * tonen zodra de dag onder de drempel zit.
  */
 const VERKOOPVENSTERS: { sleutel: Verkoopsleutel; drempel: number }[] = [
-  { sleutel: 'sold24h', drempel: 3 },
-  { sleutel: 'sold7d', drempel: 3 },
-  { sleutel: 'sold30d', drempel: 5 },
+  { sleutel: 'sold24h', drempel: 2 },
 ]
 
 const LEEG: ActivityData = { activeViewers: 0, sold24h: 0, sold7d: 0, sold30d: 0 }

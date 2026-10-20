@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from '@/i18n/routing'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
@@ -682,7 +681,7 @@ export default function CheckoutPage() {
       const response = await fetch(`/api/get-order?order_id=${orderId}`)
       
       if (!response.ok) {
-        throw new Error('Order niet gevonden')
+        throw new Error(t('messages.orderNotFound'))
       }
       
       const { order, items: orderItems } = await response.json()
@@ -1181,12 +1180,12 @@ export default function CheckoutPage() {
         localStorage.setItem('mose_promo_type', data.discountType)
         localStorage.setItem('mose_promo_value', data.discountValue.toString())
       } else {
-        setPromoError(data.error || t('promo.codeInvalid', { ns: 'cart' }))
+        setPromoError(data.error || tCart('promo.codeInvalid'))
         setPromoDiscount(0)
       }
     } catch (error) {
       console.error('Error validating promo code:', error)
-      setPromoError(t('promo.validationFailed', { ns: 'cart' }))
+      setPromoError(tCart('promo.validationFailed'))
       setPromoDiscount(0)
     }
   }
@@ -1685,7 +1684,7 @@ export default function CheckoutPage() {
         setAddressLookup({
           isLookingUp: false,
           isLookedUp: false,
-          error: data.error || 'Adres niet gevonden',
+          error: data.error || t('lookup.notFound'),
         })
         return
       }
@@ -1925,7 +1924,7 @@ export default function CheckoutPage() {
                   <>
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
-                      <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
+                      <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{tCart('staffel.label')}</span>
                       <span className="font-bold text-black text-xs">-{formatBedrag(staffelSavings, locale)}</span>
                     </div>
                   </>
@@ -1989,9 +1988,9 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
                       <div>
                         <div className="font-semibold text-yellow-800 uppercase tracking-wide text-xs">
-                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)}: {loyaltyTierDiscountPct}% korting
+                          {t('loyaltyTier.line', { tier: loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1), pct: loyaltyTierDiscountPct })}
                         </div>
-                        <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
+                        <div className="text-xs text-gray-600">{t('loyaltyTier.auto')}</div>
                       </div>
                       <span className="font-bold text-yellow-800 text-sm">-{formatBedrag(loyaltyTierDiscount, locale)}</span>
                     </div>
@@ -2015,7 +2014,7 @@ export default function CheckoutPage() {
                 
                 {/* Total */}
                 <div className="flex justify-between text-base border-t-2 border-black pt-3 mt-2">
-                  <span className="font-display text-lg uppercase tracking-wide">TOTAAL</span>
+                  <span className="font-display text-lg uppercase tracking-wide">{t('total')}</span>
                   <span className="font-display text-2xl">{formatBedrag(total, locale)}</span>
                 </div>
 
@@ -2160,7 +2159,7 @@ export default function CheckoutPage() {
                     onBlur={() => handleBlur('email')}
                     inputMode="email"
                     className={`w-full px-4 py-3 border-2 ${getInputBorderClass('email')} focus:border-brand-primary focus:outline-none transition-colors`}
-                    placeholder="jouw@email.nl"
+                    placeholder={t('placeholder.email')}
                     autoComplete="email"
                   />
                   {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
@@ -2723,13 +2722,13 @@ export default function CheckoutPage() {
                 {/* Terms - Compact */}
                 <div className="text-xs text-gray-600 border-t-2 border-gray-200 pt-6">
                   {t('terms.text')}{' '}
-                  <Link href="/algemene-voorwaarden" className="text-brand-primary underline" target="_blank">
+                  <LocaleLink href="/algemene-voorwaarden" className="text-brand-primary underline" target="_blank">
                     {t('terms.terms')}
-                  </Link>{' '}
+                  </LocaleLink>{' '}
                   {t('terms.and')}{' '}
-                  <Link href="/privacy" className="text-brand-primary underline" target="_blank">
+                  <LocaleLink href="/privacy" className="text-brand-primary underline" target="_blank">
                     {t('terms.privacy')}
-                  </Link>
+                  </LocaleLink>
                   .
                 </div>
 
@@ -2872,7 +2871,7 @@ export default function CheckoutPage() {
                   <>
                     <div className="h-px bg-gray-200"></div>
                     <div className="flex justify-between items-center py-1.5 px-3 bg-gray-50 border-l-2 border-black -mx-3">
-                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Staffelkorting</span>
+                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-wide">{tCart('staffel.label')}</span>
                       <span className="font-bold text-black text-sm">-{formatBedrag(staffelSavings, locale)}</span>
                     </div>
                   </>
@@ -2936,9 +2935,9 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center py-2 px-3 bg-yellow-50 border-l-2 border-yellow-500 -mx-3">
                       <div>
                         <div className="font-semibold text-yellow-800 uppercase tracking-wide text-sm">
-                          Loyalty {loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1)}: {loyaltyTierDiscountPct}% korting
+                          {t('loyaltyTier.line', { tier: loyaltyTier.charAt(0).toUpperCase() + loyaltyTier.slice(1), pct: loyaltyTierDiscountPct })}
                         </div>
-                        <div className="text-xs text-gray-600">Automatisch toegepast op je bestelling</div>
+                        <div className="text-xs text-gray-600">{t('loyaltyTier.auto')}</div>
                       </div>
                       <span className="font-bold text-yellow-800">-{formatBedrag(loyaltyTierDiscount, locale)}</span>
                     </div>

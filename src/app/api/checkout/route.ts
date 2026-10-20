@@ -56,6 +56,33 @@ export async function POST(request: Request) {
     // ============================================
     console.log('📦 Validating stock for', items.length, 'items...')
 
+    // Eerst: staat elk product nog in de winkel? De voorraadcheck hieronder
+    // kijkt alleen naar de variant, dus een product op concept (zoals het
+    // horloge) met voorraad kwam er gewoon doorheen. Een mand kan zo'n
+    // product nog bevatten uit een oude sessie of via een suggestie; dit is
+    // de plek waar het echt tegengehouden wordt.
+    const teControlerenIds = [...new Set(items.map((i: any) => i.product_id).filter(Boolean))] as string[]
+    if (teControlerenIds.length > 0) {
+      const { data: inWinkel } = await supabase
+        .from('products')
+        .select('id')
+        .in('id', teControlerenIds)
+        .eq('is_active', true)
+        .eq('status', 'active')
+      const actief = new Set((inWinkel ?? []).map((p: { id: string }) => p.id))
+      const nietMeer = items.find((i: any) => i.product_id && !actief.has(i.product_id))
+      if (nietMeer) {
+        console.error('❌ Product not active:', nietMeer.product_id)
+        return NextResponse.json(
+          {
+            error: 'Product niet beschikbaar',
+            details: `${nietMeer.product_name} is niet meer te koop. Haal het uit je winkelmand om verder te gaan.`,
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     for (const item of items) {
       // Gift cards are digital: no stock to check, no variant required.
       if (item.is_gift_card) continue

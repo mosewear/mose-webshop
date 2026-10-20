@@ -1,5 +1,6 @@
 import Image from 'next/image'
-import { setRequestLocale } from 'next-intl/server'
+import type { Metadata } from 'next'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { Link } from '@/i18n/routing'
 import { createAnonClient } from '@/lib/supabase/server'
@@ -9,6 +10,16 @@ export const revalidate = 1800
 
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'metadata.pages.about' })
+  return { title: t('title'), description: t('description') }
 }
 
 async function getReturnsAndShipping(): Promise<{

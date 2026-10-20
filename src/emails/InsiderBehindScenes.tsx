@@ -54,7 +54,7 @@ export default function InsiderBehindScenesEmail({
       <EmailModule padding="28px 30px">
         <EmailParagraph>
           {t('insiderBehindScenes.intro') ||
-            'Drops maak je niet in een week. Dit is het verhaal achter wat er nu op ons atelier gebeurt.'}
+            'Drops maak je niet in een week. Dit is het verhaal achter wat er nu in Groningen voor je gemaakt wordt.'}
         </EmailParagraph>
       </EmailModule>
 

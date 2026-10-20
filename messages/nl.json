@@ -300,7 +300,8 @@
       "loading": "Ophalen...",
       "success": "Adres opgehaald!",
       "edit": "Wijzig",
-      "error": "Kon adres niet ophalen. Probeer opnieuw of vul handmatig in."
+      "error": "Kon adres niet ophalen. Probeer opnieuw of vul handmatig in.",
+      "notFound": "Adres niet gevonden"
     },
     "countryChanged": {
       "title": "Land gewijzigd → {country}",
@@ -335,12 +336,17 @@
       "paymentFailed": "Betaling mislukt",
       "errorOccurred": "Er is een fout opgetreden",
       "paymentCancelled": "Je vorige betaling is geannuleerd",
-      "paymentCancelledDesc": "Geen zorgen, je gegevens zijn bewaard. Kies opnieuw je betaalmethode om je bestelling af te ronden."
+      "paymentCancelledDesc": "Geen zorgen, je gegevens zijn bewaard. Kies opnieuw je betaalmethode om je bestelling af te ronden.",
+      "orderNotFound": "Bestelling niet gevonden"
     },
     "newsletter": {
       "optIn": "Houd me op de hoogte van nieuwe drops & exclusieve aanbiedingen (10% korting)",
       "subscribed": "Je bent ingeschreven! Check je inbox.",
       "error": "Kon niet inschrijven. Probeer het opnieuw."
+    },
+    "loyaltyTier": {
+      "line": "Loyalty {tier}: {pct}% korting",
+      "auto": "Automatisch toegepast op je bestelling"
     }
   },
   "cart": {
@@ -573,7 +579,8 @@
       "submitSuccess": "Bedankt voor je review! Hij wordt binnen 24 uur goedgekeurd.",
       "showAll": "Toon alle {count} reviews",
       "openPhoto": "Open foto",
-      "removePhoto": "Verwijder foto"
+      "removePhoto": "Verwijder foto",
+      "photoAlt": "Reviewfoto"
     },
     "description": {
       "title": "Beschrijving"
@@ -595,7 +602,17 @@
       "info": "Info",
       "shoes": "Maattabel",
       "jewelry": "Maten",
-      "default": "Maattabel"
+      "default": "Maattabel",
+      "colSize": "Maat",
+      "colChest": "Borst (cm)",
+      "colLength": "Lengte (cm)",
+      "colShoulders": "Schouders (cm)",
+      "chestLabel": "Borst:",
+      "chestHow": "Meet rond het breedste punt van je borst",
+      "lengthLabel": "Lengte:",
+      "lengthHow": "Meet vanaf de halsnaad tot aan de onderkant",
+      "shouldersLabel": "Schouders:",
+      "shouldersHow": "Meet van schouder tot schouder over de rug"
     },
     "watchSpecs": {
       "caseSize": "Kastmaat",
@@ -628,7 +645,7 @@
       "storageText": "Bewaar in droge omgeving, bij voorkeur in horloge box"
     },
     "video": {
-      "thumbnail": "Video thumbnail",
+      "thumbnail": "Videominiatuur",
       "label": "VIDEO"
     },
     "selectVariantFirst": "Selecteer eerst een maat en kleur",
@@ -648,8 +665,8 @@
       "removed": "Verwijderd uit wishlist"
     },
     "tabs": {
-      "description": "Product beschrijving",
-      "details": "Product details",
+      "description": "Productbeschrijving",
+      "details": "Productdetails",
       "materials": "Materiaal & verzorging",
       "shipping": "VERZENDING",
       "returns": "RETOUR",
@@ -736,7 +753,9 @@
         }
       ],
       "answerVerzendingAltijd": "Bestel vandaag voor 17:00 en je hebt 'm meestal morgen al in huis in NL en BE via DHL, anders de dag erna. Verzending is altijd gratis, zonder minimumbedrag."
-    }
+    },
+    "discountBadge": "-{pct}% KORTING",
+    "youSave": "Je bespaart {amount}"
   },
   "shipping": {
     "title": "VERZENDING",
@@ -873,7 +892,9 @@
       "knop": "Bekijk de hoodie",
       "beeldAlt": "Close-up van de bruine MOSE Essential Hoodie: de puff-print op de borst, de mouw en de geribde boord"
     },
-    "categorieLabel": "Categorie"
+    "categorieLabel": "Categorie",
+    "priceMin": "Minimumprijs",
+    "priceMax": "Maximumprijs"
   },
   "errors": {
     "required": "Verplicht veld",
@@ -906,7 +927,9 @@
     "error": "FOUT",
     "checkError": "Er is een fout opgetreden bij het controleren van je betaling.",
     "statusError": "Betaling status: {status}. Probeer het later opnieuw.",
-    "backToCart": "Terug naar winkelwagen"
+    "backToCart": "Terug naar winkelwagen",
+    "loading": "LADEN...",
+    "pleaseWait": "Even geduld..."
   },
   "account": {
     "title": "MIJN ACCOUNT",
@@ -1025,9 +1048,16 @@
         "phone": "Telefoon",
         "country": "Land",
         "isDefaultShipping": "Standaard verzendadres",
-        "isDefaultBilling": "Standaard factuuradres"
-      }
-    }
+        "isDefaultBilling": "Standaard factuuradres",
+        "addressPlaceholder": "Straat + huisnummer"
+      },
+      "fillRequired": "Vul alle verplichte velden in",
+      "editButton": "Bewerken"
+    },
+    "startShopping": "Start met shoppen",
+    "itemCount": "{count, plural, =1 {1 item} other {# items}}",
+    "noImage": "Geen afbeelding",
+    "orderAgain": "Bestel opnieuw"
   },
   "wishlist": {
     "title": "Mijn wishlist",
@@ -1195,7 +1225,7 @@
   },
   "metadata": {
     "title": "MOSE | Kleding en accessoires voor mannen",
-    "description": "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €{threshold}.",
+    "description": "Tijdloze basics zonder gedoe. Premium hoodies, sweaters en t-shirts voor mannen die kwaliteit waarderen. Laten maken in Groningen. Altijd gratis verzending.",
     "keywords": "MOSE, mannenkleding, premium basics, hoodies, t-shirts, Groningen, lokaal gemaakt",
     "shop": {
       "title": "Shop",
@@ -1210,6 +1240,55 @@
     "product": {
       "notFound": "Product niet gevonden",
       "notFoundDesc": "Het door jou gezochte product bestaat niet meer."
+    },
+    "pages": {
+      "contact": {
+        "title": "Contact",
+        "description": "Vragen over je bestelling, maten of retouren? Neem contact op met MOSE via e-mail of telefoon."
+      },
+      "privacy": {
+        "title": "Privacybeleid",
+        "description": "Lees hoe MOSE omgaat met je persoonsgegevens en cookies."
+      },
+      "terms": {
+        "title": "Algemene voorwaarden",
+        "description": "De algemene voorwaarden van MOSE voor bestellen, betalen, verzenden en retourneren."
+      },
+      "shipping": {
+        "title": "Verzending en retour",
+        "description": "Alles over verzending, levertijden en retourneren bij MOSE."
+      },
+      "about": {
+        "title": "Over MOSE",
+        "description": "Wie zitten er achter MOSE? Lees waarom Irma en Rick premium basics laten maken in Groningen."
+      },
+      "cart": {
+        "title": "Winkelwagen"
+      },
+      "wishlist": {
+        "title": "Wishlist"
+      },
+      "login": {
+        "title": "Inloggen"
+      },
+      "account": {
+        "title": "Mijn account"
+      },
+      "forgotPassword": {
+        "title": "Wachtwoord vergeten"
+      },
+      "resetPassword": {
+        "title": "Nieuw wachtwoord instellen"
+      },
+      "orderConfirmation": {
+        "title": "Bestelling bevestigd"
+      },
+      "returns": {
+        "title": "Retourneren"
+      },
+      "checkout": {
+        "title": "Afrekenen"
+      }
     }
   },
   "trackOrder": {
@@ -1323,7 +1402,7 @@
       "badge": "Ons verhaal",
       "title": "GEMAAKT IN",
       "titleHighlight": "GRONINGEN",
-      "description1": "Geen poespas. Alleen karakter. We maken kleding die lang meegaat, lokaal geproduceerd en geen compromissen op kwaliteit.",
+      "description1": "Geen poespas. Alleen karakter. Kleding die lang meegaat, gemaakt in Groningen, zonder compromissen op kwaliteit.",
       "description2": "Premium basics met een ziel. Gebouwd voor het echte leven.",
       "stat1": {
         "label": "100% Lokaal",
@@ -1340,11 +1419,12 @@
       "cta": {
         "text": "Lees ons verhaal",
         "aria": "Lees het volledige verhaal over MOSE en onze lokale productie"
-      }
+      },
+      "imageAlt": "MOSE, gedragen in het echte leven"
     },
     "newsletter": {
       "title": "JOIN THE PACK",
-      "description": "Nieuws over drops, restocks en het atelier.",
+      "description": "Nieuws over drops, restocks en wat er achter de schermen gebeurt.",
       "noSpam": "Geen spam. Alleen MOSE.",
       "placeholder": "Jouw e-mailadres",
       "submit": "JOIN NU",
@@ -1354,7 +1434,10 @@
       "alreadySubscribed": "Je stond al op de lijst, geen actie nodig.",
       "error": "Er ging iets mis. Probeer het opnieuw.",
       "submitAria": "Schrijf je in voor de MOSE nieuwsbrief",
-      "privacy": "We respecteren je privacy. Uitschrijven kan altijd."
+      "privacy": "We respecteren je privacy. Uitschrijven kan altijd.",
+      "iconAria": "Nieuwsbrief-icoon",
+      "formAria": "Inschrijven voor de nieuwsbrief",
+      "emailLabel": "E-mailadres voor de nieuwsbrief"
     },
     "instagram": {
       "sectionTitle": "@mosewearcom",
@@ -1369,7 +1452,8 @@
       "next": "Volgende",
       "showCaption": "Toon bijschrift",
       "hideCaption": "Verberg bijschrift"
-    }
+    },
+    "carouselGoTo": "Ga naar slide {n}"
   },
   "searchOverlay": {
     "placeholder": "Zoek producten...",
@@ -1526,7 +1610,8 @@
       "description": "Je bestelling is betaald. Stuur ons een WhatsApp en we plannen samen een geschikt afhaalmoment.",
       "note": "We reageren meestal snel op werkdagen.",
       "button": "WhatsApp ons nu"
-    }
+    },
+    "loyaltyDiscount": "Loyaltykorting"
   },
   "privacy": {
     "title": "PRIVACYBELEID",
@@ -1683,7 +1768,7 @@
     "story": {
       "title": "ONS VERHAAL",
       "paragraph1": "Wij zijn Irma en Rick, de oprichters van MOSE.\n\nWe wonen met onze katten Bob en Marley en onze daggoe Guus in Groningen, in Helpman. Sinds september zijn we zelfs getrouwd. Wow, serieuze shit.\n\n“Waarom MOSE?” Onze overleden poes heette Mosie, we noemden haar Moos. Dit is ons eerbetoon. 🐱",
-      "paragraph2": "We zijn MOSE gestart omdat fast fashion ons irriteert. We kochten vaak dure t-shirts die na een paar keer wassen klaar waren voor de prullenbak. Daarom maken we kleding die blijft. Duurzaam, eerlijk en lokaal. Ook na tig keer wassen.\n\nLokaal? Ja. Gewoon gemaakt in het atelier in Groningen."
+      "paragraph2": "We zijn MOSE gestart omdat fast fashion ons irriteert. We kochten vaak dure t-shirts die na een paar keer wassen klaar waren voor de prullenbak. Daarom laten we kleding maken die blijft. Duurzaam, eerlijk en lokaal. Ook na tig keer wassen.\n\nLokaal? Ja. We laten alles maken in Groningen."
     },
     "local": {
       "title": "LOKAAL GEMAAKT IN GRONINGEN",
@@ -1713,7 +1798,7 @@
       "title": "WAAROM MOSE?",
       "sustainable": {
         "title": "Duurzaam zonder bullshit",
-        "text": "We maken kleding die lang meegaat. Dat is de beste sustainability."
+        "text": "Kleding die lang meegaat. Dat is de beste sustainability."
       },
       "stylish": {
         "title": "Stoer maar stijlvol",
@@ -1986,7 +2071,8 @@
     "dismissLink": "Nee bedankt, ik betaal gewoon de volle prijs",
     "successHeadline": "GELUKT!",
     "successMessage": "Check je inbox voor je {discount}% kortingscode",
-    "error": "Er ging iets mis. Probeer het opnieuw."
+    "error": "Er ging iets mis. Probeer het opnieuw.",
+    "close": "Sluiten"
   },
   "cookieConsent": {
     "title": "Cookies & privacy",
@@ -2028,9 +2114,9 @@
       "help": {
         "intro": "Team MOSE helpt je graag met:",
         "damaged": "Beschadigde of verkeerde orders",
-        "returns": "Complexe retour situaties",
-        "custom": "Custom requests",
-        "tracking": "Order status & tracking",
+        "returns": "Ingewikkelde retoursituaties",
+        "custom": "Verzoeken op maat",
+        "tracking": "Bestelstatus en tracking",
         "other": "Andere vragen"
       },
       "headerTitle": "Team MOSE",
@@ -2092,7 +2178,8 @@
   "error": {
     "description": "Er is iets misgegaan. Probeer het opnieuw of ga terug naar de shop.",
     "tryAgain": "Probeer opnieuw",
-    "toShop": "Naar de shop"
+    "toShop": "Naar de shop",
+    "oops": "Oeps!"
   },
   "blog": {
     "title": "Blog",
@@ -2194,7 +2281,29 @@
     "earned": "Verdiend",
     "redeemed": "Ingewisseld",
     "adjusted": "Aangepast",
-    "noHistory": "Nog geen punten activiteit."
+    "noHistory": "Nog geen punten activiteit.",
+    "tab": {
+      "loading": "Laden...",
+      "loadFailed": "Kan je loyaltygegevens niet laden.",
+      "title": "Loyaltyprogramma",
+      "member": "Lid",
+      "lifetimePoints": "{points} punten in totaal",
+      "availablePoints": "Beschikbare punten",
+      "pointsToNext": "Nog <b>{points}</b> punten tot <tierWrap>{tier}</tierWrap>",
+      "yourBenefits": "Jouw voordelen",
+      "benefitDiscount5": "5% korting op alle bestellingen",
+      "benefitDiscount10": "10% korting op alle bestellingen",
+      "noBenefits": "Bij Bronze heb je nog geen extra voordelen. Verdien meer punten om Silver of Gold te bereiken!",
+      "allTiers": "Alle niveaus",
+      "howItWorks": "Hoe werkt het?",
+      "step1": "Verdien <strong>1 punt per euro</strong> bij elke bestelling",
+      "step2": "Wissel <strong>100 punten</strong> in voor <strong>€5 korting</strong>",
+      "step3": "Bereik <strong>Silver</strong> (500 pt) voor <strong>5% korting</strong> of <strong>Gold</strong> (1000 pt) voor <strong>10% korting</strong> op alle bestellingen",
+      "history": "Transactiegeschiedenis",
+      "noTransactions": "Nog geen transacties. Verdien punten bij elke bestelling!",
+      "expired": "Verlopen",
+      "ctaText": "Elke euro die je besteedt levert je 1 loyaltypunt op. Spaar en profiteer!"
+    }
   },
   "campaignPopup": {
     "closeAria": "Sluit campagne-popup",
@@ -2207,5 +2316,138 @@
   "campaignAutoApply": {
     "appliedToast": "Code {code} toegepast, geldt automatisch in je winkelmand",
     "replacedToast": "Code {code} toegepast (vervangt {previous})"
+  },
+  "returnFlow": {
+    "loading": "Laden...",
+    "loadingOrders": "Bestellingen laden...",
+    "noEligibleOrders": "Je hebt geen geleverde bestellingen die in aanmerking komen voor retour.",
+    "backToAccount": "Terug naar account",
+    "backToReturns": "Terug naar retouren",
+    "orderNumber": "Order #{id}",
+    "daysLeft": "{count, plural, =1 {Nog 1 dag} other {Nog # dagen}}",
+    "deliveredOn": "Geleverd op {date}",
+    "itemCount": "{count, plural, =1 {1 item} other {# items}}",
+    "requestReturnArrow": "Retour aanvragen →",
+    "requestReturn": "Retour aanvragen",
+    "submitting": "Verzenden...",
+    "cancel": "Annuleren",
+    "orderNotFound": "Order niet gevonden",
+    "onlyDelivered": "Alleen geleverde orders kunnen worden geretourneerd",
+    "deadlinePassed": "De retourtermijn is verstreken. Je hebt {days} dagen vanaf levering.",
+    "orderLoadFailed": "Kon order niet laden",
+    "staffelWarning": "Let op: door deze retour vervalt je staffelkorting. Het terug te betalen bedrag is daarop aangepast.",
+    "fillRequired": "Vul alle verplichte velden in",
+    "selectAtLeastOne": "Selecteer minimaal één item om te retourneren",
+    "submitted": "Je retourverzoek is ingediend!",
+    "createFailed": "Kon retour niet aanmaken",
+    "pageTitle": "RETOUR AANVRAGEN",
+    "selectOrderTitle": "Selecteer een bestelling",
+    "selectOrderIntro": "Kies een geleverde bestelling om een retour voor aan te vragen. Je hebt {days} dagen vanaf de leverdatum om een retour aan te vragen.",
+    "mustLogin": "Je moet ingelogd zijn om een retour aan te vragen.",
+    "login": "Inloggen",
+    "chooseAnotherOrder": "Kies een andere bestelling",
+    "selectItems": "Selecteer items",
+    "itemMeta": "Maat {size} • {color} • {quantity}x",
+    "quantityToReturn": "Aantal retourneren (max {max})",
+    "itemReason": "Reden voor dit item",
+    "selectReason": "Selecteer reden...",
+    "reasonTitle": "Reden van retour",
+    "mainReason": "Hoofdreden voor retour *",
+    "optionalNotes": "Optionele notities",
+    "notesPlaceholder": "Voeg eventuele extra informatie toe...",
+    "refundSummary": "Overzicht terugbetaling",
+    "refundItems": "Terug te betalen (items)",
+    "labelCost": "Kosten retourlabel",
+    "labelCostPaid": "Kosten retourlabel (al betaald)",
+    "refundTotal": "Terug te betalen",
+    "refundNoteNew": "(Na ontvangst van je retour. De labelkosten heb je al betaald.)",
+    "refundNote": "(Na ontvangst van je retour)",
+    "reasons": {
+      "doesNotFit": "Past niet goed",
+      "notAsExpected": "Niet wat ik verwachtte",
+      "defective": "Defect product",
+      "wrongItem": "Verkeerde maat of kleur geleverd",
+      "other": "Anders"
+    },
+    "status": {
+      "return_requested": "Aangevraagd",
+      "return_approved": "Goedgekeurd",
+      "return_label_payment_pending": "Betaling label",
+      "return_label_payment_completed": "Label betaald",
+      "return_label_generated": "Label beschikbaar",
+      "return_in_transit": "Onderweg",
+      "return_received": "Ontvangen",
+      "refund_processing": "Terugbetaling bezig",
+      "refunded": "Terugbetaald",
+      "return_rejected": "Afgewezen"
+    },
+    "paymentSucceededToast": "Betaling gelukt! Je retourlabel wordt nu gemaakt...",
+    "labelReadyToast": "Je retourlabel is klaar!",
+    "labelSlowToast": "Het maken van het label duurt langer dan verwacht. Neem contact op met de klantenservice als het label niet verschijnt.",
+    "returnLoadFailed": "Kon retour niet laden",
+    "labelCreateFailed": "Kon label niet aanmaken",
+    "labelCreatedToast": "Retourlabel aangemaakt!",
+    "noCheckoutUrl": "Geen betaallink van Mollie ontvangen",
+    "paymentPrepareFailed": "Kon betaling niet voorbereiden",
+    "returnNotFound": "Retour niet gevonden",
+    "detailsTitle": "RETOURDETAILS",
+    "returnNumber": "Retour #{id}",
+    "freeLabelTitle": "Gratis retourlabel",
+    "freeLabelText": "Voor deze retour hoef je niets te betalen, het retourlabel is van ons. Klik hieronder om het label aan te maken. Je ontvangt het daarna per mail en hier op deze pagina.",
+    "creatingLabel": "Label wordt aangemaakt...",
+    "createLabel": "Retourlabel aanmaken",
+    "inStoreTitle": "Breng je retour langs in de winkel",
+    "inStoreText": "Deze retour handelen we in de winkel af. Kom langs met je items en noem je retournummer <number></number> aan de balie.",
+    "inStoreContact": "Openingstijden en adres vind je op <link>onze contactpagina</link>.",
+    "inStoreReceivedTitle": "Retour ontvangen",
+    "inStoreReceivedText": "We hebben je retour in de winkel ontvangen. Onze collega's controleren de items op schade en volledigheid. Binnen 3 werkdagen storten we het bedrag terug via dezelfde betaalmethode.",
+    "payLabelTitle": "Betaal voor je retourlabel",
+    "payLabelText": "Om je retourlabel te ontvangen, betaal je eerst {amount} voor de retourverzending. Na betaling wordt je retourlabel automatisch gemaakt.",
+    "redirectingMollie": "Doorsturen naar Mollie...",
+    "payViaMollie": "Betaal {amount} via Mollie",
+    "paymentCompletedTitle": "Betaling voltooid",
+    "paymentCompletedText": "Je betaling is ontvangen! We maken nu je retourlabel. Dit kan even duren.",
+    "generatingLabel": "Retourlabel wordt gemaakt...",
+    "autoRefresh": "De pagina werkt zichzelf bij zodra het label klaar is.",
+    "refreshStatus": "Status vernieuwen",
+    "labelAvailableTitle": "Retourlabel beschikbaar",
+    "labelAvailableText": "Je retourlabel is klaar! Download het label en plak het op je pakket.",
+    "downloadLabel": "Download retourlabel",
+    "trackReturn": "Volg retour",
+    "trackingCode": "Trackingcode:",
+    "orderInfo": "Orderinformatie",
+    "orderNumberLabel": "Ordernummer:",
+    "deliveredOnLabel": "Geleverd op:",
+    "returnItems": "Retouritems",
+    "reasonLabel": "Reden:",
+    "returnInfo": "Retourinformatie",
+    "notesLabel": "Notities:",
+    "requestedOnLabel": "Aangevraagd op:"
+  },
+  "unsubscribe": {
+    "metaTitle": "Uitschrijven",
+    "metaDescription": "Uitschrijven van de MOSE nieuwsbrief",
+    "loading": "Laden...",
+    "error": "Er ging iets mis",
+    "errorRetry": "Er ging iets mis. Probeer het opnieuw.",
+    "successToast": "Je bent uitgeschreven",
+    "invalidTitle": "Ongeldige link",
+    "invalidText": "Deze uitschrijflink is ongeldig. Controleer je e-mail en probeer het opnieuw.",
+    "backHome": "Terug naar home",
+    "doneTitle": "Je bent uitgeschreven",
+    "doneText": "Je ontvangt geen e-mails meer van ons. We vinden het jammer dat je gaat!",
+    "doneHint": "Bedenk je je? Je kunt je altijd weer inschrijven via onze homepage.",
+    "title": "Uitschrijven van de nieuwsbrief",
+    "confirmText": "Weet je zeker dat je geen updates meer wilt ontvangen van MOSE?",
+    "emailLabel": "E-mail:",
+    "busy": "Bezig...",
+    "confirmButton": "Ja, uitschrijven",
+    "keepButton": "Nee, hou me ingeschreven"
+  },
+  "metaCheckout": {
+    "loadingCart": "Winkelwagen laden…",
+    "redirectCheckout": "Doorsturen naar afrekenen…",
+    "loadFailed": "De producten uit de Meta Shop konden niet worden geladen. Je wordt doorgestuurd…",
+    "genericError": "Er ging iets mis. Je wordt doorgestuurd naar de shop…"
   }
 }

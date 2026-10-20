@@ -52,6 +52,9 @@ interface Address {
 
 export default function AccountPage() {
   const t = useTranslations('account')
+  const tAuthErrors = useTranslations('auth.errors')
+  const tCheckout = useTranslations('checkout')
+  const tLoyalty = useTranslations('loyalty')
   const locale = useLocale()
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
@@ -286,12 +289,12 @@ export default function AccountPage() {
     setPasswordError('')
 
     if (passwordForm.newPassword.length < 6) {
-      setPasswordError('Wachtwoord moet minimaal 6 karakters lang zijn')
+      setPasswordError(tAuthErrors('passwordMinLength'))
       return
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError('Wachtwoorden komen niet overeen')
+      setPasswordError(tAuthErrors('passwordMismatch'))
       return
     }
 
@@ -360,7 +363,7 @@ export default function AccountPage() {
     setAddressError('')
 
     if (!addressForm.name || !addressForm.address || !addressForm.city || !addressForm.postal_code) {
-      setAddressError('Vul alle verplichte velden in')
+      setAddressError(t('addressSection.fillRequired'))
       return
     }
 
@@ -649,7 +652,7 @@ export default function AccountPage() {
                   : 'text-gray-600 hover:text-black'
               }`}
             >
-              Loyalty
+              {tLoyalty('title')}
             </button>
           </div>
         </div>
@@ -707,7 +710,7 @@ export default function AccountPage() {
                       : 'hover:bg-gray-200'
                   }`}
                 >
-                  Loyalty
+                  {tLoyalty('title')}
                 </button>
               </nav>
             </div>
@@ -727,7 +730,7 @@ export default function AccountPage() {
                       href="/shop"
                       className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
                     >
-                      Start met shoppen
+                      {t('startShopping')}
                     </LocaleLink>
                   </div>
                 ) : (
@@ -765,7 +768,7 @@ export default function AccountPage() {
                           <div className="text-left md:text-right">
                             <p className="text-2xl md:text-3xl font-display mb-1">{formatBedrag(order.total, locale)}</p>
                             <p className="text-sm text-gray-600">
-                              {order.order_items.reduce((sum, item) => sum + item.quantity, 0)} item(s)
+                              {t('itemCount', { count: order.order_items.reduce((sum, item) => sum + item.quantity, 0) })}
                             </p>
                           </div>
                         </div>
@@ -789,7 +792,7 @@ export default function AccountPage() {
                                   </div>
                                 ) : (
                                   <div className="w-20 h-20 md:w-24 md:h-24 border-2 border-gray-200 bg-gray-100 flex items-center justify-center">
-                                    <span className="text-gray-400 text-xs text-center px-2">Geen afbeelding</span>
+                                    <span className="text-gray-400 text-xs text-center px-2">{t('noImage')}</span>
                                   </div>
                                 )}
                               </div>
@@ -833,7 +836,7 @@ export default function AccountPage() {
                                 href="/shop"
                                 className="px-6 py-3 border-2 border-gray-300 font-bold uppercase text-sm hover:bg-gray-100 transition-colors text-center"
                               >
-                                Bestel opnieuw
+                                {t('orderAgain')}
                               </LocaleLink>
                             </>
                           )}
@@ -990,7 +993,7 @@ export default function AccountPage() {
                           value={addressForm.address}
                           onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
                           className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                          placeholder="Straat + huisnummer"
+                          placeholder={t('addressSection.fields.addressPlaceholder')}
                         />
                       </div>
                       <div className="grid md:grid-cols-2 gap-4">
@@ -1041,9 +1044,9 @@ export default function AccountPage() {
                             onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
                             className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                           >
-                            <option value="NL">Nederland</option>
-                            <option value="BE">België</option>
-                            <option value="DE">Duitsland</option>
+                            <option value="NL">{tCheckout('country.nl')}</option>
+                            <option value="BE">{tCheckout('country.be')}</option>
+                            <option value="DE">{tCheckout('country.de')}</option>
                           </select>
                         </div>
                       </div>
@@ -1129,13 +1132,13 @@ export default function AccountPage() {
                               onClick={() => startEditAddress(address)}
                               className="px-4 py-2 border-2 border-black font-bold uppercase text-xs hover:bg-black hover:text-white transition-colors"
                             >
-                              Bewerken
+                              {t('addressSection.editButton')}
                             </button>
                             <button
                               onClick={() => deleteAddress(address.id)}
                               className="px-4 py-2 border-2 border-red-600 text-red-600 font-bold uppercase text-xs hover:bg-red-600 hover:text-white transition-colors"
                             >
-                              Verwijderen
+                              {t('addressSection.delete')}
                             </button>
                           </div>
                         </div>

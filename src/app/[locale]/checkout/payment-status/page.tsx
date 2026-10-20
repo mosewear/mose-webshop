@@ -108,19 +108,22 @@ function PaymentStatusContent() {
   return null
 }
 
+function LoadingFallback() {
+  const t = useTranslations('paymentStatus')
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center max-w-md px-4">
+        <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+        <h1 className="text-2xl font-display mb-2">{t('loading')}</h1>
+        <p className="text-gray-600">{t('pleaseWait')}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function PaymentStatusPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center max-w-md px-4">
-            <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h1 className="text-2xl font-display mb-2">LADEN...</h1>
-            <p className="text-gray-600">Even geduld...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingFallback />}>
       <PaymentStatusContent />
     </Suspense>
   )

@@ -13,6 +13,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const supabase = createClient()
   const t = useTranslations('auth.forgotPassword')
+  const tErrors = useTranslations('auth.errors')
   const locale = useLocale()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +36,7 @@ export default function ForgotPasswordPage() {
       setSuccess(true)
       setLoading(false)
     } catch (err: any) {
-      setError(err.message || t('../errors.somethingWrong'))
+      setError(err.message || tErrors('somethingWrong'))
       setLoading(false)
     }
   }

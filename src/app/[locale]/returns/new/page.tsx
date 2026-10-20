@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Link, useRouter } from '@/i18n/routing'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { getSiteSettings } from '@/lib/settings'
 import toast from 'react-hot-toast'
 import { calculateReturnRefundWithDiscount, findApplicableTier, type QuantityDiscountTier } from '@/lib/quantity-discount'
 import { formatBedrag } from '@/lib/format-price'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface Order {
   id: string
@@ -32,17 +32,21 @@ interface Order {
   }[]
 }
 
+// De waarde die we opslaan blijft Nederlands (admin en mails lezen die),
+// alleen het label dat de klant ziet volgt de taal van de site.
 const RETURN_REASONS = [
-  'Past niet goed',
-  'Niet wat ik verwachtte',
-  'Defect product',
-  'Verkeerde maat/kleur geleverd',
-  'Anders',
-]
+  { value: 'Past niet goed', key: 'doesNotFit' },
+  { value: 'Niet wat ik verwachtte', key: 'notAsExpected' },
+  { value: 'Defect product', key: 'defective' },
+  { value: 'Verkeerde maat/kleur geleverd', key: 'wrongItem' },
+  { value: 'Anders', key: 'other' },
+] as const
 
 // Component voor order selectie lijst
 function OrderSelectionList({ returnDays }: { returnDays: number }) {
   const locale = useLocale()
+  const t = useTranslations('returnFlow')
+  const dateLocale = locale === 'en' ? 'en-GB' : 'nl-NL'
   const [orders, setOrders] = useState<Order[]>([])
   const [loadingOrders, setLoadingOrders] = useState(true)
   const supabase = createClient()
@@ -99,7 +103,7 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
     return (
       <div className="text-center py-8">
         <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Bestellingen laden...</p>
+        <p className="text-gray-600">{t('loadingOrders')}</p>
       </div>
     )
   }
@@ -108,13 +112,13 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-600 mb-4">
-          Je hebt geen geleverde bestellingen die in aanmerking komen voor retour.
+          {t('noEligibleOrders')}
         </p>
         <Link
           href="/account"
           className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
         >
-          Terug naar account
+          {t('backToAccount')}
         </Link>
       </div>
     )
@@ -140,28 +144,28 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-bold text-lg">
-                    Order #{order.id.slice(0, 8).toUpperCase()}
+                    {t('orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}
                   </h3>
                   {daysLeft > 0 && (
                     <span className="px-3 py-1 text-xs font-bold uppercase bg-yellow-400 text-black">
-                      Nog {daysLeft} dag{daysLeft !== 1 ? 'en' : ''}
+                      {t('daysLeft', { count: daysLeft })}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-gray-600 mb-1">
-                  Geleverd op {deliveredDate ? deliveredDate.toLocaleDateString('nl-NL', {
+                  {t('deliveredOn', { date: deliveredDate ? deliveredDate.toLocaleDateString(dateLocale, {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
-                  }) : 'N/A'}
+                  }) : 'N/A' })}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {order.order_items?.length || 0} item{(order.order_items?.length || 0) !== 1 ? 's' : ''} • {formatBedrag(order.total, locale)}
+                  {t('itemCount', { count: order.order_items?.length || 0 })} • {formatBedrag(order.total, locale)}
                 </p>
               </div>
               <div className="text-right">
                 <span className="inline-block px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors">
-                  Retour Aanvragen →
+                  {t('requestReturnArrow')}
                 </span>
               </div>
             </div>
@@ -174,6 +178,8 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
 
 export default function NewReturnPage() {
   const locale = useLocale()
+  const t = useTranslations('returnFlow')
+  const dateLocale = locale === 'en' ? 'en-GB' : 'nl-NL'
   const router = useRouter()
   const searchParams = useSearchParams()
   const orderId = searchParams.get('order_id')
@@ -283,7 +289,7 @@ export default function NewReturnPage() {
         .single()
 
       if (error || !orderData) {
-        toast.error('Order niet gevonden')
+        toast.error(t('orderNotFound'))
         setLoading(false)
         router.push('/account')
         return
@@ -291,7 +297,7 @@ export default function NewReturnPage() {
 
       // Check of order delivered is
       if (orderData.status !== 'delivered') {
-        toast.error('Alleen geleverde orders kunnen worden geretourneerd')
+        toast.error(t('onlyDelivered'))
         setLoading(false)
         router.push('/account')
         return
@@ -305,7 +311,7 @@ export default function NewReturnPage() {
         deadline.setDate(deadline.getDate() + days)
         
         if (new Date() > deadline) {
-          toast.error(`Retourtermijn is verstreken. Je hebt ${days} dagen vanaf levering.`)
+          toast.error(t('deadlinePassed', { days }))
           setLoading(false)
           router.push('/account')
           return
@@ -315,7 +321,7 @@ export default function NewReturnPage() {
       setOrder(orderData)
     } catch (error: any) {
       console.error('Error fetching order:', error)
-      toast.error('Kon order niet laden')
+      toast.error(t('orderLoadFailed'))
       router.push('/account')
     } finally {
       setLoading(false)
@@ -407,7 +413,7 @@ export default function NewReturnPage() {
     }
 
     if (hasStaffelWarning && !staffelWarning) {
-      setStaffelWarning('Let op: door deze retour vervalt je staffelkorting. Het refundbedrag is hierop aangepast.')
+      setStaffelWarning(t('staffelWarning'))
     } else if (!hasStaffelWarning && staffelWarning) {
       setStaffelWarning(null)
     }
@@ -417,7 +423,7 @@ export default function NewReturnPage() {
 
   async function submitReturn() {
     if (!order || !returnReason) {
-      toast.error('Vul alle verplichte velden in')
+      toast.error(t('fillRequired'))
       return
     }
 
@@ -432,7 +438,7 @@ export default function NewReturnPage() {
     })
 
     if (selectedItemsArray.length === 0) {
-      toast.error('Selecteer minimaal één item om te retourneren')
+      toast.error(t('selectAtLeastOne'))
       return
     }
 
@@ -458,10 +464,10 @@ export default function NewReturnPage() {
         throw new Error(data.error || 'Failed to create return')
       }
 
-      toast.success('Retourverzoek succesvol ingediend!')
+      toast.success(t('submitted'))
       router.push(`/returns/${data.return_id}`)
     } catch (error: any) {
-      toast.error(error.message || 'Kon retour niet aanmaken')
+      toast.error(error.message || t('createFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -472,7 +478,7 @@ export default function NewReturnPage() {
       <div className="min-h-screen pt-6 px-4 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Laden...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     )
@@ -492,29 +498,29 @@ export default function NewReturnPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </Link>
-            <h1 className="text-4xl md:text-5xl font-display">RETOUR AANVRAGEN</h1>
+            <h1 className="text-4xl md:text-5xl font-display">{t('pageTitle')}</h1>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Laden...</p>
+              <p className="text-gray-600">{t('loading')}</p>
             </div>
           ) : (
             <div className="bg-white border-2 border-black p-6 mb-6">
-              <h2 className="text-2xl font-display mb-4">Selecteer een bestelling</h2>
+              <h2 className="text-2xl font-display mb-4">{t('selectOrderTitle')}</h2>
               <p className="text-gray-600 mb-6">
-                Kies een geleverde bestelling om een retour voor aan te vragen. Je hebt {returnDays} dagen vanaf de leverdatum om een retour aan te vragen.
+                {t('selectOrderIntro', { days: returnDays })}
               </p>
 
               {!user ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-600 mb-4">Je moet ingelogd zijn om een retour aan te vragen.</p>
+                  <p className="text-gray-600 mb-4">{t('mustLogin')}</p>
                   <Link
                     href="/login?redirect=/returns/new"
                     className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
                   >
-                    Inloggen
+                    {t('login')}
                   </Link>
                 </div>
               ) : (
@@ -532,19 +538,19 @@ export default function NewReturnPage() {
       <div className="min-h-screen pt-6 md:pt-8 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-50 border-2 border-gray-300 p-8 md:p-12 text-center">
-            <p className="text-gray-600 mb-6 text-lg">Order niet gevonden</p>
+            <p className="text-gray-600 mb-6 text-lg">{t('orderNotFound')}</p>
             <Link
               href="/returns/new"
               className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors mb-4"
             >
-              Kies een andere bestelling
+              {t('chooseAnotherOrder')}
             </Link>
             <br />
             <Link
               href="/account"
               className="inline-block px-8 py-4 border-2 border-black font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
             >
-              Terug naar account
+              {t('backToAccount')}
             </Link>
           </div>
         </div>
@@ -557,19 +563,19 @@ export default function NewReturnPage() {
   return (
     <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-display mb-8">RETOUR AANVRAGEN</h1>
+        <h1 className="text-4xl md:text-5xl font-display mb-8">{t('pageTitle')}</h1>
 
         {/* Order Info */}
         <div className="bg-white border-2 border-black p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 className="font-bold text-xl mb-2">Order #{order.id.slice(0, 8).toUpperCase()}</h2>
+              <h2 className="font-bold text-xl mb-2">{t('orderNumber', { id: order.id.slice(0, 8).toUpperCase() })}</h2>
               <p className="text-sm text-gray-600">
-                Geleverd op {order.delivered_at ? new Date(order.delivered_at).toLocaleDateString('nl-NL', {
+                {t('deliveredOn', { date: order.delivered_at ? new Date(order.delivered_at).toLocaleDateString(dateLocale, {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
-                }) : 'N/A'}
+                }) : 'N/A' })}
               </p>
             </div>
             <div className="text-right">
@@ -580,7 +586,7 @@ export default function NewReturnPage() {
 
         {/* Select Items */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Selecteer items</h2>
+          <h2 className="text-2xl font-display mb-4">{t('selectItems')}</h2>
           <div className="space-y-4">
             {order.order_items.map((item) => {
               const isSelected = !!selectedItems[item.id]
@@ -617,7 +623,7 @@ export default function NewReturnPage() {
                         <div className="flex-1">
                           <h3 className="font-bold text-lg mb-1">{item.product_name}</h3>
                           <p className="text-sm text-gray-600 mb-2">
-                            Maat {item.size} • {item.color} • {item.quantity}x stuks
+                            {t('itemMeta', { size: item.size, color: item.color, quantity: item.quantity })}
                           </p>
                           <p className="font-bold">{formatBedrag(item.subtotal, locale)}</p>
                         </div>
@@ -627,7 +633,7 @@ export default function NewReturnPage() {
                         <div className="mt-4 pt-4 border-t-2 border-gray-200 space-y-3">
                           <div>
                             <label className="block text-sm font-bold mb-2">
-                              Aantal retourneren (max {item.quantity})
+                              {t('quantityToReturn', { max: item.quantity })}
                             </label>
                             <input
                               type="number"
@@ -639,16 +645,16 @@ export default function NewReturnPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold mb-2">Reden voor dit item</label>
+                            <label className="block text-sm font-bold mb-2">{t('itemReason')}</label>
                             <select
                               value={selectedData.reason}
                               onChange={(e) => updateItemReason(item.id, e.target.value)}
                               className="w-full px-4 py-2 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
                             >
-                              <option value="">Selecteer reden...</option>
+                              <option value="">{t('selectReason')}</option>
                               {RETURN_REASONS.map((reason) => (
-                                <option key={reason} value={reason}>
-                                  {reason}
+                                <option key={reason.value} value={reason.value}>
+                                  {t(`reasons.${reason.key}`)}
                                 </option>
                               ))}
                             </select>
@@ -665,11 +671,11 @@ export default function NewReturnPage() {
 
         {/* Return Reason */}
         <div className="bg-white border-2 border-black p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Reden van retour</h2>
+          <h2 className="text-2xl font-display mb-4">{t('reasonTitle')}</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold mb-2">
-                Hoofdreden voor retour *
+                {t('mainReason')}
               </label>
               <select
                 value={returnReason}
@@ -677,24 +683,24 @@ export default function NewReturnPage() {
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
                 required
               >
-                <option value="">Selecteer reden...</option>
+                <option value="">{t('selectReason')}</option>
                 {RETURN_REASONS.map((reason) => (
-                  <option key={reason} value={reason}>
-                    {reason}
+                  <option key={reason.value} value={reason.value}>
+                    {t(`reasons.${reason.key}`)}
                   </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-bold mb-2">
-                Optionele notities
+                {t('optionalNotes')}
               </label>
               <textarea
                 value={customerNotes}
                 onChange={(e) => setCustomerNotes(e.target.value)}
                 rows={4}
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                placeholder="Voeg eventuele extra informatie toe..."
+                placeholder={t('notesPlaceholder')}
               />
             </div>
           </div>
@@ -709,23 +715,23 @@ export default function NewReturnPage() {
 
         {/* Summary */}
         <div className="bg-black text-white p-6 mb-6">
-          <h2 className="text-2xl font-display mb-4">Overzicht terugbetaling</h2>
+          <h2 className="text-2xl font-display mb-4">{t('refundSummary')}</h2>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span>Terug te betalen (items)</span>
+              <span>{t('refundItems')}</span>
               <span className="font-bold">{formatBedrag(refundAmount, locale)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-400">
-              <span>Retourlabel kosten</span>
+              <span>{t('labelCost')}</span>
               <span>€7,87</span>
             </div>
             <div className="border-t-2 border-gray-600 pt-2 mt-2">
               <div className="flex justify-between text-xl font-display">
-                <span>Terug te betalen</span>
+                <span>{t('refundTotal')}</span>
                 <span>{formatBedrag(refundAmount, locale)}</span>
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                (Na ontvangst retour, label kosten zijn al betaald)
+                {t('refundNoteNew')}
               </p>
             </div>
           </div>
@@ -738,13 +744,13 @@ export default function NewReturnPage() {
             disabled={submitting || Object.keys(selectedItems).length === 0 || !returnReason}
             className="flex-1 px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Verzenden...' : 'Retour Aanvragen'}
+            {submitting ? t('submitting') : t('requestReturn')}
           </button>
           <Link
             href="/account"
             className="px-8 py-4 border-2 border-black font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors text-center"
           >
-            Annuleren
+            {t('cancel')}
           </Link>
         </div>
       </div>

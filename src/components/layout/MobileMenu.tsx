@@ -447,7 +447,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
               {producten.map((product) => (
                 <li key={product.id}>
                   <LocaleLink
-                    href={`/product/${product.slug}`}
+                    href={product.href}
                     onClick={onClose}
                     className="group relative block aspect-[4/3] overflow-hidden bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary"
                   >
@@ -472,6 +472,11 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
                       <span className="line-clamp-2 font-display text-[13px] uppercase leading-tight tracking-wide">
                         {product.naam}
                       </span>
+                      {product.kleur && (
+                        <span className="text-[10px] font-bold uppercase leading-none tracking-[0.08em] text-white/75">
+                          {product.kleur}
+                        </span>
+                      )}
                       <span className="text-[12px] font-bold leading-none">
                         €{formatPrijs(product.prijs, locale)}
                         {product.vanafPrijs !== null && (

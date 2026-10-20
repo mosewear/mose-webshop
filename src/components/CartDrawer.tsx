@@ -261,6 +261,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           product_images!inner(url, is_primary),
           product_variants!inner(id, sku, size, color, color_hex, stock_quantity, is_available)
         `)
+        // Alleen wat ook in de shop staat. Zonder deze twee regels verscheen
+        // het horloge hier terwijl het op concept stond, en kon je het met één
+        // tik in je mand leggen.
+        .eq('is_active', true)
+        .eq('status', 'active')
         .gt('product_variants.stock_quantity', 0)
         .eq('product_images.is_primary', true)
         .eq('product_variants.is_available', true)

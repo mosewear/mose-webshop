@@ -219,7 +219,7 @@ export default function NewsletterPopup({
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Er ging iets mis')
+        throw new Error(data.error || t('error'))
       }
 
       // Track successful subscription
@@ -269,7 +269,7 @@ export default function NewsletterPopup({
           <button
             onClick={handleDismiss}
             className="absolute top-4 right-4 p-2 hover:bg-gray-100 transition-colors border-2 border-black"
-            aria-label="Sluiten"
+            aria-label={t('close')}
           >
             <X className="w-5 h-5" />
           </button>

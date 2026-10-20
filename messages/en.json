@@ -300,7 +300,8 @@
       "loading": "Loading...",
       "success": "Address retrieved!",
       "edit": "Edit",
-      "error": "Could not fetch address. Try again or enter it manually."
+      "error": "Could not fetch address. Try again or enter it manually.",
+      "notFound": "Address not found"
     },
     "countryChanged": {
       "title": "Country changed → {country}",
@@ -335,12 +336,17 @@
       "paymentFailed": "Payment failed",
       "errorOccurred": "An error occurred",
       "paymentCancelled": "Your previous payment was cancelled",
-      "paymentCancelledDesc": "No worries, your details are saved. Choose your payment method again to complete your order."
+      "paymentCancelledDesc": "No worries, your details are saved. Choose your payment method again to complete your order.",
+      "orderNotFound": "Order not found"
     },
     "newsletter": {
       "optIn": "Keep me updated about new drops & exclusive offers (10% discount)",
       "subscribed": "You're subscribed! Check your inbox.",
       "error": "Could not subscribe. Please try again."
+    },
+    "loyaltyTier": {
+      "line": "Loyalty {tier}: {pct}% off",
+      "auto": "Automatically applied to your order"
     }
   },
   "cart": {
@@ -573,7 +579,8 @@
       "submitSuccess": "Thanks for your review! It will be approved within 24 hours.",
       "showAll": "Show all {count} reviews",
       "openPhoto": "Open photo",
-      "removePhoto": "Remove photo"
+      "removePhoto": "Remove photo",
+      "photoAlt": "Review photo"
     },
     "description": {
       "title": "Description"
@@ -595,7 +602,17 @@
       "info": "Info",
       "shoes": "Size Chart",
       "jewelry": "Sizes",
-      "default": "Size Chart"
+      "default": "Size Chart",
+      "colSize": "Size",
+      "colChest": "Chest (cm)",
+      "colLength": "Length (cm)",
+      "colShoulders": "Shoulders (cm)",
+      "chestLabel": "Chest:",
+      "chestHow": "Measure around the widest part of your chest",
+      "lengthLabel": "Length:",
+      "lengthHow": "Measure from the neck seam down to the hem",
+      "shouldersLabel": "Shoulders:",
+      "shouldersHow": "Measure from shoulder to shoulder across the back"
     },
     "watchSpecs": {
       "caseSize": "Case Size",
@@ -736,7 +753,9 @@
         }
       ],
       "answerVerzendingAltijd": "Order today before 17:00 and it usually arrives tomorrow in NL and BE via DHL, otherwise the day after. Shipping is always free, with no minimum."
-    }
+    },
+    "discountBadge": "-{pct}% OFF",
+    "youSave": "You save {amount}"
   },
   "shipping": {
     "title": "SHIPPING",
@@ -873,7 +892,9 @@
       "knop": "View the hoodie",
       "beeldAlt": "Close-up of the brown MOSE Essential Hoodie: the puff print on the chest, the sleeve and the ribbed cuff"
     },
-    "categorieLabel": "Category"
+    "categorieLabel": "Category",
+    "priceMin": "Minimum price",
+    "priceMax": "Maximum price"
   },
   "errors": {
     "required": "Required field",
@@ -906,7 +927,9 @@
     "error": "ERROR",
     "checkError": "An error occurred while checking your payment.",
     "statusError": "Payment status: {status}. Please try again later.",
-    "backToCart": "Back to cart"
+    "backToCart": "Back to cart",
+    "loading": "LOADING...",
+    "pleaseWait": "One moment..."
   },
   "account": {
     "title": "MY ACCOUNT",
@@ -1025,9 +1048,16 @@
         "phone": "Phone",
         "country": "Country",
         "isDefaultShipping": "Default shipping address",
-        "isDefaultBilling": "Default billing address"
-      }
-    }
+        "isDefaultBilling": "Default billing address",
+        "addressPlaceholder": "Street + house number"
+      },
+      "fillRequired": "Please fill in all required fields",
+      "editButton": "Edit"
+    },
+    "startShopping": "Start shopping",
+    "itemCount": "{count, plural, =1 {1 item} other {# items}}",
+    "noImage": "No image",
+    "orderAgain": "Order again"
   },
   "wishlist": {
     "title": "My wishlist",
@@ -1255,11 +1285,12 @@
       "description": "Your order is paid. Send us a WhatsApp message and we will schedule a pickup time that works for you.",
       "note": "We usually respond quickly on business days.",
       "button": "WhatsApp us now"
-    }
+    },
+    "loyaltyDiscount": "Loyalty discount"
   },
   "metadata": {
     "title": "MOSE | Clothing and accessories for men",
-    "description": "Timeless basics without the fuss. MOSE makes premium hoodies, t-shirts and accessories for men who appreciate quality. Locally produced in Groningen. Free shipping from €{threshold}.",
+    "description": "Timeless basics without the fuss. Premium hoodies, sweaters and t-shirts for men who appreciate quality. Made in Groningen. Always free shipping.",
     "keywords": "MOSE, menswear, premium basics, hoodies, t-shirts, Groningen, locally made",
     "shop": {
       "title": "Shop",
@@ -1274,6 +1305,55 @@
     "product": {
       "notFound": "Product not found",
       "notFoundDesc": "The product you are looking for no longer exists."
+    },
+    "pages": {
+      "contact": {
+        "title": "Contact",
+        "description": "Questions about your order, sizing or returns? Get in touch with MOSE by email or phone."
+      },
+      "privacy": {
+        "title": "Privacy policy",
+        "description": "Read how MOSE handles your personal data and cookies."
+      },
+      "terms": {
+        "title": "Terms and conditions",
+        "description": "MOSE's terms and conditions for ordering, payment, shipping and returns."
+      },
+      "shipping": {
+        "title": "Shipping and returns",
+        "description": "Everything about shipping, delivery times and returns at MOSE."
+      },
+      "about": {
+        "title": "About MOSE",
+        "description": "Who's behind MOSE? Read why Irma and Rick have their premium basics made in Groningen."
+      },
+      "cart": {
+        "title": "Shopping cart"
+      },
+      "wishlist": {
+        "title": "Wishlist"
+      },
+      "login": {
+        "title": "Log in"
+      },
+      "account": {
+        "title": "My account"
+      },
+      "forgotPassword": {
+        "title": "Forgot password"
+      },
+      "resetPassword": {
+        "title": "Set a new password"
+      },
+      "orderConfirmation": {
+        "title": "Order confirmed"
+      },
+      "returns": {
+        "title": "Returns"
+      },
+      "checkout": {
+        "title": "Checkout"
+      }
     }
   },
   "trackOrder": {
@@ -1387,7 +1467,7 @@
       "badge": "Our Story",
       "title": "MADE IN",
       "titleHighlight": "GRONINGEN",
-      "description1": "No nonsense. Just character. We make clothing that lasts, locally produced without compromise on quality.",
+      "description1": "No nonsense. Just character. Clothing that lasts, made in Groningen, without compromise on quality.",
       "description2": "Premium basics with a soul. Built for real life.",
       "stat1": {
         "label": "100% Local",
@@ -1404,11 +1484,12 @@
       "cta": {
         "text": "Read our story",
         "aria": "Read the full story about MOSE and our local production"
-      }
+      },
+      "imageAlt": "MOSE, worn in real life"
     },
     "newsletter": {
       "title": "JOIN THE PACK",
-      "description": "News about drops, restocks and the atelier.",
+      "description": "News about drops, restocks and what happens behind the scenes.",
       "noSpam": "No spam. Only MOSE.",
       "placeholder": "Your email address",
       "submit": "JOIN NOW",
@@ -1418,7 +1499,10 @@
       "alreadySubscribed": "You're already on the list, all good.",
       "error": "Something went wrong. Please try again.",
       "submitAria": "Subscribe to the MOSE newsletter",
-      "privacy": "We respect your privacy. You can unsubscribe anytime."
+      "privacy": "We respect your privacy. You can unsubscribe anytime.",
+      "iconAria": "Newsletter icon",
+      "formAria": "Newsletter sign-up",
+      "emailLabel": "Email address for the newsletter"
     },
     "instagram": {
       "sectionTitle": "@mosewearcom",
@@ -1433,7 +1517,8 @@
       "next": "Next",
       "showCaption": "Show caption",
       "hideCaption": "Hide caption"
-    }
+    },
+    "carouselGoTo": "Go to slide {n}"
   },
   "searchOverlay": {
     "placeholder": "Search products...",
@@ -1683,7 +1768,7 @@
     "story": {
       "title": "OUR STORY",
       "paragraph1": "We're Irma and Rick, the founders of MOSE.\n\nWe live with our cats Bob and Marley and our doggo Guus in Groningen, in Helpman. As of September we're even married. Wow, serious stuff.\n\n\"Why MOSE?\" Our late cat was named Mosie, we called her Moos. This is our tribute to her. 🐱",
-      "paragraph2": "We started MOSE because fast fashion irritates us. We kept buying expensive t-shirts that were ready for the bin after a few washes. So we make clothing that lasts. Sustainable, honest and local. Even after countless washes.\n\nLocal? Yes. Just made in the atelier in Groningen."
+      "paragraph2": "We started MOSE because fast fashion irritates us. We kept buying expensive t-shirts that were ready for the bin after a few washes. So we have clothing made that lasts. Sustainable, honest and local. Even after countless washes.\n\nLocal? Yes. Everything is made for us in Groningen."
     },
     "local": {
       "title": "LOCALLY MADE IN GRONINGEN",
@@ -1713,7 +1798,7 @@
       "title": "WHY MOSE?",
       "sustainable": {
         "title": "Sustainable without the BS",
-        "text": "We make clothing that lasts. That's the best sustainability."
+        "text": "Clothing that lasts. That's the best sustainability."
       },
       "stylish": {
         "title": "Rugged yet stylish",
@@ -1986,7 +2071,8 @@
     "dismissLink": "No thanks, I'll pay full price",
     "successHeadline": "SUCCESS!",
     "successMessage": "Check your inbox for your {discount}% discount code",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "close": "Close"
   },
   "cookieConsent": {
     "title": "Cookies & Privacy",
@@ -2092,7 +2178,8 @@
   "error": {
     "description": "Something went wrong. Please try again or go back to the shop.",
     "tryAgain": "Try again",
-    "toShop": "Go to shop"
+    "toShop": "Go to shop",
+    "oops": "Oops!"
   },
   "blog": {
     "title": "Blog",
@@ -2194,7 +2281,29 @@
     "earned": "Earned",
     "redeemed": "Redeemed",
     "adjusted": "Adjusted",
-    "noHistory": "No points activity yet."
+    "noHistory": "No points activity yet.",
+    "tab": {
+      "loading": "Loading...",
+      "loadFailed": "We couldn't load your loyalty details.",
+      "title": "Loyalty programme",
+      "member": "Member",
+      "lifetimePoints": "{points} lifetime points",
+      "availablePoints": "Available points",
+      "pointsToNext": "<b>{points}</b> more points to <tierWrap>{tier}</tierWrap>",
+      "yourBenefits": "Your benefits",
+      "benefitDiscount5": "5% off every order",
+      "benefitDiscount10": "10% off every order",
+      "noBenefits": "Bronze doesn't come with extra benefits yet. Earn more points to reach Silver or Gold!",
+      "allTiers": "All tiers",
+      "howItWorks": "How does it work?",
+      "step1": "Earn <strong>1 point per euro</strong> on every order",
+      "step2": "Redeem <strong>100 points</strong> for <strong>€5 off</strong>",
+      "step3": "Reach <strong>Silver</strong> (500 pts) for <strong>5% off</strong> or <strong>Gold</strong> (1000 pts) for <strong>10% off</strong> every order",
+      "history": "Transaction history",
+      "noTransactions": "No transactions yet. Earn points with every order!",
+      "expired": "Expired",
+      "ctaText": "Every euro you spend earns you 1 loyalty point. Save up and enjoy the rewards!"
+    }
   },
   "campaignPopup": {
     "closeAria": "Close campaign popup",
@@ -2207,5 +2316,138 @@
   "campaignAutoApply": {
     "appliedToast": "Code {code} applied, added to your cart automatically",
     "replacedToast": "Code {code} applied (replaces {previous})"
+  },
+  "returnFlow": {
+    "loading": "Loading...",
+    "loadingOrders": "Loading orders...",
+    "noEligibleOrders": "You have no delivered orders that are eligible for a return.",
+    "backToAccount": "Back to account",
+    "backToReturns": "Back to returns",
+    "orderNumber": "Order #{id}",
+    "daysLeft": "{count, plural, =1 {1 day left} other {# days left}}",
+    "deliveredOn": "Delivered on {date}",
+    "itemCount": "{count, plural, =1 {1 item} other {# items}}",
+    "requestReturnArrow": "Request return →",
+    "requestReturn": "Request return",
+    "submitting": "Sending...",
+    "cancel": "Cancel",
+    "orderNotFound": "Order not found",
+    "onlyDelivered": "Only delivered orders can be returned",
+    "deadlinePassed": "The return period has ended. You have {days} days from delivery.",
+    "orderLoadFailed": "Could not load order",
+    "staffelWarning": "Heads up: this return cancels your volume discount. The refund amount has been adjusted accordingly.",
+    "fillRequired": "Please fill in all required fields",
+    "selectAtLeastOne": "Select at least one item to return",
+    "submitted": "Your return request has been submitted!",
+    "createFailed": "Could not create return",
+    "pageTitle": "REQUEST A RETURN",
+    "selectOrderTitle": "Select an order",
+    "selectOrderIntro": "Choose a delivered order to request a return for. You have {days} days from the delivery date to request a return.",
+    "mustLogin": "You need to be logged in to request a return.",
+    "login": "Log in",
+    "chooseAnotherOrder": "Choose another order",
+    "selectItems": "Select items",
+    "itemMeta": "Size {size} • {color} • {quantity}x",
+    "quantityToReturn": "Quantity to return (max {max})",
+    "itemReason": "Reason for this item",
+    "selectReason": "Select a reason...",
+    "reasonTitle": "Reason for return",
+    "mainReason": "Main reason for return *",
+    "optionalNotes": "Notes (optional)",
+    "notesPlaceholder": "Add any extra information...",
+    "refundSummary": "Refund summary",
+    "refundItems": "Refund (items)",
+    "labelCost": "Return label cost",
+    "labelCostPaid": "Return label cost (already paid)",
+    "refundTotal": "Refund total",
+    "refundNoteNew": "(Once we receive your return. The label cost has already been paid.)",
+    "refundNote": "(Once we receive your return)",
+    "reasons": {
+      "doesNotFit": "Doesn't fit well",
+      "notAsExpected": "Not what I expected",
+      "defective": "Defective product",
+      "wrongItem": "Wrong size or colour delivered",
+      "other": "Other"
+    },
+    "status": {
+      "return_requested": "Requested",
+      "return_approved": "Approved",
+      "return_label_payment_pending": "Label payment",
+      "return_label_payment_completed": "Label paid",
+      "return_label_generated": "Label available",
+      "return_in_transit": "In transit",
+      "return_received": "Received",
+      "refund_processing": "Refund in progress",
+      "refunded": "Refunded",
+      "return_rejected": "Rejected"
+    },
+    "paymentSucceededToast": "Payment successful! We're creating your return label now...",
+    "labelReadyToast": "Your return label is ready!",
+    "labelSlowToast": "Creating the label is taking longer than expected. Please contact customer service if the label doesn't appear.",
+    "returnLoadFailed": "Could not load return",
+    "labelCreateFailed": "Could not create label",
+    "labelCreatedToast": "Return label created!",
+    "noCheckoutUrl": "No payment link received from Mollie",
+    "paymentPrepareFailed": "Could not prepare payment",
+    "returnNotFound": "Return not found",
+    "detailsTitle": "RETURN DETAILS",
+    "returnNumber": "Return #{id}",
+    "freeLabelTitle": "Free return label",
+    "freeLabelText": "You don't have to pay anything for this return, the label is on us. Click below to create it. You'll then receive it by email and here on this page.",
+    "creatingLabel": "Creating label...",
+    "createLabel": "Create return label",
+    "inStoreTitle": "Drop off your return in store",
+    "inStoreText": "We handle this return in store. Bring your items and mention your return number <number></number> at the counter.",
+    "inStoreContact": "You'll find our opening hours and address on <link>our contact page</link>.",
+    "inStoreReceivedTitle": "Return received",
+    "inStoreReceivedText": "We've received your return in store. Our team is checking the items for damage and completeness. Within 3 working days we'll refund the amount to your original payment method.",
+    "payLabelTitle": "Pay for your return label",
+    "payLabelText": "To receive your return label, first pay {amount} for return shipping. Once paid, your return label is created automatically.",
+    "redirectingMollie": "Redirecting to Mollie...",
+    "payViaMollie": "Pay {amount} via Mollie",
+    "paymentCompletedTitle": "Payment completed",
+    "paymentCompletedText": "We've received your payment! We're creating your return label now. This may take a moment.",
+    "generatingLabel": "Creating return label...",
+    "autoRefresh": "This page updates automatically as soon as the label is ready.",
+    "refreshStatus": "Refresh status",
+    "labelAvailableTitle": "Return label available",
+    "labelAvailableText": "Your return label is ready! Download it and stick it on your parcel.",
+    "downloadLabel": "Download return label",
+    "trackReturn": "Track return",
+    "trackingCode": "Tracking code:",
+    "orderInfo": "Order information",
+    "orderNumberLabel": "Order number:",
+    "deliveredOnLabel": "Delivered on:",
+    "returnItems": "Returned items",
+    "reasonLabel": "Reason:",
+    "returnInfo": "Return information",
+    "notesLabel": "Notes:",
+    "requestedOnLabel": "Requested on:"
+  },
+  "unsubscribe": {
+    "metaTitle": "Unsubscribe",
+    "metaDescription": "Unsubscribe from the MOSE newsletter",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "errorRetry": "Something went wrong. Please try again.",
+    "successToast": "You've been unsubscribed",
+    "invalidTitle": "Invalid link",
+    "invalidText": "This unsubscribe link is invalid. Please check your email and try again.",
+    "backHome": "Back to home",
+    "doneTitle": "You've been unsubscribed",
+    "doneText": "You won't receive any more emails from us. We're sorry to see you go!",
+    "doneHint": "Changed your mind? You can always subscribe again on our homepage.",
+    "title": "Unsubscribe from the newsletter",
+    "confirmText": "Are you sure you no longer want to receive updates from MOSE?",
+    "emailLabel": "Email:",
+    "busy": "Working...",
+    "confirmButton": "Yes, unsubscribe",
+    "keepButton": "No, keep me subscribed"
+  },
+  "metaCheckout": {
+    "loadingCart": "Loading your cart…",
+    "redirectCheckout": "Taking you to checkout…",
+    "loadFailed": "We couldn't load the products from the Meta Shop. Redirecting you…",
+    "genericError": "Something went wrong. Taking you to the shop…"
   }
 }
