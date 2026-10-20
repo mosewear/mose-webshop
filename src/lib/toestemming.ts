@@ -168,12 +168,12 @@ export async function zorgVoorPostmark(): Promise<{ ok: boolean; fout?: string }
  * Postmarks eigen tellingen voor deze stream. Vangnet voor als een webhook
  * niet aankomt: de stopregels rekenen met het hoogste van beide.
  */
-async function postmarkTellingen(): Promise<{ bounces: number; klachten: number } | null> {
-  const res = await postmark<{ Bounced?: number; SpamComplaints?: number }>(
+async function postmarkTellingen(): Promise<{ verstuurd: number; bounces: number; klachten: number } | null> {
+  const res = await postmark<{ Sent?: number; Bounced?: number; SpamComplaints?: number }>(
     `/stats/outbound?messagestream=${TOESTEMMING_STREAM}`,
   )
   if (res.status !== 200 || !res.data) return null
-  return { bounces: res.data.Bounced ?? 0, klachten: res.data.SpamComplaints ?? 0 }
+  return { verstuurd: res.data.Sent ?? 0, bounces: res.data.Bounced ?? 0, klachten: res.data.SpamComplaints ?? 0 }
 }
 
 // ─── Stoppen ───────────────────────────────────────────────────────────────
@@ -205,20 +205,32 @@ export async function stop(reden: string): Promise<void> {
 }
 
 /** Rekent de stopregels door. Geeft de reden terug als de ronde moet stoppen. */
-export async function controleerGrenzen(plukBounces = 0): Promise<string | null> {
+export async function controleerGrenzen(plukBounces = 0, opties: { afleverCheck?: boolean } = {}): Promise<string | null> {
   const db = createServiceClient()
   const [inst, eigen, pm, test] = await Promise.all([
     leesInstellingen(),
     leesCijfers(),
     postmarkTellingen(),
-    db.from('toestemming_ontvangers').select('status').eq('groep', 'test').in('status', ['bounce', 'klacht']),
+    db.from('toestemming_ontvangers').select('status, verzonden_op').eq('groep', 'test'),
   ])
   const verzonden = eigen.verzonden
   if (verzonden === 0) return null
   // Postmarks tellingen bevatten ook de testmails naar de simulatoradressen.
   // Die eerst eraf, anders legt een test later de echte ronde stil. Postmark
   // telt een spammelding als bounce, dus alle testsignalen gaan van de bounces.
-  const testSignalen = (test.data || []).length
+  const testRijen = test.data || []
+  const testSignalen = testRijen.filter((r) => r.status === 'bounce' || r.status === 'klacht').length
+
+  // Postmark gaf op het Developer Plan na de maandlimiet gewoon "OK" terug,
+  // maar leverde niets af (20-10-2026). Daarom vóór elke pluk: telt Postmark
+  // ongeveer evenveel verstuurd als wij? Zo niet, dan ligt de stream stil en
+  // heeft doorsturen geen zin. Ruimte van 10 voor herhaalde testmails.
+  if (opties.afleverCheck && pm) {
+    const verwacht = verzonden + testRijen.filter((r) => r.verzonden_op).length
+    if (verwacht > pm.verstuurd + 10) {
+      return `Postmark heeft ${verwacht - pm.verstuurd} van ${verwacht} mails niet verwerkt. Controleer abonnement en goedkeuring in Postmark.`
+    }
+  }
   const klachten = Math.max(eigen.klachten, pm?.klachten ?? 0)
   const bounces = Math.max(eigen.bounces, (pm?.bounces ?? 0) - testSignalen)
   const pct = (n: number) => Math.round((n / verzonden) * 10000) / 100
@@ -352,7 +364,7 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
   }
 
   // Grenzen vóór de pluk: bounces en klachten van de vorige pluk zijn er nu.
-  const vooraf = await controleerGrenzen()
+  const vooraf = await controleerGrenzen(0, { afleverCheck: true })
   if (vooraf) {
     await stop(vooraf)
     return { pluk: null, verzonden: 0, overgeslagen: 0, mislukt: 0, gestopt: vooraf }
@@ -541,4 +553,44 @@ export async function overzichtPerPluk() {
     per.set(r.pluk, p)
   }
   return [...per.values()].sort((a, b) => b.pluk - a.pluk).slice(0, 50)
+}
+
+/**
+ * Afleverstatus van losse berichten bij Postmark, voor controle achteraf
+ * (bijvoorbeeld orderbevestigingen tijdens een blokkade).
+ */
+export async function postmarkBerichten(ids: string[]) {
+  return Promise.all(
+    ids.slice(0, 20).map(async (id) => {
+      const res = await postmark<{ Status?: string; Recipients?: string[]; Subject?: string; MessageStream?: string; MessageEvents?: Array<{ Type: string; ReceivedAt: string; Details?: Record<string, unknown> }> }>(
+        `/messages/outbound/${encodeURIComponent(id)}/details`,
+      )
+      return {
+        id,
+        http: res.status,
+        status: res.data?.Status ?? null,
+        stream: res.data?.MessageStream ?? null,
+        onderwerp: res.data?.Subject ?? null,
+        gebeurtenissen: (res.data?.MessageEvents || []).map((e) => ({ type: e.Type, op: e.ReceivedAt, details: e.Details })),
+      }
+    }),
+  )
+}
+
+/** Postmarks eigen tellingen per stream, voor het dashboard. */
+export async function postmarkStreamCijfers() {
+  const uit: Record<string, unknown> = {}
+  for (const stream of [TOESTEMMING_STREAM, 'outbound']) {
+    const res = await postmark<Record<string, number>>(`/stats/outbound?messagestream=${stream}`)
+    uit[stream] = res.status === 200 ? res.data : { http: res.status }
+  }
+  return uit
+}
+
+/** Laatste berichten aan één ontvanger, over alle streams. */
+export async function postmarkZoekOntvanger(email: string) {
+  const res = await postmark<{ Messages?: Array<{ MessageID: string; Status: string; Subject: string; ReceivedAt: string; MessageStream: string }> }>(
+    `/messages/outbound?recipient=${encodeURIComponent(email)}&count=20&offset=0`,
+  )
+  return { http: res.status, berichten: res.data?.Messages || [] }
 }

@@ -7,6 +7,9 @@ import {
   overzichtPerPluk,
   verstuurPluk,
   verstuurTest,
+  postmarkBerichten,
+  postmarkStreamCijfers,
+  postmarkZoekOntvanger,
 } from '@/lib/toestemming'
 
 export const runtime = 'nodejs'
@@ -15,8 +18,13 @@ export const maxDuration = 300
 export async function GET() {
   const { authorized } = await requireAdmin(['admin'])
   if (!authorized) return NextResponse.json({ ok: false, fout: 'Niet geautoriseerd' }, { status: 403 })
-  const [instellingen, cijfers, plukken] = await Promise.all([leesInstellingen(), leesCijfers(), overzichtPerPluk()])
-  return NextResponse.json({ ok: true, instellingen, cijfers, plukken })
+  const [instellingen, cijfers, plukken, postmark] = await Promise.all([
+    leesInstellingen(),
+    leesCijfers(),
+    overzichtPerPluk(),
+    postmarkStreamCijfers().catch(() => null),
+  ])
+  return NextResponse.json({ ok: true, instellingen, cijfers, plukken, postmark })
 }
 
 export async function POST(req: NextRequest) {
@@ -65,6 +73,12 @@ export async function POST(req: NextRequest) {
         .eq('status', 'vastgehouden')
       return NextResponse.json({ ok: true, vrijgegeven: count })
     }
+    case 'postmark_berichten': {
+      const ids = Array.isArray(body.ids) ? (body.ids as unknown[]).map(String).filter(Boolean) : []
+      return NextResponse.json({ ok: true, berichten: await postmarkBerichten(ids) })
+    }
+    case 'postmark_zoek':
+      return NextResponse.json({ ok: true, ...(await postmarkZoekOntvanger(String(body.email || ''))) })
     default:
       return NextResponse.json({ ok: false, fout: 'Onbekende actie' }, { status: 400 })
   }
