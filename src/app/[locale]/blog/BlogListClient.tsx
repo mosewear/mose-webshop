@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter, usePathname } from '@/i18n/routing'
-import EditorialPageBanner, { PAGE_BANNER_IMAGES } from '@/components/EditorialPageBanner'
+import PaginaKop from '@/components/layout/PaginaKop'
+import CategorieKiezer from '@/components/shop/CategorieKiezer'
 
 interface BlogPost {
   id: string
@@ -82,50 +83,26 @@ export default function BlogListClient({ posts, categories }: BlogListClientProp
     return t.has(key as never) ? (t(key as never) as string) : slug
   }
 
-  const categoryOptions = [
-    { value: 'all', label: t('allCategories') },
-    ...categories.map((c) => ({ value: c, label: categoryLabel(c) })),
-  ]
-
   return (
     <div className="bg-white">
-      <EditorialPageBanner
-        title={t('title')}
-        eyebrow={t('eyebrow')}
-        subtitle={t('heroSubtitle')}
-        imageSrc={PAGE_BANNER_IMAGES.blog.desktop}
-        imageSrcMobile={PAGE_BANNER_IMAGES.blog.mobile}
-        imageAlt={t('heroAlt')}
-        // De band is 3,2 op 1 en de foto 1,5 op 1, dus er blijft 47 procent van
-        // de hoogte over. Op 40 procent sneed dat de vier mannen rond het middel
-        // af en viel de titel over een gezicht. Hoger in het beeld staat de
-        // poort boven hun hoofden: rustiger, en de linkerhoek blijft vrij.
-        objectPosition="center 12%"
-        objectPositionMobile="center 14%"
-      />
+      {/* Zelfde kop als de shop (PaginaKop): geen fotobanner meer, de
+          categorieën in het blok, en de artikelen beginnen direct eronder. */}
+      <PaginaKop titel={t('title')} ondertitel={t('heroSubtitle')}>
+        <CategorieKiezer
+          items={categories.map((c) => ({
+            slug: c,
+            naam: categoryLabel(c),
+            aantal: posts.filter((p) => p.category === c).length,
+          }))}
+          actief={selectedCategory}
+          onKies={setCategory}
+          allesLabel={t('allCategories')}
+          groepLabel={t('title')}
+          totaalAantal={posts.length}
+        />
+      </PaginaKop>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-        <div className="flex flex-wrap gap-2 mb-8 md:mb-12" role="group" aria-label={t('title')}>
-          {categoryOptions.map((cat) => {
-            const isActive = selectedCategory === cat.value
-            return (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => setCategory(cat.value)}
-                aria-pressed={isActive}
-                className={`px-4 py-2 text-sm font-bold uppercase tracking-wider border-2 transition-all ${
-                  isActive
-                    ? 'bg-brand-primary border-brand-primary text-white'
-                    : 'border-gray-300 text-gray-700 hover:border-black'
-                }`}
-              >
-                {cat.label}
-              </button>
-            )
-          })}
-        </div>
-
         {filteredPosts.length === 0 && (
           <div className="text-center py-16">
             <svg

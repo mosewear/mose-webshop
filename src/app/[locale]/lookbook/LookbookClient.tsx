@@ -9,6 +9,7 @@ import type { LookbookGlobalSettings } from '@/lib/lookbook-data'
 import LookbookChapter from './LookbookChapter'
 import LookbookStamp from './LookbookStamp'
 import { MotionFadeIn, MotionStaggerItem } from './motion'
+import PaginaKop from '@/components/layout/PaginaKop'
 
 interface LookbookClientProps {
   settings: LookbookGlobalSettings | null
@@ -77,35 +78,8 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
     // the fixed announcement banner + header. Only the homepage opts
     // out of that rule because its hero intentionally sits behind it.
     <div className="min-h-screen bg-white">
-      {/* HEADER ------------------------------------------------------- */}
-      <header className="relative bg-white text-black border-b-2 border-black">
-        <MotionFadeIn
-          stagger
-          rootMargin="0px"
-          className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-10 md:pt-14 lg:pt-20 pb-10 md:pb-16 lg:pb-20"
-        >
-          <MotionStaggerItem
-            as="p"
-            className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-gray-500 mb-4"
-          >
-            {t('eyebrow')}
-          </MotionStaggerItem>
-          <MotionStaggerItem
-            as="h1"
-            className="text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-display uppercase tracking-tight leading-[0.85] mb-4 md:mb-6"
-          >
-            {headerTitle}
-          </MotionStaggerItem>
-          {headerSubtitle && (
-            <MotionStaggerItem
-              as="p"
-              className="text-base md:text-xl text-gray-700 max-w-2xl"
-            >
-              {headerSubtitle}
-            </MotionStaggerItem>
-          )}
-        </MotionFadeIn>
-      </header>
+      {/* HEADER: zelfde kop als de shop (PaginaKop). */}
+      <PaginaKop titel={headerTitle} ondertitel={headerSubtitle || undefined} />
 
       {/* EMPTY STATE -------------------------------------------------- */}
       {chapters.length === 0 ? (

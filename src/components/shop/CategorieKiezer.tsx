@@ -49,12 +49,16 @@ export default function CategorieKiezer({
       {/* Op telefoon een vast raster van twee kolommen. Met flex-wrap viel
           de rij per schermbreedte anders uit: 2+2 op 390, maar 3+1 op 430,
           met één knop alleen op de tweede regel. Vanaf sm passen ze naast
-          elkaar en worden het gewone knoppen op hun eigen breedte. */}
+          elkaar en worden het gewone knoppen op hun eigen breedte.
+          Bij een oneven aantal (de blog heeft er vijf) krijgt "Alles" op
+          telefoon de volle breedte, zodat de rest netjes in paren staat in
+          plaats van één knop alleen onderaan. */}
       <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0 sm:flex sm:flex-wrap">
         {kaarten.map((kaart) => {
           const isActief = kaart.slug === actief
+          const volleBreedte = kaart.slug === 'all' && kaarten.length % 2 === 1
           return (
-            <li key={kaart.slug}>
+            <li key={kaart.slug} className={volleBreedte ? 'col-span-2' : undefined}>
               <button
                 type="button"
                 onClick={() => onKies(kaart.slug)}

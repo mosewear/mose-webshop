@@ -5,6 +5,7 @@ import { Truck, Package, Clock, MapPin, RefreshCw, Check, ArrowRight, Lightbulb,
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import PaginaKop from '@/components/layout/PaginaKop'
 
 export default function VerzendingPage() {
   const t = useTranslations('shipping')
@@ -45,65 +46,43 @@ export default function VerzendingPage() {
     )
   }
 
+  const altijdGratis = settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section - Brutalist Style */}
-      <section className="relative bg-black text-white py-16 md:py-24 overflow-hidden">
-        {/* Animated Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300A676' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary text-white font-bold uppercase tracking-[0.2em] text-sm mb-6">
-              <Truck className="w-4 h-4" />
-              {t('service')}
-            </div>
-
-            <h1 className="font-display text-5xl md:text-7xl mb-6 leading-tight">
-              {t('title')}<br />
-              <span className="text-brand-primary">& {t('returns')}</span>
-            </h1>
-            
-            <p className="text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto">
-              {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                ? t('alwaysFreeShipping')
-                : t('freeShipping', { threshold: settings.free_shipping_threshold })
-              }. 
-              {t('returnPolicy', { days: settings.return_days })}.
-            </p>
-            <p className="text-sm text-gray-400 mt-3">
-              {t('sameConditionsNLBE')}
-            </p>
-          </div>
-
-          {/* Trust Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
-            {[
-              { 
-                icon: <Truck className="w-6 h-6" />, 
-                label: settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
-                  ? t('alwaysFree')
-                  : t('freeFrom', { threshold: settings.free_shipping_threshold }), 
-                sublabel: t('shipping') 
-              },
-              { icon: <Clock className="w-6 h-6" />, label: t('deliveryTime'), sublabel: t('deliveryTimeLabel') },
-              { icon: <RefreshCw className="w-6 h-6" />, label: t('returnDays', { days: settings.return_days }), sublabel: t('returns') },
-              { icon: <Check className="w-6 h-6" />, label: t('free'), sublabel: t('manufacturingFault') },
-            ].map((stat, idx) => (
-              <div key={idx} className="text-center p-6 border-2 border-gray-700 hover:border-brand-primary transition-all duration-300 hover:bg-brand-primary/10 group">
-                <div className="mb-3 flex justify-center group-hover:scale-110 transition-transform">{stat.icon}</div>
-                <div className="text-lg font-bold uppercase tracking-wider mb-1">{stat.label}</div>
-                <div className="text-xs text-gray-400">{stat.sublabel}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Zelfde kop als de shop. Het zwarte vlak met patroon is weg; de vier
+          kerngegevens staan als rustige tegels in het blok, zodat je in één
+          blik ziet wat je moet weten. */}
+      <PaginaKop
+        titel={`${t('title')} & ${t('returns')}`}
+        ondertitel={
+          <>
+            {altijdGratis ? t('alwaysFreeShipping') : t('freeShipping', { threshold: settings.free_shipping_threshold })}.{' '}
+            {t('returnPolicy', { days: settings.return_days })}. {t('sameConditionsNLBE')}
+          </>
+        }
+      >
+        <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0 md:grid-cols-4 md:gap-3">
+          {[
+            {
+              icon: <Truck className="h-5 w-5" aria-hidden="true" />,
+              label: altijdGratis ? t('alwaysFree') : t('freeFrom', { threshold: settings.free_shipping_threshold }),
+              sublabel: t('shipping'),
+            },
+            { icon: <Clock className="h-5 w-5" aria-hidden="true" />, label: t('deliveryTime'), sublabel: t('deliveryTimeLabel') },
+            { icon: <RefreshCw className="h-5 w-5" aria-hidden="true" />, label: t('returnDays', { days: settings.return_days }), sublabel: t('returns') },
+            { icon: <Check className="h-5 w-5" aria-hidden="true" />, label: t('free'), sublabel: t('manufacturingFault') },
+          ].map((stat) => (
+            <li key={stat.sublabel} className="flex items-center gap-3 border-2 border-gray-300 bg-white px-3 py-3 md:px-4">
+              <span className="shrink-0 text-brand-primary">{stat.icon}</span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold uppercase leading-tight tracking-wider text-black">{stat.label}</span>
+                <span className="block text-xs text-gray-600">{stat.sublabel}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </PaginaKop>
 
       {/* Main Content - Brutalist Cards */}
       <div className="max-w-7xl mx-auto px-4 py-16 md:py-24">

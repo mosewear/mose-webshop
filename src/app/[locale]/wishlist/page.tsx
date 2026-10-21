@@ -10,6 +10,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
 import { Heart } from 'lucide-react'
+import PaginaKop from '@/components/layout/PaginaKop'
 
 interface Product {
   id: string
@@ -162,23 +163,26 @@ export default function WishlistPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="container mx-auto px-4 pb-8 md:pb-12 min-h-[60vh]">
+      <>
+      <PaginaKop titel={t('title')} />
+      <div className="container mx-auto px-4 pb-8 md:pb-12 pt-8 md:pt-12 min-h-[60vh]">
         <div className="max-w-7xl mx-auto">
-          <h1 className="font-display text-3xl md:text-4xl mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
           <div className="flex flex-col items-center justify-center py-16 md:py-24">
             <div className="inline-block animate-spin w-12 h-12 md:w-16 md:h-16 border-4 border-black border-t-brand-primary mb-4"></div>
             <p className="text-gray-600 font-bold uppercase tracking-wide text-sm">{t('loading')}</p>
           </div>
         </div>
       </div>
+      </>
     )
   }
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 pb-8 md:pb-12 min-h-[60vh]">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="font-display text-3xl md:text-4xl mb-6 md:mb-8 uppercase tracking-wide">{t('title')}</h1>
+      <>
+      <PaginaKop titel={t('title')} />
+      <div className="container mx-auto px-4 pb-8 md:pb-12 pt-8 md:pt-12 min-h-[60vh]">
+        <div className="max-w-7xl mx-auto">
           
           {/* MOSE Brutalist Empty State */}
           <div className="bg-white border-4 border-black p-8 md:p-12 text-center">
@@ -198,20 +202,15 @@ export default function WishlistPage() {
           </div>
         </div>
       </div>
+      </>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 pb-8 md:pb-12">
+    <>
+    <PaginaKop titel={t('title')} ondertitel={t('itemCount', { count: items.length })} />
+    <div className="container mx-auto px-4 pb-8 md:pb-12 pt-8 md:pt-12">
       <div className="max-w-7xl mx-auto">
-        {/* Header - MOSE Style */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 gap-3">
-          <h1 className="font-display text-3xl md:text-4xl uppercase tracking-wide">{t('title')}</h1>
-          <div className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black bg-white">
-            <Heart className="w-5 h-5" strokeWidth={2} />
-            <span className="font-bold text-sm md:text-base">{t('itemCount', { count: items.length })}</span>
-          </div>
-        </div>
 
         {/* Product Grid - MOSE Brutalist Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -307,5 +306,6 @@ export default function WishlistPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

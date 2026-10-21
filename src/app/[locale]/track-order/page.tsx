@@ -5,6 +5,7 @@ import { Package, Truck, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatBedrag } from '@/lib/format-price'
+import PaginaKop from '@/components/layout/PaginaKop'
 
 interface OrderTrackingData {
   id: string
@@ -147,19 +148,13 @@ export default function TrackOrderPage() {
   const statusInfo = orderData ? getStatusInfo(orderData.status) : null
 
   return (
-    <div className="min-h-screen pb-16 px-4 bg-gray-50">
+    <div className="min-h-screen bg-white">
+      <PaginaKop titel={t('title')} ondertitel={t('description')} breedte="tekst" />
+      <div className="px-4 pb-16 pt-8 md:pt-12">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-display mb-4">
-            {t('title')}
-          </h1>
-          <p className="text-gray-600 text-lg">
-            {t('description')}
-          </p>
-        </div>
 
         {!orderData && (
-          <div className="bg-white border-2 border-black p-8 md:p-12 max-w-2xl mx-auto">
+          <div className="bg-white border-2 border-black p-8 md:p-12 max-w-2xl">
             <form onSubmit={handleTrackOrder} className="space-y-6" noValidate>
               <div>
                 <label
@@ -359,6 +354,7 @@ export default function TrackOrderPage() {
           </div>
         )}
       </div>
+    </div>
     </div>
   )
 }

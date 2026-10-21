@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Link } from '@/i18n/routing'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations } from 'next-intl'
+import PaginaKop from '@/components/layout/PaginaKop'
 
 export default function PrivacyPage() {
   const t = useTranslations('privacy')
@@ -26,13 +27,10 @@ export default function PrivacyPage() {
   const addressLines = settings.contact_address.split(',').map(line => line.trim())
 
   return (
-    <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
+    <div className="min-h-screen">
+      <PaginaKop titel={t('title')} ondertitel={t('lastUpdated')} breedte="tekst" />
+      <div className="px-4 pb-16 pt-8 md:pt-12">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-4">{t('title')}</h1>
-          <p className="text-gray-600">{t('lastUpdated')}</p>
-        </div>
 
         {/* Content */}
         <div className="prose prose-lg max-w-none space-y-8">
@@ -190,6 +188,7 @@ export default function PrivacyPage() {
           </Link>
         </div>
       </div>
+    </div>
     </div>
   )
 }

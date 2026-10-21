@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import PaginaKop from '@/components/layout/PaginaKop'
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
@@ -78,17 +79,11 @@ export default async function AboutPage({
   ]
 
   return (
-    <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
+    <div className="min-h-screen">
+      {/* Zelfde kop als de shop; uitgelijnd op de tekstkolom eronder. */}
+      <PaginaKop titel={about.hero_title} ondertitel={about.hero_subtitle} breedte="tekst" />
+      <div className="px-4 pb-16 pt-8 md:pt-12">
       <div className="max-w-4xl mx-auto">
-        {/* Hero */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-6">
-            {about.hero_title}
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-700">
-            {about.hero_subtitle}
-          </p>
-        </div>
 
         {/* Story Image — art-directed: portrait on mobile, landscape on desktop */}
         <div className="relative aspect-[4/5] md:aspect-[3/2] mb-12 border-2 border-black overflow-hidden">
@@ -223,6 +218,7 @@ export default async function AboutPage({
           </Link>
         </div>
       </div>
+    </div>
     </div>
   )
 }

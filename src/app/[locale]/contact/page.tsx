@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
 import { useLocale, useTranslations } from 'next-intl'
+import PaginaKop from '@/components/layout/PaginaKop'
 
 export default function ContactPage() {
   const t = useTranslations('contactPage')
@@ -89,15 +90,10 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen pt-6 md:pt-8 px-4 pb-16">
+    <div className="min-h-screen">
+      <PaginaKop titel={t('title')} ondertitel={t('subtitle')} breedte="midden" />
+      <div className="px-4 pb-16 pt-8 md:pt-12">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-display mb-6">{t('title')}</h1>
-          <p className="text-xl text-gray-700 max-w-2xl mx-auto">
-            {t('subtitle')}
-          </p>
-        </div>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Contact Form */}
@@ -282,6 +278,7 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

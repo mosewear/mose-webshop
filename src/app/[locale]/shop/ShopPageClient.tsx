@@ -24,6 +24,7 @@ import {
   getImageForColor,
   getHoverImageForColor,
 } from '@/lib/product-display'
+import PaginaKop from '@/components/layout/PaginaKop'
 import CategorieKiezer, { type CategorieItem } from '@/components/shop/CategorieKiezer'
 import DetailBlok from '@/components/shop/DetailBlok'
 
@@ -485,44 +486,25 @@ export default function ShopPageClient() {
   return (
     <div className="bg-white">
       {/* Compacte collectieheader in plaats van de fotobanner. Die kostte op
-          desktop 320 pixels voordat het eerste kledingstuk in beeld kwam; de
-          beelden blijven bestaan en worden elders nog gebruikt.
-
-          De zachte warme tint zet dit blok apart van de sitekop erboven en het
-          raster eronder. Zonder die tint staan er drie witte banen op elkaar
-          met alleen een grijs lijntje ertussen. Bewust geen zwart (vecht met
-          de actieve categorieknop er vlak onder) en geen merkgroen (de
-          mededelingenbalk erboven is al groen, en groen botst met de olijven
-          bruine hoodies in het raster). Het lijntje onderaan kan weg, de
-          kleurovergang doet dat werk nu. */}
-      <header className="bg-[#F5F4F1]">
-        <div className="mx-auto max-w-7xl px-4 pb-7 pt-8 md:pb-9 md:pt-12">
-          <h1 className="font-display text-4xl uppercase leading-none tracking-tight text-black md:text-5xl">
-            {t('title')}
-          </h1>
-          <p className="mt-3 max-w-prose text-[15px] leading-relaxed text-gray-600 md:text-base">
-            {t('heroSubtitle')}
-          </p>
-
-          {/* Categorierij in de kop in plaats van eronder. Los op wit hing
-              hij tussen kop en raster in; hier hoort hij bij de paginatitel
-              en begint het raster direct na het blok. De vaste minimale
-              hoogte houdt het blok even hoog tijdens het laden, zodat de
-              producten niet verspringen als de knoppen verschijnen. */}
-          <div className="mt-6 min-h-[96px] sm:min-h-[44px] md:mt-7">
-            {!loading && categorieKaarten.length > 1 && (
-              <CategorieKiezer
-                items={categorieKaarten}
-                actief={selectedCategory}
-                onKies={kiesCategorie}
-                allesLabel={t('filters.allShort')}
-                groepLabel={t('categorieLabel')}
-                totaalAantal={expandToShopTiles(products).length}
-              />
-            )}
-          </div>
-        </div>
-      </header>
+          desktop 320 pixels voordat het eerste kledingstuk in beeld kwam.
+          De opbouw staat nu in PaginaKop, zodat alle pagina's dezelfde kop
+          hebben. De categorierij zit in de kop; de vaste minimale hoogte
+          houdt het blok even hoog tijdens het laden, zodat de producten niet
+          verspringen als de knoppen verschijnen. */}
+      <PaginaKop titel={t('title')} ondertitel={t('heroSubtitle')} bedieningHoogte="min-h-[96px] sm:min-h-[44px]">
+        <>
+          {!loading && categorieKaarten.length > 1 && (
+            <CategorieKiezer
+              items={categorieKaarten}
+              actief={selectedCategory}
+              onKies={kiesCategorie}
+              allesLabel={t('filters.allShort')}
+              groepLabel={t('categorieLabel')}
+              totaalAantal={expandToShopTiles(products).length}
+            />
+          )}
+        </>
+      </PaginaKop>
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
         {/* Mobile Filter Button - Inline (bold & brutalist) */}
