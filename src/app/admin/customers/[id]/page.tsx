@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { formatBedrag } from '@/lib/format-price'
+import { adresRegel } from '@/lib/adres'
 
 interface Customer {
   id: string
@@ -485,7 +486,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   {orders[0].shipping_address.name}
                 </div>
                 <div className="text-gray-700">
-                  {orders[0].shipping_address.address}
+                  {adresRegel(orders[0].shipping_address)}
                 </div>
                 <div className="text-gray-700">
                   {orders[0].shipping_address.postalCode} {orders[0].shipping_address.city}

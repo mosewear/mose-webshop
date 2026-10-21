@@ -12,6 +12,7 @@ import { getSiteSettings } from '@/lib/settings'
 import { useTranslations } from 'next-intl'
 import { useParams } from 'next/navigation'
 import { formatBedrag, formatBedragKaal } from '@/lib/format-price'
+import { adresRegel } from '@/lib/adres'
 
 interface Order {
   id: string
@@ -466,7 +467,7 @@ export default function OrderConfirmationPage({
                 ) : (
                   <>
                     <p className="font-semibold text-black">{order.shipping_address?.name}</p>
-                    <p>{order.shipping_address?.address}</p>
+                    <p>{adresRegel(order.shipping_address)}</p>
                     <p>{order.shipping_address?.postalCode} {order.shipping_address?.city}</p>
                   </>
                 )}

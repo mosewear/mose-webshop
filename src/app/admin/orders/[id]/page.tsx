@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { Mail, Package, Clock, CheckCircle2, XCircle, Truck, AlertCircle, ChevronDown, ChevronUp, Printer, Zap, RefreshCw, Pencil, X, Save, Trash2, Plus, Minus, RotateCcw } from 'lucide-react'
 import { getCarrierOptions, generateTrackingUrl, calculateEstimatedDelivery } from '@/lib/order-utils'
 import { formatBedrag } from '@/lib/format-price'
+import { adresRegel, splitsAdres, nummerMetToevoeging } from '@/lib/adres'
 
 interface Order {
   id: string
@@ -646,17 +647,21 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     const ba = typeof order.billing_address === 'object' ? order.billing_address : {}
     setCustomerEmail(order.email || '')
     setShippingName(sa?.name || '')
-    setShippingAddress(sa?.address || '')
-    setShippingHouseNumber(sa?.houseNumber || '')
-    setShippingAddition(sa?.addition || '')
+    // Het straatveld krijgt alleen de straat; nummer en toevoeging staan in
+    // hun eigen veld. Anders bewerk je "Nobel 10" naast huisnummer 10.
+    const sas = splitsAdres(sa)
+    setShippingAddress(sas.straat)
+    setShippingHouseNumber(sas.nummer)
+    setShippingAddition(sas.toevoeging)
     setShippingPostalCode(sa?.postalCode || '')
     setShippingCity(sa?.city || '')
     setShippingCountry(sa?.country || 'NL')
     setShippingPhone(sa?.phone || '')
     setBillingName(ba?.name || '')
-    setBillingAddress(ba?.address || '')
-    setBillingHouseNumber(ba?.houseNumber || '')
-    setBillingAddition(ba?.addition || '')
+    const bas = splitsAdres(ba)
+    setBillingAddress(bas.straat)
+    setBillingHouseNumber(bas.nummer)
+    setBillingAddition(bas.toevoeging)
     setBillingPostalCode(ba?.postalCode || '')
     setBillingCity(ba?.city || '')
     setBillingCountry(ba?.country || '')
@@ -669,7 +674,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       setSavingCustomer(true)
       const newShippingAddress = {
         name: shippingName,
-        address: shippingAddress,
+        // Zelfde vorm als de checkout: straat met nummer, plus de losse velden.
+        address: [shippingAddress.trim(), nummerMetToevoeging(shippingHouseNumber.trim(), shippingAddition.trim())].filter(Boolean).join(' '),
         houseNumber: shippingHouseNumber,
         addition: shippingAddition,
         postalCode: shippingPostalCode,
@@ -680,7 +686,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       const hasBilling = billingName || billingAddress || billingCity || billingPostalCode
       const newBillingAddress = hasBilling ? {
         name: billingName,
-        address: billingAddress,
+        address: [billingAddress.trim(), nummerMetToevoeging(billingHouseNumber.trim(), billingAddition.trim())].filter(Boolean).join(' '),
         houseNumber: billingHouseNumber,
         addition: billingAddition,
         postalCode: billingPostalCode,
@@ -1428,9 +1434,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="text-sm md:text-base mt-1 text-gray-700">
                       <div>{order.shipping_address.name || 'N/A'}</div>
                       <div>
-                        {order.shipping_address.address || 'N/A'}
-                        {order.shipping_address.houseNumber && ` ${order.shipping_address.houseNumber}`}
-                        {order.shipping_address.addition && ` ${order.shipping_address.addition}`}
+                        {/* Eén regel uit elke opslagvorm; voorheen werd het nummer
+                            achter een straat geplakt waar het al in stond. */}
+                        {adresRegel(order.shipping_address) || 'N/A'}
                       </div>
                       <div>{order.shipping_address.postalCode || 'N/A'}, {order.shipping_address.city || 'N/A'}</div>
                       <div>{displayCountry(order.shipping_address.country)}</div>
@@ -1447,9 +1453,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="text-sm md:text-base mt-1 text-gray-700">
                       <div>{order.billing_address.name || 'N/A'}</div>
                       <div>
-                        {order.billing_address.address || 'N/A'}
-                        {order.billing_address.houseNumber && ` ${order.billing_address.houseNumber}`}
-                        {order.billing_address.addition && ` ${order.billing_address.addition}`}
+                        {adresRegel(order.billing_address) || 'N/A'}
                       </div>
                       <div>{order.billing_address.postalCode || 'N/A'}, {order.billing_address.city || 'N/A'}</div>
                       <div>{displayCountry(order.billing_address.country)}</div>

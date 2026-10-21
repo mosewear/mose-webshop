@@ -11,6 +11,7 @@ import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
 import { processGiftCardsForPaidOrder } from '@/lib/gift-card-processing'
 import { catalogContentId } from '@/lib/catalog-ids'
 import { sendServerPurchaseEvent } from '@/lib/meta/capi'
+import { adresRegel } from '@/lib/adres'
 
 export type FulfillPaidOrderResult =
   | { ok: true; alreadyPaid: boolean; orderId: string }
@@ -410,7 +411,8 @@ async function sendConfirmationEmail(supabase: SupabaseClient, order: any) {
       })),
       shippingAddress: {
         name: shippingAddress?.name || '',
-        address: shippingAddress?.address || '',
+        // Volledige straatregel, ook als het nummer alleen apart is opgeslagen.
+        address: adresRegel(shippingAddress),
         city: shippingAddress?.city || '',
         postalCode: shippingAddress?.postalCode || '',
       },

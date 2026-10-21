@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderConfirmationEmail } from '@/lib/email'
+import { adresRegel } from '@/lib/adres'
 
 export async function GET(req: NextRequest) {
   try {
@@ -104,7 +105,7 @@ export async function GET(req: NextRequest) {
           })) || [],
           shippingAddress: {
             name: order.shipping_address.name,
-            address: order.shipping_address.address,
+            address: adresRegel(order.shipping_address),
             city: order.shipping_address.city,
             postalCode: order.shipping_address.postalCode,
           },
