@@ -285,7 +285,10 @@ export const TEMPO = [
 ] as const
 
 /** Omhoog als het sinds de vorige stap zo schoon is gebleven. */
-const OMHOOG = { minUren: 20, minVerstuurd: 300, maxBouncePct: 2, maxAfmeldPct: 5 }
+// 12 uur en 150 mails (Rick, 21-10): lang genoeg om klachten van een avond
+// binnen te laten komen, kort genoeg om op een gecontroleerde lijst niet een
+// hele dag te wachten.
+const OMHOOG = { minUren: 12, minVerstuurd: 150, maxBouncePct: 2, maxAfmeldPct: 5 }
 /** Terug naar stand 0 boven deze bounce of bij één klacht. */
 const OMLAAG_BOUNCE_PCT = 2.5
 /**
