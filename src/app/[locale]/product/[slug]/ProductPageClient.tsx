@@ -14,6 +14,7 @@ import PdpTrustStrip from '@/components/product/PdpTrustStrip'
 import KlarnaInstallmentLine from '@/components/product/KlarnaInstallmentLine'
 import ProductReviewSnippet from '@/components/product/ProductReviewSnippet'
 import ProductActivityStrip from '@/components/product/ProductActivityStrip'
+import ProductDetailStrip from '@/components/product/ProductDetailStrip'
 import ModelFitInfo from '@/components/product/ModelFitInfo'
 import PdpFaq from '@/components/product/PdpFaq'
 import WatchSpecsModal from '@/components/WatchSpecsModal'
@@ -2295,6 +2296,9 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
               </div>
             </div>
           </div>
+
+          {/* Van dichtbij: detailbeelden van de gekozen kleur. */}
+          {selectedColor && <ProductDetailStrip productId={product.id} color={selectedColor} locale={locale} />}
 
           {/* Related Products (Feature 4) */}
           {relatedProducts.length > 0 && (

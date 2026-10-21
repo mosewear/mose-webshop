@@ -755,7 +755,14 @@
       "answerVerzendingAltijd": "Order today before 17:00 and it usually arrives tomorrow in NL and BE via DHL, otherwise the day after. Shipping is always free, with no minimum."
     },
     "discountBadge": "-{pct}% OFF",
-    "youSave": "You save {amount}"
+    "youSave": "You save {amount}",
+    "detailStrip": {
+      "title": "Up close",
+      "enlarge": "enlarge",
+      "previous": "Previous",
+      "next": "Next",
+      "close": "Close"
+    }
   },
   "shipping": {
     "title": "SHIPPING",

@@ -755,7 +755,14 @@
       "answerVerzendingAltijd": "Bestel vandaag voor 17:00 en je hebt 'm meestal morgen al in huis in NL en BE via DHL, anders de dag erna. Verzending is altijd gratis, zonder minimumbedrag."
     },
     "discountBadge": "-{pct}% KORTING",
-    "youSave": "Je bespaart {amount}"
+    "youSave": "Je bespaart {amount}",
+    "detailStrip": {
+      "title": "Van dichtbij",
+      "enlarge": "vergroten",
+      "previous": "Vorige",
+      "next": "Volgende",
+      "close": "Sluiten"
+    }
   },
   "shipping": {
     "title": "VERZENDING",
