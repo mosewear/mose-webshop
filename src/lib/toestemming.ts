@@ -1,10 +1,12 @@
 /**
  * Toestemmingsronde voor de oude maillijst.
  *
- * Eén mail per adres met de vraag of het op de lijst wil blijven. Wie op de
- * knop drukt, komt in Brevo-lijst "Toestemming bevestigd" en in
+ * Eén mail per adres: je staat op de lijst, bevestig het of meld je af. Wie
+ * op de knop drukt, komt in Brevo-lijst "Toestemming bevestigd" en in
  * newsletter_subscribers, met tijdstip, IP en browser als bewijs. Wie niets
- * doet, krijgt niets meer.
+ * doet, blijft op de lijst (keuze Rick, 21-10-2026); alleen wie zich afmeldt
+ * gaat eraf. De eerste 149 kregen nog de oude tekst ("doe je niets, dan
+ * krijg je geen mail meer"); zie mose-toestemmingsronde in het geheugen.
  *
  * Verzending
  *   Plukken via een eigen Postmark-broadcaststream, zodat de cijfers los
@@ -56,6 +58,9 @@ export interface Instellingen {
   brevo_lijst_id: number | null
   /** Vanaf hier tellen de bounces voor de bouncegrens. Leeg: hele ronde. */
   meet_vanaf: string | null
+  tempo_stap: number
+  tempo_sinds: string | null
+  tempo_automatisch: boolean
 }
 
 export interface Cijfers {
@@ -266,32 +271,127 @@ export async function controleerGrenzen(plukBounces = 0, opties: { afleverCheck?
   return null
 }
 
+// ─── Tempo opbouwen ────────────────────────────────────────────────────────
+
+/**
+ * Drie standen. Mailproviders vertrouwen een afzender meer als het volume
+ * geleidelijk groeit, dus omhoog gaat stap voor stap en alleen na een schone
+ * periode; omlaag gaat in één keer terug naar de rustigste stand.
+ */
+export const TEMPO = [
+  { plukgrootte: 50, interval: 120, perDag: 350, omschrijving: '50 per 2 uur' },
+  { plukgrootte: 50, interval: 60, perDag: 650, omschrijving: '50 per uur' },
+  { plukgrootte: 100, interval: 60, perDag: 1300, omschrijving: '100 per uur' },
+] as const
+
+/** Omhoog als het sinds de vorige stap zo schoon is gebleven. */
+const OMHOOG = { minUren: 20, minVerstuurd: 300, maxBouncePct: 2, maxAfmeldPct: 5 }
+/** Terug naar stand 0 boven deze bounce of bij één klacht. */
+const OMLAAG_BOUNCE_PCT = 2.5
+/**
+ * Alle streams samen in 30 dagen. Het abonnement is 10.000 per maand en
+ * daar vallen de ordermails ook onder; boven dit getal wacht de ronde.
+ */
+const BUNDELGRENS_30D = 8500
+
+async function telSinds(sinds: string) {
+  const db = createServiceClient()
+  const basis = () => db.from('toestemming_ontvangers').select('email', { count: 'exact', head: true }).neq('groep', 'test').gte('verzonden_op', sinds)
+  const [v, b, k, a] = await Promise.all([
+    basis(),
+    basis().eq('status', 'bounce'),
+    basis().eq('status', 'klacht'),
+    basis().eq('status', 'afgemeld'),
+  ])
+  return { verstuurd: v.count ?? 0, bounces: b.count ?? 0, klachten: k.count ?? 0, afgemeld: a.count ?? 0 }
+}
+
+/** Past de stand aan als dat moet. Geeft een omschrijving terug bij een wijziging. */
+export async function pasTempoAan(): Promise<string | null> {
+  const inst = await leesInstellingen()
+  if (!inst.tempo_automatisch) return null
+  const sinds = inst.tempo_sinds || inst.meet_vanaf
+  if (!sinds) return null
+  const t = await telSinds(sinds)
+  const pct = (n: number) => (t.verstuurd > 0 ? (n / t.verstuurd) * 100 : 0)
+  const uren = (Date.now() - new Date(sinds).getTime()) / 3_600_000
+
+  let nieuw = inst.tempo_stap
+  let reden = ''
+  if (inst.tempo_stap > 0 && (t.klachten > 0 || (t.verstuurd >= 100 && pct(t.bounces) > OMLAAG_BOUNCE_PCT))) {
+    nieuw = 0
+    reden = t.klachten > 0 ? `${t.klachten} klacht sinds de vorige stap` : `${pct(t.bounces).toFixed(1)}% bounces sinds de vorige stap`
+  } else if (
+    inst.tempo_stap < TEMPO.length - 1 &&
+    uren >= OMHOOG.minUren &&
+    t.verstuurd >= OMHOOG.minVerstuurd &&
+    t.klachten === 0 &&
+    pct(t.bounces) < OMHOOG.maxBouncePct &&
+    pct(t.afgemeld) < OMHOOG.maxAfmeldPct
+  ) {
+    nieuw = inst.tempo_stap + 1
+    reden = `${t.verstuurd} verstuurd, ${pct(t.bounces).toFixed(1)}% bounces, 0 klachten, ${pct(t.afgemeld).toFixed(1)}% afgemeld`
+  }
+  if (nieuw === inst.tempo_stap) return null
+
+  const stand = TEMPO[nieuw]
+  const db = createServiceClient()
+  await db
+    .from('toestemming_instellingen')
+    .update({ tempo_stap: nieuw, tempo_sinds: new Date().toISOString(), plukgrootte: stand.plukgrootte, interval_minuten: stand.interval, updated_at: new Date().toISOString() })
+    .eq('id', 1)
+
+  const richting = nieuw > inst.tempo_stap ? 'verhoogd' : 'teruggezet'
+  const tekst = `Het tempo van de toestemmingsronde is ${richting} naar ${stand.omschrijving} (ongeveer ${stand.perDag} per dag).\n\nReden: ${reden}.\n\n${site()}/admin/toestemming`
+  await sendEmail({
+    From: 'MOSE Webshop <orders@mosewear.com>',
+    To: MELDING_AAN,
+    Subject: `Toestemmingsronde: tempo ${richting} naar ${stand.omschrijving}`,
+    HtmlBody: `<pre style="font-family:inherit;white-space:pre-wrap">${tekst}</pre>`,
+    TextBody: tekst,
+    Tag: 'toestemming-melding',
+  }).catch((e) => console.error('[toestemming] tempomelding mislukt', e))
+  return `tempo ${richting} naar ${stand.omschrijving}`
+}
+
+/** Alles wat er de laatste 30 dagen via Postmark is verstuurd, over alle streams. */
+async function verstuurdLaatste30Dagen(): Promise<number | null> {
+  const van = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+  let totaal = 0
+  for (const stream of ['outbound', 'broadcast', TOESTEMMING_STREAM]) {
+    const res = await postmark<{ Sent?: number }>(`/stats/outbound?messagestream=${stream}&fromdate=${van}`)
+    if (res.status !== 200) return null
+    totaal += res.data?.Sent ?? 0
+  }
+  return totaal
+}
+
 // ─── De mail ───────────────────────────────────────────────────────────────
 
 const TEKST = {
   nl: {
-    onderwerp: 'Wil je nog mail van MOSE?',
-    voorvertoning: 'Eén klik en je blijft op de lijst. Doe je niets, dan mailen we je niet meer.',
+    onderwerp: 'Je staat op de maillijst van MOSE',
+    voorvertoning: 'Af en toe nieuws over drops en restocks. Liever niet? Afmelden kan met één klik.',
     aanhef: 'Hoi,',
-    alinea1: 'Je adres staat op de maillijst van MOSE, het kledingmerk uit Groningen. We ruimen die lijst op en mailen voortaan alleen nog mensen die dat zelf willen.',
-    alinea2: 'Wil je horen over nieuwe drops en restocks? Bevestig het dan met de knop hieronder.',
-    knop: 'Ja, ik blijf op de lijst',
-    niets: 'Doe je niets, dan krijg je geen mail meer van ons. Liever meteen weg?',
-    afmelden: 'Meld je hier af',
+    alinea1: 'Je adres staat op de maillijst van MOSE, het kledingmerk uit Groningen. We sturen je af en toe een mail over nieuwe drops en restocks, en nooit vaker dan nodig.',
+    alinea2: 'Vind je dat goed? Bevestig het met de knop hieronder, dan weten we het zeker.',
+    knop: 'Ja, houd me op de hoogte',
+    niets: 'Liever geen mail meer van ons?',
+    afmelden: 'Meld je hier af, dan halen we je direct van de lijst',
     groet: 'Groet,',
     namen: 'Irma en Rick',
     voet: (email: string) => `Je krijgt deze mail eenmalig omdat ${email} op de maillijst van MOSE staat.`,
     uitschrijven: 'Uitschrijven',
   },
   en: {
-    onderwerp: 'Still want emails from MOSE?',
-    voorvertoning: 'One click and you stay on the list. Do nothing and we will stop emailing you.',
+    onderwerp: 'You are on the MOSE mailing list',
+    voorvertoning: 'Now and then news about drops and restocks. Rather not? Unsubscribe in one click.',
     aanhef: 'Hi,',
-    alinea1: 'Your address is on the mailing list of MOSE, the clothing brand from Groningen. We are cleaning up that list and from now on we only email people who want to hear from us.',
-    alinea2: 'Want to hear about new drops and restocks? Confirm with the button below.',
-    knop: 'Yes, keep me on the list',
-    niets: 'If you do nothing, you will not get any more emails from us. Rather leave now?',
-    afmelden: 'Unsubscribe here',
+    alinea1: 'Your address is on the mailing list of MOSE, the clothing brand from Groningen. Now and then we send an email about new drops and restocks, never more often than needed.',
+    alinea2: 'Is that fine with you? Confirm with the button below, so we know for sure.',
+    knop: 'Yes, keep me posted',
+    niets: 'Rather not hear from us?',
+    afmelden: 'Unsubscribe here and we will take you off the list right away',
     groet: 'Best,',
     namen: 'Irma and Rick',
     voet: (email: string) => `You are receiving this one-time email because ${email} is on the MOSE mailing list.`,
@@ -387,6 +487,17 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
   if (vooraf) {
     await stop(vooraf)
     return { pluk: null, verzonden: 0, overgeslagen: 0, mislukt: 0, gestopt: vooraf }
+  }
+
+  const tempo = await pasTempoAan()
+  if (tempo) console.log('[toestemming]', tempo)
+
+  const bundel = await verstuurdLaatste30Dagen()
+  if (bundel !== null) {
+    const inst = await leesInstellingen()
+    if (bundel + inst.plukgrootte > BUNDELGRENS_30D) {
+      return { pluk: null, verzonden: 0, overgeslagen: 0, mislukt: 0, gestopt: null, reden: `bundel: ${bundel} mails in 30 dagen, grens ${BUNDELGRENS_30D}` }
+    }
   }
 
   const { data: rijen, error } = await db.rpc('toestemming_claim_pluk', {

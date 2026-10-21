@@ -2451,10 +2451,10 @@
     "genericError": "Something went wrong. Taking you to the shop…"
   },
   "toestemming": {
-    "metaTitel": "Stay on the list? - MOSE",
-    "titel": "Stay on the list?",
-    "tekst": "Confirm that you want to keep getting emails from MOSE about new drops and restocks. You can unsubscribe at any time.",
-    "knop": "Yes, keep me on the list",
+    "metaTitel": "Stay in the loop? - MOSE",
+    "titel": "Stay in the loop?",
+    "tekst": "Confirm that you want emails from MOSE about new drops and restocks. You can unsubscribe at any time.",
+    "knop": "Yes, keep me posted",
     "bezig": "One moment",
     "klaarTitel": "Great, you are staying on the list",
     "klaarTekst": "You will hear from us when there is something new. No more often than that.",

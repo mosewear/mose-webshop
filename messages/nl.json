@@ -2451,10 +2451,10 @@
     "genericError": "Er ging iets mis. Je wordt doorgestuurd naar de shop…"
   },
   "toestemming": {
-    "metaTitel": "Blijf je op de lijst? - MOSE",
-    "titel": "Blijf je op de lijst?",
-    "tekst": "Bevestig dat je mail van MOSE wilt blijven krijgen over nieuwe drops en restocks. Afmelden kan altijd.",
-    "knop": "Ja, ik blijf op de lijst",
+    "metaTitel": "Blijf je op de hoogte? - MOSE",
+    "titel": "Blijf je op de hoogte?",
+    "tekst": "Bevestig dat je mail van MOSE wilt krijgen over nieuwe drops en restocks. Afmelden kan altijd.",
+    "knop": "Ja, houd me op de hoogte",
     "bezig": "Even geduld",
     "klaarTitel": "Top, je blijft op de lijst",
     "klaarTekst": "Je hoort van ons zodra er iets nieuws is. Niet vaker dan dat.",
