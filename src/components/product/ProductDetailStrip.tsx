@@ -78,11 +78,15 @@ export default function ProductDetailStrip({ productId, color, locale }: Props) 
       <h2 id="van-dichtbij" className="mb-6 font-display text-3xl uppercase md:mb-8 md:text-4xl">
         {t('title')}
       </h2>
-      {/* Telefoon twee per rij, tablet drie, breed scherm alles op één rij.
-          Met drie per rij op desktop werd elke foto groter dan een half scherm. */}
-      <ul className={`m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 md:gap-4 ${KOLOMMEN[Math.min(vanKleur.length, 6)] || ''}`}>
+      {/* Telefoon: één rij om te vegen, ruim twee beelden in beeld en een
+          derde aan de rand als hint. Onder elkaar werden zes vierkanten bijna
+          drie schermen. Tablet drie per rij, breed scherm alles op één rij. */}
+      <ul
+        className={`m-0 -mx-4 flex list-none snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 ${KOLOMMEN[Math.min(vanKleur.length, 6)] || ''}`}
+        aria-label={t('title')}
+      >
         {vanKleur.map((b, i) => (
-          <li key={b.id}>
+          <li key={b.id} className="w-[42%] shrink-0 snap-start md:w-auto">
             <button
               type="button"
               onClick={() => setOpen(i)}
@@ -94,7 +98,7 @@ export default function ProductDetailStrip({ productId, color, locale }: Props) 
                   src={b.url}
                   alt={en ? b.alt_en : b.alt_nl}
                   fill
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 260px"
+                  sizes="(max-width: 768px) 42vw, (max-width: 1024px) 33vw, 260px"
                   quality={90}
                   loading="lazy"
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
