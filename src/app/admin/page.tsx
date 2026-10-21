@@ -150,14 +150,47 @@ function computePeriodStats(orders: OrderRow[]): PeriodStats {
   }
 }
 
-function DeltaBadge({ current, previous, disabled }: { current: number; previous: number; disabled?: boolean }) {
+/**
+ * Verschil met de vorige periode.
+ *
+ * Was de vorige periode nul, dan is een percentage betekenisloos (1 en 40
+ * tegenover 0 gaven allebei "+100%"); dan staat er "nieuw". Bij cijfers waar
+ * meer slecht is (verlaten manden, onbetaalde orders) kleurt een stijging
+ * rood en een daling groen.
+ */
+function DeltaBadge({
+  current,
+  previous,
+  disabled,
+  hogerIsSlecht = false,
+}: {
+  current: number
+  previous: number
+  disabled?: boolean
+  hogerIsSlecht?: boolean
+}) {
   if (disabled) return null
   if (previous === 0 && current === 0) return null
-  const pct = previous === 0 ? 100 : ((current - previous) / previous) * 100
-  const positive = pct >= 0
+  if (previous === 0) {
+    return (
+      <span className="ml-2 inline-flex items-center text-xs font-bold text-gray-500" title="Vorige periode: 0">
+        nieuw
+      </span>
+    )
+  }
+  const pct = ((current - previous) / previous) * 100
+  if (Math.round(pct) === 0) {
+    return <span className="ml-2 inline-flex items-center text-xs font-bold text-gray-500">0%</span>
+  }
+  const omhoog = pct > 0
+  const goed = hogerIsSlecht ? !omhoog : omhoog
   return (
-    <span className={`inline-flex items-center text-xs font-bold ml-2 ${positive ? 'text-green-600' : 'text-red-600'}`}>
-      {positive ? '↑' : '↓'} {positive ? '+' : ''}{Math.round(pct)}%
+    <span
+      className={`ml-2 inline-flex items-center text-xs font-bold ${goed ? 'text-green-600' : 'text-red-600'}`}
+      title={`Vorige periode: ${Math.round(previous * 100) / 100}`}
+    >
+      {omhoog ? '↑ +' : '↓ '}
+      {Math.round(pct)}%
     </span>
   )
 }
@@ -204,7 +237,10 @@ export default function AdminDashboard() {
         range === 'all'
           ? ordersQuery
           : ordersQuery.gte('created_at', prevStart.toISOString()),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        // Klanten = unieke e-mailadressen met een betaalde order, met of zonder
+        // account. Het aantal accounts zei weinig: gasten telden niet mee,
+        // accounts zonder bestelling wel.
+        supabase.from('orders').select('email').in('payment_status', ['paid', 'refunded']),
         supabase.from('orders')
           .select('id', { count: 'exact', head: true })
           .eq('payment_status', 'paid')
@@ -229,7 +265,11 @@ export default function AdminDashboard() {
       const lowStockCount = variants.filter(
         (v: { stock_quantity: number }) => v.stock_quantity > 0 && v.stock_quantity < lowStockThreshold
       ).length
-      const totalCustomers = customersRes.count || 0
+      const totalCustomers = new Set(
+        ((customersRes.data as { email: string | null }[] | null) || [])
+          .map((o) => (o.email || '').trim().toLowerCase())
+          .filter(Boolean),
+      ).size
 
       const allOrders: OrderRow[] = ordersRes.data || []
       const currentOrders = range === 'all'
@@ -397,6 +437,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="text-lg md:text-xl text-gray-600 uppercase tracking-wider font-bold">Klanten</div>
+          <div className="mt-1 text-xs text-gray-500">Unieke kopers, met of zonder account</div>
         </Link>
       </div>
 
@@ -499,7 +540,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten Mandjes</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-amber-600">{stats.abandonedCarts}</span>
-              <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} disabled={dateRange === 'all'} />
+              <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} disabled={dateRange === 'all'} hogerIsSlecht />
             </div>
             <div className="text-xs text-gray-500 mt-2">Checkout gestart, niet betaald</div>
           </div>
@@ -508,7 +549,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Onbetaalde Orders</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-red-600">{stats.unpaidOrders}</span>
-              <DeltaBadge current={stats.unpaidOrders} previous={prevStats.unpaidOrders} disabled={dateRange === 'all'} />
+              <DeltaBadge current={stats.unpaidOrders} previous={prevStats.unpaidOrders} disabled={dateRange === 'all'} hogerIsSlecht />
             </div>
             <div className="text-xs text-gray-500 mt-2">Geen betaling ontvangen</div>
           </div>
@@ -517,7 +558,7 @@ export default function AdminDashboard() {
             <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Betalingen Pending</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-orange-600">{stats.pendingPayments}</span>
-              <DeltaBadge current={stats.pendingPayments} previous={prevStats.pendingPayments} disabled={dateRange === 'all'} />
+              <DeltaBadge current={stats.pendingPayments} previous={prevStats.pendingPayments} disabled={dateRange === 'all'} hogerIsSlecht />
             </div>
             <div className="text-xs text-gray-500 mt-2">Wachten op verwerking</div>
           </div>
