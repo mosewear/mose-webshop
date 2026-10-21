@@ -54,6 +54,8 @@ export interface Instellingen {
   gestopt_op: string | null
   stopreden: string | null
   brevo_lijst_id: number | null
+  /** Vanaf hier tellen de bounces voor de bouncegrens. Leeg: hele ronde. */
+  meet_vanaf: string | null
 }
 
 export interface Cijfers {
@@ -231,15 +233,32 @@ export async function controleerGrenzen(plukBounces = 0, opties: { afleverCheck?
       return `Postmark heeft ${verwacht - pm.verstuurd} van ${verwacht} mails niet verwerkt. Controleer abonnement en goedkeuring in Postmark.`
     }
   }
+  // Klachten over de hele ronde, met Postmarks eigen telling als vangnet.
   const klachten = Math.max(eigen.klachten, pm?.klachten ?? 0)
-  const bounces = Math.max(eigen.bounces, (pm?.bounces ?? 0) - testSignalen)
-  const pct = (n: number) => Math.round((n / verzonden) * 10000) / 100
-
-  if (klachten > 0 && pct(klachten) > inst.max_klacht_pct) {
-    return `${klachten} spamklacht${klachten === 1 ? '' : 'en'} op ${verzonden} verstuurd (${pct(klachten)}%, grens ${inst.max_klacht_pct}%)`
+  const pct = (n: number, van: number) => Math.round((n / van) * 10000) / 100
+  if (klachten > 0 && pct(klachten, verzonden) > inst.max_klacht_pct) {
+    return `${klachten} spamklacht${klachten === 1 ? '' : 'en'} op ${verzonden} verstuurd (${pct(klachten, verzonden)}%, grens ${inst.max_klacht_pct}%)`
   }
-  if (verzonden >= 100 && pct(bounces) > inst.max_bounce_pct) {
-    return `${bounces} bounces op ${verzonden} verstuurd (${pct(bounces)}%, grens ${inst.max_bounce_pct}%)`
+
+  // Bounces vanaf meet_vanaf, uit onze eigen tabel (de webhook vult die per
+  // bounce). Postmarks telling kan niet vanaf een tijdstip en zou de bounces
+  // van vóór de lijstcontrole van 21-10 blijven meetellen; zonder meet_vanaf
+  // geldt de oude regel over de hele ronde, met Postmark als vangnet.
+  let bounces: number
+  let basis: number
+  if (inst.meet_vanaf) {
+    const [{ count: v }, { count: b }] = await Promise.all([
+      db.from('toestemming_ontvangers').select('email', { count: 'exact', head: true }).neq('groep', 'test').gte('verzonden_op', inst.meet_vanaf),
+      db.from('toestemming_ontvangers').select('email', { count: 'exact', head: true }).neq('groep', 'test').eq('status', 'bounce').gte('verzonden_op', inst.meet_vanaf),
+    ])
+    basis = v ?? 0
+    bounces = b ?? 0
+  } else {
+    basis = verzonden
+    bounces = Math.max(eigen.bounces, (pm?.bounces ?? 0) - testSignalen)
+  }
+  if (basis >= 100 && pct(bounces, basis) > inst.max_bounce_pct) {
+    return `${bounces} bounces op ${basis} verstuurd (${pct(bounces, basis)}%, grens ${inst.max_bounce_pct}%)`
   }
   if (plukBounces >= inst.max_bounces_pluk) {
     return `${plukBounces} bounces in één pluk (grens ${inst.max_bounces_pluk})`

@@ -10,6 +10,15 @@ interface TableData {
   /** Eén zin over hoe het kledingstuk valt. Staat bovenaan, want dat is de
    *  vraag waarmee iemand deze maatgids opent: welke maat moet ik hebben. */
   fit_note?: string
+  /**
+   * Welke maat bij welk lichaam past: lengte en borstomtrek. Staat boven de
+   * kledingstuktabel. Zonder dit blok vergeleken klanten hun eigen arm met de
+   * mouwlengte van het kledingstuk (die door de verlaagde schouder korter
+   * is) en kwamen ze een of twee maten te groot uit.
+   */
+  body_guide?: { title: string; columns: string[]; rows: string[][]; note?: string }
+  /** Kop boven de kledingstuktabel, bijvoorbeeld "Maten van de hoodie, plat gemeten". */
+  garment_title?: string
 }
 
 interface SpecsData {
@@ -60,6 +69,39 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
             <p className="mb-3 sm:mb-4 border-l-4 border-brand-primary bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-black sm:text-sm">
               {content.fit_note}
             </p>
+          )}
+
+          {content.body_guide && (
+            <section className="mb-5 sm:mb-6" aria-labelledby="maat-lichaam">
+              <h3 id="maat-lichaam" className="mb-2 text-sm font-bold uppercase tracking-wider sm:text-base">
+                {content.body_guide.title}
+              </h3>
+              <table className="w-full border-2 border-black text-xs sm:text-sm">
+                <thead>
+                  <tr className="bg-brand-primary text-white">
+                    {content.body_guide.columns.map((col, i) => (
+                      <th key={i} className="px-3 py-2 text-left font-bold sm:px-4">{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {content.body_guide.rows.map((row, i) => (
+                    <tr key={i} className={`border-b-2 border-black ${i % 2 === 1 ? 'bg-gray-50' : ''}`}>
+                      {row.map((cell, j) => (
+                        <td key={j} className={`px-3 py-2 sm:px-4 ${j === 0 ? 'font-bold' : ''}`}>{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {content.body_guide.note && (
+                <p className="mt-2 text-xs leading-relaxed text-gray-700 sm:text-sm">{content.body_guide.note}</p>
+              )}
+            </section>
+          )}
+
+          {content.garment_title && (
+            <h3 className="mb-2 text-sm font-bold uppercase tracking-wider sm:text-base">{content.garment_title}</h3>
           )}
 
           {/* Scroll hint for mobile */}
