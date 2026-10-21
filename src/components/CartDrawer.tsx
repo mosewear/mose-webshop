@@ -20,6 +20,7 @@ import {
 import { buttonVariants } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { vertaalKleur } from '@/lib/kleurnaam'
+import LookCompleet, { type LookProduct, type LookVariant } from '@/components/cart/LookCompleet'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -57,7 +58,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [promoValue, setPromoValue] = useState(0)
   const [upsellProducts, setUpsellProducts] = useState<any[]>([])
   const [addingProduct, setAddingProduct] = useState<string | null>(null)
-  const [selectedUpsellSizes, setSelectedUpsellSizes] = useState<Record<string, string>>({})
   const [quantityDiscountTiers, setQuantityDiscountTiers] = useState<
     Record<string, ProductQtyTierRow[]>
   >({})
@@ -228,8 +228,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const isVideoBestand = (url?: string | null) => !!url && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url)
 
   /** Eerste bruikbare miniatuur van een product. */
-  const miniatuur = (product: { product_images?: { url: string }[] }) =>
-    product.product_images?.find((b) => !isVideoBestand(b?.url))?.url || '/placeholder-product.svg'
+  const miniatuur = (product: { product_images?: { url: string; is_primary?: boolean | null }[] }) => {
+    const beelden = (product.product_images || []).filter((b) => !isVideoBestand(b?.url))
+    return (beelden.find((b) => b.is_primary) || beelden[0])?.url || '/placeholder-product.svg'
+  }
 
   // Suggesties ophalen.
   //
@@ -258,7 +260,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           name_en,
           slug,
           base_price,
-          product_images!inner(url, is_primary),
+          sale_price,
+          product_images!inner(url, is_primary, color, position, media_type),
           product_variants!inner(id, sku, size, color, color_hex, stock_quantity, is_available)
         `)
         // Alleen wat ook in de shop staat. Zonder deze twee regels verscheen
@@ -266,8 +269,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         // tik in je mand leggen.
         .eq('is_active', true)
         .eq('status', 'active')
+        // Alle beelden, niet alleen het primaire: de suggestie toont de foto
+        // van de kleur die je kiest.
         .gt('product_variants.stock_quantity', 0)
-        .eq('product_images.is_primary', true)
         .eq('product_variants.is_available', true)
         // Was `.limit(3)` zonder ordening, dus de volgorde was willekeurig. Bij
         // een mand van €50 verscheen het horloge als eerste
@@ -296,16 +300,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         )
         setUpsellProducts((passend.length > 0 ? passend : (data as any[])).slice(0, 3))
         
-        // Set default selected size for each product (first available size)
-        const defaultSizes: Record<string, string> = {}
-        data.forEach(product => {
-          if (product.product_variants && product.product_variants.length > 0) {
-            // Get unique sizes and select first one
-            const sizes = [...new Set(product.product_variants.map((v: any) => v.size))].sort()
-            defaultSizes[product.id] = sizes[0] || ''
-          }
-        })
-        setSelectedUpsellSizes(defaultSizes)
       }
     }
 
@@ -503,26 +497,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     localStorage.removeItem('mose_promo_value')
   }
 
-  // Handle quick add from upsell
-  const handleQuickAdd = async (product: any) => {
-    const selectedSize = selectedUpsellSizes[product.id]
-    
-    if (!selectedSize) {
-      console.error('No size selected')
-      return
-    }
-    
+  // Toevoegen vanuit "Maak je look compleet". Kleur en maat komen uit de
+  // keuze in de rij; voorheen werd de variant alleen op maat gezocht, en
+  // kwam er dus een willekeurige kleur in de mand.
+  const handleQuickAdd = async (product: LookProduct, variant: LookVariant, beeld: string) => {
     setAddingProduct(product.id)
-    
-    // Find the variant that matches the selected size
-    const variant = product.product_variants.find((v: any) => v.size === selectedSize)
-    
-    if (!variant) {
-      console.error('Variant not found for selected size')
-      setAddingProduct(null)
-      return
-    }
-    
+    const prijs = product.sale_price && product.sale_price < product.base_price ? product.sale_price : product.base_price
+
     addItem({
       productId: product.id,
       variantId: variant.id,
@@ -531,9 +512,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       size: variant.size,
       color: variant.color || 'Zwart',
       colorHex: variant.color_hex || '#000000',
-      price: product.base_price,
+      price: prijs,
       quantity: 1,
-      image: miniatuur(product),
+      image: beeld,
       sku: variant.sku,
       stock: variant.stock_quantity,
     })
@@ -545,10 +526,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const contentId = catalogContentId(product.id, variant.color)
     trackPixelEvent('AddToCart', {
       content_ids: [contentId],
-      contents: [{ id: contentId, quantity: 1, item_price: Number(product.base_price) }],
+      contents: [{ id: contentId, quantity: 1, item_price: Number(prijs) }],
       content_name: `${getProductName(product)} - ${variant.size} - ${variant.color}`,
       content_type: 'product',
-      value: Number(product.base_price),
+      value: Number(prijs),
       currency: 'EUR',
       num_items: 1,
     })
@@ -556,8 +537,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     trackAddToCart({
       id: product.id,
       name: product.name,
-      category: product.categories?.name || 'uncategorized',
-      price: Number(product.base_price),
+      category: 'uncategorized',
+      price: Number(prijs),
       quantity: 1,
       color: variant.color,
       size: variant.size,
@@ -565,20 +546,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       sku: variant.sku,
       source: 'cart_upsell',
       sizeChosenByUser: true,
-      colorChosenByUser: false,
+      colorChosenByUser: true,
     })
 
-    // Remove from upsell list
+    // Even "Toegevoegd" laten zien, dan verdwijnt de suggestie: hij ligt nu in de mand.
+    await new Promise((r) => setTimeout(r, 900))
     setUpsellProducts(prev => prev.filter(p => p.id !== product.id))
-    
-    // Remove from selected sizes
-    setSelectedUpsellSizes(prev => {
-      const newSizes = { ...prev }
-      delete newSizes[product.id]
-      return newSizes
-    })
-    
-    setTimeout(() => setAddingProduct(null), 1000)
+    setAddingProduct(null)
   }
 
   if (!isOpen) return null
@@ -844,132 +818,31 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </button>
               </div>
 
-              {/* Upsell Products - "Maak je Look Compleet" */}
-              {upsellProducts.length > 0 && (
-                <div className="px-4 md:px-6 pb-4 border-t-2 border-gray-200 pt-4">
-                  <h3 className="font-display text-base uppercase mb-3 tracking-wide">
-                    {t('upsell.completeLook')}
-                  </h3>
-                  {/* Snappen per kaart, en de derde kaart loopt zichtbaar het
-                      beeld uit zodat je ziet dat er meer naast staat. Zonder die
-                      aanzet eindigt de rij precies op de rand en lijkt het één
-                      suggestie. */}
-                  <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
-                    {upsellProducts.map((product) => {
-                      const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']
-                      const availableSizes = [...new Set(product.product_variants.map((v: any) => v.size))] as string[]
-                      availableSizes.sort((a: string, b: string) => {
-                        const indexA = sizeOrder.indexOf(a.toUpperCase())
-                        const indexB = sizeOrder.indexOf(b.toUpperCase())
-                        
-                        // Both sizes in predefined order - sort by index
-                        if (indexA !== -1 && indexB !== -1) {
-                          return indexA - indexB
-                        }
-                        
-                        // Only A is in predefined order - A comes first
-                        if (indexA !== -1) return -1
-                        
-                        // Only B is in predefined order - B comes first
-                        if (indexB !== -1) return 1
-                        
-                        // Neither in predefined order - sort alphabetically
-                        return a.localeCompare(b)
-                      })
-                      const selectedSize = selectedUpsellSizes[product.id]
-                      
-                      return (
-                        <div
-                          key={product.id}
-                          className="flex-shrink-0 snap-start w-[280px] md:w-[320px] border-2 border-gray-200 hover:border-black transition-all p-2 group"
-                        >
-                          {/* Top Row: Image + Info */}
-                          <div className="flex items-start gap-3 mb-2">
-                            {/* Image */}
-                            <LocaleLink
-                              href={`/product/${product.slug}`}
-                              onClick={onClose}
-                              className="relative w-[60px] h-[80px] bg-gray-100 flex-shrink-0 overflow-hidden"
-                            >
-                              <Image
-                                src={miniatuur(product)}
-                                alt={getProductName(product)}
-                                fill
-                                sizes="60px"
-                                quality={90}
-                                className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.svg' }}
-                              />
-                            </LocaleLink>
-                            
-                            {/* Product Info + Price */}
-                            <div className="flex-1 min-w-0">
-                              <LocaleLink
-                                href={`/product/${product.slug}`}
-                                onClick={onClose}
-                                className="block text-xs font-semibold uppercase leading-tight mb-1 hover:text-brand-primary transition-colors line-clamp-2"
-                              >
-                                {getProductName(product)}
-                              </LocaleLink>
-                              <span className="text-brand-primary font-bold text-sm">
-                                {formatPrice(product.base_price, locale)}
-                              </span>
-                            </div>
-                          </div>
+              {/* "Maak je look compleet": compacte rijen, kleur en maat kiezen in de rij. */}
+              <LookCompleet
+                producten={upsellProducts as LookProduct[]}
+                mand={items.map((i) => ({ productId: i.productId, name: i.name, size: i.size, color: i.color }))}
+                locale={locale}
+                bezigMet={addingProduct}
+                onToevoegen={handleQuickAdd}
+                onNaarProduct={onClose}
+              />
 
-                          {/* Inline: Size Selector + Add Button */}
-                          <div className="flex items-center gap-2">
-                            {/* Size Buttons */}
-                            <div className="flex gap-1 flex-1">
-                              {availableSizes.map((size: string) => (
-                                <button
-                                  key={size}
-                                  onClick={() => setSelectedUpsellSizes(prev => ({ ...prev, [product.id]: size }))}
-                                  className={`
-                                    flex-1 min-h-[44px] px-2 text-[11px] font-bold uppercase border-2 transition-all
-                                    ${selectedSize === size
-                                      ? 'border-black bg-black text-white'
-                                      : 'border-gray-300 hover:border-black'
-                                    }
-                                  `}
-                                >
-                                  {size}
-                                </button>
-                              ))}
-                            </div>
-
-                            {/* Add to Cart Button */}
-                            <button
-                              onClick={() => handleQuickAdd(product)}
-                              disabled={addingProduct === product.id || !selectedSize}
-                              className={`
-                                flex-shrink-0 min-h-[44px] px-4 text-[11px] font-bold uppercase transition-all whitespace-nowrap
-                                ${addingProduct === product.id
-                                  ? 'bg-brand-primary text-white'
-                                  : !selectedSize
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-brand-primary text-white hover:bg-green-600'
-                                }
-                              `}
-                            >
-                              {addingProduct === product.id ? (
-                                <span className="flex items-center gap-1">
-                                  <span className="text-sm">✓</span>
-                                  OK
-                                </span>
-                              ) : !selectedSize ? (
-                                t('size')
-                              ) : (
-                                t('upsell.quickAdd')
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Drie zekerheden onder de suggesties. Ze vullen de ruimte boven het
+                  vaste totaalblok met wat een koper op dit moment wil weten, in
+                  plaats van een witte strook. */}
+              <ul className="m-0 list-none space-y-1.5 border-t-2 border-gray-200 px-4 py-4 text-[13px] text-gray-700 md:px-6">
+                {[
+                  freeShippingThreshold <= 0 && shippingCost <= 0 ? t('zekerheid.gratis') : t('zekerheid.gratisVanaf', { bedrag: formatBedragKaal(freeShippingThreshold, locale) }),
+                  t('zekerheid.bezorging'),
+                  t('zekerheid.retour', { dagen: returnDays }),
+                ].map((regel) => (
+                  <li key={regel} className="flex items-center gap-2">
+                    <span aria-hidden="true" className="font-bold text-brand-primary">✓</span>
+                    {regel}
+                  </li>
+                ))}
+              </ul>
 
             </div>
 

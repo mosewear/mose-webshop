@@ -135,3 +135,8 @@ BEGIN
 END;
 $$;
 REVOKE ALL ON FUNCTION public.toestemming_claim_pluk(boolean) FROM PUBLIC, anon, authenticated;
+
+-- Expliciet: alleen de service-rol (zie Supabase-wijziging van 30-10-2026,
+-- waarna nieuwe tabellen geen automatische rechten meer krijgen).
+GRANT ALL ON public.toestemming_ontvangers, public.toestemming_instellingen TO service_role;
+GRANT EXECUTE ON FUNCTION public.toestemming_cijfers(), public.toestemming_claim_pluk(boolean) TO service_role;

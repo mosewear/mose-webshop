@@ -416,7 +416,16 @@
       "add": "Toevoegen",
       "completeLook": "Maak je look compleet",
       "quickAdd": "Toevoegen",
-      "adding": "Toevoegen..."
+      "adding": "Toevoegen...",
+      "choose": "Kies maat en kleur",
+      "close": "Sluiten",
+      "color": "Kleur",
+      "sizeLabel": "Maat",
+      "soldOut": "uitverkocht",
+      "added": "Toegevoegd",
+      "addWith": "Voeg toe: {kleur}, {maat}",
+      "pickSize": "Kies een maat",
+      "pairsWith": "Combineert met je {kleur} {product}"
     },
     "staffel": {
       "label": "Staffelkorting",
@@ -427,7 +436,13 @@
     "onlyLeft": "Nog {count} op voorraad",
     "maxReached": "Dit is alles wat we hebben",
     "freeShippingReached": "Je krijgt gratis verzending!",
-    "clearCart": "Winkelmand legen"
+    "clearCart": "Winkelmand legen",
+    "zekerheid": {
+      "gratis": "Altijd gratis verzending",
+      "gratisVanaf": "Gratis verzending vanaf €{bedrag}",
+      "bezorging": "Voor 17:00 besteld? Meestal morgen in huis",
+      "retour": "{dagen} dagen bedenktijd, retour zonder gedoe"
+    }
   },
   "product": {
     "notFound": "Product niet gevonden",

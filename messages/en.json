@@ -416,7 +416,16 @@
       "add": "Add",
       "completeLook": "Complete your look",
       "quickAdd": "Add",
-      "adding": "Adding..."
+      "adding": "Adding...",
+      "choose": "Choose size and colour",
+      "close": "Close",
+      "color": "Colour",
+      "sizeLabel": "Size",
+      "soldOut": "sold out",
+      "added": "Added",
+      "addWith": "Add: {kleur}, {maat}",
+      "pickSize": "Choose a size",
+      "pairsWith": "Goes with your {kleur} {product}"
     },
     "staffel": {
       "label": "Volume discount",
@@ -427,7 +436,13 @@
     "onlyLeft": "Only {count} left",
     "maxReached": "That's all we have",
     "freeShippingReached": "Your shipping is free!",
-    "clearCart": "Empty cart"
+    "clearCart": "Empty cart",
+    "zekerheid": {
+      "gratis": "Always free shipping",
+      "gratisVanaf": "Free shipping from €{bedrag}",
+      "bezorging": "Order before 17:00 and it usually arrives tomorrow",
+      "retour": "{dagen} days to change your mind, easy returns"
+    }
   },
   "product": {
     "notFound": "Product not found",

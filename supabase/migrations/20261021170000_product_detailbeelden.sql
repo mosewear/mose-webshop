@@ -25,3 +25,10 @@ DROP POLICY IF EXISTS "detailbeelden lezen" ON public.product_detail_images;
 CREATE POLICY "detailbeelden lezen" ON public.product_detail_images FOR SELECT TO anon, authenticated USING (actief);
 DROP POLICY IF EXISTS "detailbeelden beheren" ON public.product_detail_images;
 CREATE POLICY "detailbeelden beheren" ON public.product_detail_images FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- Expliciete rechten. Vanaf 30-10-2026 geeft Supabase nieuwe tabellen in
+-- public geen automatische Data API-toegang meer; zonder deze regels zou
+-- de strip op een nieuwe database leeg blijven. RLS bepaalt welke rijen.
+GRANT SELECT ON public.product_detail_images TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.product_detail_images TO authenticated;
+GRANT ALL ON public.product_detail_images TO service_role;
