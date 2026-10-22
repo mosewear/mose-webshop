@@ -61,6 +61,7 @@ export interface Instellingen {
   tempo_stap: number
   tempo_sinds: string | null
   tempo_automatisch: boolean
+  postmark_bundel: number
 }
 
 export interface Cijfers {
@@ -96,7 +97,7 @@ export async function leesCijfers(): Promise<Cijfers> {
 
 // ─── Postmark ──────────────────────────────────────────────────────────────
 
-async function postmark<T>(pad: string, init: RequestInit = {}): Promise<{ status: number; data: T | null }> {
+export async function postmark<T>(pad: string, init: RequestInit = {}): Promise<{ status: number; data: T | null }> {
   const res = await fetch(`${POSTMARK_API}${pad}`, {
     ...init,
     headers: {
@@ -122,14 +123,19 @@ async function postmark<T>(pad: string, init: RequestInit = {}): Promise<{ statu
  * stopregels blind.
  */
 export async function zorgVoorPostmark(): Promise<{ ok: boolean; fout?: string }> {
-  const stream = await postmark<{ ID?: string }>(`/message-streams/${TOESTEMMING_STREAM}`)
+  return zorgVoorStream(TOESTEMMING_STREAM, 'Toestemmingsronde 2026', 'Eenmalige vraag aan de oude lijst of ze mail willen blijven ontvangen')
+}
+
+/** Broadcaststream plus webhook, idempotent. Gedeeld met de campagnes. */
+export async function zorgVoorStream(id: string, naam: string, omschrijving: string): Promise<{ ok: boolean; fout?: string }> {
+  const stream = await postmark<{ ID?: string }>(`/message-streams/${id}`)
   if (stream.status === 404 || (stream.status === 422 && !stream.data?.ID)) {
     const nieuw = await postmark<{ ID?: string; Message?: string }>('/message-streams', {
       method: 'POST',
       body: JSON.stringify({
-        ID: TOESTEMMING_STREAM,
-        Name: 'Toestemmingsronde 2026',
-        Description: 'Eenmalige vraag aan de oude lijst of ze mail willen blijven ontvangen',
+        ID: id,
+        Name: naam,
+        Description: omschrijving,
         MessageStreamType: 'Broadcasts',
         // Postmark beheert de afmeldingen: zij zetten de List-Unsubscribe-kop
         // (met één-klik) en melden afmeldingen via de webhook. Eigen afhandeling
@@ -147,7 +153,7 @@ export async function zorgVoorPostmark(): Promise<{ ok: boolean; fout?: string }
   if (!gebruiker || !wachtwoord) return { ok: false, fout: 'Webhook-inlog ontbreekt in Vercel' }
 
   const lijst = await postmark<{ Webhooks?: Array<{ ID: number; Url: string }> }>(
-    `/webhooks?MessageStream=${TOESTEMMING_STREAM}`,
+    `/webhooks?MessageStream=${id}`,
   )
   const url = `${site()}/api/postmark-webhook`
   if (!lijst.data?.Webhooks?.some((w) => w.Url === url)) {
@@ -155,7 +161,7 @@ export async function zorgVoorPostmark(): Promise<{ ok: boolean; fout?: string }
       method: 'POST',
       body: JSON.stringify({
         Url: url,
-        MessageStream: TOESTEMMING_STREAM,
+        MessageStream: id,
         HttpAuth: { Username: gebruiker, Password: wachtwoord },
         Triggers: {
           Bounce: { Enabled: true, IncludeContent: false },
@@ -292,10 +298,11 @@ const OMHOOG = { minUren: 12, minVerstuurd: 150, maxBouncePct: 2, maxAfmeldPct: 
 /** Terug naar stand 0 boven deze bounce of bij één klacht. */
 const OMLAAG_BOUNCE_PCT = 2.5
 /**
- * Alle streams samen in 30 dagen. Het abonnement is 10.000 per maand en
- * daar vallen de ordermails ook onder; boven dit getal wacht de ronde.
+ * Ruimte die altijd vrij blijft voor ordermails. De grens is de bundel uit
+ * de instellingen (postmark_bundel, standaard 10.000) min deze reserve; boven
+ * die grens wachten toestemmingsronde en campagnes.
  */
-const BUNDELGRENS_30D = 8500
+export const ORDERRESERVE = 1500
 
 async function telSinds(sinds: string) {
   const db = createServiceClient()
@@ -358,11 +365,13 @@ export async function pasTempoAan(): Promise<string | null> {
 }
 
 /** Alles wat er de laatste 30 dagen via Postmark is verstuurd, over alle streams. */
-async function verstuurdLaatste30Dagen(): Promise<number | null> {
+export async function verstuurdLaatste30Dagen(): Promise<number | null> {
   const van = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
   let totaal = 0
-  for (const stream of ['outbound', 'broadcast', TOESTEMMING_STREAM]) {
+  for (const stream of ['outbound', 'broadcast', TOESTEMMING_STREAM, 'campagnes']) {
     const res = await postmark<{ Sent?: number }>(`/stats/outbound?messagestream=${stream}&fromdate=${van}`)
+    // Een stream die nog niet bestaat telt als nul, niet als fout.
+    if (res.status === 422 || res.status === 404) continue
     if (res.status !== 200) return null
     totaal += res.data?.Sent ?? 0
   }
@@ -498,8 +507,9 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
   const bundel = await verstuurdLaatste30Dagen()
   if (bundel !== null) {
     const inst = await leesInstellingen()
-    if (bundel + inst.plukgrootte > BUNDELGRENS_30D) {
-      return { pluk: null, verzonden: 0, overgeslagen: 0, mislukt: 0, gestopt: null, reden: `bundel: ${bundel} mails in 30 dagen, grens ${BUNDELGRENS_30D}` }
+    const grens = (inst.postmark_bundel || 10000) - ORDERRESERVE
+    if (bundel + inst.plukgrootte > grens) {
+      return { pluk: null, verzonden: 0, overgeslagen: 0, mislukt: 0, gestopt: null, reden: `bundel: ${bundel} mails in 30 dagen, grens ${grens}` }
     }
   }
 
@@ -713,7 +723,7 @@ export async function postmarkBerichten(ids: string[]) {
 /** Postmarks eigen tellingen per stream, voor het dashboard. */
 export async function postmarkStreamCijfers() {
   const uit: Record<string, unknown> = {}
-  for (const stream of [TOESTEMMING_STREAM, 'outbound']) {
+  for (const stream of [TOESTEMMING_STREAM, 'outbound', 'campagnes']) {
     const res = await postmark<Record<string, number>>(`/stats/outbound?messagestream=${stream}`)
     uit[stream] = res.status === 200 ? res.data : { http: res.status }
   }

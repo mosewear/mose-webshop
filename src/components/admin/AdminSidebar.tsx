@@ -235,22 +235,14 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
       ),
     },
     {
-      name: 'Nieuwsbrief',
-      href: '/admin/newsletter',
+      // Eén plek voor lijst, campagnes, toestemmingsronde en resultaat; de
+      // abonneelijst staat daar onder een knop.
+      name: 'E-mailmarketing',
+      href: '/admin/email-marketing',
       allowedRoles: ['admin', 'manager'],
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Toestemmingsronde',
-      href: '/admin/toestemming',
-      allowedRoles: ['admin'],
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zM9 15l2 2 4-4" />
         </svg>
       ),
     },

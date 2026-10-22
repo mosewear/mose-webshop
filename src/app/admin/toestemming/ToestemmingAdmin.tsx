@@ -22,7 +22,7 @@ const pct = (n: number, van: number) => (van > 0 ? `${((n / van) * 100).toFixed(
 const tijd = (s: string | null) =>
   s ? new Date(s).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–'
 
-export default function ToestemmingAdmin() {
+export default function ToestemmingAdmin({ ingebed = false }: { ingebed?: boolean } = {}) {
   const [data, setData] = useState<Data | null>(null)
   const [bezig, setBezig] = useState<string | null>(null)
   const [melding, setMelding] = useState<string | null>(null)
@@ -72,10 +72,14 @@ export default function ToestemmingAdmin() {
   const dagenTeGaan = plukkenPerDag > 0 ? Math.ceil(c.wachtrij / (plukkenPerDag * i.plukgrootte)) : null
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 p-4 md:p-8">
+    <div className={ingebed ? 'space-y-6' : 'mx-auto max-w-6xl space-y-8 p-4 md:p-8'}>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl uppercase md:text-4xl">Toestemmingsronde</h1>
+          {ingebed ? (
+            <h2 className="font-display text-2xl uppercase md:text-3xl">Toestemmingsronde</h2>
+          ) : (
+            <h1 className="font-display text-3xl uppercase md:text-4xl">Toestemmingsronde</h1>
+          )}
           <p className="mt-1 text-sm text-gray-600">
             Eén mail aan de oude lijst: blijf je op de lijst? Stopt zichzelf bij te veel bounces of klachten.
           </p>
@@ -106,7 +110,7 @@ export default function ToestemmingAdmin() {
           ['Afgemeld', c.afgemeld, pct(c.afgemeld, c.verzonden)],
           ['Bounces', c.bounces, `${pct(c.bounces, c.verzonden)} · grens ${i.max_bounce_pct}%`],
           ['Klachten', c.klachten, `${pct(c.klachten, c.verzonden)} · grens ${i.max_klacht_pct}%`],
-          ['Mislukt', c.mislukt, 'niet verstuurd'],
+          ['Uit de rij gehaald', c.mislukt, 'ongeldig volgens Bouncer of eerder gebounced'],
           ['Zakelijk vastgehouden', c.vastgehouden, 'wacht op jouw akkoord'],
           ['Klaar over', dagenTeGaan === null ? '–' : `${dagenTeGaan} d`, `${plukkenPerDag} plukken per dag`],
         ].map(([label, waarde, sub]) => (
