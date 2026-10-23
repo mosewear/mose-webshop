@@ -174,6 +174,32 @@ export async function voegToeAanLijst(
   return { ok: true }
 }
 
+/**
+ * Bestaande contacten in bulk aan een lijst toevoegen (per 150, de grens van
+ * Brevo). Gebruikt door de toestemmingsronde: wie de mail kreeg en zich niet
+ * afmeldde, hoort op de opgeschoonde lijst. Geblokkeerde contacten blijven
+ * geblokkeerd; toevoegen heft dat niet op.
+ */
+export async function voegToeAanLijstBulk(
+  emails: string[],
+  lijstId: number
+): Promise<{ toegevoegd: number; fout?: string }> {
+  let toegevoegd = 0
+  for (let i = 0; i < emails.length; i += 150) {
+    const deel = emails.slice(i, i + 150)
+    const res = await roep<{ contacts?: { success?: string[] } }>(`/contacts/lists/${lijstId}/contacts/add`, {
+      methode: 'POST',
+      body: { emails: deel },
+    })
+    if (!res.ok) {
+      console.error(`[Brevo] Bulk toevoegen aan lijst ${lijstId} mislukt: ${res.fout}`)
+      return { toegevoegd, fout: res.fout }
+    }
+    toegevoegd += res.data?.contacts?.success?.length ?? 0
+  }
+  return { toegevoegd }
+}
+
 /** Haalt de lijsten op, zodat de admin kan tonen waar contacten belanden. */
 export async function haalLijsten(): Promise<
   { ok: boolean; lijsten?: Array<{ id: number; name: string; aantal: number }>; fout?: string }

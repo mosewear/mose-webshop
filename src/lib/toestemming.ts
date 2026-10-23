@@ -28,7 +28,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendEmail, htmlToText } from '@/lib/postmark'
 import { isEmailSuppressed } from '@/lib/email-suppression'
-import { schrijfContactUit, voegToeAanLijst } from '@/lib/brevo'
+import { schrijfContactUit, voegToeAanLijst, voegToeAanLijstBulk } from '@/lib/brevo'
 
 export const TOESTEMMING_STREAM = 'toestemming-2026'
 const AFZENDER = 'Irma en Rick van MOSE <info@mosewear.com>'
@@ -526,6 +526,7 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
   let verzonden = 0
   let overgeslagen = 0
   let mislukt = 0
+  const voorBrevo: string[] = []
 
   for (const r of lijst) {
     // Bounces en klachten op de transactionele stream tellen ook.
@@ -542,6 +543,7 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
         .update({ status: 'verzonden', verzonden_op: new Date().toISOString(), postmark_id: res.data?.id ?? null })
         .eq('email', r.email)
       verzonden++
+      voorBrevo.push(r.email)
     } else {
       const fout = res.error as { ErrorCode?: number; Message?: string; message?: string } | undefined
       const code = fout?.ErrorCode
@@ -558,6 +560,14 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
     }
     // Rustig tempo binnen de pluk; geen salvo van vijftig in één seconde.
     await new Promise((r2) => setTimeout(r2, 250))
+  }
+
+  // Wie de toestemmingsmail kreeg, hoort op de opgeschoonde Brevo-lijst
+  // (afmeldmodel, keuze Rick 21-10). Afmelden, bounces en klachten blokkeren
+  // het contact daarna in Brevo; dat houdt de lijst schoon.
+  const inst = await leesInstellingen()
+  if (inst.brevo_lijst_id && voorBrevo.length > 0) {
+    await voegToeAanLijstBulk(voorBrevo, inst.brevo_lijst_id).catch((e) => console.error('[toestemming] Brevo-lijst', e))
   }
 
   return { pluk, verzonden, overgeslagen, mislukt, gestopt: null }
@@ -579,7 +589,8 @@ export async function verwerkSignaal(email: string, soort: 'bounce' | 'klacht' |
     .select('pluk, groep')
   if (!data || data.length === 0) return
 
-  if (soort !== 'bounce') await schrijfContactUit(adres)
+  // Ook bij een harde bounce: een dood adres hoort niet op de Brevo-lijst.
+  await schrijfContactUit(adres)
 
   if (data[0].groep === 'test') return
   const { count } = await db
