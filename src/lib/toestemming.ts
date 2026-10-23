@@ -271,8 +271,11 @@ export async function controleerGrenzen(plukBounces = 0, opties: { afleverCheck?
   if (basis >= 100 && pct(bounces, basis) > inst.max_bounce_pct) {
     return `${bounces} bounces op ${basis} verstuurd (${pct(bounces, basis)}%, grens ${inst.max_bounce_pct}%)`
   }
-  if (plukBounces >= inst.max_bounces_pluk) {
-    return `${plukBounces} bounces in één pluk (grens ${inst.max_bounces_pluk})`
+  // Grens per pluk schaalt mee met de plukgrootte: 3 was bedoeld voor plukken
+  // van 50 (6 %); bij 125 was het 2,4 % en stopte de ronde op gewone bounces.
+  const plukGrens = Math.max(inst.max_bounces_pluk, Math.ceil(inst.plukgrootte * 0.04))
+  if (plukBounces >= plukGrens) {
+    return `${plukBounces} bounces in één pluk (grens ${plukGrens})`
   }
   return null
 }
@@ -606,6 +609,15 @@ export async function verwerkSignaal(email: string, soort: 'bounce' | 'klacht' |
   await schrijfContactUit(adres)
 
   if (data[0].groep === 'test') return
+  // De plukregel geldt alleen voor de laatste pluk. Een late bounce uit een
+  // oudere pluk zette de ronde anders opnieuw stil nadat hij net weer was
+  // gestart (23-10, 17:14); de totale bouncegrens telt hem wel gewoon mee.
+  const inst = await leesInstellingen()
+  if (data[0].pluk !== inst.laatste_pluk) {
+    const reden = await controleerGrenzen(0)
+    if (reden) await stop(reden)
+    return
+  }
   const { count } = await db
     .from('toestemming_ontvangers')
     .select('email', { count: 'exact', head: true })
