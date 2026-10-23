@@ -340,7 +340,7 @@ export async function GET(req: NextRequest) {
             inStoreState,
             returnItems: dummyData.returnItems,
             refundAmount: dummyData.refundAmount,
-            labelCost: 7.87,
+            labelCost: 6.95,
             t,
             siteUrl,
             contactEmail,

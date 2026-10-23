@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
     const settings = await getSiteSettings()
     const returnDays = settings.return_days || 14
     const returnLabelCostExclBtw = settings.return_label_cost_excl_btw || 6.5
-    const returnLabelCostInclBtw = settings.return_label_cost_incl_btw || 7.87
+    const returnLabelCostInclBtw = settings.return_label_cost_incl_btw || 6.95
 
     if (!force && order.delivered_at) {
       const deliveredDate = new Date(order.delivered_at)

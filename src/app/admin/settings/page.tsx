@@ -43,8 +43,8 @@ export default function SettingsPage() {
 
   // Returns settings
   const [returnsAutoApprove, setReturnsAutoApprove] = useState(true)
-  const [returnLabelCostExclBtw, setReturnLabelCostExclBtw] = useState('6.50')
-  const [returnLabelCostInclBtw, setReturnLabelCostInclBtw] = useState('7.87')
+  const [returnLabelCostExclBtw, setReturnLabelCostExclBtw] = useState('5.74')
+  const [returnLabelCostInclBtw, setReturnLabelCostInclBtw] = useState('6.95')
 
   // Preview images notice
   const [showPreviewImagesNotice, setShowPreviewImagesNotice] = useState(false)
@@ -921,7 +921,7 @@ export default function SettingsPage() {
               <p className="font-bold mb-1">ℹ️ Hoe werkt het?</p>
               <p className="mb-2">
                 <strong>Ingeschakeld:</strong> Retouraanvragen worden direct goedgekeurd en de klant kan meteen 
-                betalen voor het retourlabel (€7,87). Dit geeft de snelste flow.
+                betalen voor het retourlabel (€{returnLabelCostInclBtw.replace('.', ',')}). Dit geeft de snelste flow.
               </p>
               <p>
                 <strong>Uitgeschakeld:</strong> Retouraanvragen blijven in afwachting tot jij ze goedkeurt 
@@ -988,7 +988,7 @@ export default function SettingsPage() {
                       }
                     }}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors bg-gray-50"
-                    placeholder="7.87"
+                    placeholder="6.95"
                     readOnly={false}
                   />
                   <p className="text-[10px] sm:text-xs text-gray-500 mt-1">

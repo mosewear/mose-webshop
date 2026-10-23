@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     
     // Get return label costs from settings
     const returnLabelCostExclBtw = settings.return_label_cost_excl_btw || 6.50
-    const returnLabelCostInclBtw = settings.return_label_cost_incl_btw || 7.87
+    const returnLabelCostInclBtw = settings.return_label_cost_incl_btw || 6.95
     
     if (order.delivered_at) {
       const deliveredDate = new Date(order.delivered_at)

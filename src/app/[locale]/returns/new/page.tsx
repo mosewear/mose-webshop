@@ -196,6 +196,9 @@ export default function NewReturnPage() {
   // bestellingen had die in aanmerking kwamen. Dat is een retour weigeren waar
   // de klant volgens onze eigen voorwaarden recht op heeft.
   const [returnDays, setReturnDays] = useState(30)
+  // Labelkosten uit de instellingen. Stond hier als vaste €7,87, terwijl het
+  // label €6,95 kost; de klant zag dus een ander bedrag dan hij betaalde.
+  const [labelKosten, setLabelKosten] = useState(6.95)
   
   const [selectedItems, setSelectedItems] = useState<Record<string, {
     quantity: number
@@ -212,6 +215,8 @@ export default function NewReturnPage() {
       .then((instellingen) => {
         const dagen = Number(instellingen?.return_days)
         if (Number.isFinite(dagen) && dagen > 0) setReturnDays(dagen)
+        const kosten = Number(instellingen?.return_label_cost_incl_btw)
+        if (Number.isFinite(kosten) && kosten > 0) setLabelKosten(kosten)
       })
       .catch(() => {
         // Instellingen niet bereikbaar: dan blijft de 30 uit de beginwaarde
@@ -723,7 +728,7 @@ export default function NewReturnPage() {
             </div>
             <div className="flex justify-between text-sm text-gray-400">
               <span>{t('labelCost')}</span>
-              <span>€7,87</span>
+              <span>{formatBedrag(labelKosten, locale)}</span>
             </div>
             <div className="border-t-2 border-gray-600 pt-2 mt-2">
               <div className="flex justify-between text-xl font-display">
