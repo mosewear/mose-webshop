@@ -295,8 +295,15 @@ export const TEMPO = [
 // binnen te laten komen, kort genoeg om op een gecontroleerde lijst niet een
 // hele dag te wachten.
 const OMHOOG = { minUren: 12, minVerstuurd: 150, maxBouncePct: 2, maxAfmeldPct: 5 }
-/** Terug naar stand 0 boven deze bounce of bij één klacht. */
+/** Terug naar stand 0 boven deze bounce, of boven OMLAAG_KLACHT_PCT klachten. */
 const OMLAAG_BOUNCE_PCT = 2.5
+/**
+ * Klachtpercentage over de hele ronde sinds de lijstcontrole (meet_vanaf),
+ * niet over de laatste stap. Eén losse klacht kort na een stap gaf anders
+ * meteen 1 % en zette het tempo terug (23-10: 1 klacht op 2.400 = 0,04 %).
+ * De noodstop blijft bij max_klacht_pct (0,1 %).
+ */
+const OMLAAG_KLACHT_PCT = 0.05
 /**
  * Ruimte die altijd vrij blijft voor ordermails. De grens is de bundel uit
  * de instellingen (postmark_bundel, standaard 10.000) min deze reserve; boven
@@ -326,11 +333,17 @@ export async function pasTempoAan(): Promise<string | null> {
   const pct = (n: number) => (t.verstuurd > 0 ? (n / t.verstuurd) * 100 : 0)
   const uren = (Date.now() - new Date(sinds).getTime()) / 3_600_000
 
+  const ronde = inst.meet_vanaf ? await telSinds(inst.meet_vanaf) : t
+  const klachtPct = ronde.verstuurd > 0 ? (ronde.klachten / ronde.verstuurd) * 100 : 0
+
   let nieuw = inst.tempo_stap
   let reden = ''
-  if (inst.tempo_stap > 0 && (t.klachten > 0 || (t.verstuurd >= 100 && pct(t.bounces) > OMLAAG_BOUNCE_PCT))) {
+  const teveelKlachten = ronde.klachten > 0 && klachtPct > OMLAAG_KLACHT_PCT
+  if (inst.tempo_stap > 0 && (teveelKlachten || (t.verstuurd >= 100 && pct(t.bounces) > OMLAAG_BOUNCE_PCT))) {
     nieuw = 0
-    reden = t.klachten > 0 ? `${t.klachten} klacht sinds de vorige stap` : `${pct(t.bounces).toFixed(1)}% bounces sinds de vorige stap`
+    reden = teveelKlachten
+      ? `${ronde.klachten} klacht${ronde.klachten === 1 ? '' : 'en'} op ${ronde.verstuurd} sinds de lijstcontrole (${klachtPct.toFixed(2)}%)`
+      : `${pct(t.bounces).toFixed(1)}% bounces sinds de vorige stap`
   } else if (
     inst.tempo_stap < TEMPO.length - 1 &&
     uren >= OMHOOG.minUren &&
