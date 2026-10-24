@@ -15,6 +15,7 @@
  *                    later zelf naar de site getypt)
  */
 
+import { unstable_cache } from 'next/cache'
 import { roep } from '@/lib/brevo'
 import { createServiceClient } from '@/lib/supabase/service'
 
@@ -170,7 +171,7 @@ async function siteCijfers(utm: string, verzonden: Date | null) {
   return { bezoekers: sessies.size, perPlek, ordersNaKlik, ordersOntvangers }
 }
 
-export async function brevoCampagneOverzicht(): Promise<{ campagnes: BrevoCampagne[]; fout?: string }> {
+async function haalOverzicht(): Promise<{ campagnes: BrevoCampagne[]; fout?: string }> {
   const lijst = await roep<{ campaigns?: BrevoCampagneRuw[] }>('/emailCampaigns?limit=20&sort=desc&excludeHtmlContent=true')
   if (!lijst.ok) return { campagnes: [], fout: lijst.fout }
 
@@ -220,3 +221,10 @@ export async function brevoCampagneOverzicht(): Promise<{ campagnes: BrevoCampag
 
   return { campagnes }
 }
+
+/**
+ * Vijf minuten gebufferd. De admin ververst elke minuut, en Brevo begrenst
+ * het opvragen van campagnes: op 24-10 gaf dat endpoint na een reeks
+ * aanroepen een uur lang 429.
+ */
+export const brevoCampagneOverzicht = unstable_cache(haalOverzicht, ['brevo-campagne-overzicht'], { revalidate: 300 })
