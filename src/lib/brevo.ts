@@ -262,7 +262,7 @@ export async function controleerKoppeling(): Promise<{
 // Bijgewerkt bij elke betaalde order (fulfill-paid-order), bij elke nieuwe
 // inschrijving (zetContact) en elke nacht voor de hele lijst
 // (/api/cron/brevo-klanten), wat ook nieuwe contacten en gemiste updates
-// rechtzet.
+// rechtzet. Die nachtronde blokkeert ook wie bij ons is uitgesloten.
 
 export interface Klantgegevens {
   KLANT: boolean
@@ -314,15 +314,39 @@ export async function werkKlantgegevensBij(email: string): Promise<void> {
   if (!res.ok && res.status !== 404) console.error(`[Brevo] Klantgegevens ${adres} niet bijgewerkt: ${res.fout}`)
 }
 
-/** Zet de klantgegevens op ieder contact in de nieuwsbrieflijst. */
-export async function synchroniseerKlantgegevens(): Promise<{ contacten: number; klanten: number; mislukt: number }> {
+/** Iedereen die bij ons is uitgesloten: afgemeld, klacht, bounce, onderdrukt. */
+async function uitgeslotenAdressen(): Promise<Set<string>> {
+  const db = createServiceClient()
+  const uit = new Set<string>()
+  const bronnen = [
+    () => db.from('email_suppressions').select('email'),
+    () => db.from('newsletter_subscribers').select('email').eq('status', 'unsubscribed'),
+    () => db.from('toestemming_ontvangers').select('email').in('status', ['afgemeld', 'klacht', 'bounce']),
+  ]
+  for (const bron of bronnen) {
+    for (let van = 0; ; van += 1000) {
+      const { data, error } = await bron().range(van, van + 999)
+      if (error) throw new Error(`uitsluitingen lezen: ${error.message}`)
+      for (const r of data || []) if (r.email) uit.add(String(r.email).trim().toLowerCase())
+      if (!data || data.length < 1000) break
+    }
+  }
+  return uit
+}
+
+/**
+ * Elke nacht over de hele nieuwsbrieflijst: zet de klantgegevens goed en
+ * blokkeer wie bij ons is uitgesloten maar in Brevo nog actief staat. Dat
+ * laatste is een vangnet; normaal blokkeren de webhooks dat direct.
+ */
+export async function synchroniseerKlantgegevens(): Promise<{ contacten: number; klanten: number; mislukt: number; geblokkeerd: number }> {
   const lijst = brevoLijstId()
   if (!lijst) throw new Error('BREVO_LIST_ID ontbreekt')
   const klanten = await alleKlanten()
 
-  const contacten: Array<{ email: string; attributes?: Record<string, unknown> }> = []
+  const contacten: Array<{ email: string; emailBlacklisted?: boolean; attributes?: Record<string, unknown> }> = []
   for (let offset = 0; ; offset += 500) {
-    const res = await roep<{ contacts?: Array<{ email: string; attributes?: Record<string, unknown> }> }>(
+    const res = await roep<{ contacts?: Array<{ email: string; emailBlacklisted?: boolean; attributes?: Record<string, unknown> }> }>(
       `/contacts/lists/${lijst}/contacts?limit=500&offset=${offset}`,
     )
     if (!res.ok) throw new Error(`lijst lezen: ${res.fout}`)
@@ -353,6 +377,16 @@ export async function synchroniseerKlantgegevens(): Promise<{ contacten: number;
       console.error(`[Brevo] Klantgegevens batch ${i / 100 + 1} mislukt: ${res.fout}`)
     }
   }
+  const uitgesloten = await uitgeslotenAdressen()
+  let geblokkeerd = 0
+  for (const c of contacten) {
+    if (c.emailBlacklisted || !uitgesloten.has(c.email.toLowerCase())) continue
+    const r = await schrijfContactUit(c.email)
+    if (r.ok) geblokkeerd++
+    else mislukt++
+  }
+  if (geblokkeerd > 0) console.warn(`[Brevo] ${geblokkeerd} uitgesloten adressen stonden nog actief en zijn nu geblokkeerd`)
+
   const klantenOpLijst = contacten.filter((c) => klanten.has(c.email.toLowerCase())).length
-  return { contacten: updates.length, klanten: klantenOpLijst, mislukt }
+  return { contacten: updates.length, klanten: klantenOpLijst, mislukt, geblokkeerd }
 }

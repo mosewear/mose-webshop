@@ -4,7 +4,8 @@ import { synchroniseerKlantgegevens } from '@/lib/brevo'
 /**
  * Elke nacht. Zet KLANT, AANTAL_ORDERS en LAATSTE_BESTELLING op ieder contact
  * in de Brevo-nieuwsbrieflijst. Bij een betaalde order gebeurt dat al direct;
- * dit vangt nieuwe contacten en gemiste updates op.
+ * dit vangt nieuwe contacten en gemiste updates op, en blokkeert wie bij ons
+ * is uitgesloten maar in Brevo nog actief staat.
  */
 export const runtime = 'nodejs'
 export const maxDuration = 300

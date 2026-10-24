@@ -30,6 +30,7 @@ import { addSuppression, type SuppressionReason } from '@/lib/email-suppression'
 import { createServiceClient } from '@/lib/supabase/service'
 import { TOESTEMMING_STREAM, verwerkSignaal } from '@/lib/toestemming'
 import { CAMPAGNE_STREAM, verwerkCampagneSignaal } from '@/lib/campagnes'
+import { schrijfContactUit } from '@/lib/brevo'
 
 export const runtime = 'nodejs'
 
@@ -225,6 +226,10 @@ export async function POST(req: NextRequest) {
           id: p.ID,
         },
       })
+      // Ook in Brevo blokkeren, uit welke stream de bounce ook komt. Zonder
+      // dit stonden op 24-10 adressen die bij Postmark bouncten nog actief
+      // op de campagnelijst.
+      await schrijfContactUit(p.Email).catch(() => {})
       return NextResponse.json({ ok: true, suppressed: p.Email, reason })
     }
 
@@ -245,6 +250,7 @@ export async function POST(req: NextRequest) {
           id: p.ID,
         },
       })
+      await schrijfContactUit(p.Email).catch(() => {})
       return NextResponse.json({ ok: true, suppressed: p.Email })
     }
 
@@ -266,6 +272,8 @@ export async function POST(req: NextRequest) {
             changed_at: p.ChangedAt,
           },
         })
+        // Afmelden via de knop van Postmark geldt ook voor de campagnes in Brevo.
+        await schrijfContactUit(email).catch(() => {})
         return NextResponse.json({ ok: true, suppressed: email })
       }
       // Re-subscribed via Postmark dashboard — clear the local
