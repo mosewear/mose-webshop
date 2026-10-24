@@ -14,6 +14,8 @@
  * mislukte synchronisatie wordt gelogd, niet doorgegeven aan de bezoeker.
  */
 
+import { createServiceClient } from '@/lib/supabase/service'
+
 const BASIS = 'https://api.brevo.com/v3'
 
 /** Contacten die we nooit wegschrijven, ongeacht wat er binnenkomt. */
@@ -105,6 +107,7 @@ export async function zetContact(
   }
 
   const lijst = brevoLijstId()
+  const klant = await klantgegevens(email).catch(() => null)
   const res = await roep('/contacts', {
     methode: 'POST',
     body: {
@@ -115,6 +118,7 @@ export async function zetContact(
         TAAL: (contact.locale || 'nl').toUpperCase(),
         BRON: contact.source || 'onbekend',
         ...(contact.voornaam ? { VOORNAAM: contact.voornaam } : {}),
+        ...(klant || {}),
       },
     },
   })
@@ -246,4 +250,109 @@ export async function controleerKoppeling(): Promise<{
     account: account.data?.companyName || account.data?.email,
     lijstNaam,
   }
+}
+
+// ─── Klantgegevens ─────────────────────────────────────────────────────────
+//
+// Drie velden op elk contact, zodat je in Brevo kunt segmenteren: kopers
+// anders mailen dan niet-kopers, of wie net iets kocht een week overslaan.
+//   KLANT               ja of nee
+//   AANTAL_ORDERS       betaalde orders (ook als er later iets terugging)
+//   LAATSTE_BESTELLING  datum van de laatste betaalde order
+// Bijgewerkt bij elke betaalde order (fulfill-paid-order), bij elke nieuwe
+// inschrijving (zetContact) en elke nacht voor de hele lijst
+// (/api/cron/brevo-klanten), wat ook nieuwe contacten en gemiste updates
+// rechtzet.
+
+export interface Klantgegevens {
+  KLANT: boolean
+  AANTAL_ORDERS: number
+  LAATSTE_BESTELLING?: string
+}
+
+const GEEN_KLANT: Klantgegevens = { KLANT: false, AANTAL_ORDERS: 0 }
+
+/** Alle kopers met hun gegevens, op kleine letters. */
+async function alleKlanten(): Promise<Map<string, Klantgegevens>> {
+  const db = createServiceClient()
+  const klanten = new Map<string, Klantgegevens>()
+  for (let van = 0; ; van += 1000) {
+    const { data, error } = await db
+      .from('orders')
+      .select('email, created_at')
+      .in('payment_status', ['paid', 'refunded'])
+      .order('created_at')
+      .range(van, van + 999)
+    if (error) throw new Error(`orders lezen: ${error.message}`)
+    for (const o of data || []) {
+      const email = (o.email || '').trim().toLowerCase()
+      if (!email) continue
+      const k = klanten.get(email) || { KLANT: true, AANTAL_ORDERS: 0 }
+      k.AANTAL_ORDERS++
+      // Oplopend gesorteerd, dus de laatste die langskomt is de nieuwste.
+      k.LAATSTE_BESTELLING = new Date(o.created_at).toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
+      klanten.set(email, k)
+    }
+    if (!data || data.length < 1000) break
+  }
+  return klanten
+}
+
+export async function klantgegevens(email: string): Promise<Klantgegevens> {
+  const klanten = await alleKlanten()
+  return klanten.get(email.trim().toLowerCase()) || GEEN_KLANT
+}
+
+/** Na een betaalde order. Bestaat het contact niet in Brevo, dan gebeurt er niets. */
+export async function werkKlantgegevensBij(email: string): Promise<void> {
+  const adres = email.trim().toLowerCase()
+  if (!adres || !isBrevoGeconfigureerd()) return
+  const res = await roep(`/contacts/${encodeURIComponent(adres)}`, {
+    methode: 'PUT',
+    body: { attributes: await klantgegevens(adres) },
+  })
+  if (!res.ok && res.status !== 404) console.error(`[Brevo] Klantgegevens ${adres} niet bijgewerkt: ${res.fout}`)
+}
+
+/** Zet de klantgegevens op ieder contact in de nieuwsbrieflijst. */
+export async function synchroniseerKlantgegevens(): Promise<{ contacten: number; klanten: number; mislukt: number }> {
+  const lijst = brevoLijstId()
+  if (!lijst) throw new Error('BREVO_LIST_ID ontbreekt')
+  const klanten = await alleKlanten()
+
+  const contacten: Array<{ email: string; attributes?: Record<string, unknown> }> = []
+  for (let offset = 0; ; offset += 500) {
+    const res = await roep<{ contacts?: Array<{ email: string; attributes?: Record<string, unknown> }> }>(
+      `/contacts/lists/${lijst}/contacts?limit=500&offset=${offset}`,
+    )
+    if (!res.ok) throw new Error(`lijst lezen: ${res.fout}`)
+    const deel = res.data?.contacts || []
+    contacten.push(...deel)
+    if (deel.length < 500) break
+  }
+
+  // Alleen versturen wat afwijkt; meestal is dat een handvol.
+  const updates = contacten
+    .map((c) => {
+      const email = c.email.toLowerCase()
+      const nieuw = klanten.get(email) || GEEN_KLANT
+      const oud = c.attributes || {}
+      const gelijk =
+        oud.KLANT === nieuw.KLANT &&
+        Number(oud.AANTAL_ORDERS ?? -1) === nieuw.AANTAL_ORDERS &&
+        String(oud.LAATSTE_BESTELLING ?? '').slice(0, 10) === (nieuw.LAATSTE_BESTELLING ?? '')
+      return gelijk ? null : { email, attributes: nieuw }
+    })
+    .filter((u): u is { email: string; attributes: Klantgegevens } => u !== null)
+
+  let mislukt = 0
+  for (let i = 0; i < updates.length; i += 100) {
+    const res = await roep('/contacts/batch', { methode: 'POST', body: { contacts: updates.slice(i, i + 100) } })
+    if (!res.ok) {
+      mislukt += Math.min(100, updates.length - i)
+      console.error(`[Brevo] Klantgegevens batch ${i / 100 + 1} mislukt: ${res.fout}`)
+    }
+  }
+  const klantenOpLijst = contacten.filter((c) => klanten.has(c.email.toLowerCase())).length
+  return { contacten: updates.length, klanten: klantenOpLijst, mislukt }
 }
