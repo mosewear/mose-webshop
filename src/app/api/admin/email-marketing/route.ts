@@ -3,13 +3,14 @@ import { requireAdmin } from '@/lib/supabase/admin'
 import { createServiceClient } from '@/lib/supabase/service'
 import { leesCijfers, postmarkStreamCijfers } from '@/lib/toestemming'
 import { campagneOverzicht, verstuurCampagneTest } from '@/lib/campagnes'
+import { brevoCampagneOverzicht } from '@/lib/brevo-campagnes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
 /**
  * Alles voor het e-mailmarketingoverzicht in één keer: de lijst, de
- * campagnes met verkeer en orders per verzendmoment, het verkeer uit e-mail
+ * Brevo-campagnes, de Postmark-campagnes met verkeer en orders per verzendmoment, het verkeer uit e-mail
  * per dag, en Postmarks eigen tellingen per stream.
  */
 export async function GET() {
@@ -18,9 +19,10 @@ export async function GET() {
   const db = createServiceClient()
   const sinds = new Date(Date.now() - 30 * 86_400_000).toISOString()
 
-  const [lijst, campagnes, postmark, events, abonnees] = await Promise.all([
+  const [lijst, campagnes, brevo, postmark, events, abonnees] = await Promise.all([
     leesCijfers(),
     campagneOverzicht(),
+    brevoCampagneOverzicht().catch((e) => ({ campagnes: [], fout: e instanceof Error ? e.message : 'Brevo onbereikbaar' })),
     postmarkStreamCijfers().catch(() => null),
     db
       .from('analytics_events')
@@ -64,6 +66,7 @@ export async function GET() {
     ...campagnes,
     verkeer,
     bezoekersPerMoment,
+    brevo,
     postmark,
   })
 }

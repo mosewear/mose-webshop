@@ -4,19 +4,20 @@
  * E-mailmarketing: alles op één plek.
  *
  * Bovenaan de stand van de lijst en de Postmark-bundel, daaronder de
- * campagnes met per verzendmoment wat er verstuurd is, wie er doorklikte
- * naar de site, en wat dat opleverde aan orders en omzet. Dan het verkeer
- * uit e-mail per dag, Postmarks eigen tellingen per stream, en de
- * toestemmingsronde.
+ * campagnes via Brevo (sinds 24-10-2026 de gewone route): wat er in de
+ * mailbox gebeurde, kliks per plek in de mail, bezoekers en orders. Dan de
+ * Postmark-campagnes (reserve), het verkeer uit e-mail per dag, Postmarks
+ * eigen tellingen per stream, en de toestemmingsronde.
  *
- * Opens tonen we bewust niet: Apple Mail opent mails automatisch, waardoor
- * dat cijfer niets zegt. Bezoekers (via de UTM-kenmerken op de links) en
- * orders binnen 72 uur na verzending wel.
+ * Opens tonen we alleen bij Brevo en dan zonder de automatische opens van
+ * Apple Mail; ook dan blijft het een indicatie. Kliks, bezoekers en orders
+ * zijn de cijfers om op te sturen.
  */
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import ToestemmingAdmin from '../toestemming/ToestemmingAdmin'
+import type { BrevoCampagne } from '@/lib/brevo-campagnes'
 
 interface Cijfers {
   verzonden: number
@@ -55,6 +56,7 @@ interface Data {
   bundel: { verstuurd30d: number | null; grootte: number; grens: number }
   verkeer: Array<{ dag: string; campagne: number; toestemming: number }>
   bezoekersPerMoment: Record<string, number>
+  brevo: { campagnes: BrevoCampagne[]; fout?: string }
   postmark: Record<string, { Sent?: number; Bounced?: number; SpamComplaints?: number; BounceRate?: number; SpamComplaintsRate?: number } | { http: number }> | null
 }
 
@@ -140,7 +142,7 @@ export default function EmailMarketingAdmin() {
         <div>
           <h1 className="font-display text-3xl uppercase md:text-4xl">E-mailmarketing</h1>
           <p className="mt-1 max-w-2xl text-sm text-gray-600">
-            Lijst, campagnes, verkeer en omzet uit e-mail. Opens staan er bewust niet bij: Apple Mail opent mails automatisch, dus dat cijfer zegt niets. Bezoekers en orders wel.
+            Lijst, campagnes, verkeer en omzet uit e-mail. Stuur op kliks, bezoekers en orders; opens zijn door Apple Mail hooguit een indicatie.
           </p>
         </div>
         <Link href="/admin/newsletter" className="border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white">
@@ -189,9 +191,12 @@ export default function EmailMarketingAdmin() {
         </div>
       </section>
 
-      {/* Campagnes */}
+      <BrevoCampagnes brevo={data.brevo} />
+
+      {/* Campagnes via Postmark */}
       <section className="space-y-4" aria-labelledby="campagnes">
-        <h2 id="campagnes" className="font-display text-2xl uppercase">Campagnes</h2>
+        <h2 id="campagnes" className="font-display text-2xl uppercase">Campagnes via Postmark</h2>
+        <p className="text-sm text-gray-600">Reserveroute. Campagnes gaan sinds 24 oktober via Brevo; activeer hier alleen iets als Brevo niet beschikbaar is, anders krijgen mensen hem dubbel.</p>
         <p className="text-sm text-gray-600">
           Doelgroep op dit moment: <strong>{data.doelgroepNu.toLocaleString('nl-NL')}</strong> mensen die de toestemmingsmail kregen en zich niet afmeldden. Groeit mee met de toestemmingsronde.
         </p>
@@ -370,5 +375,110 @@ export default function EmailMarketingAdmin() {
         <ToestemmingAdmin ingebed />
       </section>
     </div>
+  )
+}
+
+const BREVOSTATUS: Record<string, [string, string]> = {
+  queued: ['ingepland', 'border-black bg-white text-black'],
+  inProcess: ['wordt verstuurd', 'border-brand-primary bg-brand-primary text-white'],
+  sent: ['verstuurd', 'border-gray-400 bg-gray-100 text-gray-700'],
+  suspended: ['gepauzeerd', 'border-red-700 bg-red-700 text-white'],
+}
+
+const PLEKNAAM: Record<string, string> = {
+  logo: 'Logo bovenaan',
+  'hero-foto': 'Grote foto bovenaan',
+  'hoodie-foto': 'Foto hoodie',
+  'hoodie-bruin': 'Hoodie bruin',
+  'hoodie-groen': 'Hoodie groen',
+  'hoodie-zwart': 'Hoodie zwart',
+  'hoodie-knop': 'Knop: bekijk de hoodie',
+  'sweater-foto': 'Foto sweater',
+  'sweater-offwhite': 'Sweater off white',
+  'sweater-zwart': 'Sweater zwart',
+  'sweater-knop': 'Knop: bekijk de sweater',
+  'collectie-knop': 'Knop: bekijk de collectie',
+  voettekst: 'Link in de voettekst',
+}
+
+function BrevoCampagnes({ brevo }: { brevo: Data['brevo'] }) {
+  return (
+    <section className="space-y-4" aria-labelledby="brevo">
+      <div>
+        <h2 id="brevo" className="font-display text-2xl uppercase">Campagnes via Brevo</h2>
+        <p className="mt-1 max-w-3xl text-sm text-gray-600">
+          Mailboxcijfers komen van Brevo, de rest van de site zelf. <strong>Orders na klik</strong>: gekocht in hetzelfde bezoek als de klik uit de mail.{' '}
+          <strong>Orders van ontvangers</strong>: elke bestelling binnen 72 uur door iemand op de lijst, ook zonder klik.
+        </p>
+      </div>
+      {brevo.fout && <p className="border-2 border-red-700 bg-white p-3 text-sm text-red-700">Brevo gaf geen cijfers: {brevo.fout}</p>}
+      {brevo.campagnes.length === 0 && !brevo.fout && <p className="text-sm text-gray-600">Nog geen campagnes in Brevo.</p>}
+      {brevo.campagnes.map((c) => {
+        const m = c.mailbox
+        const afgeleverd = m.delivered || m.sent
+        const [statusNaam, statusKleur] = BREVOSTATUS[c.status] || [c.status, 'border-gray-300 bg-white text-gray-700']
+        const maxKliks = Math.max(1, ...c.links.map((l) => l.kliks))
+        const tegels: Array<[string, string, string?, boolean?]> = [
+          ['Afgeleverd', afgeleverd.toLocaleString('nl-NL'), m.sent ? `van ${m.sent.toLocaleString('nl-NL')} verstuurd` : undefined],
+          ['Opens zonder Apple', m.trackableViews.toLocaleString('nl-NL'), `${pct(m.trackableViews, afgeleverd)} · indicatie`],
+          ['Klikkers', m.clickers.toLocaleString('nl-NL'), `${pct(m.clickers, afgeleverd)} van afgeleverd`],
+          ['Bezoekers op de site', c.bezoekers.toLocaleString('nl-NL'), 'unieke sessies uit deze mail'],
+          ['Orders na klik', String(c.ordersNaKlik.aantal), euro(c.ordersNaKlik.omzet)],
+          ['Orders van ontvangers', String(c.ordersOntvangers.aantal), `${euro(c.ordersOntvangers.omzet)} · 72 uur`],
+          ['Afgemeld', String(m.unsubscriptions), pct(m.unsubscriptions, afgeleverd)],
+          ['Klachten en bounces', `${m.complaints} · ${m.hardBounces}`, `klacht ${pct(m.complaints, afgeleverd)} · bounce ${pct(m.hardBounces, m.sent)}`, m.complaints > 0],
+        ]
+        return (
+          <article key={c.id} className="border-2 border-black bg-white">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-black p-4">
+              <div>
+                <h3 className="text-lg font-bold">{c.naam}</h3>
+                <p className="text-sm text-gray-600">Onderwerp: “{c.onderwerp}”</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  {c.verzendmoment ? `${c.status === 'sent' ? 'Verstuurd' : 'Gepland'} ${tijd(c.verzendmoment)}` : 'Nog geen moment'}
+                  {c.ontvangersGepland !== null && ` · nu ${c.ontvangersGepland.toLocaleString('nl-NL')} ontvangers, groeit mee met de lijst`}
+                  {c.utm && <span className="text-gray-400"> · utm {c.utm}</span>}
+                </p>
+              </div>
+              <span className={`border-2 px-2 py-1 text-xs font-bold uppercase tracking-wider ${statusKleur}`}>{statusNaam}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-px bg-gray-200 md:grid-cols-4">
+              {tegels.map(([l, w, sub, letOp]) => (
+                <div key={l} className="bg-white p-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-600">{l}</p>
+                  <p className={`mt-1 text-lg font-bold tabular-nums ${letOp ? 'text-red-700' : ''}`}>{w}</p>
+                  {sub && <p className="text-xs text-gray-500">{sub}</p>}
+                </div>
+              ))}
+            </div>
+
+            {c.links.length > 0 && (
+              <div className="overflow-x-auto border-t-2 border-black">
+                <table className="w-full text-sm tabular-nums">
+                  <thead className="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-600">
+                    <tr>{['Plek in de mail', 'Kliks (Brevo)', '', 'Bezoekers (site)'].map((k, i) => <th key={i} className="whitespace-nowrap px-3 py-2">{k}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {c.links.map((l) => (
+                      <tr key={l.plek} className="border-t border-gray-200">
+                        <td className="whitespace-nowrap px-3 py-2 font-semibold">{PLEKNAAM[l.plek] || l.plek}</td>
+                        <td className="px-3 py-2">{l.kliks}</td>
+                        <td className="w-1/3 px-3 py-2">
+                          <div className="h-2 bg-gray-100" aria-hidden>
+                            <div className="h-full bg-black" style={{ width: `${(l.kliks / maxKliks) * 100}%` }} />
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">{l.bezoekers}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </article>
+        )
+      })}
+    </section>
   )
 }

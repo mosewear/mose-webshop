@@ -6,7 +6,8 @@
  *   Brevo     nieuwsbrief en campagnes
  *
  * Deze module synchroniseert alleen contacten. Er gaat geen enkele mail via
- * Brevo vanuit de code; campagnes maak je in Brevo zelf.
+ * Brevo vanuit de code; campagnes maak je in Brevo zelf. De cijfers daarvan
+ * leest brevo-campagnes.ts terug voor de admin.
  *
  * Alles hier faalt stil. Een inschrijving op mosewear.com mag nooit stuklopen
  * omdat Brevo even onbereikbaar is: de eigen tabel blijft leidend en een
@@ -37,7 +38,7 @@ interface BrevoAntwoord<T = unknown> {
   fout?: string
 }
 
-async function roep<T = unknown>(
+export async function roep<T = unknown>(
   pad: string,
   opties: { methode?: string; body?: unknown } = {}
 ): Promise<BrevoAntwoord<T>> {
