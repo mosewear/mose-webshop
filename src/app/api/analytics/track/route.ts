@@ -50,6 +50,7 @@ type TrackBody = {
   event_name?: string
   event_properties?: Record<string, unknown>
   session_id?: string | null
+  anonymous_id?: string | null
   user_id?: string | null
   page_url?: string | null
   page_title?: string | null
@@ -170,6 +171,7 @@ export async function POST(request: NextRequest) {
     event_name,
     event_properties,
     session_id: body.session_id ?? null,
+    anonymous_id: typeof body.anonymous_id === 'string' && body.anonymous_id.length <= 100 ? body.anonymous_id : null,
     user_id: body.user_id ?? null,
     page_url: body.page_url ?? null,
     page_title: body.page_title ?? null,

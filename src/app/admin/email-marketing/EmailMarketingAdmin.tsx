@@ -407,7 +407,7 @@ function BrevoCampagnes({ brevo }: { brevo: Data['brevo'] }) {
       <div>
         <h2 id="brevo" className="font-display text-2xl uppercase">Campagnes via Brevo</h2>
         <p className="mt-1 max-w-3xl text-sm text-gray-600">
-          Mailboxcijfers komen van Brevo, de rest van de site zelf. <strong>Orders na klik</strong>: gekocht in hetzelfde bezoek als de klik uit de mail.{' '}
+          Mailboxcijfers komen van Brevo, de rest van de site zelf. <strong>Orders na klik</strong>: gekocht in hetzelfde bezoek als de klik uit de mail, of binnen 7 dagen als de bezoeker alle cookies accepteerde.{' '}
           <strong>Orders van ontvangers</strong>: elke bestelling binnen 72 uur door iemand op de lijst, ook zonder klik.
         </p>
       </div>

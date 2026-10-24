@@ -75,6 +75,10 @@ export async function trackEvent({ event_name, properties = {}, user_id }: Track
 
     const sessionId = getSessionId()
     const deviceInfo = getDeviceInfo()
+    // Vaste bezoekers-id, alleen als PostHog draait en dus na toestemming
+    // voor alle cookies. Daarmee telt een klik uit een mail die dagen later
+    // tot een bestelling leidt ook mee; de sessie zelf is per tabblad.
+    const anonymousId = posthog.__loaded && posthog.get_distinct_id ? posthog.get_distinct_id() : null
     
     // 1. Track in PostHog (for session recordings & heatmaps)
     if (posthog.__loaded) {
@@ -94,6 +98,7 @@ export async function trackEvent({ event_name, properties = {}, user_id }: Track
         event_name,
         event_properties: properties,
         session_id: sessionId,
+        anonymous_id: anonymousId,
         user_id: user_id || null,
         page_url: window.location.href,
         page_title: document.title,

@@ -7,9 +7,9 @@
  * we uit onze eigen data, gekoppeld via utm_campaign en utm_content op de
  * links:
  *   bezoekers        unieke sessies die met utm_campaign binnenkwamen
- *   orders na klik   aankopen in hetzelfde bezoek als de klik (de site houdt
- *                    sessies per tabblad bij en heeft geen vaste
- *                    bezoekers-id; komt die er, dan telt hij 7 dagen mee)
+ *   orders na klik   aankopen in hetzelfde bezoek als de klik, of binnen 7
+ *                    dagen door dezelfde bezoeker als die alle cookies
+ *                    accepteerde (anonymous_id, sinds 24-10-2026)
  *   orders ontvangers  bestellingen binnen 72 uur na verzending door iemand
  *                    die op de lijst stond, ook zonder klik (bijvoorbeeld
  *                    later zelf naar de site getypt)
