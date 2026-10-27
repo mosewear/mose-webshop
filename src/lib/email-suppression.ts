@@ -109,14 +109,12 @@ export async function addSuppression(input: AddSuppressionInput): Promise<void> 
 
     const nowIso = new Date().toISOString()
 
-    // Upsert into email_suppressions on lower(email). Postgres treats
-    // the unique-on-(lower(email)) index as the conflict target;
-    // Supabase JS only supports column-list conflicts, so we use
-    // insert + ignore-duplicate semantics via .onConflict('email')
-    // with the canonical lowercase value.
+    // The unique index is an expression on lower(email), not on email.
+    // PostgREST's on_conflict=email cannot target it and always fails.
+    // A plain insert lets that index enforce idempotency atomically.
     const { error: insertErr } = await supabase
       .from('email_suppressions')
-      .upsert(
+      .insert(
         {
           email,
           reason: input.reason,
@@ -124,29 +122,13 @@ export async function addSuppression(input: AddSuppressionInput): Promise<void> 
           provider_message_id: input.providerMessageId ?? null,
           details: (input.details ?? null) as never,
         },
-        { onConflict: 'email', ignoreDuplicates: false },
       )
 
-    if (insertErr) {
-      // Some DBs reject the upsert because we have a UNIQUE on
-      // lower(email) (not email). Fall back to manual idempotent
-      // insert; a true duplicate just gets logged and dropped.
-      const { error: bareInsertErr } = await supabase
-        .from('email_suppressions')
-        .insert({
-          email,
-          reason: input.reason,
-          source: input.source || 'postmark_webhook',
-          provider_message_id: input.providerMessageId ?? null,
-          details: (input.details ?? null) as never,
-        })
-      if (bareInsertErr && !bareInsertErr.message?.toLowerCase().includes('duplicate')) {
-        console.error('[email-suppression] insert failed', {
-          email,
-          reason: input.reason,
-          error: bareInsertErr,
-        })
-      }
+    if (insertErr && insertErr.code !== '23505') {
+      console.error('[email-suppression] insert failed', {
+        reason: input.reason,
+        code: insertErr.code,
+      })
     }
 
     // Mirror onto newsletter_subscribers row if present so the admin
