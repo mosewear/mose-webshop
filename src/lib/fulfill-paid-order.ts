@@ -12,7 +12,6 @@ import { processGiftCardsForPaidOrder } from '@/lib/gift-card-processing'
 import { catalogContentId } from '@/lib/catalog-ids'
 import { sendServerPurchaseEvent } from '@/lib/meta/capi'
 import { adresRegel } from '@/lib/adres'
-import { werkKlantgegevensBij } from '@/lib/brevo'
 
 export type FulfillPaidOrderResult =
   | { ok: true; alreadyPaid: boolean; orderId: string }
@@ -374,13 +373,6 @@ export async function fulfillPaidOrder(
     )
   } catch (gcError) {
     console.error('[fulfillPaidOrder] gift-card processing failed:', gcError)
-  }
-
-  // Klantgegevens in Brevo (KLANT, AANTAL_ORDERS, LAATSTE_BESTELLING)
-  try {
-    if (order.email) await werkKlantgegevensBij(order.email)
-  } catch (brevoError) {
-    console.error('[fulfillPaidOrder] Brevo-klantgegevens failed:', brevoError)
   }
 
   // Confirmation email

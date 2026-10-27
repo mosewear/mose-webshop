@@ -14,10 +14,12 @@
  * zijn de cijfers om op te sturen.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import ToestemmingAdmin from '../toestemming/ToestemmingAdmin'
 import type { BrevoCampagne } from '@/lib/brevo-campagnes'
+import PostmarkPilotStats from '@/components/admin/PostmarkPilotStats'
+import type { PostmarkCampaignReport } from '@/lib/postmark-campaign-report'
 
 interface Cijfers {
   verzonden: number
@@ -49,6 +51,8 @@ interface Campagne {
   per_run: number
 }
 interface Data {
+  postmarkCampagnes?: Record<string, PostmarkCampaignReport>
+  pilot?: { slug: string; maximum: number; startAt: string; batchSize?: number; minimumGapDays?: number; maximumCommercialEmails30d?: number }
   lijst: { totaal: number; wachtrij: number; vastgehouden: number; verzonden: number; bevestigd: number; afgemeld: number; bounces: number; klachten: number; mislukt: number; abonneesSite: number | null }
   campagnes: Campagne[]
   momenten: Moment[]
@@ -94,21 +98,35 @@ export default function EmailMarketingAdmin() {
   const [fout, setFout] = useState<string | null>(null)
   const [melding, setMelding] = useState<string | null>(null)
   const [bezig, setBezig] = useState<string | null>(null)
+  const [laden, setLaden] = useState(false)
+  const [laatstBijgewerkt, setLaatstBijgewerkt] = useState<Date | null>(null)
+  const verzoek = useRef<AbortController | null>(null)
   const [testAdres, setTestAdres] = useState('info@mosewear.com')
 
   const laad = useCallback(async () => {
-    const res = await fetch('/api/admin/email-marketing', { cache: 'no-store' })
-    const j = await res.json()
-    if (j.ok) {
+    verzoek.current?.abort()
+    const controller = new AbortController()
+    verzoek.current = controller
+    setLaden(true)
+    try {
+      const res = await fetch('/api/admin/email-marketing', { cache: 'no-store', signal: controller.signal })
+      const j = await res.json()
+      if (!res.ok || !j.ok) throw new Error(j.fout || 'Cijfers konden niet worden geladen')
+      if (controller.signal.aborted) return
       setData(j)
+      setLaatstBijgewerkt(new Date())
       setFout(null)
-    } else setFout(j.fout || 'Laden mislukt')
+    } catch (e) {
+      if (!controller.signal.aborted) setFout(e instanceof Error ? e.message : 'Laden mislukt')
+    } finally {
+      if (verzoek.current === controller) setLaden(false)
+    }
   }, [])
 
   useEffect(() => {
     laad()
     const id = setInterval(laad, 60_000)
-    return () => clearInterval(id)
+    return () => { clearInterval(id); verzoek.current?.abort() }
   }, [laad])
 
   async function actie(naam: string, extra: Record<string, unknown> = {}) {
@@ -123,12 +141,19 @@ export default function EmailMarketingAdmin() {
       const j = await res.json()
       setMelding(j.ok ? (naam === 'test' ? `Testmail verstuurd naar ${testAdres}` : 'Opgeslagen') : j.fout || 'Mislukt')
       await laad()
+    } catch (e) {
+      setMelding(e instanceof Error ? e.message : 'De actie is niet gelukt; probeer opnieuw')
     } finally {
       setBezig(null)
     }
   }
 
-  if (fout) return <div className="p-8 text-red-700">{fout}</div>
+  if (fout && !data) return (
+    <div className="space-y-3 p-8" role="alert">
+      <p className="text-red-700">{fout}</p>
+      <button onClick={laad} disabled={laden} className="border-2 border-black px-4 py-2 text-sm font-bold">{laden ? 'Laden…' : 'Opnieuw proberen'}</button>
+    </div>
+  )
   if (!data) return <div className="p-8 text-gray-600">Laden…</div>
 
   const { lijst, bundel } = data
@@ -145,11 +170,16 @@ export default function EmailMarketingAdmin() {
             Lijst, campagnes, verkeer en omzet uit e-mail. Stuur op kliks, bezoekers en orders; opens zijn door Apple Mail hooguit een indicatie.
           </p>
         </div>
-        <Link href="/admin/newsletter" className="border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white">
-          Abonnees bekijken
-        </Link>
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <button onClick={laad} disabled={laden} className="border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white disabled:opacity-50">{laden ? 'Verversen…' : 'Ververs cijfers'}</button>
+            <Link href="/admin/newsletter" className="border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white">Abonnees bekijken</Link>
+          </div>
+          <p className="text-xs text-gray-500" role="status">Elke minuut bijgewerkt{laatstBijgewerkt ? ` · laatst om ${laatstBijgewerkt.toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam', hour: '2-digit', minute: '2-digit' })}` : ''}</p>
+        </div>
       </header>
 
+      {fout && <p role="alert" className="border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">{fout}. De laatst geladen cijfers blijven zichtbaar; probeer Ververs cijfers.</p>}
       {melding && <p className="border-2 border-black bg-white p-3 text-sm font-semibold">{melding}</p>}
 
       {/* De lijst */}
@@ -191,24 +221,22 @@ export default function EmailMarketingAdmin() {
         </div>
       </section>
 
-      <BrevoCampagnes brevo={data.brevo} />
-
       {/* Campagnes via Postmark */}
       <section className="space-y-4" aria-labelledby="campagnes">
-        <h2 id="campagnes" className="font-display text-2xl uppercase">Campagnes via Postmark</h2>
-        <p className="text-sm text-gray-600">Reserveroute. Campagnes gaan sinds 24 oktober via Brevo; activeer hier alleen iets als Brevo niet beschikbaar is, anders krijgen mensen hem dubbel.</p>
+        <h2 id="campagnes" className="font-display text-2xl uppercase">Campagneresultaten: Brevo + Postmark</h2>
+        <p className="text-sm text-gray-600">Resultaten per verzendmoment. De eerste Brevo-verzending en het resterende deel via Postmark staan apart; iedere ontvanger telt eenmaal mee.</p>
         <p className="text-sm text-gray-600">
-          Doelgroep op dit moment: <strong>{data.doelgroepNu.toLocaleString('nl-NL')}</strong> mensen die de toestemmingsmail kregen en zich niet afmeldden. Groeit mee met de toestemmingsronde.
+          Huidige doelgroep uit de toestemmingsronde: <strong>{data.doelgroepNu.toLocaleString('nl-NL')}</strong>. Dit is de actuele lijststand; de verzonden aantallen staan per campagne hieronder.
         </p>
         {data.campagnes.map((c) => {
-          const momenten = data.momenten.filter((m) => m.campagne_id === c.id)
+          const momenten = data.momenten.filter((m) => m.campagne_id === c.id && (c.status !== 'klaar' || m.status !== 'overgeslagen'))
           const totaal = momenten.reduce(
             (s, m) => {
               const k = m.cijfers
               if (!k) return s
-              return { v: s.v + k.verzonden, o: s.o + k.orders, omzet: s.omzet + k.omzet, b: s.b + (data.bezoekersPerMoment[`${c.slug}|${inhoudSlug(m.label)}`] || 0) }
+              return { v: s.v + k.verzonden, o: s.o + k.orders, omzet: s.omzet + k.omzet, b: s.b + (data.bezoekersPerMoment[`${c.slug}|${inhoudSlug(m.label)}`] || 0), af: s.af + k.afgemeld, bo: s.bo + k.bounces, kl: s.kl + k.klachten, mi: s.mi + k.mislukt }
             },
-            { v: 0, o: 0, omzet: 0, b: 0 },
+            { v: 0, o: 0, omzet: 0, b: 0, af: 0, bo: 0, kl: 0, mi: 0 },
           )
           return (
             <article key={c.id} className="border-2 border-black bg-white">
@@ -216,24 +244,29 @@ export default function EmailMarketingAdmin() {
                 <div>
                   <h3 className="text-lg font-bold">{c.naam}</h3>
                   <p className="text-sm text-gray-600">Onderwerp: “{c.onderwerp}”</p>
+                  {data.pilot?.slug === c.slug && <p className="mt-2 text-sm text-gray-600">Proef met maximaal {data.pilot.maximum} bevestigers en aantoonbare website-inschrijvers · {tijd(data.pilot.startAt)}. Uitsluitingen en verzendhistorie worden vóór verzending opnieuw gecontroleerd. Geen automatische vervolgcampagne.</p>}
                   {c.stopreden && <p className="mt-1 text-sm font-semibold text-red-700">Gestopt: {c.stopreden}</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`border-2 px-2 py-1 text-xs font-bold uppercase tracking-wider ${STATUSKLEUR[c.status]}`}>{STATUSNAAM[c.status]}</span>
                   {c.status === 'actief' ? (
                     <button onClick={() => actie('pauzeer', { campagneId: c.id })} disabled={!!bezig} className="border-2 border-black px-3 py-1.5 text-xs font-bold uppercase tracking-wider">Pauzeer</button>
-                  ) : (
+                  ) : c.status !== 'klaar' ? (
                     <button onClick={() => actie('activeer', { campagneId: c.id })} disabled={!!bezig} className="border-2 border-brand-primary bg-brand-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white">Activeer</button>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-px bg-gray-200 md:grid-cols-4">
                 {[
-                  ['Verstuurd', totaal.v.toLocaleString('nl-NL')],
+                  ['Totaal verstuurd', totaal.v.toLocaleString('nl-NL')],
                   ['Bezoekers naar de site', `${totaal.b} · ${pct(totaal.b, totaal.v)}`],
-                  ['Orders binnen 72 uur', `${totaal.o} · ${pct(totaal.o, totaal.v)}`],
-                  ['Omzet', euro(totaal.omzet)],
+                  ['Orders van ontvangers, 72 uur', `${totaal.o} · ${pct(totaal.o, totaal.v)}`],
+                  ['Omzet binnen 72 uur', euro(totaal.omzet)],
+                  ['Afgemeld', `${totaal.af.toLocaleString('nl-NL')} · ${pct(totaal.af, totaal.v)}`],
+                  ['Bounces', `${totaal.bo.toLocaleString('nl-NL')} · ${pct(totaal.bo, totaal.v)}`],
+                  ['Spamklachten', `${totaal.kl.toLocaleString('nl-NL')} · ${pct(totaal.kl, totaal.v)}`],
+                  ['Verzendfouten', totaal.mi.toLocaleString('nl-NL')],
                 ].map(([l, w]) => (
                   <div key={l} className="bg-white p-3">
                     <p className="text-xs font-bold uppercase tracking-wider text-gray-600">{l}</p>
@@ -242,8 +275,12 @@ export default function EmailMarketingAdmin() {
                 ))}
               </div>
 
-              <div className="overflow-x-auto">
+              <PostmarkPilotStats report={data.postmarkCampagnes?.[c.slug]} />
+              <p className="border-t border-gray-200 px-3 py-2 text-xs text-gray-500">Percentages zijn berekend over verstuurde mails. Orders en omzet: aankopen van ontvangers binnen 72 uur, ook zonder klik. {c.slug === 'mose-edit-01-hoodie' ? 'Postmark-linkklikken staan apart hierboven; ze zijn geen unieke bezoekers. Betaalde orders na klik staan apart met een venster van 7 dagen; dit is geen bewijs van extra omzet door de mail.' : 'Opens en kliks zijn alleen voor het Brevo-deel beschikbaar.'}</p>
+              <p className="px-3 pt-2 text-xs text-gray-500 md:hidden">Veeg horizontaal voor alle cijfers per verzending.</p>
+              <div className="overflow-x-auto" role="region" aria-label={`Resultaten per verzendmoment voor ${c.naam}`} tabIndex={0}>
                 <table className="w-full text-sm tabular-nums">
+                  <caption className="sr-only">Resultaten per verzendmoment voor {c.naam}</caption>
                   <thead className="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-600">
                     <tr>{['Moment', 'Wanneer', 'Status', 'Verstuurd', 'Bezoekers', 'Orders', 'Omzet', 'Afgemeld', 'Bounces', 'Klachten'].map((k) => <th key={k} className="whitespace-nowrap px-3 py-2">{k}</th>)}</tr>
                   </thead>
@@ -256,7 +293,7 @@ export default function EmailMarketingAdmin() {
                           <td className="whitespace-nowrap px-3 py-2 font-semibold">{m.label}</td>
                           <td className="whitespace-nowrap px-3 py-2">{tijd(m.start_op)}</td>
                           <td className="px-3 py-2"><span className={`border px-1.5 py-0.5 text-[11px] font-bold uppercase ${STATUSKLEUR[m.status]}`}>{STATUSNAAM[m.status]}</span></td>
-                          <td className="px-3 py-2">{k?.verzonden ?? 0}</td>
+                          <td className="px-3 py-2">{(k?.verzonden ?? 0).toLocaleString('nl-NL')}</td>
                           <td className="px-3 py-2">{bezoekers} <span className="text-gray-500">{pct(bezoekers, k?.verzonden ?? 0)}</span></td>
                           <td className="px-3 py-2">{k?.orders ?? 0} <span className="text-gray-500">{pct(k?.orders ?? 0, k?.verzonden ?? 0)}</span></td>
                           <td className="px-3 py-2">{euro(k?.omzet ?? 0)}</td>
@@ -270,7 +307,9 @@ export default function EmailMarketingAdmin() {
                 </table>
               </div>
 
-              <div className="grid gap-4 border-t-2 border-black p-4 md:grid-cols-2">
+              <details className="border-t-2 border-black">
+                <summary className="cursor-pointer px-4 py-3 text-xs font-bold uppercase tracking-wider">Instellingen en testmail</summary>
+                <div className="grid gap-4 p-4 pt-0 md:grid-cols-2">
                 <form
                   className="space-y-2 text-sm"
                   onSubmit={(e) => {
@@ -280,12 +319,13 @@ export default function EmailMarketingAdmin() {
                   }}
                 >
                   <p className="text-xs font-bold uppercase tracking-wider">Regels</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  {data.pilot?.slug === c.slug && <p className="text-xs text-gray-600">Op verzoek direct versturen: voor deze campagne vervalt de wachttijd. Maximaal {data.pilot.maximumCommercialEmails30d ?? 2} commerciële mails per 30 dagen en {data.pilot.batchSize ?? 25} per ronde.</p>}
+                  {data.pilot?.slug !== c.slug && <><fieldset className="grid grid-cols-3 gap-2">
                     <label className="space-y-1">Wachttijd na toestemmingsmail (min)<input name="wachttijd" type="number" min={0} defaultValue={c.wachttijd_minuten} className="block w-full border-2 border-gray-300 px-2 py-1" /></label>
                     <label className="space-y-1">Minimaal dagen tussen campagnes<input name="dagen" type="number" min={0} defaultValue={c.min_dagen_tussen} className="block w-full border-2 border-gray-300 px-2 py-1" /></label>
                     <label className="space-y-1">Per 5 minuten<input name="per_run" type="number" min={1} max={500} defaultValue={c.per_run} className="block w-full border-2 border-gray-300 px-2 py-1" /></label>
-                  </div>
-                  <button className="border-2 border-black px-3 py-1 font-bold uppercase tracking-wider" disabled={!!bezig}>Opslaan</button>
+                  </fieldset>
+                  <button className="border-2 border-black px-3 py-1 font-bold uppercase tracking-wider" disabled={!!bezig}>Opslaan</button></>}
                 </form>
                 <form
                   className="space-y-2 text-sm"
@@ -299,11 +339,20 @@ export default function EmailMarketingAdmin() {
                   <input value={testAdres} onChange={(e) => setTestAdres(e.target.value)} type="email" className="block w-full border-2 border-gray-300 px-2 py-1" />
                   <button className="border-2 border-black px-3 py-1 font-bold uppercase tracking-wider" disabled={!!bezig}>{bezig === 'test' ? 'Bezig…' : 'Verstuur test'}</button>
                 </form>
-              </div>
+                </div>
+              </details>
             </article>
           )
         })}
       </section>
+
+      <details className="border-2 border-black bg-white">
+        <summary className="cursor-pointer p-4 font-display text-xl uppercase">Brevo-detailrapport</summary>
+        <div className="space-y-3 border-t border-gray-200 p-4">
+          <p className="text-sm text-gray-600">Alleen de verzending via Brevo; deze cijfers kunnen enkele minuten achterlopen. Het gezamenlijke totaal van Brevo en Postmark staat hierboven bij Campagneresultaten.</p>
+          <BrevoCampagnes brevo={data.brevo} />
+        </div>
+      </details>
 
       {/* Verkeer uit e-mail */}
       <section className="space-y-3" aria-labelledby="verkeer">
@@ -380,6 +429,8 @@ export default function EmailMarketingAdmin() {
 
 const BREVOSTATUS: Record<string, [string, string]> = {
   queued: ['ingepland', 'border-black bg-white text-black'],
+  in_review: ['in beoordeling', 'border-amber-500 bg-amber-50 text-amber-800'],
+  rejected: ['afgekeurd', 'border-red-700 bg-red-700 text-white'],
   inProcess: ['wordt verstuurd', 'border-brand-primary bg-brand-primary text-white'],
   sent: ['verstuurd', 'border-gray-400 bg-gray-100 text-gray-700'],
   suspended: ['gepauzeerd', 'border-red-700 bg-red-700 text-white'],
@@ -435,7 +486,7 @@ function BrevoCampagnes({ brevo }: { brevo: Data['brevo'] }) {
                 <h3 className="text-lg font-bold">{c.naam}</h3>
                 <p className="text-sm text-gray-600">Onderwerp: “{c.onderwerp}”</p>
                 <p className="mt-1 text-sm text-gray-600">
-                  {c.verzendmoment ? `${c.status === 'sent' ? 'Verstuurd' : 'Gepland'} ${tijd(c.verzendmoment)}` : 'Nog geen moment'}
+                  {c.verzendmoment ? `${c.mailbox.sent > 0 ? 'Verzendmoment' : 'Gepland'} ${tijd(c.verzendmoment)}` : 'Nog geen moment'}
                   {c.ontvangersGepland !== null && ` · nu ${c.ontvangersGepland.toLocaleString('nl-NL')} ontvangers, groeit mee met de lijst`}
                   {c.utm && <span className="text-gray-400"> · utm {c.utm}</span>}
                 </p>

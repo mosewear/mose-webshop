@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { draaiCampagnes } from '@/lib/campagnes'
+import { eligiblePilotRecipients, MOSE_EDIT_PILOT } from '@/lib/mose-edit-pilot'
+import { getPostmarkPilotReportWithOrders } from '@/lib/postmark-campaign-report'
 
 /**
  * Elke vijf minuten. Doet niets tot een verzendmoment aan de beurt is; dan
@@ -15,6 +17,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
+    // Read-only deployment check: returns counts, never recipients or credentials.
+    if (req.nextUrl.searchParams.get('check') === 'pilot') {
+      const exclusions: Record<string, number> = {}
+      const now = await eligiblePilotRecipients(Date.now(), exclusions)
+      const report = await getPostmarkPilotReportWithOrders()
+      return NextResponse.json({ ok: report.status === 'ok' && report.clickOrders?.status === 'ok', eligibleNow: now.length, exclusions, maximum: MOSE_EDIT_PILOT.roster.length, startAt: MOSE_EDIT_PILOT.startAt, reportStatus: report.status, clickOrdersStatus: report.clickOrders?.status, paidOrders7d: report.clickOrders?.paidOrders7d })
+    }
     return NextResponse.json({ ok: true, ...(await draaiCampagnes()) })
   } catch (e) {
     console.error('[cron/campagnes]', e)

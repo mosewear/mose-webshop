@@ -28,7 +28,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendEmail, htmlToText } from '@/lib/postmark'
 import { isEmailSuppressed } from '@/lib/email-suppression'
-import { schrijfContactUit, voegToeAanLijst, voegToeAanLijstBulk } from '@/lib/brevo'
+import { schrijfContactUit, voegToeAanLijst } from '@/lib/brevo'
 
 export const TOESTEMMING_STREAM = 'toestemming-2026'
 const AFZENDER = 'Irma en Rick van MOSE <info@mosewear.com>'
@@ -271,11 +271,8 @@ export async function controleerGrenzen(plukBounces = 0, opties: { afleverCheck?
   if (basis >= 100 && pct(bounces, basis) > inst.max_bounce_pct) {
     return `${bounces} bounces op ${basis} verstuurd (${pct(bounces, basis)}%, grens ${inst.max_bounce_pct}%)`
   }
-  // Grens per pluk schaalt mee met de plukgrootte: 3 was bedoeld voor plukken
-  // van 50 (6 %); bij 125 was het 2,4 % en stopte de ronde op gewone bounces.
-  const plukGrens = Math.max(inst.max_bounces_pluk, Math.ceil(inst.plukgrootte * 0.04))
-  if (plukBounces >= plukGrens) {
-    return `${plukBounces} bounces in één pluk (grens ${plukGrens})`
+  if (plukBounces >= inst.max_bounces_pluk) {
+    return `${plukBounces} bounces in één pluk (grens ${inst.max_bounces_pluk})`
   }
   return null
 }
@@ -298,15 +295,8 @@ export const TEMPO = [
 // binnen te laten komen, kort genoeg om op een gecontroleerde lijst niet een
 // hele dag te wachten.
 const OMHOOG = { minUren: 12, minVerstuurd: 150, maxBouncePct: 2, maxAfmeldPct: 5 }
-/** Terug naar stand 0 boven deze bounce, of boven OMLAAG_KLACHT_PCT klachten. */
+/** Terug naar stand 0 boven deze bounce of bij één klacht. */
 const OMLAAG_BOUNCE_PCT = 2.5
-/**
- * Klachtpercentage over de hele ronde sinds de lijstcontrole (meet_vanaf),
- * niet over de laatste stap. Eén losse klacht kort na een stap gaf anders
- * meteen 1 % en zette het tempo terug (23-10: 1 klacht op 2.400 = 0,04 %).
- * De noodstop blijft bij max_klacht_pct (0,1 %).
- */
-const OMLAAG_KLACHT_PCT = 0.05
 /**
  * Ruimte die altijd vrij blijft voor ordermails. De grens is de bundel uit
  * de instellingen (postmark_bundel, standaard 10.000) min deze reserve; boven
@@ -336,17 +326,11 @@ export async function pasTempoAan(): Promise<string | null> {
   const pct = (n: number) => (t.verstuurd > 0 ? (n / t.verstuurd) * 100 : 0)
   const uren = (Date.now() - new Date(sinds).getTime()) / 3_600_000
 
-  const ronde = inst.meet_vanaf ? await telSinds(inst.meet_vanaf) : t
-  const klachtPct = ronde.verstuurd > 0 ? (ronde.klachten / ronde.verstuurd) * 100 : 0
-
   let nieuw = inst.tempo_stap
   let reden = ''
-  const teveelKlachten = ronde.klachten > 0 && klachtPct > OMLAAG_KLACHT_PCT
-  if (inst.tempo_stap > 0 && (teveelKlachten || (t.verstuurd >= 100 && pct(t.bounces) > OMLAAG_BOUNCE_PCT))) {
+  if (inst.tempo_stap > 0 && (t.klachten > 0 || (t.verstuurd >= 100 && pct(t.bounces) > OMLAAG_BOUNCE_PCT))) {
     nieuw = 0
-    reden = teveelKlachten
-      ? `${ronde.klachten} klacht${ronde.klachten === 1 ? '' : 'en'} op ${ronde.verstuurd} sinds de lijstcontrole (${klachtPct.toFixed(2)}%)`
-      : `${pct(t.bounces).toFixed(1)}% bounces sinds de vorige stap`
+    reden = t.klachten > 0 ? `${t.klachten} klacht sinds de vorige stap` : `${pct(t.bounces).toFixed(1)}% bounces sinds de vorige stap`
   } else if (
     inst.tempo_stap < TEMPO.length - 1 &&
     uren >= OMHOOG.minUren &&
@@ -542,7 +526,6 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
   let verzonden = 0
   let overgeslagen = 0
   let mislukt = 0
-  const voorBrevo: string[] = []
 
   for (const r of lijst) {
     // Bounces en klachten op de transactionele stream tellen ook.
@@ -559,7 +542,6 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
         .update({ status: 'verzonden', verzonden_op: new Date().toISOString(), postmark_id: res.data?.id ?? null })
         .eq('email', r.email)
       verzonden++
-      voorBrevo.push(r.email)
     } else {
       const fout = res.error as { ErrorCode?: number; Message?: string; message?: string } | undefined
       const code = fout?.ErrorCode
@@ -576,14 +558,6 @@ export async function verstuurPluk(opties: { negeerWachttijd?: boolean } = {}): 
     }
     // Rustig tempo binnen de pluk; geen salvo van vijftig in één seconde.
     await new Promise((r2) => setTimeout(r2, 250))
-  }
-
-  // Wie de toestemmingsmail kreeg, hoort op de opgeschoonde Brevo-lijst
-  // (afmeldmodel, keuze Rick 21-10). Afmelden, bounces en klachten blokkeren
-  // het contact daarna in Brevo; dat houdt de lijst schoon.
-  const inst = await leesInstellingen()
-  if (inst.brevo_lijst_id && voorBrevo.length > 0) {
-    await voegToeAanLijstBulk(voorBrevo, inst.brevo_lijst_id).catch((e) => console.error('[toestemming] Brevo-lijst', e))
   }
 
   return { pluk, verzonden, overgeslagen, mislukt, gestopt: null }
@@ -605,19 +579,9 @@ export async function verwerkSignaal(email: string, soort: 'bounce' | 'klacht' |
     .select('pluk, groep')
   if (!data || data.length === 0) return
 
-  // Ook bij een harde bounce: een dood adres hoort niet op de Brevo-lijst.
-  await schrijfContactUit(adres)
+  if (soort !== 'bounce') await schrijfContactUit(adres)
 
   if (data[0].groep === 'test') return
-  // De plukregel geldt alleen voor de laatste pluk. Een late bounce uit een
-  // oudere pluk zette de ronde anders opnieuw stil nadat hij net weer was
-  // gestart (23-10, 17:14); de totale bouncegrens telt hem wel gewoon mee.
-  const inst = await leesInstellingen()
-  if (data[0].pluk !== inst.laatste_pluk) {
-    const reden = await controleerGrenzen(0)
-    if (reden) await stop(reden)
-    return
-  }
   const { count } = await db
     .from('toestemming_ontvangers')
     .select('email', { count: 'exact', head: true })
