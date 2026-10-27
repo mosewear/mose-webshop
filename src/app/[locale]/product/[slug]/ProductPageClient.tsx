@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect, useRef, useCallback, ReactElement } from 'react'
+import { Suspense, use, useState, useEffect, useRef, useCallback, ReactElement } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -32,13 +32,15 @@ import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
+import { isTapstitchProduct } from '@/lib/tapstitch-products'
+import { PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import GiftCardProductView from '@/components/product/GiftCardProductView'
 import { vertaalKleur } from '@/lib/kleurnaam'
 
 const supabase = createClient()
 
-interface Product {
+export interface Product {
   id: string
   name: string
   name_en?: string
@@ -47,7 +49,7 @@ interface Product {
   description_en?: string
   base_price: number
   sale_price: number | null
-  category_id: string
+  category_id: string | null
   meta_title: string
   meta_description: string
   size_guide_content?: any | null
@@ -86,7 +88,7 @@ interface Product {
     default_materials_care_en?: string | null
     pdp_signature_specs?: string | null
     pdp_signature_specs_en?: string | null
-  }
+  } | null
 }
 
 interface ProductImage {
@@ -309,6 +311,24 @@ function VideoThumbnail({
   )
 }
 
+interface ProductPresentationSettings {
+  free_shipping_threshold: number
+  return_days: number
+  shipping_cost: number
+  show_preview_images_notice: boolean
+  pdp_sticky_picker_enabled: boolean
+  return_label_cost_incl_btw: number
+}
+
+// Query-string selection is the only CSR-only part of an otherwise server-
+// rendered PDP. Keeping its Suspense boundary here preserves the hero/product
+// HTML in static pages instead of bailing the entire product into client render.
+function ProductColorQuery({ onChange }: { onChange: (color: string | null) => void }) {
+  const color = useSearchParams().get('color')
+  useEffect(() => onChange(color), [color, onChange])
+  return null
+}
+
 interface ProductPageProps {
   params: Promise<{ slug: string; locale: string }>
   /** Server-rendered Instagram-feed sectie. Komt vanuit de bovenliggende
@@ -316,10 +336,12 @@ interface ProductPageProps {
    *  her-fetchen vanuit een client component. Wanneer de admin de feed
    *  niet aan heeft staan, levert page.tsx hier `null` aan en rendert
    *  de PDP gewoon zonder Instagram-blok. */
+  initialSettings?: ProductPresentationSettings
+  initialProduct?: Product
   instagramSlot?: React.ReactNode
 }
 
-export default function ProductPage({ params, instagramSlot }: ProductPageProps) {
+export default function ProductPage({ params, instagramSlot, initialProduct, initialSettings }: ProductPageProps) {
   const t = useTranslations('product')
   const tShipping = useTranslations('shipping')
   const tCommon = useTranslations('common')
@@ -330,8 +352,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   // color preselected. Shop color-split tiles + transactional email
   // links rely on this — see src/lib/product-display.ts buildPdpHref()
   // and src/app/api/admin/campaigns/spring-drop/send/route.ts.
-  const searchParams = useSearchParams()
-  const requestedColorParam = searchParams.get('color')
+  const [requestedColorParam, setRequestedColorParam] = useState<string | null>(null)
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -342,13 +363,20 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   const getLocalizedDescription = (product: Product) => 
     locale === 'en' && product.description_en ? product.description_en : product.description
   const getLocalizedCategoryName = (product: Product) => 
-    locale === 'en' && product.categories.name_en ? product.categories.name_en : product.categories.name
+    locale === 'en' && product.categories?.name_en ? product.categories?.name_en : product.categories?.name
   
-  const [product, setProduct] = useState<Product | null>(null)
+  const [product, setProduct] = useState<Product | null>(initialProduct ?? null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialProduct)
+  const [loadError, setLoadError] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
-  const [selectedSize, setSelectedSize] = useState<string>('')
+  const initialVariants = initialProduct?.product_variants ?? []
+  const initialColorVariants = requestedColorParam
+    ? initialVariants.filter(variant => variant.color?.toLowerCase() === requestedColorParam.toLowerCase())
+    : initialVariants
+  const initialVariant = initialColorVariants.find(variant => variant.is_available && variant.stock_quantity + (variant.presale_stock_quantity || 0) > 0)
+    ?? initialColorVariants.find(variant => variant.is_available) ?? initialColorVariants[0]
+  const [selectedSize, setSelectedSize] = useState<string>(initialVariant?.size ?? '')
 
   // Heeft de bezoeker maat en kleur zelf aangetikt, of staat er nog wat wij
   // hebben voorgeselecteerd?
@@ -360,7 +388,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   // Met deze twee vlaggen erbij is het verschil achteraf wél te zien.
   const maatZelfGekozen = useRef(false)
   const kleurZelfGekozen = useRef(false)
-  const [selectedColor, setSelectedColor] = useState<string>('')
+  const [selectedColor, setSelectedColor] = useState<string>(initialVariant?.color ?? '')
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [showLightbox, setShowLightbox] = useState(false)
@@ -436,15 +464,8 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
       })
     })
   }
-  const [settings, setSettings] = useState<{
-    free_shipping_threshold: number
-    return_days: number
-    shipping_cost: number
-    show_preview_images_notice: boolean
-    pdp_sticky_picker_enabled: boolean
-    return_label_cost_incl_btw: number
-  } | null>(null)
-  const [settingsLoading, setSettingsLoading] = useState(true)
+  const [settings, setSettings] = useState<ProductPresentationSettings | null>(initialSettings ?? null)
+  const [settingsLoading, setSettingsLoading] = useState(!initialSettings)
 
   // Ref for scroll container (CSS scroll-snap)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -460,7 +481,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
 
   useEffect(() => {
     loadWishlist()
-    loadSettings()
+    if (!initialSettings) void loadSettings()
   }, [])
 
   const loadSettings = async () => {
@@ -485,7 +506,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
   }
 
   useEffect(() => {
-    fetchProduct()
+    void fetchProduct(initialProduct)
   }, [slug])
 
   /**
@@ -561,45 +582,22 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     }
   }, [showSizeGuide])
 
-  async function fetchProduct() {
+  async function fetchProduct(seed?: Product) {
+    const requestedColorParam = new URLSearchParams(window.location.search).get('color')
+    setLoadError(false)
+    try {
     const supabase = createClient()
-    const { data, error } = await supabase
+    const { data, error } = seed ? { data: seed, error: null } : await supabase
       .from('products')
-      .select(`
-        *,
-        name_en,
-        description_en,
-        size_guide_content_en,
-        product_images(*),
-        product_variants(
-          id,
-          product_id,
-          size,
-          color,
-          color_hex,
-          sku,
-          stock_quantity,
-          presale_stock_quantity,
-          presale_enabled,
-          presale_expected_date,
-          presale_expected_date_en,
-          price_adjustment,
-          is_available,
-          display_order,
-          created_at
-        ),
-        categories(name, name_en, slug, size_guide_type, size_guide_content, size_guide_content_en, default_product_details, default_product_details_en, default_materials_care, default_materials_care_en, pdp_signature_specs, pdp_signature_specs_en),
-        product_quantity_discounts(id, min_quantity, discount_type, discount_value, is_active)
-      `)
+      .select(PDP_PRODUCT_SELECT)
       .eq('slug', slug)
       .eq('is_active', true)
       .eq('status', 'active')
+      .abortSignal(AbortSignal.timeout(8000))
       .single()
 
     if (error) {
-      console.error('Error fetching product:', error)
-      setLoading(false)
-      return
+      throw error
     }
 
     if (data) {
@@ -671,6 +669,9 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         }
       }
 
+      // Recommendations must never delay the main product or buy controls.
+      setLoading(false)
+
       // Fetch related products from same category
       const { data: related } = await supabase
         .from('products')
@@ -706,6 +707,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         .neq('id', data.id)
         .order('base_price', { ascending: true })
         .limit(6)
+        .abortSignal(AbortSignal.timeout(8000))
 
       if (related) {
         // Niets tonen dat meer dan het dubbele kost van wat iemand nu bekijkt.
@@ -726,7 +728,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
         setRelatedProducts(productsWithSortedImages)
       }
     }
-    setLoading(false)
+    } catch (error) {
+      console.error('Product request failed:', error)
+      if (!seed) setLoadError(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   /**
@@ -1117,6 +1124,14 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
     )
   }
 
+  if (!product && loadError) {
+    return <div role="alert" className="max-w-xl mx-auto px-6 py-20 text-center">
+      <h1 className="font-display text-3xl mb-4">{locale === 'en' ? 'Unable to load this product' : 'Product tijdelijk niet bereikbaar'}</h1>
+      <p className="mb-6">{locale === 'en' ? 'Please try again in a moment.' : 'Probeer het over een moment opnieuw.'}</p>
+      <button className="bg-brand-primary text-white px-6 py-3 font-bold" onClick={() => { setLoading(true); void fetchProduct() }}>{locale === 'en' ? 'Try again' : 'Opnieuw proberen'}</button>
+    </div>
+  }
+
   if (!product) {
     return (
       <div className="min-h-screen pt-6 md:pt-8 px-4">
@@ -1132,6 +1147,10 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
       </div>
     )
   }
+
+  const supplierFulfilled = isTapstitchProduct(product)
+  const supplierDelivery = locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.'
+  const supplierOrigin = locale === 'en' ? 'Fulfilled by our production partner Tapstitch.' : 'Geleverd via onze productiepartner Tapstitch.'
 
   if (product.is_gift_card) {
     return (
@@ -1163,9 +1182,9 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           })),
           categories: product.categories
             ? {
-                name: product.categories.name,
-                name_en: product.categories.name_en ?? null,
-                slug: product.categories.slug,
+                name: product.categories?.name,
+                name_en: product.categories?.name_en ?? null,
+                slug: product.categories?.slug,
               }
             : null,
         }}
@@ -1197,6 +1216,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
 
   return (
     <>
+      <Suspense fallback={null}><ProductColorQuery onChange={setRequestedColorParam} /></Suspense>
       <div className="min-h-screen px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Sentinel for the mobile sticky variant-picker. Sits at the very
@@ -1244,7 +1264,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                             : 'md:opacity-0 md:pointer-events-none'
                         }`}
                       >
-                        {media.media_type === 'video' ? (
+                        {Math.abs(index - selectedImage) <= 1 ? (media.media_type === 'video' ? (
                           <MainVideo 
                             videoUrl={media.url}
                             posterUrl={media.video_thumbnail_url}
@@ -1264,12 +1284,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                               sizes="(max-width: 768px) 100vw, 50vw"
                               quality={95}
                               className="object-contain object-center"
-                              priority={index === 0}
+                              priority={index === selectedImage}
                               placeholder="blur"
                               blurDataURL={BLUR_DATA_URL}
                             />
                           </div>
-                        )}
+                        )) : null}
                       </div>
                     ))}
                   </div>
@@ -1496,13 +1516,13 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                   {t('breadcrumb.shop', { ns: 'common' })}
                 </LocaleLink>
                 <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span>
-                <LocaleLink
+                {product.categories && <><LocaleLink
                   href={`/shop?category=${product.categories.slug}`}
                   className="hover:text-brand-primary transition-colors"
                 >
                   {product.categories.name}
                 </LocaleLink>
-                <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span>
+                <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span></>}
                 <span className="text-gray-700 font-medium">
                   {product && getLocalizedName(product)}
                 </span>
@@ -1515,7 +1535,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     above the title. Falls back to a brand line when no
                     reviews exist yet. */}
                 <div className="mb-1 md:mb-2">
-                  <ProductReviewSnippet productId={product.id} />
+                  <ProductReviewSnippet productId={product.id} fallbackText={supplierFulfilled ? (locale === 'en' ? 'Selected for MOSE' : 'Geselecteerd voor MOSE') : undefined} />
                 </div>
                 <div className="flex items-start justify-between gap-3 mb-2 md:mb-3">
                   <h1 className="text-2xl md:text-3xl font-display transition-all duration-300">
@@ -1525,7 +1545,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     )}
                   </h1>
                   <span className="hidden md:inline-flex shrink-0 items-center px-2 py-0.5 bg-black text-white text-[10px] font-bold uppercase tracking-wider whitespace-nowrap mt-1">
-                    {t('madeInGroningenBadge')}
+                    {supplierFulfilled ? 'MOSE SELECT' : t('madeInGroningenBadge')}
                   </span>
                 </div>
                 
@@ -1559,7 +1579,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                             </p>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{t('inclVat')}</p>
-                          <KlarnaInstallmentLine price={salePrice} />
+                          {!supplierFulfilled && <KlarnaInstallmentLine price={salePrice} />}
                         </>
                       )
                     }
@@ -1568,7 +1588,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                       <>
                         <p className="text-xl md:text-2xl font-bold">{formatPrice(basePrice, locale)}</p>
                         <p className="text-xs text-gray-500">{t('inclVat')}</p>
-                        <KlarnaInstallmentLine price={basePrice} />
+                        {!supplierFulfilled && <KlarnaInstallmentLine price={basePrice} />}
                       </>
                     )
                   })()}
@@ -1576,7 +1596,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                 {/* Mobile-only Made-in-Groningen badge sits beneath the price
                     so the title row stays uncluttered on narrow screens. */}
                 <span className="md:hidden inline-flex items-center px-2 py-0.5 bg-black text-white text-[10px] font-bold uppercase tracking-wider mb-1">
-                  {t('madeInGroningenBadge')}
+                  {supplierFulfilled ? 'MOSE SELECT' : t('madeInGroningenBadge')}
                 </span>
 
                 {/* Staffelkorting badge */}
@@ -1706,12 +1726,12 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Truck className="w-3.5 h-3.5" />
-                        {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                        {supplierFulfilled ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
                       </span>
-                      {product.categories.size_guide_type === 'watch' && (
+                      {product.categories?.size_guide_type === 'watch' && (
                         <span className="flex items-center gap-1.5">
                           <Lock className="w-3.5 h-3.5" />
                           {t('trust.warranty')}
@@ -1941,7 +1961,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                       {t('size')}: {selectedSize}
                     </label>
                     {/* Dynamic Size Guide Button - only show if not 'none' */}
-                    {product.categories.size_guide_type !== 'none' && (
+                    {product.categories?.size_guide_type !== 'none' && (
                       <button
                         onClick={() => setShowSizeGuide(true)}
                         className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
@@ -1949,10 +1969,10 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        {product.categories.size_guide_type === 'watch' ? t('sizeGuide.specs') : 
-                         product.categories.size_guide_type === 'accessory' ? t('sizeGuide.info') :
-                         product.categories.size_guide_type === 'shoes' ? t('sizeGuide.shoes') :
-                         product.categories.size_guide_type === 'jewelry' ? t('sizeGuide.jewelry') :
+                        {product.categories?.size_guide_type === 'watch' ? t('sizeGuide.specs') :
+                         product.categories?.size_guide_type === 'accessory' ? t('sizeGuide.info') :
+                         product.categories?.size_guide_type === 'shoes' ? t('sizeGuide.shoes') :
+                         product.categories?.size_guide_type === 'jewelry' ? t('sizeGuide.jewelry') :
                          t('sizeGuide.default')}
                       </button>
                     )}
@@ -2113,12 +2133,13 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
               {hasAnyStock && (
                 <div className="border-2 border-black p-3 md:p-4">
                   <PdpTrustStrip
+                    supplierFulfilled={supplierFulfilled}
                     freeShippingThreshold={settings.free_shipping_threshold}
                     shippingCost={settings.shipping_cost}
                     signatureSpecs={
                       locale === 'en'
-                        ? product.categories.pdp_signature_specs_en || product.categories.pdp_signature_specs || null
-                        : product.categories.pdp_signature_specs || null
+                        ? product.categories?.pdp_signature_specs_en || product.categories?.pdp_signature_specs || null
+                        : product.categories?.pdp_signature_specs || null
                     }
                   />
                 </div>
@@ -2161,7 +2182,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">
-                            {settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                            {supplierFulfilled ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                               ? tShipping('alwaysFreeShipping')
                               : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                             }
@@ -2173,7 +2194,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                         </div>
                         <div className="flex items-center gap-3">
                           <MapPin className="w-5 h-5 text-brand-primary flex-shrink-0" />
-                          <span className="text-sm font-semibold text-gray-900">{t('madeLocally')}</span>
+                          <span className="text-sm font-semibold text-gray-900">{supplierFulfilled ? supplierOrigin : t('madeLocally')}</span>
                         </div>
                       </div>
                     )}
@@ -2198,10 +2219,10 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     </button>
                     {activeTab === 'details' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {product.categories?.default_product_details || product.categories?.default_product_details_en ? (
+                        {supplierFulfilled ? <p>{getLocalizedDescription(product)}</p> : product.categories?.default_product_details || product.categories?.default_product_details_en ? (
                           renderHTMLContent(
-                            locale === 'en' && product.categories?.default_product_details_en 
-                              ? product.categories.default_product_details_en 
+                            locale === 'en' && product.categories?.default_product_details_en
+                              ? product.categories?.default_product_details_en
                               : product.categories?.default_product_details || ''
                           )
                         ) : (
@@ -2244,10 +2265,10 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     </button>
                     {activeTab === 'materials' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
+                        {supplierFulfilled ? <p>{locale === 'en' ? 'Refer to the product description for the fabric composition. Follow the care label inside your garment.' : 'Bekijk de productbeschrijving voor de samenstelling. Volg het waslabel in je kledingstuk.'}</p> : product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
                           renderHTMLContent(
-                            locale === 'en' && product.categories?.default_materials_care_en 
-                              ? product.categories.default_materials_care_en 
+                            locale === 'en' && product.categories?.default_materials_care_en
+                              ? product.categories?.default_materials_care_en
                               : product.categories?.default_materials_care || ''
                           )
                         ) : (
@@ -2282,13 +2303,13 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
                     {activeTab === 'shipping' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {
-                          settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          supplierFulfilled ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                             ? tShipping('alwaysFreeShipping')
                             : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }</p>
-                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {t('shipping.deliveryTimeValue')}</p>
+                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {supplierFulfilled ? supplierDelivery : t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
-                        <p><span className="font-semibold">{t('returns.cost')}:</span> {t('returns.costValue', { cost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') })}</p>
+                        <p><span className="font-semibold">{t('returns.cost')}:</span> {supplierFulfilled ? (locale === 'en' ? 'See our returns policy for instructions and costs.' : 'Bekijk ons retourbeleid voor de werkwijze en kosten.') : t('returns.costValue', { cost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') })}</p>
                       </div>
                     )}
                   </div>
@@ -2369,6 +2390,7 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
               concurrenten heeft zo'n product-FAQ; het is iets wat MOSE beter
               doet, en dan moet het niet onderaan staan. */}
           <PdpFaq
+            supplierFulfilled={supplierFulfilled}
             freeShippingThreshold={settings.free_shipping_threshold}
             shippingCost={settings.shipping_cost}
             returnDays={settings.return_days}
@@ -2444,9 +2466,11 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
       {showSizeGuide && (() => {
         // Priority 1: Product-specific content (override)
         // Select locale-specific content: EN if locale is 'en', otherwise NL
-        const sizeGuideContent = locale === 'en' 
-          ? (product.size_guide_content_en || product.categories.size_guide_content_en || product.size_guide_content || product.categories.size_guide_content)
-          : (product.size_guide_content || product.categories.size_guide_content)
+        const sizeGuideContent = supplierFulfilled
+          ? (locale === 'en' ? product.size_guide_content_en || product.size_guide_content : product.size_guide_content)
+          : locale === 'en'
+          ? (product.size_guide_content_en || product.categories?.size_guide_content_en || product.size_guide_content || product.categories?.size_guide_content)
+          : (product.size_guide_content || product.categories?.size_guide_content)
         
         // If we have JSON content, use DynamicSizeGuideModal
         if (sizeGuideContent) {
@@ -2458,8 +2482,18 @@ export default function ProductPage({ params, instagramSlot }: ProductPageProps)
           )
         }
         
+        if (supplierFulfilled) return (
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+            <div className="bg-white border-2 border-black p-6 max-w-md">
+              <h2 className="font-display text-2xl mb-4">{t('sizeGuide.title')}</h2>
+              <p>{locale === 'en' ? 'Please contact MOSE for the measurements of this specific model before ordering.' : 'Vraag MOSE vóór het bestellen naar de afmetingen van dit specifieke model.'}</p>
+              <button className="mt-6 bg-brand-primary text-white px-6 py-3 font-bold" onClick={() => setShowSizeGuide(false)}>{t('sizeGuide.closeButton')}</button>
+            </div>
+          </div>
+        )
+
         // Fallback: Hardcoded modals for backward compatibility
-        if (product.categories.size_guide_type === 'watch') {
+        if (product.categories?.size_guide_type === 'watch') {
           return <WatchSpecsModal onClose={() => setShowSizeGuide(false)} />
         }
         

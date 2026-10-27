@@ -24,6 +24,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { sendEmail, htmlToText } from '@/lib/postmark'
 import { schrijfContactUit } from '@/lib/brevo'
 import { postmark, zorgVoorStream, verstuurdLaatste30Dagen, leesInstellingen, ORDERRESERVE } from '@/lib/toestemming'
+import { MOSE_EDIT_PILOT, runMoseEditPilot, pilotMail } from '@/lib/mose-edit-pilot'
 
 export const CAMPAGNE_STREAM = 'campagnes'
 const AFZENDER = 'MOSE <info@mosewear.com>'
@@ -62,6 +63,7 @@ interface Moment {
 
 /** Zet de UTM-kenmerken op elke link naar de winkel, zodat bezoek en orders per moment te herleiden zijn. */
 export function bouwCampagneMail(c: Pick<Campagne, 'html' | 'slug' | 'voorvertoning'>, momentLabel: string) {
+  if (c.slug === MOSE_EDIT_PILOT.slug) return pilotMail(c.html, momentLabel)
   const inhoud = momentLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
   const html = c.html.replace(/href="(https:\/\/(?:www\.)?mosewear\.com[^"]*)"/g, (_m, url: string) => {
     const scheiding = url.includes('?') ? '&' : '?'
@@ -105,6 +107,7 @@ async function tellingen(campagneId: string) {
 /** Geeft de reden terug als de campagne moet stoppen. */
 async function controleerCampagne(c: Campagne): Promise<string | null> {
   const t = await tellingen(c.id)
+  if (c.slug === MOSE_EDIT_PILOT.slug && (t.bounces || t.klachten || t.afgemeld)) return 'Ontvangerssignaal bij de proefgroep: beoordeel de resultaten voordat er meer wordt verstuurd'
   if (t.verzonden === 0) return null
   const pct = (n: number) => Math.round((n / t.verzonden) * 10000) / 100
   if (t.klachten > 0 && pct(t.klachten) > Number(c.max_klacht_pct)) {
@@ -173,6 +176,11 @@ export async function draaiCampagnes(): Promise<CampagneRun> {
 
   for (const m of lijst) {
     const c = m.campagnes
+    if (c.slug === MOSE_EDIT_PILOT.slug) {
+      const result = await runMoseEditPilot(c, m)
+      if (c.status === 'actief') return result
+      continue
+    }
     const eind = new Date(new Date(m.start_op).getTime() + VENSTER_UREN * 3_600_000)
     if (c.status !== 'actief') {
       // Een gestopte of concept-campagne laat zijn moment liggen tot hij weer
@@ -245,13 +253,22 @@ export async function draaiCampagnes(): Promise<CampagneRun> {
 }
 
 /** Bounce, klacht of afmelding vanuit de webhook. */
-export async function verwerkCampagneSignaal(email: string, soort: 'bounce' | 'klacht' | 'afgemeld', messageId?: string | null) {
+export async function verwerkCampagneSignaal(email: string, soort: 'bounce' | 'klacht' | 'afgemeld', messageId?: string | null, metadataCampaignId?: string) {
   const adres = email.trim().toLowerCase()
   if (!adres) return
   const db = createServiceClient()
   let query = db.from('campagne_ontvangers').update({ status: soort, signaal_op: new Date().toISOString() }).eq('email', adres)
   query = messageId ? query.eq('postmark_id', messageId) : query.eq('status', 'verzonden')
-  const { data } = await query.select('campagne_id')
+  const { data: original, error } = await query.select('campagne_id')
+  if (error) throw new Error('Campagnesignaal niet opgeslagen')
+  let data = original
+  // A fast provider webhook may precede the send response that stores MessageID.
+  if (!data?.length && metadataCampaignId === MOSE_EDIT_PILOT.campaignId && messageId) {
+    const pending = await db.from('campagne_ontvangers').update({ status: soort, signaal_op: new Date().toISOString(), postmark_id: messageId })
+      .eq('campagne_id', metadataCampaignId).eq('email', adres).is('postmark_id', null).eq('status', 'bezig').select('campagne_id')
+    if (pending.error) throw new Error('Proefsignaal niet opgeslagen')
+    data = pending.data
+  }
 
   if (soort !== 'bounce') {
     // Wie zich bij een campagne afmeldt of klaagt, wil niets meer van MOSE.
@@ -286,7 +303,7 @@ export async function verstuurCampagneTest(campagneId: string, email: string) {
     TextBody: mail.tekst,
     MessageStream: CAMPAGNE_STREAM,
     Tag: `${(c as Campagne).slug}-test`,
-    TrackLinks: 'None',
+    TrackLinks: c.slug === MOSE_EDIT_PILOT.slug ? 'HtmlAndText' : 'None',
   })
   return res.success ? { ok: true } : { ok: false, fout: JSON.stringify(res.error) }
 }
@@ -296,7 +313,17 @@ export async function campagneOverzicht() {
   const db = createServiceClient()
   const { data: campagnes } = await db.from('campagnes').select('id, slug, naam, onderwerp, status, stopreden, wachttijd_minuten, min_dagen_tussen, per_run').order('created_at')
   const { data: momenten } = await db.from('campagne_momenten').select('*').order('start_op')
-  const { data: ontvangers } = await db.from('campagne_ontvangers').select('campagne_id, email, moment_id, status, verzonden_op').limit(20000)
+  // Supabase caps each response at 1,000 rows, even with limit(20000).
+  // Fetch the full recipient ledger so a large campaign is not truncated.
+  const ontvangers: Array<{ campagne_id: string; email: string; moment_id: string | null; status: string; verzonden_op: string | null }> = []
+  for (let van = 0; ; van += 1000) {
+    const { data, error } = await db.from('campagne_ontvangers')
+      .select('campagne_id, email, moment_id, status, verzonden_op')
+      .order('campagne_id').order('email').range(van, van + 999)
+    if (error) throw new Error(`Campagneontvangers niet leesbaar: ${error.message}`)
+    ontvangers.push(...(data || []))
+    if (!data || data.length < 1000) break
+  }
   const { data: orders } = await db.from('orders').select('email, total, created_at').in('payment_status', ['paid', 'refunded']).gte('created_at', new Date(Date.now() - 60 * 86_400_000).toISOString())
 
   const ordersPerEmail = new Map<string, Array<{ t: number; bedrag: number }>>()

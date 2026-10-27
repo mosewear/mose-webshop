@@ -1,0 +1,1699 @@
+{
+  "version": 1,
+  "importKey": "tapstitch-unprinted-2026-10-27",
+  "sourceCapturedOn": "2026-10-27",
+  "mode": "draft-only",
+  "pricePolicy": "Unknown sale prices remain null here. MOSE requires base_price: the import writes a technical zero placeholder only on inactive draft products with unavailable variants and zero stock. This is not a retail price.",
+  "imagesPolicy": "65 AI-generated concept images; physical sample fidelity remains unverified. Original supplier images are retained as source evidence.",
+  "products": [
+    {
+      "sourceProductId": "1516805081033580544",
+      "sourceCode": "RW0041-P001-V3",
+      "sourcePage": "https://www.tapstitch.com/custom/1516805081033580544",
+      "supplierName": "Essential Oversized Boxy Fit Fleece Hoodie",
+      "name": "Boxy Fleece Hoodie",
+      "nameEn": "Boxy Fleece Hoodie",
+      "slug": "tapstitch-rw0041-boxy-fleece-hoodie",
+      "description": "Een korte, ruime hoodie met verlaagde schouders en een rustige, onbedrukte uitstraling. De boxy pasvorm geeft ruimte rond borst en mouwen.\n\nMateriaal: 53% polyester, 42% katoen, 5% overige vezels.\nStofgewicht: 10.2 oz/yd² (345 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "A cropped, oversized fleece hoodie with dropped shoulders and a plain finish. The boxy fit gives the chest and sleeves room.\n\nFabric: 53% polyester, 42% cotton, 5% other fibers.\nFabric weight: 10.2 oz/yd² (345 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Schouderbreedte (cm)",
+          "Borstbreedte (cm)",
+          "Mouwlengte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "59",
+            "65",
+            "72",
+            "55"
+          ],
+          [
+            "M",
+            "61",
+            "67",
+            "74",
+            "56"
+          ],
+          [
+            "L",
+            "63",
+            "69",
+            "76",
+            "57"
+          ],
+          [
+            "XL",
+            "65",
+            "71",
+            "78",
+            "58"
+          ],
+          [
+            "2XL",
+            "67",
+            "73",
+            "80",
+            "59"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Shoulder (cm)",
+          "Chest (cm)",
+          "Sleeve length (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "59",
+            "65",
+            "72",
+            "55"
+          ],
+          [
+            "M",
+            "61",
+            "67",
+            "74",
+            "56"
+          ],
+          [
+            "L",
+            "63",
+            "69",
+            "76",
+            "57"
+          ],
+          [
+            "XL",
+            "65",
+            "71",
+            "78",
+            "58"
+          ],
+          [
+            "2XL",
+            "67",
+            "73",
+            "80",
+            "59"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "53% polyester, 42% cotton, 5% other fibers",
+        "Fabric Weight": "10.2 oz/yd² (345 g/m²)",
+        "Fabric Thickness": "Thick",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 8405,
+          "name": "Coffee",
+          "hex": "#4b3730",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-RW0041%20(9)-v1763604804.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-RW0041%20(10)-v1763604808.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/RW0041-coffee.png",
+              "sha256": "93c34a594021a2da2823d5673f3a2f7391ede35fd1087ae70565bff5bce477ec",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/RW0041-coffee--back.png",
+              "sha256": "95a8fd91c6f29afec4e9e0bbef8a872e996ef3e2b8cad4a28c3ea3cd0a4b7197",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/RW0041-coffee--angle.png",
+              "sha256": "c2b4983d75eab243170da08d0c92f9b9c7b12b42a8c19631de01e84451a389df",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/RW0041-coffee--detail.png",
+              "sha256": "213bf3be1cec3621403c0d4db30d64ef266c3b58d7b23ccc3fb10980a2cfb5b1",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/RW0041-coffee--lifestyle.png",
+              "sha256": "a58e271a9dd38bd9eada7242780cc64d9ceb610361acea3209d223e97f495a4b",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        },
+        {
+          "sourceColorId": 8403,
+          "name": "Black",
+          "hex": "#1d1f1e",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-RW0041%20(3)-v1763604783.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-RW0041%20(4)-v1763604783.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/RW0041-black.png",
+              "sha256": "fc7830dbce47c757121ed9b2f775b7c0e2e077a174149df942f4b04da2eadccb",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/RW0041-black--back.png",
+              "sha256": "60520037054b19a73dac329537ad03f20bf4a6ae78d94730ba804fe0761faf4f",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/RW0041-black--angle.png",
+              "sha256": "cf0736648ae3d29226308a87b2c3e05555eb37f4c8278fe01da88842941086fc",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/RW0041-black--detail.png",
+              "sha256": "7ae8e2f670b9b1df8824a5b0a83507df2e50ca5ac420eb19f55fab34e72ae9c8",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/RW0041-black--lifestyle.png",
+              "sha256": "dd227bee7c67558e21d989880a051b144154584e6545f273688a34c26288461f",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        },
+        {
+          "sourceColorId": 8410,
+          "name": "Dark Green",
+          "hex": "#204136",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-RW0041%20(11)-v1763604800.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-RW0041%20(12)-v1763604803.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/RW0041-dark-green.png",
+              "sha256": "26fa181e56413dff42ec8aed2457a0a9bea1baf02036606c6ea17f1d0c292022",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/RW0041-dark-green--back.png",
+              "sha256": "100b4c854c2c344a6a88772d84b05c52813de7707f1405882a4557aa2985bcbf",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/RW0041-dark-green--angle.png",
+              "sha256": "b8703c86c5d38b5594642b88b655a8357ac2e1fa1f1badab1f17a830a82bc8dc",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/RW0041-dark-green--detail.png",
+              "sha256": "8f55c27432325d34154d9b16aba380e4c4154bf8c06028f95eb88a12c17088d2",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/RW0041-dark-green--lifestyle.png",
+              "sha256": "6d7c3ef27d9131aeb60521dcb76c43d1d383285e7bde602984ef6fdd9fe8ed55",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1369643248599044096",
+      "sourceCode": "RT0028-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1369643248599044096",
+      "supplierName": "Color-Blocked Raglan Long-Sleeve T-Shirt",
+      "name": "Raglan Longsleeve",
+      "nameEn": "Raglan Longsleeve",
+      "slug": "tapstitch-rt0028-raglan-longsleeve",
+      "description": "Een ruime longsleeve met contrasterende raglanmouwen. De katoenen stof van 270 g/m² geeft deze onbedrukte basic meer gewicht.\n\nMateriaal: 100% katoen.\nStofgewicht: 8.0 oz/yd² (270 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "A relaxed long-sleeve tee with contrasting raglan sleeves. The 270 g/m² cotton fabric gives this plain staple a substantial feel.\n\nFabric: 100% cotton.\nFabric weight: 8.0 oz/yd² (270 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Borstbreedte (cm)",
+          "Mouwlengte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "70",
+            "58",
+            "76"
+          ],
+          [
+            "M",
+            "72",
+            "60",
+            "78"
+          ],
+          [
+            "L",
+            "74",
+            "62",
+            "80"
+          ],
+          [
+            "XL",
+            "76",
+            "64",
+            "82"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Chest (cm)",
+          "Sleeve length (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "70",
+            "58",
+            "76"
+          ],
+          [
+            "M",
+            "72",
+            "60",
+            "78"
+          ],
+          [
+            "L",
+            "74",
+            "62",
+            "80"
+          ],
+          [
+            "XL",
+            "76",
+            "64",
+            "82"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "100% cotton",
+        "Fabric Weight": "8.0 oz/yd² (270 g/m²)",
+        "Fabric Elasticity": "High Stretch",
+        "Fabric Thickness": "Moderate",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 7360,
+          "name": "White with Black",
+          "hex": "#eef2f5",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-RT0028%20(1)-v1768291972.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-RT0028%20(2)-v1768291972.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/RT0028-white-with-black.png",
+              "sha256": "01a57a82f84fb88fa8b7a83d8ca85e8886f0f8b931fdc4b1580dd2cd2569e611",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/RT0028-white-with-black--back.png",
+              "sha256": "51228d9abf631bcf51a4c7ee83655abfea886e45a2a1017df2c25365c5d8f5de",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/RT0028-white-with-black--angle.png",
+              "sha256": "daf9fb9d1679881fbc3bf251f5b8a880047ff6193f5a4ba8718f0ca05a8f44a8",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/RT0028-white-with-black--detail.png",
+              "sha256": "a30a4a4815ddad227228e520256a2a723787d5cbb8730bf9d73928abf7c147c6",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/RT0028-white-with-black--lifestyle.png",
+              "sha256": "ca5a1024ab4fd9a3ebd0df6791eff4faf424371d0d33cbbbc0e3d8be4e72fee8",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        },
+        {
+          "sourceColorId": 7361,
+          "name": "White with Coffee",
+          "hex": "#4a3828",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-RT0028%20(3)-v1768291991.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-RT0028%20(4)-v1768291991.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/RT0028-white-with-coffee.png",
+              "sha256": "24150f801af1ae497b83ea96bafece4f21032bdfa8ae29cc162ce80697301e73",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/RT0028-white-with-coffee--back.png",
+              "sha256": "0c688dbc70478c6072fea51d0cf7742fd6dc50cb53109a4098d9a42fd27d1867",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/RT0028-white-with-coffee--angle.png",
+              "sha256": "17991edfdaa2fcd7961f1851728e06c09479d7049b61c1647f68d961bcedb46b",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/RT0028-white-with-coffee--detail.png",
+              "sha256": "3212b4c1794f5457a41dd6ebd259e9053a91868ae4db1c91604f6b49359fbc4b",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/RT0028-white-with-coffee--lifestyle.png",
+              "sha256": "f38eb8be5f2a808b54970bf557f1330789d1b0e50c0e79dbb549dc756e51cdd9",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1488856079197757440",
+      "sourceCode": "MB0001-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1488856079197757440",
+      "supplierName": "Men's Barrel Leg Pants",
+      "name": "Barrel Pants",
+      "nameEn": "Barrel Pants",
+      "slug": "tapstitch-mb0001-barrel-pants",
+      "description": "Een ruime broek met barrel-leg silhouet en middelhoge taille. De katoenmix met elastaan geeft de onbedrukte broek bewegingsruimte.\n\nMateriaal: 52% katoen, 41% polyester, 7% elastaan.\nStofgewicht: 7.1 oz/yd² (240 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "Loose barrel-leg pants with a mid-rise waist. A cotton blend with elastane adds stretch to this plain style.\n\nFabric: 52% cotton, 41% polyester, 7% spandex.\nFabric weight: 7.1 oz/yd² (240 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Taillebreedte (cm)",
+          "Heupbreedte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "103",
+            "38",
+            "54"
+          ],
+          [
+            "M",
+            "105",
+            "40",
+            "56"
+          ],
+          [
+            "L",
+            "107",
+            "42",
+            "58"
+          ],
+          [
+            "XL",
+            "109",
+            "44",
+            "60"
+          ],
+          [
+            "2XL",
+            "111",
+            "46",
+            "62"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Waist (cm)",
+          "Hip (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "103",
+            "38",
+            "54"
+          ],
+          [
+            "M",
+            "105",
+            "40",
+            "56"
+          ],
+          [
+            "L",
+            "107",
+            "42",
+            "58"
+          ],
+          [
+            "XL",
+            "109",
+            "44",
+            "60"
+          ],
+          [
+            "2XL",
+            "111",
+            "46",
+            "62"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "52% cotton, 41% polyester, 7% spandex",
+        "Fabric Weight": "7.1 oz/yd² (240 g/m²)",
+        "Fabric Thickness": "Moderate",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 9652,
+          "name": "Black",
+          "hex": "#232931",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-MB0001%20(3)-v1775963992.jpg?x-oss-process=style/hugepod-product-list-webp",
+            "https://files.tapstitch.com/material/style/item_image/image-MB0001%20(4)-v1775963990.jpg?x-oss-process=style/hugepod-product-list-webp"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/MB0001-black.png",
+              "sha256": "bd4ab4e92f32dd1b82f985e3c663cabdbe496677dd77d962461ac6d75d29ef86",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/MB0001-black--back.png",
+              "sha256": "944aea44351ade01a4c3d76a46a49e936dac59cde9bff5e6c93a50bad74fd902",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/MB0001-black--angle.png",
+              "sha256": "4c3001c2355d17a720cad5af71ba4d64c32fd16fd5e24cece9b5a1cc0c34f08c",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/MB0001-black--detail.png",
+              "sha256": "8ed0db871488a1ea03b2305add50e925702a8668f9aa9bb54f3853b48c7400d4",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/MB0001-black--lifestyle.png",
+              "sha256": "3c4617dbc0034bfcc5eae4ff1113797664138a23c6840f90cd7614cebc177c48",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        },
+        {
+          "sourceColorId": 9651,
+          "name": "Gray Green",
+          "hex": "#a2a182",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-MB0001%20(5)-v1775963997.jpg?x-oss-process=style/hugepod-product-list-webp",
+            "https://files.tapstitch.com/material/style/item_image/image-MB0001%20(6)-v1775963993.jpg?x-oss-process=style/hugepod-product-list-webp"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/MB0001-gray-green.png",
+              "sha256": "1abaae690202d7c08ec72b278562b6ad34c4f08dfea868723979db972e703cd4",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/MB0001-gray-green--back.png",
+              "sha256": "6f5b8606285a12caf762ffb35cd49b715396bd535e807121f8918a5df6ca709e",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/MB0001-gray-green--angle.png",
+              "sha256": "172fbb9a52ebc98a3dd7c2d5ec0ae918440372e517db5bb578852da1eb9ccfc2",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/MB0001-gray-green--detail.png",
+              "sha256": "10dca6aaadfbb0dc9c5f3442cae5dbd4d8f7d2a2997d03094ed3f5c3ff38a064",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/MB0001-gray-green--lifestyle.png",
+              "sha256": "837c9283fb7907ffaa0f9fb6110209deff51ed05edc606ab4e1f70494864a372",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        },
+        {
+          "sourceColorId": 9650,
+          "name": "Coffee",
+          "hex": "#615346",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-MB0001%20(1)TT-v1775964003.jpg?x-oss-process=style/hugepod-product-list-webp",
+            "https://files.tapstitch.com/material/style/item_image/image-MB0001%20(2)TT-v1775963998.jpg?x-oss-process=style/hugepod-product-list-webp"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/MB0001-coffee.png",
+              "sha256": "04cb641d29c1b180bfb048fb527f931717c95588d9b3ab315a7a74f4b32f7207",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/MB0001-coffee--back.png",
+              "sha256": "fb02235cd92bb45d5abbc2096a7586223a961ede70faf3d34eab41a18d234064",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/MB0001-coffee--angle.png",
+              "sha256": "108f9aa88a14e08d190220c5d66e4643cd1e453eac9775e5b90c9b0e0810cff1",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/MB0001-coffee--detail.png",
+              "sha256": "ddde85b1bab43834ac5bbb54a68c9b7d875d3e4b87ec50ad4323b7874fa957c7",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/MB0001-coffee--lifestyle.png",
+              "sha256": "b60c77f4ea70f06642d7fa108974b2925f3e315a0cee2d84c4d75c0dc42618c9",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1549434820000690176",
+      "sourceCode": "MB0057-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1549434820000690176",
+      "supplierName": "Men's Tree Camo Barrel Leg Pants",
+      "name": "Tree Camo Barrel Pants",
+      "nameEn": "Tree Camo Barrel Pants",
+      "slug": "tapstitch-mb0057-tree-camo-barrel-pants",
+      "description": "Een ruime barrel-leg broek met boomcamouflage, middelhoge taille en knoop- en ritssluiting. Het patroon is onderdeel van de originele stof; er wordt geen extra bedrukking toegevoegd.\n\nMateriaal: 100% katoen.\nStofgewicht: 10.6 oz/yd² (360 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "Loose barrel-leg pants with tree camouflage, a mid-rise waist and button-and-zip closure. The original fabric pattern is retained with no added print.\n\nFabric: 100% cotton.\nFabric weight: 10.6 oz/yd² (360 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Taillebreedte (cm)",
+          "Heupbreedte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "105",
+            "38",
+            "52.5"
+          ],
+          [
+            "M",
+            "107",
+            "40",
+            "54.5"
+          ],
+          [
+            "L",
+            "109",
+            "42",
+            "56.5"
+          ],
+          [
+            "XL",
+            "111",
+            "44",
+            "58.5"
+          ],
+          [
+            "2XL",
+            "113",
+            "46",
+            "60.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Waist (cm)",
+          "Hip (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "105",
+            "38",
+            "52.5"
+          ],
+          [
+            "M",
+            "107",
+            "40",
+            "54.5"
+          ],
+          [
+            "L",
+            "109",
+            "42",
+            "56.5"
+          ],
+          [
+            "XL",
+            "111",
+            "44",
+            "58.5"
+          ],
+          [
+            "2XL",
+            "113",
+            "46",
+            "60.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "100% cotton",
+        "Fabric Weight": "10.6 oz/yd² (360 g/m²)",
+        "Fabric Thickness": "Moderate",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 13779,
+          "name": "Brown Tree Camo",
+          "hex": "#7c7565",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-MB0057%20(1)-v1791599564.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-MB0057%20(2)-v1791599564.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/MB0057-brown-tree-camo.png",
+              "sha256": "0de917a3cafcb82ac65eef0f0d71555252ab699ab74e09b969ba9a2aa84c279f",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/MB0057-brown-tree-camo--back.png",
+              "sha256": "c8de9c3b1bdb2421d783027e9af98ded412c39f69b5a446194784d578b80124d",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/MB0057-brown-tree-camo--angle.png",
+              "sha256": "a24d887ad98dde548aef1f9aabcfa94dff30962774ce6b0e1a8b6c33d3cec3c4",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/MB0057-brown-tree-camo--detail.png",
+              "sha256": "787de7ec353f4f1f30fb0b6b3cc7a20a341907f16e839715a88cf48c057635fe",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/MB0057-brown-tree-camo--lifestyle.png",
+              "sha256": "9e0020ca4dde92c50de1fa820e57c4c6fd6144700c1379159a6e143f651f1a12",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1544742753966178304",
+      "sourceCode": "UB0083-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1544742753966178304",
+      "supplierName": "Unisex Vintage Wash Barrel Leg Denim Jeans",
+      "name": "Vintage Barrel Jeans",
+      "nameEn": "Vintage Barrel Jeans",
+      "slug": "tapstitch-ub0083-vintage-barrel-jeans",
+      "description": "Een jeans met barrel-leg silhouet, vintage wassing en middelhoge taille. De denim van 410 g/m² geeft de vorm gewicht. Zonder toegevoegde print.\n\nMateriaal: 68.2% katoen, 25.8% polyester, 6% viscose.\nStofgewicht: 12.1 oz/yd² (410 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "Barrel-leg jeans with a vintage wash and mid-rise waist. The 410 g/m² denim adds weight to the silhouette. No added print.\n\nFabric: 68.2% cotton, 25.8% polyester, 6% viscose.\nFabric weight: 12.1 oz/yd² (410 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Taillebreedte (cm)",
+          "Heupbreedte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "103",
+            "35",
+            "52.5"
+          ],
+          [
+            "M",
+            "104",
+            "37",
+            "54.5"
+          ],
+          [
+            "L",
+            "105",
+            "39",
+            "56.5"
+          ],
+          [
+            "XL",
+            "106",
+            "41",
+            "58.5"
+          ],
+          [
+            "2XL",
+            "107",
+            "43",
+            "60.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Waist (cm)",
+          "Hip (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "103",
+            "35",
+            "52.5"
+          ],
+          [
+            "M",
+            "104",
+            "37",
+            "54.5"
+          ],
+          [
+            "L",
+            "105",
+            "39",
+            "56.5"
+          ],
+          [
+            "XL",
+            "106",
+            "41",
+            "58.5"
+          ],
+          [
+            "2XL",
+            "107",
+            "43",
+            "60.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "68.2% cotton, 25.8% polyester, 6% viscose",
+        "Fabric Weight": "12.1 oz/yd² (410 g/m²)",
+        "Fabric Thickness": "Thick",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 13510,
+          "name": "Jeans Blue",
+          "hex": "#667f94",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-UB0083%20(1)-v1789627622.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-UB0083%20(2)-v1789627622.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/UB0083-jeans-blue.png",
+              "sha256": "3641480e7970ffe3ef1a62b474bc5787bcb23f72ec4122734663439fbc63fdc7",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/UB0083-jeans-blue--back.png",
+              "sha256": "4a744c3e1468cbce74751d4fa933ebf694ffcc0941f8b7eb906ae277ff00ca9b",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/UB0083-jeans-blue--angle.png",
+              "sha256": "3c4a1599892e5f1e74099eb322f63a04a0f97f6bf99b1c3e7e665dfccfdbf59f",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/UB0083-jeans-blue--detail.png",
+              "sha256": "c0d36668915a38fbce50b07c8854d726dd915dbff6ea3fb12af6fdec8fc5b48b",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/UB0083-jeans-blue--lifestyle.png",
+              "sha256": "fdbb4bea16dd7f749d6a5ba127425fc176ae487f39653c4dde485716093f8f80",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1524102391815913472",
+      "sourceCode": "MB0030-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1524102391815913472",
+      "supplierName": "Men’s Vintage Wash Barrel Leg Jeans",
+      "name": "Washed Barrel Jeans",
+      "nameEn": "Washed Barrel Jeans",
+      "slug": "tapstitch-mb0030-washed-barrel-jeans",
+      "description": "Een ruime barrel-leg jeans met een uitgesproken vintage wassing en middelhoge taille. De denim weegt 450 g/m². Zonder toegevoegde print.\n\nMateriaal: 80% katoen, 14% geregenereerde cellulose, 6% polyester.\nStofgewicht: 13.3 oz/yd² (450 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "Loose barrel-leg jeans with a distinctive vintage wash and mid-rise waist. Made from 450 g/m² denim with no added print.\n\nFabric: 80% cotton, 14% regenerated cellulose, 6% polyester.\nFabric weight: 13.3 oz/yd² (450 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Taillebreedte (cm)",
+          "Heupbreedte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "106",
+            "38",
+            "53.5"
+          ],
+          [
+            "M",
+            "107",
+            "40",
+            "55.5"
+          ],
+          [
+            "L",
+            "108",
+            "42",
+            "57.5"
+          ],
+          [
+            "XL",
+            "109",
+            "44",
+            "59.5"
+          ],
+          [
+            "2XL",
+            "110",
+            "46",
+            "61.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Waist (cm)",
+          "Hip (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "106",
+            "38",
+            "53.5"
+          ],
+          [
+            "M",
+            "107",
+            "40",
+            "55.5"
+          ],
+          [
+            "L",
+            "108",
+            "42",
+            "57.5"
+          ],
+          [
+            "XL",
+            "109",
+            "44",
+            "59.5"
+          ],
+          [
+            "2XL",
+            "110",
+            "46",
+            "61.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "80% cotton, 14% regenerated cellulose, 6% polyester",
+        "Fabric Weight": "13.3 oz/yd² (450 g/m²)",
+        "Fabric Thickness": "Thick",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 11727,
+          "name": "Jeans Blue",
+          "hex": "#9c907f",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-MB0030%20(1)-v1784187450.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-MB0030%20(2)-v1784187450.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/MB0030-jeans-blue.png",
+              "sha256": "94caca4cd34e4fc60c5a4dc6e82fe84d637e2d3e1a2c808eab29141a0514785d",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/MB0030-jeans-blue--back.png",
+              "sha256": "c71eb8e35550a0aea94071904fd5b8439928e899dc1e11f87092a34c0f5471b2",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/MB0030-jeans-blue--angle.png",
+              "sha256": "7e01249e728457028a7c43c075d1d3ab42228227c4cefe168e73897b9899f7d8",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/MB0030-jeans-blue--detail.png",
+              "sha256": "f97a158353127e8e0c5dbfcaef5de3bcdeaacc6e19094d7b733a17114d1f91e8",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/MB0030-jeans-blue--lifestyle.png",
+              "sha256": "6b36a4f86185fcea1dab5d557bcb05c9035a70dfb65861338dc7075f10ad0e22",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1496881686280081408",
+      "sourceCode": "MB0010-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1496881686280081408",
+      "supplierName": "Men's Vintage Wash Sunfade Barrel Leg Jeans",
+      "name": "Sunfade Barrel Jeans",
+      "nameEn": "Sunfade Barrel Jeans",
+      "slug": "tapstitch-mb0010-sunfade-barrel-jeans",
+      "description": "Een ruime barrel-leg jeans in lichtblauw met sunfade-wassing en rafelige details. De middelhoge taille en denim van 460 g/m² bepalen de pasvorm. Zonder toegevoegde print.\n\nMateriaal: 80% katoen, 20% polyester.\nStofgewicht: 13.6 oz/yd² (460 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "Loose barrel-leg jeans in light blue with a sunfade wash and frayed details. A mid-rise waist and 460 g/m² denim define the fit. No added print.\n\nFabric: 80% cotton, 20% polyester.\nFabric weight: 13.6 oz/yd² (460 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Taillebreedte (cm)",
+          "Heupbreedte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "107",
+            "38",
+            "52.5"
+          ],
+          [
+            "M",
+            "108",
+            "40",
+            "54.5"
+          ],
+          [
+            "L",
+            "109",
+            "42",
+            "56.5"
+          ],
+          [
+            "XL",
+            "110",
+            "44",
+            "58.5"
+          ],
+          [
+            "2XL",
+            "111",
+            "46",
+            "60.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Waist (cm)",
+          "Hip (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "107",
+            "38",
+            "52.5"
+          ],
+          [
+            "M",
+            "108",
+            "40",
+            "54.5"
+          ],
+          [
+            "L",
+            "109",
+            "42",
+            "56.5"
+          ],
+          [
+            "XL",
+            "110",
+            "44",
+            "58.5"
+          ],
+          [
+            "2XL",
+            "111",
+            "46",
+            "60.5"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "80% cotton, 20% polyester",
+        "Fabric Weight": "13.6 oz/yd² (460 g/m²)",
+        "Fabric Thickness": "Moderate",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 10045,
+          "name": "Light Blue",
+          "hex": "#b3becc",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-MB0010%20(1)-v1778220812.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-MB0010%20(2)-v1778220812.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/MB0010-light-blue.png",
+              "sha256": "2e0ddcfccfbf2b21984a0eb8d2bcacab8c08ca45b276e76a23d4a450586f39bd",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/MB0010-light-blue--back.png",
+              "sha256": "542f745c3a02cc6531b0a389bac5b16d4908b2aefaf7edaaabb081b13c0e6200",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/MB0010-light-blue--angle.png",
+              "sha256": "4c5f6af1b1df39ab9f8e4222c75faffc694c99f494092ba31999aec82c2a896c",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/MB0010-light-blue--detail.png",
+              "sha256": "d7761e22e6418a69a0b25212d8c67988dad752e95ef2de04f5591819430e6e0b",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/MB0010-light-blue--lifestyle.png",
+              "sha256": "47f01dd808d97c263d90880edd8addd0086c708872ff0c5979c55ad6cb769542",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    },
+    {
+      "sourceProductId": "1486330220951773184",
+      "sourceCode": "UB0018-C001-V2",
+      "sourcePage": "https://www.tapstitch.com/custom/1486330220951773184",
+      "supplierName": "Men's Distressed Barrel Leg Jeans",
+      "name": "Distressed Barrel Jeans",
+      "nameEn": "Distressed Barrel Jeans",
+      "slug": "tapstitch-ub0018-distressed-barrel-jeans",
+      "description": "Een ruime barrel-leg jeans met gewassen finish, distressed details en middelhoge taille. De denim weegt 340 g/m². Zonder toegevoegde print.\n\nMateriaal: 91.4% katoen, 7.6% polyester, 1% overige vezels.\nStofgewicht: 10.0 oz/yd² (340 g/m²).\nOnderhoud: fijnwas op 30 °C, niet bleken, drogen op lage temperatuur, strijken op lage temperatuur, niet chemisch reinigen.",
+      "descriptionEn": "Loose barrel-leg jeans with a washed finish, distressed details and mid-rise waist. Made from 340 g/m² denim with no added print.\n\nFabric: 91.4% cotton, 7.6% polyester, 1% other fibers.\nFabric weight: 10.0 oz/yd² (340 g/m²).\nCare: Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean.",
+      "sizeGuide": {
+        "type": "table",
+        "columns": [
+          "Maat",
+          "Lengte (cm)",
+          "Taillebreedte (cm)",
+          "Heupbreedte (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "103.5",
+            "36.9",
+            "51.3"
+          ],
+          [
+            "M",
+            "105",
+            "38.9",
+            "53.3"
+          ],
+          [
+            "L",
+            "106.5",
+            "40.9",
+            "55.3"
+          ],
+          [
+            "XL",
+            "108",
+            "42.9",
+            "57.3"
+          ],
+          [
+            "2XL",
+            "109.5",
+            "44.9",
+            "59.3"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Kledingmaten, geen lichaamsomtrek",
+            "description": "Vergelijk de plat gemeten breedtes met een passend kledingstuk. Waarden rechtstreeks overgenomen van de leverancier; pasvorm nog te controleren met een sample."
+          }
+        ]
+      },
+      "sizeGuideEn": {
+        "type": "table",
+        "columns": [
+          "size",
+          "Length (cm)",
+          "Waist (cm)",
+          "Hip (cm)"
+        ],
+        "rows": [
+          [
+            "S",
+            "103.5",
+            "36.9",
+            "51.3"
+          ],
+          [
+            "M",
+            "105",
+            "38.9",
+            "53.3"
+          ],
+          [
+            "L",
+            "106.5",
+            "40.9",
+            "55.3"
+          ],
+          [
+            "XL",
+            "108",
+            "42.9",
+            "57.3"
+          ],
+          [
+            "2XL",
+            "109.5",
+            "44.9",
+            "59.3"
+          ]
+        ],
+        "how_to_measure": [
+          {
+            "label": "Garment measurements, not body circumference",
+            "description": "Compare flat garment widths with a garment that fits. Supplier measurements; sample fit verification is pending."
+          }
+        ]
+      },
+      "sourceMaterial": {
+        "Fabric": "91.4% cotton, 7.6% polyester, 1% other fibers",
+        "Fabric Weight": "10.0 oz/yd² (340 g/m²)",
+        "Fabric Thickness": "Thick",
+        "Care Instructions": "Machine wash at 30°C (gentle cycle); Do not bleach; Tumble dry low;  Iron at low temperature, avoid ironing on print; Do not dry clean"
+      },
+      "colorways": [
+        {
+          "sourceColorId": 9542,
+          "name": "Blue",
+          "hex": "#56646f",
+          "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL"
+          ],
+          "sourceImages": [
+            "https://files.tapstitch.com/material/style/item_image/image-%E6%9C%80%E7%BB%88-v1778748724.jpg?x-oss-process=style/hugepod-product-list",
+            "https://files.tapstitch.com/material/style/item_image/image-UB0018%20(2)-v1777426721.jpg?x-oss-process=style/hugepod-product-list"
+          ],
+          "images": [
+            {
+              "role": "front",
+              "path": "images/UB0018-blue.png",
+              "sha256": "25deaa4adba874a611c13757ae5cb8d50cab07b60e8bbe7dae59af0d92cb2838",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "back",
+              "path": "images/UB0018-blue--back.png",
+              "sha256": "07422e8abbf84cfaeaa435faee05429d8359219b5bea1b791264749e95daeec3",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "angle",
+              "path": "images/UB0018-blue--angle.png",
+              "sha256": "2ca084246c1d4cbe64c54826580a5efc437c91e4eb0ce3f3abcb47ed1ff6c87e",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "detail",
+              "path": "images/UB0018-blue--detail.png",
+              "sha256": "75cb4df7ba45f48dc8c8c41ca880df24a17e6de02e203b8b7f757a757aac1a14",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            },
+            {
+              "role": "lifestyle",
+              "path": "images/UB0018-blue--lifestyle.png",
+              "sha256": "ed68e9cfef534c0b22752b5931690ff2ca776abaf5b8ede96afaf6ddf9c18158",
+              "width": 1122,
+              "height": 1402,
+              "status": "concept-review"
+            }
+          ]
+        }
+      ],
+      "salePriceEur": null,
+      "landedCostEur": null,
+      "sampleVerified": false,
+      "fulfillmentVerified": false
+    }
+  ]
+}

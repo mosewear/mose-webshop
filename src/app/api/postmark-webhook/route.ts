@@ -180,18 +180,18 @@ export async function POST(req: NextRequest) {
 
     // Zelfde voor de campagnes, op hun eigen stream.
     if ((payload as { MessageStream?: string }).MessageStream === CAMPAGNE_STREAM) {
-      const p = payload as unknown as { Email?: string; Recipient?: string; Type?: string; SuppressSending?: boolean; MessageID?: string }
+      const p = payload as unknown as { Email?: string; Recipient?: string; Type?: string; SuppressSending?: boolean; MessageID?: string; Metadata?: { campagne_id?: string; campagne?: string } }
       const adres = p.Email || p.Recipient || ''
       const soort =
         recordType === 'SpamComplaint' || (recordType === 'Bounce' && p.Type === 'SpamNotification')
           ? 'klacht'
-          : recordType === 'Bounce' && (!p.Type || HARD_BOUNCE_TYPES.has(p.Type))
+          : recordType === 'Bounce' && p.Type !== 'AutoResponder'
             ? 'bounce'
             : recordType === 'SubscriptionChange' && p.SuppressSending
               ? 'afgemeld'
               : null
       if (adres && soort) {
-        await verwerkCampagneSignaal(adres, soort, p.MessageID).catch((e) => console.error('[postmark-webhook] campagne', e))
+        await verwerkCampagneSignaal(adres, soort, p.MessageID, p.Metadata?.campagne_id)
       }
     }
 
@@ -286,10 +286,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: recordType || 'unknown' })
   } catch (err) {
     console.error('[postmark-webhook] handler error', err)
-    // Still return 200 so Postmark doesn't retry — the suppression
-    // helper already logs its own errors and the next bounce report
-    // will catch us up.
-    return NextResponse.json({ ok: true, error: 'handler_error' })
+    // A failed signal must be retried; accepting it would silently lose an opt-out.
+    return NextResponse.json({ ok: false, error: 'handler_error' }, { status: 500 })
   }
 }
 

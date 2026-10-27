@@ -7,6 +7,7 @@ import Link from 'next/link'
 import LanguageTabs from '@/components/admin/LanguageTabs'
 import GiftCardFields, { type GiftCardFieldsValue } from '@/components/admin/GiftCardFields'
 import { formatBedrag } from '@/lib/format-price'
+import { needsRetailPrice } from '@/lib/product-publication'
 
 interface Category {
   id: string
@@ -85,6 +86,10 @@ export default function CreateProductPage() {
     try {
       if (!formData.name || !formData.slug || !formData.base_price) {
         throw new Error('Vul alle verplichte velden in')
+      }
+
+      if (status === 'active' && needsRetailPrice({ base_price: formData.base_price, is_gift_card: isGift })) {
+        throw new Error('Stel eerst een verkoopprijs hoger dan € 0 in voordat je dit product publiceert.')
       }
 
       // Gift cards never have a sale price — silently clear it so admin

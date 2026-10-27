@@ -472,6 +472,7 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-3xl font-display font-bold mb-2">Orders</h1>
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
+          <Link href="/admin/shopify/orders" className="inline-block mt-3 font-bold underline underline-offset-4">Shopify-bestellingen en pakketstatus →</Link>
         </div>
         {/* Laat de knoppen afbreken. Vanaf md werden het er vier naast elkaar op
             volle tekstbreedte, en op een tablet van 768 pixels stak de knop

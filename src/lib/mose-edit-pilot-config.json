@@ -1,0 +1,15 @@
+{
+  "campaignId": "a24813a0-1db4-4a1c-b79b-880a3be756d2",
+  "slug": "mose-edit-01-hoodie",
+  "subject": "Jouw hoodie, in drie kleuren",
+  "htmlSha256": "cbf1d37fcf8cad1d3167f529aab41ab5956b57983e03c985acdb663db7864057",
+  "startAt": "2026-10-26T15:10:11.294003Z",
+  "endAt": "2026-10-26T19:10:11.294003Z",
+  "momentLabel": "Uitgebreide proefgroep (26 oktober)",
+  "roster": [],
+  "batchSize": 25,
+  "minimumGapDays": 0,
+  "immediateSendAuthorizedAt": "2026-10-26T15:10:11.294003Z",
+  "maximumCommercialEmails30d": 3,
+  "threeIn30DaysAuthorizedAt": "2026-10-26T15:54:52.205225+00:00"
+}

@@ -47,7 +47,7 @@ interface BrevoCampagneRuw {
   scheduledAt?: string | null
   sentDate?: string | null
   htmlContent?: string
-  statistics?: { globalStats?: BrevoStats; linksStats?: Record<string, number>; remaining?: number }
+  statistics?: { globalStats?: BrevoStats; campaignStats?: Array<BrevoStats & { listId?: number }>; linksStats?: Record<string, number>; remaining?: number }
 }
 
 export interface BrevoLink {
@@ -176,7 +176,7 @@ async function haalOverzicht(): Promise<{ campagnes: BrevoCampagne[]; fout?: str
   if (!lijst.ok) return { campagnes: [], fout: lijst.fout }
 
   const relevant = (lijst.data?.campaigns || []).filter(
-    (c) => c.createdAt >= VANAF && ['queued', 'inProcess', 'sent', 'suspended'].includes(c.status),
+    (c) => c.createdAt >= VANAF && ['queued', 'inProcess', 'in_review', 'rejected', 'sent', 'suspended'].includes(c.status),
   )
 
   const campagnes = await Promise.all(
@@ -184,6 +184,13 @@ async function haalOverzicht(): Promise<{ campagnes: BrevoCampagne[]; fout?: str
       const vol = await roep<BrevoCampagneRuw>(`/emailCampaigns/${kort.id}?statistics=linksStats`)
       const detail = await roep<BrevoCampagneRuw>(`/emailCampaigns/${kort.id}?statistics=globalStats`)
       const c = { ...kort, ...(detail.data || {}) }
+      // Review/rejected campaigns may return zeroed globalStats while the
+      // single list's campaignStats contains the actual first-batch results.
+      const lijstStats = c.statistics?.campaignStats || vol.data?.statistics?.campaignStats || kort.statistics?.campaignStats
+      const gebruikLijstStats = !c.statistics?.globalStats?.sent || ['in_review', 'rejected'].includes(c.status)
+      const mailbox = gebruikLijstStats && lijstStats?.length === 1
+        ? lijstStats[0]
+        : c.statistics?.globalStats
       const html = vol.data?.htmlContent || detail.data?.htmlContent || ''
       const utm = html.match(/utm_campaign=([a-z0-9-]+)/i)?.[1] ?? null
       const verzendmoment = c.sentDate || c.scheduledAt || null
@@ -210,7 +217,7 @@ async function haalOverzicht(): Promise<{ campagnes: BrevoCampagne[]; fout?: str
         verzendmoment,
         utm,
         ontvangersGepland: c.status === 'queued' ? (detail.data?.statistics?.remaining ?? null) : null,
-        mailbox: { ...leeg(), ...(c.statistics?.globalStats || {}) },
+        mailbox: { ...leeg(), ...(mailbox || {}) },
         bezoekers: site?.bezoekers ?? 0,
         ordersNaKlik: site?.ordersNaKlik ?? { aantal: 0, omzet: 0 },
         ordersOntvangers: site?.ordersOntvangers ?? { aantal: 0, omzet: 0 },
@@ -227,4 +234,4 @@ async function haalOverzicht(): Promise<{ campagnes: BrevoCampagne[]; fout?: str
  * het opvragen van campagnes: op 24-10 gaf dat endpoint na een reeks
  * aanroepen een uur lang 429.
  */
-export const brevoCampagneOverzicht = unstable_cache(haalOverzicht, ['brevo-campagne-overzicht'], { revalidate: 300 })
+export const brevoCampagneOverzicht = unstable_cache(haalOverzicht, ['brevo-campagne-overzicht-v2'], { revalidate: 300 })

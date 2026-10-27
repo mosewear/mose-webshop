@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { createAnonClient } from '@/lib/supabase/server'
+import { getCommercePromises } from '@/lib/settings-server'
+import { isTapstitchProduct } from '@/lib/tapstitch-products'
+import { getCatalogProduct } from '@/lib/catalog-server'
 import ProductPageClient from './ProductPageClient'
 import PdpInstagramFetcher from '@/components/product/PdpInstagramFetcher'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { routing } from '@/i18n/routing'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
 import { notFound } from 'next/navigation'
 
-export const revalidate = 3600
+export const revalidate = 60
 
 export async function generateMetadata({
   params,
@@ -17,39 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, locale } = await params
   const t = await getTranslations({ locale, namespace: 'metadata' })
-  const supabase = createAnonClient()
-
-  const { data: product } = await supabase
-    .from('products')
-    .select(`
-      id,
-      name,
-      name_en,
-      description,
-      description_en,
-      base_price,
-      sale_price,
-      meta_title,
-      meta_description,
-      meta_title_en,
-      meta_description_en,
-      category_id,
-      product_images (
-        url,
-        alt_text,
-        is_primary,
-        position
-      ),
-      categories (
-        name,
-        name_en,
-        slug
-      )
-    `)
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .eq('status', 'active')
-    .maybeSingle()
+  const product = await getCatalogProduct(slug)
 
   if (!product) {
     return {
@@ -101,7 +70,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, 'mannenkleding', 'premium basics', 'Groningen', 'lokaal gemaakt'].filter(Boolean) as string[],
+    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, 'mannenkleding', 'premium basics', ...(isTapstitchProduct(product) ? [] : ['Groningen', 'lokaal gemaakt'])].filter(Boolean) as string[],
     openGraph: {
       title,
       description,
@@ -141,43 +110,7 @@ export default async function ProductPage({
 }) {
   const { slug, locale: localeParam } = await params
   setRequestLocale(localeParam)
-  const supabase = createAnonClient()
-
-  // Fetch product data for structured data
-  const { data: product } = await supabase
-    .from('products')
-    .select(`
-      id,
-      name,
-      name_en,
-      description,
-      description_en,
-      base_price,
-      sale_price,
-      slug,
-      category_id,
-      product_images (
-        url,
-        alt_text,
-        is_primary
-      ),
-      product_variants (
-        stock_quantity,
-        is_available,
-        presale_enabled,
-        presale_stock_quantity,
-        presale_expected_date
-      ),
-      categories (
-        name,
-        name_en,
-        slug
-      )
-    `)
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .eq('status', 'active')
-    .maybeSingle()
+  const [product, initialSettings] = await Promise.all([getCatalogProduct(slug), getCommercePromises()])
 
   if (!product) {
     notFound()
@@ -289,15 +222,13 @@ export default async function ProductPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      {/* Suspense wrap is verplicht zodra ProductPageClient
-          `useSearchParams()` gebruikt (voor ?color= pre-select vanuit
-          de shop kleurvariant-tegels). Zonder deze boundary forceert
-          Next.js de hele PDP-route naar volledig dynamische rendering,
-          wat de ISR-revalidate kortsluit. Fallback=null houdt de
-          LCP-cascade hetzelfde als voorheen — de client component
-          rendert direct met zijn eigen interne loading-state. */}
+      {/* Product and presentation settings arrive with the server HTML.
+          The client isolates URL-only colour selection in its own boundary. */}
       <Suspense fallback={null}>
         <ProductPageClient
+          key={slug}
+          initialProduct={product}
+          initialSettings={initialSettings}
           params={Promise.resolve({ slug, locale: localeParam })}
           instagramSlot={
             // Server-component variant van de homepage Instagram-feed,

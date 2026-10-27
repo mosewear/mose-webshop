@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl'
 import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 interface PdpFaqProps {
+  supplierFulfilled?: boolean
   /** Uit site_settings. Het antwoord op de bezorgvraag beweerde eerder
    *  "geen minimum bestelbedrag, verzending is altijd gratis", terwijl
    *  free_shipping_threshold op 150 staat. Dat is precies de vraag die een
@@ -29,11 +30,22 @@ export default function PdpFaq({
   shippingCost,
   returnDays,
   locale,
+  supplierFulfilled = false,
 }: PdpFaqProps) {
   const t = useTranslations('product.pdpFaq')
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
-  const items = (t.raw('items') as Array<{ question: string; answer: string }>) || []
+  const items = supplierFulfilled ? (locale === 'en' ? [
+    { question: 'How does this model fit?', answer: 'Use the model-specific size chart and product description. Compare the garment measurements with a similar item you already own.' },
+    { question: 'When will my order arrive?', answer: 'Delivery options and shipping costs are shown at checkout. Items fulfilled by different partners may arrive separately.' },
+    { question: 'Who fulfils this product?', answer: 'This item is supplied through our production partner Tapstitch. It is not manufactured in our Groningen studio.' },
+    { question: 'What if the size does not fit?', answer: 'See our returns policy or contact MOSE for help with your return.' },
+  ] : [
+    { question: 'Hoe valt dit model?', answer: 'Gebruik de maattabel en beschrijving van dit specifieke model. Vergelijk de kledingmaten met een vergelijkbaar kledingstuk dat je al hebt.' },
+    { question: 'Wanneer ontvang ik mijn bestelling?', answer: 'Bezorgopties en verzendkosten staan bij het afrekenen. Artikelen van verschillende partners kunnen afzonderlijk aankomen.' },
+    { question: 'Wie levert dit product?', answer: 'Dit artikel leveren we via onze productiepartner Tapstitch. Het wordt niet in ons Groningse atelier gemaakt.' },
+    { question: 'Wat als de maat niet past?', answer: 'Bekijk ons retourbeleid of neem contact op met MOSE voor hulp bij je retour.' },
+  ]) : (t.raw('items') as Array<{ question: string; answer: string }>) || []
   if (!items.length) return null
 
   // Zelfde substitutiepatroon als FAQAccordion, zodat beide FAQ's dezelfde

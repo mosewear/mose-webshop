@@ -12,9 +12,18 @@ import {
   maskFromLast4,
 } from '@/lib/gift-cards'
 import { computePromoEligibility } from '@/lib/promo-code-eligibility'
+import { shopifyCheckoutEnabled } from '@/lib/checkout-cutover'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
+  // Guard before body parsing, profile writes, stock operations or gift-card
+  // reservations. Client feature flags and ?recover= are not authorization.
+  if (shopifyCheckoutEnabled()) {
+    return NextResponse.json({
+      error: 'Gebruik de nieuwe afrekenpagina. Je winkelmand blijft bewaard.',
+      code: 'SHOPIFY_CHECKOUT_REQUIRED',
+    }, { status: 409, headers: { 'Cache-Control': 'no-store' } })
+  }
   try {
     const parseNumber = (value: unknown, fallback: number) => {
       if (typeof value === 'number' && Number.isFinite(value)) return value

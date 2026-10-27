@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { legacyPaymentDecision, shopifyCheckoutEnabled } from '@/lib/checkout-cutover'
 import {
   asMolliePayment,
   formatMollieAmount,
@@ -64,12 +65,22 @@ export async function POST(req: NextRequest) {
 
     const { data: orderRow, error: orderErr } = await supabase
       .from('orders')
-      .select('total, payment_status, shipping_cost, locale, email')
+      .select('total, payment_status, shipping_cost, locale, email, created_at, status')
       .eq('id', orderId)
       .maybeSingle()
 
     if (orderErr || !orderRow) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
+
+    const historicalDecision = legacyPaymentDecision(orderRow)
+    if (historicalDecision !== 'allow') {
+      return NextResponse.json({
+        error: historicalDecision === 'cutover_not_configured'
+          ? 'Deze betaling kan nu niet worden hervat. Neem contact met ons op.'
+          : 'Deze bestelling kan niet via deze betaalroute worden betaald.',
+        code: historicalDecision === 'cutover_not_configured' ? 'PAYMENT_RECOVERY_UNAVAILABLE' : 'LEGACY_PAYMENT_NOT_ALLOWED',
+      }, { status: historicalDecision === 'cutover_not_configured' ? 503 : 409, headers: { 'Cache-Control': 'no-store' } })
     }
 
     if (orderRow.payment_status === 'paid') {
@@ -107,11 +118,15 @@ export async function POST(req: NextRequest) {
 
     // Reuse open Mollie payment if still open for this order
     if (orderRow && (orderRow as any)) {
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('orders')
         .select('mollie_payment_id')
         .eq('id', orderId)
         .maybeSingle()
+
+      if (existingError && shopifyCheckoutEnabled()) {
+        return NextResponse.json({ error: 'We kunnen de vorige betaling nu niet controleren. Probeer het later opnieuw.' }, { status: 503 })
+      }
 
       if (existing?.mollie_payment_id) {
         try {
@@ -125,7 +140,7 @@ export async function POST(req: NextRequest) {
             // If method changed, create a new payment instead
             const existingMethod = existingPayment.method
             const wanted = method ? toMollieMethod(method) : null
-            if (!wanted || existingMethod === wanted || !existingMethod) {
+            if (shopifyCheckoutEnabled() || !wanted || existingMethod === wanted || !existingMethod) {
               const checkoutUrl = existingPayment.getCheckoutUrl()
               if (checkoutUrl) {
                 return NextResponse.json({
@@ -133,6 +148,9 @@ export async function POST(req: NextRequest) {
                   paymentId: existingPayment.id,
                   reused: true,
                 })
+              }
+              if (shopifyCheckoutEnabled()) {
+                return NextResponse.json({ error: 'Je eerdere betaling wordt nog verwerkt. Probeer het later opnieuw.' }, { status: 409 })
               }
             }
           }
@@ -142,8 +160,16 @@ export async function POST(req: NextRequest) {
               { status: 400 }
             )
           }
+          if (shopifyCheckoutEnabled() && !['failed', 'canceled', 'expired'].includes(existingPayment.status)) {
+            return NextResponse.json({ error: 'Je eerdere betaling wordt nog verwerkt. Probeer het later opnieuw.' }, { status: 409 })
+          }
         } catch {
-          // stale id — create new payment below
+          // During cutover an unknown previous payment must never result in a
+          // second charge. Keep historical recovery retryable after an outage.
+          if (shopifyCheckoutEnabled()) {
+            return NextResponse.json({ error: 'We kunnen de vorige betaling nu niet controleren. Probeer het later opnieuw.' }, { status: 503 })
+          }
+          // Legacy behavior before cutover: stale id — create new payment below.
         }
       }
     }

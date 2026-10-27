@@ -103,6 +103,17 @@ export async function POST(req: NextRequest) {
       if (soort === 'klacht') await markeerAfgemeld(adres, nu)
     }
 
+    // Imported Brevo batches use a namespaced provider reference in the
+    // recipient ledger, so later signals update only this campaign's row.
+    if (typeof p.camp_id === 'number' && Number.isInteger(p.camp_id)) {
+      const db = createServiceClient()
+      const { error } = await db.from('campagne_ontvangers')
+        .update({ status: soort, signaal_op: nu })
+        .eq('email', adres)
+        .eq('postmark_id', `brevo:${p.camp_id}`)
+      if (error) throw error
+    }
+
     console.log('[brevo-webhook]', soort, adres, p.camp_id ?? '')
     return NextResponse.json({ ok: true, soort })
   } catch (err) {

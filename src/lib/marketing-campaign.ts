@@ -15,9 +15,10 @@ export * from '@/lib/marketing-campaign-shared'
 
 async function fetchActiveCampaignFromDb(): Promise<ResolvedCampaign | null> {
   const supabase = createAnonClient()
+  const signal = AbortSignal.timeout(8000)
 
   try {
-    const { data, error } = await supabase.rpc('get_active_marketing_campaign')
+    const { data, error } = await supabase.rpc('get_active_marketing_campaign').abortSignal(signal)
     if (error) {
       console.error('[marketing-campaign] RPC error:', error)
       return null
@@ -32,6 +33,7 @@ async function fetchActiveCampaignFromDb(): Promise<ResolvedCampaign | null> {
         .from('promo_codes')
         .select('id, code, discount_type, discount_value, is_active, expires_at, applies_to_sale_items')
         .eq('id', row.promo_code_id)
+        .abortSignal(signal)
         .maybeSingle()
 
       if (codeData) {

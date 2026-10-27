@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { withDeadline } from '@/lib/request-deadline'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -11,20 +12,23 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const inFlight = useRef(false)
   const router = useRouter()
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (inFlight.current) return
+    inFlight.current = true
     setError('')
     setLoading(true)
 
     try {
       // 1. Sign in with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await withDeadline(supabase.auth.signInWithPassword({
         email,
         password,
-      })
+      }))
 
       if (authError) {
         setError(authError.message)
@@ -43,13 +47,16 @@ export default function AdminLoginPage() {
         .from('profiles')
         .select('is_admin')
         .eq('id', authData.user.id)
+        .abortSignal(AbortSignal.timeout(8000))
         .single()
 
       const profile = profileData as { is_admin: boolean } | null
 
-      if (profileError || !profile || !profile.is_admin) {
+      if (profileError) throw profileError
+
+      if (!profile || !profile.is_admin) {
         // User is not an admin
-        await supabase.auth.signOut()
+        await withDeadline(supabase.auth.signOut({ scope: 'local' }), 3000)
         setError('Je hebt geen admin toegang.')
         setLoading(false)
         return
@@ -60,7 +67,9 @@ export default function AdminLoginPage() {
       router.refresh()
     } catch (err) {
       console.error('Login error:', err)
-      setError('Er is iets misgegaan. Probeer opnieuw.')
+      setError('Inloggen kon niet worden afgerond. De verbinding reageert niet of is tijdelijk niet beschikbaar. Probeer opnieuw.')
+    } finally {
+      inFlight.current = false
       setLoading(false)
     }
   }
@@ -85,7 +94,7 @@ export default function AdminLoginPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-900/50 border-2 border-red-500 text-red-200 px-6 py-4 rounded">
+          <div role="alert" className="bg-red-900/50 border-2 border-red-500 text-red-200 px-6 py-4 rounded">
             {error}
           </div>
         )}
@@ -99,6 +108,7 @@ export default function AdminLoginPage() {
             <input
               id="email"
               type="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -114,6 +124,7 @@ export default function AdminLoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

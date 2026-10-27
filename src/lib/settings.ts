@@ -72,10 +72,17 @@ export function normaliseBrandDesign(value: unknown): BrandWidgetDesign {
 }
 
 let cachedSettings: SiteSettings | null = null
+let pendingSettings: Promise<SiteSettings> | null = null
 let cacheTimestamp: number = 0
 const CACHE_TTL = 60000 // 60 seconds
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+export function getSiteSettings(): Promise<SiteSettings> {
+  if (cachedSettings && Date.now() - cacheTimestamp < CACHE_TTL) return Promise.resolve(cachedSettings)
+  if (!pendingSettings) pendingSettings = fetchSiteSettings().finally(() => { pendingSettings = null })
+  return pendingSettings
+}
+
+async function fetchSiteSettings(): Promise<SiteSettings> {
   const now = Date.now()
   const cacheAge = now - cacheTimestamp
 
@@ -89,6 +96,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabase
       .from('site_settings')
       .select('key, value, updated_at')
+      .abortSignal(AbortSignal.timeout(8000))
 
     if (error) {
       console.error('[SETTINGS] Database error:', error)
@@ -164,6 +172,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return cachedSettings
   } catch (error) {
     console.error('[SETTINGS] Error fetching site settings:', error)
+    if (cachedSettings) return cachedSettings
 
     return {
       site_name: 'MOSE Wear',

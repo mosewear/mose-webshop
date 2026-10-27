@@ -176,23 +176,40 @@ export const useCart = create<CartStore>()(
         // No schema changes between versions yet; just return the state.
         return persistedState
       },
-      onRehydrateStorage: () => (state) => {
-        if (cartChannel && state) {
-          cartChannel.onmessage = (event) => {
-            const { type, items } = event.data
-            
-            if (type === 'UPDATE' && items) {
-              // Update this tab's cart with items from other tab
-              state.items = items
-            } else if (type === 'CLEAR') {
-              state.items = []
-            }
-          }
-        }
-      },
     }
   )
 )
+
+// Update through Zustand: mutating the rehydrated object did not notify React
+// subscribers or persist incoming changes. Do not call setItems here: that
+// would broadcast the same message back to every other tab indefinitely.
+if (cartChannel) {
+  cartChannel.onmessage = (event: MessageEvent<unknown>) => {
+    const data = event.data
+    if (!data || typeof data !== 'object') return
+    const message = data as { type?: unknown; items?: unknown }
+    if (message.type === 'CLEAR') {
+      useCart.setState({ items: [] })
+    } else if (message.type === 'UPDATE' && Array.isArray(message.items) &&
+      message.items.every(isCartSyncItem)) {
+      // Older persisted/recovered carts did not always include a slug. Accept
+      // those messages and normalize them instead of losing the update after
+      // the recovery flow has broadcast CLEAR.
+      useCart.setState({ items: message.items.map(item => ({ ...item, slug: item.slug ?? '' })) })
+    }
+  }
+}
+
+function isCartSyncItem(value: unknown): value is Omit<CartItem, 'slug'> & { slug?: string } {
+  if (!value || typeof value !== 'object') return false
+  const item = value as Record<string, unknown>
+  return (item.slug === undefined || typeof item.slug === 'string') &&
+    ['productId', 'variantId', 'name', 'size', 'color', 'colorHex', 'image', 'sku']
+    .every(key => typeof item[key] === 'string') &&
+    typeof item.quantity === 'number' && Number.isSafeInteger(item.quantity) && item.quantity >= 1 &&
+    typeof item.price === 'number' && Number.isFinite(item.price) && item.price >= 0 &&
+    typeof item.stock === 'number' && Number.isFinite(item.stock) && item.stock >= 0
+}
 
 /**
  * Is de winkelmand al uit localStorage teruggelezen?
