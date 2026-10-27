@@ -1,0 +1,78 @@
+{
+  "mode": "apply",
+  "products": [
+    {
+      "id": "2307a99e-781a-8f4a-9da0-2374d3cb464f",
+      "name": "Boxy Fleece Hoodie",
+      "slug": "tapstitch-rw0041-boxy-fleece-hoodie",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "39ff9979-e4ff-84b4-8831-cf0b0cc713af",
+      "name": "Raglan Longsleeve",
+      "slug": "tapstitch-rt0028-raglan-longsleeve",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "b925b2e2-a147-8cf1-9fcb-47e2ca45ec2f",
+      "name": "Barrel Pants",
+      "slug": "tapstitch-mb0001-barrel-pants",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "51c487a8-ca2d-8e2d-82d4-68ab8501b8c9",
+      "name": "Tree Camo Barrel Pants",
+      "slug": "tapstitch-mb0057-tree-camo-barrel-pants",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "cb17519f-6662-86fc-894e-92b4e0ccbbb0",
+      "name": "Vintage Barrel Jeans",
+      "slug": "tapstitch-ub0083-vintage-barrel-jeans",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "1569c48c-5120-8d19-add8-04e24546eee4",
+      "name": "Washed Barrel Jeans",
+      "slug": "tapstitch-mb0030-washed-barrel-jeans",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "6fd7d8dc-ffe1-8efe-8639-f04d1f50dffa",
+      "name": "Sunfade Barrel Jeans",
+      "slug": "tapstitch-mb0010-sunfade-barrel-jeans",
+      "status": "draft",
+      "basePricePlaceholder": true
+    },
+    {
+      "id": "f2ccb146-34b5-8b6f-a779-44f685e090d6",
+      "name": "Distressed Barrel Jeans",
+      "slug": "tapstitch-ub0018-distressed-barrel-jeans",
+      "status": "draft",
+      "basePricePlaceholder": true
+    }
+  ],
+  "colorways": 13,
+  "variants": 63,
+  "images": 65,
+  "sourceImagesVerified": true,
+  "imageEncoding": "lossless WebP, source dimensions preserved",
+  "imageBytes": 111756536,
+  "salePricesApproved": false,
+  "published": false,
+  "supplierConnectionCreated": false,
+  "projectRef": "bsklcgeyvdsxjxvmghbp",
+  "verifiedAt": "2026-10-27T16:19:59.228Z",
+  "uploaded": 65,
+  "inserted": {
+    "products": 8,
+    "product_variants": 63,
+    "product_images": 65
+  }
+}

@@ -13,7 +13,7 @@
 
 ## Werkelijk gewijzigde Shopify-catalogus
 
-Drie producten zijn als **DRAFT** aangemaakt en daarna via Shopify teruggelezen. 27 SKU/kleur/maat/prijs-koppelingen zijn gecontroleerd. Voorraad staat op nul, niet gepubliceerd, niet vrijgegeven voor checkout. Beschrijvingen en afbeeldingen zijn nog niet gemigreerd.
+Drie producten zijn als **DRAFT** aangemaakt en daarna via Shopify teruggelezen. 27 SKU/kleur/maat/prijs-koppelingen zijn gecontroleerd. Voorraad staat op nul, niet gepubliceerd, niet vrijgegeven voor checkout. Beschrijvingen en alle 46 productafbeeldingen zijn gemigreerd en via Shopify teruggelezen (hoodie 18, sweater 12, tee 16).
 
 | Product | Varianten | Prijs | Shopify-product-ID |
 |---|---:|---:|---|
@@ -21,7 +21,7 @@ Drie producten zijn als **DRAFT** aangemaakt en daarna via Shopify teruggelezen.
 | MOSE Classic Sweater | 6 | €75 | 11413172781383 |
 | MOSE Tee | 12 | €50 | 11413173109063 |
 
-De inactieve horloge- en cadeaukaartproducten zijn niet geactiveerd. De acht Tapstitch-modellen zijn nog niet als verkoopproducten toegevoegd: hun echte leverancierkoppeling moet via Tapstitch worden gemaakt en gecontroleerd. Geen imitatie van een supplierkoppeling.
+De inactieve horloge- en cadeaukaartproducten zijn niet geactiveerd. De acht Tapstitch-modellen zijn nu in MOSE geïmporteerd als inactieve conceptproducten met 63 varianten en 65 lossless WebP-beelden. Alle rijen zijn na schrijven exact teruggelezen; zie `catalog-import-result-2026-10-27.json`. Prijzen zijn nog onbekend (technische nulplaceholder); varianten zijn onbeschikbaar en voorraad nul. In Tapstitch en Shopify zijn deze acht modellen nog niet toegevoegd: hun echte leverancierkoppeling moet via Tapstitch worden gemaakt en gecontroleerd. Geen imitatie van een supplierkoppeling.
 
 De officiële Tapstitch-app is zichtbaar in Shopify. Dat bewijst installatie, niet de juiste productmapping, automatische indiening, betaalmethode, tarieven of volledige fulfillmentketen. De browserinventaris bood geen bestuurbare browser of tab; toestemming is aanwezig, maar toegang tot de ingelogde Tapstitch-sessie was technisch niet beschikbaar.
 
@@ -29,7 +29,7 @@ De officiële Tapstitch-app is zichtbaar in Shopify. Dat bewijst installatie, ni
 
 De lokale galerij bevat **65 conceptbeelden: 13 kleuruitvoeringen × 5 beelden** (voorzijde, achterzijde, hoek, detail en lifestyle). Alle beelden zijn bekeken; galerijbediening en mobiele weergave zijn getest. Een broekbeeld is gecorrigeerd op ontbrekende taillebanddetails.
 
-Locatie: `docs/product-imagery/tapstitch-2026-10-27/index.html` in de oorspronkelijke MOSE-workspace. Niet gepubliceerd in Shopify of op de webshop. AI-beelden zijn geen bewijs van exacte fysieke pasvorm of stof/patroon; vergelijking met echte samples blijft nodig.
+Locatie: `docs/product-imagery/tapstitch-2026-10-27/index.html` in de oorspronkelijke MOSE-workspace. De 65 beelden zijn nu als lossless WebP in MOSE Storage opgeslagen en aan de acht conceptproducten gekoppeld; bronpixels en afmetingen zijn behouden. De producten zijn niet gepubliceerd op de webshop of in Shopify. AI-beelden zijn geen bewijs van exacte fysieke pasvorm of stof/patroon; vergelijking met echte samples blijft nodig.
 
 ## Testbewijs
 
@@ -50,10 +50,10 @@ Lokale en gemockte tests bewijzen geen echte Shopify-betaling of Tapstitch-lever
 |---|---|
 | Productieverbinding | Eigen productiegeschikte Admin/Storefront-appcredentials, webhooksecret, sessiesecret en juiste rechten instellen. De interactieve CLI-login en ChatGPT-connector zijn niet de servercredential. |
 | Database en verwerking | Stagingmigratie/RLS bewijzen, productie-migratie voorbereiden, cron instellen, herstel/monitoring demonstreren, retentie vaststellen. |
-| Catalogus | Bestaande teksten/beelden migreren; Tapstitch-producten met echte suppliervariant-ID’s toevoegen; voorraad per locatie verifiëren. |
+| Catalogus | Bestaande teksten/beelden zijn gemigreerd; Tapstitch-producten met echte suppliervariant-ID’s toevoegen; voorraad per locatie verifiëren. |
 | Kortingen en loyaliteit | 22 mogelijk bruikbare promo’s exact toetsen/migreren; 54 loyaltyaccounts en 6.104 punten behouden; juiste identiteit, korting, bijschrijving en refund verwerken. |
 | Markten en levering | Gateway is nu NL/EUR. Bestaande andere landen, gratis verzending en afhaalbeleid volledig overzetten of expliciet afbakenen. Geen onzichtbaar functieverlies. |
-| Orderafhandeling | Shopify-orders in account/admin en bestaande fulfillmentoperatie integreren; eenmalige punten/voorraad/e-mail/analytics-bijwerkingen implementeren; juiste adressen en rechten. Huidige worker is alleen projectie. |
+| Orderafhandeling | Shopify-orders zijn gebouwd voor account/admin, met geverifieerde accountkoppeling; bestaande fulfillmentoperatie nog integreren; eenmalige punten/voorraad/e-mail/analytics-bijwerkingen implementeren; juiste adressen en rechten. Huidige worker is alleen projectie. |
 | Herstel | Gecontroleerde afhandeling van verlopen/onzekere checkoutpogingen; nooit blind een tweede cart/betaling starten. |
 | Tapstitch en marge | Echte kosten, verzending, leverancierbetaling, orderindiening, prijsvoorstel en minimaal acht fysieke samples controleren. |
 | Echte ketentest | Eigen order, Tapstitch-order, gemengde order, annulering, deelrefund, uitval en late legacybetaling aantoonbaar doorlopen. |
@@ -66,3 +66,12 @@ De volledige integratie is dus **nog niet af**. Behalve externe toegang en fysie
 Concept-PR: https://github.com/mosewear/mose-webshop/pull/15. De Vercel-preview heeft succesvol gebouwd; dit is geen productie-omschakeling.
 
 Code staat op branch `feat/shopify-tapstitch-pilot` in geïsoleerde worktree `/private/tmp/mose-shopify-implementation`. Bestaande niet-gerelateerde wijzigingen in de oorspronkelijke werkmap zijn behouden. Catalogusmapping staat naast dit document; er staan geen toegangstokens of klantgegevens in de rapporten.
+
+## Aanvullingen 27 oktober, namiddag
+
+- Servergerenderde shop/PDP, cache van publieke catalogus, begrensde databaseaanvragen en herstelbare adminlogin; beeldkwaliteit 90/95 behouden. Volledige desktop/mobile componentfixtures gecontroleerd.
+- Sitemapfilter hersteld naar categories.status; suppression-insert gebruikt de bestaande lower(email)-index zonder ongeldige on_conflict=email-aanroep.
+- Checkout controleert verse lokale publicatiestatus, beschikbaarheid, prijs en leverancierroute vóór een Shopify-aanvraag; conceptproducten, niet-ondersteunde digitale producten en voorverkoop blijven geblokkeerd.
+- Vrijgavecontrole toetst volledige actieve catalogusdekking en bestaande kortings-/loyaltyverplichtingen; onbekend wordt niet als klaar beschouwd.
+- Browsertoestemming is aanwezig, maar de browsertool retourneert nog steeds Browser is not available voor Chrome en de ingebouwde browser. Een ingelogd Chrome-venster op een screenshot is geen bestuurbare sessie.
+- De productieomgeving bevat nog geen Shopify-servercredentials of geactiveerde Shopify-vrijgaveflags. Geen echte Shopify/Tapstitch-order is geplaatst of betaald.
