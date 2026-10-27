@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { TAPSTITCH_PRODUCT_SOURCES } from '@/lib/tapstitch-products'
+import type { MappedVariant } from './policy'
 
 const productSchema = z.object({
   id: z.string().min(1), status: z.string(), is_active: z.boolean(), is_gift_card: z.boolean(),
@@ -31,7 +33,7 @@ export function localVariantPriceCents(product: { base_price?: unknown; sale_pri
 
 type CheckoutLine = { localVariantId: string; expectedPriceCents: number }
 /** Server records are read fresh. Cached pages, client IDs and enabled mappings cannot publish a draft. */
-export function assertCurrentLocalCatalog(lines: CheckoutLine[], variantRows: unknown[], productRows: unknown[]): void {
+export function assertCurrentLocalCatalog(lines: CheckoutLine[], variantRows: unknown[], productRows: unknown[], mappings: Pick<MappedVariant, 'mose_variant_id' | 'fulfillment_owner' | 'supplier_model'>[] = []): void {
   const variants = z.array(variantSchema).parse(variantRows)
   const products = z.array(productSchema).parse(productRows)
   const byVariant = new Map(variants.map(variant => [variant.id, variant]))
@@ -42,6 +44,13 @@ export function assertCurrentLocalCatalog(lines: CheckoutLine[], variantRows: un
     const product = variant ? byProduct.get(variant.product_id) : undefined
     if (!variant || variant.is_available !== true || !product || product.status !== 'active' || product.is_active !== true || product.is_gift_card !== false) {
       throw new Error('LOCAL_PRODUCT_UNAVAILABLE')
+    }
+    const supplierSource = TAPSTITCH_PRODUCT_SOURCES[product.id]
+    if (supplierSource) {
+      const owner = mappings.filter(mapping => mapping.mose_variant_id === variant.id)
+      if (owner.length !== 1 || owner[0].fulfillment_owner !== 'tapstitch' || owner[0].supplier_model !== supplierSource.sourceCode) {
+        throw new Error('SUPPLIER_ROUTING_MISMATCH')
+      }
     }
     // Presale delivery promises and digital issuance must pass their own migration gates first.
     if (variant.presale_enabled && (variant.presale_stock_quantity ?? 0) > 0) throw new Error('PRESALE_NOT_RELEASED')

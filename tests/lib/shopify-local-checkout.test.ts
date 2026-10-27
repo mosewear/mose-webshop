@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
+import { TAPSTITCH_PRODUCT_SOURCES } from '@/lib/tapstitch-products'
 import { assertCurrentLocalCatalog, localVariantPriceCents } from '@/lib/shopify/local-checkout'
 const variant = { id: 'v1', product_id: 'p1', is_available: true, price_adjustment: 0, presale_enabled: false, presale_stock_quantity: 0 }
 const product = { id: 'p1', status: 'active', is_active: true, is_gift_card: false, base_price: 69.95, sale_price: null }
@@ -19,6 +20,15 @@ describe('current local publication gate', () => {
     }
     expect(() => assertCurrentLocalCatalog(lines, [variant], [product, product])).toThrow('LOCAL_CATALOG_AMBIGUOUS')
     expect(() => assertCurrentLocalCatalog(lines, [variant], [{ ...product, base_price: null }])).toThrow('LOCAL_PRICE_CHANGED')
+  })
+  it('never sends a known Tapstitch model through MOSE fulfillment or another supplier model', () => {
+    const [id, source] = Object.entries(TAPSTITCH_PRODUCT_SOURCES)[0]
+    const supplierProduct = { ...product, id }
+    const supplierVariant = { ...variant, product_id: id }
+    expect(() => assertCurrentLocalCatalog(lines, [supplierVariant], [supplierProduct])).toThrow('SUPPLIER_ROUTING_MISMATCH')
+    expect(() => assertCurrentLocalCatalog(lines, [supplierVariant], [supplierProduct], [{ mose_variant_id: 'v1', fulfillment_owner: 'mose', supplier_model: source.sourceCode }])).toThrow('SUPPLIER_ROUTING_MISMATCH')
+    expect(() => assertCurrentLocalCatalog(lines, [supplierVariant], [supplierProduct], [{ mose_variant_id: 'v1', fulfillment_owner: 'tapstitch', supplier_model: 'WRONG-MODEL' }])).toThrow('SUPPLIER_ROUTING_MISMATCH')
+    expect(() => assertCurrentLocalCatalog(lines, [supplierVariant], [supplierProduct], [{ mose_variant_id: 'v1', fulfillment_owner: 'tapstitch', supplier_model: source.sourceCode }])).not.toThrow()
   })
   it('uses Shopify inventory authority but rejects unverified presale promises', () => {
     expect(() => assertCurrentLocalCatalog(lines, [{ ...variant, stock_quantity: 0 }], [product])).not.toThrow()

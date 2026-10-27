@@ -38,7 +38,7 @@ export function authorizeLines(input: CheckoutInput, variants: MappedVariant[]) 
     const supplierReady = match?.fulfillment_owner !== 'tapstitch' ||
       (match.supplier_link_verified && match.sample_verified && PILOT_MODELS.some(model => model === match.supplier_model))
     if (!match || !match.enabled || !supplierReady ||
-      !['mose', 'tapstitch', 'digital'].includes(match.fulfillment_owner) ||
+      !['mose', 'tapstitch'].includes(match.fulfillment_owner) ||
       !/^gid:\/\/shopify\/ProductVariant\/\d+$/.test(match.shopify_variant_id) ||
       !Number.isSafeInteger(match.price_eur_cents) || match.price_eur_cents <= 0 || quantity > 10) {
       throw new Error('VARIANT_NOT_RELEASED')

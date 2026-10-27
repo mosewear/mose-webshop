@@ -26,4 +26,49 @@ describe('private Shopify readiness endpoint', () => {
     expect(data.status).not.toBe('technical_checks_passed')
     expect(data.checks.find((c: { key: string }) => c.key === 'stock').status).toBe('unknown')
   })
+  it('stops after the state probe when migrations are missing', async () => {
+    mocks.authorize.mockResolvedValue({ authorized: true })
+    const from = vi.fn()
+    const query = { select: () => query, eq: () => query, abortSignal: () => query, maybeSingle: () => Promise.resolve({ data: null, error: { code: '42P01' } }) }
+    from.mockReturnValue(query)
+    mocks.database.mockReturnValue({ from })
+    const data = await (await GET()).json()
+    expect(from).toHaveBeenCalledTimes(1)
+    expect(data.releaseAudit.catalog.sellableVariants).toBeNull()
+  })
+
+  it('audits every variant and never launches more than three reads at once', async () => {
+    mocks.authorize.mockResolvedValue({ authorized: true })
+    const stamp = new Date().toISOString()
+    const responses = [
+      { data: { app_installed: true, checkout_enabled: true, catalog_verified: true, inventory_verified: true, benefits_verified: true, fulfillment_verified: true, market_verified: true, last_worker_at: stamp, last_reconciled_at: stamp }, error: null },
+      { data: [{ mose_variant_id: 'v1', shopify_variant_id: 'gid://shopify/ProductVariant/1', fulfillment_owner: 'mose', price_eur_cents: 7900, enabled: true }], count: 1, error: null },
+      { count: 1, error: null }, { count: 0, error: null }, { count: 0, error: null }, { data: null, error: null },
+      { data: [{ id: 'p1', is_active: true, status: 'active', is_gift_card: false, base_price: 79, sale_price: null }], count: 1, error: null },
+      { data: ['v1', 'v2'].map(id => ({ id, product_id: 'p1', is_available: true, price_adjustment: 0, presale_enabled: false, presale_stock_quantity: 0 })), count: 2, error: null },
+      { data: [], count: 0, error: null }, { data: [], count: 0, error: null },
+      { count: 54, error: null }, { count: 0, error: null }, { count: 0, error: null },
+    ]
+    let index = 0, inFlight = 0, peak = 0
+    const from = vi.fn(() => {
+      const result = responses[index++]
+      const query = {
+        select: () => query, eq: () => query, is: () => query, not: () => query, gt: () => query,
+        or: () => query, limit: () => query, order: () => query, maybeSingle: () => query, abortSignal: () => query,
+        then: (resolve: (value: unknown) => void) => {
+          inFlight++; peak = Math.max(peak, inFlight)
+          setTimeout(() => { inFlight--; resolve(result) }, 0)
+        },
+      }
+      return query
+    })
+    mocks.database.mockReturnValue({ from })
+    const data = await (await GET()).json()
+    expect(from).toHaveBeenCalledTimes(13)
+    expect(peak).toBeLessThanOrEqual(3)
+    expect(data.releaseAudit.catalog).toMatchObject({ sellableVariants: 2, coveredVariants: 1, missingMappings: 1 })
+    expect(data.checks.find((check: { key: string }) => check.key === 'loyaltyLedger').status).toBe('missing')
+    expect(data.status).toBe('blocked')
+  })
+
 })

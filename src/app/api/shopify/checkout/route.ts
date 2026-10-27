@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (!productIds.length) return respond({ error: 'Een artikel is niet meer beschikbaar. Controleer je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
     const localProducts = await db.from('products').select('id,status,is_active,is_gift_card,base_price,sale_price').in('id', productIds)
     if (localProducts.error) throw new Error('LOCAL_CATALOG_UNAVAILABLE')
-    try { assertCurrentLocalCatalog(lines, localVariants.data ?? [], localProducts.data ?? []) } catch {
+    try { assertCurrentLocalCatalog(lines, localVariants.data ?? [], localProducts.data ?? [], data ?? []) } catch {
       return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
     }
     // Vercel replaces this platform header. No arbitrary X-Forwarded-For fallback.
