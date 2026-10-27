@@ -175,7 +175,7 @@ export default function CartPage() {
    * Drie plekken die uit elkaar liepen; de BTW stond in de ene als losse regel
    * tussen subtotaal en verzending, alsof hij er nog bij kwam.
    */
-  const Prijsopbouw = () => (
+  const prijsopbouw = (
     <div className="space-y-3">
       <div className="flex justify-between text-base">
         <span className="uppercase tracking-wider text-gray-600">{t('subtotal')}</span>
@@ -225,7 +225,7 @@ export default function CartPage() {
    * oogopslag zien hoe dichtbij je bent, en dat is precies het moment waarop
    * iemand besluit er nog iets bij te leggen.
    */
-  const Verzendbalk = () => (
+  const verzendbalk = (
     <div className="border border-gray-200 bg-white px-4 py-3">
       <p className="text-sm text-gray-700">
         {tekortVoorGratis > 0
@@ -248,7 +248,7 @@ export default function CartPage() {
     </div>
   )
 
-  const Vertrouwen = () => (
+  const vertrouwen = (
     <ul className="space-y-2.5 text-sm text-gray-600">
       <li className="flex items-center gap-2.5">
         <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
@@ -457,10 +457,10 @@ export default function CartPage() {
             className="lg:sticky lg:top-[calc(var(--header-total-height,90px)+1.5rem)]"
           >
             <div className="border-2 border-black bg-gray-50 p-6">
-              <Prijsopbouw />
+              {prijsopbouw}
 
               <div className="mt-5">
-                {!altijdGratisVerzending && <Verzendbalk />}
+                {!altijdGratisVerzending && verzendbalk}
               </div>
 
               <div className="mt-5 border-t-2 border-black pt-5">
@@ -484,7 +484,7 @@ export default function CartPage() {
               <Betaalmethoden className="mt-4 justify-center" />
 
               <div className="mt-5 border-t border-gray-200 pt-5">
-                <Vertrouwen />
+                {vertrouwen}
               </div>
             </div>
           </aside>

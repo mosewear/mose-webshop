@@ -17,7 +17,7 @@
  * het kleurlabel wisselen mee, zodat je ziet wat je toevoegt.
  */
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -117,27 +117,23 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
   const ankerKleur = anker?.color?.toLowerCase() || null
   const mandMaat = mand.find((m) => MAATVOLGORDE.includes((m.size || '').toUpperCase()))?.size?.toUpperCase() || null
 
-  const rijen = useMemo(
-    () =>
-      producten.map((p) => {
-        const varianten = p.product_variants.filter((v) => v.is_available && v.color)
-        const kleuren = [...new Set(varianten.map((v) => v.color as string))]
-        const volgorde = ankerKleur ? COMBINEERT[ankerKleur] || [] : []
-        kleuren.sort((a, b) => {
-          const ia = volgorde.indexOf(a.toLowerCase())
-          const ib = volgorde.indexOf(b.toLowerCase())
-          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
-        })
-        const opVoorraad = (kleur: string) => varianten.some((v) => v.color === kleur && v.stock_quantity > 0)
-        const inMandMaat = (kleur: string) =>
-          !!mandMaat && varianten.some((v) => v.color === kleur && v.size.toUpperCase() === mandMaat && v.stock_quantity > 0)
-        // Liefst de best combinerende kleur die er in jouw maat is; anders de
-        // best combinerende die er überhaupt is.
-        const besteKleur = kleuren.find(inMandMaat) || kleuren.find(opVoorraad) || kleuren[0]
-        return { p, varianten, kleuren, besteKleur }
-      }),
-    [producten, ankerKleur, mandMaat],
-  )
+  const rijen = producten.map((p) => {
+    const varianten = p.product_variants.filter((v) => v.is_available && v.color)
+    const kleuren = [...new Set(varianten.map((v) => v.color as string))]
+    const volgorde = ankerKleur ? COMBINEERT[ankerKleur] || [] : []
+    kleuren.sort((a, b) => {
+      const ia = volgorde.indexOf(a.toLowerCase())
+      const ib = volgorde.indexOf(b.toLowerCase())
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+    })
+    const opVoorraad = (kleur: string) => varianten.some((v) => v.color === kleur && v.stock_quantity > 0)
+    const inMandMaat = (kleur: string) =>
+      !!mandMaat && varianten.some((v) => v.color === kleur && v.size.toUpperCase() === mandMaat && v.stock_quantity > 0)
+    // Liefst de best combinerende kleur die er in jouw maat is; anders de
+    // best combinerende die er überhaupt is.
+    const besteKleur = kleuren.find(inMandMaat) || kleuren.find(opVoorraad) || kleuren[0]
+    return { p, varianten, kleuren, besteKleur }
+  })
 
   if (rijen.length === 0) return null
 
