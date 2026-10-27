@@ -16,11 +16,12 @@
 
 import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { levertMorgen } from '@/lib/shipping-cutoff'
 import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 interface PdpTrustStripProps {
+  supplierFulfilled?: boolean
   signatureSpecs?: string | null
   /** Uit site_settings. De verzendregel beloofde hardgecodeerd "gratis
    *  bezorging", terwijl free_shipping_threshold op 150 staat. Dat is de
@@ -31,7 +32,8 @@ interface PdpTrustStripProps {
   shippingCost?: number
 }
 
-export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, shippingCost = 0 }: PdpTrustStripProps) {
+export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, shippingCost = 0, supplierFulfilled = false }: PdpTrustStripProps) {
+  const locale = useLocale()
   const t = useTranslations('product.trustAnchor')
   // Lazy-init runs once on first render. `Intl.DateTimeFormat` works on
   // both server and client so the SSR'd HTML matches the first client
@@ -52,7 +54,12 @@ export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, s
   // kloppen met wat de checkout rekent.
   const altijdGratis = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
 
-  const lines = [
+  const lines = supplierFulfilled ? [
+    locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.',
+    locale === 'en' ? 'Fulfilled by our production partner Tapstitch.' : 'Geleverd via onze productiepartner Tapstitch.',
+    locale === 'en' ? 'Check the size chart for this specific model.' : 'Bekijk de maattabel van dit specifieke model.',
+    locale === 'en' ? 'Secure payment at checkout.' : 'Veilig betalen bij het afrekenen.',
+  ] : [
     beforeCutoff
       ? (altijdGratis
           ? t('shippingBeforeCutoffAltijd')

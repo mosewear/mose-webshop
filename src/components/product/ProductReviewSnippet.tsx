@@ -19,6 +19,7 @@ import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
 interface ProductReviewSnippetProps {
+  fallbackText?: string
   productId: string
 }
 
@@ -41,6 +42,7 @@ async function fetchReviewStats(productId: string): Promise<ReviewStats> {
     .select('rating')
     .eq('product_id', productId)
     .eq('is_approved', true)
+    .abortSignal(AbortSignal.timeout(8000))
 
   if (error || !data) {
     const fallback: ReviewStats = { count: 0, average: null }
@@ -57,7 +59,7 @@ async function fetchReviewStats(productId: string): Promise<ReviewStats> {
   return stats
 }
 
-export default function ProductReviewSnippet({ productId }: ProductReviewSnippetProps) {
+export default function ProductReviewSnippet({ productId, fallbackText }: ProductReviewSnippetProps) {
   const t = useTranslations('product.reviewSnippet')
   const [stats, setStats] = useState<ReviewStats | null>(null)
 
@@ -120,7 +122,7 @@ export default function ProductReviewSnippet({ productId }: ProductReviewSnippet
   return (
     <span className="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold uppercase tracking-wider text-gray-700">
       <span aria-hidden className="inline-block w-2 h-2 rounded-full bg-brand-primary" />
-      {t('fallback')}
+      {fallbackText ?? t('fallback')}
     </span>
   )
 }

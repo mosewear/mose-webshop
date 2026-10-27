@@ -144,6 +144,9 @@ export default function BehaviorAnalyticsPage() {
   const [feedRefreshing, setFeedRefreshing] = useState(false)
   const [feedLastUpdate, setFeedLastUpdate] = useState<Date | null>(null)
   const supabase = createClient()
+  const feedInFlight = useRef(false)
+  const feedFailures = useRef(0)
+  const nextFeedAttempt = useRef(0)
   const feedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -153,6 +156,8 @@ export default function BehaviorAnalyticsPage() {
   // Poll only the lightweight "recent events" query — no need to re-run the
   // expensive funnel / performance RPCs every 15 seconds.
   const refreshFeed = async () => {
+    if (feedInFlight.current || document.visibilityState === 'hidden' || Date.now() < nextFeedAttempt.current) return
+    feedInFlight.current = true
     setFeedRefreshing(true)
     try {
       // Het filter gaat MEE in de query. Hiervoor werden de laatste 50
@@ -166,14 +171,21 @@ export default function BehaviorAnalyticsPage() {
         .order('created_at', { ascending: false })
         .limit(FEED_LIMIT)
       if (eventFilter !== 'all') query = query.eq('event_name', eventFilter)
-      const { data: events, error: eventsError } = await query
+      const { data: events, error: eventsError } = await query.abortSignal(AbortSignal.timeout(8000))
       if (eventsError) {
-        console.error('Error refreshing feed:', eventsError)
+        throw eventsError
       } else {
+        feedFailures.current = 0
+        nextFeedAttempt.current = 0
         setRecentEvents(events || [])
         setFeedLastUpdate(new Date())
       }
+    } catch (error) {
+      feedFailures.current += 1
+      nextFeedAttempt.current = Date.now() + Math.min(120000, FEED_REFRESH_MS * 2 ** feedFailures.current)
+      console.error('Error refreshing feed:', error)
     } finally {
+      feedInFlight.current = false
       setFeedRefreshing(false)
     }
   }

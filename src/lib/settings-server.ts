@@ -1,4 +1,6 @@
 import 'server-only'
+import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 
 import { createAnonClient } from '@/lib/supabase/server'
 
@@ -28,10 +30,10 @@ const DEFAULTS: CommercePromises = {
   return_label_cost_incl_btw: 6.95,
 }
 
-export async function getCommercePromises(): Promise<CommercePromises> {
+const loadCommercePromises = unstable_cache(async (): Promise<CommercePromises> => {
   try {
     const supabase = createAnonClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('site_settings')
       .select('key, value')
       .in('key', [
@@ -40,6 +42,8 @@ export async function getCommercePromises(): Promise<CommercePromises> {
         'return_days',
         'return_label_cost_incl_btw',
       ])
+      .abortSignal(AbortSignal.timeout(8000))
+    if (error) throw error
 
     const map: Record<string, unknown> = {}
     ;(data ?? []).forEach((row: { key: string; value: unknown }) => {
@@ -57,10 +61,14 @@ export async function getCommercePromises(): Promise<CommercePromises> {
       return_days: Math.round(num('return_days')),
       return_label_cost_incl_btw: num('return_label_cost_incl_btw'),
     }
-  } catch {
-    return { ...DEFAULTS }
+  } catch (error) {
+    throw error
   }
-}
+}, ['public-commerce-promises-v1'], { revalidate: 300, tags: ['site-settings'] })
+
+export const getCommercePromises = cache(async (): Promise<CommercePromises> => {
+  try { return await loadCommercePromises() } catch { return { ...DEFAULTS } }
+})
 
 /** Formatteert een bedrag zoals de storefront het toont: 150 → "150", 6.95 → "6,95". */
 export function formatPromiseAmount(amount: number, locale: string): string {

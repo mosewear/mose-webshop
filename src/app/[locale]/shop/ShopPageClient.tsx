@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SHOP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { X, SlidersHorizontal, Search } from 'lucide-react'
@@ -28,7 +29,7 @@ import PaginaKop from '@/components/layout/PaginaKop'
 import CategorieKiezer, { type CategorieItem } from '@/components/shop/CategorieKiezer'
 import DetailBlok from '@/components/shop/DetailBlok'
 
-interface Product {
+export interface ShopProduct {
   id: string
   name: string
   name_en?: string
@@ -75,27 +76,27 @@ interface Product {
   }>
 }
 
-interface Category {
+export interface ShopCategory {
   id: string
   name: string
   name_en?: string
   slug: string
 }
 
-export default function ShopPageClient() {
+export default function ShopPageClient({ initialProducts, initialCategories }: { initialProducts?: ShopProduct[]; initialCategories?: ShopCategory[] }) {
   const t = useTranslations('shop')
   const tProduct = useTranslations('product')
   const locale = useLocale()
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const [products, setProducts] = useState<ShopProduct[]>(initialProducts ?? [])
+  const [categories, setCategories] = useState<ShopCategory[]>(initialCategories ?? [])
+  const [loading, setLoading] = useState(!initialProducts)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [showCategoryLabels, setShowCategoryLabels] = useState(true) // Default to true
   
   // Helper for locale-aware links
   
   // Helper to get localized names
-  const getProductName = (product: Product) => 
+  const getProductName = (product: ShopProduct) =>
     locale === 'en' && product.name_en ? product.name_en : product.name
 
   /**
@@ -107,9 +108,9 @@ export default function ShopPageClient() {
    * In de paginatitel, de productpagina en de Google-feed blijft het merk wel
    * staan; daar staat de naam zonder context.
    */
-  const getTileName = (product: Product) =>
+  const getTileName = (product: ShopProduct) =>
     getProductName(product).replace(/^MOSE\s+/i, '')
-  const getCategoryName = (category: Category | { name: string; name_en?: string }) => 
+  const getCategoryName = (category: ShopCategory | { name: string; name_en?: string }) =>
     locale === 'en' && category.name_en ? category.name_en : category.name
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -123,6 +124,7 @@ export default function ShopPageClient() {
   const [maxPrice, setMaxPrice] = useState(500)
   const [showInStockOnly, setShowInStockOnly] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [hoveredTile, setHoveredTile] = useState<string | null>(null)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   // Tracks whether we are mounted on the client so the mobile drawer portal
   // can safely target document.body without breaking SSR.
@@ -159,8 +161,8 @@ export default function ShopPageClient() {
 
   useEffect(() => {
     loadWishlist()
-    fetchCategories()
-    fetchProducts()
+    if (!initialCategories) void fetchCategories()
+    if (!initialProducts) void fetchProducts()
     loadSettings()
   }, [])
 
@@ -207,7 +209,9 @@ export default function ShopPageClient() {
     const { data } = await supabase
       .from('categories')
       .select('id, name, name_en, slug')
+      .eq('status', 'active')
       .order('name')
+      .abortSignal(AbortSignal.timeout(8000))
     
     if (data) setCategories(data)
   }
@@ -231,18 +235,12 @@ export default function ShopPageClient() {
       // visitor picks an option other than 'featured'.
       const { data, error } = await supabase
         .from('products')
-        .select(`
-          *,
-          name_en,
-          description_en,
-          category:categories(name, name_en, slug),
-          images:product_images(url, alt_text, is_primary, media_type, color, position),
-          variants:product_variants(color, color_hex, stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
-        `)
+        .select(SHOP_PRODUCT_SELECT)
         .eq('is_active', true)
         .eq('status', 'active')
         .order('display_order', { ascending: true })
         .order('created_at', { ascending: false })
+        .abortSignal(AbortSignal.timeout(8000))
 
       if (error) throw error
       
@@ -286,6 +284,16 @@ export default function ShopPageClient() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!initialProducts?.length) return
+    const prices = initialProducts.map(p => p.sale_price ?? p.base_price)
+    const min = Math.floor(Math.min(...prices) / 10) * 10
+    const max = Math.ceil(Math.max(...prices) / 10) * 10
+    setMinPrice(min)
+    setMaxPrice(max)
+    setPriceRange([min, max])
+  }, [initialProducts])
 
   // Memoize filtered and sorted products to prevent re-sorts
   const filteredProducts = useMemo(() => {
@@ -1045,17 +1053,19 @@ export default function ShopPageClient() {
                   // scannable ("HOODIE / BRUIN" vs "HOODIE / STONE").
                   const colorLabel = color ? formatColorLabel(color, locale) : null
 
-                  // Priority-load the first 6 tiles to avoid CLS at
+                  // Priority-load the first visible desktop row (3 tiles) to avoid CLS at
                   // the top of the viewport. Split products can put
                   // more tiles in that window than before, so this
                   // applies to tiles (not products).
-                  const isPriority = index < 6
+                  const isPriority = index < 3
 
                   return (
                     <LocaleLink
                       key={tile.tileKey}
                       href={pdpHref}
                       className="group block h-full"
+                      onPointerEnter={() => setHoveredTile(tile.tileKey)}
+                      onFocus={() => setHoveredTile(tile.tileKey)}
                       style={{
                         contain: 'layout style paint',
                         transform: 'translateZ(0)',
@@ -1076,7 +1086,7 @@ export default function ShopPageClient() {
                                 : getProductName(product)
                             }
                             fill
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 420px"
                             quality={90}
                             className="object-cover object-center"
                             priority={isPriority}
@@ -1086,13 +1096,13 @@ export default function ShopPageClient() {
                             onError={() => setFailedImages(prev => new Set(prev).add(tile.tileKey))}
                           />
 
-                          {hoverSrc && !failedImages.has(tile.tileKey) && (
+                          {hoverSrc && hoveredTile === tile.tileKey && !failedImages.has(tile.tileKey) && (
                             <Image
                               src={hoverSrc}
                               alt=""
                               aria-hidden="true"
                               fill
-                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 420px"
                               quality={90}
                               loading="lazy"
                               className="hidden md:block object-cover object-center opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-100 motion-reduce:transition-none"

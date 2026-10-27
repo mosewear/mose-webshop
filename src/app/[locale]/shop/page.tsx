@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getShopCatalog } from '@/lib/catalog-server'
 import ShopPageClient from './ShopPageClient'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 }
 
-export const revalidate = 1800 // Revalidate every 30 minutes
+export const revalidate = 60 // Public presentation data; checkout checks live inventory
 
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -58,6 +59,8 @@ export default async function ShopPage({ params }: { params: Promise<{ locale: s
   // twee verschillende beloftes voor dezelfde pagina.
   const { free_shipping_threshold } = await getCommercePromises()
   const threshold = formatPromiseAmount(free_shipping_threshold, locale)
+
+  const catalog = await getShopCatalog()
 
   // Add structured data for CollectionPage
   const structuredData = {
@@ -97,7 +100,7 @@ export default async function ShopPage({ params }: { params: Promise<{ locale: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <ShopPageClient />
+      <ShopPageClient initialProducts={catalog.products} initialCategories={catalog.categories} />
     </>
   )
 }
