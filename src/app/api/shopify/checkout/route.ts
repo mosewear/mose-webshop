@@ -8,6 +8,7 @@ import { CART_CREATE, VARIANTS_QUERY } from '@/lib/shopify/queries'
 import { assertCheckoutUrl, authorizeLines, checkoutInput, moneyToCents } from '@/lib/shopify/policy'
 import { readLimitedBody } from '@/lib/shopify/http'
 import { SHOPIFY_SESSION_COOKIE, validShopifySession } from '@/lib/shopify/session'
+import { assertCurrentLocalCatalog } from '@/lib/shopify/local-checkout'
 import { decideCheckoutAttempt } from '@/lib/shopify/attempts'
 
 export const runtime = 'nodejs'
@@ -79,6 +80,18 @@ export async function POST(request: NextRequest) {
     let lines: ReturnType<typeof authorizeLines>
     try { lines = authorizeLines(input, data ?? []) } catch {
       return respond({ error: 'Een artikel is nog niet beschikbaar voor deze bestelroute.', code: 'VARIANT_NOT_RELEASED' }, 409)
+    }
+    // Read current local publication and price from the variant's database parent, never a client product ID.
+    const localVariants = await db.from('product_variants')
+      .select('id,product_id,is_available,price_adjustment,presale_enabled,presale_stock_quantity')
+      .in('id', lines.map(line => line.localVariantId))
+    if (localVariants.error) throw new Error('LOCAL_CATALOG_UNAVAILABLE')
+    const productIds = [...new Set((localVariants.data ?? []).map(variant => variant.product_id as string))]
+    if (!productIds.length) return respond({ error: 'Een artikel is niet meer beschikbaar. Controleer je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
+    const localProducts = await db.from('products').select('id,status,is_active,is_gift_card,base_price,sale_price').in('id', productIds)
+    if (localProducts.error) throw new Error('LOCAL_CATALOG_UNAVAILABLE')
+    try { assertCurrentLocalCatalog(lines, localVariants.data ?? [], localProducts.data ?? []) } catch {
+      return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
     }
     // Vercel replaces this platform header. No arbitrary X-Forwarded-For fallback.
     const buyerIp = process.env.VERCEL === '1' ? request.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim() : process.env.SHOPIFY_DEV_BUYER_IP

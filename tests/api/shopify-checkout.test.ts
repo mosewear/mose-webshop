@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-const mock = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[] }))
+const mock = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[], localVariants: [] as Record<string, unknown>[], localProducts: [] as Record<string, unknown>[], localError: false }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: () => ({ from: mock.from, rpc: mock.rpc }) }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: mock.getUser } }) }))
 vi.mock('@/lib/shopify/client', () => ({ storefront: mock.storefront }))
@@ -23,10 +23,13 @@ beforeEach(() => {
     benefits_verified: true, fulfillment_verified: true, market_verified: true, last_reconciled_at: new Date().toISOString(), last_worker_at: new Date().toISOString() }
   mock.mappings = [{ mose_variant_id: 'local-123', shopify_variant_id: gid, fulfillment_owner: 'mose', supplier_model: null,
     supplier_link_verified: false, sample_verified: false, enabled: true, price_eur_cents: 6995 }]
+  mock.localError = false
+  mock.localVariants = [{ id: 'local-123', product_id: 'product-1', is_available: true, price_adjustment: 0, presale_enabled: false, presale_stock_quantity: 0 }]
+  mock.localProducts = [{ id: 'product-1', status: 'active', is_active: true, is_gift_card: false, base_price: 69.95, sale_price: null }]
   mock.getUser.mockReset().mockResolvedValue({ data: { user: { id: '11111111-1111-4111-8111-111111111111' } }, error: null })
   mock.insertOwner.mockReset().mockResolvedValue({ error: null })
   mock.from.mockReset().mockImplementation((table: string) => ({ insert: mock.insertOwner, select: () => table === 'shopify_integration_state'
-    ? { eq: () => ({ single: async () => ({ data: mock.state }) }) } : { in: async () => ({ data: mock.mappings }) } }))
+    ? { eq: () => ({ single: async () => ({ data: mock.state }) }) } : { in: async () => ({ data: table === 'product_variants' ? mock.localVariants : table === 'products' ? mock.localProducts : mock.mappings, error: mock.localError && table === 'products' ? { message: 'database unavailable' } : null }) } }))
   mock.rpc.mockReset().mockImplementation(async (name: string, args: Record<string, unknown>) => name === 'shopify_queue_health' ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] } : name === 'reserve_shopify_checkout'
     ? { data: [{ status: 'creating', request_fingerprint: args.p_fingerprint, cart_id: null, checkout_url: null, lease_token: args.p_lease, expires_at: new Date(Date.now()+3600000).toISOString() }] } : { data: true })
   mock.storefront.mockReset().mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5, price: { amount: '69.95', currencyCode: 'EUR' } }] })
@@ -147,6 +150,41 @@ describe('unified checkout boundary', () => {
     const req = request(); req.cookies.set('sb-test-auth-token', 'session')
     expect((await POST(req)).status).toBe(409)
     expect(mock.insertOwner).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['draft status', 'product', { status: 'draft' }],
+    ['inactive product', 'product', { is_active: false }],
+    ['gift card mislabeled as physical in mapping', 'product', { is_gift_card: true }],
+    ['unavailable variant', 'variant', { is_available: false }],
+    ['local price change', 'product', { base_price: 79.95 }],
+    ['local adjustment change', 'variant', { price_adjustment: 5 }],
+    ['unmigrated presale promise', 'variant', { presale_enabled: true, presale_stock_quantity: 5 }],
+  ])('rejects %s even with an enabled Shopify mapping', async (_label, kind, patch) => {
+    Object.assign(kind === 'product' ? mock.localProducts[0] : mock.localVariants[0], patch)
+    const response = await POST(request())
+    expect(response.status).toBe(409)
+    expect((await response.json()).code).toBe('LOCAL_CATALOG_CHANGED')
+    expect(mock.storefront).not.toHaveBeenCalled()
+    expect(mock.rpc.mock.calls.some(call => call[0] === 'reserve_shopify_checkout')).toBe(false)
+  })
+  it('does not use a deleted or mismatched local variant/product', async () => {
+    mock.localVariants = []
+    expect((await POST(request())).status).toBe(409)
+    mock.localVariants = [{ id: 'local-123', product_id: 'another-product', is_available: true, price_adjustment: 0, presale_enabled: false, presale_stock_quantity: 0 }]
+    expect((await POST(request())).status).toBe(409)
+    expect(mock.storefront).not.toHaveBeenCalled()
+  })
+  it('fails closed when current local catalog reads fail', async () => {
+    mock.localError = true
+    expect((await POST(request())).status).toBe(503)
+    expect(mock.storefront).not.toHaveBeenCalled()
+  })
+  it('authorizes the current local sale price plus variant adjustment', async () => {
+    mock.localProducts[0].base_price = 89.95
+    mock.localProducts[0].sale_price = 64.95
+    mock.localVariants[0].price_adjustment = 5
+    expect((await POST(request())).status).toBe(200)
   })
 
 })
