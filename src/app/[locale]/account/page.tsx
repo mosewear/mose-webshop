@@ -1,5 +1,6 @@
 'use client'
 
+import ShopifyOrders from '@/components/shopify/ShopifyOrders'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from '@/i18n/routing'
@@ -721,6 +722,7 @@ export default function AccountPage() {
             {/* Orders Tab */}
             {activeTab === 'orders' && (
               <>
+                {process.env.NEXT_PUBLIC_SHOPIFY_ORDERS_ENABLED === 'true' && <ShopifyOrders mode="account" locale={locale} />}
                 <h2 className="text-2xl md:text-3xl font-display mb-6">{t('myOrders')}</h2>
 
                 {orders.length === 0 ? (

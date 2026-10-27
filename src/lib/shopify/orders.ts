@@ -53,7 +53,7 @@ export async function fetchOrderProjection(orderId: string, execute: AdminExecut
       if (new Set(projected.lineItems.nodes.map(l => l.id)).size !== projected.lineItems.nodes.length) throw new Error('DUPLICATE_ORDER_LINES')
       projected.lineItems.pageInfo = { hasNextPage: false, endCursor: null }
       // Only our correlation values are retained; customer-authored arbitrary attributes are excluded.
-      projected.customAttributes = projected.customAttributes.filter(a => ['mose_source', 'mose_attempt'].includes(a.key))
+      projected.customAttributes = projected.customAttributes.filter(a => ['mose_source', 'mose_attempt', 'mose_account_proof'].includes(a.key))
       return projected
     }
     const next = order.lineItems.pageInfo.endCursor

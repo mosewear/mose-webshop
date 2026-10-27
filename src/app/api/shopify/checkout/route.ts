@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash, createHmac, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomUUID, randomBytes } from 'node:crypto'
 import { isIP } from 'node:net'
+import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { storefront } from '@/lib/shopify/client'
 import { CART_CREATE, VARIANTS_QUERY } from '@/lib/shopify/queries'
@@ -44,6 +45,14 @@ export async function POST(request: NextRequest) {
     if (!Number.isFinite(cutoff) || cutoff > Date.now()) throw new Error('CUTOVER_NOT_READY')
     const secret = process.env.SHOPIFY_SESSION_SECRET
     if (!secret || secret.length < 32 || !process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || !process.env.SHOPIFY_ADMIN_ACCESS_TOKEN) throw new Error('NOT_CONFIGURED')
+    // Only a server-verified Supabase identity can own an account order. Guests need no Auth call.
+    let userId: string | null = null
+    if (request.cookies.getAll().some(cookie => /^sb-.+-auth-token(?:\.\d+)?$/.test(cookie.name))) {
+      const auth = await createClient()
+      const { data: identity, error: authError } = await auth.auth.getUser()
+      if (authError || !identity.user) return respond({ error: 'Log opnieuw in om je bestelling aan je account te koppelen.', code: 'ACCOUNT_SESSION_INVALID' }, 401)
+      userId = identity.user.id
+    }
     db = createServiceClient()
     const readiness = await db.from('shopify_integration_state').select('*').eq('id', 1).single()
     const state = readiness.data
@@ -84,7 +93,7 @@ export async function POST(request: NextRequest) {
         return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'CART_CHANGED' }, 409)
       }
     }
-    const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines })).digest('hex')
+    const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId })).digest('hex')
     const booking = await db.rpc('reserve_shopify_checkout', {
       p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'),
       p_fingerprint: fingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'),
@@ -101,11 +110,18 @@ export async function POST(request: NextRequest) {
     }, 409)
     if (decision.kind === 'reuse') return respond({ checkoutUrl: assertCheckoutUrl(decision.url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
     reserved = true
+    const attributes = [{ key: 'mose_source', value: 'unified-checkout' }, { key: 'mose_attempt', value: input.attemptId }]
+    if (userId) {
+      const proof = randomBytes(32).toString('hex')
+      const owner = await db.from('shopify_checkout_owners').insert({ attempt_id: input.attemptId, user_id: userId, proof })
+      if (owner.error) throw new Error('ACCOUNT_LINK_UNAVAILABLE')
+      attributes.push({ key: 'mose_account_proof', value: proof })
+    }
     const created = await storefront<CreatedCart>(CART_CREATE, {
       ...context, input: {
         buyerIdentity: { countryCode: 'NL' },
         lines: lines.map(({ merchandiseId, quantity }) => ({ merchandiseId, quantity })),
-        attributes: [{ key: 'mose_source', value: 'unified-checkout' }, { key: 'mose_attempt', value: input.attemptId }],
+        attributes,
       },
     }, buyerIp)
     const { cart, userErrors, warnings } = created.cartCreate

@@ -1,8 +1,9 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-const mock = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[] }))
+const mock = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[] }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: () => ({ from: mock.from, rpc: mock.rpc }) }))
+vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: mock.getUser } }) }))
 vi.mock('@/lib/shopify/client', () => ({ storefront: mock.storefront }))
 import { POST } from '@/app/api/shopify/checkout/route'
 import { GET as bootstrap } from '@/app/api/shopify/session/route'
@@ -22,7 +23,9 @@ beforeEach(() => {
     benefits_verified: true, fulfillment_verified: true, market_verified: true, last_reconciled_at: new Date().toISOString(), last_worker_at: new Date().toISOString() }
   mock.mappings = [{ mose_variant_id: 'local-123', shopify_variant_id: gid, fulfillment_owner: 'mose', supplier_model: null,
     supplier_link_verified: false, sample_verified: false, enabled: true, price_eur_cents: 6995 }]
-  mock.from.mockReset().mockImplementation((table: string) => ({ select: () => table === 'shopify_integration_state'
+  mock.getUser.mockReset().mockResolvedValue({ data: { user: { id: '11111111-1111-4111-8111-111111111111' } }, error: null })
+  mock.insertOwner.mockReset().mockResolvedValue({ error: null })
+  mock.from.mockReset().mockImplementation((table: string) => ({ insert: mock.insertOwner, select: () => table === 'shopify_integration_state'
     ? { eq: () => ({ single: async () => ({ data: mock.state }) }) } : { in: async () => ({ data: mock.mappings }) } }))
   mock.rpc.mockReset().mockImplementation(async (name: string, args: Record<string, unknown>) => name === 'shopify_queue_health' ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] } : name === 'reserve_shopify_checkout'
     ? { data: [{ status: 'creating', request_fingerprint: args.p_fingerprint, cart_id: null, checkout_url: null, lease_token: args.p_lease, expires_at: new Date(Date.now()+3600000).toISOString() }] } : { data: true })
@@ -101,6 +104,49 @@ describe('unified checkout boundary', () => {
       expect((await response.json()).code).toBe('ORDER_SYNC_NOT_READY')
     }
     expect(mock.storefront).not.toHaveBeenCalled()
+  })
+
+  it('binds authenticated checkout to an opaque proof before creating the cart', async () => {
+    const req = request()
+    req.cookies.set('sb-test-auth-token', 'session')
+    const response = await POST(req)
+    expect(response.status).toBe(200)
+    const owner = mock.insertOwner.mock.calls[0][0]
+    expect(owner).toMatchObject({ attempt_id: attemptId, user_id: '11111111-1111-4111-8111-111111111111' })
+    expect(owner.proof).toMatch(/^[a-f0-9]{64}$/)
+    expect(mock.storefront.mock.calls[1][1].input.attributes).toContainEqual({ key: 'mose_account_proof', value: owner.proof })
+    expect(mock.insertOwner.mock.invocationCallOrder[0]).toBeLessThan(mock.storefront.mock.invocationCallOrder[1])
+    expect(JSON.stringify(await response.json())).not.toContain(owner.proof)
+  })
+  it('keeps anonymous checkout working without an account or ownership row', async () => {
+    expect((await POST(request())).status).toBe(200)
+    expect(mock.getUser).not.toHaveBeenCalled()
+    expect(mock.insertOwner).not.toHaveBeenCalled()
+    expect(mock.storefront.mock.calls[1][1].input.attributes).toHaveLength(2)
+  })
+  it('does not downgrade an invalid logged-in session to a guest order', async () => {
+    mock.getUser.mockResolvedValue({ data: { user: null }, error: { message: 'expired' } })
+    const req = request(); req.cookies.set('sb-test-auth-token.0', 'session')
+    expect((await POST(req)).status).toBe(401)
+    expect(mock.storefront).not.toHaveBeenCalled()
+  })
+  it('does not create a cart if durable account ownership fails', async () => {
+    mock.insertOwner.mockResolvedValue({ error: { message: 'database failed' } })
+    const req = request(); req.cookies.set('sb-test-auth-token', 'session')
+    expect((await POST(req)).status).toBe(503)
+    expect(mock.storefront).toHaveBeenCalledTimes(1) // validation only; no cart mutation
+  })
+  it('includes verified identity in the attempt fingerprint, preventing cross-account reuse', async () => {
+    await POST(request())
+    const guestFingerprint = mock.rpc.mock.calls.find(c => c[0] === 'reserve_shopify_checkout')![1].p_fingerprint
+    mock.storefront.mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5, price: { amount: '69.95', currencyCode: 'EUR' } }] })
+    const implementation = mock.rpc.getMockImplementation()!
+    mock.rpc.mockImplementation(async (name, args) => name === 'reserve_shopify_checkout'
+      ? { data: [{ status: 'ready', request_fingerprint: guestFingerprint, checkout_url: url, expires_at: new Date(Date.now()+3600000).toISOString() }] }
+      : implementation(name, args))
+    const req = request(); req.cookies.set('sb-test-auth-token', 'session')
+    expect((await POST(req)).status).toBe(409)
+    expect(mock.insertOwner).not.toHaveBeenCalled()
   })
 
 })
