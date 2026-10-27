@@ -61,5 +61,9 @@ try {
   check(await scalar('select checkpoint_shopify_reconciliation($1,null,$2::jsonb)', [other,events]), false, 'reconciliation fenced')
   check(await scalar('select checkpoint_shopify_reconciliation($1,null,$2::jsonb)', [recon.reconcile_lease_token,events]), true, 'queue+checkpoint atomic')
   check(await scalar("select count(*)::int from shopify_webhook_inbox where topic='reconcile/order'"), 1, 'reconciliation queued')
+  const health = (await query('select * from shopify_queue_health()')).rows[0]
+  check(Number(health.pending_count), 1, 'queue health reports pending reconciliation')
+  check(Number(health.dead_letter_count), 0, 'queue health reports zero dead letters')
+  check(health.oldest_pending_at != null, true, 'queue health exposes age for checkout gate')
   console.log(`${checks} PostgreSQL migration/lease/idempotency/privilege checks passed (local PGlite only).`)
 } finally { await db.close() }

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomUUID } from 'node:crypto'
 import { isIP } from 'node:net'
 import { createServiceClient } from '@/lib/supabase/service'
 import { storefront } from '@/lib/shopify/client'
 import { CART_CREATE, VARIANTS_QUERY } from '@/lib/shopify/queries'
 import { assertCheckoutUrl, authorizeLines, checkoutInput, moneyToCents } from '@/lib/shopify/policy'
 import { readLimitedBody } from '@/lib/shopify/http'
+import { SHOPIFY_SESSION_COOKIE, validShopifySession } from '@/lib/shopify/session'
+import { decideCheckoutAttempt } from '@/lib/shopify/attempts'
 
 export const runtime = 'nodejs'
-const COOKIE = 'mose_shopify_session'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
 type CreatedCart = { cartCreate: {
   cart: null | { id: string; checkoutUrl: string; totalQuantity: number; cost: { subtotalAmount: { amount: string; currencyCode: string } }; lines: { nodes: { quantity: number; merchandise: { id: string } }[] } }
@@ -17,13 +18,8 @@ type CreatedCart = { cartCreate: {
 
 export async function POST(request: NextRequest) {
   const headers = { 'Cache-Control': 'no-store' }
-  const session = request.cookies.get(COOKIE)?.value
-  const sessionToken = session && /^[a-f0-9]{64}$/.test(session) ? session : randomBytes(32).toString('hex')
-  const respond = (body: Record<string, unknown>, status = 200) => {
-    const response = NextResponse.json(body, { status, headers })
-    response.cookies.set(COOKIE, sessionToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 86400 })
-    return response
-  }
+  const sessionToken = request.cookies.get(SHOPIFY_SESSION_COOKIE)?.value
+  const respond = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, { status, headers })
   if (process.env.SHOPIFY_CHECKOUT_ENABLED !== 'true' || process.env.SHOPIFY_BENEFITS_VERIFIED !== 'true') {
     return respond({ error: 'Deze bestelroute is nog niet beschikbaar.', code: 'CHECKOUT_DISABLED' }, 503)
   }
@@ -32,6 +28,7 @@ export async function POST(request: NextRequest) {
     return respond({ error: 'Afrekenen is tijdelijk niet beschikbaar.', code: 'CONFIGURATION_UNAVAILABLE' }, 503)
   }
   if (request.headers.get('origin') !== origin) return respond({ error: 'Ongeldige aanvraag.' }, 403)
+  if (!validShopifySession(sessionToken)) return respond({ error: 'Start eerst een veilige afrekensessie.', code: 'SESSION_REQUIRED', retrySafe: true }, 409)
   let parsed: ReturnType<typeof checkoutInput.safeParse>
   try { parsed = checkoutInput.safeParse(JSON.parse((await readLimitedBody(request, 12_000)).toString('utf8'))) } catch (error) {
     return respond({ error: 'Ongeldige winkelmand.' }, error instanceof Error && error.message === 'BODY_TOO_LARGE' ? 413 : 400)
@@ -52,9 +49,21 @@ export async function POST(request: NextRequest) {
     const state = readiness.data
     const gates = ['app_installed', 'checkout_enabled', 'catalog_verified', 'inventory_verified', 'benefits_verified', 'fulfillment_verified', 'market_verified']
     const lastSync = Date.parse(state?.last_reconciled_at ?? '')
+    const lastWorker = Date.parse(state?.last_worker_at ?? '')
     if (readiness.error || !state || gates.some(key => state[key] !== true) ||
-      !Number.isFinite(lastSync) || lastSync > Date.now() + 60_000 || Date.now() - lastSync > 15 * 60_000) {
+      !Number.isFinite(lastSync) || lastSync > Date.now() + 60_000 || Date.now() - lastSync > 15 * 60_000 ||
+      !Number.isFinite(lastWorker) || lastWorker > Date.now() + 60_000 || Date.now() - lastWorker > 15 * 60_000) {
       return respond({ error: 'Afrekenen is tijdelijk niet beschikbaar. Je winkelmand blijft bewaard.', code: 'CHECKOUT_NOT_READY' }, 503)
+    }
+    const healthResult = await db.rpc('shopify_queue_health')
+    const health = healthResult.data?.[0]
+    const oldest = health?.oldest_pending_at ? Date.parse(health.oldest_pending_at) : null
+    const deadLetters = Number(health?.dead_letter_count)
+    const pending = Number(health?.pending_count)
+    if (healthResult.error || !health || health.dead_letter_count == null || health.pending_count == null || !Number.isSafeInteger(deadLetters) || deadLetters !== 0 ||
+      !Number.isSafeInteger(pending) || pending < 0 ||
+      (pending > 0 && (oldest === null || !Number.isFinite(oldest) || oldest > Date.now() + 60_000 || Date.now() - oldest > 15 * 60_000))) {
+      return respond({ error: 'Afrekenen is tijdelijk niet beschikbaar. Je winkelmand blijft bewaard.', code: 'ORDER_SYNC_NOT_READY' }, 503)
     }
     const { data, error } = await db.from('shopify_variant_mappings').select('*').in('mose_variant_id', input.lines.map(l => l.variantId))
     if (error) throw new Error('MAPPING_UNAVAILABLE')
@@ -85,12 +94,12 @@ export async function POST(request: NextRequest) {
       if (booking.error.message?.includes('CHECKOUT_RATE_LIMIT')) return respond({ error: 'Te veel afrekenpogingen. Probeer het over een minuut opnieuw.', code: 'RATE_LIMIT' }, 429)
       throw new Error('ATTEMPT_UNAVAILABLE')
     }
-    const attempt = booking.data?.[0]
-    if (!attempt || Date.parse(attempt.expires_at) <= Date.now()) return respond({ error: 'Deze afrekenpoging hoort niet meer bij je winkelmand.', code: 'ATTEMPT_CONFLICT' }, 409)
-    if (attempt.status === 'ready') return respond({ checkoutUrl: assertCheckoutUrl(attempt.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
-    if (attempt.lease_token !== lease || attempt.status !== 'creating') {
-      return respond({ error: 'Deze afrekenpoging wordt nog gecontroleerd. Je winkelmand blijft bewaard.', code: 'ATTEMPT_PENDING' }, 409)
-    }
+    const decision = decideCheckoutAttempt(booking.data?.[0], fingerprint, lease)
+    if (decision.kind === 'reject') return respond({
+      error: decision.retrySafe ? 'Deze afrekenpoging kan veilig opnieuw worden gestart.' : 'Deze afrekenpoging moet eerst worden gecontroleerd. Je winkelmand blijft bewaard.',
+      code: decision.code, retrySafe: decision.retrySafe,
+    }, 409)
+    if (decision.kind === 'reuse') return respond({ checkoutUrl: assertCheckoutUrl(decision.url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
     reserved = true
     const created = await storefront<CreatedCart>(CART_CREATE, {
       ...context, input: {
@@ -100,6 +109,11 @@ export async function POST(request: NextRequest) {
       },
     }, buyerIp)
     const { cart, userErrors, warnings } = created.cartCreate
+    if (!cart && userErrors.length) {
+      const failed = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'failed', p_error: 'CART_REJECTED' })
+      if (failed.error || failed.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')
+      return respond({ error: 'Shopify kon deze winkelmand niet aanmaken. Controleer je artikelen en probeer opnieuw.', code: 'ATTEMPT_FAILED', retrySafe: true }, 409)
+    }
     if (!cart || userErrors.length || warnings.length || cart.cost.subtotalAmount.currencyCode !== 'EUR' ||
       cart.totalQuantity !== lines.reduce((n, l) => n + l.quantity, 0) || cart.lines.nodes.length !== lines.length ||
       lines.some(l => !cart.lines.nodes.some(c => c.merchandise.id === l.merchandiseId && c.quantity === l.quantity))) throw new Error('CART_MISMATCH')

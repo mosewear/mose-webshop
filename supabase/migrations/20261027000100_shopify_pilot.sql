@@ -70,7 +70,7 @@ begin
   perform pg_advisory_xact_lock(hashtextextended(p_buyer, 0));
   if exists(select 1 from public.shopify_checkout_attempts where id = p_id) then
     return query select * from public.shopify_checkout_attempts
-      where id = p_id and session_hash = p_session and request_fingerprint = p_fingerprint;
+      where id = p_id and session_hash = p_session;
     return;
   end if;
   if (select count(*) from public.shopify_checkout_attempts
@@ -232,6 +232,16 @@ begin
   return found;
 end $$;
 
+-- A fresh enqueue cursor alone does not establish a healthy order-processing pipeline.
+create function public.shopify_queue_health()
+returns table (pending_count bigint, oldest_pending_at timestamptz, dead_letter_count bigint)
+language sql security definer set search_path = public as $$
+  select count(*) filter(where processed_at is null and dead_letter_at is null),
+    min(received_at) filter(where processed_at is null and dead_letter_at is null),
+    count(*) filter(where processed_at is null and dead_letter_at is not null)
+  from public.shopify_webhook_inbox;
+$$;
+
 create function public.claim_shopify_reconciliation()
 returns setof public.shopify_integration_state language sql security definer set search_path = public as $$
   update public.shopify_integration_state set reconcile_lease_until=now()+interval '2 minutes',
@@ -272,7 +282,7 @@ do $$ declare t text; f record; begin
   for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace
     where n.nspname='public' and p.proname in ('reserve_shopify_checkout','finish_shopify_checkout',
       'claim_shopify_events','complete_shopify_event','fail_shopify_event','claim_shopify_reconciliation',
-      'checkpoint_shopify_reconciliation') loop
+      'checkpoint_shopify_reconciliation','shopify_queue_health') loop
     execute format('revoke all on function %s from public, anon, authenticated',f.signature);
     execute format('grant execute on function %s to service_role',f.signature);
   end loop;

@@ -59,5 +59,10 @@ export async function runOrderWorker(db = createServiceClient(), fetchOrder = fe
       else result.failed++
     }
   }
+  if (result.failed === 0 && result.leaseLost === 0) {
+    // An empty but successful run is healthy too; pending-age/dead-letter gates are separate.
+    const heartbeat = await db.from('shopify_integration_state').update({ last_worker_at: new Date().toISOString() }).eq('id', 1)
+    if (heartbeat.error) throw new Error('WORKER_HEARTBEAT_FAILED')
+  }
   return result
 }

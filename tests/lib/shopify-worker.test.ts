@@ -65,6 +65,15 @@ describe('webhook worker', () => {
     const result = await runOrderWorker({ rpc } as unknown as ReturnType<typeof createServiceClient>)
     expect(result.processed).toBe(0); expect(result.leaseLost).toBe(1)
   })
+  it('records a successful empty run as worker health without inventing processed orders', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [] })
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn(() => ({ update }))
+    const result = await runOrderWorker({ rpc, from } as unknown as ReturnType<typeof createServiceClient>)
+    expect(result).toEqual({ processed: 0, failed: 0, leaseLost: 0 })
+    expect(update.mock.calls[0][0]).toHaveProperty('last_worker_at')
+  })
   it('does not store provider responses containing personal details as error text', () => {
     expect(safeWorkerError(new Error('customer rick@example.com not found'))).toBe('WORKER_FAILED')
   })

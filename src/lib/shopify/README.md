@@ -6,11 +6,13 @@ This foundation creates a single Shopify cart from reviewed MOSE-local variant m
 
 `POST /api/shopify/checkout`: `{ locale: "nl" | "en", country: "NL", attemptId: UUID, lines: [{ variantId: MOSE_LOCAL_ID, quantity: 1..10 }] }`.
 
-Success returns `{ checkoutUrl, attemptId }`. Prices and Shopify IDs are server-owned. Keep one attempt ID per unchanged normalized basket; reuse it on retries. The server binds it to a random HttpOnly session and the reviewed basket fingerprint. A pending/unknown attempt is not recreated automatically. Creating a cart never proves payment and never clears the MOSE cart. Cart IDs and checkout URLs must not enter logs, analytics or publicly readable tables.
+Before POST, await `GET /api/shopify/session` with same-origin credentials; it returns `{ready:true}` and sets the HttpOnly ownership cookie. POST without the acknowledged cookie returns `SESSION_REQUIRED` before any database/provider mutation. A lost bootstrap response therefore cannot orphan a checkout.
+
+Success returns `{ checkoutUrl, attemptId }`. Prices and Shopify IDs are server-owned. Keep one attempt ID per unchanged normalized basket; reuse it on retries. The server binds it to a random HttpOnly session and the reviewed basket fingerprint. A pending/unknown attempt is not recreated automatically. `ATTEMPT_EXPIRED`, `INPUT_CHANGED` and `ATTEMPT_FAILED` carry `retrySafe`; it is true only for a definite failed attempt with no issued cart. Expired ready/creating/unknown attempts require controlled payment reconciliation/support, not automatic UUID rotation. TTL is not proof that no payment happened. Creating a cart never proves payment and never clears the MOSE cart. Cart IDs and checkout URLs must not enter logs, analytics or publicly readable tables.
 
 Required server secrets: `SHOPIFY_STOREFRONT_PRIVATE_TOKEN`, production/offline `SHOPIFY_ADMIN_ACCESS_TOKEN`, `SHOPIFY_APP_CLIENT_SECRET`, `SHOPIFY_SESSION_SECRET` (at least 32 characters), `CRON_SECRET` (at least 24 characters). Never use interactive CLI tokens for production. `SHOPIFY_DEV_BUYER_IP` is only for local development; Vercel uses the overwritten platform IP header.
 
-Release flags `SHOPIFY_CHECKOUT_ENABLED=true` and `SHOPIFY_BENEFITS_VERIFIED=true` are insufficient alone. A valid past `SHOPIFY_CUTOVER_AT`, all seven database release gates and a reconciliation less than 15 minutes old are required. Current gateway is NL/EUR only: the existing webshop's other markets remain an explicit migration blocker. Digital variants cannot be released until their pricing/personalization and benefits contract is supported; no inactive catalogue item should be activated implicitly.
+Release flags `SHOPIFY_CHECKOUT_ENABLED=true` and `SHOPIFY_BENEFITS_VERIFIED=true` are insufficient alone. A valid past `SHOPIFY_CUTOVER_AT`, all seven database release gates a reconciliation and successful worker heartbeat less than 15 minutes old, no pending event older than 15 minutes, and zero dead letters are required. Missing/unknown queue counts fail closed. Current gateway is NL/EUR only: the existing webshop's other markets remain an explicit migration blocker. Digital variants cannot be released until their pricing/personalization and benefits contract is supported; no inactive catalogue item should be activated implicitly.
 
 ## Durable synchronization
 
@@ -27,7 +29,7 @@ Admin access must be proven for ordinary orders and merchant-/third-party-manage
 
 ## Validation
 
-Run `npm test -- tests/lib/shopify-pilot.test.ts tests/lib/shopify-worker.test.ts tests/api/shopify-checkout.test.ts tests/api/shopify-webhooks.test.ts` and `npx tsc --noEmit`.
+Run `npm test -- tests/lib/shopify-pilot.test.ts tests/lib/shopify-worker.test.ts tests/lib/shopify-attempts.test.ts tests/api/shopify-checkout.test.ts tests/api/shopify-webhooks.test.ts` and `npx tsc --noEmit`.
 
 `tests/lib/shopify-migration-check.mjs` executes the migration and fencing/idempotency/privilege assertions against a local in-memory PGlite engine. It never connects to Supabase or Shopify. Instructions for the isolated optional dependency are in that file. A real Supabase staging migration/RLS check remains required before production.
 
