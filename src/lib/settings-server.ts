@@ -21,6 +21,8 @@ export type CommercePromises = {
   shipping_cost: number
   return_days: number
   return_label_cost_incl_btw: number
+  show_preview_images_notice: boolean
+  pdp_sticky_picker_enabled: boolean
 }
 
 const DEFAULTS: CommercePromises = {
@@ -28,6 +30,8 @@ const DEFAULTS: CommercePromises = {
   shipping_cost: 6.95,
   return_days: 30,
   return_label_cost_incl_btw: 6.95,
+  show_preview_images_notice: false,
+  pdp_sticky_picker_enabled: true,
 }
 
 const loadCommercePromises = unstable_cache(async (): Promise<CommercePromises> => {
@@ -41,6 +45,8 @@ const loadCommercePromises = unstable_cache(async (): Promise<CommercePromises> 
         'shipping_cost',
         'return_days',
         'return_label_cost_incl_btw',
+        'show_preview_images_notice',
+        'pdp_sticky_picker_enabled',
       ])
       .abortSignal(AbortSignal.timeout(8000))
     if (error) throw error
@@ -50,7 +56,7 @@ const loadCommercePromises = unstable_cache(async (): Promise<CommercePromises> 
       map[row.key] = row.value
     })
 
-    const num = (key: keyof CommercePromises) => {
+    const num = (key: 'free_shipping_threshold' | 'shipping_cost' | 'return_days' | 'return_label_cost_incl_btw') => {
       const parsed = parseFloat(String(map[key]))
       return Number.isFinite(parsed) ? parsed : DEFAULTS[key]
     }
@@ -60,6 +66,8 @@ const loadCommercePromises = unstable_cache(async (): Promise<CommercePromises> 
       shipping_cost: num('shipping_cost'),
       return_days: Math.round(num('return_days')),
       return_label_cost_incl_btw: num('return_label_cost_incl_btw'),
+      show_preview_images_notice: map.show_preview_images_notice === true || map.show_preview_images_notice === 'true',
+      pdp_sticky_picker_enabled: map.pdp_sticky_picker_enabled !== false && map.pdp_sticky_picker_enabled !== 'false',
     }
   } catch (error) {
     throw error

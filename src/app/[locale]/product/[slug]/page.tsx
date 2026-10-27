@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { getCommercePromises } from '@/lib/settings-server'
 import { isTapstitchProduct } from '@/lib/tapstitch-products'
 import { getCatalogProduct } from '@/lib/catalog-server'
 import ProductPageClient from './ProductPageClient'
@@ -109,7 +110,7 @@ export default async function ProductPage({
 }) {
   const { slug, locale: localeParam } = await params
   setRequestLocale(localeParam)
-  const product = await getCatalogProduct(slug)
+  const [product, initialSettings] = await Promise.all([getCatalogProduct(slug), getCommercePromises()])
 
   if (!product) {
     notFound()
@@ -221,17 +222,13 @@ export default async function ProductPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      {/* Suspense wrap is verplicht zodra ProductPageClient
-          `useSearchParams()` gebruikt (voor ?color= pre-select vanuit
-          de shop kleurvariant-tegels). Zonder deze boundary forceert
-          Next.js de hele PDP-route naar volledig dynamische rendering,
-          wat de ISR-revalidate kortsluit. Fallback=null houdt de
-          LCP-cascade hetzelfde als voorheen — de client component
-          rendert direct met zijn eigen interne loading-state. */}
+      {/* Product and presentation settings arrive with the server HTML.
+          The client isolates URL-only colour selection in its own boundary. */}
       <Suspense fallback={null}>
         <ProductPageClient
           key={slug}
           initialProduct={product}
+          initialSettings={initialSettings}
           params={Promise.resolve({ slug, locale: localeParam })}
           instagramSlot={
             // Server-component variant van de homepage Instagram-feed,

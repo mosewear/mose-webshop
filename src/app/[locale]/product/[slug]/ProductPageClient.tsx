@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect, useRef, useCallback, ReactElement } from 'react'
+import { Suspense, use, useState, useEffect, useRef, useCallback, ReactElement } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -311,6 +311,24 @@ function VideoThumbnail({
   )
 }
 
+interface ProductPresentationSettings {
+  free_shipping_threshold: number
+  return_days: number
+  shipping_cost: number
+  show_preview_images_notice: boolean
+  pdp_sticky_picker_enabled: boolean
+  return_label_cost_incl_btw: number
+}
+
+// Query-string selection is the only CSR-only part of an otherwise server-
+// rendered PDP. Keeping its Suspense boundary here preserves the hero/product
+// HTML in static pages instead of bailing the entire product into client render.
+function ProductColorQuery({ onChange }: { onChange: (color: string | null) => void }) {
+  const color = useSearchParams().get('color')
+  useEffect(() => onChange(color), [color, onChange])
+  return null
+}
+
 interface ProductPageProps {
   params: Promise<{ slug: string; locale: string }>
   /** Server-rendered Instagram-feed sectie. Komt vanuit de bovenliggende
@@ -318,11 +336,12 @@ interface ProductPageProps {
    *  her-fetchen vanuit een client component. Wanneer de admin de feed
    *  niet aan heeft staan, levert page.tsx hier `null` aan en rendert
    *  de PDP gewoon zonder Instagram-blok. */
+  initialSettings?: ProductPresentationSettings
   initialProduct?: Product
   instagramSlot?: React.ReactNode
 }
 
-export default function ProductPage({ params, instagramSlot, initialProduct }: ProductPageProps) {
+export default function ProductPage({ params, instagramSlot, initialProduct, initialSettings }: ProductPageProps) {
   const t = useTranslations('product')
   const tShipping = useTranslations('shipping')
   const tCommon = useTranslations('common')
@@ -333,8 +352,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct }: P
   // color preselected. Shop color-split tiles + transactional email
   // links rely on this — see src/lib/product-display.ts buildPdpHref()
   // and src/app/api/admin/campaigns/spring-drop/send/route.ts.
-  const searchParams = useSearchParams()
-  const requestedColorParam = searchParams.get('color')
+  const [requestedColorParam, setRequestedColorParam] = useState<string | null>(null)
   
   // Helper for locale-aware links
   const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
@@ -446,15 +464,8 @@ export default function ProductPage({ params, instagramSlot, initialProduct }: P
       })
     })
   }
-  const [settings, setSettings] = useState<{
-    free_shipping_threshold: number
-    return_days: number
-    shipping_cost: number
-    show_preview_images_notice: boolean
-    pdp_sticky_picker_enabled: boolean
-    return_label_cost_incl_btw: number
-  } | null>(null)
-  const [settingsLoading, setSettingsLoading] = useState(true)
+  const [settings, setSettings] = useState<ProductPresentationSettings | null>(initialSettings ?? null)
+  const [settingsLoading, setSettingsLoading] = useState(!initialSettings)
 
   // Ref for scroll container (CSS scroll-snap)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -470,7 +481,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct }: P
 
   useEffect(() => {
     loadWishlist()
-    loadSettings()
+    if (!initialSettings) void loadSettings()
   }, [])
 
   const loadSettings = async () => {
@@ -572,6 +583,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct }: P
   }, [showSizeGuide])
 
   async function fetchProduct(seed?: Product) {
+    const requestedColorParam = new URLSearchParams(window.location.search).get('color')
     setLoadError(false)
     try {
     const supabase = createClient()
@@ -1204,6 +1216,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct }: P
 
   return (
     <>
+      <Suspense fallback={null}><ProductColorQuery onChange={setRequestedColorParam} /></Suspense>
       <div className="min-h-screen px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Sentinel for the mobile sticky variant-picker. Sits at the very
