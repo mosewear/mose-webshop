@@ -20,6 +20,8 @@ import { calculateTierDiscount, getTierDiscountPercent, type LoyaltyTier } from 
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { computeCartStaffelBreakdown } from '@/lib/cart-staffel-display'
+import { ShopifyCheckoutHandoff } from '@/components/shopify/ShopifyCheckoutHandoff'
+import { shouldUseLegacyRecovery } from '@/lib/shopify-cart'
 
 type PaymentMethod = 'ideal' | 'card' | 'klarna' | 'bancontact' | 'paypal'
 type DeliveryMethod = 'shipping' | 'pickup'
@@ -54,6 +56,22 @@ interface CheckoutForm {
 }
 
 export default function CheckoutPage() {
+  const searchParams = useSearchParams()
+  const [legacySession, setLegacySession] = useState<boolean | null>(null)
+  useEffect(() => {
+    try {
+      setLegacySession(previous => previous === true || shouldUseLegacyRecovery(searchParams.get('recover'), sessionStorage.getItem('payment_cancelled'), sessionStorage.getItem('order_id')))
+    } catch { setLegacySession(previous => previous === true || Boolean(searchParams.get('recover'))) }
+  }, [searchParams])
+  if (process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED !== 'true' || searchParams.get('recover') || legacySession === true) {
+    return <LegacyCheckoutPage />
+  }
+  // Wait for old payment-recovery state before mounting either checkout.
+  if (legacySession === null) return null
+  return <ShopifyCheckoutHandoff />
+}
+
+function LegacyCheckoutPage() {
   const t = useTranslations('checkout')
   const tCommon = useTranslations('common')
   const tErrors = useTranslations('errors')
@@ -699,13 +717,15 @@ export default function CheckoutPage() {
           // Fetch variant to get colorHex and stock
           const { data: variant } = await supabase
             .from('product_variants')
-            .select('color_hex, stock_quantity')
+            .select('color_hex, stock_quantity, products(slug)')
             .eq('id', item.variant_id)
             .single()
           
+          const recoveredProduct = Array.isArray(variant?.products) ? variant.products[0] : variant?.products
           return {
             productId: item.product_id,
             variantId: item.variant_id,
+            slug: recoveredProduct?.slug || item.slug || '',
             name: item.product_name,
             size: item.size,
             color: item.color,

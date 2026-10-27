@@ -45,6 +45,16 @@ export default function AdminSidebar({ adminUser }: AdminSidebarProps) {
 
   const allNavigation = [
     {
+      name: 'Shopify checkout',
+      href: '/admin/shopify',
+      allowedRoles: ['admin', 'manager'],
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5h18v14H3V5zm0 5h18M7 15h4" />
+        </svg>
+      ),
+    },
+    {
       name: 'Overzicht',
       href: '/admin',
       allowedRoles: ['admin', 'manager', 'viewer'],
