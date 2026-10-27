@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import { formatBedrag } from '@/lib/format-price'
+import { needsRetailPrice } from '@/lib/product-publication'
 
 interface Product {
   id: string
@@ -244,6 +245,18 @@ export default function AdminProductsPage() {
     try {
       setBulkUpdating(true)
       const newStatus: 'active' | 'draft' = bulkAction === 'activate' ? 'active' : 'draft'
+      if (newStatus === 'active') {
+        // Selection may span pages; validate the current database values for
+        // every selected product, not only the rows visible on this page.
+        const { data: prices, error: priceError } = await supabase
+          .from('products').select('id, base_price, is_gift_card').in('id', selectedProducts)
+        if (priceError || prices?.length !== selectedProducts.length) {
+          throw new Error('De prijzen konden niet worden gecontroleerd. Er is niets gepubliceerd.')
+        }
+        if (prices.some(needsRetailPrice)) {
+          throw new Error('Stel eerst een verkoopprijs hoger dan € 0 in voor alle geselecteerde producten.')
+        }
+      }
       const { error } = await supabase
         .from('products')
         .update({
@@ -270,6 +283,10 @@ export default function AdminProductsPage() {
   const handleToggleStatus = async (product: Product) => {
     const current = resolveStatus(product)
     const next: 'active' | 'draft' = current === 'active' ? 'draft' : 'active'
+    if (next === 'active' && needsRetailPrice(product)) {
+      toast.error('Stel eerst een verkoopprijs hoger dan € 0 in. Dit product blijft een concept.')
+      return
+    }
     setTogglingStatus(product.id)
     try {
       const { error } = await supabase
@@ -600,10 +617,10 @@ export default function AdminProductsPage() {
                               -{discountPercentage}%
                             </span>
                           </div>
-                          <div className="text-xs text-gray-500 line-through">{formatBedrag(Number(product.base_price))}</div>
+                          <div className="text-xs text-gray-500 line-through">{needsRetailPrice(product) ? 'Prijs nog bepalen' : formatBedrag(Number(product.base_price))}</div>
                         </>
                       ) : (
-                        <div className="text-sm font-bold text-gray-900">{formatBedrag(Number(product.base_price))}</div>
+                        <div className="text-sm font-bold text-gray-900">{needsRetailPrice(product) ? 'Prijs nog bepalen' : formatBedrag(Number(product.base_price))}</div>
                       )}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -788,7 +805,7 @@ export default function AdminProductsPage() {
 
                         return (
                           <div className="text-sm font-bold text-gray-900">
-                            {formatBedrag(Number(product.base_price))}
+                            {needsRetailPrice(product) ? 'Prijs nog bepalen' : formatBedrag(Number(product.base_price))}
                           </div>
                         )
                       })()}
