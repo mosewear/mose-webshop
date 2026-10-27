@@ -1,6 +1,6 @@
 # MOSE — implementatiestatus en vrijgavebewijs
 
-27 oktober 2026. Besluit: fundament gereed voor een concept-PR, **geen productie-vrijgave**. Rick heeft uitvoering en productie na een positieve onafhankelijke review toegestaan. De positieve AI-directiereview van het voorstel is geen verklaring dat de gebouwde keten al verkoopklaar is. Er is geen echte externe CEO betrokken.
+27 oktober 2026. Besluit: snelheids- en loginverbeteringen plus afgeschermde Shopify-voorbereiding zijn gereed voor productie; **geen vrijgave van Shopify-checkout of Tapstitch-verkoop**. Rick heeft uitvoering en productie na een positieve onafhankelijke review toegestaan. De positieve AI-directiereview van het voorstel is geen verklaring dat de gebouwde keten al verkoopklaar is. Er is geen echte externe CEO betrokken.
 
 ## Gebouwd en gecontroleerd
 
@@ -33,7 +33,7 @@ Locatie: `docs/product-imagery/tapstitch-2026-10-27/index.html` in de oorspronke
 
 ## Testbewijs
 
-- Volledige Vitest-suite: **19 bestanden, 162 tests geslaagd**.
+- Volledige Vitest-suite: **43 bestanden, 317 tests geslaagd**.
 - TypeScript-controle geslaagd.
 - Volledige ESLint-controle: nul fouten; 890 bestaande waarschuwingen blijven zichtbaar. Vijf bestaande React-fouten in de winkelmand/productsuggesties zijn gericht hersteld.
 - Toevoegen van `npm test` aan de GitHub-workflow is niet gepubliceerd: de bestaande OAuth-koppeling mist `workflow`-scope. Het workflowbestand is behouden; de tests zijn lokaal uitgevoerd. GitHub CI behoudt zijn bestaande lint/typecheck/build-stappen.
@@ -44,7 +44,7 @@ Locatie: `docs/product-imagery/tapstitch-2026-10-27/index.html` in de oorspronke
 
 Lokale en gemockte tests bewijzen geen echte Shopify-betaling of Tapstitch-levering. Er is geen nieuwe klantmail, samplebestelling, voorraadtransfer of productie-omschakeling uitgevoerd.
 
-## Nog te bouwen en te bewijzen vóór productie
+## Nog te bouwen en te bewijzen vóór Shopify-omschakeling
 
 | Werkpakket | Concrete ontbrekende stap |
 |---|---|
@@ -63,9 +63,9 @@ De volledige integratie is dus **nog niet af**. Behalve externe toegang en fysie
 
 ## Terugvinden en behoud
 
-Concept-PR: https://github.com/mosewear/mose-webshop/pull/15. De Vercel-preview heeft succesvol gebouwd; dit is geen productie-omschakeling.
+Release-PR: https://github.com/mosewear/mose-webshop/pull/16 (vervangt concept-PR 15). De productiegebouwde kandidaat is op desktop en mobiel gecontroleerd: shop, productpagina, loginformulier, toevoegen aan winkelmand en bestaande checkout. Geen kapotte afbeeldingen, horizontale overflow of JavaScript-fouten gevonden. Dit bewijst geen ingelogde adminsessie, betaling of Shopify/Tapstitch-order. Shopify-omschakeling blijft uitgeschakeld.
 
-Code staat op branch `feat/shopify-tapstitch-pilot` in geïsoleerde worktree `/private/tmp/mose-shopify-implementation`. Bestaande niet-gerelateerde wijzigingen in de oorspronkelijke werkmap zijn behouden. Catalogusmapping staat naast dit document; er staan geen toegangstokens of klantgegevens in de rapporten.
+Releasecode staat op branch `release/mose-catalog-performance-2026-10-27` in geïsoleerde worktree `/private/tmp/mose-production-release`. Bestaande niet-gerelateerde wijzigingen in de oorspronkelijke werkmap zijn behouden. Catalogusmapping staat naast dit document; er staan geen toegangstokens of klantgegevens in de rapporten.
 
 ## Aanvullingen 27 oktober, namiddag
 
@@ -75,3 +75,10 @@ Code staat op branch `feat/shopify-tapstitch-pilot` in geïsoleerde worktree `/p
 - Vrijgavecontrole toetst volledige actieve catalogusdekking en bestaande kortings-/loyaltyverplichtingen; onbekend wordt niet als klaar beschouwd.
 - Browsertoestemming is aanwezig, maar de browsertool retourneert nog steeds Browser is not available voor Chrome en de ingebouwde browser. Een ingelogd Chrome-venster op een screenshot is geen bestuurbare sessie.
 - De productieomgeving bevat nog geen Shopify-servercredentials of geactiveerde Shopify-vrijgaveflags. Geen echte Shopify/Tapstitch-order is geplaatst of betaald.
+
+## Laatste verificatie
+
+- Alle 27 bestaande Shopify-varianten hebben nu de juiste primaire kleurafbeelding; mutatieresultaten zijn teruggelezen zonder Shopify-fouten.
+- De privé-e-maildoelgroep wordt uitsluitend via een gevoelige serveromgevingsvariabele geladen. De publieke repository bevat geen deelnemers-ID’s of e-mailhashes; bestaande campagnelogica blijft behouden.
+- De standaard uitgeschakelde Shopify-cron maakt geen database- of providercalls. Activering is onderdeel van de nog openstaande ketenvrijgave.
+- Vercel-functies draaien in Dublin, bij de bestaande database in Ierland. Supabase Auth-netwerkverzoeken worden na twaalf seconden echt afgebroken; de login blijft niet onbeperkt draaien.
