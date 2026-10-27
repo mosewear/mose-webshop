@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-27T16:32:19.403Z",
+  "products": [
+    {
+      "id": "gid://shopify/Product/11413172388167",
+      "title": "MOSE Essential Hoodie",
+      "status": "DRAFT",
+      "variants": 9,
+      "images": 18,
+      "descriptionPresent": true,
+      "inventory": 0
+    },
+    {
+      "id": "gid://shopify/Product/11413172781383",
+      "title": "MOSE Classic Sweater",
+      "status": "DRAFT",
+      "variants": 6,
+      "images": 12,
+      "descriptionPresent": true,
+      "inventory": 0
+    },
+    {
+      "id": "gid://shopify/Product/11413173109063",
+      "title": "MOSE Tee",
+      "status": "DRAFT",
+      "variants": 12,
+      "images": 16,
+      "descriptionPresent": true,
+      "inventory": 0
+    }
+  ]
+}
