@@ -35,6 +35,8 @@ Locatie: `docs/product-imagery/tapstitch-2026-10-27/index.html` in de oorspronke
 
 - Volledige Vitest-suite: **19 bestanden, 162 tests geslaagd**.
 - TypeScript-controle geslaagd.
+- Volledige ESLint-controle: nul fouten; 890 bestaande waarschuwingen blijven zichtbaar. Vijf bestaande React-fouten in de winkelmand/productsuggesties zijn gericht hersteld.
+- Toevoegen van `npm test` aan de GitHub-workflow is niet gepubliceerd: de bestaande OAuth-koppeling mist `workflow`-scope. Het workflowbestand is behouden; de tests zijn lokaal uitgevoerd. GitHub CI behoudt zijn bestaande lint/typecheck/build-stappen.
 - Next.js-productiebuild geslaagd (229 pagina’s), met Shopify-vrijgaveflags uit.
 - Migratie lokaal met PGlite gecontroleerd: 23 assertions rond transacties, bevoegdheden, idempotentie en leases. Nog geen live Supabase-migratie uitgevoerd.
 - Shopify GraphQL-operaties door de backendreview tegen de officiële schema’s gecontroleerd.
@@ -60,5 +62,7 @@ Lokale en gemockte tests bewijzen geen echte Shopify-betaling of Tapstitch-lever
 De volledige integratie is dus **nog niet af**. Behalve externe toegang en fysieke levering staat er nog applicatiewerk open. De releaseflags mogen pas aan wanneer dat werk en de ketentests zijn afgerond. Een geslaagde build of een positieve ontwerpbeoordeling vervangt die voorwaarden niet.
 
 ## Terugvinden en behoud
+
+Concept-PR: https://github.com/mosewear/mose-webshop/pull/15. De Vercel-preview heeft succesvol gebouwd; dit is geen productie-omschakeling.
 
 Code staat op branch `feat/shopify-tapstitch-pilot` in geïsoleerde worktree `/private/tmp/mose-shopify-implementation`. Bestaande niet-gerelateerde wijzigingen in de oorspronkelijke werkmap zijn behouden. Catalogusmapping staat naast dit document; er staan geen toegangstokens of klantgegevens in de rapporten.
