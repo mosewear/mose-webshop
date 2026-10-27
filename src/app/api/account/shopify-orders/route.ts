@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     if (error || !user) return NextResponse.json({ error: 'Log in om je bestellingen te bekijken.' }, { status: 401, headers })
     const page = parseOrderPage(request.url)
     if (page === null) return NextResponse.json({ error: 'Ongeldige pagina.' }, { status: 400, headers })
+    if (process.env.SHOPIFY_SYNC_ENABLED !== 'true' || process.env.NEXT_PUBLIC_SHOPIFY_ORDERS_ENABLED !== 'true') return NextResponse.json({ enabled: false, orders: [], hasMore: false, page, reason: 'SYNC_NOT_CONFIGURED' }, { headers })
     return NextResponse.json(await readShopifyOrders(page, 'account', user.id), { headers })
   } catch {
     return NextResponse.json({ error: 'Bestellingen kunnen nu niet worden geladen.' }, { status: 503, headers })

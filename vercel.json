@@ -43,6 +43,13 @@
     {
       "path": "/api/cron/brevo-klanten",
       "schedule": "15 2 * * *"
+    },
+    {
+      "path": "/api/cron/shopify",
+      "schedule": "*/5 * * * *"
     }
+  ],
+  "regions": [
+    "dub1"
   ]
 }

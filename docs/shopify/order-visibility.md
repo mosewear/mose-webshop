@@ -8,7 +8,7 @@ The read-only Shopify order views are separate from historical Mollie orders:
 
 ## Deploy sequence
 
-Apply `20261027000100_shopify_pilot.sql` and then `20261027000200_shopify_order_accounts.sql` before enabling Shopify checkout. The second migration is required for signed-in checkout. Enable `NEXT_PUBLIC_SHOPIFY_ORDERS_ENABLED=true` after migration and authenticated read checks; this display flag is independent of the checkout flag so existing orders stay visible if checkout is rolled back. These changes do not set any release gate or enable checkout themselves.
+Apply `20261027000100_shopify_pilot.sql` and then `20261027000200_shopify_order_accounts.sql` before enabling Shopify checkout. The second migration is required for signed-in checkout. The admin/API views return an authenticated setup state without querying Shopify integration tables while `SHOPIFY_SYNC_ENABLED` is off. Account reads also require `NEXT_PUBLIC_SHOPIFY_ORDERS_ENABLED=true`. Enable that flag after migration and authenticated read checks; this display flag is independent of the checkout flag so existing orders stay visible if checkout is rolled back. These changes do not set any release gate or enable checkout themselves.
 
 Before any Shopify cart request, checkout re-reads the local variant and its database parent. Draft/inactive products, unavailable variants, gift cards, unverified presale reserves and prices that differ from the released mapping are rejected. Shopify remains authoritative for stock quantity. This gate also runs before reusing a saved checkout URL; already-issued Shopify checkout URLs still require synchronized Shopify publication when a local product is withdrawn.
 

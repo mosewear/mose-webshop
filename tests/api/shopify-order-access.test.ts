@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 const mock = vi.hoisted(() => ({ getUser: vi.fn(), requireAdmin: vi.fn(), read: vi.fn() }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: mock.getUser } }) }))
@@ -10,10 +10,13 @@ import { GET as admin } from '@/app/api/admin/shopify/orders/route'
 import { parseOrderPage } from '@/lib/shopify/order-access'
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('SHOPIFY_SYNC_ENABLED', 'true')
+  vi.stubEnv('NEXT_PUBLIC_SHOPIFY_ORDERS_ENABLED', 'true')
   mock.getUser.mockResolvedValue({ data: { user: { id: 'verified-user' } }, error: null })
   mock.requireAdmin.mockResolvedValue({ authorized: true })
   mock.read.mockResolvedValue({ orders: [], hasMore: false, page: 0 })
 })
+afterEach(() => vi.unstubAllEnvs())
 describe('Shopify order read authorization', () => {
   it('uses verified identity and never accepts a requested user or email', async () => {
     expect((await account(new NextRequest('https://mosewear.com/api/account/shopify-orders?page=2'))).status).toBe(200)
@@ -47,4 +50,28 @@ describe('Shopify order read authorization', () => {
     }
     expect(parseOrderPage('https://mosewear.com')).toBe(0)
   })
+  it('returns a setup state without reading integration tables while synchronization is disabled', async () => {
+    vi.stubEnv('SHOPIFY_SYNC_ENABLED', 'false')
+    for (const route of [admin, account]) {
+      const response = await route(new NextRequest('https://mosewear.com/api/orders'))
+      expect(response.status).toBe(200)
+      expect(await response.json()).toMatchObject({ enabled: false, orders: [], reason: 'SYNC_NOT_CONFIGURED' })
+    }
+    expect(mock.read).not.toHaveBeenCalled()
+  })
+  it('does not expose account lists when the account display flag is off', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SHOPIFY_ORDERS_ENABLED', 'false')
+    const response = await account(new NextRequest('https://mosewear.com/api/account/shopify-orders'))
+    expect(await response.json()).toMatchObject({ enabled: false, orders: [] })
+    expect(mock.read).not.toHaveBeenCalled()
+  })
+  it('still requires authorization when synchronization is disabled', async () => {
+    vi.stubEnv('SHOPIFY_SYNC_ENABLED', 'false')
+    mock.requireAdmin.mockResolvedValue({ authorized: false })
+    mock.getUser.mockResolvedValue({ data: { user: null }, error: null })
+    expect((await admin(new NextRequest('https://mosewear.com/api/orders'))).status).toBe(403)
+    expect((await account(new NextRequest('https://mosewear.com/api/orders'))).status).toBe(401)
+    expect(mock.read).not.toHaveBeenCalled()
+  })
+
 })

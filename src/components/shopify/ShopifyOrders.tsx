@@ -18,6 +18,7 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
   const [orders, setOrders] = useState<ShopifyOrderView[]>([])
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(false)
+  const [enabled, setEnabled] = useState(true)
   const [settledRequest, setSettledRequest] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
   const [revision, setRevision] = useState(0)
@@ -34,7 +35,7 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
       if (!response.ok) throw new Error('ORDERS_UNAVAILABLE')
       const result = await response.json()
       if (!Array.isArray(result.orders) || typeof result.hasMore !== 'boolean') throw new Error('INVALID_RESPONSE')
-      if (current) { setOrders(result.orders); setHasMore(result.hasMore); setFailed(false) }
+      if (current) { setOrders(result.orders); setHasMore(result.hasMore); setEnabled(result.enabled !== false); setFailed(false) }
     }).catch(() => { if (current) setFailed(true) }).finally(() => { clearTimeout(deadline); if (current) setSettledRequest(requestKey) })
     return () => { current = false; clearTimeout(deadline); controller.abort() }
   }, [mode, page, requestKey])
@@ -53,6 +54,12 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
       : <p className="text-sm text-gray-600">{text('Hier verschijnen bestellingen die je ingelogd via onze Shopify-checkout plaatst. Als gast besteld? Gebruik de bestelbevestiging in je e-mail. Je bestelling kan in meerdere pakketten komen.', 'Orders placed while signed in through our Shopify checkout appear here. Ordered as a guest? Use your email confirmation. Your order may arrive in separate parcels.')}</p>}
     {loading ? <p role="status" className="border-2 border-gray-200 p-6">{text('Bestellingen laden…', 'Loading orders…')}</p>
       : failed ? <div role="alert" className="border-2 border-amber-500 bg-amber-50 p-5"><p>{text('Je bestellingen kunnen nu niet worden geladen. Probeer het opnieuw met Vernieuwen.', 'Your orders could not be loaded. Please try Refresh again.')}</p></div>
+      : !enabled ? <div role="status" className="border-2 border-gray-300 bg-gray-50 p-6 space-y-2">
+        <h3 className="font-bold">{text('Shopify-bestellingen worden voorbereid', 'Shopify orders are being set up')}</h3>
+        <p className="text-sm text-gray-600">{mode === 'admin'
+          ? 'De ordersynchronisatie is nog niet ingeschakeld. Zodra de koppeling is ingesteld en gecontroleerd, verschijnen hier de Shopify-bestellingen. Bestaande MOSE-orders blijven beschikbaar onder Orders.'
+          : text('Deze bestelomgeving is nog niet beschikbaar. Je eerdere bestellingen vind je hieronder. Voor vragen kun je contact met ons opnemen.', 'This order view is not available yet. Your previous orders are shown below. Please contact us if you need help.')}</p>
+      </div>
       : !orders.length ? <p className="border-2 border-gray-200 bg-gray-50 p-6 text-gray-600">{text('Nog geen bestellingen via Shopify op deze pagina.', 'No orders via Shopify on this page yet.')}</p>
       : orders.map(order => <article key={order.id} className="border-2 border-black bg-white">
         <header className="flex flex-wrap justify-between gap-3 border-b-2 border-black p-4 md:p-6">
@@ -86,7 +93,7 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
           </footer>
         </div>
       </article>)}
-    {(page > 0 || hasMore) && <nav aria-label={text('Pagina’s met bestellingen', 'Order pages')} className="flex items-center gap-3">
+    {enabled && (page > 0 || hasMore) && <nav aria-label={text('Pagina’s met bestellingen', 'Order pages')} className="flex items-center gap-3">
       <button type="button" disabled={loading || page === 0} onClick={() => setPage(p => p - 1)} className="border-2 border-black px-4 py-2 font-bold disabled:opacity-40">{text('Vorige', 'Previous')}</button>
       <span className="text-sm">{text('Pagina', 'Page')} {page + 1}</span>
       <button type="button" disabled={loading || !hasMore || failed} onClick={() => setPage(p => p + 1)} className="border-2 border-black px-4 py-2 font-bold disabled:opacity-40">{text('Volgende', 'Next')}</button>
