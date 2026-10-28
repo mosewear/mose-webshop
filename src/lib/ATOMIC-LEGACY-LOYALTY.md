@@ -97,7 +97,7 @@ Supabase-like default table grants. Rollback removed all integration relations;
 commit preserved the 54 synthetic opening accounts and 6104 points byte for byte.
 The 19 integration tables all had RLS and denied browser CRUD despite those
 initial default grants. Actual `SET ROLE` requests denied order reads and the
-atomic money RPC. **191 assertions** passed, including separate PostgreSQL
+atomic money RPC. **222 assertions** passed, including separate PostgreSQL
 connections for competing redemptions, Shopify reserve versus legacy debit,
 simultaneous late earning/refund/admin writes, duplicate callbacks, and two
 first-purchase writers creating one account while retaining both earnings.
@@ -133,3 +133,9 @@ coordinated rather than publishing that UI and leaving it disabled. Financial
 ledger FKs prevent cascading financial erasure; auth-account deletions may require
 an explicit reviewed anonymization/retention workflow. Do not claim account
 erasure is solved or delete journals to bypass the FKs.
+
+Supabase-style default privileges also revealed that granting SELECT did not
+remove service_role's inherited ALL. Migrations 004/005/006 now explicitly revoke
+service_role table grants before their narrow SELECT grants; discount bindings
+retain SELECT+INSERT. The real PostgreSQL test verifies all direct journal DML
+is denied to service_role, while reviewed SECURITY DEFINER RPCs retain mutation.

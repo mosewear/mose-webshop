@@ -36,7 +36,7 @@ create table public.shopify_loyalty_ledger (
 alter table public.shopify_loyalty_reservations enable row level security;
 alter table public.shopify_loyalty_settlements enable row level security;
 alter table public.shopify_loyalty_ledger enable row level security;
-revoke all on public.shopify_loyalty_reservations, public.shopify_loyalty_settlements, public.shopify_loyalty_ledger from public, anon, authenticated;
+revoke all on public.shopify_loyalty_reservations, public.shopify_loyalty_settlements, public.shopify_loyalty_ledger from public, anon, authenticated, service_role;
 grant select on public.shopify_loyalty_reservations, public.shopify_loyalty_settlements, public.shopify_loyalty_ledger to service_role;
 
 -- Internal primitive. Callers hold the account lock. All effects roll back on

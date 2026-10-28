@@ -20,7 +20,7 @@ create table public.legacy_loyalty_refund_claims (
 );
 alter table public.legacy_loyalty_operations enable row level security;
 alter table public.legacy_loyalty_refund_claims enable row level security;
-revoke all on public.legacy_loyalty_operations,public.legacy_loyalty_refund_claims from public,anon,authenticated;
+revoke all on public.legacy_loyalty_operations,public.legacy_loyalty_refund_claims from public,anon,authenticated, service_role;
 grant select on public.legacy_loyalty_operations,public.legacy_loyalty_refund_claims to service_role;
 
 -- Caller holds the per-order advisory lock and account row lock. Claims received

@@ -32,7 +32,7 @@ create index shopify_loyalty_outbox_pending on public.shopify_loyalty_outbox(nex
 alter table public.shopify_loyalty_runtime enable row level security;
 alter table public.shopify_loyalty_discount_bindings enable row level security;
 alter table public.shopify_loyalty_outbox enable row level security;
-revoke all on public.shopify_loyalty_runtime,public.shopify_loyalty_discount_bindings,public.shopify_loyalty_outbox from public,anon,authenticated;
+revoke all on public.shopify_loyalty_runtime,public.shopify_loyalty_discount_bindings,public.shopify_loyalty_outbox from public,anon,authenticated, service_role;
 grant select on public.shopify_loyalty_runtime,public.shopify_loyalty_discount_bindings,public.shopify_loyalty_outbox to service_role;
 grant insert on public.shopify_loyalty_discount_bindings to service_role;
 

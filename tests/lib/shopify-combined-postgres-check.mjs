@@ -43,6 +43,14 @@ try {
  for(const table of tables){check(await scalar('select relrowsecurity from pg_class where oid=$1::regclass',[table]),true,'RLS '+table)
   for(const role of ['anon','authenticated'])for(const privilege of ['select','insert','update','delete'])check(await scalar('select has_table_privilege($1,$2,$3)',[role,table,privilege]),false,role+' cannot '+privilege+' '+table)
  }
+ // Supabase default grants must not leave direct service-role financial writes.
+ for(const table of ['shopify_loyalty_reservations','shopify_loyalty_settlements','shopify_loyalty_ledger','shopify_loyalty_runtime','shopify_loyalty_outbox','legacy_loyalty_operations','legacy_loyalty_refund_claims']){
+  check(await scalar("select has_table_privilege('service_role',$1,'select')",[table]),true,'server reads '+table)
+  for(const privilege of ['insert','update','delete'])check(await scalar("select has_table_privilege('service_role',$1,$2)",[table,privilege]),false,'service financial writes only through RPC '+table)
+ }
+ check(await scalar("select has_table_privilege('service_role','shopify_loyalty_discount_bindings','insert')"),true,'server creates verified discount binding')
+ check(await scalar("select has_table_privilege('service_role','shopify_loyalty_discount_bindings','update')"),false,'binding immutable to ordinary server')
+ check(await scalar("select has_table_privilege('service_role','shopify_loyalty_discount_bindings','delete')"),false,'binding cannot silently disappear')
  for(const role of ['anon','authenticated']){await db.query('set role '+role);await assert.rejects(db.query('select * from shopify_order_snapshots'),/permission denied/);checks++;await assert.rejects(db.query("select atomic_legacy_loyalty('admin','test-key','synthetic@example.invalid',null)"),/permission denied/);checks++;await db.query('reset role')}
  await db.query("insert into shopify_checkout_attempts(id,session_hash,request_fingerprint,buyer_hash,status,lease_token,cart_snapshot)values($1,'session','fingerprint','buyer','creating',$1,'{}')",[attempt])
  await db.query("insert into shopify_checkout_owners(attempt_id,user_id,proof)values($1,$2,repeat('a',64))",[attempt,user])
