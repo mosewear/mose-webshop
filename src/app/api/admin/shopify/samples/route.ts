@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/supabase/admin'
 import { createServiceClient } from '@/lib/supabase/service'
 import { storefront } from '@/lib/shopify/client'
 import { CART_CREATE } from '@/lib/shopify/queries'
+import { BENEFITS_CART_QUERY, assertCartBenefits } from '@/lib/shopify/benefits'
 import { assertCheckoutUrl, moneyToCents } from '@/lib/shopify/policy'
 import { SHOPIFY_SESSION_COOKIE, validShopifySession } from '@/lib/shopify/session'
 import { readLimitedBody } from '@/lib/shopify/http'
@@ -61,6 +62,11 @@ export async function POST(request:NextRequest){
   const {cart,userErrors,warnings}=created.cartCreate
   if(!cart && userErrors.length){const saved=await db.rpc('finish_shopify_checkout',{p_id:input.attemptId,p_lease:lease,p_status:'failed',p_error:'SAMPLE_CART_REJECTED'});if(saved.error||saved.data!==true)throw new Error('SAVE_FAILED');return reply({error:'Shopify heeft de samplewinkelmand geweigerd.',code:'ATTEMPT_FAILED',retrySafe:true},409)}
   if(!cart || userErrors.length || warnings.length || cart.totalQuantity!==8 || cart.lines.nodes.length!==8 || cart.cost.subtotalAmount.currencyCode!=='EUR' || moneyToCents(cart.cost.subtotalAmount.amount)!==lines.reduce((s,l)=>s+l.expectedPriceCents,0) || lines.some(l=>!cart.lines.nodes.some(n=>n.merchandise.id===l.merchandiseId && n.quantity===1)))throw new Error('SAMPLE_CART_MISMATCH')
+  // Shopify subtotal precedes order-level discounts. Inspect every actual
+  // allocation even for a deliberately undiscounted private sample cart.
+  const benefits = await storefront<{cart:null|{id:string}}>(BENEFITS_CART_QUERY,{id:cart.id},buyerIp)
+  if (benefits.cart?.id !== cart.id) throw new Error('SAMPLE_CART_MISMATCH')
+  assertCartBenefits(benefits.cart,[],{lines:lines.map(l=>({variantId:l.merchandiseId,quantity:1,unitCents:l.expectedPriceCents})),payableMerchandiseCents:lines.reduce((sum,l)=>sum+l.expectedPriceCents,0)})
   const checkoutUrl=assertCheckoutUrl(cart.checkoutUrl,process.env.SHOPIFY_CHECKOUT_HOST)
   const saved=await db.rpc('finish_shopify_checkout',{p_id:input.attemptId,p_lease:lease,p_status:'ready',p_cart_id:cart.id,p_checkout_url:checkoutUrl})
   if(saved.error||saved.data!==true)throw new Error('SAVE_FAILED')
