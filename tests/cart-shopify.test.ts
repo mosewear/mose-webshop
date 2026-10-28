@@ -45,8 +45,27 @@ describe('one Shopify cart for the whole MOSE collection', () => {
   it('rotates expired attempts only when the server explicitly proves no checkout was issued', () => {
     expect(canRotateCheckoutAttempt({ code: 'ATTEMPT_EXPIRED', retrySafe: true })).toBe(true)
     expect(canRotateCheckoutAttempt({ code: 'ATTEMPT_FAILED', retrySafe: true })).toBe(true)
+    expect(canRotateCheckoutAttempt({ code: 'BENEFIT_UNAVAILABLE', retrySafe: true })).toBe(true)
+    expect(canRotateCheckoutAttempt({ code: 'BENEFIT_UNAVAILABLE', retrySafe: false })).toBe(false)
     for (const result of [{ code: 'ATTEMPT_EXPIRED' }, { code: 'ATTEMPT_EXPIRED', retrySafe: false }, { code: 'ATTEMPT_PENDING', retrySafe: true }, { code: 'INPUT_CHANGED', retrySafe: 'true' }]) {
       expect(canRotateCheckoutAttempt(result)).toBe(false)
     }
   })
+  it('includes normalized optional benefits in idempotency without client discount authority', () => {
+    const snapshot = createShopifyCartSnapshot([item('a')], 'nl', { promoCode: ' welcome_10 ', loyaltyPoints: 200 })
+    expect(snapshot).toEqual({ locale: 'nl', country: 'NL', promoCode: 'WELCOME_10', loyaltyPoints: 200, lines: [{ variantId: 'a', quantity: 1 }] })
+    const first = getCheckoutAttempt(snapshot, null, () => id1)
+    expect(getCheckoutAttempt(createShopifyCartSnapshot([item('a')], 'nl', { promoCode: 'WELCOME_10', loyaltyPoints: 200 }), first, () => id2).attemptId).toBe(id1)
+    expect(() => getCheckoutAttempt(createShopifyCartSnapshot([item('a')], 'nl', { promoCode: 'OTHER', loyaltyPoints: 200 }), { ...first, locked: true }, () => id2)).toThrow('ATTEMPT_REVIEW_REQUIRED')
+    expect(() => getCheckoutAttempt(createShopifyCartSnapshot([item('a')], 'nl', { promoCode: 'WELCOME_10', loyaltyPoints: 100 }), { ...first, locked: true }, () => id2)).toThrow('ATTEMPT_REVIEW_REQUIRED')
+    expect(snapshot).not.toHaveProperty('discountAmount'); expect(snapshot).not.toHaveProperty('tier')
+  })
+  it('rejects malformed benefit selections and preserves uncertain changed baskets', () => {
+    for (const loyaltyPoints of [NaN, -100, 50, 100.5, 20_000_100]) expect(() => createShopifyCartSnapshot([item('a')], 'nl', { loyaltyPoints })).toThrow('INVALID_LOYALTY')
+    expect(() => createShopifyCartSnapshot([item('a')], 'nl', { promoCode: 'BAD CODE' })).toThrow('INVALID_PROMO')
+    const locked = { ...getCheckoutAttempt(createShopifyCartSnapshot([item('a')], 'nl'), null, () => id1), locked: true }
+    expect(() => getCheckoutAttempt(createShopifyCartSnapshot([item('b')], 'nl'), locked, () => id2)).toThrow('ATTEMPT_REVIEW_REQUIRED')
+    expect(getCheckoutAttempt(createShopifyCartSnapshot([item('a')], 'nl'), locked, () => id2).attemptId).toBe(id1)
+  })
+
 })
