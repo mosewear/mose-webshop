@@ -4,6 +4,7 @@ import { planEvent, runOrderWorker, safeWorkerError } from '@/lib/shopify/worker
 import { fetchOrderProjection, type AdminExecutor } from '@/lib/shopify/orders'
 import { reconcileOrders } from '@/lib/shopify/reconcile'
 import { createServiceClient } from '@/lib/supabase/service'
+import { ShopifyUnavailable } from '@/lib/shopify/client'
 
 const orderId = 'gid://shopify/Order/123'
 const info: { hasNextPage: boolean; endCursor: string | null } = { hasNextPage: false, endCursor: null }
@@ -43,6 +44,18 @@ describe('authoritative order projection', () => {
 })
 
 describe('webhook worker', () => {
+  it('closes checkout and retains a retryable event when order access is denied', async () => {
+    const rpc = vi.fn().mockResolvedValueOnce({ data: [{ id: 1, topic: 'orders/paid', payload: { id: 123 }, lease_token: 'lease' }] })
+      .mockResolvedValueOnce({ data: true }).mockResolvedValueOnce({ data: [] })
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn(() => ({ update }))
+    const fetchOrder = vi.fn().mockRejectedValue(new ShopifyUnavailable('SHOPIFY_ACCESS_DENIED'))
+    const result = await runOrderWorker({ rpc, from } as unknown as ReturnType<typeof createServiceClient>, fetchOrder)
+    expect(result).toEqual({ processed: 0, failed: 1, leaseLost: 0 })
+    expect(update).toHaveBeenCalledExactlyOnceWith({ checkout_enabled: false, last_error: 'SHOPIFY_ACCESS_DENIED' })
+    expect(rpc.mock.calls[1]).toEqual(['fail_shopify_event', { p_id: 1, p_lease: 'lease', p_error: 'SHOPIFY_ACCESS_DENIED' }])
+  })
   it('resolves refund/fulfillment events to their order, never to the refund ID', () => {
     expect(planEvent({ topic: 'refunds/create', payload: { id: 555, order_id: 123, admin_graphql_api_id: 'gid://shopify/Refund/555' } })).toEqual({ kind: 'order', orderId })
     expect(() => planEvent({ topic: 'orders/paid', payload: { id: Number.MAX_SAFE_INTEGER + 1 } })).toThrow()
