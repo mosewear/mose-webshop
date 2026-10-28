@@ -19,6 +19,13 @@ export async function applyInventoryDecrementForPaidOrder(
   supabase: SupabaseClient,
   orderId: string
 ): Promise<{ ok: boolean; skipped?: boolean; reason?: string }> {
+  if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+    const result = await supabase.rpc('apply_legacy_paid_stock', { p_order: orderId })
+    // Never fall back to non-atomic writes after an unknown RPC outcome.
+    if (result.error || !result.data || result.data.ok !== true) return { ok: false, reason: 'ATOMIC_INVENTORY_RETRY_REQUIRED' }
+    return result.data as { ok: true; skipped?: boolean; reason?: string }
+  }
+
   const { data: order, error: orderErr } = await supabase
     .from('orders')
     .select('id, payment_status, stock_decremented_at')

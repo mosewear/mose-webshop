@@ -47,6 +47,22 @@
     {
       "path": "/api/cron/shopify",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/shopify-inventory",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/shopify-loyalty",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/shopify-benefits",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/shopify-legacy-stock",
+      "schedule": "*/5 * * * *"
     }
   ],
   "regions": [

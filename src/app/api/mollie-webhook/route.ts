@@ -118,6 +118,9 @@ export async function POST(req: NextRequest) {
           paid_at: payment.paidAt,
         },
       })
+      if (!result.ok && ['LOYALTY_RETRY_REQUIRED', 'INVENTORY_RETRY_REQUIRED'].includes(result.reason)) {
+        return NextResponse.json({ received: false, error: result.reason }, { status: 503 })
+      }
       return NextResponse.json({ received: true, type: 'order_payment', ...result })
     }
 

@@ -10,6 +10,12 @@ import { readLimitedBody } from '@/lib/shopify/http'
 import { SHOPIFY_SESSION_COOKIE, validShopifySession } from '@/lib/shopify/session'
 import { assertCurrentLocalCatalog } from '@/lib/shopify/local-checkout'
 import { decideCheckoutAttempt } from '@/lib/shopify/attempts'
+import { assertInventoryEvidence } from '@/lib/shopify/inventory'
+import { adminCredentialsConfigured } from '@/lib/shopify/admin-auth'
+import { runtimeReadiness } from '@/lib/shopify/runtime-readiness'
+import { readCheckoutBenefitQuote, issueCheckoutBenefits } from '@/lib/shopify/checkout-benefits'
+import { recordDefinitiveNoCart } from '@/lib/shopify/benefit-recovery'
+import { BENEFITS_CART_QUERY, assertCartBenefits } from '@/lib/shopify/benefits'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
@@ -45,14 +51,16 @@ export async function POST(request: NextRequest) {
     const cutoff = Date.parse(process.env.SHOPIFY_CUTOVER_AT ?? '')
     if (!Number.isFinite(cutoff) || cutoff > Date.now()) throw new Error('CUTOVER_NOT_READY')
     const secret = process.env.SHOPIFY_SESSION_SECRET
-    if (!secret || secret.length < 32 || !process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || !process.env.SHOPIFY_ADMIN_ACCESS_TOKEN) throw new Error('NOT_CONFIGURED')
+    if (!secret || secret.length < 32 || !process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || !adminCredentialsConfigured()) throw new Error('NOT_CONFIGURED')
     // Only a server-verified Supabase identity can own an account order. Guests need no Auth call.
     let userId: string | null = null
+    let verifiedUser: { id: string; email?: string; email_confirmed_at?: string | null } | null = null
     if (request.cookies.getAll().some(cookie => /^sb-.+-auth-token(?:\.\d+)?$/.test(cookie.name))) {
       const auth = await createClient()
       const { data: identity, error: authError } = await auth.auth.getUser()
       if (authError || !identity.user) return respond({ error: 'Log opnieuw in om je bestelling aan je account te koppelen.', code: 'ACCOUNT_SESSION_INVALID' }, 401)
       userId = identity.user.id
+      verifiedUser = identity.user
     }
     db = createServiceClient()
     const readiness = await db.from('shopify_integration_state').select('*').eq('id', 1).single()
@@ -75,11 +83,22 @@ export async function POST(request: NextRequest) {
       (pending > 0 && (oldest === null || !Number.isFinite(oldest) || oldest > Date.now() + 60_000 || Date.now() - oldest > 15 * 60_000))) {
       return respond({ error: 'Afrekenen is tijdelijk niet beschikbaar. Je winkelmand blijft bewaard.', code: 'ORDER_SYNC_NOT_READY' }, 503)
     }
+    const runtimeChecks = await runtimeReadiness(db)
+    if (runtimeChecks.some(check => check.status !== 'verified')) {
+      return respond({ error: 'Voorraad en klantvoordelen worden gecontroleerd. Je winkelmand blijft bewaard.', code: 'RUNTIME_NOT_READY' }, 503)
+    }
     const { data, error } = await db.from('shopify_variant_mappings').select('*').in('mose_variant_id', input.lines.map(l => l.variantId))
     if (error) throw new Error('MAPPING_UNAVAILABLE')
     let lines: ReturnType<typeof authorizeLines>
     try { lines = authorizeLines(input, data ?? []) } catch {
       return respond({ error: 'Een artikel is nog niet beschikbaar voor deze bestelroute.', code: 'VARIANT_NOT_RELEASED' }, 409)
+    }
+    const inventory = await db.rpc('shopify_inventory_evidence', { p_ids: lines.map(line => line.localVariantId) })
+    try {
+      if (inventory.error || !Array.isArray(inventory.data)) throw new Error('INVENTORY_UNAVAILABLE')
+      assertInventoryEvidence(lines, inventory.data, Date.now(), new Map<string, string>((data ?? []).map(mapping => [mapping.mose_variant_id, mapping.inventory_revision])))
+    } catch {
+      return respond({ error: 'Voorraad wordt gecontroleerd. Je winkelmand blijft bewaard.', code: 'INVENTORY_NOT_READY' }, 409)
     }
     // Read current local publication and price from the variant's database parent, never a client product ID.
     const localVariants = await db.from('product_variants')
@@ -106,11 +125,40 @@ export async function POST(request: NextRequest) {
         return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'CART_CHANGED' }, 409)
       }
     }
-    const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId })).digest('hex')
+    const benefitLines = lines.map(line => {
+      const variant = localVariants.data!.find(v => v.id === line.localVariantId)!
+      const product = localProducts.data!.find(p => p.id === variant.product_id)!
+      return { variantId: line.merchandiseId, quantity: line.quantity, unitCents: line.expectedPriceCents,
+        productId: product.id, giftCard: Boolean(product.is_gift_card),
+        onSale: product.sale_price != null && Number(product.sale_price) > 0 && Number(product.sale_price) < Number(product.base_price) }
+    })
+    let preparedBenefits: Awaited<ReturnType<typeof readCheckoutBenefitQuote>>
+    try {
+      preparedBenefits = await readCheckoutBenefitQuote(db, { lines: benefitLines, promoCode: input.promoCode, points: input.loyaltyPoints, user: verifiedUser })
+    } catch {
+      // Claim a domain-separated rejected input before authorizing a fresh ID.
+      // An existing payable/uncertain attempt must never be rotated just because
+      // its promo expired or its point hold reduced the available balance.
+      const rejectedFingerprint = createHash('sha256').update(JSON.stringify({ domain: 'rejected-benefit-input:v1', locale: input.locale, country: input.country, lines, userId, promoCode: input.promoCode ?? null, points: input.loyaltyPoints ?? 0 })).digest('hex')
+      const rejected = await db.rpc('reserve_shopify_checkout', {
+        p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'),
+        p_fingerprint: rejectedFingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'),
+        p_snapshot: { rejectedBenefitInput: true }, p_lease: lease,
+      })
+      const decision = rejected.error ? null : decideCheckoutAttempt(rejected.data?.[0], rejectedFingerprint, lease)
+      let retrySafe = decision?.kind === 'reject' && decision.retrySafe
+      if (decision?.kind === 'create') {
+        const failed = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'failed', p_error: 'BENEFIT_INPUT_REJECTED' })
+        retrySafe = !failed.error && failed.data === true
+      }
+      return respond({ error: 'Je korting of spaarpunten kunnen nu niet worden toegepast. Controleer je code en beschikbare punten.', code: 'BENEFIT_UNAVAILABLE', retrySafe: Boolean(retrySafe) }, 409)
+    }
+    const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId,
+      benefits: { quote: preparedBenefits.quote, points: input.loyaltyPoints ?? 0 } })).digest('hex')
     const booking = await db.rpc('reserve_shopify_checkout', {
       p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'),
       p_fingerprint: fingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'),
-      p_snapshot: { locale: input.locale, country: input.country, lines }, p_lease: lease,
+      p_snapshot: { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote }, p_lease: lease,
     })
     if (booking.error) {
       if (booking.error.message?.includes('CHECKOUT_RATE_LIMIT')) return respond({ error: 'Te veel afrekenpogingen. Probeer het over een minuut opnieuw.', code: 'RATE_LIMIT' }, 429)
@@ -130,15 +178,23 @@ export async function POST(request: NextRequest) {
       if (owner.error) throw new Error('ACCOUNT_LINK_UNAVAILABLE')
       attributes.push({ key: 'mose_account_proof', value: proof })
     }
+    // Voucher capabilities/point holds are issued only after the durable attempt
+    // and account proof. An unknown issuance is never retried with another ID.
+    const expectedBenefits = await issueCheckoutBenefits(db, { ...preparedBenefits, attemptId: input.attemptId, checkoutLease: lease, secret })
     const created = await storefront<CreatedCart>(CART_CREATE, {
       ...context, input: {
-        buyerIdentity: { countryCode: 'NL' },
+        buyerIdentity: { countryCode: 'NL', ...(verifiedUser?.email_confirmed_at && verifiedUser.email ? { email: verifiedUser.email } : {}) },
         lines: lines.map(({ merchandiseId, quantity }) => ({ merchandiseId, quantity })),
+        ...(expectedBenefits.length ? { discountCodes: expectedBenefits.map(benefit => benefit.code) } : {}),
         attributes,
       },
     }, buyerIp)
     const { cart, userErrors, warnings } = created.cartCreate
     if (!cart && userErrors.length) {
+      if (expectedBenefits.length) {
+        await recordDefinitiveNoCart(db, { attemptId: input.attemptId, checkoutLease: lease })
+        return respond({ error: 'Deze afrekenpoging moet eerst worden gecontroleerd. Je winkelmand blijft bewaard.', code: 'ATTEMPT_PENDING' }, 503)
+      }
       const failed = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'failed', p_error: 'CART_REJECTED' })
       if (failed.error || failed.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')
       return respond({ error: 'Shopify kon deze winkelmand niet aanmaken. Controleer je artikelen en probeer opnieuw.', code: 'ATTEMPT_FAILED', retrySafe: true }, 409)
@@ -146,7 +202,9 @@ export async function POST(request: NextRequest) {
     if (!cart || userErrors.length || warnings.length || cart.cost.subtotalAmount.currencyCode !== 'EUR' ||
       cart.totalQuantity !== lines.reduce((n, l) => n + l.quantity, 0) || cart.lines.nodes.length !== lines.length ||
       lines.some(l => !cart.lines.nodes.some(c => c.merchandise.id === l.merchandiseId && c.quantity === l.quantity))) throw new Error('CART_MISMATCH')
-    moneyToCents(cart.cost.subtotalAmount.amount)
+    if (moneyToCents(cart.cost.subtotalAmount.amount) !== preparedBenefits.expectedSubtotalBeforeOrderCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
+    const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: cart.id }, buyerIp)
+    assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
     const checkoutUrl = assertCheckoutUrl(cart.checkoutUrl, process.env.SHOPIFY_CHECKOUT_HOST)
     const saved = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'ready', p_cart_id: cart.id, p_checkout_url: checkoutUrl })
     if (saved.error || saved.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')

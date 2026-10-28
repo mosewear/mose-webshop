@@ -1,3 +1,4 @@
+import { atomicLoyaltyEnabled, atomicLegacyLoyalty } from '@/lib/atomic-legacy-loyalty'
 /**
  * Idempotent paid-order fulfillment shared by Mollie webhook + return-URL
  * confirmation. Mirrors the former Stripe payment_intent.succeeded order branch.
@@ -81,7 +82,19 @@ export async function fulfillPaidOrder(
 
   // Idempotency: already paid — still ensure stock + gift cards
   if (order.payment_status === 'paid') {
-    await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+      const inventory = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+      if (!inventory.ok) return { ok: false, reason: 'INVENTORY_RETRY_REQUIRED', orderId: order.id }
+    }
+    if (atomicLoyaltyEnabled() && !options.minimal) {
+      try {
+        await atomicLegacyLoyalty(supabase, { kind: 'earn', key: `legacy:order:${order.id}:earn`,
+          email: order.email, userId: order.user_id || null, orderId: order.id, amount: order.total })
+      } catch {
+        return { ok: false, reason: 'LOYALTY_RETRY_REQUIRED', orderId: order.id }
+      }
+    }
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED !== 'true') await applyInventoryDecrementForPaidOrder(supabase, order.id)
     try {
       await processGiftCardsForPaidOrder(
         supabase,
@@ -130,8 +143,14 @@ export async function fulfillPaidOrder(
     }
   }
 
+  // Capture the paid physical obligation before independent loyalty/notification work can fail.
+  if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+    const inventory = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    if (!inventory.ok) return { ok: false, reason: 'INVENTORY_RETRY_REQUIRED', orderId: order.id }
+  }
+
   if (options.minimal) {
-    await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED !== 'true') await applyInventoryDecrementForPaidOrder(supabase, order.id)
     try {
       await processGiftCardsForPaidOrder(
         supabase,
@@ -263,6 +282,21 @@ export async function fulfillPaidOrder(
     )
     const pointsToAward = calculatePointsForOrder(updatedOrder.total)
 
+    if (atomicLoyaltyEnabled()) {
+      const result = await atomicLegacyLoyalty(supabase, { kind: 'earn',
+        key: `legacy:order:${order.id}:earn`, email: order.email, userId: order.user_id || null,
+        orderId: order.id, amount: updatedOrder.total })
+      const rank = { bronze: 0, silver: 1, gold: 2 }
+      if (!result.duplicate && result.new_tier && result.old_tier && rank[result.new_tier] > rank[result.old_tier]) {
+        const { sendLoyaltyStatusUpdateEmail } = await import('@/lib/email')
+        await sendLoyaltyStatusUpdateEmail({ customerEmail: order.email,
+          customerName: (order.shipping_address as any)?.name || order.email.split('@')[0],
+          tier: result.new_tier, previousTier: result.old_tier, pointsBalance: result.new_balance ?? 0,
+          lifetimePoints: result.lifetime_points ?? 0, variant: 'tier_up', locale: 'nl' })
+        await supabase.from('loyalty_points').update({ status_mail_sent_at: new Date().toISOString(),
+          last_tier_mailed: result.new_tier }).eq('email', order.email)
+      }
+    } else {
     const { data: existingTx } = await supabase
       .from('loyalty_transactions')
       .select('id')
@@ -350,18 +384,20 @@ export async function fulfillPaidOrder(
         }
       }
     }
+    }
   } catch (loyaltyError) {
     console.error('[fulfillPaidOrder] loyalty failed:', loyaltyError)
+    if (atomicLoyaltyEnabled()) return { ok: false, reason: 'LOYALTY_RETRY_REQUIRED', orderId: order.id }
   }
 
-  // Stock (idempotent via stock_decremented_at)
-  try {
-    const inv = await applyInventoryDecrementForPaidOrder(supabase, order.id)
-    if (!inv.ok) {
-      console.error('[fulfillPaidOrder] Inventory decrement failed:', inv.reason)
+  // Atomic stock was captured before loyalty; retain the historical client path while the flag is off.
+  if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED !== 'true') {
+    try {
+      const inv = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+      if (!inv.ok) console.error('[fulfillPaidOrder] Inventory decrement failed:', inv.reason)
+    } catch (stockError) {
+      console.error('[fulfillPaidOrder] stock error:', stockError)
     }
-  } catch (stockError) {
-    console.error('[fulfillPaidOrder] stock error:', stockError)
   }
 
   // Gift cards

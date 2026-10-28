@@ -1,3 +1,5 @@
+import { inventoryOperation } from './inventory-operation'
+
 export type InventoryAdjustField = 'regular' | 'presale'
 
 export async function postInventoryAdjust(body: {
@@ -6,10 +8,12 @@ export async function postInventoryAdjust(body: {
   field: InventoryAdjustField
   reason?: string
   notes?: string | null
+  expectedStock?: number
 }) {
+  const operation = await inventoryOperation('adjust', body)
   const res = await fetch('/api/admin/inventory/adjust', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.id },
     credentials: 'same-origin',
     body: JSON.stringify({
       variantId: body.variantId,
@@ -17,13 +21,18 @@ export async function postInventoryAdjust(body: {
       field: body.field,
       reason: body.reason ?? 'manual',
       notes: body.notes ?? null,
+      ...(body.expectedStock === undefined ? {} : { expectedStock: body.expectedStock }),
     }),
   })
   const json = await res.json().catch(() => ({}))
   if (!res.ok) {
     throw new Error((json as { error?: string }).error || res.statusText)
   }
-  return json as { ok: true; result: unknown }
+  if (!json || json.ok !== true || !json.result || typeof json.result !== 'object') {
+    throw new Error('Voorraadbewerking nog niet bevestigd. Probeer dezelfde bewerking opnieuw.')
+  }
+  operation.confirmed()
+  return json as { ok: true; result: { shopify_pending?: boolean; [key: string]: unknown } }
 }
 
 export type InventoryLogRow = {
@@ -77,9 +86,10 @@ export async function postInventoryReceive(body: {
     inventoryType: 'regular' | 'presale'
   }>
 }) {
+  const operation = await inventoryOperation('receive', body)
   const res = await fetch('/api/admin/inventory/receive', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operation.id },
     credentials: 'same-origin',
     body: JSON.stringify(body),
   })
@@ -87,9 +97,14 @@ export async function postInventoryReceive(body: {
   if (!res.ok) {
     throw new Error((json as { error?: string }).error || res.statusText)
   }
+  if (!json || json.ok !== true || !json.result || typeof json.result !== 'object') {
+    throw new Error('Voorraadbewerking nog niet bevestigd. Probeer dezelfde bewerking opnieuw.')
+  }
+  operation.confirmed()
   return json as {
     ok: true
     result: {
+      shopify_pending?: boolean
       receipt_id?: string
       total_added?: number
       expected_total?: number | null

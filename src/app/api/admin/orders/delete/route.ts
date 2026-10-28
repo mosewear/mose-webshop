@@ -1,3 +1,4 @@
+import { atomicLoyaltyEnabled } from '@/lib/atomic-legacy-loyalty'
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
@@ -31,6 +32,8 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { persistSession: false } }
     )
+
+    if (atomicLoyaltyEnabled()) return NextResponse.json({ error: 'Orderhistorie wordt bewaard voor veilige puntenafhandeling; gebruik annuleren of retourneren' }, { status: 409 })
 
     const { error: loyaltyErr } = await supabase
       .from('loyalty_transactions')

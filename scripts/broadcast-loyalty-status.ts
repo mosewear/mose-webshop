@@ -127,7 +127,7 @@ async function main() {
       tier: tierFromLifetime(lifetime),
     })
   }
-  if (toInsert.length > 0 && !dryRun) {
+  if (process.env.LOYALTY_ATOMIC_ENABLED !== 'true' && toInsert.length > 0 && !dryRun) {
     const { error } = await supabase.from('loyalty_points').insert(toInsert)
     if (error) console.warn('[broadcast] Insert missing rows warning:', error.message)
   }

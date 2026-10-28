@@ -215,7 +215,7 @@ export default function ReceivingWizard() {
     }
     try {
       setSubmitting(true)
-      await postInventoryReceive({
+      const receipt = await postInventoryReceive({
         title: title.trim(),
         notes: notes.trim() || null,
         expectedTotal: Number.isFinite(expectedNum) ? expectedNum : null,
@@ -225,7 +225,7 @@ export default function ReceivingWizard() {
           inventoryType: l.inventoryType,
         })),
       })
-      toast.success('Levering opgeslagen', {
+      toast.success(receipt.result.shopify_pending ? 'Levering opgeslagen; Shopify-voorraad wordt bijgewerkt.' : 'Levering opgeslagen', {
         style: { border: '2px solid black', borderRadius: '0', fontWeight: 'bold' },
       })
       setLines([])

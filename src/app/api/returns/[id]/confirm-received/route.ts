@@ -43,27 +43,33 @@ export async function POST(
       'return_label_generated',
       'return_approved', // in-store drop-off start
     ]
-    if (!allowedSourceStatuses.includes(returnRecord.status)) {
+    const replay = process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true' && ['return_received', 'refunded', 'refund_processing'].includes(returnRecord.status)
+    if (!allowedSourceStatuses.includes(returnRecord.status) && !replay) {
       return NextResponse.json({
         error: `Cannot confirm receipt. Return status must be one of ${allowedSourceStatuses.join(', ')}, current: ${returnRecord.status}`,
       }, { status: 400 })
     }
 
-    // Update status
-    const { data: updatedReturn, error: updateError } = await supabase
-      .from('returns')
-      .update({
-        status: 'return_received',
-        received_at: new Date().toISOString(),
-        admin_notes: admin_notes || returnRecord.admin_notes,
-      })
-      .eq('id', id)
-      .select()
-      .single()
+    // A retry must preserve an already-refunded return status.
+    let updatedReturn = returnRecord
+    if (!replay) {
+      const { data: receivedReturn, error: updateError } = await supabase
+        .from('returns')
+        .update({
+          status: 'return_received',
+          received_at: new Date().toISOString(),
+          admin_notes: admin_notes || returnRecord.admin_notes,
+        })
+        .eq('id', id)
+        .select()
+        .single()
 
-    if (updateError) {
-      console.error('Error confirming return receipt:', updateError)
-      return NextResponse.json({ error: 'Failed to confirm receipt' }, { status: 500 })
+      if (updateError) {
+        console.error('Error confirming return receipt:', updateError)
+        return NextResponse.json({ error: 'Failed to confirm receipt' }, { status: 500 })
+      }
+
+      updatedReturn = receivedReturn
     }
 
     // Update stock (items terug naar inventory).
@@ -76,7 +82,10 @@ export async function POST(
     const orderItems = (returnRecord.orders?.order_items as any[]) ?? []
     const restockFouten: string[] = []
 
-    for (const returnItem of returnItems) {
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+      const { error } = await supabase.rpc('apply_inventory_command', { p_operation: id, p_kind: 'return', p_payload: { returnId: id } })
+      if (error) restockFouten.push('Voorraadcorrectie nog niet bevestigd; bevestig dezelfde retour opnieuw.')
+    } else for (const returnItem of returnItems) {
       try {
         const orderItem = orderItems.find((item: any) => item.id === returnItem.order_item_id)
         if (!orderItem?.variant_id) {
@@ -99,7 +108,7 @@ export async function POST(
 
     // Update order status naar return_received
     try {
-      await updateOrderStatusForReturn(returnRecord.order_id, 'return_received')
+      if (!replay) await updateOrderStatusForReturn(returnRecord.order_id, 'return_received')
     } catch (error) {
       console.error('Error updating order status:', error)
     }
@@ -130,7 +139,7 @@ export async function POST(
       // maar de voorraad handmatige aandacht nodig heeft, in plaats van dat
       // stilletjes in de serverlog te laten verdwijnen.
       restockWarnings: restockFouten.length ? restockFouten : undefined,
-    })
+    }, { status: process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true' && restockFouten.length ? 503 : 200 })
   } catch (error: any) {
     console.error('Error in POST /api/returns/[id]/confirm-received:', error)
     return NextResponse.json({ error: 'Er is een fout opgetreden' }, { status: 500 })

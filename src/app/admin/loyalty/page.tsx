@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
@@ -43,6 +43,7 @@ export default function AdminLoyaltyPage() {
   const [adjustPoints, setAdjustPoints] = useState('')
   const [adjustReason, setAdjustReason] = useState('')
   const [adjusting, setAdjusting] = useState(false)
+  const adjustOperation = useRef<{ signature: string; id: string } | null>(null)
 
   // Stats
   const [stats, setStats] = useState({
@@ -258,50 +259,21 @@ export default function AdminLoyaltyPage() {
 
     setAdjusting(true)
     try {
-      // Find the member to get current balance
-      const member = members.find(m => m.id === adjustModal.memberId)
-      if (!member) throw new Error('Lid niet gevonden')
-
-      const newBalance = member.points_balance + points
-      if (newBalance < 0) {
-        toast.error('Saldo kan niet negatief worden')
-        setAdjusting(false)
-        return
+      const signature = JSON.stringify([adjustModal.memberId, points, adjustReason.trim()])
+      if (!adjustOperation.current) {
+        try { adjustOperation.current = JSON.parse(sessionStorage.getItem('mose-loyalty-admin-adjustment') || 'null') } catch { /* same-page retries remain stable */ }
       }
-
-      // Update balance
-      const newLifetime = points > 0
-        ? member.lifetime_points + points
-        : member.lifetime_points
-
-      let newTier: 'bronze' | 'silver' | 'gold' = 'bronze'
-      if (newLifetime >= 1000) newTier = 'gold'
-      else if (newLifetime >= 500) newTier = 'silver'
-
-      const { error: updateError } = await supabase
-        .from('loyalty_points')
-        .update({
-          points_balance: newBalance,
-          lifetime_points: newLifetime,
-          tier: newTier,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', adjustModal.memberId)
-
-      if (updateError) throw updateError
-
-      // Record transaction
-      const { error: txError } = await supabase
-        .from('loyalty_transactions')
-        .insert({
-          email: adjustModal.email,
-          user_id: member.user_id,
-          type: 'adjusted',
-          points: points,
-          description: `Handmatige aanpassing: ${adjustReason}`,
-        })
-
-      if (txError) throw txError
+      if (adjustOperation.current?.signature !== signature) {
+        adjustOperation.current = { signature, id: crypto.randomUUID() }
+        try { sessionStorage.setItem('mose-loyalty-admin-adjustment', JSON.stringify(adjustOperation.current)) } catch { /* storage unavailable */ }
+      }
+      const response = await fetch('/api/admin/loyalty/adjust', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId: adjustModal.memberId, points, reason: adjustReason.trim(), operationId: adjustOperation.current.id }) })
+      const result = await response.json()
+      if (!response.ok || !result.success) throw new Error(result.error || 'Punten aanpassen mislukt')
+      try { sessionStorage.removeItem('mose-loyalty-admin-adjustment') } catch { /* storage unavailable */ }
+      adjustOperation.current = null
 
       toast.success(`${points > 0 ? '+' : ''}${points} punten aangepast`)
       setAdjustModal(null)

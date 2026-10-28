@@ -1,0 +1,57 @@
+// @vitest-environment node
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+let api: typeof import('@/lib/shopify/admin-auth')
+const exchange = vi.fn()
+beforeEach(async () => {
+  vi.resetModules()
+  vi.stubEnv('SHOPIFY_ADMIN_ACCESS_TOKEN', '')
+  vi.stubEnv('SHOPIFY_APP_CLIENT_ID', 'own-app')
+  vi.stubEnv('SHOPIFY_APP_CLIENT_SECRET', 'private-secret')
+  vi.stubGlobal('fetch', exchange.mockReset())
+  api = await import('@/lib/shopify/admin-auth')
+})
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.useRealTimers() })
+const response = (value = 'private-token', expires = 86399) => new Response(JSON.stringify({ access_token: value, expires_in: expires }), { status: 200 })
+it('uses an existing offline token without exchanging a CLI or browser credential', async () => {
+  vi.stubEnv('SHOPIFY_ADMIN_ACCESS_TOKEN', 'offline-token')
+  expect(await api.getAdminAccessToken()).toBe('offline-token')
+  expect(exchange).not.toHaveBeenCalled()
+})
+it('exchanges only at the fixed store endpoint, deduplicates and caches until expiry', async () => {
+  vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-28T12:00:00Z'))
+  exchange.mockResolvedValueOnce(response()).mockResolvedValueOnce(response('refreshed'))
+  expect(await Promise.all([api.getAdminAccessToken(), api.getAdminAccessToken()])).toEqual(['private-token','private-token'])
+  expect(exchange).toHaveBeenCalledTimes(1)
+  const [url, options] = exchange.mock.calls[0]
+  expect(url).toBe('https://hp5szr-te.myshopify.com/admin/oauth/access_token')
+  expect(options.redirect).toBe('error'); expect(options.cache).toBe('no-store')
+  expect(options.body.get('grant_type')).toBe('client_credentials')
+  expect(options.body.get('client_id')).toBe('own-app')
+  expect(options.body.get('client_secret')).toBe('private-secret')
+  vi.advanceTimersByTime((86399 - 61) * 1000)
+  expect(await api.getAdminAccessToken()).toBe('private-token')
+  vi.advanceTimersByTime(2000)
+  expect(await api.getAdminAccessToken()).toBe('refreshed')
+})
+it('does not reuse the old app token after credential rotation', async () => {
+  exchange.mockResolvedValueOnce(response('old')).mockResolvedValueOnce(response('new'))
+  expect(await api.getAdminAccessToken()).toBe('old')
+  vi.stubEnv('SHOPIFY_APP_CLIENT_SECRET', 'rotated-secret')
+  expect(await api.getAdminAccessToken()).toBe('new')
+  expect(exchange).toHaveBeenCalledTimes(2)
+})
+it('never exposes the provider response or client secret on denial and retries a later exchange', async () => {
+  exchange.mockResolvedValueOnce(new Response('private-secret details', { status: 403 })).mockResolvedValueOnce(response())
+  await expect(api.getAdminAccessToken()).rejects.toMatchObject({ code: 'SHOPIFY_ACCESS_DENIED', message: 'SHOPIFY_ACCESS_DENIED' })
+  expect(await api.getAdminAccessToken()).toBe('private-token')
+})
+it.each([['',86399],['token',0],['token',60],['token',90000],['token','86399'],['token',12.5]])('rejects invalid token lifetime or token (%s, %s)', async (token, expiry) => {
+  exchange.mockResolvedValue(new Response(JSON.stringify({ access_token: token, expires_in: expiry })))
+  await expect(api.getAdminAccessToken()).rejects.toMatchObject({ code: 'SHOPIFY_AUTH_INVALID_RESPONSE' })
+})
+it('reports missing credentials without a network request', async () => {
+  vi.stubEnv('SHOPIFY_APP_CLIENT_SECRET', '')
+  expect(api.adminCredentialsConfigured()).toBe(false)
+  await expect(api.getAdminAccessToken()).rejects.toMatchObject({ code: 'SHOPIFY_ADMIN_NOT_CONFIGURED' })
+  expect(exchange).not.toHaveBeenCalled()
+})

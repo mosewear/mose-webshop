@@ -1,3 +1,4 @@
+import { atomicLoyaltyEnabled, atomicLegacyLoyalty } from '@/lib/atomic-legacy-loyalty'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { LOYALTY_CONFIG, calculateRedemptionValue } from '@/lib/loyalty'
@@ -26,6 +27,22 @@ export async function POST(req: NextRequest) {
     const redeemPoints = Math.floor(points / LOYALTY_CONFIG.redemptionMinPoints) * LOYALTY_CONFIG.redemptionMinPoints
 
     const serviceClient = createServiceRoleClient()
+
+    if (atomicLoyaltyEnabled()) {
+      if (typeof body.operationId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.operationId)) {
+        return NextResponse.json({ error: 'Vernieuw de checkout en probeer opnieuw' }, { status: 400 })
+      }
+      try {
+        const result = await atomicLegacyLoyalty(serviceClient, { kind: 'redeem',
+          key: `legacy:redeem:${user.id}:${body.operationId}`, email: user.email,
+          userId: user.id, points: redeemPoints })
+        return NextResponse.json(result)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : ''
+        const insufficient = /INSUFFICIENT|ACCOUNT_NOT_FOUND/.test(message)
+        return NextResponse.json({ error: insufficient ? 'Niet genoeg punten' : 'Inwisselen kon niet worden afgerond; probeer dezelfde aanvraag opnieuw' }, { status: insufficient ? 409 : 503 })
+      }
+    }
 
     const { data: loyaltyRecord } = await serviceClient
       .from('loyalty_points')

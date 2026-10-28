@@ -49,6 +49,15 @@ export async function POST(request: Request) {
       { auth: { persistSession: false, autoRefreshToken: false } }
     )
 
+    if (process.env.SHOPIFY_CHECKOUT_ENABLED === 'true') {
+      return NextResponse.json({ error: 'Maak nieuwe bestellingen in Shopify aan; de voorraad wordt daar beheerd.' }, { status: 409 })
+    }
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+      const ownership = await supabase.from('shopify_stock_ownership').select('variant_id').in('variant_id', items.map((item: { variant_id: string }) => item.variant_id)).limit(1)
+      if (ownership.error) return NextResponse.json({ error: 'Voorraadbeheer kan nu niet worden gecontroleerd.' }, { status: 503 })
+      if (ownership.data.length) return NextResponse.json({ error: 'Dit artikel wordt in Shopify beheerd. Maak de bestelling daar aan.' }, { status: 409 })
+    }
+
     // Validate stock for each item
     for (const item of items) {
       const { data: variant, error: variantError } = await supabase
