@@ -48,6 +48,7 @@ try {
       case when email='customer1@test.invalid' then 1000 when email='customer2@test.invalid' then 112 else 96 end from auth.users;`)
   const preserved = (await query('select * from loyalty_points order by email')).rows
   await db.exec(await readFile(new URL('../../supabase/migrations/20261028000400_shopify_loyalty_ledger.sql',import.meta.url),'utf8'))
+  await db.exec(await readFile(new URL('../../supabase/migrations/20261028000500_shopify_loyalty_outbox.sql',import.meta.url),'utf8'))
   check((await query('select * from loyalty_points order by email')).rows,preserved,'migration preserves all 54 existing accounts byte for byte')
   check(await scalar('select sum(points_balance)::int from loyalty_points'),6104,'6104 opening points preserved')
   check(await scalar('select count(*)::int from loyalty_transactions'),0,'no synthetic backfill transactions')
@@ -150,5 +151,55 @@ try {
   await query('select release_failed_shopify_loyalty($1)',[spender])
   check(await balance(),1000,'release repays debt without minting points')
   check(await scalar('select count(*)::int from loyalty_points'),54,'no implicit new account creation')
+  check(await scalar('select count(*)::int from shopify_loyalty_outbox'),0,'dormant runtime never queues historical fixture snapshots')
+  check((await query('select * from claim_shopify_loyalty()')).rows,[],'no claim before reviewed cutover')
+  for (const role of ['anon','authenticated']) {
+    check(await scalar(`select has_function_privilege('${role}','public.complete_shopify_loyalty(text,uuid,timestamptz,integer,integer,integer,integer)','execute')`),false,`${role} cannot settle/ack queue`)
+    check(await scalar(`select has_table_privilege('${role}','public.shopify_loyalty_discount_bindings','select')`),false,`${role} cannot read private code bindings`)
+  }
+  await db.exec("update shopify_loyalty_runtime set cutover_at=now()-interval '1 hour',review_reference='test-reviewed-cutover' where id=1")
+  const preCutoff = await attempt()
+  await query("update shopify_checkout_attempts set created_at=now()-interval '2 hours' where id=$1",[preCutoff])
+  await order(preCutoff)
+  check(await scalar('select count(*)::int from shopify_loyalty_outbox'),0,'old attempts never get retrospective loyalty')
+  const queuedOrder = await order(await attempt())
+  check(await scalar('select count(*)::int from shopify_loyalty_outbox'),1,'verified account snapshot atomically enqueues after link trigger')
+  let claimed = (await query('select * from claim_shopify_loyalty()')).rows[0]
+  const complete = (lease=claimed.lease_token,version=claimed.source_updated_at,refund=0,discount=0) => scalar('select complete_shopify_loyalty($1,$2,$3,1099,$4,$5,0)',[queuedOrder,lease,version,refund,discount])
+  check(await complete(other),false,'wrong worker lease cannot settle')
+  check(await balance(),1000,'wrong lease cannot credit balance')
+  check(await complete(),true,'settlement and queue acknowledgement commit together')
+  check(await balance(),1010,'outbox settlement credits once')
+  check(await complete(),false,'replayed acknowledged lease cannot credit again')
+  await advance(queuedOrder,'2026-10-28T12:00:00Z','PAID')
+  check((await query('select * from claim_shopify_loyalty()')).rows,[],'same snapshot version does not requeue')
+  await advance(queuedOrder,'2026-10-28T12:01:00Z')
+  claimed=(await query('select * from claim_shopify_loyalty()')).rows[0]
+  const oldLease=claimed.lease_token
+  await advance(queuedOrder,'2026-10-28T12:02:00Z')
+  check(await complete(oldLease,'2026-10-28T12:01:00Z',60),false,'new snapshot fences old in-flight worker')
+  claimed=(await query('select * from claim_shopify_loyalty()')).rows[0]
+  check(claimed.lease_token!==oldLease,true,'new version gets a new lease')
+  check(await complete(claimed.lease_token,'2026-10-28T12:02:00Z',120),true,'new snapshot applies cumulative partial refund')
+  check(await balance(),1009,'partial refund converges after stale worker')
+  await advance(queuedOrder,'2026-10-28T12:03:00Z')
+  claimed=(await query('select * from claim_shopify_loyalty()')).rows[0]
+  await query("update shopify_loyalty_outbox set lease_until=now()-interval '1 second' where order_id=$1",[queuedOrder])
+  const expired=claimed.lease_token
+  claimed=(await query('select * from claim_shopify_loyalty()')).rows[0]
+  check(claimed.lease_token!==expired,true,'expired lease is recoverable')
+  check(await complete(expired,'2026-10-28T12:03:00Z',120),false,'expired worker cannot settle')
+  await assert.rejects(complete(claimed.lease_token,'2026-10-28T12:03:00Z',120,500),/LOYALTY_RESERVATION_MISSING/); checks++
+  check(await scalar('select status from shopify_loyalty_outbox where order_id=$1',[queuedOrder]),'processing','failed settlement cannot acknowledge queue')
+  check(await balance(),1009,'failed settlement does not corrupt balance')
+  for (let retry=0;retry<7;retry++) {
+    check(await scalar('select fail_shopify_loyalty($1,$2,$3)',[queuedOrder,claimed.lease_token,'private code/customer']),true,'fenced failure retained')
+    await query('update shopify_loyalty_outbox set next_attempt_at=now() where order_id=$1',[queuedOrder])
+    const next=(await query('select * from claim_shopify_loyalty()')).rows[0]
+    if (next) claimed=next
+  }
+  check(await scalar('select status from shopify_loyalty_outbox where order_id=$1',[queuedOrder]),'dead_letter','bounded retries expose dead letter')
+  check(await scalar('select last_error from shopify_loyalty_outbox where order_id=$1',[queuedOrder]),'LOYALTY_WORKER_FAILED','provider/private values never stored as queue error')
+  check(Number((await query('select * from shopify_loyalty_health()')).rows[0].dead_letter_count),1,'health reflects real dead letters')
   console.log(`${checks} loyalty PostgreSQL preservation/idempotency/partial-refund/privilege/atomicity assertions passed (local PGlite only).`)
 } finally { await db.close() }
