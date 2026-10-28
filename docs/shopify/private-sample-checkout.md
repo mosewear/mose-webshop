@@ -44,3 +44,9 @@ release evidence, malicious selection/price injection, real availability/source/
 price mismatch, durable ownership, save uncertainty, safe reuse and POD stock
 semantics. TypeScript and targeted lint pass. Actual production checkout delivery,
 shipping quote and payment completion still require live browser validation.
+
+Fresh own-app readback at 2026-10-28T12:38:12Z confirmed all eight product IDs,
+63 variant IDs, every exact color/size and retail price. The 23 hoodie/longsleeve
+SKUs changed after artwork sync; the private manifest has been updated to those
+current exported SKUs. Storefront validation also compares the two selected
+option values, so an unexpected option change fails before cart creation.
