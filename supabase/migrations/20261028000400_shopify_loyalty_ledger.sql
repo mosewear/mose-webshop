@@ -135,6 +135,18 @@ begin
   if (snap.financial_status = 'PAID' and (p_refunded_cents <> 0 or p_restored_points <> 0))
     or (snap.financial_status = 'REFUNDED' and p_refunded_cents <> p_paid_cents)
     or (p_restored_points > 0 and p_refunded_cents = 0) then raise exception 'LOYALTY_REFUND_NOT_VERIFIED'; end if;
+  -- A verified first purchase may create its own empty account. Serialize with
+  -- late legacy earning by exact auth email; never import, case-fold or transfer
+  -- an existing account belonging to another authenticated user.
+  declare
+    verified_email text;
+  begin
+    select email into verified_email from auth.users where id = owner_row.user_id;
+    if verified_email is null then raise exception 'LOYALTY_ACCOUNT_NOT_FOUND'; end if;
+    perform pg_advisory_xact_lock(hashtextextended('loyalty-account:' || verified_email,0));
+    insert into public.loyalty_points(email,user_id) values(verified_email,owner_row.user_id)
+      on conflict(email) do nothing;
+  end;
   select lp.* into a from public.loyalty_points lp join auth.users u on lp.email = u.email
     where u.id = owner_row.user_id and (lp.user_id is null or lp.user_id = u.id) for update of lp;
   if not found then raise exception 'LOYALTY_ACCOUNT_NOT_FOUND'; end if;

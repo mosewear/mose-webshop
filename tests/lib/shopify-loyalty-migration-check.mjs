@@ -201,5 +201,20 @@ try {
   check(await scalar('select status from shopify_loyalty_outbox where order_id=$1',[queuedOrder]),'dead_letter','bounded retries expose dead letter')
   check(await scalar('select last_error from shopify_loyalty_outbox where order_id=$1',[queuedOrder]),'LOYALTY_WORKER_FAILED','provider/private values never stored as queue error')
   check(Number((await query('select * from shopify_loyalty_health()')).rows[0].dead_letter_count),1,'health reflects real dead letters')
+  // A first-time verified buyer earns without a pre-existing legacy balance.
+  const fresh = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  await query("insert into auth.users(id,email) values($1,'first-buyer@test.invalid')",[fresh])
+  const firstOrder = await order(await attempt(fresh))
+  check(await scalar("select count(*)::int from loyalty_points where email='first-buyer@test.invalid'"),0,'checkout proof does not precreate points')
+  check(await settle(firstOrder,{paid:7900,discount:0}),'applied','first purchase settles')
+  check(await scalar('select points_balance from loyalty_points where user_id=$1',[fresh]),79,'first purchase credits its exact verified owner')
+  check(await settle(firstOrder,{paid:7900,discount:0}),'duplicate','first purchase replay is idempotent')
+  check(await scalar('select count(*)::int from loyalty_points'),55,'only the actual verified buyer account is created')
+  const conflictUser = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
+  await query("insert into auth.users(id,email) values($1,'mismatched-buyer@test.invalid')",[conflictUser])
+  await query("insert into loyalty_points(email,user_id) values('mismatched-buyer@test.invalid',$1)",[other])
+  const conflictOrder = await order(await attempt(conflictUser))
+  await assert.rejects(settle(conflictOrder,{paid:7900,discount:0}),/LOYALTY_ACCOUNT_NOT_FOUND/);checks++
+  check(await scalar("select points_balance from loyalty_points where email='mismatched-buyer@test.invalid'"),0,'existing account never transfers to different user')
   console.log(`${checks} loyalty PostgreSQL preservation/idempotency/partial-refund/privilege/atomicity assertions passed (local PGlite only).`)
 } finally { await db.close() }
