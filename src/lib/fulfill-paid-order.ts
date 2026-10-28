@@ -90,7 +90,10 @@ export async function fulfillPaidOrder(
         return { ok: false, reason: 'LOYALTY_RETRY_REQUIRED', orderId: order.id }
       }
     }
-    await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    const inventory = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true' && !inventory.ok) {
+      return { ok: false, reason: 'INVENTORY_RETRY_REQUIRED', orderId: order.id }
+    }
     try {
       await processGiftCardsForPaidOrder(
         supabase,
@@ -140,7 +143,10 @@ export async function fulfillPaidOrder(
   }
 
   if (options.minimal) {
-    await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    const inventory = await applyInventoryDecrementForPaidOrder(supabase, order.id)
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true' && !inventory.ok) {
+      return { ok: false, reason: 'INVENTORY_RETRY_REQUIRED', orderId: order.id }
+    }
     try {
       await processGiftCardsForPaidOrder(
         supabase,
@@ -385,9 +391,11 @@ export async function fulfillPaidOrder(
     const inv = await applyInventoryDecrementForPaidOrder(supabase, order.id)
     if (!inv.ok) {
       console.error('[fulfillPaidOrder] Inventory decrement failed:', inv.reason)
+      if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') return { ok: false, reason: 'INVENTORY_RETRY_REQUIRED', orderId: order.id }
     }
   } catch (stockError) {
     console.error('[fulfillPaidOrder] stock error:', stockError)
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') return { ok: false, reason: 'INVENTORY_RETRY_REQUIRED', orderId: order.id }
   }
 
   // Gift cards

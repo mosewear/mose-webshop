@@ -17,11 +17,11 @@ beforeEach(() => {
 })
 const request = () => new NextRequest('https://example.test/api/mollie-webhook', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'id=tr_synthetic' })
 describe('late legacy loyalty acknowledgment', () => {
-  it('asks provider to retry a failed atomic posting instead of acknowledging it', async () => {
-    mocks.fulfill.mockResolvedValue({ ok: false, reason: 'LOYALTY_RETRY_REQUIRED' })
+  it.each(['LOYALTY_RETRY_REQUIRED', 'INVENTORY_RETRY_REQUIRED'])('asks provider to retry a failed atomic posting: %s', async reason => {
+    mocks.fulfill.mockResolvedValue({ ok: false, reason })
     const response = await POST(request())
     expect(response.status).toBe(503)
-    expect(await response.json()).toEqual({ received: false, error: 'LOYALTY_RETRY_REQUIRED' })
+    expect(await response.json()).toEqual({ received: false, error: reason })
   })
   it('acknowledges a late already-paid replay after atomic rescue succeeds', async () => {
     mocks.fulfill.mockResolvedValue({ ok: true, alreadyPaid: true, orderId: 'synthetic-order' })

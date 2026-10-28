@@ -1,0 +1,19 @@
+# Staged legacy paid-stock bridge
+
+This code is disabled by default. It does not transfer the 119 observed local units, create ownership rows, activate products, obtain write scopes, or enable a cron. The approved read-only Shopify app cannot execute this worker until a separate `write_inventory` grant is approved.
+
+`LEGACY_INVENTORY_ATOMIC_ENABLED=true` routes paid legacy MOSE orders through service-only `apply_legacy_paid_stock(uuid)`. That RPC locks the paid order and all affected variants in stable order, aggregates duplicate variant/presale lines, updates every quantity and `stock_decremented_at` in one transaction, and replays the stamp without decrementing again. Failed lines roll the transaction back. Unknown RPC outcomes never fall back to old non-atomic client writes.
+
+No ownership rows means legacy stock remains local. Before creating a `shopify_stock_ownership` row, freeze the relevant sales/writers, reconcile paid and pending/late legacy payments, transfer the reviewed quantity to the verified native Shopify item/location using a separately reviewed compare-and-swap request, read it back, and record the actual cutoff and verification reference. Do not copy an old observation. The ownership trigger takes the same variant lock as paid inventory processing. Pending/uncertain remote deltas pin the ownership route against update/delete.
+
+After explicit ownership transfer, a historical order created before that variant's cutoff atomically records one durable negative Shopify `available` delta together with its local shadow update and stamp. It does not overwrite Shopify quantities. The outbox freezes item/location/generation and uses its durable UUID as Shopify's `@idempotent` key. New legacy orders after the cutoff and presale ownership are rejected. A local shadow shortfall stays visible and must be reconciled, even if the remote delta succeeds.
+
+`SHOPIFY_SYNC_ENABLED=true`, `SHOPIFY_LEGACY_STOCK_SYNC_ENABLED=true`, and `LEGACY_INVENTORY_ATOMIC_ENABLED=true` are all required for the authenticated `/api/cron/shopify-legacy-stock` runner. It drains at most five fenced events within 90 seconds. Add its five-minute Vercel schedule only alongside reviewed release configuration. Provider timeouts retry the exact key/variables. Eight failures dead-letter. Uncertain requests older than 22 hours dead-letter rather than replay beyond Shopify's documented 24-hour idempotency retention. Never reset keys or clear unknown outcomes without provider reconciliation.
+
+Public checkout readiness must require `legacy_stock_bridge_health()` pending/deadLetters/shortfalls all zero (and measured fresh sync health), not merely a broad inventory flag. When an adjustment is newly queued, the public checkout must fail closed until it is confirmed. Inventory snapshot evidence must be refreshed after bridge delivery; an earlier snapshot does not include the delta.
+
+Still required for global cutover: prevent or bridge every other local inventory writer (admin corrections, receipts, return restocks); implement the reverse Shopify-authoritative shadow mirror without enqueueing a duplicate delta; account for existing pending payment reservations; and verify caller retry behavior when stock RPC fails. This bridge alone is not permission to enable global checkout. A private supplier-only sample checkout does not need the merchant-stock transfer and must not mark physical sample quality verified.
+
+Validation: local PGlite transaction/rollback/replay/presale/lease/privilege tests; Vitest stable-key, unknown outcome, ownership mismatch and lost-ack tests; TypeScript and ESLint. No live stock mutation was run.
+
+References: [inventoryAdjustQuantities 2026-10](https://shopify.dev/docs/api/admin-graphql/2026-10/mutations/inventoryAdjustQuantities), [Shopify idempotency retention](https://shopify.dev/docs/apps/build/apis/graphql-admin/implementing-idempotency).
