@@ -1,3 +1,4 @@
+import { atomicLoyaltyEnabled } from '@/lib/atomic-legacy-loyalty'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
       tier: tierFromLifetime(lifetime),
     })
   }
-  if (toInsert.length > 0 && !dryRun) {
+  if (toInsert.length > 0 && !dryRun && !atomicLoyaltyEnabled()) {
     const { error: insertErr } = await supabase
       .from('loyalty_points')
       .insert(toInsert)

@@ -178,6 +178,7 @@ function LegacyCheckoutPage() {
   // Loyalty points state
   const [loyaltyPointsBalance, setLoyaltyPointsBalance] = useState(0)
   const [loyaltyRedeemPoints, setLoyaltyRedeemPoints] = useState(0)
+  const loyaltyRedemptionOperation = useRef<{ points: number; id: string } | null>(null)
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0)
   const [loyaltyExpanded, setLoyaltyExpanded] = useState(false)
   const [loyaltyLoading, setLoyaltyLoading] = useState(false)
@@ -3143,14 +3144,23 @@ function LegacyCheckoutPage() {
                           onClick={async () => {
                             if (loyaltyRedeemPoints < 100) return
                             setLoyaltyLoading(true)
+                            if (!loyaltyRedemptionOperation.current) {
+                              try { loyaltyRedemptionOperation.current = JSON.parse(sessionStorage.getItem('mose-loyalty-redemption') || 'null') } catch { /* storage unavailable */ }
+                            }
+                            if (loyaltyRedemptionOperation.current?.points !== loyaltyRedeemPoints) {
+                              loyaltyRedemptionOperation.current = { points: loyaltyRedeemPoints, id: crypto.randomUUID() }
+                              try { sessionStorage.setItem('mose-loyalty-redemption', JSON.stringify(loyaltyRedemptionOperation.current)) } catch { /* same-page retry still stable */ }
+                            }
                             try {
                               const res = await fetch('/api/loyalty/redeem', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ points: loyaltyRedeemPoints }),
+                                body: JSON.stringify({ points: loyaltyRedeemPoints, operationId: loyaltyRedemptionOperation.current.id }),
                               })
                               const json = await res.json()
                               if (res.ok && json.success) {
+                                try { sessionStorage.removeItem('mose-loyalty-redemption') } catch { /* storage unavailable */ }
+                                loyaltyRedemptionOperation.current = null
                                 setLoyaltyDiscount(json.discount_value)
                                 setLoyaltyPointsBalance(json.remaining_balance)
                                 setLoyaltyExpanded(false)

@@ -1,3 +1,4 @@
+import { atomicLoyaltyEnabled, atomicLegacyLoyalty } from '@/lib/atomic-legacy-loyalty'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { calculatePointsForOrder, calculateTier } from '@/lib/loyalty'
 
@@ -24,6 +25,16 @@ export async function reverseLoyaltyForReturn(
   }
 ): Promise<ReverseLoyaltyResult> {
   const { returnId, orderId, refundAmount, customerEmail, userId } = params
+
+  if (atomicLoyaltyEnabled()) {
+    try {
+      const result = await atomicLegacyLoyalty(supabase, { kind: 'refund',
+        key: `legacy:return:${returnId}:refund`, email: customerEmail, userId,
+        orderId, returnId, amount: refundAmount })
+      return result.pending ? { ok: true, skipped: 'awaiting_legacy_order_earning' }
+        : { ok: true, pointsDeducted: result.points_deducted ?? 0 }
+    } catch (error) { return { ok: false, error: error instanceof Error ? error.message : 'LOYALTY_REFUND_FAILED' } }
+  }
 
   const { data: existing } = await supabase
     .from('loyalty_transactions')

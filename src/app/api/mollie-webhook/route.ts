@@ -118,6 +118,9 @@ export async function POST(req: NextRequest) {
           paid_at: payment.paidAt,
         },
       })
+      if (!result.ok && result.reason === 'LOYALTY_RETRY_REQUIRED') {
+        return NextResponse.json({ received: false, error: 'LOYALTY_RETRY_REQUIRED' }, { status: 503 })
+      }
       return NextResponse.json({ received: true, type: 'order_payment', ...result })
     }
 
