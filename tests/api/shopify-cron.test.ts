@@ -81,7 +81,7 @@ describe('production Shopify cron', () => {
   })
   it('schedules exactly one gated runner every five minutes, preserving existing crons', () => {
     const config = JSON.parse(readFileSync('vercel.json', 'utf8'))
-    expect(config.crons.filter((c: { path: string }) => c.path.includes('shopify'))).toEqual([{ path: '/api/cron/shopify', schedule: '*/5 * * * *' }])
+    expect(config.crons.filter((c: { path: string }) => c.path.includes('shopify'))).toEqual([{ path: '/api/cron/shopify', schedule: '*/5 * * * *' }, { path: '/api/cron/shopify-inventory', schedule: '*/5 * * * *' }])
     expect(config.crons.some((c: { path: string }) => c.path === '/api/cron/campagnes')).toBe(true)
     expect(config.regions).toEqual(['dub1'])
   })

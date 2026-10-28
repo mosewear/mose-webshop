@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { summarizeReadiness, type IntegrationState } from '@/lib/shopify-readiness'
 import { legacyPaymentDecision } from '@/lib/checkout-cutover'
 import { attachReleaseAudit, auditShopifyRelease, type AuditProduct, type AuditVariant } from '@/lib/shopify-release-audit'
+import { inventoryReadiness } from '@/lib/shopify/inventory'
 import type { MappedVariant } from '@/lib/shopify/policy'
 
 export const dynamic = 'force-dynamic'
@@ -66,12 +67,18 @@ export async function GET() {
       giftCardsWithBalance: giftBalances.error ? null : giftBalances.count,
       scheduledGiftCards: scheduledGifts.error ? null : scheduledGifts.count,
     })
-    return NextResponse.json(attachReleaseAudit(summarizeReadiness(state.error ? null : state.data as IntegrationState | null, {
+    const inventory = await db.rpc('shopify_inventory_evidence').abortSignal(signal)
+    const inventoryCheck = inventoryReadiness(inventory.error || !Array.isArray(inventory.data) ? null : inventory.data, released.error ? null : released.count, now.getTime())
+    const readiness = attachReleaseAudit(summarizeReadiness(state.error ? null : state.data as IntegrationState | null, {
       mappings: mappings.error ? null : mappings.count,
       released: released.error ? null : released.count,
       pendingEvents: pending.error ? null : pending.count,
       failedEvents: failed.error ? null : failed.count,
-    }, environment, now, oldest.error ? null : oldest.data?.received_at ?? null), audit), { headers })
+    }, environment, now, oldest.error ? null : oldest.data?.received_at ?? null), audit)
+    readiness.checks.push(inventoryCheck)
+    if (inventoryCheck.status === 'missing') readiness.status = 'blocked'
+    else if (inventoryCheck.status === 'unknown' && readiness.status === 'technical_checks_passed') readiness.status = 'unknown'
+    return NextResponse.json(readiness, { headers })
   } catch {
     return NextResponse.json(attachReleaseAudit(summarizeReadiness(null, { mappings: null, released: null, pendingEvents: null, failedEvents: null }, environment), auditShopifyRelease(null)), { headers })
   }

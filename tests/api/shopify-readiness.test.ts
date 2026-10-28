@@ -31,7 +31,7 @@ describe('private Shopify readiness endpoint', () => {
     const from = vi.fn()
     const query = { select: () => query, eq: () => query, abortSignal: () => query, maybeSingle: () => Promise.resolve({ data: null, error: { code: '42P01' } }) }
     from.mockReturnValue(query)
-    mocks.database.mockReturnValue({ from })
+    mocks.database.mockReturnValue({ from, rpc: vi.fn(() => ({ abortSignal: async () => ({ data: [], error: null }) })) })
     const data = await (await GET()).json()
     expect(from).toHaveBeenCalledTimes(1)
     expect(data.releaseAudit.catalog.sellableVariants).toBeNull()
@@ -62,7 +62,7 @@ describe('private Shopify readiness endpoint', () => {
       }
       return query
     })
-    mocks.database.mockReturnValue({ from })
+    mocks.database.mockReturnValue({ from, rpc: vi.fn(() => ({ abortSignal: async () => ({ data: [], error: null }) })) })
     const data = await (await GET()).json()
     expect(from).toHaveBeenCalledTimes(13)
     expect(peak).toBeLessThanOrEqual(3)

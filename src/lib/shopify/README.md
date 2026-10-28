@@ -35,3 +35,5 @@ Run `npm test -- tests/lib/shopify-pilot.test.ts tests/lib/shopify-worker.test.t
 `tests/lib/shopify-migration-check.mjs` executes the migration and fencing/idempotency/privilege assertions against a local in-memory PGlite engine. It never connects to Supabase or Shopify. Instructions for the isolated optional dependency are in that file. A real Supabase staging migration/RLS check remains required before production.
 
 Queries target API `2026-10` and were checked with Shopify's official schema validator. Reference: https://shopify.dev/docs/api/admin-graphql/2026-10/queries/order and https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage.
+
+Inventory evidence now has a separate default-off, service-only location reconciliation runner. See [inventory evidence](../../../docs/shopify/inventory-evidence.md) for revision/lease fencing, unknown untracked supplier quantities and checkout/readiness freshness gates. It does not transfer stock or certify the inventory cutover.

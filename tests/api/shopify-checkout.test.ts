@@ -7,6 +7,7 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { g
 vi.mock('@/lib/shopify/client', () => ({ storefront: mock.storefront }))
 import { POST } from '@/app/api/shopify/checkout/route'
 import { GET as bootstrap } from '@/app/api/shopify/session/route'
+const inventory = () => ({ data: [{ mose_variant_id: 'local-123', mapping_revision: 'revision-a', mapping_current: true, status: 'known', available_quantity: 5, observed_at: new Date().toISOString() }] })
 const attemptId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
 const gid = 'gid://shopify/ProductVariant/123'
 const url = 'https://mosewear.myshopify.com/cart/c/secret'
@@ -21,7 +22,7 @@ beforeEach(() => {
     SHOPIFY_DEV_BUYER_IP: '127.0.0.1', VERCEL: '', NEXT_PUBLIC_SITE_URL: 'https://www.mosewear.com' })) vi.stubEnv(key,value)
   mock.state = { app_installed: true, checkout_enabled: true, catalog_verified: true, inventory_verified: true,
     benefits_verified: true, fulfillment_verified: true, market_verified: true, last_reconciled_at: new Date().toISOString(), last_worker_at: new Date().toISOString() }
-  mock.mappings = [{ mose_variant_id: 'local-123', shopify_variant_id: gid, fulfillment_owner: 'mose', supplier_model: null,
+  mock.mappings = [{ mose_variant_id: 'local-123', inventory_revision: 'revision-a', shopify_variant_id: gid, fulfillment_owner: 'mose', supplier_model: null,
     supplier_link_verified: false, sample_verified: false, enabled: true, price_eur_cents: 6995 }]
   mock.localError = false
   mock.localVariants = [{ id: 'local-123', product_id: 'product-1', is_available: true, price_adjustment: 0, presale_enabled: false, presale_stock_quantity: 0 }]
@@ -30,7 +31,7 @@ beforeEach(() => {
   mock.insertOwner.mockReset().mockResolvedValue({ error: null })
   mock.from.mockReset().mockImplementation((table: string) => ({ insert: mock.insertOwner, select: () => table === 'shopify_integration_state'
     ? { eq: () => ({ single: async () => ({ data: mock.state }) }) } : { in: async () => ({ data: table === 'product_variants' ? mock.localVariants : table === 'products' ? mock.localProducts : mock.mappings, error: mock.localError && table === 'products' ? { message: 'database unavailable' } : null }) } }))
-  mock.rpc.mockReset().mockImplementation(async (name: string, args: Record<string, unknown>) => name === 'shopify_queue_health' ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] } : name === 'reserve_shopify_checkout'
+  mock.rpc.mockReset().mockImplementation(async (name: string, args: Record<string, unknown>) => name === 'shopify_inventory_evidence' ? inventory() : name === 'shopify_queue_health' ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] } : name === 'reserve_shopify_checkout'
     ? { data: [{ status: 'creating', request_fingerprint: args.p_fingerprint, cart_id: null, checkout_url: null, lease_token: args.p_lease, expires_at: new Date(Date.now()+3600000).toISOString() }] } : { data: true })
   mock.storefront.mockReset().mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5, price: { amount: '69.95', currencyCode: 'EUR' } }] })
     .mockResolvedValueOnce({ cartCreate: { cart: { id: 'private-cart-id', checkoutUrl: url, totalQuantity: 1,
@@ -38,6 +39,17 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('unified checkout boundary', () => {
+  it('rejects unknown, stale or changed inventory before provider calls or reusing a checkout', async () => {
+    const base = mock.rpc.getMockImplementation()!
+    for (const patch of [{ status: 'unknown', available_quantity: null }, { mapping_current: false }, { mapping_revision: 'revision-b' }, { observed_at: '2020-01-01T00:00:00Z' }, { available_quantity: 0 }]) {
+      mock.rpc.mockImplementation(async (name, args) => name === 'shopify_inventory_evidence' ? { data: [{ ...inventory().data[0], ...patch }] } : base(name, args))
+      const response = await POST(request())
+      expect(response.status).toBe(409)
+      expect((await response.json()).code).toBe('INVENTORY_NOT_READY')
+    }
+    expect(mock.storefront).not.toHaveBeenCalled()
+    expect(mock.rpc.mock.calls.some(c => c[0] === 'reserve_shopify_checkout')).toBe(false)
+  })
   it('defaults closed before external access', async () => {
     vi.stubEnv('SHOPIFY_CHECKOUT_ENABLED', '')
     expect((await POST(request())).status).toBe(503)
@@ -53,19 +65,19 @@ describe('unified checkout boundary', () => {
     const response = await POST(request())
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ checkoutUrl: url, attemptId })
-    expect(mock.rpc.mock.calls.map(c => c[0])).toEqual(['shopify_queue_health','reserve_shopify_checkout','finish_shopify_checkout'])
-    expect(mock.rpc.mock.calls[1][1].p_snapshot.lines[0]).toMatchObject({ localVariantId: 'local-123', merchandiseId: gid })
+    expect(mock.rpc.mock.calls.map(c => c[0])).toEqual(['shopify_queue_health','shopify_inventory_evidence','reserve_shopify_checkout','finish_shopify_checkout'])
+    expect(mock.rpc.mock.calls[2][1].p_snapshot.lines[0]).toMatchObject({ localVariantId: 'local-123', merchandiseId: gid })
     expect(response.headers.get('set-cookie')).toBe(null)
   })
   it('reuses a session-bound ready attempt without creating a second cart', async () => {
-    mock.rpc.mockImplementation(async (name: string,args: Record<string,unknown>) => name === 'shopify_queue_health'
+    mock.rpc.mockImplementation(async (name: string,args: Record<string,unknown>) => name === 'shopify_inventory_evidence' ? inventory() : name === 'shopify_queue_health'
       ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] }
       : { data: [{ status: 'ready', request_fingerprint: args.p_fingerprint, checkout_url: url, expires_at: new Date(Date.now()+3600000).toISOString() }] })
     const response = await POST(request())
     expect(response.status).toBe(200); expect(mock.storefront).toHaveBeenCalledTimes(1)
   })
   it('does not return an unpersisted checkout after the database fails', async () => {
-    mock.rpc.mockImplementation(async (name: string,args: Record<string,unknown>) => name === 'shopify_queue_health' ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] } : name === 'reserve_shopify_checkout'
+    mock.rpc.mockImplementation(async (name: string,args: Record<string,unknown>) => name === 'shopify_inventory_evidence' ? inventory() : name === 'shopify_queue_health' ? { data: [{ pending_count: 0, oldest_pending_at: null, dead_letter_count: 0 }] } : name === 'reserve_shopify_checkout'
       ? { data: [{ status: 'creating', request_fingerprint: args.p_fingerprint, cart_id: null, checkout_url: null, lease_token: args.p_lease, expires_at: new Date(Date.now()+3600000).toISOString() }] }
       : { data: null, error: { message: 'storage failed' } })
     const response = await POST(request())

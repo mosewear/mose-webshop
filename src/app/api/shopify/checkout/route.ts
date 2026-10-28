@@ -10,6 +10,7 @@ import { readLimitedBody } from '@/lib/shopify/http'
 import { SHOPIFY_SESSION_COOKIE, validShopifySession } from '@/lib/shopify/session'
 import { assertCurrentLocalCatalog } from '@/lib/shopify/local-checkout'
 import { decideCheckoutAttempt } from '@/lib/shopify/attempts'
+import { assertInventoryEvidence } from '@/lib/shopify/inventory'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
@@ -80,6 +81,13 @@ export async function POST(request: NextRequest) {
     let lines: ReturnType<typeof authorizeLines>
     try { lines = authorizeLines(input, data ?? []) } catch {
       return respond({ error: 'Een artikel is nog niet beschikbaar voor deze bestelroute.', code: 'VARIANT_NOT_RELEASED' }, 409)
+    }
+    const inventory = await db.rpc('shopify_inventory_evidence', { p_ids: lines.map(line => line.localVariantId) })
+    try {
+      if (inventory.error || !Array.isArray(inventory.data)) throw new Error('INVENTORY_UNAVAILABLE')
+      assertInventoryEvidence(lines, inventory.data, Date.now(), new Map<string, string>((data ?? []).map(mapping => [mapping.mose_variant_id, mapping.inventory_revision])))
+    } catch {
+      return respond({ error: 'Voorraad wordt gecontroleerd. Je winkelmand blijft bewaard.', code: 'INVENTORY_NOT_READY' }, 409)
     }
     // Read current local publication and price from the variant's database parent, never a client product ID.
     const localVariants = await db.from('product_variants')
