@@ -2,6 +2,7 @@ import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
+import { isTapstitchProduct, TAPSTITCH_PRODUCT_SOURCES } from '@/lib/tapstitch-products'
 
 // Runtime config for streaming
 export const runtime = 'edge'
@@ -16,7 +17,7 @@ function normalizeLocale(locale?: string): 'nl' | 'en' {
 }
 
 // System prompt for MOSE AI assistant
-const MOSE_SYSTEM_PROMPT = `Je bent de AI-assistent van MOSE, een Nederlands streetwear merk dat premium basics maakt in Groningen.
+const MOSE_SYSTEM_PROMPT = `Je bent de AI-assistent van MOSE, een Nederlands streetwear merk uit Groningen.
 
 TONE OF VOICE:
 - Direct en eerlijk (no-nonsense, zonder poespas)
@@ -27,14 +28,16 @@ TONE OF VOICE:
 - Engels: casual but clear
 
 EXPERTISE:
-- Made in Groningen, Nederland
 - Het complete assortiment met actuele prijzen staat hieronder onder LIVE
   ASSORTIMENT. Noem nooit een product of een prijs die daar niet in staat, en
   verzin geen prijsrange.
-- No-nonsense stijl (zonder poespas) & regular fits
-- Premium materialen:
-  - Hoodies & sweaters: 300 GSM OEKO-Tex joggingfleece katoen, regular fit
-  - T-shirts: 240 GSM OEKO-Tex jersey, regular fit
+- No-nonsense stijl (zonder poespas)
+- Materiaal, gewicht, certificering, pasvorm en herkomst verschillen per product.
+  Gebruik uitsluitend de live productbeschrijving; vul ontbrekende feiten nooit aan.
+- Tapstitch-producten worden geleverd via onze productiepartner Tapstitch.
+  Pas hierop geen lokale productie-, voorraad-, afhaal- of leverbeloften toe.
+  Bezorgopties en verzendkosten worden voor deze producten bij het afrekenen getoond.
+  Algemene LIVE SETTINGS en SHIPPING CONTEXT gelden daarvoor niet als toezegging.
 
 OPMAAK:
 - Schrijf platte tekst. Geen markdown: geen sterretjes voor vet, geen koppen,
@@ -94,6 +97,7 @@ async function getProductDetails(productSlug: string, locale: 'nl' | 'en') {
     return { error: 'Product niet gevonden' }
   }
 
+  const supplierFulfilled = isTapstitchProduct(product)
   const name = (locale === 'en' && product.name_en) ? product.name_en : product.name
   const description = (locale === 'en' && product.description_en) ? product.description_en : product.description
 
@@ -136,24 +140,29 @@ async function getProductDetails(productSlug: string, locale: 'nl' | 'en') {
     name,
     description,
     category: categoryName,
+    supplier: supplierFulfilled ? TAPSTITCH_PRODUCT_SOURCES[product.id] : null,
+    fulfillment: supplierFulfilled ? 'Tapstitch; delivery options and shipping costs shown at checkout; local stock and pickup unverified' : 'MOSE',
     price: `EUR ${formatEur(effectivePrice)}`,
     base_price: basePrice,
     sale_price: salePrice,
     image_url: primaryImage,
     sizes,
     colors,
-    stock,
-    size_guide_type: category?.size_guide_type || null,
-    size_guide:
-      locale === 'en'
+    stock: supplierFulfilled ? null : stock,
+    size_guide_type: supplierFulfilled ? null : category?.size_guide_type || null,
+    size_guide: supplierFulfilled
+      ? (locale === 'en' ? product.size_guide_content_en || product.size_guide_content || null : product.size_guide_content || null)
+      : locale === 'en'
         ? (product.size_guide_content_en || category?.size_guide_content_en || product.size_guide_content || category?.size_guide_content || null)
         : (product.size_guide_content || category?.size_guide_content || null),
-    materials_care:
-      locale === 'en'
+    materials_care: supplierFulfilled
+      ? null
+      : locale === 'en'
         ? (category?.default_materials_care_en || category?.default_materials_care || null)
         : (category?.default_materials_care || null),
-    product_details:
-      locale === 'en'
+    product_details: supplierFulfilled
+      ? description
+      : locale === 'en'
         ? (category?.default_product_details_en || category?.default_product_details || null)
         : (category?.default_product_details || null),
   }
@@ -173,7 +182,7 @@ async function getCatalogSummary(locale: 'nl' | 'en') {
     const supabase = createServiceRoleClient()
     const { data } = await supabase
       .from('products')
-      .select('name, name_en, slug, base_price, sale_price')
+      .select('id, name, name_en, slug, base_price, sale_price')
       .eq('is_active', true)
       .eq('status', 'active')
       .order('base_price', { ascending: true })
@@ -185,7 +194,7 @@ async function getCatalogSummary(locale: 'nl' | 'en') {
       const basis = Number(p.base_price || 0)
       const aanbieding = p.sale_price === null || p.sale_price === undefined ? null : Number(p.sale_price)
       const prijs = aanbieding !== null && aanbieding > 0 ? aanbieding : basis
-      return `${naam} (/product/${p.slug}): EUR ${formatEur(prijs)}${aanbieding !== null && aanbieding > 0 ? ` (was EUR ${formatEur(basis)})` : ''}`
+      return `${naam} (/product/${p.slug}): EUR ${formatEur(prijs)}${aanbieding !== null && aanbieding > 0 ? ` (was EUR ${formatEur(basis)})` : ''}${isTapstitchProduct(p) ? ' [Tapstitch: product-specific facts only; delivery and shipping costs at checkout]' : ''}`
     })
   } catch {
     return null
