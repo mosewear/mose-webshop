@@ -6,7 +6,7 @@ import { Instagram, Facebook } from 'lucide-react'
 import { SiTiktok } from 'react-icons/si'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
-import { formatKvk } from '@/lib/company'
+import { formatKvk, formatVat } from '@/lib/company'
 import { Link as LocaleLink } from '@/i18n/routing'
 import TrustpilotWidget from '@/components/TrustpilotWidget'
 
@@ -71,6 +71,7 @@ export function Footer() {
               {/* Wettelijk verplichte vermelding voor een Nederlandse webshop.
                   Stond nergens op de site. */}
               <p>{formatKvk()}</p>
+              <p>{formatVat()}</p>
             </div>
             {/* Trustpilot Widget */}
             <div className="mb-4">
