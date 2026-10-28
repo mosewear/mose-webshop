@@ -43,8 +43,9 @@ export async function readCheckoutBenefitQuote(db:SupabaseClient,input:{lines:Se
   ...(p?{promo:{id:p.id,active:p.is_active,expiresAt:p.expires_at,type:p.discount_type,value:Number(p.discount_value),minOrderCents:Math.round(Number(p.min_order_value??0)*100),includeSale:p.applies_to_sale_items,usageLimit:p.usage_limit,usageCount:p.usage_count}}:{})})
  let orderWidePromo=!!p
  if(p&&!p.applies_to_sale_items){
-  const products=await db.from('products').select('id,base_price,sale_price,is_gift_card').eq('is_active',true)
+  const products=await db.from('products').select('id,base_price,sale_price,is_gift_card',{count:'exact'}).eq('is_active',true)
   if(products.error||!Array.isArray(products.data)) throw new Error('BENEFIT_SALE_CATALOG_UNAVAILABLE')
+  if(products.count==null||products.data.length!==products.count) throw new Error('BENEFIT_SALE_CATALOG_TRUNCATED')
   orderWidePromo=!products.data.some(product=>!product.is_gift_card&&product.sale_price!=null&&Number(product.sale_price)>0&&Number(product.sale_price)<Number(product.base_price))
  }
  // Native order percentage combinations preserve source arithmetic only when
