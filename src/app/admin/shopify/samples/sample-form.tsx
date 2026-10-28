@@ -12,12 +12,12 @@ export default function SampleForm(){
    const variants=models.map(m=>selected[m.model]);const stored=sessionStorage.getItem(key)
    let attempt:{id:string;variants:string[]}
    if(stored){attempt=JSON.parse(stored);if(JSON.stringify([...attempt.variants].sort())!==JSON.stringify([...variants].sort()))throw new Error('Je eerdere poging gebruikt andere maten. Rond die poging eerst af of laat hem controleren.')}else{attempt={id:crypto.randomUUID(),variants};sessionStorage.setItem(key,JSON.stringify(attempt))}
-   const session=await fetch('/api/shopify/session',{cache:'no-store',credentials:'same-origin'});if(!session.ok)throw new Error('De veilige afrekensessie kon niet worden gestart.')
-   const response=await fetch('/api/admin/shopify/samples',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({attemptId:attempt.id,variants:attempt.variants,acknowledgedCosts:true})})
+   const session=await fetch('/api/shopify/session',{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(15000)});if(!session.ok)throw new Error('De veilige afrekensessie kon niet worden gestart.')
+   const response=await fetch('/api/admin/shopify/samples',{method:'POST',signal:AbortSignal.timeout(45000),headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({attemptId:attempt.id,variants:attempt.variants,acknowledgedCosts:true})})
    const data=await response.json();if(!response.ok){setRetrySafe(data.retrySafe===true);throw new Error(data.error||'Afrekenen is nog niet beschikbaar.')}
    if(typeof data.checkoutUrl!=='string')throw new Error('Geen bevestigde afrekenlink ontvangen. Gebruik dezelfde poging.')
    window.location.assign(data.checkoutUrl)
-  }catch(e){setError(e instanceof Error?e.message:'Afrekenen is nog niet beschikbaar.')}finally{setBusy(false)}
+  }catch(e){setError(e instanceof Error && ['TimeoutError','AbortError'].includes(e.name)?'Geen bevestiging ontvangen. Je poging blijft bewaard; probeer dezelfde poging opnieuw.':e instanceof Error?e.message:'Afrekenen is nog niet beschikbaar.')}finally{setBusy(false)}
  }
  return <main className="max-w-4xl mx-auto space-y-6">
   <header><h1 className="font-display text-3xl uppercase">Private samplebestelling</h1><p className="mt-2">Eén exemplaar van elk van de acht Tapstitch-modellen. Alleen voor de beheerder; de publieke collectie wordt hiermee niet vrijgegeven.</p></header>
