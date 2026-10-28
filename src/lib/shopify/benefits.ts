@@ -72,6 +72,7 @@ export const BENEFITS_CART_QUERY = `query MoseBenefitsCart($id: ID!) {
     deliveryGroups(first: 100) { pageInfo { hasNextPage } nodes { discountAllocations { __typename } } }
     lines(first: 100) { pageInfo { hasNextPage } nodes {
       quantity merchandise { ... on ProductVariant { id } }
+      cost { amountPerQuantity { amount currencyCode } subtotalAmount { amount currencyCode } }
       discountAllocations(lineLevelOnly: false) { __typename ... on CartCodeDiscountAllocation { code discountedAmount { amount currencyCode } } }
     } }
   }
@@ -80,15 +81,18 @@ const money = z.object({ amount: z.string(), currencyCode: z.literal('EUR') })
 const allocation = z.object({ __typename: z.literal('CartCodeDiscountAllocation'), code: z.string(), discountedAmount: money })
 /** Every allocation is checked: an unexpected automatic/stacked code is not a
  * reason to silently change the promised amount. No capability in thrown errors. */
-export function assertCartBenefits(raw: unknown, expected: { code: string; discountCents: number; eligibleVariants: string[] }[]) {
+export function assertCartBenefits(raw: unknown, expected: { code: string; discountCents: number; eligibleVariants: string[] }[], proof?: {
+  lines: { variantId: string; quantity: number; unitCents: number }[]; payableMerchandiseCents: number;
+}) {
   const cart = z.object({
     discountCodes: z.array(z.object({ code: z.string(), applicable: z.boolean() })),
     deliveryGroups: z.object({ pageInfo: z.object({ hasNextPage: z.literal(false) }), nodes: z.array(z.object({ discountAllocations: z.array(z.unknown()).max(0) })) }),
     lines: z.object({ pageInfo: z.object({ hasNextPage: z.literal(false) }), nodes: z.array(z.object({
       quantity: z.number().int().positive(), merchandise: z.object({ id: variant }), discountAllocations: z.array(allocation),
+      cost: z.object({ amountPerQuantity: money, subtotalAmount: money }).optional(),
     })) }),
   }).parse(raw)
-  if (new Set(expected.map(e => e.code)).size !== expected.length || cart.discountCodes.length !== expected.length ||
+  if (new Set(expected.map(e => e.code)).size !== expected.length || cart.discountCodes.length !== expected.length || new Set(cart.discountCodes.map(c => c.code)).size !== cart.discountCodes.length ||
     cart.discountCodes.some(c => !c.applicable || !expected.some(e => e.code === c.code))) throw new Error('BENEFITS_CODE_MISMATCH')
   const totals = new Map(expected.map(e => [e.code, 0]))
   const add = (a: z.infer<typeof allocation>, variantId?: string) => {
@@ -100,4 +104,22 @@ export function assertCartBenefits(raw: unknown, expected: { code: string; disco
   }
   cart.lines.nodes.forEach(l => l.discountAllocations.forEach(a => add(a, l.merchandise.id)))
   if (expected.some(e => !Number.isSafeInteger(e.discountCents) || e.discountCents <= 0 || totals.get(e.code) !== e.discountCents)) throw new Error('BENEFITS_AMOUNT_MISMATCH')
+  if (proof) {
+    const source = z.array(z.object({ variantId: variant, quantity: z.number().int().positive(), unitCents: cents })).min(1).max(100).parse(proof.lines)
+    const actual = cart.lines.nodes
+    if (new Set(source.map(l => l.variantId)).size !== source.length || new Set(actual.map(l => l.merchandise.id)).size !== actual.length || source.length !== actual.length)
+      throw new Error('BENEFITS_LINE_PROOF_MISMATCH')
+    let originalSubtotal = 0
+    for (const line of actual) {
+      const trusted = source.find(l => l.variantId === line.merchandise.id)
+      if (!trusted || trusted.quantity !== line.quantity || !line.cost ||
+        moneyToCents(line.cost.amountPerQuantity.amount) !== trusted.unitCents ||
+        moneyToCents(line.cost.subtotalAmount.amount) !== trusted.unitCents * trusted.quantity)
+        throw new Error('BENEFITS_LINE_PROOF_MISMATCH')
+      originalSubtotal += moneyToCents(line.cost.subtotalAmount.amount)
+    }
+    const allocated = [...totals.values()].reduce((sum, value) => sum + value, 0)
+    if (!Number.isSafeInteger(originalSubtotal) || !Number.isSafeInteger(proof.payableMerchandiseCents) ||
+      originalSubtotal - allocated !== proof.payableMerchandiseCents) throw new Error('BENEFITS_PAYABLE_PROOF_MISMATCH')
+  }
 }

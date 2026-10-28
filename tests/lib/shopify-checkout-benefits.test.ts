@@ -11,7 +11,7 @@ vi.mock('@/lib/shopify/promo-issuer',()=>({reserveAndIssuePromo:vi.fn()}))
 vi.mock('@/lib/shopify/benefit-issuer',()=>({CREATE_LOYALTY_DISCOUNT:'mutation',reserveAndIssueLoyaltyDiscount:vi.fn()}))
 const id='00000000-0000-4000-8000-000000000001',v='gid://shopify/ProductVariant/1'
 const lines=[{productId:id,variantId:v,quantity:2,unitCents:5900,onSale:false,giftCard:false}]
-const basic={attemptId:id,checkoutLease:id,secret:'a'.repeat(32),lines,user:null,points:0,promo:undefined,orderWidePromo:true}
+const basic={attemptId:id,checkoutLease:id,secret:'a'.repeat(32),lines,user:null,points:0,promo:undefined,orderWidePromo:true,expectedSubtotalBeforeOrderCents:11800}
 beforeEach(()=>{vi.clearAllMocks();delete process.env.SHOPIFY_BENEFIT_WRITES_ENABLED})
 it('no-benefit guest makes zero provider/identity mutations',async()=>{
  const quote=quoteCheckoutBenefits({lines,tiers:[]})

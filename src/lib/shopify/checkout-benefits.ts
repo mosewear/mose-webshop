@@ -53,7 +53,8 @@ export async function readCheckoutBenefitQuote(db:SupabaseClient,input:{lines:Se
  if(quote.promo&&quote.tierCents>0&&(!orderWidePromo||quote.promo.eligibleVariants.length!==input.lines.length)) throw new Error('MIXED_SALE_TIER_PARITY_REQUIRED')
  const componentCount=quote.staffel.length+Number(quote.tierCents>0)+Number(!!quote.promo)+Number(quote.redemptionCents>0)
  if(componentCount>5) throw new Error('BENEFIT_CODE_LIMIT')
- return {quote,promo,orderWidePromo,lines:input.lines,user:input.user??null,points:input.points??0}
+ const expectedSubtotalBeforeOrderCents=quote.subtotalCents-quote.staffelCents-(orderWidePromo?0:(quote.promo?.discountCents??0))
+ return {quote,promo,orderWidePromo,expectedSubtotalBeforeOrderCents,lines:input.lines,user:input.user??null,points:input.points??0}
 }
 
 async function issueAutomatic(db:SupabaseClient,input:{attemptId:string;checkoutLease:string;secret:string;component:string;basic:Record<string,unknown>;discountCents:number;eligibleVariants:string[]}){

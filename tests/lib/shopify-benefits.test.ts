@@ -96,3 +96,25 @@ describe('durable loyalty issuance orchestration', () => {
     expect(rpc.mock.calls.some(c => c[0] === 'release_failed_shopify_loyalty')).toBe(false)
   })
 })
+
+describe('provider original line subtotal proof', () => {
+  const proof = { lines: [{variantId:v1,quantity:2,unitCents:5900}], payableMerchandiseCents:11300 }
+  const priced = () => ({...cart(),lines:{...cart().lines,nodes:[{...cart().lines.nodes[0],cost:{amountPerQuantity:{amount:'59.00',currencyCode:'EUR'},subtotalAmount:{amount:'118.00',currencyCode:'EUR'}}}]}})
+  it('proves original line prices minus all allocations rather than using CartCost before order discounts', () => {
+    expect(() => assertCartBenefits(priced(),expected,proof)).not.toThrow()
+    expect(() => assertCartBenefits(priced(),expected,{...proof,payableMerchandiseCents:11800})).toThrow('BENEFITS_PAYABLE_PROOF_MISMATCH')
+  })
+  it('rejects altered unit price/quantity, missing price and non-EUR cost', () => {
+    expect(() => assertCartBenefits(cart(),expected,proof)).toThrow('BENEFITS_LINE_PROOF_MISMATCH')
+    expect(() => assertCartBenefits(priced(),expected,{...proof,lines:[{...proof.lines[0],unitCents:5800}]})).toThrow('BENEFITS_LINE_PROOF_MISMATCH')
+    expect(() => assertCartBenefits(priced(),expected,{...proof,lines:[{...proof.lines[0],quantity:1}]})).toThrow('BENEFITS_LINE_PROOF_MISMATCH')
+    const altered=priced();altered.lines.nodes[0].cost.amountPerQuantity.currencyCode='USD'
+    expect(() => assertCartBenefits(altered,expected,proof)).toThrow()
+  })
+  it('requires matching zero-benefit line prices and refuses unexpected automatic order savings', () => {
+    const clean=priced();clean.discountCodes=[];clean.lines.nodes[0].discountAllocations=[]
+    expect(() => assertCartBenefits(clean,[],{...proof,payableMerchandiseCents:11800})).not.toThrow()
+    const automatic=priced();automatic.lines.nodes[0].discountAllocations[0].__typename='CartAutomaticDiscountAllocation'
+    expect(() => assertCartBenefits(automatic,[],{...proof,payableMerchandiseCents:11800})).toThrow()
+  })
+})
