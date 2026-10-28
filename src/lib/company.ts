@@ -12,16 +12,20 @@
  * een wettelijk verplichte vermelding doen verdwijnen. Verhuis ze pas naar
  * de admin als daar een reden voor ontstaat.
  *
- * Er is bewust GEEN btw-identificatienummer opgenomen; de eigenaar heeft
- * aangegeven dat niet te willen tonen. Vermelding daarvan is voor een
- * webshop niet verplicht, in tegenstelling tot het KvK-nummer.
+ * Btw-identificatienummer bevestigd door de eigenaar op 28 oktober 2026.
  */
 export const COMPANY = {
   legalName: 'MOSE',
   kvkNumber: '98043609',
+  vatNumber: 'NL868336270B01',
 } as const
 
 /** "KvK 98043609" — het label is in beide talen gangbaar. */
 export function formatKvk(): string {
   return `KvK ${COMPANY.kvkNumber}`
+}
+
+/** Btw-identificatie bij de openbare bedrijfsgegevens. */
+export function formatVat(): string {
+  return `BTW / VAT ${COMPANY.vatNumber}`
 }

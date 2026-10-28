@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@/i18n/routing'
 import { getSiteSettings } from '@/lib/settings'
-import { COMPANY, formatKvk } from '@/lib/company'
+import { COMPANY, formatKvk, formatVat } from '@/lib/company'
 import { useTranslations } from 'next-intl'
 import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 import PaginaKop from '@/components/layout/PaginaKop'
@@ -169,7 +169,7 @@ export default function TermsPage() {
             {/* Wettelijk verplichte bedrijfsgegevens. Stonden nergens op de
                 site, ook niet in deze voorwaarden. */}
             <p className="text-gray-700 leading-relaxed mt-4">
-              {COMPANY.legalName}, {settings.contact_address} &middot; {formatKvk()}
+              {COMPANY.legalName}, {settings.contact_address} &middot; {formatKvk()} &middot; {formatVat()}
             </p>
           </div>
         </div>
