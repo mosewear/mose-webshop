@@ -1,0 +1,515 @@
+[
+  {
+    "model": "RW0041-P001-V3",
+    "name": "Boxy Fleece Hoodie",
+    "localProductId": "2307a99e-781a-8f4a-9da0-2374d3cb464f",
+    "productId": "gid://shopify/Product/11420032762183",
+    "priceCents": 7900,
+    "variants": [
+      {
+        "localId": "34de29bb-a360-85ed-9456-e69f98d42b20",
+        "id": "gid://shopify/ProductVariant/55604610793799",
+        "sku": "261028PODRB9141#006",
+        "color": "Dark Green",
+        "size": "S"
+      },
+      {
+        "localId": "ed7e96f9-5c13-87fe-8fe9-79b8046a9b0e",
+        "id": "gid://shopify/ProductVariant/55604610826567",
+        "sku": "261028PODRB9141#007",
+        "color": "Dark Green",
+        "size": "M"
+      },
+      {
+        "localId": "c3cdb126-d8e0-8b5d-9ea8-d3f5e6bc6820",
+        "id": "gid://shopify/ProductVariant/55604610859335",
+        "sku": "261028PODRB9141#008",
+        "color": "Dark Green",
+        "size": "L"
+      },
+      {
+        "localId": "be74cd35-356e-8233-92da-79c7da3fc41a",
+        "id": "gid://shopify/ProductVariant/55604610892103",
+        "sku": "261028PODRB9141#009",
+        "color": "Dark Green",
+        "size": "XL"
+      },
+      {
+        "localId": "e6047946-6386-81ea-9c99-a3efe4b567bd",
+        "id": "gid://shopify/ProductVariant/55604610924871",
+        "sku": "261028PODRB9141#010",
+        "color": "Dark Green",
+        "size": "2XL"
+      },
+      {
+        "localId": "494399b7-8490-84c5-9759-e7be5e94eb20",
+        "id": "gid://shopify/ProductVariant/55604610957639",
+        "sku": "261028PODRB9141#001",
+        "color": "Black",
+        "size": "S"
+      },
+      {
+        "localId": "fd00847f-74d2-8248-98fc-c19afa6f1dae",
+        "id": "gid://shopify/ProductVariant/55604610990407",
+        "sku": "261028PODRB9141#002",
+        "color": "Black",
+        "size": "M"
+      },
+      {
+        "localId": "9a22683e-666e-845b-b1e6-2d152ae72ac9",
+        "id": "gid://shopify/ProductVariant/55604611023175",
+        "sku": "261028PODRB9141#003",
+        "color": "Black",
+        "size": "L"
+      },
+      {
+        "localId": "db2d44ef-4957-8285-b99e-9e765465a8e8",
+        "id": "gid://shopify/ProductVariant/55604611055943",
+        "sku": "261028PODRB9141#004",
+        "color": "Black",
+        "size": "XL"
+      },
+      {
+        "localId": "993d0c72-6127-8215-9741-0332ac404e23",
+        "id": "gid://shopify/ProductVariant/55604611088711",
+        "sku": "261028PODRB9141#005",
+        "color": "Black",
+        "size": "2XL"
+      },
+      {
+        "localId": "750a46bc-53ba-84a8-9816-b3116f2fa753",
+        "id": "gid://shopify/ProductVariant/55604611121479",
+        "sku": "261028PODRB9141#011",
+        "color": "Coffee",
+        "size": "S"
+      },
+      {
+        "localId": "85fac23f-df16-8512-bf3f-812423e2e612",
+        "id": "gid://shopify/ProductVariant/55604611154247",
+        "sku": "261028PODRB9141#012",
+        "color": "Coffee",
+        "size": "M"
+      },
+      {
+        "localId": "eff254bb-e8a6-8e0f-af95-ac4e32dd9486",
+        "id": "gid://shopify/ProductVariant/55604611187015",
+        "sku": "261028PODRB9141#013",
+        "color": "Coffee",
+        "size": "L"
+      },
+      {
+        "localId": "ce07425f-4e17-8bad-9720-a1c1338b3bc0",
+        "id": "gid://shopify/ProductVariant/55604611219783",
+        "sku": "261028PODRB9141#014",
+        "color": "Coffee",
+        "size": "XL"
+      },
+      {
+        "localId": "340197fb-21b1-82dc-8c52-49ae9267bb8a",
+        "id": "gid://shopify/ProductVariant/55604611252551",
+        "sku": "261028PODRB9141#015",
+        "color": "Coffee",
+        "size": "2XL"
+      }
+    ]
+  },
+  {
+    "model": "RT0028-C001-V2",
+    "name": "Raglan Longsleeve",
+    "localProductId": "39ff9979-e4ff-84b4-8831-cf0b0cc713af",
+    "productId": "gid://shopify/Product/11420054815047",
+    "priceCents": 5900,
+    "variants": [
+      {
+        "localId": "36c1ec9e-7370-8d4c-bfb6-e6714583b116",
+        "id": "gid://shopify/ProductVariant/55604661846343",
+        "sku": "261028PODPR9146#001",
+        "color": "White with Black",
+        "size": "S"
+      },
+      {
+        "localId": "6cf7b679-d07c-80f1-a62a-9d6c8db14ee3",
+        "id": "gid://shopify/ProductVariant/55604661879111",
+        "sku": "261028PODPR9146#002",
+        "color": "White with Black",
+        "size": "M"
+      },
+      {
+        "localId": "e0d5b4aa-fad7-8e7c-a7f0-0e74006d5f1d",
+        "id": "gid://shopify/ProductVariant/55604661911879",
+        "sku": "261028PODPR9146#003",
+        "color": "White with Black",
+        "size": "L"
+      },
+      {
+        "localId": "93929404-35c3-8d06-98ef-94e7e268965e",
+        "id": "gid://shopify/ProductVariant/55604661944647",
+        "sku": "261028PODPR9146#004",
+        "color": "White with Black",
+        "size": "XL"
+      },
+      {
+        "localId": "17eeaef4-75b5-8eca-b18a-79668562573a",
+        "id": "gid://shopify/ProductVariant/55604661977415",
+        "sku": "261028PODPR9146#005",
+        "color": "White with Coffee",
+        "size": "S"
+      },
+      {
+        "localId": "6fbf5e7f-c2c7-8f44-af77-68e268463559",
+        "id": "gid://shopify/ProductVariant/55604662010183",
+        "sku": "261028PODPR9146#006",
+        "color": "White with Coffee",
+        "size": "M"
+      },
+      {
+        "localId": "ede1e4a6-9c91-88e2-835a-6f1cc885edec",
+        "id": "gid://shopify/ProductVariant/55604662042951",
+        "sku": "261028PODPR9146#007",
+        "color": "White with Coffee",
+        "size": "L"
+      },
+      {
+        "localId": "1b55c335-3eda-8f37-95e9-c74f22339457",
+        "id": "gid://shopify/ProductVariant/55604662075719",
+        "sku": "261028PODPR9146#008",
+        "color": "White with Coffee",
+        "size": "XL"
+      }
+    ]
+  },
+  {
+    "model": "MB0001-C001-V2",
+    "name": "Barrel Pants",
+    "localProductId": "b925b2e2-a147-8cf1-9fcb-47e2ca45ec2f",
+    "productId": "gid://shopify/Product/11420075196743",
+    "priceCents": 7900,
+    "variants": [
+      {
+        "localId": "8c9dd196-0ce2-8975-b633-41fc798684d5",
+        "id": "gid://shopify/ProductVariant/55604715454791",
+        "sku": "261028PODGF9150#006",
+        "color": "Gray Green",
+        "size": "S"
+      },
+      {
+        "localId": "029d0965-103d-859a-9adf-f6a096c1c840",
+        "id": "gid://shopify/ProductVariant/55604715487559",
+        "sku": "261028PODGF9150#007",
+        "color": "Gray Green",
+        "size": "M"
+      },
+      {
+        "localId": "37ba882c-cd95-8eb4-8ba9-b75de02107f3",
+        "id": "gid://shopify/ProductVariant/55604715520327",
+        "sku": "261028PODGF9150#008",
+        "color": "Gray Green",
+        "size": "L"
+      },
+      {
+        "localId": "87c97703-53ec-8e02-b96e-2f2cf94592e8",
+        "id": "gid://shopify/ProductVariant/55604715553095",
+        "sku": "261028PODGF9150#009",
+        "color": "Gray Green",
+        "size": "XL"
+      },
+      {
+        "localId": "a8e8e3c3-0e41-8c2d-9722-db59c18b61ae",
+        "id": "gid://shopify/ProductVariant/55604715585863",
+        "sku": "261028PODGF9150#010",
+        "color": "Gray Green",
+        "size": "2XL"
+      },
+      {
+        "localId": "5b64209b-5c05-8f01-825d-ec10dae0b5cb",
+        "id": "gid://shopify/ProductVariant/55604715618631",
+        "sku": "261028PODGF9150#001",
+        "color": "Black",
+        "size": "S"
+      },
+      {
+        "localId": "f46ed438-6643-8fca-95c3-3d694948c325",
+        "id": "gid://shopify/ProductVariant/55604715651399",
+        "sku": "261028PODGF9150#002",
+        "color": "Black",
+        "size": "M"
+      },
+      {
+        "localId": "f0249313-fc08-862f-98c6-acd38fdb050f",
+        "id": "gid://shopify/ProductVariant/55604715684167",
+        "sku": "261028PODGF9150#003",
+        "color": "Black",
+        "size": "L"
+      },
+      {
+        "localId": "44c7c44d-18db-86e7-8fe4-88ec0661baed",
+        "id": "gid://shopify/ProductVariant/55604715716935",
+        "sku": "261028PODGF9150#004",
+        "color": "Black",
+        "size": "XL"
+      },
+      {
+        "localId": "45d18a4d-5f4c-8977-93b9-52a5917eeb34",
+        "id": "gid://shopify/ProductVariant/55604715749703",
+        "sku": "261028PODGF9150#005",
+        "color": "Black",
+        "size": "2XL"
+      },
+      {
+        "localId": "22dc8cd5-61e3-8665-969b-ce54bad2a568",
+        "id": "gid://shopify/ProductVariant/55604715782471",
+        "sku": "261028PODGF9150#011",
+        "color": "Coffee",
+        "size": "S"
+      },
+      {
+        "localId": "853a65ae-ab72-83d4-a096-1e596c3ec83c",
+        "id": "gid://shopify/ProductVariant/55604715815239",
+        "sku": "261028PODGF9150#012",
+        "color": "Coffee",
+        "size": "M"
+      },
+      {
+        "localId": "0d843208-47fd-8db9-835a-78baa832cd10",
+        "id": "gid://shopify/ProductVariant/55604715848007",
+        "sku": "261028PODGF9150#013",
+        "color": "Coffee",
+        "size": "L"
+      },
+      {
+        "localId": "208a05b2-8e9f-89c8-a694-c8c5c01d132a",
+        "id": "gid://shopify/ProductVariant/55604715880775",
+        "sku": "261028PODGF9150#014",
+        "color": "Coffee",
+        "size": "XL"
+      },
+      {
+        "localId": "e0f46a9e-ab09-80d6-8cc0-280a3b088a8d",
+        "id": "gid://shopify/ProductVariant/55604715913543",
+        "sku": "261028PODGF9150#015",
+        "color": "Coffee",
+        "size": "2XL"
+      }
+    ]
+  },
+  {
+    "model": "MB0057-C001-V2",
+    "name": "Tree Camo Barrel Pants",
+    "localProductId": "51c487a8-ca2d-8e2d-82d4-68ab8501b8c9",
+    "productId": "gid://shopify/Product/11420330099015",
+    "priceCents": 8900,
+    "variants": [
+      {
+        "localId": "19c262d7-bb11-8e57-b9e0-167ac66d384a",
+        "id": "gid://shopify/ProductVariant/55605406204231",
+        "sku": "261028PODFN9244#001",
+        "color": "Brown Tree Camo",
+        "size": "S"
+      },
+      {
+        "localId": "727b5712-ca88-8382-aaee-98316da2c5b9",
+        "id": "gid://shopify/ProductVariant/55605406236999",
+        "sku": "261028PODFN9244#002",
+        "color": "Brown Tree Camo",
+        "size": "M"
+      },
+      {
+        "localId": "ab4c2538-0335-86dc-ad5c-5156ef33d78f",
+        "id": "gid://shopify/ProductVariant/55605406269767",
+        "sku": "261028PODFN9244#003",
+        "color": "Brown Tree Camo",
+        "size": "L"
+      },
+      {
+        "localId": "0ea5c283-45e4-8460-910a-1768f7aa242d",
+        "id": "gid://shopify/ProductVariant/55605406302535",
+        "sku": "261028PODFN9244#004",
+        "color": "Brown Tree Camo",
+        "size": "XL"
+      },
+      {
+        "localId": "e72321a6-9451-8f9d-9c71-dd9e6f23d4ff",
+        "id": "gid://shopify/ProductVariant/55605406335303",
+        "sku": "261028PODFN9244#005",
+        "color": "Brown Tree Camo",
+        "size": "2XL"
+      }
+    ]
+  },
+  {
+    "model": "UB0083-C001-V2",
+    "name": "Vintage Barrel Jeans",
+    "localProductId": "cb17519f-6662-86fc-894e-92b4e0ccbbb0",
+    "productId": "gid://shopify/Product/11420332654919",
+    "priceCents": 8500,
+    "variants": [
+      {
+        "localId": "34436c2c-359d-83f2-b0eb-6a79e94fe663",
+        "id": "gid://shopify/ProductVariant/55605413085511",
+        "sku": "261028PODSX9251#001",
+        "color": "Jeans Blue",
+        "size": "S"
+      },
+      {
+        "localId": "6dc40b7f-daaf-89a2-96ec-0a2976cbfe1d",
+        "id": "gid://shopify/ProductVariant/55605413118279",
+        "sku": "261028PODSX9251#002",
+        "color": "Jeans Blue",
+        "size": "M"
+      },
+      {
+        "localId": "e4249c7d-0cf1-81d1-84d2-676787726a7c",
+        "id": "gid://shopify/ProductVariant/55605413151047",
+        "sku": "261028PODSX9251#003",
+        "color": "Jeans Blue",
+        "size": "L"
+      },
+      {
+        "localId": "ba533378-027a-8954-96df-0037fef3b788",
+        "id": "gid://shopify/ProductVariant/55605413183815",
+        "sku": "261028PODSX9251#004",
+        "color": "Jeans Blue",
+        "size": "XL"
+      },
+      {
+        "localId": "8f363538-6e41-80e1-aa5e-31ce4df99525",
+        "id": "gid://shopify/ProductVariant/55605413216583",
+        "sku": "261028PODSX9251#005",
+        "color": "Jeans Blue",
+        "size": "2XL"
+      }
+    ]
+  },
+  {
+    "model": "MB0030-C001-V2",
+    "name": "Washed Barrel Jeans",
+    "localProductId": "1569c48c-5120-8d19-add8-04e24546eee4",
+    "productId": "gid://shopify/Product/11420333867335",
+    "priceCents": 8900,
+    "variants": [
+      {
+        "localId": "e4c6e2c9-5d64-8793-868f-68d540d4eca4",
+        "id": "gid://shopify/ProductVariant/55605415543111",
+        "sku": "261028PODFN9253#001",
+        "color": "Jeans Blue",
+        "size": "S"
+      },
+      {
+        "localId": "38b395de-4fc0-8011-9806-a3c0693284bc",
+        "id": "gid://shopify/ProductVariant/55605415575879",
+        "sku": "261028PODFN9253#002",
+        "color": "Jeans Blue",
+        "size": "M"
+      },
+      {
+        "localId": "d1ce66bf-e441-82e8-87a3-2f816eaf024a",
+        "id": "gid://shopify/ProductVariant/55605415608647",
+        "sku": "261028PODFN9253#003",
+        "color": "Jeans Blue",
+        "size": "L"
+      },
+      {
+        "localId": "56f280b0-6308-8878-b310-1728873adff1",
+        "id": "gid://shopify/ProductVariant/55605415641415",
+        "sku": "261028PODFN9253#004",
+        "color": "Jeans Blue",
+        "size": "XL"
+      },
+      {
+        "localId": "020372b3-df63-87ec-a442-03fb425f5513",
+        "id": "gid://shopify/ProductVariant/55605415674183",
+        "sku": "261028PODFN9253#005",
+        "color": "Jeans Blue",
+        "size": "2XL"
+      }
+    ]
+  },
+  {
+    "model": "MB0010-C001-V2",
+    "name": "Sunfade Barrel Jeans",
+    "localProductId": "6fd7d8dc-ffe1-8efe-8639-f04d1f50dffa",
+    "productId": "gid://shopify/Product/11420336161095",
+    "priceCents": 8900,
+    "variants": [
+      {
+        "localId": "b0173003-437d-8c1c-93c7-741fc5819e78",
+        "id": "gid://shopify/ProductVariant/55605419147591",
+        "sku": "261028PODFN9262#001",
+        "color": "Light Blue",
+        "size": "S"
+      },
+      {
+        "localId": "40226d5a-a030-882d-8308-7bed07c98a6a",
+        "id": "gid://shopify/ProductVariant/55605419180359",
+        "sku": "261028PODFN9262#002",
+        "color": "Light Blue",
+        "size": "M"
+      },
+      {
+        "localId": "4b8a2403-0d8a-8d78-beed-48e1d6db9675",
+        "id": "gid://shopify/ProductVariant/55605419213127",
+        "sku": "261028PODFN9262#003",
+        "color": "Light Blue",
+        "size": "L"
+      },
+      {
+        "localId": "e24da525-d46c-8dd4-a3b8-5bfb5833d6f2",
+        "id": "gid://shopify/ProductVariant/55605419245895",
+        "sku": "261028PODFN9262#004",
+        "color": "Light Blue",
+        "size": "XL"
+      },
+      {
+        "localId": "f730064d-4a82-8b0c-acd4-231b2dad3660",
+        "id": "gid://shopify/ProductVariant/55605419278663",
+        "sku": "261028PODFN9262#005",
+        "color": "Light Blue",
+        "size": "2XL"
+      }
+    ]
+  },
+  {
+    "model": "UB0018-C001-V2",
+    "name": "Distressed Barrel Jeans",
+    "localProductId": "f2ccb146-34b5-8b6f-a779-44f685e090d6",
+    "productId": "gid://shopify/Product/11420339339591",
+    "priceCents": 8900,
+    "variants": [
+      {
+        "localId": "5fbbc6b1-9c2d-879d-8ca6-1ba99fb258ec",
+        "id": "gid://shopify/ProductVariant/55605426323783",
+        "sku": "261028PODFN9273#001",
+        "color": "Blue",
+        "size": "S"
+      },
+      {
+        "localId": "2c7510f9-0d51-836a-b0d7-c349778f9a24",
+        "id": "gid://shopify/ProductVariant/55605426356551",
+        "sku": "261028PODFN9273#002",
+        "color": "Blue",
+        "size": "M"
+      },
+      {
+        "localId": "162d62f1-2db3-83b0-acfb-b398ffe7390d",
+        "id": "gid://shopify/ProductVariant/55605426389319",
+        "sku": "261028PODFN9273#003",
+        "color": "Blue",
+        "size": "L"
+      },
+      {
+        "localId": "ada72617-40f2-850c-8ca4-fcc127422ed8",
+        "id": "gid://shopify/ProductVariant/55605426422087",
+        "sku": "261028PODFN9273#004",
+        "color": "Blue",
+        "size": "XL"
+      },
+      {
+        "localId": "2de5a34b-04be-88c5-a313-a1c21549f474",
+        "id": "gid://shopify/ProductVariant/55605426454855",
+        "sku": "261028PODFN9273#005",
+        "color": "Blue",
+        "size": "2XL"
+      }
+    ]
+  }
+]

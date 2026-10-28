@@ -1,0 +1,33 @@
+// @vitest-environment node
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { NextRequest } from 'next/server'
+const m=vi.hoisted(()=>({auth:vi.fn(),create:vi.fn(),storefront:vi.fn(),rpc:vi.fn(),insert:vi.fn(),state:vi.fn()}))
+vi.mock('@/lib/supabase/admin',()=>({requireAdmin:m.auth}))
+vi.mock('@/lib/supabase/service',()=>({createServiceClient:m.create}))
+vi.mock('@/lib/shopify/client',()=>({storefront:m.storefront}))
+import { GET, POST } from '@/app/api/admin/shopify/samples/route'
+import { sampleCatalog,selectSampleLines,assertSampleAvailability } from '@/lib/shopify/admin-samples'
+const attempt='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+const variants=sampleCatalog.map(p=>p.variants[0].localId)
+const lines=selectSampleLines(variants)
+const available=lines.map(l=>({id:l.merchandiseId,sku:l.sku,availableForSale:true,price:{amount:(l.expectedPriceCents/100).toFixed(2),currencyCode:'EUR'},product:{id:l.productId}}))
+const req=(patch:Record<string,unknown>={},origin='https://mose.test',cookie=true)=>new NextRequest('https://mose.test/api/admin/shopify/samples',{method:'POST',headers:{origin,'Content-Type':'application/json',...(cookie?{cookie:'mose_shopify_session='+'a'.repeat(64)}:{})},body:JSON.stringify({attemptId:attempt,variants,acknowledgedCosts:true,...patch})})
+beforeEach(()=>{
+ vi.clearAllMocks();vi.stubEnv('NEXT_PUBLIC_SITE_URL','https://mose.test');vi.stubEnv('SHOPIFY_SAMPLE_CHECKOUT_ENABLED','true');vi.stubEnv('SHOPIFY_SAMPLE_BRANDING_REFERENCE','Approved label+hangtag, hoodie DTF6cm, raglan DTG6cm');vi.stubEnv('SHOPIFY_SESSION_SECRET','test'.repeat(12));vi.stubEnv('SHOPIFY_STOREFRONT_PRIVATE_TOKEN','test');vi.stubEnv('SHOPIFY_DEV_BUYER_IP','127.0.0.1');vi.stubEnv('VERCEL','0')
+ m.auth.mockResolvedValue({authorized:true,user:{id:'admin-identity'}});m.state.mockResolvedValue({data:{app_installed:true},error:null});m.insert.mockResolvedValue({error:null})
+ m.create.mockReturnValue({from:(table:string)=>table==='shopify_integration_state'?{select:()=>({eq:()=>({single:m.state})})}:{insert:m.insert},rpc:m.rpc})
+ m.rpc.mockImplementation(async(name:string,args:Record<string,unknown>)=>name==='reserve_shopify_checkout'?{error:null,data:[{status:'creating',request_fingerprint:args.p_fingerprint,lease_token:args.p_lease,expires_at:new Date(Date.now()+60000).toISOString(),cart_id:null,checkout_url:null}]}:{data:true,error:null})
+ m.storefront.mockImplementation(async(query:string)=>query.includes('MoseSampleVariants')?{nodes:available}:{cartCreate:{userErrors:[],warnings:[],cart:{id:'gid://shopify/Cart/1',checkoutUrl:'https://hp5szr-te.myshopify.com/checkouts/synthetic',totalQuantity:8,cost:{subtotalAmount:{amount:'658.00',currencyCode:'EUR'}},lines:{nodes:lines.map(l=>({quantity:1,merchandise:{id:l.merchandiseId}}))}}}})
+})
+afterEach(()=>vi.unstubAllEnvs())
+describe('private eight-model sample order',()=>{
+ it('denies non-admin GET and POST before any service client or supplier call',async()=>{m.auth.mockResolvedValue({authorized:false});expect((await GET()).status).toBe(403);expect((await POST(req())).status).toBe(403);expect(m.create).not.toHaveBeenCalled();expect(m.storefront).not.toHaveBeenCalled()})
+ it('rejects cross-origin and missing bootstrap cookie before mutations',async()=>{expect((await POST(req({},'https://evil.test'))).status).toBe(403);expect((await POST(req({},'https://mose.test',false))).status).toBe(409);expect(m.rpc).not.toHaveBeenCalled()})
+ it('keeps private release disabled without reviewed branding evidence',async()=>{vi.stubEnv('SHOPIFY_SAMPLE_BRANDING_REFERENCE','');expect((await POST(req())).status).toBe(503);expect(m.create).not.toHaveBeenCalled()})
+ it('rejects arbitrary IDs, duplicate models and client-supplied prices/quantities',async()=>{for(const patch of [{variants:[...variants.slice(0,7),variants[0]]},{variants:[...variants.slice(0,7),'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb']},{price:1},{quantity:8},{acknowledgedCosts:false}])expect((await POST(req(patch))).status).toBe(400);expect(m.rpc).not.toHaveBeenCalled()})
+ it('checks actual source identity, EUR price and availability before creating any attempt',async()=>{for(const patch of [{availableForSale:false},{sku:'different-supplier'},{price:{amount:'0.01',currencyCode:'EUR'}},{price:{amount:'79.00',currencyCode:'USD'}},{product:{id:'gid://shopify/Product/999'}}]){m.storefront.mockResolvedValueOnce({nodes:[{...available[0],...patch},...available.slice(1)]});expect((await POST(req())).status).toBe(409)}expect(m.rpc).not.toHaveBeenCalled()})
+ it('persists one account-owned eight-item cart and only returns saved checkout URL',async()=>{const response=await POST(req());expect(response.status).toBe(200);expect((await response.json()).checkoutUrl).toContain('hp5szr-te.myshopify.com');expect(m.insert).toHaveBeenCalledWith(expect.objectContaining({user_id:'admin-identity',attempt_id:attempt}));expect(m.rpc).toHaveBeenLastCalledWith('finish_shopify_checkout',expect.objectContaining({p_status:'ready'}));const reserve=m.rpc.mock.calls[0][1];expect(reserve.p_snapshot.purpose).toBe('admin-sample');expect(reserve.p_snapshot.lines).toHaveLength(8);expect(JSON.stringify(reserve)).not.toContain('127.0.0.1');expect(reserve).not.toHaveProperty('sample_verified')})
+ it('refuses uncertain outcomes and never returns unpersisted cart URL',async()=>{m.rpc.mockImplementation(async(name:string,args:Record<string,unknown>)=>name==='reserve_shopify_checkout'?{data:[{status:'creating',request_fingerprint:args.p_fingerprint,lease_token:args.p_lease,expires_at:new Date(Date.now()+60000).toISOString()}]}:{error:{message:'private persistence failure'},data:null});const r=await POST(req());expect(r.status).toBe(503);expect(await r.json()).not.toHaveProperty('checkoutUrl');expect(m.rpc).toHaveBeenLastCalledWith('finish_shopify_checkout',expect.objectContaining({p_status:'unknown'}))})
+ it('reuses a persisted matching attempt without second cart mutation',async()=>{m.rpc.mockImplementation(async(_name:string,args:Record<string,unknown>)=>({data:[{status:'ready',request_fingerprint:args.p_fingerprint,lease_token:'old',expires_at:new Date(Date.now()+60000).toISOString(),checkout_url:'https://hp5szr-te.myshopify.com/checkouts/existing'}]}));const r=await POST(req());expect(r.status).toBe(200);expect(m.storefront).toHaveBeenCalledTimes(1);expect(m.insert).not.toHaveBeenCalled()})
+ it('accepts unknown physical POD quantity without inventing stock or approval',()=>{expect(()=>assertSampleAvailability(lines,available)).not.toThrow();expect(lines.every(l=>l.quantity===1)).toBe(true);expect(sampleCatalog).toHaveLength(8);expect(sampleCatalog.flatMap(p=>p.variants)).toHaveLength(63)})
+})
