@@ -1,22 +1,28 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-const mock = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[], localVariants: [] as Record<string, unknown>[], localProducts: [] as Record<string, unknown>[], localError: false }))
+const mock = vi.hoisted(() => ({ benefitQuote: vi.fn(), issueBenefits: vi.fn(), runtimeReadiness: vi.fn(), from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[], localVariants: [] as Record<string, unknown>[], localProducts: [] as Record<string, unknown>[], localError: false }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: () => ({ from: mock.from, rpc: mock.rpc }) }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: mock.getUser } }) }))
 vi.mock('@/lib/shopify/client', () => ({ storefront: mock.storefront }))
+vi.mock('@/lib/shopify/runtime-readiness', () => ({ runtimeReadiness: mock.runtimeReadiness }))
+vi.mock('@/lib/shopify/checkout-benefits', () => ({ readCheckoutBenefitQuote: mock.benefitQuote, issueCheckoutBenefits: mock.issueBenefits }))
 import { POST } from '@/app/api/shopify/checkout/route'
 import { GET as bootstrap } from '@/app/api/shopify/session/route'
 const inventory = () => ({ data: [{ mose_variant_id: 'local-123', mapping_revision: 'revision-a', mapping_current: true, status: 'known', available_quantity: 5, observed_at: new Date().toISOString() }] })
 const attemptId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
 const gid = 'gid://shopify/ProductVariant/123'
 const url = 'https://mosewear.myshopify.com/cart/c/secret'
+const emptyBenefitCart = () => ({ cart: { discountCodes: [], deliveryGroups: { pageInfo: { hasNextPage: false }, nodes: [] }, lines: { pageInfo: { hasNextPage: false }, nodes: [{ quantity: 1, merchandise: { id: gid }, discountAllocations: [], cost: { amountPerQuantity: { amount: '69.95', currencyCode: 'EUR' }, subtotalAmount: { amount: '69.95', currencyCode: 'EUR' } } }] } } })
 const body = { attemptId, locale: 'nl', country: 'NL', lines: [{ variantId: 'local-123', quantity: 1 }] }
 function request(data: unknown = body, session: string | null = 'a'.repeat(64)) {
   return new NextRequest('https://www.mosewear.com/api/shopify/checkout', { method: 'POST', body: JSON.stringify(data),
     headers: { origin: 'https://www.mosewear.com', ...(session ? { cookie: 'mose_shopify_session=' + session } : {}) } })
 }
 beforeEach(() => {
+  mock.benefitQuote.mockReset().mockImplementation(async (_db, input) => ({ ...input, expectedSubtotalBeforeOrderCents: input.lines.reduce((n: number,line: {unitCents:number;quantity:number})=>n+line.unitCents*line.quantity,0), quote: { payableMerchandiseCents: input.lines.reduce((n: number,line: {unitCents:number;quantity:number})=>n+line.unitCents*line.quantity,0), discountCents: 0 } }))
+  mock.issueBenefits.mockReset().mockResolvedValue([])
+  mock.runtimeReadiness.mockReset().mockResolvedValue([{ key: 'loyaltyRuntime', status: 'verified' }, { key: 'legacyStockBridge', status: 'verified' }])
   for (const [key,value] of Object.entries({ SHOPIFY_CHECKOUT_ENABLED: 'true', SHOPIFY_BENEFITS_VERIFIED: 'true', SHOPIFY_SESSION_SECRET: 'a'.repeat(32),
     SHOPIFY_CUTOVER_AT: '2026-01-01T00:00:00Z', SHOPIFY_STOREFRONT_PRIVATE_TOKEN: 'test', SHOPIFY_ADMIN_ACCESS_TOKEN: 'test',
     SHOPIFY_DEV_BUYER_IP: '127.0.0.1', VERCEL: '', NEXT_PUBLIC_SITE_URL: 'https://www.mosewear.com' })) vi.stubEnv(key,value)
@@ -36,9 +42,61 @@ beforeEach(() => {
   mock.storefront.mockReset().mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5, price: { amount: '69.95', currencyCode: 'EUR' } }] })
     .mockResolvedValueOnce({ cartCreate: { cart: { id: 'private-cart-id', checkoutUrl: url, totalQuantity: 1,
       cost: { subtotalAmount: { amount: '69.95', currencyCode: 'EUR' } }, lines: { nodes: [{ quantity: 1, merchandise: { id: gid } }] } }, userErrors: [], warnings: [] } })
+    .mockResolvedValueOnce(emptyBenefitCart())
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('unified checkout boundary', () => {
+  it('records definite rejected promo input before allowing an attempt replacement', async () => {
+    mock.benefitQuote.mockRejectedValueOnce(new Error('PROMO_EXPIRED'))
+    const result=await POST(request({...body,promoCode:'EXPIRED'}))
+    expect(result.status).toBe(409)
+    expect(await result.json()).toMatchObject({code:'BENEFIT_UNAVAILABLE',retrySafe:true})
+    expect(mock.issueBenefits).not.toHaveBeenCalled()
+    expect(mock.rpc.mock.calls.some(call=>call[0]==='reserve_shopify_checkout')).toBe(true)
+    expect(mock.rpc.mock.calls.at(-1)?.[1]).toMatchObject({p_status:'failed',p_error:'BENEFIT_INPUT_REJECTED'})
+  })
+  it('never rotates a previously uncertain cart when a later benefit quote fails', async () => {
+    mock.benefitQuote.mockRejectedValueOnce(new Error('POINTS_HELD'))
+    const base=mock.rpc.getMockImplementation()!
+    mock.rpc.mockImplementation(async (name,args)=>name==='reserve_shopify_checkout' ? {data:[{status:'unknown',request_fingerprint:'previous',lease_token:'old',expires_at:new Date(Date.now()+3600000).toISOString(),cart_id:null,checkout_url:null}]} : base(name,args))
+    const response=await POST(request({...body,loyaltyPoints:100}))
+    expect(await response.json()).toMatchObject({code:'BENEFIT_UNAVAILABLE',retrySafe:false})
+    expect(mock.rpc.mock.calls.some(call=>call[0]==='finish_shopify_checkout')).toBe(false)
+    expect(mock.issueBenefits).not.toHaveBeenCalled()
+  })
+  it('verifies actual provider allocations before returning a discounted checkout', async () => {
+    mock.benefitQuote.mockResolvedValueOnce({ expectedSubtotalBeforeOrderCents:6995, quote:{payableMerchandiseCents:6495,discountCents:500}, lines:[], user:{id:'11111111-1111-4111-8111-111111111111'}, points:100 })
+    mock.issueBenefits.mockResolvedValueOnce([{code:'PRIVATE-CODE',discountCents:500,eligibleVariants:[gid]}])
+    mock.getUser.mockResolvedValueOnce({data:{user:{id:'11111111-1111-4111-8111-111111111111',email:'buyer@example.org',email_confirmed_at:'2026-01-01T00:00:00Z'}},error:null})
+    mock.storefront.mockReset().mockResolvedValueOnce({ nodes:[{id:gid,availableForSale:true,quantityAvailable:5,price:{amount:'69.95',currencyCode:'EUR'}}] })
+      .mockResolvedValueOnce({cartCreate:{cart:{id:'private-cart-id',checkoutUrl:url,totalQuantity:1,cost:{subtotalAmount:{amount:'69.95',currencyCode:'EUR'}},lines:{nodes:[{quantity:1,merchandise:{id:gid}}]}},userErrors:[],warnings:[]}})
+      .mockResolvedValueOnce({cart:{discountCodes:[{code:'PRIVATE-CODE',applicable:true}],deliveryGroups:{pageInfo:{hasNextPage:false},nodes:[]},lines:{pageInfo:{hasNextPage:false},nodes:[{quantity:1,merchandise:{id:gid},cost:{amountPerQuantity:{amount:'69.95',currencyCode:'EUR'},subtotalAmount:{amount:'69.95',currencyCode:'EUR'}},discountAllocations:[{__typename:'CartCodeDiscountAllocation',code:'PRIVATE-CODE',discountedAmount:{amount:'5.00',currencyCode:'EUR'}}]}]}}})
+    const req=request({...body,loyaltyPoints:100}); req.cookies.set('sb-test-auth-token','session')
+    const result=await POST(req)
+    expect(result.status).toBe(200)
+    expect(mock.storefront.mock.calls[1][1].input).toMatchObject({discountCodes:['PRIVATE-CODE'],buyerIdentity:{countryCode:'NL',email:'buyer@example.org'}})
+    expect(mock.insertOwner.mock.invocationCallOrder[0]).toBeLessThan(mock.issueBenefits.mock.invocationCallOrder[0])
+    expect(JSON.stringify(await result.json())).not.toContain('PRIVATE-CODE')
+  })
+  it('does not mark voucher-bearing cart rejection safe for automatic attempt rotation', async () => {
+    mock.issueBenefits.mockResolvedValueOnce([{code:'PRIVATE-CODE',discountCents:500,eligibleVariants:[gid]}])
+    mock.storefront.mockReset().mockResolvedValueOnce({nodes:[{id:gid,availableForSale:true,quantityAvailable:5,price:{amount:'69.95',currencyCode:'EUR'}}]})
+      .mockResolvedValueOnce({cartCreate:{cart:null,userErrors:[{code:'REJECTED'}],warnings:[]}})
+    const result=await POST(request())
+    expect(result.status).toBe(503)
+    expect(await result.json()).toMatchObject({code:'ATTEMPT_PENDING'})
+    expect(mock.rpc.mock.calls.at(-1)?.[1].p_status).toBe('unknown')
+  })
+  it('blocks stale financial or stock runtime before any provider calls or cart reuse', async () => {
+    for (const key of ['loyaltyRuntime','legacyStockBridge']) {
+      mock.runtimeReadiness.mockResolvedValue([{ key, status: 'unknown' }])
+      const result = await POST(request())
+      expect(result.status).toBe(503)
+      expect((await result.json()).code).toBe('RUNTIME_NOT_READY')
+    }
+    expect(mock.storefront).not.toHaveBeenCalled()
+    expect(mock.rpc.mock.calls.some(call => call[0] === 'reserve_shopify_checkout')).toBe(false)
+  })
   it('rejects unknown, stale or changed inventory before provider calls or reusing a checkout', async () => {
     const base = mock.rpc.getMockImplementation()!
     for (const patch of [{ status: 'unknown', available_quantity: null }, { mapping_current: false }, { mapping_revision: 'revision-b' }, { observed_at: '2020-01-01T00:00:00Z' }, { available_quantity: 0 }]) {

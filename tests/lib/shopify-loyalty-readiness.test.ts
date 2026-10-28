@@ -7,7 +7,7 @@ describe('loyalty computed readiness', () => {
     expect(loyaltyRuntimeReady(healthy, now)).toBe(true)
     expect(loyaltyRuntimeReady(null, now)).toBe(false)
   })
-  it.each([{ cutover_at: null }, { cutover_at: '2026-10-29T10:00:00Z' }, { review_reference: '' }, { last_worker_at: null }, { last_worker_at: '2026-10-28T11:00:00Z' }, { pending_count: null }, { pending_count: -1 }, { pending_count: 1 }, { dead_letter_count: null }, { dead_letter_count: 1 }])('fails closed for missing/stale state %j', patch => {
+  it.each([{ cutover_at: null }, { cutover_at: '2026-10-29T10:00:00Z' }, { review_reference: '' }, { last_worker_at: null }, { last_worker_at: '2026-10-28T11:00:00Z' }, { pending_count: null }, { pending_count: '' }, { dead_letter_count: '' }, { pending_count: -1 }, { pending_count: 1 }, { dead_letter_count: null }, { dead_letter_count: 1 }])('fails closed for missing/stale state %j', patch => {
     expect(loyaltyRuntimeReady({ ...healthy, ...patch }, now)).toBe(false)
   })
   it('accepts a fresh pending event but blocks a stale queue', () => {

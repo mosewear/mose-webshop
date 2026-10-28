@@ -18,6 +18,7 @@ export async function storefront<T>(query: string, variables: Record<string, unk
     },
     body: JSON.stringify({ query, variables }),
     cache: 'no-store',
+    redirect: 'error',
     signal: AbortSignal.timeout(12_000),
   })
   if (!response.ok) throw new ShopifyUnavailable('SHOPIFY_HTTP_ERROR')
@@ -32,7 +33,7 @@ export async function admin<T>(query: string, variables: Record<string, unknown>
   const token = await getAdminAccessToken()
   const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': token },
-    body: JSON.stringify({ query, variables }), cache: 'no-store', signal: AbortSignal.timeout(15_000),
+    body: JSON.stringify({ query, variables }), cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15_000),
   })
   if (response.status === 429) throw new ShopifyUnavailable('SHOPIFY_THROTTLED')
   if (response.status === 401 || response.status === 403) throw new ShopifyUnavailable('SHOPIFY_ACCESS_DENIED')

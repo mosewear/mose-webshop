@@ -7,6 +7,7 @@ import { attachReleaseAudit, auditShopifyRelease, type AuditProduct, type AuditV
 import { inventoryReadiness } from '@/lib/shopify/inventory'
 import type { MappedVariant } from '@/lib/shopify/policy'
 import { adminCredentialsConfigured } from '@/lib/shopify/admin-auth'
+import { runtimeReadiness } from '@/lib/shopify/runtime-readiness'
 
 export const dynamic = 'force-dynamic'
 export async function GET() {
@@ -79,6 +80,10 @@ export async function GET() {
     readiness.checks.push(inventoryCheck)
     if (inventoryCheck.status === 'missing') readiness.status = 'blocked'
     else if (inventoryCheck.status === 'unknown' && readiness.status === 'technical_checks_passed') readiness.status = 'unknown'
+    const runtimeChecks = await runtimeReadiness(db, now.getTime())
+    readiness.checks.push(...runtimeChecks)
+    if (runtimeChecks.some(check => check.status === 'missing')) readiness.status = 'blocked'
+    else if (runtimeChecks.some(check => check.status === 'unknown') && readiness.status === 'technical_checks_passed') readiness.status = 'unknown'
     return NextResponse.json(readiness, { headers })
   } catch {
     return NextResponse.json(attachReleaseAudit(summarizeReadiness(null, { mappings: null, released: null, pendingEvents: null, failedEvents: null }, environment), auditShopifyRelease(null)), { headers })
