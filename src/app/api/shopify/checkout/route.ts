@@ -11,6 +11,7 @@ import { SHOPIFY_SESSION_COOKIE, validShopifySession } from '@/lib/shopify/sessi
 import { assertCurrentLocalCatalog } from '@/lib/shopify/local-checkout'
 import { decideCheckoutAttempt } from '@/lib/shopify/attempts'
 import { assertInventoryEvidence } from '@/lib/shopify/inventory'
+import { adminCredentialsConfigured } from '@/lib/shopify/admin-auth'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     const cutoff = Date.parse(process.env.SHOPIFY_CUTOVER_AT ?? '')
     if (!Number.isFinite(cutoff) || cutoff > Date.now()) throw new Error('CUTOVER_NOT_READY')
     const secret = process.env.SHOPIFY_SESSION_SECRET
-    if (!secret || secret.length < 32 || !process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || !process.env.SHOPIFY_ADMIN_ACCESS_TOKEN) throw new Error('NOT_CONFIGURED')
+    if (!secret || secret.length < 32 || !process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN || !adminCredentialsConfigured()) throw new Error('NOT_CONFIGURED')
     // Only a server-verified Supabase identity can own an account order. Guests need no Auth call.
     let userId: string | null = null
     if (request.cookies.getAll().some(cookie => /^sb-.+-auth-token(?:\.\d+)?$/.test(cookie.name))) {

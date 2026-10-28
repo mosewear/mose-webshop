@@ -1,9 +1,8 @@
 import { isIP } from 'node:net'
 import { SHOPIFY_API_VERSION, SHOPIFY_STORE } from './policy'
-
-export class ShopifyUnavailable extends Error {
-  constructor(public readonly code: string) { super(code); this.name = 'ShopifyUnavailable' }
-}
+import { getAdminAccessToken } from './admin-auth'
+import { ShopifyUnavailable } from './errors'
+export { ShopifyUnavailable } from './errors'
 
 /** Server only. Never reuse the interactive CLI's user token for production. */
 export async function storefront<T>(query: string, variables: Record<string, unknown>, buyerIp: string): Promise<T> {
@@ -27,11 +26,10 @@ export async function storefront<T>(query: string, variables: Record<string, unk
   return result.data
 }
 
-/** Production offline Admin token only; never a CLI session or browser credential. */
+/** Own installed app credentials or production offline token; never a CLI/browser credential. */
 export async function admin<T>(query: string, variables: Record<string, unknown>): Promise<T> {
   if (typeof window !== 'undefined') throw new Error('SERVER_ONLY')
-  const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
-  if (!token) throw new ShopifyUnavailable('SHOPIFY_ADMIN_NOT_CONFIGURED')
+  const token = await getAdminAccessToken()
   const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': token },
     body: JSON.stringify({ query, variables }), cache: 'no-store', signal: AbortSignal.timeout(15_000),

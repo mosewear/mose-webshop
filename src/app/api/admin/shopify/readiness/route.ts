@@ -6,6 +6,7 @@ import { legacyPaymentDecision } from '@/lib/checkout-cutover'
 import { attachReleaseAudit, auditShopifyRelease, type AuditProduct, type AuditVariant } from '@/lib/shopify-release-audit'
 import { inventoryReadiness } from '@/lib/shopify/inventory'
 import type { MappedVariant } from '@/lib/shopify/policy'
+import { adminCredentialsConfigured } from '@/lib/shopify/admin-auth'
 
 export const dynamic = 'force-dynamic'
 export async function GET() {
@@ -14,7 +15,7 @@ export async function GET() {
   if (!authorized) return NextResponse.json({ error: 'Geen toegang.' }, { status: 403, headers })
   const environment = {
     storefront: Boolean(process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN),
-    admin: Boolean(process.env.SHOPIFY_ADMIN_ACCESS_TOKEN),
+    admin: adminCredentialsConfigured(),
     session: (process.env.SHOPIFY_SESSION_SECRET?.length ?? 0) >= 32,
     webhook: Boolean(process.env.SHOPIFY_APP_CLIENT_SECRET),
     checkout: process.env.SHOPIFY_CHECKOUT_ENABLED === 'true',
