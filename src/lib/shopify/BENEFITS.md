@@ -149,3 +149,48 @@ Official references:
 - https://shopify.dev/docs/api/admin-graphql/2026-10/input-objects/DiscountContextInput
 - https://shopify.dev/docs/api/admin-graphql/2026-10/input-objects/DiscountAmountInput
 - https://shopify.dev/docs/api/storefront/2026-10/interfaces/BaseCartLine
+
+## Definitive rejected-cart recovery (migration 011)
+
+Only the backend's actual `CartCreate` response `{cart:null,userErrors:[...]}`
+can establish no-cart proof. At that branch, if vouchers were issued, call
+`recordDefinitiveNoCart(db,{attemptId,checkoutLease})`. It records the original
+lease's protocol fact and atomically changes the attempt to `unknown` with
+`BENEFIT_CART_REJECTED`. Keep its proof token server-only. The ordinary outer
+failure handler cannot overwrite that fact because it updates only `creating`.
+
+A transport failure, unknown issuer response, absent order search, expired age,
+missing provider object or `asyncUsageCount=0` is **never** no-cart proof. Those
+attempts remain held and are listed for manual investigation, not automatically
+restored. No endpoint allows an administrator browser to invent this proof.
+
+`GET /api/admin/shopify/benefits` is admin-only/private/no-store and returns
+aggregate held points/promo uses, oldest timestamps, unresolved issuer counts
+and at most 100 unknown attempt references with their no-cart proof status.
+It performs no provider writes and works while recovery is disabled.
+
+With `SHOPIFY_BENEFIT_RECOVERY_ENABLED=true`, an authenticated same-origin admin
+may `POST /api/admin/shopify/benefits` with `{attemptId}`. The operator service:
+
+1. Requires the pre-existing definitive no-cart proof and all provider IDs/hash
+   bindings. Unresolved issuance prevents recovery before any provider action.
+2. Reads each exact private coupon via Admin Node API; verifies Basic type,
+   unique code hash and zero uses. Missing/wrong/used objects block recovery.
+3. Deactivates each active/scheduled coupon, then reads its exact identity again
+   to verify EXPIRED and zero uses. An already-expired observation is re-read too.
+   Async zero usage is only an additional rejection check; causal no-cart proof
+   is the reason a server checkout cannot remain payable.
+4. Records recent verified revocations. SQL requires **every** associated loyalty,
+   promo and automatic coupon, plus no stored cart URL/ID and no attributed order.
+5. In one transaction marks the attempt failed, restores reserved points through
+   the existing idempotent ledger and releases the pending promo use. Repeating
+   completion never restores points or source uses twice.
+
+The operator run is bounded; incomplete work retains every financial hold and
+can be continued. The five-minute freshness requirement is for provider evidence,
+not a hold expiry. No real order/payment is cancelled, no supplier/sample coupon
+is changed, and no uncertain payable cart is abandoned automatically.
+
+The recovery provider read/deactivation operations validate against 2026-10.
+Tests add seven service cases, four admin-route cases and 30 PostgreSQL assertions
+using the actual original ledger/issuance/promo/recovery migrations.
