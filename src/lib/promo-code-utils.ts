@@ -1,3 +1,4 @@
+import { atomicPromoEnabled } from '@/lib/shopify/promo-reservation'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 
 /**
@@ -107,6 +108,15 @@ export async function trackPromoCodeUsage(
 ) {
   try {
     const supabase = createServiceRoleClient() // Use service role to bypass RLS
+
+    if (atomicPromoEnabled()) {
+      const result = await supabase.rpc('track_legacy_promo_usage_atomic', {
+        p_code: promoCode.toUpperCase(), p_order: orderId, p_discount: discountAmount,
+        p_total: orderTotal, p_user: userId || null,
+      })
+      if (result.error || result.data !== true) throw new Error('PROMO_USAGE_UNCONFIRMED')
+      return
+    }
 
     // Get the promo code
     const { data: code, error: codeError } = await supabase

@@ -1,3 +1,4 @@
+import { atomicPromoEnabled, createAtomicLegacyPromoOrder } from '@/lib/shopify/promo-reservation'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { evaluatePickupEligibility } from '@/lib/pickup-eligibility'
@@ -238,6 +239,7 @@ export async function POST(request: Request) {
     // STEP 2: VALIDATE PROMO CODE (SERVER-SIDE) + NO STACKING DISCOUNTS
     // ============================================
     let validatedDiscount = 0
+    let validatedPromoRow: Record<string, unknown> | null = null
     
     if (order.promo_code) {
       console.log('🎟️ Validating promo code:', order.promo_code)
@@ -391,6 +393,7 @@ export async function POST(request: Request) {
       }
 
       validatedDiscount = eligibility.discountAmount
+      validatedPromoRow = promoCode
 
       console.log('✅ Promo code validated:', order.promo_code)
       console.log(
@@ -599,11 +602,24 @@ export async function POST(request: Request) {
     const koperUserAgent = request.headers.get('user-agent') || null
 
     // Insert order
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert([{ ...order, ip_address: koperIp, user_agent: koperUserAgent }])
-      .select()
-      .single()
+    // With the shared cap enabled, order + usage commit in one transaction.
+    // A concurrent Shopify hold/legacy order cannot spend the same final use.
+    const atomicPromoOrder = atomicPromoEnabled() && validatedPromoRow && validatedDiscount > 0
+    let orderData: any
+    let orderError: unknown
+    if (atomicPromoOrder) {
+      try {
+        orderData = await createAtomicLegacyPromoOrder(supabase, { ...order, ip_address: koperIp, user_agent: koperUserAgent }, validatedPromoRow!)
+      } catch {
+        // The SQL transaction either committed all effects or none. Do not
+        // create an untracked discounted fallback order after uncertainty.
+        return NextResponse.json({ error: 'De kortingscode of beschikbaarheid is gewijzigd. Controleer je bestelling opnieuw.', code: 'PROMO_ORDER_UNCONFIRMED' }, { status: 409 })
+      }
+    } else {
+      const inserted = await supabase.from('orders').insert([{ ...order, ip_address: koperIp, user_agent: koperUserAgent }]).select().single()
+      orderData = inserted.data
+      orderError = inserted.error
+    }
 
     if (orderError) {
       console.error('❌ SERVER: Order creation error:', orderError)
@@ -616,7 +632,7 @@ export async function POST(request: Request) {
     console.log('✅ SERVER: Order created:', orderData)
 
     // Track promo code usage (if applicable)
-    if (order.promo_code && validatedDiscount > 0) {
+    if (!atomicPromoOrder && order.promo_code && validatedDiscount > 0) {
       console.log('🎟️ Tracking promo code usage:', order.promo_code)
       await supabase.rpc('track_promo_usage', {
         promo_code_value: order.promo_code.toUpperCase(),

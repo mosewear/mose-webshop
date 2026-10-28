@@ -40,7 +40,7 @@ describe('server-owned benefits', () => {
     expect(a.basicCodeDiscount.context.customers.add).toEqual([input.customerId])
     expect(a.basicCodeDiscount.customerGets.value.discountAmount).toEqual({ amount: '5.00', appliesOnEachItem: false })
     expect(a.basicCodeDiscount.usageLimit).toBe(1)
-    expect(a.basicCodeDiscount.combinesWith).toEqual({ orderDiscounts: false, productDiscounts: false, shippingDiscounts: false })
+    expect(a.basicCodeDiscount.combinesWith).toEqual({ orderDiscounts: true, productDiscounts: true, shippingDiscounts: false })
     expect(() => loyaltyDiscountPlan({ ...input, points: 101 })).toThrow()
     expect(() => loyaltyDiscountPlan({ ...input, points: 100000 })).toThrow('LOYALTY_DISCOUNT_EXCEEDS_CART')
     expect(() => loyaltyDiscountPlan({ ...input, customerId: '' })).toThrow()

@@ -51,14 +51,15 @@ export function loyaltyDiscountPlan(input: {
   const code = `MOSE-L-${createHmac('sha256', input.secret).update(`loyalty:v1:${input.attemptId}`).digest('hex').toUpperCase()}`
   const now = input.now ?? Date.now()
   return {
+    eligibleVariants: [...new Set(lines.map(l => l.variantId))],
     code, codeHash: createHash('sha256').update(code).digest('hex'), discountCents: amount,
     basicCodeDiscount: {
       title: 'MOSE spaarpunten', code, startsAt: new Date(now - 60_000).toISOString(),
       endsAt: new Date(now + 24 * 60 * 60_000).toISOString(), usageLimit: 1, appliesOncePerCustomer: true,
       context: { customers: { add: [input.customerId] } },
-      combinesWith: { orderDiscounts: false, productDiscounts: false, shippingDiscounts: false },
+      combinesWith: { orderDiscounts: true, productDiscounts: true, shippingDiscounts: false },
       customerGets: {
-        items: { products: { productVariantsToAdd: [...new Set(lines.map(l => l.variantId))] } },
+        items: { all: true },
         value: { discountAmount: { amount: (amount / 100).toFixed(2), appliesOnEachItem: false } },
       },
     },

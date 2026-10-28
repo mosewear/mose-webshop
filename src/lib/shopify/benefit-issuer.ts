@@ -44,5 +44,5 @@ export async function reserveAndIssueLoyaltyDiscount(
     p_attempt: input.attemptId, p_issuance_lease: input.issuanceLease, p_provider_id: binding.provider_discount_id,
   })
   if (saved.error || saved.data !== true) throw new Error('BENEFIT_BINDING_UNCONFIRMED')
-  return { code: plan.code, discountCents: plan.discountCents, eligibleVariants: plan.basicCodeDiscount.customerGets.items.products.productVariantsToAdd }
+  return { code: plan.code, discountCents: plan.discountCents, eligibleVariants: plan.eligibleVariants }
 }
