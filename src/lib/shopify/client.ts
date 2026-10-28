@@ -40,6 +40,9 @@ export async function admin<T>(query: string, variables: Record<string, unknown>
   if (response.status === 401 || response.status === 403) throw new ShopifyUnavailable('SHOPIFY_ACCESS_DENIED')
   if (!response.ok) throw new ShopifyUnavailable('SHOPIFY_HTTP_ERROR')
   const result = await response.json() as { data?: T; errors?: { extensions?: { code?: string } }[] }
+  // GraphQL permission failures can arrive with HTTP 200 and partial data.
+  // Preserve the access-denied code so the order worker closes checkout.
+  if (result.errors?.some(e => e.extensions?.code === 'ACCESS_DENIED')) throw new ShopifyUnavailable('SHOPIFY_ACCESS_DENIED')
   if (result.errors?.some(e => e.extensions?.code === 'THROTTLED')) throw new ShopifyUnavailable('SHOPIFY_THROTTLED')
   if (result.errors?.length || !result.data) throw new ShopifyUnavailable('SHOPIFY_QUERY_FAILED')
   return result.data
