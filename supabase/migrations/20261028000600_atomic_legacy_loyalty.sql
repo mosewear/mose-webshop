@@ -159,4 +159,4 @@ revoke all on function public.legacy_loyalty_writer_health() from public,anon,au
 grant execute on function public.legacy_loyalty_writer_health() to service_role;
 
 -- Financial writes only through server RPCs; own-data SELECT policies remain.
-revoke insert,update,delete on public.loyalty_points,public.loyalty_transactions from anon,authenticated;
+revoke insert,update,delete,truncate,references,trigger on public.loyalty_points,public.loyalty_transactions from anon,authenticated;

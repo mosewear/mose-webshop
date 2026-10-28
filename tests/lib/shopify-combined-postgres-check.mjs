@@ -43,6 +43,7 @@ try {
  for(const table of tables){check(await scalar('select relrowsecurity from pg_class where oid=$1::regclass',[table]),true,'RLS '+table)
   for(const role of ['anon','authenticated'])for(const privilege of ['select','insert','update','delete'])check(await scalar('select has_table_privilege($1,$2,$3)',[role,table,privilege]),false,role+' cannot '+privilege+' '+table)
  }
+ for(const table of ['loyalty_points','loyalty_transactions'])for(const role of ['anon','authenticated'])for(const privilege of ['insert','update','delete','truncate','references','trigger'])check(await scalar('select has_table_privilege($1,$2,$3)',[role,table,privilege]),false,'legacy browser financial mutation denied')
  // Supabase default grants must not leave direct service-role financial writes.
  for(const table of ['shopify_loyalty_reservations','shopify_loyalty_settlements','shopify_loyalty_ledger','shopify_loyalty_runtime','shopify_loyalty_outbox','legacy_loyalty_operations','legacy_loyalty_refund_claims']){
   check(await scalar("select has_table_privilege('service_role',$1,'select')",[table]),true,'server reads '+table)
