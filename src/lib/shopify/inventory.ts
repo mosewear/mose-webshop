@@ -11,19 +11,19 @@ export const INVENTORY_QUERY = `query MoseInventory($ids: [ID!]!, $location: ID!
   shop { currencyCode }
   nodes(ids: $ids) { ... on ProductVariant {
     id price inventoryPolicy product { id status }
-    inventoryItem { tracked inventoryLevel(locationId: $location) {
+    inventoryItem { id tracked inventoryLevel(locationId: $location) {
       location { id isActive fulfillsOnlineOrders }
       quantities(names: ["available"]) { name quantity }
     } }
   } }
 }`
 const nodeSchema = z.object({ id: z.string(), price: z.string(), inventoryPolicy: z.enum(['DENY','CONTINUE']),
-  product: z.object({ id: z.string(), status: z.string() }), inventoryItem: z.object({ tracked: z.boolean(),
+  product: z.object({ id: z.string(), status: z.string() }), inventoryItem: z.object({ id: z.string().optional(), tracked: z.boolean(),
     inventoryLevel: z.object({ location: z.object({ id: z.string(), isActive: z.boolean(), fulfillsOnlineOrders: z.boolean() }),
       quantities: z.array(z.object({ name: z.string(), quantity: z.number().int().safe() })) }).nullable() }) })
 const responseSchema = z.object({ shop: z.object({ currencyCode: z.string() }), nodes: z.array(nodeSchema.nullable()) })
 export type InventoryMapping = { mose_variant_id: string; shopify_variant_id: string; shopify_product_id: string;
-  inventory_location_id: string | null; inventory_revision: string; inventory_lease_token: string; price_eur_cents: number }
+  inventory_location_id: string | null; inventory_item_id?: string | null; inventory_revision: string; inventory_lease_token: string; price_eur_cents: number }
 type Observation = { status: 'known' | 'unknown' | 'error'; quantity: number | null; reason: string }
 export function projectInventory(mapping: InventoryMapping, response: z.infer<typeof responseSchema>): Observation {
   const unknown = (reason: string): Observation => ({ status: 'unknown', quantity: null, reason })
@@ -32,6 +32,7 @@ export function projectInventory(mapping: InventoryMapping, response: z.infer<ty
   const node = nodes[0]!
   if (node.product.id !== mapping.shopify_product_id) return unknown('INVENTORY_MAPPING_CHANGED')
   if (response.shop.currencyCode !== 'EUR' || moneyToCents(node.price) !== mapping.price_eur_cents) return unknown('INVENTORY_PRICE_CHANGED')
+  if (mapping.inventory_item_id && node.inventoryItem.id !== mapping.inventory_item_id) return unknown('INVENTORY_ITEM_CHANGED')
   if (node.product.status !== 'ACTIVE') return unknown('INVENTORY_PRODUCT_INACTIVE')
   // Check tracking before touching quantity: 9,999,999 from an untracked supplier is not stock.
   if (!node.inventoryItem.tracked) return unknown('INVENTORY_UNTRACKED')
@@ -41,7 +42,8 @@ export function projectInventory(mapping: InventoryMapping, response: z.infer<ty
     !level.location.isActive || !level.location.fulfillsOnlineOrders) return unknown('INVENTORY_LOCATION_UNVERIFIED')
   const quantities = level.quantities.filter(q => q.name === 'available')
   if (quantities.length !== 1) return unknown('INVENTORY_QUANTITY_UNKNOWN')
-  return { status: 'known', quantity: Math.max(0, quantities[0].quantity), reason: 'INVENTORY_VERIFIED' }
+  if (quantities[0].quantity < 0) return unknown('INVENTORY_NEGATIVE_QUANTITY')
+  return { status: 'known', quantity: quantities[0].quantity, reason: 'INVENTORY_VERIFIED' }
 }
 
 /** One fenced location batch, at most 50 variants and one read-only provider request. */

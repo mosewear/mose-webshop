@@ -1,3 +1,4 @@
+import { applyInventoryDecrementForPaidOrder } from '@/lib/order-stock'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
@@ -29,6 +30,11 @@ export async function POST(request: Request) {
         },
       }
     )
+
+    if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+      const result = await applyInventoryDecrementForPaidOrder(supabase, orderId)
+      return NextResponse.json({ success: result.ok, ...result }, { status: result.ok ? 200 : 503 })
+    }
 
     // Get order items
     const { data: orderItems, error: itemsError } = await supabase

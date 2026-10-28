@@ -11,13 +11,19 @@ export const LEGACY_STOCK_ADJUST = `mutation MoseLegacyStock($input: InventoryAd
     userErrors { code }
   }
 }`
-const eventSchema = z.object({ id: z.string().uuid(), order_id: z.string().uuid(), variant_id: z.string().uuid(),
+export const OWNED_STOCK_SET = `mutation MoseOwnedStockSet($input: InventorySetQuantitiesInput!, $key: String!) {
+  inventorySetQuantities(input: $input) @idempotent(key: $key) {
+    inventoryAdjustmentGroup { referenceDocumentUri }
+    userErrors { code }
+  }
+}`
+const eventSchema = z.object({ id: z.string().uuid(), order_id: z.string().uuid().nullable(), variant_id: z.string().uuid(),
   generation: z.string().uuid(), inventory_item_id: z.string().regex(/^gid:\/\/shopify\/InventoryItem\/\d+$/),
-  location_id: z.string().regex(/^gid:\/\/shopify\/Location\/\d+$/), delta: z.number().int().max(-1), lease_token: z.string().uuid() })
-const resultSchema = z.object({ inventoryAdjustQuantities: z.object({
+  location_id: z.string().regex(/^gid:\/\/shopify\/Location\/\d+$/), delta: z.number().int().refine(n => n !== 0), expected_quantity: z.number().int().nonnegative().nullable().optional(), target_quantity: z.number().int().nonnegative().nullable().optional(), lease_token: z.string().uuid() })
+const adjustmentSchema = z.object({
   inventoryAdjustmentGroup: z.object({ referenceDocumentUri: z.string().nullable() }).nullable(),
   userErrors: z.array(z.object({ code: z.string().nullable() })),
-}) })
+})
 export async function runLegacyStockWorker(db = createServiceClient(), execute: AdminExecutor = admin,
   options: { deadline?: number; signal?: AbortSignal } = {}) {
   const totals = { processed: 0, failed: 0, leaseLost: 0 }
@@ -35,18 +41,33 @@ export async function runLegacyStockWorker(db = createServiceClient(), execute: 
       if (ownership.error || ownership.data?.length !== 1 || owner?.generation !== e.generation || owner.inventory_item_id !== e.inventory_item_id ||
         owner.location_id !== e.location_id) throw new Error('STOCK_OWNERSHIP_CHANGED')
       const reference = `mose://legacy-stock/${e.id}`
-      const result = resultSchema.parse(await execute(LEGACY_STOCK_ADJUST, { key: e.id, input: {
+      const absolute = e.expected_quantity !== null && e.expected_quantity !== undefined
+      if (absolute && (e.target_quantity === null || e.target_quantity === undefined || e.target_quantity - e.expected_quantity! !== e.delta)) throw new Error('STOCK_INTENT_INVALID')
+      if (!absolute && e.target_quantity !== null && e.target_quantity !== undefined) throw new Error('STOCK_INTENT_INVALID')
+      const input = absolute ? {
+        name: 'available', reason: 'correction', referenceDocumentUri: reference,
+        quantities: [{ inventoryItemId: e.inventory_item_id, locationId: e.location_id, quantity: e.target_quantity, changeFromQuantity: e.expected_quantity }],
+      } : {
         name: 'available', reason: 'correction', referenceDocumentUri: reference,
         changes: [{ inventoryItemId: e.inventory_item_id, locationId: e.location_id, delta: e.delta, changeFromQuantity: null }],
-      } }))
-      const adjusted = result.inventoryAdjustQuantities
-      if (adjusted.userErrors.length || adjusted.inventoryAdjustmentGroup?.referenceDocumentUri !== reference) throw new Error('STOCK_DELTA_NOT_CONFIRMED')
+      }
+      const response = await execute<Record<string, unknown>>(absolute ? OWNED_STOCK_SET : LEGACY_STOCK_ADJUST, { key: e.id, input })
+      const adjusted = adjustmentSchema.parse(response[absolute ? 'inventorySetQuantities' : 'inventoryAdjustQuantities'])
+      if (adjusted.userErrors.some(item => item.code === 'CHANGE_FROM_QUANTITY_STALE')) {
+        error = 'STOCK_COMPARE_FAILED_REVIEW_REQUIRED'
+      } else if (adjusted.userErrors.length || adjusted.inventoryAdjustmentGroup?.referenceDocumentUri !== reference) {
+        error = 'STOCK_DELTA_RETRY_REQUIRED'
+      }
     } catch { error = 'STOCK_DELTA_RETRY_REQUIRED' }
     const saved = await boundedSyncQuery(db.rpc('finish_legacy_stock_delta', { p_id: e.id, p_lease: e.lease_token, p_error: error }), options.signal)
     if (saved.error) throw new Error('STOCK_DELTA_SAVE_FAILED')
     if (saved.data !== true) totals.leaseLost++
     else if (error) totals.failed++
     else totals.processed++
+  }
+  if (totals.failed === 0 && totals.leaseLost === 0) {
+    const heartbeat = await boundedSyncQuery(db.rpc('mark_legacy_stock_worker'), options.signal)
+    if (heartbeat.error) throw new Error('STOCK_BRIDGE_HEARTBEAT_FAILED')
   }
   return totals
 }

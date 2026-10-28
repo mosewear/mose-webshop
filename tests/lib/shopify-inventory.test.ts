@@ -9,12 +9,15 @@ const response = () => ({ shop: { currencyCode: 'EUR' }, nodes: [{ id: mapping.s
     location: { id: mapping.inventory_location_id!, isActive: true, fulfillsOnlineOrders: true }, quantities: [{ name: 'available', quantity: 3 }] } } }] })
 const evidence = () => ({ mose_variant_id: 'v1', mapping_current: true, status: 'known', available_quantity: 3, observed_at: new Date().toISOString() })
 describe('authoritative location inventory', () => {
-  it('uses the configured location available quantity, clamps negative stock, and never counts incoming/on hand', () => {
+  it('uses the configured location available quantity, flags negative stock for reconciliation, and never counts incoming/on hand', () => {
     const r = response()
     r.nodes[0].inventoryItem.inventoryLevel.quantities.push({ name: 'on_hand', quantity: 999 })
     expect(projectInventory(mapping, r)).toEqual({ status: 'known', quantity: 3, reason: 'INVENTORY_VERIFIED' })
     r.nodes[0].inventoryItem.inventoryLevel.quantities[0].quantity = -2
-    expect(projectInventory(mapping, r).quantity).toBe(0)
+    expect(projectInventory(mapping, r)).toEqual({ status: 'unknown', quantity: null, reason: 'INVENTORY_NEGATIVE_QUANTITY' })
+  })
+  it('rejects a different inventory item even when the variant and location match', () => {
+    expect(projectInventory({ ...mapping, inventory_item_id: 'gid://shopify/InventoryItem/7' }, response())).toMatchObject({ status: 'unknown', reason: 'INVENTORY_ITEM_CHANGED' })
   })
   it('never represents untracked supplier sentinel inventory as real stock', () => {
     const r = response()

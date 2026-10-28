@@ -212,12 +212,13 @@ export default function InventoryManager() {
 
     try {
       setAdjustingId(id)
-      await postInventoryAdjust({
+      const adjustment = await postInventoryAdjust({
         variantId: id,
         delta,
         field: isPresale ? 'presale' : 'regular',
         reason: 'manual',
         notes: `Voorraad gezet via admin (${isPresale ? 'presale' : 'regulier'})`,
+        ...(!isPresale ? { expectedStock: originalValue } : {}),
       })
 
       cancelEditing()
@@ -229,12 +230,13 @@ export default function InventoryManager() {
         return next
       })
 
-      toast.success(`Voorraad bijgewerkt: ${originalValue} → ${value}`, {
+      toast.success(adjustment.result.shopify_pending ? 'Opgeslagen; Shopify-voorraad wordt bijgewerkt.' : `Voorraad bijgewerkt: ${originalValue} → ${value}`, {
         duration: 5000,
         icon: '✅',
         style: { border: '2px solid black', borderRadius: '0', fontWeight: 'bold' },
       })
 
+      if (adjustment.result.shopify_pending) return
       toast(
         (t) => (
           <div className="flex items-center gap-3">
@@ -293,7 +295,7 @@ export default function InventoryManager() {
     const id = variant.id
     try {
       setAdjustingId(id)
-      await postInventoryAdjust({
+      const adjustment = await postInventoryAdjust({
         variantId: id,
         delta,
         field: field === 'presale_stock' ? 'presale' : 'regular',
@@ -308,7 +310,7 @@ export default function InventoryManager() {
         return next
       })
       toast.success(
-        delta > 0 ? `+${delta} toegevoegd` : `${delta} afgeboekt`,
+        adjustment.result.shopify_pending ? 'Opgeslagen; Shopify-voorraad wordt bijgewerkt.' : delta > 0 ? `+${delta} toegevoegd` : `${delta} afgeboekt`,
         { style: { border: '2px solid black', borderRadius: '0', fontWeight: 'bold' } }
       )
     } catch (err: unknown) {

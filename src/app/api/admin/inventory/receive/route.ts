@@ -94,6 +94,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
+    const operation = request.headers.get('idempotency-key')
+    if (!operation || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(operation)) {
+      return NextResponse.json({ error: 'Een vaste voorraadbewerking-ID is vereist. Vernieuw de beheerpagina.' }, { status: 400 })
+    }
+    const response = await (supabase as SupabaseClient).rpc('apply_inventory_command', { p_operation: operation, p_kind: 'receive', p_payload: parsed })
+    if (response.error) return NextResponse.json({ error: 'Voorraadbewerking nog niet bevestigd. Probeer dezelfde bewerking opnieuw.' }, { status: 503 })
+    return NextResponse.json({ ok: true, result: response.data })
+  }
+
   const client = supabase as SupabaseClient
   const { data, error } = await client.rpc('inventory_commit_receipt', {
     p_title: parsed.title,
