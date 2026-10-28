@@ -92,12 +92,12 @@ RPC. Original Desktop checkout was not touched.
 ## Recovered combined-schema audit — 28 October 2026
 
 All six additive Shopify migrations (001,002,inventory001,ledger004,outbox005,
-legacy006) were executed together on an isolated real PostgreSQL 18 server with
+legacy006) were executed together on an isolated real PostgreSQL 17.10 server (also tested on 18) with
 Supabase-like default table grants. Rollback removed all integration relations;
 commit preserved the 54 synthetic opening accounts and 6104 points byte for byte.
 The 19 integration tables all had RLS and denied browser CRUD despite those
 initial default grants. Actual `SET ROLE` requests denied order reads and the
-atomic money RPC. **222 assertions** passed, including separate PostgreSQL
+atomic money RPC. **247 assertions** passed, including separate PostgreSQL
 connections for competing redemptions, Shopify reserve versus legacy debit,
 simultaneous late earning/refund/admin writes, duplicate callbacks, and two
 first-purchase writers creating one account while retaining both earnings.
@@ -119,9 +119,8 @@ node tests/lib/shopify-combined-postgres-check.mjs
 ```
 
 The test refuses non-loopback URLs, creates synthetic tables/roles and requires
-an empty disposable database. It does not connect to Supabase. PostgreSQL 18
-proves real transaction/lock behavior, not Supabase-specific platform or exact
-production-version parity. The checked-in read-only preflight at
+an empty disposable database. It does not connect to Supabase. PostgreSQL 17 matches the live major version and proves real transaction/lock
+behavior; it does not replace Supabase-specific platform staging. The checked-in read-only preflight at
 `docs/shopify/database-preflight.sql` checks the live column/index/role/trigger
 contract and opening aggregates before a separately coordinated deployment.
 Supabase backup recovery, metadata preflight, migration history registration and

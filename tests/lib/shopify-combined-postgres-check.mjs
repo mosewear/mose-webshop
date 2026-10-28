@@ -19,6 +19,8 @@ const files=['20261027000100_shopify_pilot.sql','20261027000200_shopify_order_ac
 const sqls=await Promise.all(files.map(f=>readFile(new URL('../../supabase/migrations/'+f,import.meta.url),'utf8')))
 const tx=async(sql,args=[])=>{const c=new pg.Client({connectionString:url.href}); await c.connect();try{await c.query('begin');await c.query("set local statement_timeout='10s'");const result=await c.query(sql,args);await c.query('commit');return result.rows}catch(e){await c.query('rollback');throw e}finally{await c.end()}}
 try {
+ const major = await scalar("select current_setting('server_version_num')::int/10000")
+ check([17,18].includes(major),true,'supported local PostgreSQL major')
  await db.query(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;
  create table auth.users(id uuid primary key,email text unique);create function auth.uid()returns uuid language sql as 'select null::uuid';create function auth.jwt()returns jsonb language sql as 'select ''{}''::jsonb';
  create table profiles(id uuid primary key,is_admin boolean);create table returns(id uuid primary key);
@@ -82,5 +84,5 @@ try {
  check(await scalar('select points_balance from loyalty_points where email=$1',[freshEmail]),158,'separate first-purchase Shopify/legacy creators share one account and retain both earnings')
  check(await scalar('select count(*)::int from loyalty_points where email=$1',[freshEmail]),1,'concurrent first earning creates exactly one account')
  check(await scalar('select count(*)::int from loyalty_points'),55,'opening54 plus one actual new buyer only')
- console.log(`${checks} combined real PostgreSQL migration/RLS/separate-session concurrency checks passed; ${tables.length} private RLS tables; synthetic only.`)
+ console.log(`${checks} combined real PostgreSQL${major} migration/RLS/separate-session concurrency checks passed; ${tables.length} private RLS tables; synthetic only.`)
 }finally{await db.end()}
