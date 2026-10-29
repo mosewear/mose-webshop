@@ -61,7 +61,7 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
           : text('Deze bestelomgeving is nog niet beschikbaar. Je eerdere bestellingen vind je hieronder. Voor vragen kun je contact met ons opnemen.', 'This order view is not available yet. Your previous orders are shown below. Please contact us if you need help.')}</p>
       </div>
       : !orders.length ? <p className="border-2 border-gray-200 bg-gray-50 p-6 text-gray-600">{text('Nog geen bestellingen via Shopify op deze pagina.', 'No orders via Shopify on this page yet.')}</p>
-      : orders.map(order => <article key={order.id} className="border-2 border-black bg-white">
+      : orders.map(order => <article id={order.id.split('/').pop()} key={order.id} className="border-2 border-black bg-white">
         <header className="flex flex-wrap justify-between gap-3 border-b-2 border-black p-4 md:p-6">
           <div><h3 className="font-bold text-xl break-words">{order.name}</h3><p className="text-xs text-gray-500 mt-1">{text('Laatst bijgewerkt', 'Last updated')}: {date(order.updatedAt)}</p></div>
           <div className="text-left sm:text-right"><p className="font-bold text-xl">{money(order.total, order.currency)}</p><p className="text-sm mt-1">{status(order.financialStatus)}</p></div>
