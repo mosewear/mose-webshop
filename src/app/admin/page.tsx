@@ -450,7 +450,7 @@ export default function AdminDashboard() {
               <span className="text-xl sm:text-3xl font-bold text-brand-primary">{stats.conversionRate.toFixed(1)}%</span>
               <DeltaBadge current={stats.conversionRate} previous={prevStats.conversionRate} disabled={dateRange === 'all'} />
             </div>
-            <div className="text-xs text-gray-500 mt-2">Checkout → betaald</div>
+            <div className="text-xs text-gray-500 mt-2">Van alle bestellingen in deze periode</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
@@ -459,16 +459,16 @@ export default function AdminDashboard() {
               <span className="text-xl sm:text-3xl font-bold text-brand-primary">{formatBedrag(stats.avgOrderValue)}</span>
               <DeltaBadge current={stats.avgOrderValue} previous={prevStats.avgOrderValue} disabled={dateRange === 'all'} />
             </div>
-            <div className="text-xs text-gray-500 mt-2">Per betaalde order</div>
+            <div className="text-xs text-gray-500 mt-2">Per order met betaling</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
-            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten Mandjes</div>
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten eigen checkouts</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-amber-600">{stats.abandonedCarts}</span>
               <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} disabled={dateRange === 'all'} hogerIsSlecht />
             </div>
-            <div className="text-xs text-gray-500 mt-2">Checkout gestart, niet betaald</div>
+            <div className="text-xs text-gray-500 mt-2">Eigen checkout · langer dan 24 uur open</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">

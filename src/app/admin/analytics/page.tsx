@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
     lines.push(`Aandeel orders met betaling,${stats.conversionRate.toFixed(1)}%`)
     lines.push(`Totaal Orders,${stats.totalOrders}`)
     lines.push(`Orders met betaling,${stats.paidOrdersCount}`)
-    lines.push(`Verlaten Carts,${stats.abandonedCartsCount}`)
+    lines.push(`Verlaten eigen checkouts,${stats.abandonedCartsCount}`)
     lines.push('')
 
     if (revenueHistory.length > 0) {
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
               <ShoppingCart size={20} className="text-blue-600" />
             </div>
             <div className="text-3xl font-bold text-gray-800">{formatBedrag(stats.avgOrderValue)}</div>
-            <div className="text-xs text-gray-500 mt-1">Per betaalde order</div>
+            <div className="text-xs text-gray-500 mt-1">Per order met betaling</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-6">
@@ -228,11 +228,11 @@ export default function AnalyticsPage() {
 
           <div className="bg-white border-2 border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Verlaten Carts</div>
+              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Verlaten eigen checkouts</div>
               <AlertCircle size={20} className="text-orange-600" />
             </div>
             <div className="text-3xl font-bold text-gray-800">{stats.abandonedCartsCount}</div>
-            <div className="text-xs text-gray-500 mt-1">Laatste 24 uur</div>
+            <div className="text-xs text-gray-500 mt-1">Eigen checkout · langer dan 24 uur open</div>
           </div>
         </div>
 
@@ -301,7 +301,7 @@ export default function AnalyticsPage() {
             {/* Abandoned Carts */}
             <div className="flex flex-col md:flex-row md:items-center gap-3">
               <div className="w-full md:w-32 text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Verlaten Carts
+                Verlaten eigen checkouts
               </div>
               <div className="flex-1">
                 <div className="bg-red-100 h-12 flex items-center relative overflow-hidden border-2 border-red-300">
