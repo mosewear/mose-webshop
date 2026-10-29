@@ -1,5 +1,7 @@
 'use client'
 
+import { inventoryOperation } from '@/lib/admin/inventory-operation'
+
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -275,10 +277,7 @@ export default function CreateOrderPage() {
             country: billingCountry || shippingAddr.country,
           }
 
-      const res = await fetch('/api/admin/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const payload = {
           email: email.trim(),
           shipping_address: shippingAddr,
           billing_address: billingAddr,
@@ -288,12 +287,19 @@ export default function CreateOrderPage() {
           shipping_cost: shippingCost,
           internal_notes: internalNotes.trim() || null,
           items: lineItems.map(({ key, ...item }) => item),
-        }),
+      }
+      const operation = await inventoryOperation('manual-order', payload)
+      const res = await fetch('/api/admin/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, operationId: operation.id }),
       })
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Onbekende fout')
 
+      if (data.success !== true || typeof data.orderId !== 'string') throw new Error('Onbevestigde bestelling. Probeer dezelfde aanvraag opnieuw.')
+      operation.confirmed()
       router.push(`/admin/orders/${data.orderId}`)
     } catch (err: any) {
       showError(err.message)

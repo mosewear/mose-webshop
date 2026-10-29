@@ -1,0 +1,9 @@
+# Atomic manual order creation
+
+With `LEGACY_INVENTORY_ATOMIC_ENABLED=true`, new administrative orders use `create_atomic_manual_order` (migration 20261029000200). It inserts the order and lines, calls the existing `apply_legacy_paid_stock` for paid orders, updates the customer profile/statistics and records the operation in one transaction. Any failed line rolls everything back. Shopify-owned variants are rejected under the same variant locks used by ownership transfer. No historical order stamps or quantities are updated by this migration.
+
+The browser persists only a SHA-256 payload hash and random operation UUID through the existing inventory-operation helper. Retries, including reload/lost response, reuse the operation. The server hashes the actual submitted intent and checks saved operations before current stock validation. The SQL journal serializes concurrent requests with the same UUID; an exact replay returns the existing order and does not repeat stock or customer-stat updates. Reusing the key for different intent fails. An unknown RPC outcome returns 503 with retry instructions; there is no non-atomic fallback and the operation is not cleared. Success clears it and navigates to the existing order.
+
+Deploy migration before routing manual orders to this RPC. Production already has the atomic inventory flag enabled: a code-first deployment safely returns 503 for manual creation until migration exists, rather than silently reverting to the old direct stock writes. The flag-off compatibility path remains available for non-cutover installations; it is not a reason to turn off the production atomic flag.
+
+Validation: 14 local PostgreSQL checks cover stamped decrement, replay without double stock/customer statistics, intent mismatch, duplicate-line shortage with full rollback, Shopify ownership rejection and restricted function privileges. TypeScript passes. No production order or stock mutation was performed.

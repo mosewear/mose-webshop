@@ -790,26 +790,26 @@
     "returnPolicy": "Items mogen binnen {days} dagen retour zonder gedoe",
     "freeFrom": "Gratis vanaf €{threshold}",
     "shipping": "Verzending",
-    "deliveryTime": "1-2 werkdagen",
+    "deliveryTime": "Per artikel",
     "deliveryTimeLabel": "Levertijd",
     "returnDays": "{days} dagen",
     "free": "Gratis",
     "manufacturingFault": "Bij fabricagefout",
     "shippingCost": "Onder €{threshold}? Dan betaal je €{cost} verzendkosten.",
-    "sameConditionsNLBE": "Dezelfde verzend- en retourvoorwaarden gelden voor Nederland en België.",
+    "sameConditionsNLBE": "We leveren in Nederland en België. Sommige artikelen zijn alleen in Nederland beschikbaar; dit staat bij het afrekenen.",
     "loading": "Laden...",
     "returnPeriodTitle": "{days} dagen bedenktijd",
     "returnPeriodText": "Niet tevreden? Je hebt {days} dagen bedenktijd vanaf ontvangst. Retourneer zonder opgaaf van reden.",
     "conditionsTitle": "Voorwaarden",
-    "conditionUnworn": "Ongedragen en ongewassen",
-    "conditionTagsAttached": "Labels zitten er nog aan",
-    "conditionOriginalPackaging": "Originele staat en verpakking",
-    "conditionWithinDays": "Binnen {days} dagen na ontvangst",
+    "conditionUnworn": "Passen en beoordelen mag; voorkom verder gebruik en wassen.",
+    "conditionTagsAttached": "Laat labels waar mogelijk aan het artikel.",
+    "conditionOriginalPackaging": "Verpak de artikelen zorgvuldig; de originele verpakking is niet verplicht.",
+    "conditionWithinDays": "Meld je retour binnen {days} dagen na ontvangst.",
     "howToReturnTitle": "Hoe retourneren?",
     "step1Title": "Log in op je account",
     "step1TextBeforeLink": "Ga naar",
     "step1LinkText": "je klantportaal",
-    "step1TextAfterLink": "en log in met je gegevens.",
+    "step1TextAfterLink": "en log in, of meld je retour per e-mail via info@mosewear.com.",
     "step2Title": "Selecteer je order",
     "step2Text": "Kies de bestelling en selecteer de artikelen die je wilt retourneren.",
     "step3Title": "Betaal retourkosten",
@@ -817,18 +817,18 @@
     "step4Title": "Pak je artikel(en) in",
     "step4Text": "Stop alles veilig in de originele verpakking of een stevige doos.",
     "step5Title": "Plak het label erop",
-    "step5Text": "Breng het pakket naar een DHL ServicePoint bij jou in de buurt.",
+    "step5Text": "Gebruik een afgiftepunt van de vervoerder die op je retourlabel staat. Bewaar je verzendbewijs.",
     "step6Title": "Ontvang je geld terug",
-    "step6Text": "Binnen 5-7 werkdagen na ontvangst storten we het bedrag terug.",
+    "step6Text": "We verwerken retouren gewoonlijk binnen 5–7 werkdagen na ontvangst, binnen de wettelijke terugbetalingstermijn.",
     "returnCostsTitle": "Retourkosten",
     "returnCostsText": "Retourneren binnen Nederland en België kost",
-    "returnCostsFollowup": "Je betaalt dit direct bij het aanmaken van het retourlabel in je klantportaal.",
+    "returnCostsFollowup": "Je betaalt het MOSE-retourlabel bij het aanmaken. Dit bedrag houden we niet nogmaals in op je terugbetaling. Je kunt ook zelf een vervoerder kiezen en betaalt dan diens tarief.",
     "manufacturingFaultReturnFree": "Retour bij fabricagefout of verkeerde levering is altijd gratis.",
     "refundTitle": "Terugbetaling",
-    "refundTextOneBefore": "Na ontvangst en controle van je retourzending krijg je het aankoopbedrag binnen ",
+    "refundTextOneBefore": "We verwerken een retour gewoonlijk binnen ",
     "businessDays": "werkdagen",
-    "refundTextOneAfter": " teruggestort op de rekening waarmee je hebt betaald.",
-    "refundTextTwo": "Je ontvangt een bevestigingsmail zodra je retour is verwerkt en het bedrag is teruggestort.",
+    "refundTextOneAfter": " na ontvangst en betalen terug via je oorspronkelijke betaalmethode.",
+    "refundTextTwo": "Bij herroeping betalen we uiterlijk binnen 14 dagen na je melding terug. We mogen wachten op de artikelen of je verzendbewijs. Na je melding heb je 14 dagen om terug te sturen. Bij volledige herroeping vergoeden we ook eventueel betaalde standaard heenzendkosten.",
     "questionsTitle": "Nog vragen?",
     "questionsText": "Neem gerust contact met ons op. We helpen je graag verder!",
     "contactUs": "Contact opnemen",
@@ -836,11 +836,11 @@
     "shippingAreas": "Verzendgebieden",
     "netherlands": "Nederland",
     "belgium": "België",
-    "processing": "Verwerking: 1-2 dagen",
-    "delivery": "Bezorging: 1-3 dagen",
-    "total": "Totaal: meestal 1 werkdag, anders 2",
+    "processing": "Voorraadartikelen: de levertijd staat op de productpagina.",
+    "delivery": "Op bestelling gemaakt: 1–3 werkdagen productie.",
+    "total": "Daarna 5–14 werkdagen transport. Gemengde bestellingen kunnen apart aankomen.",
     "trackTrace": "Track & Trace",
-    "viaDHL": "Via <strong>DHL</strong>. Je ontvangt:",
+    "viaDHL": "Met tracking. Je ontvangt:",
     "trackCode": "Track & trace code",
     "expectedDelivery": "Verwachte levertijd",
     "trackLink": "Link om te volgen",
@@ -1714,7 +1714,7 @@
   },
   "terms": {
     "title": "ALGEMENE VOORWAARDEN",
-    "lastUpdated": "Laatst bijgewerkt: 1 januari 2025",
+    "lastUpdated": "Laatst bijgewerkt: 29 oktober 2026",
     "backToHome": "Terug naar home",
     "sections": {
       "general": {
@@ -1738,17 +1738,17 @@
       "payment": {
         "title": "4. BETALING",
         "items": [
-          "Betaling verloopt veilig via Mollie",
-          "We accepteren iDEAL, creditcard en Bancontact",
-          "Je betaling moet voltooid zijn voordat we je bestelling verzenden",
-          "Bij mislukte betalingen wordt je bestelling automatisch geannuleerd"
+          "Je betaalt via de beveiligde betaalomgeving die bij het afrekenen wordt geopend.",
+          "De beschikbare betaalmethoden worden bij het afrekenen getoond en kunnen per land verschillen.",
+          "We verzenden je bestelling nadat de betaling is bevestigd.",
+          "Bij een onderbroken betaling controleren we eerst de betaalstatus om dubbele betalingen te voorkomen."
         ]
       },
       "shipping": {
         "title": "5. VERZENDING",
         "items": [
-          "Bestellingen binnen Nederland worden verzonden via DHL",
-          "Levertijd is meestal 1 werkdag, anders 2, binnen Nederland en België",
+          "Voorraadartikelen worden vanuit Nederland verzonden. Artikelen die na bestelling worden geproduceerd kunnen rechtstreeks door onze productiepartner worden verzonden.",
+          "Voor voorraadartikelen geldt de levertijd op de productpagina. Voor productie op bestelling geldt, waar vermeld, 1–3 werkdagen productie plus 5–14 werkdagen transport. Een gemengde bestelling kan in meerdere pakketten aankomen.",
           "Je ontvangt een track & trace code bij verzending",
           "Verzendkosten: €{cost} (gratis vanaf €{threshold})"
         ],
@@ -1757,24 +1757,24 @@
       "returns": {
         "title": "6. RETOURNEREN",
         "items": [
-          "Je hebt {days} dagen bedenktijd vanaf ontvangst",
-          "Producten moeten ongedragen en in originele staat zijn",
-          "Retourzendingen binnen Nederland en België mogelijk",
-          "Retourkosten van €{returnCost} worden verrekend met je terugbetaling",
-          "Retourzendingen worden binnen 5 werkdagen verwerkt"
+          "Je kunt je retour binnen {days} dagen na ontvangst aanmelden via je account of per e-mail. Je wettelijke herroepingsrecht blijft gelden.",
+          "Je mag artikelen passen en beoordelen zoals in een winkel. Gebruik dat verder gaat dan nodig om het artikel te beoordelen kan tot waardevermindering leiden.",
+          "Na je herroepingsmelding heb je 14 dagen om de artikelen terug te sturen. Gebruik een stevige verpakking en bewaar je verzendbewijs.",
+          "Een MOSE-retourlabel voor Nederland of België kost €{returnCost}. Je betaalt dit bij het aanmaken van het label; we houden dit niet nogmaals in op je terugbetaling. Bij een gebrek of verkeerde levering betaal je geen retourkosten.",
+          "We betalen terug via de oorspronkelijke betaalmethode. Bij herroeping geldt uiterlijk 14 dagen na je melding; we mogen wachten tot ontvangst van de artikelen of je verzendbewijs. Onze gebruikelijke verwerking na ontvangst is 5–7 werkdagen, binnen deze wettelijke termijn."
         ]
       },
       "warranty": {
         "title": "7. GARANTIE",
-        "content": "Op alle producten geldt 2 jaar fabrieksgarantie tegen materiaal- en fabricagefouten. Deze garantie dekt geen normale slijtage of schade door verkeerd gebruik."
+        "content": "Je hebt recht op een product dat voldoet aan wat je redelijkerwijs mag verwachten. Je wettelijke rechten worden niet beperkt tot een vaste garantietermijn. Meld een gebrek via info@mosewear.com; afhankelijk van de situatie zorgen we voor een kosteloze passende oplossing. Normale slijtage en schade door verkeerd gebruik vallen hier niet onder."
       },
       "liability": {
         "title": "8. AANSPRAKELIJKHEID",
-        "content": "MOSE is niet aansprakelijk voor indirecte schade of gevolgschade die voortvloeit uit het gebruik van onze producten, tenzij er sprake is van opzet of grove schuld."
+        "content": "Deze voorwaarden beperken geen dwingende wettelijke consumentenrechten. Neem bij een probleem contact met ons op, zodat we het kunnen onderzoeken en een passende oplossing kunnen bieden."
       },
       "disputes": {
         "title": "9. GESCHILLEN",
-        "content": "Op alle overeenkomsten is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de bevoegde rechter in Groningen."
+        "content": "Op de overeenkomst is Nederlands recht van toepassing, zonder dat je de dwingende consumentenbescherming van je woonland verliest. Een geschil kan worden voorgelegd aan de volgens de toepasselijke wet bevoegde rechter."
       },
       "contact": {
         "title": "10. VRAGEN",

@@ -790,26 +790,26 @@
     "returnPolicy": "Items can be returned within {days} days hassle-free",
     "freeFrom": "Free from €{threshold}",
     "shipping": "Shipping",
-    "deliveryTime": "1-2 business days",
+    "deliveryTime": "Per item",
     "deliveryTimeLabel": "Delivery Time",
     "returnDays": "{days} Days",
     "free": "Free",
     "manufacturingFault": "For manufacturing defects",
     "shippingCost": "Under €{threshold}? Then you pay €{cost} shipping costs.",
-    "sameConditionsNLBE": "The same shipping and return conditions apply to the Netherlands and Belgium.",
+    "sameConditionsNLBE": "We deliver to the Netherlands and Belgium. Some items are available in the Netherlands only; checkout shows availability.",
     "loading": "Loading...",
     "returnPeriodTitle": "{days} Days return period",
     "returnPeriodText": "Not satisfied? You have {days} days to return from delivery. Return without giving a reason.",
     "conditionsTitle": "Conditions",
-    "conditionUnworn": "Unworn and unwashed",
-    "conditionTagsAttached": "Tags are still attached",
-    "conditionOriginalPackaging": "Original condition and packaging",
-    "conditionWithinDays": "Within {days} days after delivery",
+    "conditionUnworn": "You may try on and inspect items; avoid further use and washing.",
+    "conditionTagsAttached": "Keep labels attached where possible.",
+    "conditionOriginalPackaging": "Pack items securely; original packaging is not mandatory.",
+    "conditionWithinDays": "Register your return within {days} days of receipt.",
     "howToReturnTitle": "How to return?",
     "step1Title": "Log in to your account",
     "step1TextBeforeLink": "Go to",
     "step1LinkText": "your customer portal",
-    "step1TextAfterLink": "and log in with your details.",
+    "step1TextAfterLink": "and sign in, or notify us by email at info@mosewear.com.",
     "step2Title": "Select your order",
     "step2Text": "Choose the order and select the items you want to return.",
     "step3Title": "Pay return costs",
@@ -817,18 +817,18 @@
     "step4Title": "Pack your item(s)",
     "step4Text": "Pack everything safely in the original packaging or a sturdy box.",
     "step5Title": "Attach the label",
-    "step5Text": "Bring the parcel to a DHL ServicePoint near you.",
+    "step5Text": "Use a drop-off point for the carrier on your return label. Keep proof of postage.",
     "step6Title": "Receive your refund",
-    "step6Text": "We refund the amount within 5-7 business days after receiving your return.",
+    "step6Text": "We usually process returns within 5–7 business days after receipt, within the statutory refund deadline.",
     "returnCostsTitle": "Return costs",
     "returnCostsText": "Returning within the Netherlands and Belgium costs",
-    "returnCostsFollowup": "You pay this directly when creating the return label in your customer portal.",
+    "returnCostsFollowup": "Pay for the MOSE return label when creating it. We do not deduct this fee again from your refund. You may choose your own carrier instead and pay its rate.",
     "manufacturingFaultReturnFree": "Returns are always free in case of manufacturing defects or wrong delivery.",
     "refundTitle": "Refund",
-    "refundTextOneBefore": "After receiving and checking your return, the purchase amount will be refunded within ",
+    "refundTextOneBefore": "We usually process returns within ",
     "businessDays": "business days",
-    "refundTextOneAfter": " to the account you used for payment.",
-    "refundTextTwo": "You will receive a confirmation email once your return has been processed and refunded.",
+    "refundTextOneAfter": " of receipt and refund your original payment method.",
+    "refundTextTwo": "For withdrawal, we refund within 14 days of your notification, but may wait for the items or proof of dispatch. Send items back within 14 days of notification. For full withdrawal, we also refund any standard outbound delivery charge.",
     "questionsTitle": "Any questions?",
     "questionsText": "Feel free to contact us. We are happy to help!",
     "contactUs": "Contact us",
@@ -836,11 +836,11 @@
     "shippingAreas": "Shipping Areas",
     "netherlands": "Netherlands",
     "belgium": "Belgium",
-    "processing": "Processing: 1-2 days",
-    "delivery": "Delivery: 1-3 days",
-    "total": "Total: usually 1 business day, otherwise 2",
+    "processing": "In-stock items: see the delivery estimate on the product page.",
+    "delivery": "Made-to-order items: 1–3 business days for production.",
+    "total": "Then 5–14 business days in transit. Mixed orders may arrive separately.",
     "trackTrace": "Track & Trace",
-    "viaDHL": "Via <strong>DHL</strong>. You will receive:",
+    "viaDHL": "Tracked delivery. You receive:",
     "trackCode": "Track & trace code",
     "expectedDelivery": "Expected delivery time",
     "trackLink": "Link to track",
@@ -1714,7 +1714,7 @@
   },
   "terms": {
     "title": "TERMS & CONDITIONS",
-    "lastUpdated": "Last updated: January 1, 2025",
+    "lastUpdated": "Last updated: 29 October 2026",
     "backToHome": "Back to home",
     "sections": {
       "general": {
@@ -1738,17 +1738,17 @@
       "payment": {
         "title": "4. PAYMENT",
         "items": [
-          "Payment is processed securely via Mollie",
-          "We accept iDEAL, credit card and Bancontact",
-          "Your payment must be completed before we ship your order",
-          "Failed payments will automatically cancel your order"
+          "Payment takes place through the secure payment page opened at checkout.",
+          "Available payment methods are shown at checkout and may vary by country.",
+          "We dispatch your order after payment is confirmed.",
+          "If payment is interrupted, we check its status first to prevent duplicate payments."
         ]
       },
       "shipping": {
         "title": "5. SHIPPING",
         "items": [
-          "Orders within the Netherlands are shipped via DHL",
-          "Delivery time is usually 1 business day, otherwise 2, within the Netherlands and Belgium",
+          "In-stock items ship from the Netherlands. Made-to-order items may ship directly from our production partner.",
+          "For in-stock items, see the delivery estimate on the product page. Made-to-order items take, where stated, 1–3 business days for production plus 5–14 business days in transit. Mixed orders may arrive in separate parcels.",
           "You will receive a track & trace code upon shipment",
           "Shipping costs: €{cost} (free from €{threshold})"
         ],
@@ -1757,24 +1757,24 @@
       "returns": {
         "title": "6. RETURNS",
         "items": [
-          "You have {days} days cooling-off period from receipt",
-          "Products must be unworn and in original condition",
-          "Returns are possible within the Netherlands and Belgium",
-          "Return costs of €{returnCost} are deducted from your refund",
-          "Return shipments are processed within 5 business days"
+          "Register your return within {days} days of receipt through your account or by email. Your statutory right of withdrawal remains unaffected.",
+          "You may try on and inspect items as you would in a shop. Handling beyond what is necessary to assess an item may result in a deduction for diminished value.",
+          "After notifying us of withdrawal, return the items within 14 days. Pack them securely and keep proof of postage.",
+          "A MOSE return label for the Netherlands or Belgium costs €{returnCost}, paid when the label is created. We do not deduct that fee again from your refund. Returns for defects or incorrect deliveries are free.",
+          "We refund the original payment method. For statutory withdrawal, repayment is due within 14 days of notification; we may wait for the goods or proof of dispatch. Our usual processing time after receipt is 5–7 business days, within that statutory deadline."
         ]
       },
       "warranty": {
         "title": "7. WARRANTY",
-        "content": "All products come with a 2-year manufacturer warranty against material and manufacturing defects. This warranty does not cover normal wear and tear or damage from improper use."
+        "content": "You are entitled to goods that meet reasonable expectations. Your statutory rights are not limited to a fixed warranty period. Report defects to info@mosewear.com so we can arrange an appropriate solution free of charge where required. Normal wear and damage caused by misuse are excluded."
       },
       "liability": {
         "title": "8. LIABILITY",
-        "content": "MOSE is not liable for indirect damage or consequential damage arising from the use of our products, unless there is intent or gross negligence."
+        "content": "These terms do not limit mandatory consumer rights. Contact us if there is a problem so we can investigate and provide an appropriate solution."
       },
       "disputes": {
         "title": "9. DISPUTES",
-        "content": "Dutch law applies to all agreements. Disputes will be submitted to the competent court in Groningen."
+        "content": "Dutch law applies without depriving you of mandatory consumer protections in your country of residence. Disputes may be brought before the court that has jurisdiction under applicable law."
       },
       "contact": {
         "title": "10. QUESTIONS",

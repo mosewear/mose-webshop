@@ -1,3 +1,4 @@
+import { legacyCutoverFreezeResponse } from '@/lib/legacy-cutover-freeze'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { legacyPaymentDecision, shopifyCheckoutEnabled } from '@/lib/checkout-cutover'
@@ -27,6 +28,8 @@ const VALID_METHODS = new Set<StorefrontPaymentMethod>([
 ])
 
 export async function POST(req: NextRequest) {
+  const freezeResponse = await legacyCutoverFreezeResponse()
+  if (freezeResponse) return freezeResponse
   try {
     const body = await req.json()
     const {
