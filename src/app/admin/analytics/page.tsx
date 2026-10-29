@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect, useRef } from 'react'
 import { TrendingUp, ShoppingCart, Package, CreditCard, DollarSign, Clock, AlertCircle, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatBedrag } from '@/lib/format-price'
@@ -24,13 +23,16 @@ interface PaymentMethodBreakdown {
 }
 
 interface TopProduct {
+  product_id: string
   product_name: string
   total_quantity: number
-  total_revenue: number
 }
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const requestSequence = useRef(0)
+  const [retryToken, setRetryToken] = useState(0)
   const [dateRange, setDateRange] = useState<number>(30)
   const [stats, setStats] = useState<AnalyticsStats>({
     totalOrders: 0,
@@ -44,160 +46,34 @@ export default function AnalyticsPage() {
   })
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodBreakdown[]>([])
   const [topProducts, setTopProducts] = useState<TopProduct[]>([])
-  const [revenueHistory, setRevenueHistory] = useState<any[]>([])
+  const [revenueHistory, setRevenueHistory] = useState<{ date: string; revenue: number }[]>([])
 
   useEffect(() => {
-    fetchAnalytics()
-  }, [dateRange])
+    const controller = new AbortController()
+    void fetchAnalytics(controller.signal)
+    const refresh = () => { if (document.visibilityState === 'visible') void fetchAnalytics(controller.signal, false) }
+    const interval = setInterval(refresh, 60000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { controller.abort(); clearInterval(interval); document.removeEventListener('visibilitychange', refresh) }
+  }, [dateRange, retryToken])
 
-  const fetchAnalytics = async () => {
-    setLoading(true)
-    const supabase = createClient()
-    const rangeStart = new Date(Date.now() - dateRange * 24 * 60 * 60 * 1000).toISOString()
-
+  const fetchAnalytics = async (signal: AbortSignal, initial = true) => {
+    const request = ++requestSequence.current
+    if (initial) setLoading(true)
+    setError(null)
     try {
-      const { data: allOrders, error: ordersError } = await supabase
-        .from('orders')
-        .select('id, payment_status, total, paid_at, checkout_started_at, created_at')
-        .gte('created_at', rangeStart)
-        .order('created_at', { ascending: false })
-      
-      if (ordersError) {
-        console.error('Error fetching orders:', ordersError)
-        setLoading(false)
-        return
-      }
-
-      // Calculate stats manually for accuracy
-      const totalOrders = allOrders?.length || 0
-      const paidOrders = allOrders?.filter(o => o.payment_status === 'paid') || []
-      const pendingOrders = allOrders?.filter(o => o.payment_status === 'pending') || []
-      const failedOrders = allOrders?.filter(o => o.payment_status === 'failed') || []
-      
-      // Calculate abandoned carts (pending orders older than 24h)
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      const abandonedCarts = allOrders?.filter(o => 
-        o.payment_status === 'pending' && 
-        o.checkout_started_at && 
-        new Date(o.checkout_started_at) < twentyFourHoursAgo
-      ) || []
-      
-      // Calculate revenue (only paid orders)
-      const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0)
-      const avgOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
-      const conversionRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0
-      
-      setStats({
-        totalOrders,
-        paidOrdersCount: paidOrders.length,
-        pendingPaymentsCount: pendingOrders.length,
-        abandonedCartsCount: abandonedCarts.length,
-        failedPaymentsCount: failedOrders.length,
-        totalRevenue,
-        avgOrderValue,
-        conversionRate,
-      })
-
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('payment_method, total')
-        .eq('payment_status', 'paid')
-        .gte('created_at', rangeStart)
-        .not('payment_method', 'is', null)
-
-      if (ordersData) {
-        const methodBreakdown: { [key: string]: { count: number; revenue: number } } = {}
-        
-        ordersData.forEach((order) => {
-          const method = order.payment_method || 'unknown'
-          if (!methodBreakdown[method]) {
-            methodBreakdown[method] = { count: 0, revenue: 0 }
-          }
-          methodBreakdown[method].count++
-          methodBreakdown[method].revenue += Number(order.total)
-        })
-
-        const methods = Object.entries(methodBreakdown).map(([method, data]) => ({
-          method,
-          count: data.count,
-          revenue: data.revenue,
-        }))
-
-        setPaymentMethods(methods.sort((a, b) => b.revenue - a.revenue))
-      }
-
-      const { data: productsData } = await supabase
-        .from('order_items')
-        .select(`
-          product_id,
-          product_name,
-          quantity,
-          price_at_purchase,
-          order_id,
-          orders!inner(payment_status, created_at)
-        `)
-        .gte('orders.created_at', rangeStart)
-
-      if (productsData) {
-        // Groeperen op product_id, niet op product_name. product_name is een
-        // snapshot van het moment van bestellen en verschilt per taal en na een
-        // hernoeming, waardoor hetzelfde product anders in meerdere regels viel.
-        // De naam dient nu alleen nog als label; we houden de laatst gebruikte
-        // aan zodat de tabel de actuele benaming toont.
-        const productStats: {
-          [key: string]: { name: string; quantity: number; revenue: number }
-        } = {}
-
-        productsData.forEach((item: any) => {
-          if (item.orders?.payment_status === 'paid') {
-            const key = item.product_id || `naam:${item.product_name}`
-            if (!productStats[key]) {
-              productStats[key] = { name: item.product_name, quantity: 0, revenue: 0 }
-            }
-            productStats[key].quantity += item.quantity
-            productStats[key].revenue += item.quantity * Number(item.price_at_purchase)
-          }
-        })
-
-        const products = Object.values(productStats).map((data) => ({
-          product_name: data.name,
-          total_quantity: data.quantity,
-          total_revenue: data.revenue,
-        }))
-
-        setTopProducts(products.sort((a, b) => b.total_revenue - a.total_revenue).slice(0, 5))
-      }
-
-      const { data: historyData } = await supabase
-        .from('orders')
-        .select('paid_at, total')
-        .eq('payment_status', 'paid')
-        .not('paid_at', 'is', null)
-        .gte('paid_at', rangeStart)
-        .order('paid_at', { ascending: true })
-
-      if (historyData) {
-        const dailyRevenue: { [key: string]: number } = {}
-        historyData.forEach((order) => {
-          const d = new Date(order.paid_at!)
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-          dailyRevenue[key] = (dailyRevenue[key] || 0) + Number(order.total)
-        })
-
-        const allDays: { date: string; revenue: number }[] = []
-        for (let i = dateRange - 1; i >= 0; i--) {
-          const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-          const label = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })
-          allDays.push({ date: label, revenue: dailyRevenue[key] || 0 })
-        }
-        setRevenueHistory(allDays)
-      }
-
-    } catch (error) {
-      console.error('Error fetching analytics:', error)
+      const response = await fetch(`/api/admin/analytics?days=${dateRange}`, { cache: 'no-store', signal })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'De analyse kan niet worden geladen.')
+      if (signal.aborted || request !== requestSequence.current) return
+      setStats(data.stats)
+      setPaymentMethods(data.paymentMethods)
+      setTopProducts(data.topProducts)
+      setRevenueHistory(data.revenueHistory)
+    } catch (err) {
+      if (!signal.aborted && request === requestSequence.current) setError(err instanceof Error ? err.message : 'De analyse kan niet worden geladen.')
     } finally {
-      setLoading(false)
+      if (!signal.aborted && request === requestSequence.current) setLoading(false)
     }
   }
 
@@ -212,22 +88,27 @@ export default function AnalyticsPage() {
     return labels[method] || method
   }
 
+  const csvCell = (value: string) => {
+    const safe = /^[\s]*[=+\-@]|^[\t\r\n]/.test(value) ? "'" + value : value
+    return '"' + safe.replaceAll('"', '""') + '"'
+  }
+
   const exportCSV = () => {
     const lines: string[] = []
 
     lines.push('--- Overzicht ---')
     lines.push('Metriek,Waarde')
-    lines.push(`Totale Omzet,€${stats.totalRevenue.toFixed(2)}`)
-    lines.push(`Gem. Orderwaarde,€${stats.avgOrderValue.toFixed(2)}`)
-    lines.push(`Conversie Rate,${stats.conversionRate.toFixed(1)}%`)
+    lines.push(`Betaalde orderwaarde,€${stats.totalRevenue.toFixed(2)}`)
+    lines.push(`Gem. betaalde orderwaarde,€${stats.avgOrderValue.toFixed(2)}`)
+    lines.push(`Aandeel orders met betaling,${stats.conversionRate.toFixed(1)}%`)
     lines.push(`Totaal Orders,${stats.totalOrders}`)
-    lines.push(`Betaalde Orders,${stats.paidOrdersCount}`)
+    lines.push(`Orders met betaling,${stats.paidOrdersCount}`)
     lines.push(`Verlaten Carts,${stats.abandonedCartsCount}`)
     lines.push('')
 
     if (revenueHistory.length > 0) {
-      lines.push('--- Dagelijkse Omzet ---')
-      lines.push('Datum,Omzet')
+      lines.push('--- Orderwaarde per besteldatum ---')
+      lines.push('Besteldatum,Betaalde orderwaarde')
       revenueHistory.forEach((day) => {
         lines.push(`${day.date},€${day.revenue.toFixed(2)}`)
       })
@@ -235,23 +116,23 @@ export default function AnalyticsPage() {
     }
 
     if (topProducts.length > 0) {
-      lines.push('--- Top Producten ---')
-      lines.push('Product,Aantal Verkocht,Omzet')
+      lines.push('--- Populaire artikelen ---')
+      lines.push('Product,Actuele aantallen')
       topProducts.forEach((p) => {
-        lines.push(`"${p.product_name}",${p.total_quantity},€${p.total_revenue.toFixed(2)}`)
+        lines.push(`${csvCell(p.product_name)},${p.total_quantity}`)
       })
       lines.push('')
     }
 
     if (paymentMethods.length > 0) {
-      lines.push('--- Betaalmethodes ---')
-      lines.push('Methode,Aantal,Omzet')
+      lines.push('--- Betaalroutes ---')
+      lines.push('Betaalroute,Aantal,Betaalde orderwaarde')
       paymentMethods.forEach((m) => {
-        lines.push(`${getPaymentMethodLabel(m.method)},${m.count},€${m.revenue.toFixed(2)}`)
+        lines.push(`${csvCell(getPaymentMethodLabel(m.method))},${m.count},€${m.revenue.toFixed(2)}`)
       })
     }
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(['\uFEFF', lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -259,6 +140,14 @@ export default function AnalyticsPage() {
     link.click()
     URL.revokeObjectURL(url)
     toast.success('CSV geëxporteerd')
+  }
+
+  if (error) {
+    return <div role="alert" className="border-2 border-red-600 bg-red-50 p-6 text-red-900">
+      <h1 className="text-xl font-bold mb-2">Analyse niet bijgewerkt</h1>
+      <p>{error}</p>
+      <button className="mt-4 border-2 border-black px-4 py-2 text-black" onClick={() => setRetryToken(value => value + 1)}>Opnieuw laden</button>
+    </div>
   }
 
   if (loading) {
@@ -276,9 +165,9 @@ export default function AnalyticsPage() {
         <div>
           <h1 className="text-3xl font-display font-bold mb-2 flex items-center gap-3">
             <TrendingUp size={28} className="text-brand-primary" />
-            Analytics & Conversie
+            Orderanalyse
           </h1>
-          <p className="text-gray-600 text-sm md:text-base">Uitgebreide inzichten in je verkopen en conversies</p>
+          <p className="text-gray-600 text-sm md:text-base">MOSE- en Shopify-bestellingen in één analyse</p>
         </div>
         <button
           onClick={exportCSV}
@@ -289,6 +178,7 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
+      <p className="mb-6 text-sm text-gray-600">Orderbedragen zijn inclusief btw en verzending, na bevestigde terugbetalingen. Betaal- en inkoopkosten zijn niet afgetrokken. De grafiek volgt de besteldatum. Het aandeel orders met betaling is geen bezoekersconversie en omvat ook deels betaalde en later terugbetaalde orders.</p>
       <div className="space-y-6">
         {/* Date Range Filter */}
         <div className="flex flex-wrap gap-2">
@@ -311,16 +201,16 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border-2 border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Totale Omzet</div>
+              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Betaalde orderwaarde</div>
               <DollarSign size={20} className="text-green-600" />
             </div>
             <div className="text-3xl font-bold text-gray-800">{formatBedrag(stats.totalRevenue)}</div>
-            <div className="text-xs text-gray-500 mt-1">{stats.paidOrdersCount} betaalde orders</div>
+            <div className="text-xs text-gray-500 mt-1">{stats.paidOrdersCount} orders met betaling</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Gem. Orderwaarde</div>
+              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Gem. betaalde orderwaarde</div>
               <ShoppingCart size={20} className="text-blue-600" />
             </div>
             <div className="text-3xl font-bold text-gray-800">{formatBedrag(stats.avgOrderValue)}</div>
@@ -329,7 +219,7 @@ export default function AnalyticsPage() {
 
           <div className="bg-white border-2 border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Conversie Rate</div>
+              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Aandeel orders met betaling</div>
               <TrendingUp size={20} className="text-purple-600" />
             </div>
             <div className="text-3xl font-bold text-gray-800">{stats.conversionRate.toFixed(1)}%</div>
@@ -350,7 +240,7 @@ export default function AnalyticsPage() {
         <div className="bg-white border-2 border-gray-200 p-6 md:p-8">
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-6 flex items-center gap-3">
             <TrendingUp size={28} className="text-brand-primary" />
-            Conversie Funnel
+            Bestelstatussen
           </h2>
           <div className="space-y-4">
             {/* Total Orders */}
@@ -454,7 +344,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-3xl font-bold text-green-600">{stats.conversionRate.toFixed(1)}%</div>
-                    <div className="text-sm text-gray-600 uppercase tracking-wide mt-1">Conversie Rate</div>
+                    <div className="text-sm text-gray-600 uppercase tracking-wide mt-1">Aandeel orders met betaling</div>
                   </div>
                   <div>
                     <div className="text-3xl font-bold text-yellow-600">
@@ -494,7 +384,7 @@ export default function AnalyticsPage() {
                       <div className="flex-1 bg-gray-200 h-2 overflow-hidden">
                         <div 
                           className="h-full bg-brand-primary transition-all duration-500"
-                          style={{ width: `${(method.revenue / stats.totalRevenue) * 100}%` }}
+                          style={{ width: `${stats.totalRevenue > 0 ? (method.revenue / stats.totalRevenue) * 100 : 0}%` }}
                         ></div>
                       </div>
                       <span className="font-bold text-gray-800 text-sm">{formatBedrag(method.revenue)}</span>
@@ -503,7 +393,7 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">Nog geen betaalde orders</p>
+              <p className="text-gray-500 text-sm">Nog geen orders met betaling</p>
             )}
           </div>
 
@@ -511,12 +401,13 @@ export default function AnalyticsPage() {
           <div className="bg-white border-2 border-gray-200 p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Package size={24} className="text-brand-primary" />
-              Top Producten
+              Populaire artikelen
             </h2>
+            <p className="text-xs text-gray-500 mb-4">Op actuele aantallen, na orderwijzigingen en verwerkte retouren.</p>
             {topProducts.length > 0 ? (
               <div className="space-y-3">
                 {topProducts.map((product, index) => (
-                  <div key={product.product_name} className="border-2 border-gray-200 p-4">
+                  <div key={product.product_id} className="border-2 border-gray-200 p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs font-bold">
@@ -524,16 +415,16 @@ export default function AnalyticsPage() {
                         </span>
                         <span className="font-bold text-gray-800 text-sm">{product.product_name}</span>
                       </div>
-                      <span className="text-xs text-gray-600">{product.total_quantity}x verkocht</span>
+                      <span className="text-xs text-gray-600">{product.total_quantity} stuks</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex-1 bg-gray-200 h-2 overflow-hidden">
                         <div 
                           className="h-full bg-brand-primary transition-all duration-500"
-                          style={{ width: `${(product.total_revenue / topProducts[0].total_revenue) * 100}%` }}
+                          style={{ width: `${(product.total_quantity / topProducts[0].total_quantity) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="font-bold text-gray-800 text-sm">{formatBedrag(product.total_revenue)}</span>
+                      <span className="font-bold text-gray-800 text-sm">{product.total_quantity}</span>
                     </div>
                   </div>
                 ))}
@@ -548,7 +439,7 @@ export default function AnalyticsPage() {
         <div className="bg-white border-2 border-gray-200 p-6">
           <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
             <Clock size={24} className="text-brand-primary" />
-            Omzet Laatste {dateRange} Dagen
+            Orderwaarde laatste {dateRange} dagen
           </h2>
           {(() => {
             const maxRevenue = Math.max(...revenueHistory.map(d => d.revenue), 1)

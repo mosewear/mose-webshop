@@ -1,7 +1,8 @@
 // Shopify Admin API 2026-10. Read-only; no fulfillment/payment mutations.
 export const ORDER_QUERY = `query MoseOrder($id: ID!, $after: String) {
   order(id: $id) {
-    id name updatedAt cancelledAt displayFinancialStatus displayFulfillmentStatus currencyCode
+    id name createdAt email updatedAt cancelledAt displayFinancialStatus displayFulfillmentStatus currencyCode
+    netPaymentSet { shopMoney { amount currencyCode } }
     currentTotalPriceSet { shopMoney { amount currencyCode } }
     totalRefundedSet { shopMoney { amount currencyCode } }
     customAttributes { key value }

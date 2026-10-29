@@ -20,6 +20,7 @@ const fulfillmentOrder = z.object({ id, status: z.string(), requestStatus: z.str
   lineItems: z.object({ nodes: z.array(z.object({ id, remainingQuantity: z.number().int().nonnegative(),
     totalQuantity: z.number().int().nonnegative(), lineItem: z.object({ id }) })), pageInfo }) })
 export const orderSchema = z.object({ id: z.string().regex(/^gid:\/\/shopify\/Order\/\d+$/), name: z.string(), updatedAt: time,
+  createdAt: time.optional(), email: z.string().nullable().optional(), netPaymentSet: money.optional(),
   cancelledAt: time.nullable(), displayFinancialStatus: z.string().nullable(), displayFulfillmentStatus: z.string(),
   currencyCode: z.string().length(3), currentTotalPriceSet: money, totalRefundedSet: money,
   customAttributes: z.array(z.object({ key: z.string(), value: z.string() })),
