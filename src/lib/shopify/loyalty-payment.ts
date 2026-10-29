@@ -14,7 +14,7 @@ const paymentSchema = z.object({
   id: z.string().regex(/^gid:\/\/shopify\/Order\/[1-9]\d*$/), updatedAt: z.string().datetime({ offset: true }),
   currencyCode: z.literal('EUR'), presentmentCurrencyCode: z.literal('EUR'), test: z.literal(false),
   displayFinancialStatus: z.enum(['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED']),
-  totalPriceSet: moneyBag, totalReceivedSet: moneyBag, totalRefundedSet: moneyBag, totalOutstandingSet: moneyBag,
+  currentTotalPriceSet: moneyBag.optional(), totalPriceSet: moneyBag, totalReceivedSet: moneyBag, totalRefundedSet: moneyBag, totalOutstandingSet: moneyBag,
   transactionsCount: z.object({ count: z.number().int().nonnegative().max(100), precision: z.literal('EXACT') }),
   transactions: z.array(z.object({
     id: z.string().regex(/^gid:\/\/shopify\/OrderTransaction\/[1-9]\d*$/),
@@ -48,7 +48,11 @@ export function paymentToLoyaltySettlement(input: unknown, expected: { orderId: 
   const refunded = order.transactions.filter(t => t.status === 'SUCCESS' && t.kind === 'REFUND').reduce((n, t) => n + cents(t.amountSet), 0)
   // Inspect even failed/authorization amounts for malformed currency/precision.
   order.transactions.forEach(t => cents(t.amountSet))
-  if (paid !== cents(order.totalReceivedSet) || paid !== cents(order.totalPriceSet) || refunded !== cents(order.totalRefundedSet) || cents(order.totalOutstandingSet) !== 0 || refunded > paid) throw new Error('LOYALTY_PAYMENT_TOTAL_MISMATCH')
+  // A completed order edit can retain the historical original total while the
+  // current total is fully paid. Never use this exception for refunds or debts.
+  const editedFullyPaid = order.displayFinancialStatus === 'PAID' && refunded === 0 &&
+    order.currentTotalPriceSet !== undefined && paid === cents(order.currentTotalPriceSet)
+  if (paid !== cents(order.totalReceivedSet) || (paid !== cents(order.totalPriceSet) && !editedFullyPaid) || refunded !== cents(order.totalRefundedSet) || cents(order.totalOutstandingSet) !== 0 || refunded > paid) throw new Error('LOYALTY_PAYMENT_TOTAL_MISMATCH')
   if ((order.displayFinancialStatus === 'PAID' && refunded !== 0) || (order.displayFinancialStatus === 'REFUNDED' && refunded !== paid)) throw new Error('LOYALTY_REFUND_STATUS_MISMATCH')
 
   let discount = 0
