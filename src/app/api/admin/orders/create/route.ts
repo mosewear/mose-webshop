@@ -1,3 +1,5 @@
+import { createHash, randomUUID } from 'node:crypto'
+import { legacyCutoverFreezeResponse } from '@/lib/legacy-cutover-freeze'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
@@ -10,6 +12,9 @@ export async function POST(request: Request) {
     if (!authorized) {
       return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 401 })
     }
+
+    const freezeResponse = await legacyCutoverFreezeResponse()
+    if (freezeResponse) return freezeResponse
 
     const body = await request.json()
     const {
@@ -35,7 +40,7 @@ export async function POST(request: Request) {
     }
 
     for (const item of items) {
-      if (!item.variant_id || !item.quantity || item.quantity < 1) {
+      if (!item.variant_id || !Number.isInteger(item.quantity) || item.quantity < 1 || !Number.isFinite(item.price_at_purchase) || item.price_at_purchase < 0) {
         return NextResponse.json(
           { error: `Ongeldig item: ${item.product_name || 'onbekend'}` },
           { status: 400 }
@@ -56,6 +61,23 @@ export async function POST(request: Request) {
       const ownership = await supabase.from('shopify_stock_ownership').select('variant_id').in('variant_id', items.map((item: { variant_id: string }) => item.variant_id)).limit(1)
       if (ownership.error) return NextResponse.json({ error: 'Voorraadbeheer kan nu niet worden gecontroleerd.' }, { status: 503 })
       if (ownership.data.length) return NextResponse.json({ error: 'Dit artikel wordt in Shopify beheerd. Maak de bestelling daar aan.' }, { status: 409 })
+    }
+
+    const atomic = process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true'
+    const operationId = body.operationId
+    const intent = { ...body }
+    delete intent.operationId
+    const requestHash = createHash('sha256').update(JSON.stringify(intent)).digest('hex')
+    if (atomic && (typeof operationId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(operationId))) {
+      return NextResponse.json({ error: 'Vernieuw de pagina voordat je deze bestelling opslaat.' }, { status: 400 })
+    }
+    if (atomic) {
+      const replay = await supabase.from('manual_order_commands').select('request_hash,order_id').eq('id', operationId).maybeSingle()
+      if (replay.error) return NextResponse.json({ error: 'Ordercontrole tijdelijk niet beschikbaar. Probeer dezelfde bestelling opnieuw.' }, { status: 503 })
+      if (replay.data) {
+        if (replay.data.request_hash !== requestHash) return NextResponse.json({ error: 'Deze aanvraag hoort bij een andere bestelling.' }, { status: 409 })
+        return NextResponse.json({ success: true, orderId: replay.data.order_id })
+      }
     }
 
     // Validate stock for each item
@@ -96,10 +118,7 @@ export async function POST(request: Request) {
     const total = subtotal + finalShippingCost
     const isPaid = payment_status === 'paid'
 
-    // Insert order
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert([{
+    const orderPayload = {
         email: email.trim(),
         status: isPaid ? 'processing' : 'pending',
         payment_status: payment_status || 'pending',
@@ -118,30 +137,23 @@ export async function POST(request: Request) {
         internal_notes: internal_notes || null,
         checkout_started_at: null,
         locale: 'nl',
-      }])
-      .select()
-      .single()
-
-    if (orderError || !orderData) {
-      console.error('Manual order insert error:', orderError)
-      return NextResponse.json(
-        { error: 'Fout bij aanmaken order', details: orderError?.message },
-        { status: 500 }
-      )
     }
+    const orderData = { ...orderPayload, id: atomic ? operationId : randomUUID(), created_at: new Date().toISOString() }
 
     // Apply staffelkorting to manual order items
     const productIds = [...new Set(items.map((i: any) => i.product_id))]
-    const { data: allTiers } = await supabase
+    const { data: allTiers, error: tierError } = await supabase
       .from('product_quantity_discounts')
       .select('*')
       .in('product_id', productIds)
       .eq('is_active', true)
 
-    const { data: productPrices } = await supabase
+    const { data: productPrices, error: priceError } = await supabase
       .from('products')
       .select('id, base_price, sale_price')
       .in('id', productIds)
+
+    if (atomic && (tierError || priceError)) return NextResponse.json({ error: 'Prijzen kunnen nu niet worden gecontroleerd. Probeer dezelfde bestelling opnieuw.' }, { status: 503 })
 
     const tiersByProduct: Record<string, QuantityDiscountTier[]> = {}
     allTiers?.forEach((t: any) => {
@@ -204,8 +216,22 @@ export async function POST(request: Request) {
     const newSubtotal = orderItems.reduce((sum: number, i: any) => sum + i.subtotal, 0)
     if (Math.abs(newSubtotal - orderData.subtotal) > 0.01) {
       const newTotal = newSubtotal + (orderData.shipping_cost || 0) - (orderData.discount_amount || 0)
-      await supabase.from('orders').update({ subtotal: newSubtotal, total: newTotal }).eq('id', orderData.id)
+      orderData.subtotal = newSubtotal
+      orderData.total = newTotal
     }
+
+    if (atomic) {
+      const result = await supabase.rpc('create_atomic_manual_order', {
+        p_id: operationId, p_hash: requestHash, p_order: orderData, p_items: orderItems,
+      })
+      if (result.error || result.data?.ok !== true || result.data.orderId !== operationId) {
+        return NextResponse.json({ error: 'De bestelling is nog niet bevestigd. Probeer dezelfde bestelling opnieuw; maak geen tweede aan.', code: 'MANUAL_ORDER_RETRY_REQUIRED' }, { status: 503 })
+      }
+      return NextResponse.json({ success: true, orderId: result.data.orderId })
+    }
+
+    const { error: orderError } = await supabase.from('orders').insert(orderData)
+    if (orderError) return NextResponse.json({ error: 'Fout bij aanmaken order' }, { status: 500 })
 
     const { error: itemsError } = await supabase
       .from('order_items')

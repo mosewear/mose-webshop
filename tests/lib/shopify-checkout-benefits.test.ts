@@ -36,3 +36,24 @@ it('fails closed on DB tier read error instead of silently dropping earned benef
  const db={from:()=>({select:()=>({in:()=>({eq})})})}
  await expect(readCheckoutBenefitQuote(db as never,{lines})).rejects.toThrow('BENEFIT_TIERS_UNAVAILABLE')
 })
+it('groups six size/color variants with equal per-item staffel into one exact native discount', async()=>{
+ process.env.SHOPIFY_BENEFIT_WRITES_ENABLED='true'
+ const groupedLines=Array.from({length:6},(_,i)=>({...lines[0],variantId:`gid://shopify/ProductVariant/${i+1}`,quantity:1}))
+ const tiers=[{product_id:id,min_quantity:2,discount_type:'fixed' as const,discount_value:5,is_active:true}]
+ const eq=vi.fn().mockResolvedValue({data:tiers,error:null})
+ const db={from:()=>({select:()=>({in:()=>({eq})})}),rpc:vi.fn().mockResolvedValue({data:true})}
+ const plan=await readCheckoutBenefitQuote(db as never,{lines:groupedLines})
+ vi.mocked(admin).mockResolvedValue({discountCodeBasicCreate:{codeDiscountNode:{id:'gid://shopify/DiscountCodeNode/1'},userErrors:[]}})
+ const result=await issueCheckoutBenefits(db as never,{...plan,attemptId:id,checkoutLease:id,secret:'a'.repeat(32)})
+ expect(admin).toHaveBeenCalledTimes(1)
+ expect(result[0]).toMatchObject({discountCents:3000,eligibleVariants:groupedLines.map(l=>l.variantId)})
+ expect(vi.mocked(admin).mock.calls[0][1]).toMatchObject({input:{customerGets:{items:{products:{productVariantsToAdd:groupedLines.map(l=>l.variantId)}},value:{discountAmount:{amount:'5.00',appliesOnEachItem:true}}}}})
+})
+it('still blocks more than five distinct per-item discounts before any provider mutation',async()=>{
+ const distinctLines=Array.from({length:6},(_,i)=>({...lines[0],variantId:`gid://shopify/ProductVariant/${i+1}`,unitCents:1000*(i+1),quantity:1}))
+ const tiers=[{product_id:id,min_quantity:2,discount_type:'percentage',discount_value:10,is_active:true}]
+ const eq=vi.fn().mockResolvedValue({data:tiers,error:null})
+ const db={from:()=>({select:()=>({in:()=>({eq})})})}
+ await expect(readCheckoutBenefitQuote(db as never,{lines:distinctLines})).rejects.toThrow('BENEFIT_CODE_LIMIT')
+ expect(admin).not.toHaveBeenCalled()
+})

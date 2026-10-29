@@ -34,3 +34,17 @@ export function quoteCheckoutBenefits(input:{
  if(redemptionCents>0&&discountCents===subtotal) throw new Error('LOYALTY_ZERO_SPEND_PARITY_REQUIRED')
  return {subtotalCents:subtotal,afterStaffelCents:afterStaffel,staffel,staffelCents,promo,tier,tierCents,redemptionCents,discountCents,payableMerchandiseCents:subtotal-discountCents}
 }
+
+/** A native per-item discount can cover several variants only when their rounded
+ * per-item amounts match exactly. Keep unequal amounts in separate components. */
+export function groupQuantityBenefits(staffel: ReturnType<typeof quoteCheckoutBenefits>['staffel']) {
+ const groups = new Map<number, { perItemCents: number; totalCents: number; eligibleVariants: string[] }>()
+ for (const line of staffel) {
+  const group = groups.get(line.perItemCents) ?? { perItemCents: line.perItemCents, totalCents: 0, eligibleVariants: [] }
+  group.totalCents += line.totalCents
+  group.eligibleVariants.push(line.variantId)
+  groups.set(line.perItemCents, group)
+ }
+ return [...groups.values()].sort((a, b) => a.perItemCents - b.perItemCents)
+  .map(group => ({ ...group, eligibleVariants: group.eligibleVariants.sort() }))
+}

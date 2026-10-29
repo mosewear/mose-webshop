@@ -1,3 +1,4 @@
+import { legacyCutoverFreezeResponse } from '@/lib/legacy-cutover-freeze'
 import { atomicPromoEnabled, createAtomicLegacyPromoOrder } from '@/lib/shopify/promo-reservation'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
@@ -17,6 +18,8 @@ import { shopifyCheckoutEnabled } from '@/lib/checkout-cutover'
 
 // Server-side checkout route using service_role to bypass RLS
 export async function POST(request: Request) {
+  const freezeResponse = await legacyCutoverFreezeResponse()
+  if (freezeResponse) return freezeResponse
   // Guard before body parsing, profile writes, stock operations or gift-card
   // reservations. Client feature flags and ?recover= are not authorization.
   if (shopifyCheckoutEnabled()) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { applyParcelStatusUpdate } from '@/lib/sync-order-statuses'
 import { updateOrderStatusForReturn } from '@/lib/update-order-status'
+import { carrierReturnStatus } from '@/lib/sendcloud-return-status'
 import crypto from 'crypto'
 
 /**
@@ -206,7 +207,8 @@ async function handleReturnStatusChange(payload: SendcloudWebhookPayload) {
   }
 
   const sendcloudStatusId = parcel.status.id
-  let newReturnStatus = returnRecord.status
+  const newReturnStatus = carrierReturnStatus(returnRecord.status, sendcloudStatusId)
+  if (!newReturnStatus) return
 
   // Sendcloud status IDs for return tracking:
   // 3 = En route to sorting center
@@ -215,14 +217,11 @@ async function handleReturnStatusChange(payload: SendcloudWebhookPayload) {
   // 92 = Driver en route
   // 11 = Delivered
   // 93 = Shipment collected by customer
-  if ([3, 5, 7, 22, 91, 92].includes(sendcloudStatusId)) {
-    newReturnStatus = 'return_in_transit'
-  } else if ([11, 93].includes(sendcloudStatusId)) {
-    newReturnStatus = 'return_in_transit'
+  if ([11, 93].includes(sendcloudStatusId)) {
     console.log(`[Sendcloud Webhook] Return ${returnRecord.id.slice(0, 8)} delivered — admin must confirm receipt`)
   }
 
-  const { error: updateError } = await supabase
+  const { data: updatedReturn, error: updateError } = await supabase
     .from('returns')
     .update({
       status: newReturnStatus,
@@ -230,11 +229,16 @@ async function handleReturnStatusChange(payload: SendcloudWebhookPayload) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', returnRecord.id)
+    .eq('status', returnRecord.status)
+    .select('id')
+    .maybeSingle()
 
   if (updateError) {
     console.error(`[Sendcloud Webhook] Failed to update return ${returnRecord.id.slice(0, 8)}:`, updateError.message)
     return
   }
+  // A warehouse/refund action may have advanced the return after our read.
+  if (!updatedReturn) return
 
   console.log(`[Sendcloud Webhook] Return ${returnRecord.id.slice(0, 8)}: → ${newReturnStatus}`)
 

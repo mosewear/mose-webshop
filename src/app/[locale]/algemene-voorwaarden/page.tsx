@@ -10,18 +10,15 @@ import PaginaKop from '@/components/layout/PaginaKop'
 
 export default function TermsPage() {
   const t = useTranslations('terms')
-  // Deze defaults stonden op 100 en 14 terwijl site_settings 150 en 30 zegt.
-  // Op de voorwaardenpagina is dat extra kwalijk: de eerste render, en dus ook
-  // wat een crawler ziet, beloofde een kortere bedenktijd dan je werkelijk
-  // biedt en een lagere gratis-verzendingsdrempel dan je hanteert.
+  // Match current public terms before client settings have loaded.
   const [settings, setSettings] = useState({
-    free_shipping_threshold: 150,
+    free_shipping_threshold: 0,
     return_days: 30,
-    shipping_cost: 6.95,
+    shipping_cost: 0,
     return_label_cost_incl_btw: 6.95,
     contact_email: 'info@mosewear.com',
     contact_phone: '+31 50 234 0025',
-    contact_address: 'Stavangerweg 13, 9723 JC Groningen',
+    contact_address: 'Helper Brink 27a, 9722 EG Groningen',
   })
 
   const altijdGratisVerzending = isAltijdGratisUitWaarden(

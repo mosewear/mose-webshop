@@ -2,7 +2,7 @@ import { createHash, createHmac, randomUUID } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { admin } from './client'
-import { quoteCheckoutBenefits } from './benefit-quote'
+import { groupQuantityBenefits, quoteCheckoutBenefits } from './benefit-quote'
 import { bindAuthenticatedShopifyCustomer } from './customer-binding'
 import { reserveAndIssuePromo } from './promo-issuer'
 import { CREATE_LOYALTY_DISCOUNT, reserveAndIssueLoyaltyDiscount } from './benefit-issuer'
@@ -51,7 +51,7 @@ export async function readCheckoutBenefitQuote(db:SupabaseClient,input:{lines:Se
  // Native order percentage combinations preserve source arithmetic only when
  // promo has no excluded lines. Do not silently undergrant a sale basket.
  if(quote.promo&&quote.tierCents>0&&(!orderWidePromo||quote.promo.eligibleVariants.length!==input.lines.length)) throw new Error('MIXED_SALE_TIER_PARITY_REQUIRED')
- const componentCount=quote.staffel.length+Number(quote.tierCents>0)+Number(!!quote.promo)+Number(quote.redemptionCents>0)
+ const componentCount=groupQuantityBenefits(quote.staffel).length+Number(quote.tierCents>0)+Number(!!quote.promo)+Number(quote.redemptionCents>0)
  if(componentCount>5) throw new Error('BENEFIT_CODE_LIMIT')
  const expectedSubtotalBeforeOrderCents=quote.subtotalCents-quote.staffelCents-(orderWidePromo?0:(quote.promo?.discountCents??0))
  return {quote,promo,orderWidePromo,expectedSubtotalBeforeOrderCents,lines:input.lines,user:input.user??null,points:input.points??0}
@@ -91,10 +91,10 @@ export async function issueCheckoutBenefits(db:SupabaseClient,input:Awaited<Retu
  const expected:Expected[]=[]
  const variants=lines.map(l=>l.variantId)
  if(input.promo) expected.push(await reserveAndIssuePromo(db,{attemptId:input.attemptId,checkoutLease:input.checkoutLease,issuanceLease:randomUUID(),secret:input.secret,promo:input.promo,lines,staffelCents:quote.staffelCents,customerId,orderWide:input.orderWidePromo}))
- for(const staffel of quote.staffel){
-  const component=`staffel:${createHash('sha256').update(staffel.variantId).digest('hex').slice(0,16)}`
-  expected.push(await issueAutomatic(db,{...input,component,discountCents:staffel.totalCents,eligibleVariants:[staffel.variantId],basic:{context:{all:'ALL'},
-   customerGets:{items:{products:{productVariantsToAdd:[staffel.variantId]}},value:{discountAmount:{amount:(staffel.perItemCents/100).toFixed(2),appliesOnEachItem:true}}}}}))
+ for(const staffel of groupQuantityBenefits(quote.staffel)){
+  const component=`staffel:${createHash('sha256').update(staffel.eligibleVariants.join(',')).digest('hex').slice(0,16)}`
+  expected.push(await issueAutomatic(db,{...input,component,discountCents:staffel.totalCents,eligibleVariants:staffel.eligibleVariants,basic:{context:{all:'ALL'},
+   customerGets:{items:{products:{productVariantsToAdd:staffel.eligibleVariants}},value:{discountAmount:{amount:(staffel.perItemCents/100).toFixed(2),appliesOnEachItem:true}}}}}))
  }
  if(quote.tierCents>0){
   const percentage=quote.tier==='gold'?0.10:0.05
