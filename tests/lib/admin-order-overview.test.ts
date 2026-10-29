@@ -41,3 +41,77 @@ describe('unified admin source normalization',()=>{
   expect(JSON.stringify(v)).not.toContain('secret')
  })
 })
+
+describe('legacy confirmed refund accounting', () => {
+ it('does not count a pending provider refund just because the return workflow says refunded', async () => {
+  const { legacyRefundTotals } = await import('@/lib/admin-order-overview')
+  const refund={id:'r1',order_id:'o1',status:'refunded',refund_amount:'0.01',mollie_refund_id:'re_1',stripe_refund_id:'re_1',mollie_refund_status:'pending',stripe_refund_status:'succeeded',refunded_at:time}
+  expect(legacyRefundTotals([refund]).size).toBe(0)
+ })
+ it('deduplicates provider refunds and counts partial refunds only once', async () => {
+  const { legacyRefundTotals, normalizeLegacyAdminOrder } = await import('@/lib/admin-order-overview')
+  const refund={id:'r1',order_id:'o1',status:'refunded',refund_amount:'20.00',mollie_refund_id:'re_1',stripe_refund_id:'re_1',mollie_refund_status:'refunded',stripe_refund_status:'succeeded',refunded_at:time}
+  const totals=legacyRefundTotals([refund,{...refund,id:'r2'}])
+  expect(totals.get('o1')).toBe(2000)
+  expect(normalizeLegacyAdminOrder({id:'o1',created_at:time,total:70,payment_status:'paid'},totals.get('o1'))).toMatchObject({revenue:50,payment_status:'partially_refunded'})
+  expect(()=>legacyRefundTotals([refund,{...refund,id:'r2',refund_amount:'25.00'}])).toThrow('CONFLICTING_REFUND_EVIDENCE')
+ })
+ it('does not subtract again from an already fully refunded payment status', async () => {
+  const { normalizeLegacyAdminOrder } = await import('@/lib/admin-order-overview')
+  expect(normalizeLegacyAdminOrder({id:'o1',created_at:time,total:70,payment_status:'refunded'},7000).revenue).toBe(0)
+  expect(()=>normalizeLegacyAdminOrder({id:'o1',created_at:time,total:70,payment_status:'paid'},8000)).toThrow('REFUNDS_EXCEED_ORDER_TOTAL')
+ })
+})
+
+
+describe('retained provider metadata', () => {
+ it('keeps historical orders readable from their authoritative projection without a fresh provider lookup', () => {
+  const v=normalizeShopifyAdminOrder(row({...order,createdAt:time,email:'archived@example.com',netPaymentSet:money('0.01')}),undefined)
+  expect(v).toMatchObject({revenue:0.01,email:'archived@example.com',created_at:time})
+ })
+ it('uses financial metadata from the same snapshot as its payment and fulfillment state', () => {
+  const v=normalizeShopifyAdminOrder(row({...order,createdAt:time,email:null,netPaymentSet:money('0.01')}),{...meta,netPaymentSet:money('658')})
+  expect(v.revenue).toBe(0.01)
+ })
+})
+
+describe('complete admin report pagination', () => {
+ async function reader(pages: unknown[][]) {
+  const { createServiceClient } = await import('@/lib/supabase/service')
+  const chain: any = { select: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), limit: vi.fn().mockReturnThis(), gt: vi.fn().mockReturnThis(),
+   then: (resolve: (value: unknown) => void) => resolve({ data: pages.shift() ?? [], error: null }) }
+  vi.mocked(createServiceClient).mockReturnValue({ from: vi.fn().mockReturnValue(chain) } as any)
+  return { chain }
+ }
+ const page = (start: number, count=500) => Array.from({length:count},(_,i)=>({id:String(start+i).padStart(6,'0')}))
+ it('uses a stable key cursor rather than offsets that can double-count concurrent inserts', async () => {
+  const {chain}=await reader([page(0),page(500,1)])
+  const { readAllAdminRows }=await import('@/lib/admin-order-overview')
+  expect((await readAllAdminRows('orders','id','id')).length).toBe(501)
+  expect(chain.gt).toHaveBeenCalledWith('id','000499')
+ })
+ it('fails closed on duplicate source rows instead of overstating totals', async () => {
+  await reader([page(0),page(499,1)])
+  const { readAllAdminRows }=await import('@/lib/admin-order-overview')
+  await expect(readAllAdminRows('orders','id','id')).rejects.toThrow('ORDER_OVERVIEW_DUPLICATE')
+ })
+ it('allows an exact 10,000-row report but never silently truncates a larger one', async () => {
+  const pages=Array.from({length:20},(_,i)=>page(i*500))
+  const { readAllAdminRows }=await import('@/lib/admin-order-overview')
+  await reader([...pages,[]]);expect((await readAllAdminRows('orders','id','id')).length).toBe(10000)
+  await reader([...pages,page(10000,1)]);await expect(readAllAdminRows('orders','id','id')).rejects.toThrow('ORDER_OVERVIEW_LIMIT')
+ })
+})
+
+
+describe('financial evidence validation', () => {
+ it('rejects missing refund amounts instead of treating unknown cash as zero', async () => {
+  const {legacyRefundTotals}=await import('@/lib/admin-order-overview')
+  const refund={id:'r1',order_id:'o1',status:'refunded',refund_amount:null,mollie_refund_id:'re_1',stripe_refund_id:null,mollie_refund_status:'refunded',stripe_refund_status:null,refunded_at:time}
+  expect(()=>legacyRefundTotals([refund as any])).toThrow()
+ })
+ it('does not invent a capture amount for an unsupported partially-paid legacy record', async () => {
+  const {normalizeLegacyAdminOrder}=await import('@/lib/admin-order-overview')
+  expect(()=>normalizeLegacyAdminOrder({id:'o1',created_at:time,total:70,payment_status:'partially_paid'})).toThrow('LEGACY_CAPTURE_AMOUNT_REQUIRED')
+ })
+})

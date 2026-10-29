@@ -20,7 +20,9 @@ describe('supplier fulfilment promises', () => {
     expect(html).not.toMatch(/overmorgen|DHL|regular fit|fabrieksgarantie|Made in Groningen|MADE IN GRONINGEN/)
     expect(html).not.toContain('Gratis bezorging vanaf')
   })
-  it('preserves the existing local collection presentation', () => {
-    expect(render(false)).toContain('Made in Groningen')
+  it('retains model specifications without a blanket manufacturing claim', () => {
+    const html = render(false)
+    expect(html).toContain('regular fit')
+    expect(html).not.toMatch(/Made in Groningen|MADE IN GRONINGEN/)
   })
 })

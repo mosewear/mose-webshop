@@ -6,7 +6,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { formatBedrag } from '@/lib/format-price'
 
-type DateRange = 'today' | '7d' | '30d' | '90d' | 'year' | 'all'
+import { computePeriodStats, resolveDateWindow, type DateRange } from '@/lib/admin-order-metrics'
 
 const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: 'today', label: 'Vandaag' },
@@ -17,31 +17,6 @@ const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: 'all', label: 'Altijd' },
 ]
 
-// Resolve the active + previous comparison windows for a given range.
-// For rolling day windows we use a symmetric previous window of the same
-// length. For "Dit jaar" we compare against the same-length slice of the
-// previous calendar year. For "Altijd" we include every order ever placed
-// and use an empty previous window so delta badges don't render nonsense.
-function resolveDateWindow(range: DateRange): { currentStart: Date; prevStart: Date } {
-  const now = new Date()
-  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now)
-  const n=(key:string)=>Number(parts.find(p=>p.type===key)?.value)
-  const midnight=(year:number,month:number,day:number)=> {
-    const wall=Date.UTC(year,month-1,day)
-    let result=wall
-    for(let i=0;i<3;i++) {
-      const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(result))
-      const v=(k:string)=>Number(p.find(x=>x.type===k)?.value)
-      result+=wall-Date.UTC(v('year'),v('month')-1,v('day'),v('hour'),v('minute'),v('second'))
-    }
-    return new Date(result)
-  }
-  if(range==='all') return {currentStart:new Date(0),prevStart:new Date(0)}
-  if(range==='year') return {currentStart:midnight(n('year'),1,1),prevStart:midnight(n('year')-1,1,1)}
-  if(range==='today') return {currentStart:midnight(n('year'),n('month'),n('day')),prevStart:midnight(n('year'),n('month'),n('day')-1)}
-  const days=range==='7d'?7:range==='30d'?30:90
-  return {currentStart:new Date(now.getTime()-days*86400000),prevStart:new Date(now.getTime()-2*days*86400000)}
-}
 
 interface OrderRow {
   source?: string
@@ -88,70 +63,6 @@ const EMPTY_PERIOD: PeriodStats = {
   abandonedCarts: 0,
 }
 
-function computePeriodStats(orders: OrderRow[]): PeriodStats {
-  const totalOrders = orders.length
-  const paid = orders.filter(o => ['paid','partially_paid','partially_refunded','refunded'].includes(o.payment_status))
-  const unpaidOrders = orders.filter(o => o.payment_status === 'unpaid' || !o.payment_status).length
-  const pendingPayments = orders.filter(o => o.payment_status === 'pending').length
-  const pendingOrders = orders.filter(o => o.status === 'pending').length
-
-  const totalRevenue = paid.reduce((sum, o) => sum + Number(o.revenue ?? o.total), 0)
-  const avgOrderValue = paid.length > 0 ? totalRevenue / paid.length : 0
-
-  const withCheckout = orders.filter(o => o.checkout_started_at)
-  const conversionRate = withCheckout.length > 0
-    ? (paid.filter(o=>o.checkout_started_at).length / withCheckout.length) * 100
-    : 0
-
-  /**
-   * Verlaten winkelwagens, met dezelfde definitie als de herinneringsmail.
-   *
-   * Hier stond simpelweg "ouder dan 24 uur en niet betaald". Dat telde er 21,
-   * terwijl er 1 echt verlaten was. In die 21 zaten vijf bestellingen met
-   * status `refunded`, dus klanten die gewoon gekocht hebben en later hebben
-   * geretourneerd, acht mislukte betaalpogingen, en acht onbetaalde regels die
-   * stuk voor stuk een dubbele waren: dezelfde klant rondde minuten later een
-   * nieuwe bestelling wel af.
-   *
-   * Een getal dat twintig keer te hoog staat is erger dan geen getal, want je
-   * gaat erop sturen. Nu dezelfde drie regels als in get_abandoned_carts:
-   * alleen onbetaald, niet geannuleerd, geen eigen adres, en niemand die het
-   * daarna alsnog heeft gekocht.
-   */
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const betaaldPerAdres = new Map<string, number>()
-  for (const o of orders) {
-    if (o.payment_status !== 'paid' || !o.email) continue
-    const sleutel = o.email.toLowerCase()
-    const t = new Date(o.created_at).getTime()
-    betaaldPerAdres.set(sleutel, Math.max(betaaldPerAdres.get(sleutel) ?? 0, t))
-  }
-
-  const abandonedCarts = orders.filter((o) => {
-    if (!o.checkout_started_at) return false
-    if (new Date(o.checkout_started_at) >= cutoff) return false
-    if (o.payment_status !== 'unpaid' && o.payment_status !== 'pending') return false
-    if (o.status === 'cancelled') return false
-    if (!o.email || o.email.toLowerCase().endsWith('@mosewear.com')) return false
-    // Heeft dit adres rond of na dit moment alsnog betaald? Dan is het geen
-    // verlaten mand maar een tweede poging die wel is gelukt.
-    const laatstBetaald = betaaldPerAdres.get(o.email.toLowerCase())
-    if (laatstBetaald && laatstBetaald >= new Date(o.created_at).getTime() - 30 * 60 * 1000) return false
-    return true
-  }).length
-
-  return {
-    totalOrders,
-    pendingOrders,
-    paidOrders: paid.length,
-    unpaidOrders,
-    pendingPayments,
-    totalRevenue,
-    conversionRate,
-    avgOrderValue,
-    abandonedCarts,
-  }
-}
 
 /**
  * Verschil met de vorige periode.
@@ -214,10 +125,12 @@ export default function AdminDashboard() {
   const [dbOnline, setDbOnline] = useState<boolean | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
   const [loading, setLoading] = useState(true)
+  const requestSequence = useRef(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const supabase = createClient()
 
   const fetchData = async (range: DateRange, isInitial = false) => {
+    const request = ++requestSequence.current
     if (isInitial) setLoading(true)
 
     try {
@@ -292,9 +205,10 @@ export default function AdminDashboard() {
             return d >= prevStart && d < currentStart
           })
 
-      const currentPeriod = computePeriodStats(currentOrders)
-      const previousPeriod = computePeriodStats(prevOrders)
+      const currentPeriod = computePeriodStats(currentOrders, allOrders)
+      const previousPeriod = computePeriodStats(prevOrders, allOrders)
 
+      if (request !== requestSequence.current) return
       setStats({
         ...currentPeriod,
         totalProducts,
@@ -308,11 +222,12 @@ export default function AdminDashboard() {
       setOrdersToFulfill(unifiedOrders.filter(o=>['paid','partially_refunded'].includes(o.payment_status)&&['pending','paid','processing','fulfilled','partially_shipped'].includes(o.status)).length)
       setLastUpdate(new Date())
     } catch (err) {
+      if (request !== requestSequence.current) return
       console.error('Error fetching dashboard data:', err)
       toast.error('Fout bij het laden van dashboard data')
       setDbOnline(false)
     } finally {
-      setLoading(false)
+      if (request === requestSequence.current) setLoading(false)
     }
   }
 
@@ -321,8 +236,11 @@ export default function AdminDashboard() {
   }, [dateRange])
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => fetchData(dateRange), 60_000)
+    const refresh = () => { if (document.visibilityState === 'visible') void fetchData(dateRange) }
+    intervalRef.current = setInterval(refresh, 60_000)
+    document.addEventListener('visibilitychange', refresh)
     return () => {
+      document.removeEventListener('visibilitychange', refresh)
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [dateRange])
@@ -416,13 +334,13 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="text-lg md:text-xl uppercase tracking-wider font-bold flex items-center justify-between">
-            <span>Totale Omzet</span>
+            <span>Betaalde orderwaarde</span>
             <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </div>
           <div className="text-sm text-white/80 mt-2 space-y-1">
-            <div>✓ {stats.paidOrders} betaalde orders</div>
+            <div>✓ {stats.paidOrders} orders met betaling</div>
             <div>Ø {formatBedrag(stats.avgOrderValue)} per order</div>
             <div className="mt-3 text-white/60 text-xs uppercase tracking-wide group-hover:text-white/90 transition-colors">
               → Klik voor uitgebreide analytics
@@ -527,12 +445,12 @@ export default function AdminDashboard() {
         <h2 className="text-xl md:text-2xl font-display font-bold mb-4">KPI Inzichten</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
-            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Conversie</div>
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2">Aandeel met betaling</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-brand-primary">{stats.conversionRate.toFixed(1)}%</span>
               <DeltaBadge current={stats.conversionRate} previous={prevStats.conversionRate} disabled={dateRange === 'all'} />
             </div>
-            <div className="text-xs text-gray-500 mt-2">Checkout → betaald</div>
+            <div className="text-xs text-gray-500 mt-2">Van alle bestellingen in deze periode</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
@@ -541,16 +459,16 @@ export default function AdminDashboard() {
               <span className="text-xl sm:text-3xl font-bold text-brand-primary">{formatBedrag(stats.avgOrderValue)}</span>
               <DeltaBadge current={stats.avgOrderValue} previous={prevStats.avgOrderValue} disabled={dateRange === 'all'} />
             </div>
-            <div className="text-xs text-gray-500 mt-2">Per betaalde order</div>
+            <div className="text-xs text-gray-500 mt-2">Per order met betaling</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
-            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten Mandjes</div>
+            <div className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-600 mb-1 sm:mb-2 leading-tight">Verlaten eigen checkouts</div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-xl sm:text-3xl font-bold text-amber-600">{stats.abandonedCarts}</span>
               <DeltaBadge current={stats.abandonedCarts} previous={prevStats.abandonedCarts} disabled={dateRange === 'all'} hogerIsSlecht />
             </div>
-            <div className="text-xs text-gray-500 mt-2">Checkout gestart, niet betaald</div>
+            <div className="text-xs text-gray-500 mt-2">Eigen checkout · langer dan 24 uur open</div>
           </div>
 
           <div className="bg-white border-2 border-gray-200 p-4 sm:p-6">
