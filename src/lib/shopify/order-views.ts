@@ -6,7 +6,7 @@ export type ShopifyOrderView = {
   financialStatus: string; fulfillmentStatus: string; cancelled: boolean; currency: string
   total: string; refunded: string
   lines: { id: string; name: string; quantity: number; currentQuantity: number; shippedQuantity: number; owner: FulfillmentOwner }[]
-  shipments: { id: string; status: string; tracking: { company: string | null; number: string | null; url: string | null }[]; lines: { id: string; quantity: number }[] }[]
+  shipments: { id: string; status: string; displayStatus: string | null; tracking: { company: string | null; number: string | null; url: string | null }[]; lines: { id: string; quantity: number }[] }[]
 }
 export type OrderRow = { snapshot: unknown; synced_at: string }
 export type OwnerRow = { line_id: string; fulfillment_owner: string | null }
@@ -24,7 +24,7 @@ export function toShopifyOrderView(row: OrderRow, owners: OwnerRow[], audience: 
   const order = orderSchema.parse(row.snapshot)
   const ownerByLine = new Map(owners.map(line => [line.line_id, line.fulfillment_owner]))
   const shipments = order.fulfillments.filter(f => f.status === 'SUCCESS').map(f => ({
-    id: f.id, status: f.status,
+    id: f.id, status: f.status, displayStatus: f.displayStatus ?? null,
     tracking: f.trackingInfo.map(t => ({ company: t.company, number: t.number, url: safeTrackingUrl(t.url) })),
     lines: f.fulfillmentLineItems.nodes.map(l => ({ id: l.lineItem.id, quantity: l.quantity })),
   }))

@@ -13,7 +13,7 @@ describe('unified admin source normalization',()=>{
  it('counts the actual cent payment and preserves authoritative order identity',()=>{
   const v=normalizeShopifyAdminOrder(row(order),meta)
   expect(v).toMatchObject({name:'#1001',total:0.01,revenue:0.01,payment_status:'paid',created_at:time,source:'shopify'})
-  expect(v.production_status).toBe('Productie nog niet bevestigd')
+  expect(v.production_status).toBe('Productie niet afzonderlijk gemeld')
  })
  it('uses net payments without subtracting refunds twice from current order value',()=>{
   const v=normalizeShopifyAdminOrder(row({...order,displayFinancialStatus:'PARTIALLY_REFUNDED',currentTotalPriceSet:money('50'),totalRefundedSet:money('20')}),{...meta,netPaymentSet:money('50')})
@@ -26,6 +26,14 @@ describe('unified admin source normalization',()=>{
  it('fails closed on missing creation date or foreign currency rather than corrupting metrics',()=>{
   expect(()=>normalizeShopifyAdminOrder(row(order),undefined)).toThrow('ORDER_METADATA_UNAVAILABLE')
   expect(()=>normalizeShopifyAdminOrder(row({...order,currencyCode:'USD'}),meta)).toThrow('ORDER_CURRENCY_REQUIRES_CONVERSION')
+ })
+ it('requires delivery evidence for every current line before the delivered filter can match',()=>{
+  const line={id:'gid://shopify/LineItem/1',name:'Hoodie L',sku:null,quantity:1,currentQuantity:1,variant:null,originalUnitPriceSet:money('79'),discountedTotalSet:money('0.01')}
+  const shipment={id:'gid://shopify/Fulfillment/1',status:'SUCCESS',displayStatus:'DELIVERED',createdAt:time,updatedAt:time,location:null,trackingInfo:[],fulfillmentLineItems:{nodes:[{quantity:1,lineItem:{id:line.id}}],pageInfo}}
+  const shipped={...order,displayFulfillmentStatus:'FULFILLED',lineItems:{nodes:[line],pageInfo},fulfillments:[shipment]}
+  expect(normalizeShopifyAdminOrder(row(shipped),meta).status).toBe('delivered')
+  expect(normalizeShopifyAdminOrder(row({...shipped,fulfillments:[{...shipment,displayStatus:'LABEL_PRINTED'}]}),meta).status).toBe('shipped')
+  expect(normalizeShopifyAdminOrder(row({...shipped,lineItems:{nodes:[line,{...line,id:'gid://shopify/LineItem/2'}],pageInfo}}),meta).status).not.toBe('delivered')
  })
  it('does not expose private account proof or raw provider snapshot',()=>{
   const v=normalizeShopifyAdminOrder(row({...order,customAttributes:[{key:'mose_account_proof',value:'secret'}]}),meta)

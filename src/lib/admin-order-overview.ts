@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { admin } from '@/lib/shopify/client'
+import { shipmentLabel } from '@/lib/shopify/shipping-status'
 import { orderSchema } from '@/lib/shopify/orders'
 
 export const METADATA = `query AdminOrderMetadata($ids:[ID!]!){ nodes(ids:$ids){ ... on Order { id createdAt email netPaymentSet { shopMoney { amount currencyCode } } } } }`
@@ -37,7 +38,9 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
     if(!Number.isFinite(Number(meta.netPaymentSet.shopMoney.amount))) throw new Error('INVALID_PAYMENT_TOTAL')
     if(o.currencyCode!=='EUR' || meta.netPaymentSet.shopMoney.currencyCode!=='EUR') throw new Error('ORDER_CURRENCY_REQUIRES_CONVERSION')
     const paid=['PAID','PARTIALLY_PAID','PARTIALLY_REFUNDED','REFUNDED'].includes(o.displayFinancialStatus ?? '')
-    const status=o.cancelledAt ? 'cancelled' : o.displayFulfillmentStatus==='FULFILLED' ? 'shipped' : o.displayFulfillmentStatus==='PARTIALLY_FULFILLED' ? 'partially_shipped' : 'processing'
+    const activeLines=o.lineItems.nodes.filter(l=>l.currentQuantity>0)
+    const delivered=activeLines.length>0 && activeLines.every(line=>o.fulfillments.filter(f=>f.status==='SUCCESS' && f.displayStatus==='DELIVERED').reduce((sum,f)=>sum+f.fulfillmentLineItems.nodes.filter(l=>l.lineItem.id===line.id).reduce((n,l)=>n+l.quantity,0),0)>=line.currentQuantity)
+    const status=o.cancelledAt ? 'cancelled' : delivered ? 'delivered' : o.displayFulfillmentStatus==='FULFILLED' ? 'shipped' : o.displayFulfillmentStatus==='PARTIALLY_FULFILLED' ? 'partially_shipped' : 'processing'
     return {id:o.id, source:'shopify', name:o.name,email:meta.email ?? '', user_id:null,
       status, payment_status:(o.displayFinancialStatus ?? 'unknown').toLowerCase(),
       total:Number(o.currentTotalPriceSet.shopMoney.amount), currency:o.currencyCode,
@@ -45,6 +48,7 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
       paid_at:null,payment_method:'Shopify',delivery_method:'shipping',shipping_address:null,billing_address:null,
       payment_intent_id:null,tracking_code:o.fulfillments.filter(f=>f.status==='SUCCESS').flatMap(f=>f.trackingInfo).map(t=>t.number).filter(Boolean).join(', '),
       label_url:null,created_at:meta.createdAt,updated_at:o.updatedAt,checkout_started_at:null,
-      production_status:'Productie nog niet bevestigd',synced_at:row.synced_at,
+      production_status:'Productie niet afzonderlijk gemeld',
+      shipping_status:o.fulfillments.filter(f=>f.status==='SUCCESS').map(f=>shipmentLabel(f.displayStatus)).join(' · ') || 'Nog geen verzendmelding',synced_at:row.synced_at,
       detail_url:'/admin/shopify/orders#'+o.id.split('/').pop()}
 }

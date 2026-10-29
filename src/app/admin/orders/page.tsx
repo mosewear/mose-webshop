@@ -15,6 +15,8 @@ interface Order {
   source?: string
   name?: string
   detail_url?: string
+  shipping_status?: string
+  synced_at?: string
   production_status?: string
   user_id: string | null
   email: string
@@ -138,6 +140,13 @@ export default function AdminOrdersPage() {
       setRefreshing(false)
     }
   }
+
+  useEffect(() => {
+    const timer=setInterval(()=>{
+      if(document.visibilityState==='visible' && !selectedOrders.length && !bulkUpdating && !deleteTargetIds) void fetchOrders()
+    },60000)
+    return ()=>clearInterval(timer)
+  },[filter,page,debouncedSearch,selectedOrders.length,bulkUpdating,deleteTargetIds])
 
   useEffect(() => {
     if (pendingScrollRestore.current && !loading && orders.length > 0) {
@@ -652,6 +661,7 @@ export default function AdminOrdersPage() {
                     <div className="flex items-center flex-wrap gap-1">
                       <StatusBadge status={order.status} kind="order" />
                       {order.production_status && <p className="text-xs text-gray-600 mt-1">{order.production_status}</p>}
+                      {order.shipping_status && <p className="text-xs text-gray-600 mt-1">{order.shipping_status}</p>}
                       {order.label_url && order.status === 'processing' ? (
                       <span
                         title="Label aangemaakt, wacht op ophalen door DHL"
@@ -768,6 +778,7 @@ export default function AdminOrdersPage() {
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} kind="order" />
                       {order.production_status && <p className="text-xs text-gray-600 mt-1">{order.production_status}</p>}
+                      {order.shipping_status && <p className="text-xs text-gray-600 mt-1">{order.shipping_status}</p>}
                       {order.label_url && order.status === 'processing' ? (
                       <span
                         title="Label aangemaakt, wacht op ophalen door DHL"
