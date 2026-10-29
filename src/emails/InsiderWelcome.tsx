@@ -109,7 +109,7 @@ export default function InsiderWelcomeEmail({
       <EmailModule padding="28px 30px">
         <EmailParagraph>
           {t('insiderWelcome.intro') ||
-            "Streetwear zonder poespas: doordacht, duurzaam, kleine oplages. Als insider kies jij als eerste."}
+            "Kleding voor mannen. Rustige kleuren, duidelijke pasvormen en een eigen karakter."}
         </EmailParagraph>
       </EmailModule>
 
@@ -175,7 +175,7 @@ export default function InsiderWelcomeEmail({
         contactEmail={contactEmail}
         contactPhone={contactPhone}
         contactAddress={contactAddress}
-        tagline={t('insiderWelcome.tagline') || 'Made in Groningen. Dressed Worldwide.'}
+        tagline={t('insiderWelcome.tagline') || 'No nonsense. Pure character.'}
       />
     </EmailShell>
   )

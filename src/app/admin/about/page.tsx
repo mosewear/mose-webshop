@@ -271,15 +271,15 @@ export default function AboutAdminPage() {
     {
       nl: 'local_title_nl',
       en: 'local_title_en',
-      label: 'Lokaal blok — titel',
-      placeholderNl: 'LOKAAL GEMAAKT IN GRONINGEN',
-      placeholderEn: 'LOCALLY MADE IN GRONINGEN',
+      label: 'Karakterblok — titel',
+      placeholderNl: 'GEEN POESPAS. WEL KARAKTER.',
+      placeholderEn: 'NO NONSENSE. PURE CHARACTER.',
       maxLength: 60,
     },
     {
       nl: 'local_text_nl',
       en: 'local_text_en',
-      label: 'Lokaal blok — tekst',
+      label: 'Karakterblok — tekst',
       multiline: true,
     },
   ]
@@ -294,7 +294,7 @@ export default function AboutAdminPage() {
       enText: 'value_quality_text_en',
     },
     {
-      title: 'Card 2 — Lokaal gemaakt',
+      title: 'Card 2 — Pasvorm',
       nlTitle: 'value_local_made_title_nl',
       enTitle: 'value_local_made_title_en',
       nlText: 'value_local_made_text_nl',
@@ -319,7 +319,7 @@ export default function AboutAdminPage() {
 
   const whyBullets: { title: string; nlTitle: keyof AboutRow; enTitle: keyof AboutRow; nlText: keyof AboutRow; enText: keyof AboutRow }[] = [
     {
-      title: 'Bullet 1 — Duurzaam',
+      title: 'Bullet 1 — Voor elke dag',
       nlTitle: 'why_sustainable_title_nl',
       enTitle: 'why_sustainable_title_en',
       nlText: 'why_sustainable_text_nl',
@@ -333,7 +333,7 @@ export default function AboutAdminPage() {
       enText: 'why_stylish_text_en',
     },
     {
-      title: 'Bullet 3 — Lokaal',
+      title: 'Bullet 3 — Karakter',
       nlTitle: 'why_local_title_nl',
       enTitle: 'why_local_title_en',
       nlText: 'why_local_text_nl',
@@ -516,7 +516,7 @@ export default function AboutAdminPage() {
         <header className="border-b-2 border-black px-4 md:px-6 py-3 md:py-4 flex items-center gap-2">
           <BookOpen size={18} />
           <h2 className="text-base md:text-lg font-bold uppercase tracking-wide">
-            Verhaal & Lokaal blok
+            Verhaal & Karakterblok
           </h2>
         </header>
         <div className="p-4 md:p-6 space-y-4">

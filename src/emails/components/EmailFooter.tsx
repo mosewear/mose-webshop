@@ -152,7 +152,7 @@ export default function EmailFooter({
         </Link>
       </div>
 
-      <div style={metaBlock}>© {year} MOSE · Made in Groningen</div>
+      <div style={metaBlock}>© {year} MOSE · Geen poespas. Wel karakter.</div>
 
       {unsubscribeUrl ? (
         <div style={unsubscribeBlock}>

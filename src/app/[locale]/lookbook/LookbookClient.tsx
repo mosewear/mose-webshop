@@ -41,11 +41,9 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
     locale,
   )
 
-  // Editorial stamp left side (e.g. "GRONINGEN · 53.21°N 6.57°E").
-  // Falls back to the canonical Groningen coordinates so the stamp
-  // never collapses to "blank" if an editor accidentally clears it.
+  // Use the brand stamp if no editorial stamp has been configured.
   const stampLeft = pickLocalized(
-    settings?.stamp_left_nl ?? 'GRONINGEN · 53.21°N 6.57°E',
+    settings?.stamp_left_nl ?? 'MOSE · DE COLLECTIE',
     settings?.stamp_left_en ?? null,
     locale,
   )

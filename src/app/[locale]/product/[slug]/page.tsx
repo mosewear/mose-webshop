@@ -70,7 +70,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, 'mannenkleding', 'premium basics', ...(isTapstitchProduct(product) ? [] : ['Groningen', 'lokaal gemaakt'])].filter(Boolean) as string[],
+    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, 'mannenkleding', 'premium basics'].filter(Boolean) as string[],
     openGraph: {
       title,
       description,
@@ -253,12 +253,7 @@ export default async function ProductPage({
             productpagina's (Asket, Norse Projects, Carhartt WIP, Les Deux,
             Colorful Standard, Pockies, Suitsupply) heeft er geen enkele twee
             zwevende elementen: op een productpagina is het koopmoment het enige
-            dat mag blijven staan.
-
-            Het merkverhaal is niet verdwenen: "MADE IN GRONINGEN" staat als
-            label onder de prijs, de vertrouwensregels onder de koopknop noemen
-            het atelier, en de veelgestelde vragen beantwoorden "Is dit echt in
-            Groningen gemaakt?". */}
+            dat mag blijven staan. */}
       </Suspense>
     </>
   )

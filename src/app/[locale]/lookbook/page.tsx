@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { getLookbookPageData } from '@/lib/lookbook-data'
+import { pickLocalized } from '@/lib/lookbook'
 import LookbookClient from './LookbookClient'
 
 /**
@@ -84,10 +85,9 @@ export default async function LookbookPage({
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: settings?.header_title ?? 'MOSE Lookbook',
+    name: pickLocalized(settings?.header_title ?? 'MOSE Lookbook', settings?.header_title_en ?? null, normalizedLocale),
     description:
-      settings?.header_subtitle ??
-      'Editorial chapters featuring the MOSE collection.',
+      pickLocalized(settings?.header_subtitle ?? '', settings?.header_subtitle_en ?? null, normalizedLocale),
     url: `https://www.mosewear.com/${normalizedLocale}/lookbook`,
     inLanguage: normalizedLocale,
     isPartOf: {

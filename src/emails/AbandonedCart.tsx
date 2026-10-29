@@ -374,7 +374,7 @@ export default function AbandonedCartEmail({
             },
             {
               label: t('abandonedCart.trustOriginLabel') || 'Herkomst',
-              value: t('abandonedCart.trustOriginValue') || 'Atelier in Groningen',
+              value: t('abandonedCart.trustOriginValue') || 'Kleding met karakter',
             },
           ]}
         />

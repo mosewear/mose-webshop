@@ -209,7 +209,7 @@ export default function InsiderCommunityEmail({
                 style={{
                   fontFamily: EMAIL_FONTS.body,
                   fontSize: '14px',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
                   color: EMAIL_COLORS.text,
                   paddingLeft: '14px',
                   borderLeft: `3px solid ${EMAIL_COLORS.primary}`,
@@ -217,7 +217,7 @@ export default function InsiderCommunityEmail({
                   lineHeight: 1.55,
                 }}
               >
-                “{quote}”
+                {quote}
               </div>
             ))}
         </div>

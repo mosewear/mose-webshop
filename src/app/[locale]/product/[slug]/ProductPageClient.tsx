@@ -2229,7 +2229,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                           <>
                             <p><span className="font-semibold">{locale === 'en' ? 'Premium quality:' : 'Premium kwaliteit:'}</span> {locale === 'en' ? 'High-quality materials that last' : 'Hoogwaardige materialen die lang meegaan'}</p>
                             <p><span className="font-semibold">{locale === 'en' ? 'Perfect fit:' : 'Perfect fit:'}</span> {locale === 'en' ? 'Designed for comfort and style' : 'Ontworpen voor comfort en stijl'}</p>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Locally made:' : 'Lokaal gemaakt:'}</span> {locale === 'en' ? 'Produced with love in Groningen' : 'Met liefde geproduceerd in Groningen'}</p>
+                            <p><span className="font-semibold">{locale === 'en' ? 'Style:' : 'Stijl:'}</span> {locale === 'en' ? 'Understated details with character' : 'Rustige details met karakter'}</p>
                           </>
                         )}
                         

@@ -209,8 +209,8 @@ export default function SpringDrop1LaunchEmail({
     : 'Maybe you already know us a little, or maybe this is your first email from us. Either way: glad you are reading along!'
 
   const introBody = isNl
-    ? 'We zijn Irma en Rick uit Groningen en we vertellen je graag waarom MOSE bestaat, hoe we produceren en wat we geloven over minder, maar beter.'
-    : 'We are Irma and Rick from Groningen and we would love to tell you why MOSE exists, how we produce and what we believe about less, but better.'
+    ? 'Ontdek waar MOSE voor staat: kleding voor mannen, met aandacht voor pasvorm, materiaal en details.'
+    : 'Discover what MOSE stands for: clothes for men, with considered fits, fabrics and details.'
 
   const storyCtaLabel = isNl ? 'Lees het hele verhaal' : 'Read the full story'
   const storyCtaFootnote = isNl
@@ -225,7 +225,7 @@ export default function SpringDrop1LaunchEmail({
     : `Go to the shop  →`
 
   const sectionTitle = isNl ? 'Drie items' : 'Three items'
-  const sectionMeta = isNl ? 'Gemaakt in Groningen' : 'Made in Groningen'
+  const sectionMeta = isNl ? 'Kleding met karakter' : 'Clothes with character'
 
   const firstPair = gridProducts.slice(0, 2)
   const third = gridProducts[2] ?? null

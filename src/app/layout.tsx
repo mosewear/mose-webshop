@@ -34,8 +34,8 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "MOSE - Kleding en accessoires voor mannen",
       template: "%s - MOSE"
     },
-    description: "Tijdloze basics zonder gedoe. MOSE maakt premium hoodies, t-shirts en accessoires voor mannen die kwaliteit waarderen. Lokaal geproduceerd in Groningen. Gratis verzending vanaf €100.",
-    keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "Groningen", "lokaal gemaakt", "Nederlands merk", "duurzame kleding", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
+    description: "Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.",
+    keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "broeken", "sweaters", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
     authors: [{ name: "MOSE", url: "https://www.mosewear.com" }],
     creator: "MOSE",
     publisher: "MOSE",
@@ -59,7 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
     locale: "nl_NL",
     url: "https://www.mosewear.com",
     title: "MOSE - Kleding en accessoires voor mannen",
-    description: "Tijdloze basics zonder gedoe. Premium hoodies, t-shirts en accessoires voor mannen. Lokaal gemaakt in Groningen. Gratis verzending vanaf €100.",
+    description: "Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.",
     siteName: "MOSE",
     images: [
       {
@@ -73,7 +73,7 @@ export async function generateMetadata(): Promise<Metadata> {
   twitter: {
     card: "summary_large_image",
     title: "MOSE - Kleding en accessoires voor mannen",
-    description: "Tijdloze basics zonder gedoe. Lokaal gemaakt in Groningen.",
+    description: "Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.",
     images: ["/og-default.jpg"],
   },
   robots: {

@@ -73,8 +73,8 @@ export default function SpringDrop2TeeEmail({
   const isNl = locale !== 'en'
 
   const preview = isNl
-    ? '240 gsm jersey uit Groningen. Bij drie stuks €44,95 per stuk, automatisch in je mand.'
-    : '240 gsm jersey from Groningen. Three for €44.95 each, applied automatically in your cart.'
+    ? 'Stevige jersey van 240 g/m². Bij drie stuks €44,95 per stuk, automatisch in je mand.'
+    : 'Substantial 240 gsm jersey. Three for €44.95 each, applied automatically in your cart.'
 
   const heroBadge = isNl ? 'EEN FAVORIET' : 'A FAVORITE'
   const heroTitle = isNl ? 'DE MOSE TEE.' : 'THE MOSE TEE.'
