@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
+import { shopifyPercentageDiscountCents } from '@/lib/shopify/discount-rounding'
 import { formatPrice, formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import { trackAddToCart } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -140,6 +141,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           body: JSON.stringify({
             code: savedPromo,
             orderTotal: subtotal,
+            checkoutProvider: process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' ? 'shopify' : 'legacy',
             items: items, // ✅ NEW: Send items for no-stacking discount check
           }),
         })
@@ -169,7 +171,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         
         let newDiscount = 0
         if (savedType === 'percentage') {
-          newDiscount = (subtotal * savedValue) / 100
+          newDiscount = process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true'
+            ? shopifyPercentageDiscountCents(Math.round(subtotal * 100), savedValue) / 100
+            : (subtotal * savedValue) / 100
         } else if (savedType === 'fixed') {
           newDiscount = Math.min(savedValue, subtotal)
         }
@@ -455,6 +459,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         body: JSON.stringify({
           code: promoCode.toUpperCase(),
           orderTotal: subtotal,
+          checkoutProvider: process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' ? 'shopify' : 'legacy',
           items: items, // ✅ NEW: Send items for no-stacking discount check
         }),
       })

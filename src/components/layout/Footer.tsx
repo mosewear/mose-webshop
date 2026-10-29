@@ -6,7 +6,7 @@ import { Instagram, Facebook } from 'lucide-react'
 import { SiTiktok } from 'react-icons/si'
 import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
-import { formatKvk, formatVat } from '@/lib/company'
+import { COMPANY, formatKvk, formatVat } from '@/lib/company'
 import { Link as LocaleLink } from '@/i18n/routing'
 import TrustpilotWidget from '@/components/TrustpilotWidget'
 
@@ -16,7 +16,7 @@ export function Footer() {
   
   // Helper for locale-aware links
   const [settings, setSettings] = useState({
-    contact_address: 'Stavangerweg 13, 9723 JC Groningen',
+    contact_address: COMPANY.contactAddress as string,
     contact_phone: '+31 50 234 0025',
     contact_email: 'info@mosewear.com',
     tax_rate: 21,

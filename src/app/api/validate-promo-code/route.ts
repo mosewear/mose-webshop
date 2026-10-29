@@ -15,7 +15,7 @@ const STAFFEL_PROMO_ERROR =
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, orderTotal, items } = await req.json()
+    const { code, orderTotal, items, checkoutProvider } = await req.json()
 
     if (!code || orderTotal === undefined) {
       return NextResponse.json(
@@ -170,6 +170,7 @@ export async function POST(req: NextRequest) {
         applies_to_sale_items: !!promoCode.applies_to_sale_items,
       },
       eligibilityLines,
+      checkoutProvider === 'shopify' ? 'shopify' : 'legacy',
     )
 
     if (!eligibility.eligible) {

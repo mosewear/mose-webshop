@@ -1,3 +1,4 @@
+import { readPromoParity } from '@/lib/shopify/promo-parity'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { createServiceClient } from '@/lib/supabase/service'
@@ -60,6 +61,7 @@ export async function GET() {
       !result.error && result.count !== null && result.data !== null && result.count === result.data.length
     const activeIds = new Set((products.data ?? []).map((product: { id: string }) => product.id))
     const runtimeChecks = await runtimeReadiness(db, now.getTime())
+    const promoParity = await readPromoParity(db, now.getTime())
     const audit = auditShopifyRelease({
       products: (products.data ?? []) as AuditProduct[], variants: (variants.data ?? []) as AuditVariant[], mappings: (mappings.data ?? []) as MappedVariant[],
       complete: complete(products) && complete(variants) && complete(mappings),
@@ -69,7 +71,7 @@ export async function GET() {
       loyaltyAccounts: loyalty.error ? null : loyalty.count,
       giftCardsWithBalance: giftBalances.error ? null : giftBalances.count,
       scheduledGiftCards: scheduledGifts.error ? null : scheduledGifts.count,
-    }, { loyaltyRuntime: runtimeChecks.find(check => check.key === 'loyaltyRuntime')?.status ?? 'unknown' })
+    }, { loyaltyRuntime: runtimeChecks.find(check => check.key === 'loyaltyRuntime')?.status ?? 'unknown', promoParity })
     const inventory = await db.rpc('shopify_inventory_evidence').abortSignal(signal)
     const inventoryCheck = inventoryReadiness(inventory.error || !Array.isArray(inventory.data) ? null : inventory.data, released.error ? null : released.count, now.getTime())
     const readiness = attachReleaseAudit(summarizeReadiness(state.error ? null : state.data as IntegrationState | null, {

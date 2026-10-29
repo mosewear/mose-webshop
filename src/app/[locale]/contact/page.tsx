@@ -1,5 +1,7 @@
 'use client'
 
+import { COMPANY } from '@/lib/company'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getSiteSettings } from '@/lib/settings'
@@ -22,7 +24,7 @@ export default function ContactPage() {
   const [settings, setSettings] = useState({
     contact_email: 'info@mosewear.com',
     contact_phone: '+31 50 234 0025',
-    contact_address: 'Stavangerweg 13, 9723 JC Groningen',
+    contact_address: COMPANY.contactAddress as string,
   })
 
   useEffect(() => {

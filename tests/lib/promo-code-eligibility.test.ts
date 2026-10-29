@@ -161,3 +161,13 @@ describe('computePromoEligibility', () => {
     expect(r.discountAmount).toBeCloseTo(7.41, 2)
   })
 })
+
+it('quotes Shopify native percentage cents explicitly while preserving legacy recovery rounding', () => {
+  const promo = { ...code10pct, discount_value: 7.5 }
+  const lines = [
+    { productId: 'hoodie', unitPrice: 79, quantity: 1, basePrice: 79, salePrice: null },
+    { productId: 'raglan', unitPrice: 59, quantity: 2, basePrice: 59, salePrice: null },
+  ]
+  expect(computePromoEligibility(promo, lines).discountAmount).toBe(14.78)
+  expect(computePromoEligibility(promo, lines, 'shopify').discountAmount).toBe(14.77)
+})

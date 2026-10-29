@@ -1,6 +1,7 @@
 import { createHash, createHmac } from 'node:crypto'
 import { z } from 'zod'
 import { moneyToCents } from './policy'
+import { shopifyPercentageDiscountCents } from './discount-rounding'
 
 const variant = z.string().regex(/^gid:\/\/shopify\/ProductVariant\/[1-9][0-9]*$/)
 const cents = z.number().int().positive().max(100_000_000)
@@ -16,7 +17,7 @@ const promoSchema = z.object({
   usageLimit: z.number().int().positive().nullable(), usageCount: z.number().int().nonnegative(),
 })
 /** Inputs MUST come from current database rows and authenticated ownership, not
- * from browser price/discount fields. Integer cents preserve legacy rounding. */
+ * from browser price/discount fields. Integer cents use the native Shopify order-percentage rounding contract. */
 export function planPromo(rawPromo: unknown, rawLines: unknown, staffelCents: number, now = Date.now()) {
   const p = promoSchema.parse(rawPromo)
   const lines = z.array(benefitLineSchema).min(1).max(100).parse(rawLines)
@@ -29,7 +30,7 @@ export function planPromo(rawPromo: unknown, rawLines: unknown, staffelCents: nu
   const subtotal = eligible.reduce((n, l) => n + l.unitCents * l.quantity, 0)
   if (!Number.isSafeInteger(subtotal) || subtotal > 100_000_000) throw new Error('BENEFITS_INVALID_SUBTOTAL')
   if (!subtotal || subtotal < p.minOrderCents) throw new Error('PROMO_MINIMUM_NOT_MET')
-  const discountCents = Math.min(subtotal, p.type === 'percentage' ? Math.round(subtotal * p.value / 100) : Math.round(p.value * 100))
+  const discountCents = Math.min(subtotal, p.type === 'percentage' ? shopifyPercentageDiscountCents(subtotal, p.value) : Math.round(p.value * 100))
   if (!discountCents) throw new Error('PROMO_ZERO_DISCOUNT')
   return { promoId: p.id, discountCents, eligibleVariants: [...new Set(eligible.map(l => l.variantId))], eligibleSubtotalCents: subtotal }
 }

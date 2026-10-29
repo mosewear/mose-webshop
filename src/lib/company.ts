@@ -16,6 +16,7 @@
  */
 export const COMPANY = {
   legalName: 'MOSE',
+  contactAddress: 'Helper Brink 27a, 9722 EG Groningen',
   kvkNumber: '98043609',
   vatNumber: 'NL868336270B01',
 } as const

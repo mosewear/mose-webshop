@@ -1,0 +1,9 @@
+# Promotion arithmetic release evidence
+
+The admin launch-readiness audit reads service-only measured provider evidence. Public checkout does not read this evidence: its 24-hour expiry never turns off a running checkout. Refresh provider probes before a release when evidence expires; an expired or absent record yields unknown readiness, never a permanent verification claim.
+
+Evidence is bound to API version 2026-10, the native aggregate percentage truncation contract, and a canonical fingerprint of current eligible promotions, catalog prices/variants/mappings, quantity tiers and loyalty settings. Activating draft products changes the snapshot and invalidates evidence. Changing rules, expiry, pricing or supported configuration also invalidates it. Usage counters alone do not invalidate equivalent rules; exhausting a promotion removes it from the eligible snapshot and does invalidate it.
+
+Only the explicitly supported percentage shapes can pass. Unknown fields, unsupported caps/minimums, sale exclusions with sale items, quantity tiers and gift products fail closed. Provider cart observations must match expected integer cents, include every required case, be no older than one hour when verified, and have a hashed cart reference. Evidence expires within 24 hours. API upgrades require new evidence.
+
+This proves discount arithmetic only. Customer binding, actual paid settlement, stock ownership and fulfillment remain separate release obligations. Migration 004 deliberately seeds no evidence. Recording a verified row requires actual provider probes and a fresh matching configuration snapshot; a manual boolean override is not supported.

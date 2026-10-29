@@ -113,7 +113,7 @@
     "closeAria": "Close menu",
     "tickerItems": [
       "No fast fashion",
-      "Made in Groningen"
+      "From Groningen"
     ],
     "tickerAria": "MOSE values ticker",
     "navAria": "Main navigation",
@@ -163,7 +163,7 @@
     "contact": "Email us"
   },
   "footer": {
-    "tagline": "Clothing without fuss. Locally made. Built to last.",
+    "tagline": "Clothing without fuss. From Groningen. Built to last.",
     "shop": {
       "title": "Shop",
       "hoodies": "Hoodies",
@@ -1312,12 +1312,12 @@
   },
   "metadata": {
     "title": "MOSE | Clothing and accessories for men",
-    "description": "Timeless basics without the fuss. Premium hoodies, sweaters and t-shirts for men who appreciate quality. Made in Groningen. Always free shipping.",
-    "keywords": "MOSE, menswear, premium basics, hoodies, t-shirts, Groningen, locally made",
+    "description": "Timeless basics without the fuss. Discover MOSE from Groningen: hoodies, sweaters and t-shirts with attention to fit and detail. Always free shipping.",
+    "keywords": "MOSE, menswear, premium basics, hoodies, t-shirts, Groningen, from Groningen",
     "shop": {
       "title": "Shop",
-      "description": "Discover our collection of premium basics. Timeless clothing and accessories for men. Made locally in Groningen. Free shipping from €{threshold}.",
-      "keywords": "MOSE shop, premium basics, hoodies, t-shirts, menswear, Groningen, locally made, streetwear"
+      "description": "Discover our collection of premium basics. Timeless clothing and accessories for men, from Groningen. Free shipping from €{threshold}.",
+      "keywords": "MOSE shop, premium basics, hoodies, t-shirts, menswear, Groningen, from Groningen, streetwear"
     },
     "lookbook": {
       "title": "Lookbook",
@@ -1347,7 +1347,7 @@
       },
       "about": {
         "title": "About MOSE",
-        "description": "Who's behind MOSE? Read why Irma and Rick have their premium basics made in Groningen."
+        "description": "Who is behind MOSE? Read the story of Irma and Rick and their clothing brand from Groningen."
       },
       "cart": {
         "title": "Shopping cart"
@@ -1440,11 +1440,11 @@
   },
   "homepage": {
     "hero": {
-      "badge": "Made in Groningen",
+      "badge": "From Groningen",
       "title1": "NO NONSENSE.",
       "title2": "JUST CHARACTER.",
-      "subtitle": "Locally made. Quality that lasts.",
-      "imageAlt": "MOSE, made in Groningen, worn in the city",
+      "subtitle": "From Groningen. Quality that lasts.",
+      "imageAlt": "MOSE, from Groningen, worn in the city",
       "cta1": {
         "text": "Shop MOSE",
         "aria": "View our shop with all MOSE products"
@@ -1456,12 +1456,12 @@
       "scroll": "Scroll"
     },
     "stats": {
-      "local": "Locally produced",
+      "local": "From Groningen",
       "returns": "Days return policy",
       "quality": "Premium quality"
     },
     "trust": {
-      "local": "Locally made",
+      "local": "From Groningen",
       "freeShipping": "Free shipping from €{threshold}",
       "returns": "{days} days return",
       "secure": "Secure payment",
@@ -1487,13 +1487,13 @@
     },
     "story": {
       "badge": "Our Story",
-      "title": "MADE IN",
+      "title": "FROM",
       "titleHighlight": "GRONINGEN",
-      "description1": "No nonsense. Just character. Clothing that lasts, made in Groningen, without compromise on quality.",
+      "description1": "No nonsense. Just character. From Groningen, we work on clothing with attention to fit, materials and finishing.",
       "description2": "Premium basics with a soul. Built for real life.",
       "stat1": {
-        "label": "100% Local",
-        "sublabel": "Made in NL"
+        "label": "From Groningen",
+        "sublabel": "Our brand"
       },
       "stat2": {
         "label": "Built 2024",
@@ -1505,7 +1505,7 @@
       },
       "cta": {
         "text": "Read our story",
-        "aria": "Read the full story about MOSE and our local production"
+        "aria": "Read the full story about MOSE and our roots in Groningen"
       },
       "imageAlt": "MOSE, worn in real life"
     },
@@ -1580,8 +1580,8 @@
         "answer": "Wash at 30°C inside out, do not use bleach and preferably do not tumble dry. Iron at low temperature if necessary. This way your MOSE garment will stay beautiful for years."
       },
       {
-        "question": "Is MOSE really locally produced?",
-        "answer": "Absolutely! All our clothing is 100% produced in the Netherlands, mainly in Groningen. We work together with a local atelier that shares our quality standards. No long transport chains, just fair production."
+        "question": "Where is MOSE from and where is the clothing made?",
+        "answer": "MOSE is from Groningen. Production and printing can vary by item. Check the product information for origin, materials and finishing, or contact us if you have any questions."
       },
       {
         "question": "Which payment methods do you accept?",
@@ -1790,11 +1790,11 @@
     "story": {
       "title": "OUR STORY",
       "paragraph1": "We're Irma and Rick, the founders of MOSE.\n\nWe live with our cats Bob and Marley and our doggo Guus in Groningen, in Helpman. As of September we're even married. Wow, serious stuff.\n\n\"Why MOSE?\" Our late cat was named Mosie, we called her Moos. This is our tribute to her. 🐱",
-      "paragraph2": "We started MOSE because fast fashion irritates us. We kept buying expensive t-shirts that were ready for the bin after a few washes. So we have clothing made that lasts. Sustainable, honest and local. Even after countless washes.\n\nLocal? Yes. Everything is made for us in Groningen."
+      "paragraph2": "We started MOSE because fast fashion frustrates us. We kept buying expensive t-shirts that were ready for the bin after a few washes. That is why we are building a clothing brand from Groningen with attention to fit, materials and finishing. Check each product for its origin and care instructions."
     },
     "local": {
-      "title": "LOCALLY MADE IN GRONINGEN",
-      "text": "All our products are locally made in Groningen. Not because it's trendy, but because we want to know exactly where our clothing comes from and how it's made. Honest, transparent, and with respect for everyone involved in the process."
+      "title": "FROM GRONINGEN",
+      "text": "MOSE is a clothing brand from Groningen. From here we work on our collection and help with questions about products, orders and returns. Origin and finishing can differ by product; check the product information for details."
     },
     "values": {
       "title": "OUR VALUES",
@@ -1803,8 +1803,8 @@
         "text": "Only the finest materials and perfect finishing. Clothing that lasts for years."
       },
       "localMade": {
-        "title": "Locally made",
-        "text": "100% produced in Groningen. We know everyone who works on your clothing."
+        "title": "From Groningen",
+        "text": "Our brand and customer service are based in Groningen. Check each product for its origin and finishing."
       },
       "fairPricing": {
         "title": "Fair pricing",
@@ -1828,7 +1828,7 @@
       },
       "local": {
         "title": "Proudly local",
-        "text": "Made in Groningen, worn throughout the Netherlands."
+        "text": "From Groningen, worn throughout the Netherlands."
       }
     },
     "cta": "Discover the collection"
@@ -1987,8 +1987,8 @@
         "desc": "Be the first to see new releases"
       },
       "gift": {
-        "title": "Made in Groningen",
-        "desc": "Locally designed and made"
+        "title": "From Groningen",
+        "desc": "A brand from Groningen"
       },
       "shipping": {
         "title": "Free Shipping",
@@ -2009,8 +2009,8 @@
     "subtitle": "You're in. Here's what that means.",
     "intro": "Thanks for being part of the inner circle. You're officially a MOSE insider now: one of the first to know when new drops launch, before they sell out.",
     "perksTitle": "What you get as an insider:",
-    "perk1Title": "Made in Groningen",
-    "perk1Text": "Locally designed and made",
+    "perk1Title": "From Groningen",
+    "perk1Text": "A brand from Groningen",
     "perk2Title": "Free shipping",
     "perk2Text": "On your first order",
     "perk3Title": "First dibs on drops",
@@ -2058,7 +2058,7 @@
     "process3": "Limited runs. When it's gone, it's gone.",
     "limitedTitle": "Why limited edition?",
     "limitedText": "We don't do mass production. Every drop is limited. That means unique, exclusive and not for everyone. Early access ensures you don't miss out.",
-    "closing": "This is what you support when you buy from MOSE. No corporate bullshit. Just honest design, locally made.",
+    "closing": "This is what you support when you buy from MOSE. No corporate bullshit. Just honest design, from Groningen.",
     "followCTA": "Follow the process",
     "followSubtext": "@mosewearcom for real-time updates",
     "ps": "P.S. Launch is in {days} days. You have early access. Use it."
@@ -2073,7 +2073,7 @@
     "info3": "Limited items disappear fast. Early access matters.",
     "perksRemainTitle": "Your insider perks remain:",
     "perk1": "24h early access (March 1st at 00:00)",
-    "perk2": "Made in Groningen",
+    "perk2": "From Groningen",
     "perk3": "Free shipping on your first order",
     "statusTitle": "Check your status:",
     "statusNotYet": "✓ If you haven't shopped yet: wait until March 1st at 00:00 for early access",
