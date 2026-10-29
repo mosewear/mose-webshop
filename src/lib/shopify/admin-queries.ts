@@ -13,7 +13,7 @@ export const ORDER_QUERY = `query MoseOrder($id: ID!, $after: String) {
       pageInfo { hasNextPage endCursor }
     }
     fulfillments(first: 100) {
-      id status createdAt updatedAt location { id name }
+      id status displayStatus createdAt updatedAt location { id name }
       trackingInfo { company number url }
       fulfillmentLineItems(first: 100) { nodes { quantity lineItem { id } } pageInfo { hasNextPage endCursor } }
     }

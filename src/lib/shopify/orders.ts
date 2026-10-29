@@ -9,7 +9,7 @@ const money = z.object({ shopMoney: z.object({ amount: z.string().regex(/^\d+(\.
 const line = z.object({ id, name: z.string(), sku: z.string().nullable(), quantity: z.number().int().nonnegative(),
   currentQuantity: z.number().int().nonnegative(), variant: z.object({ id }).nullable(), originalUnitPriceSet: money, discountedTotalSet: money })
 const fulfillmentLine = z.object({ quantity: z.number().int().nonnegative(), lineItem: z.object({ id }) })
-const fulfillment = z.object({ id, status: z.string(), createdAt: time, updatedAt: time,
+const fulfillment = z.object({ id, status: z.string(), displayStatus: z.string().nullable().optional(), createdAt: time, updatedAt: time,
   location: z.object({ id, name: z.string() }).nullable(),
   trackingInfo: z.array(z.object({ company: z.string().nullable(), number: z.string().nullable(), url: z.string().nullable() })),
   fulfillmentLineItems: z.object({ nodes: z.array(fulfillmentLine), pageInfo }) })

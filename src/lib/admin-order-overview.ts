@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { admin } from '@/lib/shopify/client'
+import { shipmentLabel } from '@/lib/shopify/shipping-status'
 import { orderSchema } from '@/lib/shopify/orders'
 
 export const METADATA = `query AdminOrderMetadata($ids:[ID!]!){ nodes(ids:$ids){ ... on Order { id createdAt email netPaymentSet { shopMoney { amount currencyCode } } } } }`
@@ -45,6 +46,7 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
       paid_at:null,payment_method:'Shopify',delivery_method:'shipping',shipping_address:null,billing_address:null,
       payment_intent_id:null,tracking_code:o.fulfillments.filter(f=>f.status==='SUCCESS').flatMap(f=>f.trackingInfo).map(t=>t.number).filter(Boolean).join(', '),
       label_url:null,created_at:meta.createdAt,updated_at:o.updatedAt,checkout_started_at:null,
-      production_status:'Productie nog niet bevestigd',synced_at:row.synced_at,
+      production_status:'Productie niet afzonderlijk gemeld',
+      shipping_status:o.fulfillments.filter(f=>f.status==='SUCCESS').map(f=>shipmentLabel(f.displayStatus)).join(' · ') || 'Nog geen verzendmelding',synced_at:row.synced_at,
       detail_url:'/admin/shopify/orders#'+o.id.split('/').pop()}
 }

@@ -13,7 +13,7 @@ describe('unified admin source normalization',()=>{
  it('counts the actual cent payment and preserves authoritative order identity',()=>{
   const v=normalizeShopifyAdminOrder(row(order),meta)
   expect(v).toMatchObject({name:'#1001',total:0.01,revenue:0.01,payment_status:'paid',created_at:time,source:'shopify'})
-  expect(v.production_status).toBe('Productie nog niet bevestigd')
+  expect(v.production_status).toBe('Productie niet afzonderlijk gemeld')
  })
  it('uses net payments without subtracting refunds twice from current order value',()=>{
   const v=normalizeShopifyAdminOrder(row({...order,displayFinancialStatus:'PARTIALLY_REFUNDED',currentTotalPriceSet:money('50'),totalRefundedSet:money('20')}),{...meta,netPaymentSet:money('50')})

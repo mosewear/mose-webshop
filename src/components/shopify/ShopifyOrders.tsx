@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { shipmentLabel } from '@/lib/shopify/shipping-status'
 import type { ShopifyOrderView } from '@/lib/shopify/order-views'
 
 type Props = { mode: 'admin' | 'account'; locale?: string }
@@ -79,7 +80,7 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
             </li>)}
           </ul>
           {order.shipments.map((shipment, index) => <div key={shipment.id} className="bg-gray-50 p-4 space-y-2">
-            <h4 className="font-bold">{text('Pakket', 'Parcel')} {index + 1}</h4>
+            <h4 className="font-bold">{text('Pakket', 'Parcel')} {index + 1}</h4><p className="text-sm">{shipmentLabel(shipment.displayStatus,en)}</p>
             <ul className="text-sm">{shipment.lines.map(line => <li key={line.id}>{line.quantity} × {order.lines.find(item => item.id === line.id)?.name ?? text('Artikel', 'Item')}</li>)}</ul>
             {shipment.tracking.length ? shipment.tracking.map((tracking, i) => <p key={i} className="text-sm break-all">
               {tracking.company && <span>{tracking.company} · </span>}{tracking.number && <span>{tracking.number} </span>}
