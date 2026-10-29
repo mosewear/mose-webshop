@@ -43,6 +43,7 @@ export const ORDER_STATUS: Record<string, StatusMeta> = {
   pending: { label: 'In afwachting', tone: 'pending', mark: '○' },
   paid: { label: 'Betaald', tone: 'info', mark: '◆' },
   processing: { label: 'In behandeling', tone: 'info', mark: '◆' },
+  partially_shipped: { label: 'Deels verzonden', tone: 'brand', mark: '→' },
   shipped: { label: 'Verzonden', tone: 'brand', mark: '→' },
   delivered: { label: 'Afgeleverd', tone: 'success', mark: '✓' },
   cancelled: { label: 'Geannuleerd', tone: 'danger', mark: '✕' },
@@ -60,6 +61,9 @@ export const ORDER_STATUS: Record<string, StatusMeta> = {
 
 /** Betaalstatus (orders.payment_status). Bewust los van de orderstatus. */
 export const PAYMENT_STATUS: Record<string, StatusMeta> = {
+  partially_refunded: { label: 'Deels terugbetaald', tone: 'pending', mark: '↩' },
+  authorized: { label: 'Gereserveerd', tone: 'pending', mark: '○' },
+  partially_paid: { label: 'Deels betaald', tone: 'pending', mark: '○' },
   paid: { label: 'Betaald', tone: 'success', mark: '✓' },
   pending: { label: 'Wacht op betaling', tone: 'pending', mark: '⏳' },
   unpaid: { label: 'Onbetaald', tone: 'neutral', mark: '○' },

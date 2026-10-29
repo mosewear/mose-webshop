@@ -12,6 +12,10 @@ import { formatBedrag } from '@/lib/format-price'
 
 interface Order {
   id: string
+  source?: string
+  name?: string
+  detail_url?: string
+  production_status?: string
   user_id: string | null
   email: string
   status: string
@@ -71,32 +75,8 @@ export default function AdminOrdersPage() {
   }, [])
 
   const fetchStatusCounts = useCallback(async () => {
-    try {
-      const statuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled',
-        'return_requested', 'return_in_transit', 'return_received', 'return_completed']
-
-      const countQuery = (filter?: { eq?: string; in?: string[] }) => {
-        let q = supabase.from('orders').select('*', { count: 'exact', head: true })
-        if (filter?.eq) q = q.eq('status', filter.eq)
-        if (filter?.in) q = q.in('status', filter.in)
-        return q
-      }
-
-      const [allResult, ...statusResults] = await Promise.all([
-        countQuery(),
-        ...statuses.map(s => countQuery({ eq: s })),
-      ])
-
-      const counts: Record<string, number> = { all: allResult.count ?? 0 }
-      statuses.forEach((s, i) => { counts[s] = statusResults[i].count ?? 0 })
-      counts['returns'] = counts['return_requested'] + counts['return_in_transit'] +
-        counts['return_received'] + counts['return_completed']
-
-      setStatusCounts(counts)
-    } catch {
-      // counts are non-critical
-    }
-  }, [supabase])
+    // Counts and rows are updated together from the same complete response.
+  }, [])
 
   const initializedRef = useRef(false)
 
@@ -134,75 +114,22 @@ export default function AdminOrdersPage() {
       setLoading(true)
       setRefreshing(true)
 
-      const zoekterm = debouncedSearch.trim()
-
-      // Zoeken gaat via de RPC admin_search_orders en NIET via een
-      // PostgREST-filter. De oude constructie was:
-      //   .or(`id.ilike.%${q}%,email.ilike.%${q}%`)
-      // en orders.id is een UUID, dus Postgres gaf daarop een harde fout
-      // (42883: operator does not exist: uuid ~~* unknown). Elke zoekopdracht
-      // faalde, en het client-side filter dat naam en tracking toevoegde keek
-      // alleen in de 25 al opgehaalde rijen. De RPC zoekt op order-id, e-mail,
-      // klantnaam uit het verzendadres en track-and-tracecode, over de hele
-      // tabel.
-      let data: any[] | null = null
-      let error: any = null
-
-      if (zoekterm) {
-        const [{ data: rpcData, error: rpcError }, { data: rpcCount }] = await Promise.all([
-          supabase.rpc('admin_search_orders', {
-            p_query: zoekterm,
-            p_limit: PAGE_SIZE,
-            p_offset: (page - 1) * PAGE_SIZE,
-          }),
-          supabase.rpc('admin_count_orders', { p_query: zoekterm }),
-        ])
-        error = rpcError
-        // Statusfilter blijft client-side gelden binnen het zoekresultaat.
-        const rows = (rpcData as any[] | null) ?? []
-        data = filter === 'all'
-          ? rows
-          : filter === 'returns'
-            ? rows.filter((o) => ['return_requested', 'return_in_transit', 'return_received', 'return_completed'].includes(o.status))
-            : rows.filter((o) => o.status === filter)
-        setTotalCount(typeof rpcCount === 'number' ? rpcCount : data.length)
-      } else {
-        let countQuery = supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true })
-
-        if (filter !== 'all') {
-          if (filter === 'returns') {
-            countQuery = countQuery.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
-          } else {
-            countQuery = countQuery.eq('status', filter)
-          }
-        }
-
-        const { count } = await countQuery
-        setTotalCount(count || 0)
-
-        let query = supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
-
-        if (filter !== 'all') {
-          if (filter === 'returns') {
-            query = query.in('status', ['return_requested', 'return_in_transit', 'return_received', 'return_completed'])
-          } else {
-            query = query.eq('status', filter)
-          }
-        }
-
-        const res = await query
-        data = res.data
-        error = res.error
-      }
-
-      if (error) throw error
-      setOrders(data || [])
+      const response = await fetch('/api/admin/order-overview', {cache:'no-store'})
+      if(!response.ok) throw new Error('Het volledige besteloverzicht kan niet worden geladen.')
+      const result = await response.json()
+      if(!Array.isArray(result.orders)) throw new Error('Ongeldig besteloverzicht.')
+      const all = result.orders as Order[]
+      const counts: Record<string,number> = {all:all.length}
+      for(const o of all) counts[o.status]=(counts[o.status]??0)+1
+      counts.returns=['return_requested','return_in_transit','return_received','return_completed'].reduce((n,k)=>n+(counts[k]??0),0)
+      setStatusCounts(counts)
+      const q=debouncedSearch.trim().toLowerCase()
+      const matching=all.filter(o=> (filter==='all'||(filter==='returns'?['return_requested','return_in_transit','return_received','return_completed'].includes(o.status):o.status===filter)) &&
+        (!q||[o.id,o.name,o.email,o.tracking_code,o.shipping_address?.first_name,o.shipping_address?.last_name].filter(Boolean).join(' ').toLowerCase().includes(q)))
+      setTotalCount(matching.length)
+      setOrders(matching.slice((page-1)*PAGE_SIZE,page*PAGE_SIZE))
+      setSelectedOrders([])
+      setError('')
       pendingScrollRestore.current = true
     } catch (err: any) {
       setError(err.message)
@@ -227,19 +154,7 @@ export default function AdminOrdersPage() {
     }
   }, [loading, orders])
 
-  const filteredOrders = useMemo(() => {
-    if (!debouncedSearch.trim()) return orders
-    const q = debouncedSearch.toLowerCase().trim()
-    return orders.filter((order) => {
-      const idMatch = order.id.toLowerCase().includes(q)
-      const emailMatch = order.email.toLowerCase().includes(q)
-      const firstName = (order.shipping_address?.first_name || '').toLowerCase()
-      const lastName = (order.shipping_address?.last_name || '').toLowerCase()
-      const nameMatch = firstName.includes(q) || lastName.includes(q) || `${firstName} ${lastName}`.includes(q)
-      const trackingMatch = (order.tracking_code || '').toLowerCase().includes(q)
-      return idMatch || emailMatch || nameMatch || trackingMatch
-    })
-  }, [orders, debouncedSearch])
+  const filteredOrders = orders
 
   // De vier lokale status-kaarten (getStatusColor, getStatusLabel,
   // getPaymentStatusColor, getPaymentStatusLabel) zijn vervangen door
@@ -252,7 +167,7 @@ export default function AdminOrdersPage() {
     if (selectedOrders.length === filteredOrders.length) {
       setSelectedOrders([])
     } else {
-      setSelectedOrders(filteredOrders.map(o => o.id))
+      setSelectedOrders(filteredOrders.filter(o=>o.source!=='shopify').map(o => o.id))
     }
   }
 
@@ -472,7 +387,7 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-3xl font-display font-bold mb-2">Orders</h1>
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
-          <Link href="/admin/shopify/orders" className="inline-block mt-3 font-bold underline underline-offset-4">Shopify-bestellingen en pakketstatus →</Link>
+          <p className="text-xs text-gray-500 mt-2">Alle MOSE- en Shopify-bestellingen. Productie wordt pas bevestigd na een leveranciersmelding.</p>
         </div>
         {/* Laat de knoppen afbreken. Vanaf md werden het er vier naast elkaar op
             volle tekstbreedte, en op een tablet van 768 pixels stak de knop
@@ -719,12 +634,13 @@ export default function AdminOrdersPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
-                        #{order.id.slice(0, 8)}
+                        {order.name || '#'+order.id.slice(0, 8)}
                       </code>
                       <div className="text-sm font-semibold text-gray-900 mt-2 break-all">{order.email}</div>
                     </div>
                     <input
                       type="checkbox"
+                      disabled={order.source === 'shopify'}
                       checked={selectedOrders.includes(order.id)}
                       onChange={() => handleSelectOrder(order.id)}
                       className="w-5 h-5 mt-1"
@@ -735,6 +651,7 @@ export default function AdminOrdersPage() {
                     <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
                     <div className="flex items-center flex-wrap gap-1">
                       <StatusBadge status={order.status} kind="order" />
+                      {order.production_status && <p className="text-xs text-gray-600 mt-1">{order.production_status}</p>}
                       {order.label_url && order.status === 'processing' ? (
                       <span
                         title="Label aangemaakt, wacht op ophalen door DHL"
@@ -759,7 +676,7 @@ export default function AdminOrdersPage() {
 
                   <div className="mt-3 flex gap-2">
                     <Link
-                      href={`/admin/orders/${order.id}`}
+                      href={order.detail_url || `/admin/orders/${order.id}`}
                       onClick={saveScrollPosition}
                       className="flex-1 text-center text-brand-primary border-2 border-brand-primary py-2 text-sm font-semibold"
                     >
@@ -767,6 +684,7 @@ export default function AdminOrdersPage() {
                     </Link>
                     <button
                       type="button"
+                      disabled={order.source === 'shopify'}
                       onClick={() => setDeleteTargetIds([order.id])}
                       className="flex-shrink-0 px-3 py-2 border-2 border-red-300 text-red-700 hover:bg-red-50 text-sm font-semibold"
                       title="Order verwijderen"
@@ -823,14 +741,15 @@ export default function AdminOrdersPage() {
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
-                        checked={selectedOrders.includes(order.id)}
+                        disabled={order.source === 'shopify'}
+                      checked={selectedOrders.includes(order.id)}
                         onChange={() => handleSelectOrder(order.id)}
                         className="w-5 h-5"
                       />
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
-                        #{order.id.slice(0, 8)}
+                        {order.name || '#'+order.id.slice(0, 8)}
                       </code>
                     </td>
                     <td className="px-4 md:px-6 py-4">
@@ -848,6 +767,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} kind="order" />
+                      {order.production_status && <p className="text-xs text-gray-600 mt-1">{order.production_status}</p>}
                       {order.label_url && order.status === 'processing' ? (
                       <span
                         title="Label aangemaakt, wacht op ophalen door DHL"
@@ -872,7 +792,7 @@ export default function AdminOrdersPage() {
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-3">
                         <Link
-                          href={`/admin/orders/${order.id}`}
+                          href={order.detail_url || `/admin/orders/${order.id}`}
                           onClick={saveScrollPosition}
                           className="text-brand-primary hover:text-brand-primary-hover font-semibold"
                         >
@@ -880,7 +800,8 @@ export default function AdminOrdersPage() {
                         </Link>
                         <button
                           type="button"
-                          onClick={() => setDeleteTargetIds([order.id])}
+                          disabled={order.source === 'shopify'}
+                      onClick={() => setDeleteTargetIds([order.id])}
                           className="text-red-600 hover:text-red-800 p-1"
                           title="Order verwijderen"
                           aria-label="Order verwijderen"

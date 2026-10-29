@@ -24,25 +24,28 @@ const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
 // and use an empty previous window so delta badges don't render nonsense.
 function resolveDateWindow(range: DateRange): { currentStart: Date; prevStart: Date } {
   const now = new Date()
-
-  if (range === 'year') {
-    const currentStart = new Date(now.getFullYear(), 0, 1)
-    const prevStart = new Date(now.getFullYear() - 1, 0, 1)
-    return { currentStart, prevStart }
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now)
+  const n=(key:string)=>Number(parts.find(p=>p.type===key)?.value)
+  const midnight=(year:number,month:number,day:number)=> {
+    const wall=Date.UTC(year,month-1,day)
+    let result=wall
+    for(let i=0;i<3;i++) {
+      const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(result))
+      const v=(k:string)=>Number(p.find(x=>x.type===k)?.value)
+      result+=wall-Date.UTC(v('year'),v('month')-1,v('day'),v('hour'),v('minute'),v('second'))
+    }
+    return new Date(result)
   }
-
-  if (range === 'all') {
-    const epoch = new Date(0)
-    return { currentStart: epoch, prevStart: epoch }
-  }
-
-  const days = range === 'today' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 90
-  const currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
-  const prevStart = new Date(now.getTime() - 2 * days * 24 * 60 * 60 * 1000)
-  return { currentStart, prevStart }
+  if(range==='all') return {currentStart:new Date(0),prevStart:new Date(0)}
+  if(range==='year') return {currentStart:midnight(n('year'),1,1),prevStart:midnight(n('year')-1,1,1)}
+  if(range==='today') return {currentStart:midnight(n('year'),n('month'),n('day')),prevStart:midnight(n('year'),n('month'),n('day')-1)}
+  const days=range==='7d'?7:range==='30d'?30:90
+  return {currentStart:new Date(now.getTime()-days*86400000),prevStart:new Date(now.getTime()-2*days*86400000)}
 }
 
 interface OrderRow {
+  source?: string
+  revenue?: number
   status: string
   payment_status: string
   total: number
@@ -87,17 +90,17 @@ const EMPTY_PERIOD: PeriodStats = {
 
 function computePeriodStats(orders: OrderRow[]): PeriodStats {
   const totalOrders = orders.length
-  const paid = orders.filter(o => o.payment_status === 'paid')
+  const paid = orders.filter(o => ['paid','partially_paid','partially_refunded','refunded'].includes(o.payment_status))
   const unpaidOrders = orders.filter(o => o.payment_status === 'unpaid' || !o.payment_status).length
   const pendingPayments = orders.filter(o => o.payment_status === 'pending').length
   const pendingOrders = orders.filter(o => o.status === 'pending').length
 
-  const totalRevenue = paid.reduce((sum, o) => sum + Number(o.total), 0)
+  const totalRevenue = paid.reduce((sum, o) => sum + Number(o.revenue ?? o.total), 0)
   const avgOrderValue = paid.length > 0 ? totalRevenue / paid.length : 0
 
   const withCheckout = orders.filter(o => o.checkout_started_at)
   const conversionRate = withCheckout.length > 0
-    ? (paid.length / withCheckout.length) * 100
+    ? (paid.filter(o=>o.checkout_started_at).length / withCheckout.length) * 100
     : 0
 
   /**
@@ -218,6 +221,11 @@ export default function AdminDashboard() {
     if (isInitial) setLoading(true)
 
     try {
+      const overviewResponse=await fetch('/api/admin/order-overview',{cache:'no-store'})
+      if(!overviewResponse.ok) throw new Error('Volledige bestelcijfers niet beschikbaar')
+      const overview=await overviewResponse.json()
+      if(!Array.isArray(overview.orders)) throw new Error('Ongeldige bestelcijfers')
+      const unifiedOrders=overview.orders as OrderRow[]
       const { currentStart, prevStart } = resolveDateWindow(range)
       const ordersQuery = supabase.from('orders')
         .select('status, payment_status, total, checkout_started_at, created_at, email')
@@ -266,12 +274,12 @@ export default function AdminDashboard() {
         (v: { stock_quantity: number }) => v.stock_quantity > 0 && v.stock_quantity < lowStockThreshold
       ).length
       const totalCustomers = new Set(
-        ((customersRes.data as { email: string | null }[] | null) || [])
+        unifiedOrders.filter(o=>['paid','refunded','partially_refunded'].includes(o.payment_status))
           .map((o) => (o.email || '').trim().toLowerCase())
           .filter(Boolean),
       ).size
 
-      const allOrders: OrderRow[] = ordersRes.data || []
+      const allOrders: OrderRow[] = unifiedOrders
       const currentOrders = range === 'all'
         ? allOrders
         : allOrders.filter(o => new Date(o.created_at) >= currentStart)
@@ -297,7 +305,7 @@ export default function AdminDashboard() {
         totalCustomers,
       })
       setPrevStats(previousPeriod)
-      setOrdersToFulfill(fulfillRes.count || 0)
+      setOrdersToFulfill(unifiedOrders.filter(o=>['paid','partially_refunded'].includes(o.payment_status)&&['pending','paid','processing','partially_shipped'].includes(o.status)).length)
       setLastUpdate(new Date())
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
