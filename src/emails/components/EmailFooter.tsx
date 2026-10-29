@@ -112,6 +112,7 @@ export default function EmailFooter({
   contactEmail = EMAIL_DEFAULT_CONTACT.email,
   contactPhone = EMAIL_DEFAULT_CONTACT.phone,
   contactAddress = EMAIL_DEFAULT_CONTACT.address,
+  locale = 'nl',
   tagline,
   unsubscribeUrl,
   unsubscribePrompt,

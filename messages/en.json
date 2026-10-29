@@ -139,20 +139,20 @@
       "label": "Language",
       "switchTo": "Switch to {label}"
     },
-    "signature": "© {year} MOSE. MADE WITH 🐾",
+    "signature": "© {year} MOSE.",
     "shopAll": "Shop all",
     "productsAria": "Our products",
     "searchAria": "Open search",
     "cartAria": "Cart, {count, plural, one {# item} other {# items}}",
     "cartEmptyAria": "Cart, empty",
     "login": "Log in",
-    "fit": "Fits true to size. Not right? Send it back.",
+    "fit": "Compare fits and find your size.",
     "promise": {
-      "fast": "Order before 5pm, here tomorrow",
+      "fast": "Delivery options at checkout",
       "toFree": "€{amount} to go for free shipping",
       "freeIncluded": "Free shipping included",
-      "sameDay": "Order today, shipped today",
-      "nextWorkday": "Shipped next working day"
+      "sameDay": "Shipping with tracking",
+      "nextWorkday": "Track your order online"
     },
     "help": {
       "track": "Where's my parcel",
@@ -1565,11 +1565,11 @@
     "items": [
       {
         "question": "How do MOSE garments fit?",
-        "answer": "Our clothing fits true to size. We recommend ordering your usual size. Unsure between two sizes? Choose the larger size for a relaxed fit. All sizes are designed for optimal comfort."
+        "answer": "Fits vary by style, from regular to boxy and relaxed. Use the product size chart and compare the measurements with a garment that fits you well. Get in touch if you need help."
       },
       {
         "question": "What are the shipping costs and delivery time?",
-        "answer": "Shipping within the Netherlands and Belgium is free from €{freeShipping}. Below that it is €{shippingCost}. Order before 5 PM and your parcel ships the same day, usually arriving the next business day, otherwise the day after."
+        "answer": "Shipping costs and available delivery options appear at checkout. Processing and delivery times can vary by item. An order may arrive in separate parcels. You can follow your shipment once tracking is available."
       },
       {
         "question": "Can I return my order?",
@@ -1585,10 +1585,10 @@
       },
       {
         "question": "Which payment methods do you accept?",
-        "answer": "We accept iDEAL, Mastercard, Visa, American Express, PayPal and Bancontact. All payments are securely processed via Mollie. Your payment details are always protected."
+        "answer": "Available payment methods appear at checkout and depend on factors such as your country and currency. Choose the option you prefer; payments are processed securely."
       }
     ],
-    "answerVerzendingAltijd": "Shipping within the Netherlands and Belgium is always free, with no minimum order value. Order before 17:00 and your parcel usually arrives the next working day."
+    "answerVerzendingAltijd": "Available delivery options appear at checkout. Processing and delivery times can vary by item, and an order may arrive in separate parcels."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -2265,9 +2265,9 @@
         "next": "Next"
       },
       "fallbackMeta": {
-        "materialLabel": "MATERIAL",
-        "materialValue": "Solid basics",
-        "madeInLabel": "STYLE",
+        "materialLabel": "DETAILS",
+        "materialValue": "See product information",
+        "madeInLabel": "COLLECTION",
         "madeInValue": "MOSE essentials"
       }
     }

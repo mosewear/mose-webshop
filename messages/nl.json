@@ -139,20 +139,20 @@
       "label": "Taal",
       "switchTo": "Wissel naar {label}"
     },
-    "signature": "© {year} MOSE. MADE WITH 🐾",
+    "signature": "© {year} MOSE.",
     "shopAll": "Shop alles",
     "productsAria": "Onze producten",
     "searchAria": "Zoeken openen",
     "cartAria": "Winkelwagen, {count, plural, one {# artikel} other {# artikelen}}",
     "cartEmptyAria": "Winkelwagen, leeg",
     "login": "Inloggen",
-    "fit": "Valt normaal. Past niet? Stuur 'm terug.",
+    "fit": "Vergelijk de pasvormen en kies jouw maat.",
     "promise": {
-      "fast": "Voor 17:00 besteld? Morgen in huis",
+      "fast": "Bezorgopties bij het afrekenen",
       "toFree": "Nog €{amount} tot gratis verzending",
       "freeIncluded": "Gratis verzending zit erin",
-      "sameDay": "Vandaag besteld, vandaag verstuurd",
-      "nextWorkday": "Volgende werkdag verstuurd"
+      "sameDay": "Verzending met tracking",
+      "nextWorkday": "Volg je bestelling online"
     },
     "help": {
       "track": "Waar is mijn pakket",
@@ -1500,11 +1500,11 @@
     "items": [
       {
         "question": "Hoe vallen de MOSE kledingstukken?",
-        "answer": "Onze kleding valt normaal qua maat. We adviseren je gebruikelijke maat te bestellen. Bij twijfel tussen twee maten? Kies dan de grotere maat voor een relaxed fit. Alle maten zijn ontworpen voor optimaal comfort."
+        "answer": "De pasvorm verschilt per model, van regular tot boxy en ruimvallend. Bekijk de maattabel bij het artikel en vergelijk de afmetingen met een kledingstuk dat je goed past. Hulp nodig? Neem contact met ons op."
       },
       {
         "question": "Wat zijn de verzendkosten en levertijd?",
-        "answer": "Verzending binnen Nederland en België is gratis vanaf €{freeShipping}. Daaronder reken je €{shippingCost}. Bestel je voor 17:00, dan gaat je pakket dezelfde dag de deur uit en heb je het meestal de volgende werkdag in huis, anders de dag erna."
+        "answer": "Je ziet de verzendkosten en beschikbare bezorgopties bij het afrekenen. De verwerking en levertijd kunnen per artikel verschillen. Een bestelling kan in meerdere pakketten aankomen. Zodra er tracking beschikbaar is, kun je je zending volgen."
       },
       {
         "question": "Kan ik mijn bestelling retourneren?",
@@ -1520,10 +1520,10 @@
       },
       {
         "question": "Welke betaalmethoden accepteren jullie?",
-        "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Mollie. Je betaalgegevens zijn altijd beschermd."
+        "answer": "De beschikbare betaalmethoden zie je bij het afrekenen. Ze hangen onder meer af van je land en valuta. Kies daar de optie die je wilt gebruiken; je betaling wordt beveiligd verwerkt."
       }
     ],
-    "answerVerzendingAltijd": "Verzending binnen Nederland en België is altijd gratis, zonder minimumbedrag. Bestel je voor 17:00, dan ligt je pakket er meestal de volgende werkdag."
+    "answerVerzendingAltijd": "Je ziet de beschikbare bezorgopties bij het afrekenen. De verwerking en levertijd kunnen per artikel verschillen; een bestelling kan in meerdere pakketten aankomen."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -2265,9 +2265,9 @@
         "next": "Volgende"
       },
       "fallbackMeta": {
-        "materialLabel": "MATERIAAL",
-        "materialValue": "Goede basics",
-        "madeInLabel": "STIJL",
+        "materialLabel": "DETAILS",
+        "materialValue": "Bekijk de productinformatie",
+        "madeInLabel": "COLLECTIE",
         "madeInValue": "MOSE essentials"
       }
     }
