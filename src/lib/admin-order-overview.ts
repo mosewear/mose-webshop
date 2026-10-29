@@ -38,7 +38,9 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
     if(!Number.isFinite(Number(meta.netPaymentSet.shopMoney.amount))) throw new Error('INVALID_PAYMENT_TOTAL')
     if(o.currencyCode!=='EUR' || meta.netPaymentSet.shopMoney.currencyCode!=='EUR') throw new Error('ORDER_CURRENCY_REQUIRES_CONVERSION')
     const paid=['PAID','PARTIALLY_PAID','PARTIALLY_REFUNDED','REFUNDED'].includes(o.displayFinancialStatus ?? '')
-    const status=o.cancelledAt ? 'cancelled' : o.displayFulfillmentStatus==='FULFILLED' ? 'shipped' : o.displayFulfillmentStatus==='PARTIALLY_FULFILLED' ? 'partially_shipped' : 'processing'
+    const activeLines=o.lineItems.nodes.filter(l=>l.currentQuantity>0)
+    const delivered=activeLines.length>0 && activeLines.every(line=>o.fulfillments.filter(f=>f.status==='SUCCESS' && f.displayStatus==='DELIVERED').reduce((sum,f)=>sum+f.fulfillmentLineItems.nodes.filter(l=>l.lineItem.id===line.id).reduce((n,l)=>n+l.quantity,0),0)>=line.currentQuantity)
+    const status=o.cancelledAt ? 'cancelled' : delivered ? 'delivered' : o.displayFulfillmentStatus==='FULFILLED' ? 'shipped' : o.displayFulfillmentStatus==='PARTIALLY_FULFILLED' ? 'partially_shipped' : 'processing'
     return {id:o.id, source:'shopify', name:o.name,email:meta.email ?? '', user_id:null,
       status, payment_status:(o.displayFinancialStatus ?? 'unknown').toLowerCase(),
       total:Number(o.currentTotalPriceSet.shopMoney.amount), currency:o.currencyCode,
