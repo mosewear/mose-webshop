@@ -40,12 +40,13 @@ export async function PATCH(
     )
   }
 
-  const update: Partial<Record<PatchKey, unknown>> = {}
+  const update: Partial<Record<PatchKey | 'is_manually_hidden', unknown>> = {}
   for (const key of ALLOWED_PATCH_FIELDS) {
     const value = body[key]
     if (value === undefined) continue
     if (key === 'is_hidden' || key === 'is_pinned') {
       update[key] = Boolean(value)
+      if (key === 'is_hidden') update.is_manually_hidden = Boolean(value)
     } else if (key === 'pin_order') {
       update[key] = value === null ? null : Number(value)
     } else {

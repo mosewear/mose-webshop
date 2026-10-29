@@ -83,7 +83,8 @@ async function handle(req: NextRequest) {
 
     let upserted = 0
     // Re-activate (is_hidden=false) any post that re-appears in the
-    // Graph fetch — covers the case where a previously-pruned row
+    // Graph fetch; the database trigger preserves an editor's manual hide.
+    // This covers the case where a previously-pruned row
     // turns out to still exist (e.g. transient API hiccup last sync).
     for (const item of media) {
       // Upsert op instagram_id zodat curatie-velden (is_pinned,
