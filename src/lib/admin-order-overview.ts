@@ -18,10 +18,11 @@ export async function readAllAdminRows(table: string, select: string, key: strin
     if (after !== undefined) query = query.gt(key, after)
     const result = await query
     if (result.error) throw new Error('ORDER_OVERVIEW_UNAVAILABLE')
-    const page = result.data ?? []
+    const page: unknown[] = result.data ?? []
     if (rows.length + page.length > 10000) throw new Error('ORDER_OVERVIEW_LIMIT')
     for (const row of page) {
-      const cursor = row[key]
+      if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('ORDER_ROW_INVALID')
+      const cursor = (row as Record<string, unknown>)[key]
       if (typeof cursor !== 'string' && typeof cursor !== 'number') throw new Error('ORDER_CURSOR_UNAVAILABLE')
       if (seen.has(String(cursor))) throw new Error('ORDER_OVERVIEW_DUPLICATE')
       seen.add(String(cursor))

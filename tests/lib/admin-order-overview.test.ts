@@ -81,11 +81,11 @@ describe('complete admin report pagination', () => {
   const chain: any = { select: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), limit: vi.fn().mockReturnThis(), gt: vi.fn().mockReturnThis(),
    then: (resolve: (value: unknown) => void) => resolve({ data: pages.shift() ?? [], error: null }) }
   vi.mocked(createServiceClient).mockReturnValue({ from: vi.fn().mockReturnValue(chain) } as any)
-  return chain
+  return { chain }
  }
  const page = (start: number, count=500) => Array.from({length:count},(_,i)=>({id:String(start+i).padStart(6,'0')}))
  it('uses a stable key cursor rather than offsets that can double-count concurrent inserts', async () => {
-  const chain=await reader([page(0),page(500,1)])
+  const {chain}=await reader([page(0),page(500,1)])
   const { readAllAdminRows }=await import('@/lib/admin-order-overview')
   expect((await readAllAdminRows('orders','id','id')).length).toBe(501)
   expect(chain.gt).toHaveBeenCalledWith('id','000499')
