@@ -1,3 +1,4 @@
+import { shopifyPercentageDiscountCents } from '@/lib/shopify/discount-rounding'
 /**
  * Promo-code eligibility helper.
  *
@@ -77,6 +78,7 @@ export interface PromoEligibilityResult {
 export function computePromoEligibility(
   promoCode: PromoEligibilityPromoCode,
   lines: PromoEligibilityLine[],
+  percentageRounding: 'legacy' | 'shopify' = 'legacy',
 ): PromoEligibilityResult {
   let eligibleSubtotal = 0
   let excludedOnSaleSubtotal = 0
@@ -140,7 +142,9 @@ export function computePromoEligibility(
 
   let discountAmount = 0
   if (promoCode.discount_type === 'percentage') {
-    discountAmount = (eligibleSubtotal * promoCode.discount_value) / 100
+    discountAmount = percentageRounding === 'shopify'
+      ? shopifyPercentageDiscountCents(Math.round(eligibleSubtotal * 100), promoCode.discount_value) / 100
+      : (eligibleSubtotal * promoCode.discount_value) / 100
   } else if (promoCode.discount_type === 'fixed') {
     discountAmount = Math.min(promoCode.discount_value, eligibleSubtotal)
   }

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { calculateQuantityDiscount, type QuantityDiscountTier } from '@/lib/quantity-discount'
-import { calculateTier, calculateTierDiscount, type LoyaltyTier } from '@/lib/loyalty'
+import { calculateTier, getTierDiscountPercent, type LoyaltyTier } from '@/lib/loyalty'
+import { shopifyPercentageDiscountCents } from './discount-rounding'
 import { benefitLineSchema, planPromo } from './benefits'
 const quoteLine=benefitLineSchema.extend({productId:z.string().uuid()})
 /** Financial parity quote over server rows. A shipping discount/gift balance is
@@ -25,7 +26,7 @@ export function quoteCheckoutBenefits(input:{
  const afterStaffel=subtotal-staffelCents
  const promo=input.promo?planPromo(input.promo,lines,staffelCents):null
  const tier=input.loyalty?.tier??calculateTier(input.loyalty?.lifetimePoints??0)
- const tierCents=Math.round(calculateTierDiscount(tier,afterStaffel/100)*100)
+ const tierCents=shopifyPercentageDiscountCents(afterStaffel,getTierDiscountPercent(tier))
  const points=input.points??0
  z.number().int().min(0).max(20_000_000).multipleOf(100).parse(points)
  const redemptionCents=points/100*500

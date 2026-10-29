@@ -8,7 +8,7 @@ it('matches source tier stacking: tier uses subtotal before promo, not discounte
 })
 it('groups variants for quantity tier but preserves per-unit cent rounding',()=>{
  const other={...line,variantId:'gid://shopify/ProductVariant/2',unitCents:3333,quantity:1}
- expect(quoteCheckoutBenefits({lines:[{...line,quantity:1},other],tiers:[{product_id:p,min_quantity:2,discount_type:'percentage',discount_value:15,is_active:true}],loyalty:{tier:'gold',lifetimePoints:1000}})).toMatchObject({staffelCents:1385,afterStaffelCents:7848,tierCents:785})
+ expect(quoteCheckoutBenefits({lines:[{...line,quantity:1},other],tiers:[{product_id:p,min_quantity:2,discount_type:'percentage',discount_value:15,is_active:true}],loyalty:{tier:'gold',lifetimePoints:1000}})).toMatchObject({staffelCents:1385,afterStaffelCents:7848,tierCents:784})
 })
 it('blocks promo plus staffel and excludes sale from quantity savings',()=>{
  const tiers=[{product_id:p,min_quantity:2,discount_type:'percentage' as const,discount_value:15,is_active:true}]
@@ -18,4 +18,9 @@ it('blocks promo plus staffel and excludes sale from quantity savings',()=>{
 it('does not overdiscount or silently include unsupported gift card obligations',()=>{
  expect(()=>quoteCheckoutBenefits({lines:[line],tiers:[],points:100000})).toThrow('BENEFITS_EXCEED_CART')
  expect(()=>quoteCheckoutBenefits({lines:[{...line,giftCard:true}],tiers:[]})).toThrow('BENEFIT_GIFT_CARD_PARITY_REQUIRED')
+})
+
+it('quotes the exact native percentage amount before payable proof, including fractional cents',()=>{
+ const result=quoteCheckoutBenefits({lines:[{...line,variantId:'gid://shopify/ProductVariant/2',unitCents:7900,quantity:1},line],tiers:[],promo:{...promo,value:7.5}})
+ expect(result).toMatchObject({subtotalCents:19700,promo:{discountCents:1477},payableMerchandiseCents:18223})
 })

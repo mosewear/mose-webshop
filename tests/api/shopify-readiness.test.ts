@@ -1,13 +1,14 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-const mocks = vi.hoisted(() => ({ authorize: vi.fn(), database: vi.fn(), runtime: vi.fn() }))
+const mocks = vi.hoisted(() => ({ authorize: vi.fn(), database: vi.fn(), runtime: vi.fn(), promo: vi.fn() }))
 vi.mock('@/lib/supabase/admin', () => ({ requireAdmin: mocks.authorize }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: mocks.database }))
 vi.mock('@/lib/shopify/runtime-readiness', () => ({ runtimeReadiness: mocks.runtime }))
+vi.mock('@/lib/shopify/promo-parity', () => ({ readPromoParity: mocks.promo }))
 import { GET } from '@/app/api/admin/shopify/readiness/route'
 
 describe('private Shopify readiness endpoint', () => {
-  beforeEach(() => { vi.resetAllMocks(); mocks.runtime.mockResolvedValue([{ key: 'loyaltyRuntime', label: 'Measured loyalty', status: 'missing' }]) })
+  beforeEach(() => { vi.resetAllMocks(); mocks.promo.mockResolvedValue('unknown'); mocks.runtime.mockResolvedValue([{ key: 'loyaltyRuntime', label: 'Measured loyalty', status: 'missing' }]) })
   it('does not create a privileged database client for unauthorized callers', async () => {
     mocks.authorize.mockResolvedValue({ authorized: false })
     const response = await GET()

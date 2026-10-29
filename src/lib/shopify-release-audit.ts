@@ -31,6 +31,7 @@ export type ReleaseRuntimeEvidence = {
   /** From runtimeReadiness: installed atomic writer contract, reviewed cutover,
    * fresh worker heartbeat, no dead letters, and no stale pending work. */
   loyaltyRuntime: ReadinessCheck['status']
+  promoParity?: ReadinessCheck['status']
 }
 export type ReleaseAudit = {
   checks: ReadinessCheck[]
@@ -77,7 +78,7 @@ export function auditShopifyRelease(catalog: CatalogEvidence | null, obligations
   const obligation = (key: string, label: string, count: number | null, unsupported: boolean) =>
     check(key, label, count === null || !Number.isSafeInteger(count) || count < 0 ? 'unknown' : count === 0 ? 'verified' : unsupported ? 'missing' : 'unknown')
   checks.push(
-    obligation('promoParity', 'Bestaande geldige kortingscodes hebben bewezen Shopify-pariteit', obligations.activePromotions, false),
+    check('promoParity', 'Bestaande geldige kortingscodes hebben bewezen Shopify-pariteit', obligations.activePromotions === null || !Number.isSafeInteger(obligations.activePromotions) || obligations.activePromotions < 0 ? 'unknown' : obligations.activePromotions === 0 ? 'verified' : runtime?.promoParity ?? 'unknown'),
     obligation('quantityParity', 'Bestaande actieve staffels hebben bewezen Shopify-pariteit', obligations.activeQuantityTiers, false),
     check('loyaltyLedger', 'Shopify-aankopen en refunds boeken bestaande loyaliteit precies één keer',
       obligations.loyaltyAccounts === null || !Number.isSafeInteger(obligations.loyaltyAccounts) || obligations.loyaltyAccounts < 0

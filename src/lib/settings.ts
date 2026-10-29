@@ -1,3 +1,4 @@
+import { COMPANY } from '@/lib/company'
 import { createClient } from '@/lib/supabase/client'
 
 interface SiteSettings {
@@ -121,9 +122,9 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
       site_name: settings.site_name || 'MOSE Wear',
       contact_email: settings.contact_email || 'info@mosewear.com',
       contact_phone: settings.contact_phone || '+31 50 234 0025',
-      contact_address: settings.contact_address || 'Stavangerweg 13, 9723 JC Groningen',
-      free_shipping_threshold: (settings.free_shipping_threshold !== null && settings.free_shipping_threshold !== undefined && !isNaN(parseFloat(settings.free_shipping_threshold))) ? parseFloat(settings.free_shipping_threshold) : 100,
-      shipping_cost: (settings.shipping_cost !== null && settings.shipping_cost !== undefined && !isNaN(parseFloat(settings.shipping_cost))) ? parseFloat(settings.shipping_cost) : 6.95,
+      contact_address: settings.contact_address || COMPANY.contactAddress,
+      free_shipping_threshold: (settings.free_shipping_threshold !== null && settings.free_shipping_threshold !== undefined && !isNaN(parseFloat(settings.free_shipping_threshold))) ? parseFloat(settings.free_shipping_threshold) : 0,
+      shipping_cost: (settings.shipping_cost !== null && settings.shipping_cost !== undefined && !isNaN(parseFloat(settings.shipping_cost))) ? parseFloat(settings.shipping_cost) : 0,
       tax_rate: parseFloat(settings.tax_rate) || 21,
       currency: settings.currency || 'EUR',
       low_stock_threshold: parseInt(settings.low_stock_threshold) || 5,
@@ -140,7 +141,7 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
       pickup_enabled: settings.pickup_enabled === 'true' || settings.pickup_enabled === true || settings.pickup_enabled === undefined,
       pickup_max_distance_km: parseFloat(settings.pickup_max_distance_km) || 50,
       pickup_location_name: settings.pickup_location_name || 'MOSE Groningen',
-      pickup_location_address: settings.pickup_location_address || 'Stavangerweg 13, 9723 JC Groningen',
+      pickup_location_address: settings.pickup_location_address || COMPANY.contactAddress,
       pickup_latitude: parseFloat(settings.pickup_latitude) || 53.2194,
       pickup_longitude: parseFloat(settings.pickup_longitude) || 6.5665,
       // Default true: alleen expliciet false uitzetten verbergt de
@@ -178,9 +179,9 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
       site_name: 'MOSE Wear',
       contact_email: 'info@mosewear.com',
       contact_phone: '+31 50 234 0025',
-      contact_address: 'Stavangerweg 13, 9723 JC Groningen',
-      free_shipping_threshold: 100,
-      shipping_cost: 6.95,
+      contact_address: COMPANY.contactAddress,
+      free_shipping_threshold: 0,
+      shipping_cost: 0,
       tax_rate: 21,
       currency: 'EUR',
       low_stock_threshold: 5,
@@ -196,7 +197,7 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
       pickup_enabled: true,
       pickup_max_distance_km: 50,
       pickup_location_name: 'MOSE Groningen',
-      pickup_location_address: 'Stavangerweg 13, 9723 JC Groningen',
+      pickup_location_address: COMPANY.contactAddress,
       pickup_latitude: 53.2194,
       pickup_longitude: 6.5665,
       pdp_sticky_picker_enabled: true,
