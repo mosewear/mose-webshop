@@ -758,13 +758,13 @@ export default function HomePageClient({
           </div>
 
           <h2 className="font-display text-4xl md:text-6xl text-white mb-6 tracking-tight uppercase">
-            {t('newsletter.title')}
+            {homepageSettings?.newsletter_title || t('newsletter.title')}
           </h2>
 
           <p className="text-base md:text-xl text-white mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed">
-            {t('newsletter.description')}
+            {homepageSettings?.newsletter_description1 || t('newsletter.description')}
             <br />
-            <span className="font-bold">{t('newsletter.noSpam')}</span>
+            <span className="font-bold">{homepageSettings?.newsletter_description2 || t('newsletter.noSpam')}</span>
           </p>
 
           <form className="w-full max-w-full md:max-w-lg mx-auto px-4 md:px-0" aria-label={t('newsletter.formAria')} onSubmit={handleNewsletterSubmit}>
@@ -774,7 +774,7 @@ export default function HomePageClient({
                 id="newsletter-email"
                 name="email"
                 type="email"
-                placeholder={t('newsletter.placeholder')}
+                placeholder={homepageSettings?.newsletter_input_placeholder || t('newsletter.placeholder')}
                 required
                 autoComplete="email"
                 aria-required="true"
@@ -806,7 +806,7 @@ export default function HomePageClient({
                   </>
                 ) : (
                   <>
-                    {t('newsletter.submit')}
+                    {homepageSettings?.newsletter_button_text || t('newsletter.submit')}
                     <ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" className="transform group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -817,7 +817,7 @@ export default function HomePageClient({
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
-              {t('newsletter.privacy')}
+              {homepageSettings?.newsletter_trust_text || t('newsletter.privacy')}
             </p>
           </form>
         </div>

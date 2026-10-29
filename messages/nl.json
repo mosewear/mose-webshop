@@ -1445,11 +1445,11 @@
       "imageAlt": "Vier mannen in MOSE sweaters"
     },
     "newsletter": {
-      "title": "JOIN THE PACK",
-      "description": "Nieuws over drops, restocks en wat er achter de schermen gebeurt.",
-      "noSpam": "Geen spam. Alleen MOSE.",
+      "title": "NIEUWS VAN MOSE",
+      "description": "Nieuwe kleding, aangevulde maten en inspiratie uit de collectie.",
+      "noSpam": "Af en toe een mail van ons. Uitschrijven kan altijd.",
       "placeholder": "Jouw e-mailadres",
-      "submit": "JOIN NU",
+      "submit": "Aanmelden",
       "submitting": "Verzenden...",
       "subscribed": "Ingeschreven!",
       "success": "Je bent ingeschreven! Check je inbox.",
@@ -1512,7 +1512,7 @@
       },
       {
         "question": "Hoe verzorg ik mijn MOSE kleding?",
-        "answer": "Was op 30°C binnenstebuiten, gebruik geen bleekmiddel en droog bij voorkeur niet in de droger. Strijk op lage temperatuur als dat nodig is. Zo blijft je MOSE kledingstuk jarenlang mooi."
+        "answer": "Volg altijd het waslabel van je kledingstuk. Was bedrukte kleding binnenstebuiten en strijk niet rechtstreeks op een print. In de productinformatie vind je de verzorgingsdetails van het model. Twijfel je? Vraag het ons."
       },
       {
         "question": "Waar staat MOSE voor?",

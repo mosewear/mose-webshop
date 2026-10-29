@@ -720,8 +720,8 @@ const nl: EmailTranslationKeys = {
     receivedBecause: 'Je ontving deze email omdat je aangaf geïnteresseerd te zijn in dit product toen het uitverkocht was.',
   },
   newsletterWelcome: {
-    subject: 'Welkom bij de MOSE pack!',
-    title: 'WELKOM BIJ DE PACK!',
+    subject: 'Welkom bij MOSE',
+    title: 'WELKOM BIJ MOSE',
     subtitle: 'Je bent ingeschreven',
     heroText: 'Je ontvangt nieuws over nieuwe kleding en aangevulde maten',
     promoTitle: 'JE 10% KORTINGSCODE',
@@ -781,7 +781,7 @@ const nl: EmailTranslationKeys = {
     stat3: "Inspiratie om je eigen outfit samen te stellen",
     productsTitle: 'Dit is wat er komt',
     productsIntro:
-      'Dit zijn de basics waar de community op wacht. Limited edition. Lokaal gemaakt. Premium kwaliteit. Als insider heb je 24 uur voorsprong. Wees er snel bij: limited is limited.',
+      'Ontdek de modellen uit onze collectie en kies wat bij je past.',
     viewProduct: 'Bekijk product',
     presaleTitle: 'Shop nu in presale',
     presaleSubtitle: '30% korting op alle items',
@@ -1152,8 +1152,8 @@ const en: EmailTranslationKeys = {
     receivedBecause: 'You received this email because you indicated that you were interested in this product when it was sold out.',
   },
   newsletterWelcome: {
-    subject: 'Welcome to the MOSE pack!',
-    title: 'WELCOME TO THE PACK!',
+    subject: 'Welcome to MOSE',
+    title: 'WELCOME TO MOSE',
     subtitle: 'You Are Subscribed',
     heroText: 'News about new clothes and restocked sizes',
     promoTitle: 'YOUR 10% DISCOUNT CODE',
@@ -1214,7 +1214,7 @@ const en: EmailTranslationKeys = {
     stat3: "Inspiration to put your own outfit together",
     productsTitle: 'This is what\'s coming',
     productsIntro:
-      'These are the basics the community is waiting for. Limited edition. Locally made. Premium quality. As an insider you get 24 hours head start. Move fast: limited means limited.',
+      'Explore the styles in our collection and find what suits you.',
     viewProduct: 'View product',
     presaleTitle: 'Shop presale now',
     presaleSubtitle: '30% off all items',
