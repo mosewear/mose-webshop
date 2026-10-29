@@ -27,6 +27,11 @@ export const UNKNOWN_OBLIGATIONS: LegacyObligations = {
   activePromotions: null, activeQuantityTiers: null, loyaltyAccounts: null,
   giftCardsWithBalance: null, scheduledGiftCards: null,
 }
+export type ReleaseRuntimeEvidence = {
+  /** From runtimeReadiness: installed atomic writer contract, reviewed cutover,
+   * fresh worker heartbeat, no dead letters, and no stale pending work. */
+  loyaltyRuntime: ReadinessCheck['status']
+}
 export type ReleaseAudit = {
   checks: ReadinessCheck[]
   catalog: { activeProducts: number | null; sellableVariants: number | null; coveredVariants: number | null; missingMappings: number | null; priceMismatches: number | null }
@@ -34,7 +39,7 @@ export type ReleaseAudit = {
 }
 const check = (key: string, label: string, status: ReadinessCheck['status']): ReadinessCheck => ({ key, label, status })
 
-export function auditShopifyRelease(catalog: CatalogEvidence | null, obligations: LegacyObligations = UNKNOWN_OBLIGATIONS): ReleaseAudit {
+export function auditShopifyRelease(catalog: CatalogEvidence | null, obligations: LegacyObligations = UNKNOWN_OBLIGATIONS, runtime?: ReleaseRuntimeEvidence): ReleaseAudit {
   const complete = catalog?.complete === true
   const products = catalog?.products.filter(product => product.is_active === true && product.status === 'active') ?? []
   const active = new Map(products.map(product => [product.id, product]))
@@ -67,13 +72,16 @@ export function auditShopifyRelease(catalog: CatalogEvidence | null, obligations
     check('presaleContract', 'Geen actieve presalevoorraad zonder aparte Shopify-leverbelofte', unknown ? 'unknown' : variants.some(variant => variant.presale_enabled && variant.presale_stock_quantity > 0) ? 'missing' : 'verified'),
   ]
   // These checks deliberately do not inherit a broad benefits_verified switch.
-  // No current code migrates native discounts or posts Shopify loyalty entries.
+  // Loyalty now has a measured writer/worker contract. Discount settlement health
+  // alone does not prove parity for every legacy promotion or quantity rule.
   const obligation = (key: string, label: string, count: number | null, unsupported: boolean) =>
     check(key, label, count === null || !Number.isSafeInteger(count) || count < 0 ? 'unknown' : count === 0 ? 'verified' : unsupported ? 'missing' : 'unknown')
   checks.push(
     obligation('promoParity', 'Bestaande geldige kortingscodes hebben bewezen Shopify-pariteit', obligations.activePromotions, false),
     obligation('quantityParity', 'Bestaande actieve staffels hebben bewezen Shopify-pariteit', obligations.activeQuantityTiers, false),
-    obligation('loyaltyLedger', 'Shopify-aankopen en refunds boeken bestaande loyaliteit precies één keer', obligations.loyaltyAccounts, true),
+    check('loyaltyLedger', 'Shopify-aankopen en refunds boeken bestaande loyaliteit precies één keer',
+      obligations.loyaltyAccounts === null || !Number.isSafeInteger(obligations.loyaltyAccounts) || obligations.loyaltyAccounts < 0
+        ? 'unknown' : obligations.loyaltyAccounts === 0 ? 'verified' : runtime?.loyaltyRuntime ?? 'missing'),
     obligation('giftBalanceMigration', 'Bestaande cadeaubonsaldi hebben één bewezen besteedbare bron', obligations.giftCardsWithBalance, true),
     obligation('giftDeliveryOwner', 'Geplande cadeaubonnen hebben één bewezen bezorgeigenaar', obligations.scheduledGiftCards, true),
   )

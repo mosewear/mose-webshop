@@ -3,16 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Truck, Package, Clock, MapPin, RefreshCw, Check, ArrowRight, Lightbulb, AlertTriangle } from 'lucide-react'
 import { getSiteSettings } from '@/lib/settings'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import PaginaKop from '@/components/layout/PaginaKop'
 
 export default function VerzendingPage() {
   const t = useTranslations('shipping')
-  const locale = useLocale()
-  
-  // Helper for locale-aware links
-  const localeLink = (path: string) => `/${locale}${path === '/' ? '' : path}`
   
   const [settings, setSettings] = useState<{
     free_shipping_threshold: number
@@ -365,14 +361,14 @@ export default function VerzendingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <LocaleLink 
-                href={localeLink('/contact')} 
+                href="/contact"
                 className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-all duration-300 border-2 border-brand-primary"
               >
                 {t('contactUs')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </LocaleLink>
               <LocaleLink 
-                href={localeLink('/shop')} 
+                href="/shop"
                 className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-lg uppercase tracking-wider hover:bg-white hover:text-black transition-all duration-300"
               >
                 {t('continueShopping')}
