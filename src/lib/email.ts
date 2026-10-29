@@ -2015,7 +2015,7 @@ export async function sendGiftCardDeliveryEmail(props: {
 //     (CAN-SPAM + RFC 8058 + Gmail bulk sender 2024 vereisten)
 // =====================================================
 
-const SPRING_DROP_FROM = '"Irma & Rick (MOSE)" <info@mosewear.com>'
+const SPRING_DROP_FROM = '"MOSE" <info@mosewear.com>'
 const SPRING_DROP_CAMPAIGN_KEY = 'spring_drop_2026'
 
 // `buildUnsubscribeUrl` + `buildListUnsubscribeHeaders` were promoted
@@ -2086,8 +2086,8 @@ export async function sendSpringDrop1LaunchEmail(
 
   const subject =
     locale === 'en'
-      ? 'Clothes from our studio in Groningen (not a warehouse far away)'
-      : 'Kleding uit een atelier in Groningen (niet uit een magazijn ergens ver weg)'
+      ? 'Good clothes. Distinct character. Discover MOSE.'
+      : 'Goede kleding. Eigen karakter. Ontdek MOSE.'
 
   return await sendAndLog(
     {

@@ -59,8 +59,8 @@ export default function SpringDrop3FoundersEmail({
 
   const greeting = isNl ? 'Hoi,' : 'Hi,'
   const par1 = isNl
-    ? 'Wij zijn Irma en Rick. We bouwen MOSE in Groningen: kleding waar we zelf op zitten te wachten, zonder onnodige marketingpraat.'
-    : 'We are Irma and Rick. We build MOSE in Groningen: clothing we actually want to wear, without unnecessary marketing talk.'
+    ? 'Bij MOSE draait het om goede kleding voor mannen. Een prettige pasvorm, een stevige stof en rustige details.'
+    : 'MOSE is about good clothes for men. A comfortable fit, substantial fabric and understated details.'
   const par2 = isNl
     ? `Sinds we live zijn, hebben we al ${shippedOrders} bestellingen de deur uit gedaan. Mensen die voor het eerst iets van ons droegen. Dat voelt nog steeds bijzonder.`
     : `Since we went live, we have shipped ${shippedOrders} orders. People wearing MOSE for the first time. That still feels special.`
@@ -71,7 +71,7 @@ export default function SpringDrop3FoundersEmail({
     ? 'Twijfel je over een maat of wil je iets weten over de stof? Antwoord gewoon op deze mail, dan kijken we er vandaag nog naar.'
     : 'Unsure about sizing or curious about the fabric? Just reply to this email and we will look at it today.'
 
-  const sign = isNl ? 'Groetjes, Irma en Rick' : 'Irma and Rick'
+  const sign = isNl ? 'Groeten, MOSE' : 'MOSE'
 
   const codeLabel = isNl ? 'Jouw code' : 'Your code'
   const codeMeta = isNl

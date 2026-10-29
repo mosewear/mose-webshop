@@ -13,7 +13,7 @@ interface EmailFooterProps {
   contactPhone?: string
   contactAddress?: string
   locale?: string
-  /** Optionele extra tekst boven de contact-regel (bv. "Made with love in Groningen") */
+  /** Optionele merkregel boven de contactgegevens */
   tagline?: string
   /**
    * Optionele unsubscribe-URL. Wanneer gezet wordt onderaan een kleine
@@ -112,6 +112,7 @@ export default function EmailFooter({
   contactEmail = EMAIL_DEFAULT_CONTACT.email,
   contactPhone = EMAIL_DEFAULT_CONTACT.phone,
   contactAddress = EMAIL_DEFAULT_CONTACT.address,
+  locale = 'nl',
   tagline,
   unsubscribeUrl,
   unsubscribePrompt,
@@ -152,7 +153,7 @@ export default function EmailFooter({
         </Link>
       </div>
 
-      <div style={metaBlock}>© {year} MOSE · Made in Groningen</div>
+      <div style={metaBlock}>© {year} MOSE · {locale === 'en' ? 'No nonsense. Pure character.' : 'Geen poespas. Wel karakter.'}</div>
 
       {unsubscribeUrl ? (
         <div style={unsubscribeBlock}>

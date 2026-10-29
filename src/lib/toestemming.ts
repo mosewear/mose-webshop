@@ -31,7 +31,7 @@ import { isEmailSuppressed } from '@/lib/email-suppression'
 import { schrijfContactUit, voegToeAanLijst } from '@/lib/brevo'
 
 export const TOESTEMMING_STREAM = 'toestemming-2026'
-const AFZENDER = 'Irma en Rick van MOSE <info@mosewear.com>'
+const AFZENDER = 'MOSE <info@mosewear.com>'
 const MELDING_AAN = 'info@mosewear.com'
 const POSTMARK_API = 'https://api.postmarkapp.com'
 
@@ -385,13 +385,13 @@ const TEKST = {
     onderwerp: 'Je staat op de maillijst van MOSE',
     voorvertoning: 'Af en toe nieuws over drops en restocks. Liever niet? Afmelden kan met één klik.',
     aanhef: 'Hoi,',
-    alinea1: 'Je adres staat op de maillijst van MOSE, het kledingmerk uit Groningen. We sturen je af en toe een mail over nieuwe drops en restocks, en nooit vaker dan nodig.',
+    alinea1: 'Je adres staat op de maillijst van MOSE, het kledingmerk voor mannen. We sturen je af en toe een mail over nieuwe drops en restocks, en nooit vaker dan nodig.',
     alinea2: 'Vind je dat goed? Bevestig het met de knop hieronder, dan weten we het zeker.',
     knop: 'Ja, houd me op de hoogte',
     niets: 'Liever geen mail meer van ons?',
     afmelden: 'Meld je hier af, dan halen we je direct van de lijst',
     groet: 'Groet,',
-    namen: 'Irma en Rick',
+    namen: 'MOSE',
     voet: (email: string) => `Je krijgt deze mail eenmalig omdat ${email} op de maillijst van MOSE staat.`,
     uitschrijven: 'Uitschrijven',
   },
@@ -399,13 +399,13 @@ const TEKST = {
     onderwerp: 'You are on the MOSE mailing list',
     voorvertoning: 'Now and then news about drops and restocks. Rather not? Unsubscribe in one click.',
     aanhef: 'Hi,',
-    alinea1: 'Your address is on the mailing list of MOSE, the clothing brand from Groningen. Now and then we send an email about new drops and restocks, never more often than needed.',
+    alinea1: 'Your address is on the mailing list of MOSE, the menswear brand. Now and then we send an email about new drops and restocks, never more often than needed.',
     alinea2: 'Is that fine with you? Confirm with the button below, so we know for sure.',
     knop: 'Yes, keep me posted',
     niets: 'Rather not hear from us?',
     afmelden: 'Unsubscribe here and we will take you off the list right away',
     groet: 'Best,',
-    namen: 'Irma and Rick',
+    namen: 'MOSE',
     voet: (email: string) => `You are receiving this one-time email because ${email} is on the MOSE mailing list.`,
     uitschrijven: 'Unsubscribe',
   },

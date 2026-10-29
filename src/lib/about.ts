@@ -61,94 +61,72 @@ const pick = <T,>(en: T | null | undefined, nl: T, locale: Locale): T => {
 }
 
 const DEFAULT_HERO_DESKTOP =
-  'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/hero-desktop.webp'
-const DEFAULT_HERO_MOBILE =
-  'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/about/hero-mobile.webp'
+  'https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp'
 
 function fallback(locale: Locale): AboutSettings {
-  if (locale === 'en') {
-    return {
-      hero_image_url: DEFAULT_HERO_DESKTOP,
-      hero_image_url_mobile: DEFAULT_HERO_MOBILE,
-      image_focal_x: 50,
-      image_focal_y: 30,
-      hero_alt: 'MOSE, worn in real life, made in Groningen',
-      hero_title: 'ABOUT MOSE',
-      hero_subtitle: 'No nonsense. Pure character.',
-      story_title: 'OUR STORY',
-      story_paragraph1:
-        "We're Irma and Rick, the founders of MOSE.\n\nWe live with our cats Bob and Marley and our doggo Guus in Groningen, in Helpman. As of September we're even married. Wow, serious stuff.\n\n\"Why MOSE?\" Our late cat was named Mosie, we called her Moos. This is our tribute to her. \uD83D\uDC31",
-      story_paragraph2:
-        "We started MOSE because fast fashion irritates us. We kept buying expensive t-shirts that were ready for the bin after a few washes. So we make clothing that lasts. Sustainable, honest and local. Even after countless washes.\n\nLocal? Yes. Just made in the atelier in Groningen.",
-      local_title: 'LOCALLY MADE IN GRONINGEN',
-      local_text:
-        "All our products are locally made in Groningen. Not because it's trendy, but because we want to know exactly where our clothing comes from and how it's made. Honest, transparent, and with respect for everyone involved in the process.",
-      values_title: 'OUR VALUES',
-      value_quality_title: 'Premium quality',
-      value_quality_text:
-        'Only the finest materials and perfect finishing. Clothing that lasts for years.',
-      value_local_made_title: 'Locally made',
-      value_local_made_text:
-        '100% produced in Groningen. We know everyone who works on your clothing.',
-      value_fair_pricing_title: 'Fair pricing',
-      value_fair_pricing_text:
-        'No inflated prices or fake sales. Just honest pricing for what you get.',
-      value_no_hassle_title: 'No hassle',
-      value_no_hassle_text:
-        '{days} days return policy, free shipping from €{threshold}, and fast customer service. Simple.',
-      why_title: 'WHY MOSE?',
-      why_sustainable_title: 'Sustainable without the BS',
-      why_sustainable_text:
-        "We make clothing that lasts. That's the best sustainability.",
-      why_stylish_title: 'Rugged yet stylish',
-      why_stylish_text:
-        'Basics with character. For modern men who know what they want.',
-      why_local_title: 'Proudly local',
-      why_local_text: 'Made in Groningen, worn throughout the Netherlands.',
-      cta_text: 'Discover the collection',
-    }
-  }
-
-  return {
-    hero_image_url: DEFAULT_HERO_DESKTOP,
-    hero_image_url_mobile: DEFAULT_HERO_MOBILE,
-    image_focal_x: 50,
-    image_focal_y: 30,
-    hero_alt: 'MOSE, gedragen in het echte leven, gemaakt in Groningen',
-    hero_title: 'OVER MOSE',
-    hero_subtitle: 'Geen poespas. Wel karakter.',
-    story_title: 'ONS VERHAAL',
-    story_paragraph1:
-      'Wij zijn Irma en Rick, de oprichters van MOSE.\n\nWe wonen met onze katten Bob en Marley en onze daggoe Guus in Groningen, in Helpman. Sinds september zijn we zelfs getrouwd. Wow, serieuze shit.\n\n\u201CWaarom MOSE?\u201D Onze overleden poes heette Mosie, we noemden haar Moos. Dit is ons eerbetoon. \uD83D\uDC31',
-    story_paragraph2:
-      'We zijn MOSE gestart omdat fast fashion ons irriteert. We kochten vaak dure t-shirts die na een paar keer wassen klaar waren voor de prullenbak. Daarom maken we kleding die blijft. Duurzaam, eerlijk en lokaal. Ook na tig keer wassen.\n\nLokaal? Ja. Gewoon gemaakt in het atelier in Groningen.',
-    local_title: 'LOKAAL GEMAAKT IN GRONINGEN',
-    local_text:
-      'Al onze producten worden lokaal gemaakt in Groningen. Niet omdat het hip is, maar omdat we precies willen weten waar onze kleding vandaan komt en hoe het gemaakt wordt. Eerlijk, transparant, en met respect voor iedereen die eraan werkt.',
-    values_title: 'ONZE WAARDEN',
-    value_quality_title: 'Premium kwaliteit',
-    value_quality_text:
-      'Alleen de beste materialen en perfecte afwerking. Kleding die jarenlang meegaat.',
-    value_local_made_title: 'Lokaal gemaakt',
-    value_local_made_text:
-      '100% geproduceerd in Groningen. We kennen iedereen die aan je kleding werkt.',
-    value_fair_pricing_title: 'Eerlijke prijzen',
-    value_fair_pricing_text:
-      'Geen opgeblazen prijzen of fake sales. Gewoon eerlijk geprijsd voor wat je krijgt.',
-    value_no_hassle_title: 'Geen gedoe',
-    value_no_hassle_text:
-      '{days} dagen retour, gratis verzending vanaf €{threshold}, en snelle klantenservice. Simpel.',
-    why_title: 'WAAROM MOSE?',
-    why_sustainable_title: 'Duurzaam zonder bullshit',
-    why_sustainable_text:
-      'We maken kleding die lang meegaat. Dat is de beste sustainability.',
-    why_stylish_title: 'Stoer maar stijlvol',
-    why_stylish_text:
-      'Basics met karakter. Voor moderne mannen die weten wat ze willen.',
-    why_local_title: 'Trots lokaal',
-    why_local_text: 'Gemaakt in Groningen, gedragen door heel Nederland.',
-    cta_text: 'Ontdek de collectie',
-  }
+  return locale === 'en'
+    ? {
+    "hero_image_url": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp",
+    "hero_image_url_mobile": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp",
+    "image_focal_x": 50,
+    "image_focal_y": 45,
+    "hero_alt": "Two men wearing MOSE hoodies",
+    "hero_title": "ABOUT MOSE",
+    "hero_subtitle": "No nonsense. Pure character.",
+    "story_title": "GOOD CLOTHES. EVERY DAY.",
+    "story_paragraph1": "MOSE makes clothes for men who appreciate a substantial hoodie, a good T-shirt and comfortable trousers. Clear shapes, understated colours and considered details. Clothes that are easy to combine and easy to reach for.",
+    "story_paragraph2": "It starts with the fit and feel. Room where you need it, a substantial fabric and a logo that does not demand attention. From a simple Tee to a boxy hoodie or barrel jeans, each style has its own shape and character.",
+    "local_title": "NO NONSENSE. PURE CHARACTER.",
+    "local_text": "A good outfit comes down to how you put it together. A favourite shirt and jeans. A hoodie for heading out. A sweater you can pull on and go. MOSE gives you the foundation; you make it your own.",
+    "values_title": "WHAT WE LOOK FOR",
+    "value_quality_title": "The fabric",
+    "value_quality_text": "The feel and drape of a fabric matter. Each product lists its composition and material details.",
+    "value_local_made_title": "The fit",
+    "value_local_made_text": "From regular to boxy and relaxed. The shape should suit the garment. Use the size chart to find your fit.",
+    "value_fair_pricing_title": "The details",
+    "value_fair_pricing_text": "Understated colours, subtle logos and considered finishing. Enough to give each piece its own character.",
+    "value_no_hassle_title": "Straightforward service",
+    "value_no_hassle_text": "Need help with a size or an order? Get in touch. You have {days} days to register your return.",
+    "why_title": "THIS IS MOSE",
+    "why_sustainable_title": "For every day",
+    "why_sustainable_text": "Clothes for the days when you want to look good without overthinking it.",
+    "why_stylish_title": "Easy to combine",
+    "why_stylish_text": "Hoodies, shirts, sweaters and trousers that work together and with the clothes you already wear.",
+    "why_local_title": "A character of its own",
+    "why_local_text": "Strong shapes and understated details. A rugged look without the noise.",
+    "cta_text": "Explore the collection"
+}
+    : {
+    "hero_image_url": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp",
+    "hero_image_url_mobile": "https://bsklcgeyvdsxjxvmghbp.supabase.co/storage/v1/object/public/images/photoshoot-2026/lookbook/01-city-desktop.webp",
+    "image_focal_x": 50,
+    "image_focal_y": 45,
+    "hero_alt": "Twee mannen in MOSE hoodies",
+    "hero_title": "OVER MOSE",
+    "hero_subtitle": "Geen poespas. Wel karakter.",
+    "story_title": "GOEDE KLEDING. ELKE DAG.",
+    "story_paragraph1": "MOSE maakt kleding voor mannen die houden van een stevige hoodie, een goed T-shirt en een broek die lekker zit. Duidelijke vormen, rustige kleuren en details die het verschil maken. Kleding die je makkelijk combineert en graag uit je kast pakt.",
+    "story_paragraph2": "Het begint bij hoe iets valt en aanvoelt. Een ruime pasvorm waar dat past, een stevige stof en een logo dat niet alle aandacht opeist. Van een eenvoudige Tee tot een boxy hoodie of barrel jeans: elk model heeft zijn eigen vorm en karakter.",
+    "local_title": "GEEN POESPAS. WEL KARAKTER.",
+    "local_text": "Voor ons zit een sterke outfit in de combinatie. Een goed shirt op je favoriete jeans. Een hoodie voor onderweg. Een sweater die je zo aantrekt. MOSE geeft je de basis; jij maakt er je eigen outfit van.",
+    "values_title": "WAAR WE OP LETTEN",
+    "value_quality_title": "De stof",
+    "value_quality_text": "Hoe een stof aanvoelt en valt, bepaalt veel. Bij elk artikel vind je de samenstelling en de details van het materiaal.",
+    "value_local_made_title": "De pasvorm",
+    "value_local_made_text": "Van regular tot boxy en ruimvallend. We kiezen de vorm die bij het kledingstuk past. De maattabel helpt je kiezen.",
+    "value_fair_pricing_title": "De details",
+    "value_fair_pricing_text": "Rustige kleuren, subtiele logo’s en een verzorgde afwerking. Precies genoeg om het kledingstuk eigen te maken.",
+    "value_no_hassle_title": "Duidelijk geregeld",
+    "value_no_hassle_text": "Hulp nodig met je maat of bestelling? Neem contact met ons op. Je hebt {days} dagen om je retour aan te melden.",
+    "why_title": "DIT IS MOSE",
+    "why_sustainable_title": "Voor elke dag",
+    "why_sustainable_text": "Kleding voor de dagen waarop je iets goeds aan wilt trekken zonder er lang over na te denken.",
+    "why_stylish_title": "Makkelijk te combineren",
+    "why_stylish_text": "Hoodies, shirts, sweaters en broeken die samen werken, maar ook bij wat je al draagt.",
+    "why_local_title": "Een eigen karakter",
+    "why_local_text": "Stevige vormen en ingetogen details. Een stoere uitstraling, zonder dat het schreeuwerig wordt.",
+    "cta_text": "Bekijk de collectie"
+}
 }
 
 export async function getAboutSettings(
@@ -171,8 +149,8 @@ export async function getAboutSettings(
     // needs a string for a11y.
     const altFallback =
       lang === 'en'
-        ? 'MOSE, worn in real life, made in Groningen'
-        : 'MOSE, gedragen in het echte leven, gemaakt in Groningen'
+        ? 'Two men wearing MOSE hoodies'
+        : 'Twee mannen in MOSE hoodies'
 
     return {
       hero_image_url: data.hero_image_url || DEFAULT_HERO_DESKTOP,

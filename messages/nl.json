@@ -112,8 +112,8 @@
     "closeShort": "Sluit",
     "closeAria": "Menu sluiten",
     "tickerItems": [
-      "Geen fast fashion",
-      "Vanuit Groningen"
+      "KLEDING MET KARAKTER",
+      "VOOR ELKE DAG"
     ],
     "tickerAria": "MOSE waarden-ticker",
     "navAria": "Hoofdnavigatie",
@@ -139,31 +139,31 @@
       "label": "Taal",
       "switchTo": "Wissel naar {label}"
     },
-    "signature": "© {year} MOSE. MADE WITH 🐾",
+    "signature": "© {year} MOSE.",
     "shopAll": "Shop alles",
     "productsAria": "Onze producten",
     "searchAria": "Zoeken openen",
     "cartAria": "Winkelwagen, {count, plural, one {# artikel} other {# artikelen}}",
     "cartEmptyAria": "Winkelwagen, leeg",
     "login": "Inloggen",
-    "fit": "Valt normaal. Past niet? Stuur 'm terug.",
+    "fit": "Vergelijk de pasvormen en kies jouw maat.",
     "promise": {
-      "fast": "Voor 17:00 besteld? Morgen in huis",
+      "fast": "Bezorgopties bij het afrekenen",
       "toFree": "Nog €{amount} tot gratis verzending",
       "freeIncluded": "Gratis verzending zit erin",
-      "sameDay": "Vandaag besteld, vandaag verstuurd",
-      "nextWorkday": "Volgende werkdag verstuurd"
+      "sameDay": "Verzending met tracking",
+      "nextWorkday": "Volg je bestelling online"
     },
     "help": {
       "track": "Waar is mijn pakket",
       "returns": "Terugsturen"
     },
-    "makers": "Door Irma & Rick, in Groningen",
+    "makers": "GEEN POESPAS. WEL KARAKTER.",
     "wishlist": "Bewaard",
     "contact": "Mail ons"
   },
   "footer": {
-    "tagline": "Kleding zonder poespas. Vanuit Groningen. Gebouwd om lang mee te gaan.",
+    "tagline": "Mannenkleding met karakter. Geen poespas. Wel MOSE.",
     "shop": {
       "title": "Shop",
       "hoodies": "Hoodies",
@@ -187,7 +187,7 @@
     },
     "copyright": "© {year} MOSE. Alle rechten voorbehouden.",
     "prices": "Alle prijzen incl. {rate}% BTW",
-    "made": "Gemaakt met ❤️ in Groningen"
+    "made": "GEEN POESPAS. WEL KARAKTER."
   },
   "trustpilot": {
     "rated": "Beoordeeld op Trustpilot"
@@ -549,7 +549,7 @@
       "infoAltijd": "Altijd gratis verzending"
     },
     "trust": {
-      "localMade": "Lokaal gemaakt",
+      "localMade": "Met karakter",
       "freeShipping": "Gratis verzending vanaf €{threshold}",
       "returns": "{days} dagen retour",
       "warranty": "2 jaar garantie",
@@ -688,7 +688,7 @@
       "warranty": "GARANTIE",
       "shippingReturns": "Verzending & retour"
     },
-    "madeLocally": "Lokaal gemaakt in Nederland",
+    "madeLocally": "MOSE essentials",
     "returns": {
       "info": "{days} dagen retour zonder gedoe",
       "label": "Retour",
@@ -720,14 +720,14 @@
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
-      "fallback": "Made in Groningen, première batch 2026."
+      "fallback": "Een goede pasvorm. Een eigen karakter."
     },
     "trustAnchor": {
       "shippingBeforeCutoff": "Voor 17:00 besteld? Meestal morgen in huis via DHL in NL en BE. Gratis bezorging vanaf €{threshold}.",
       "shippingAfterCutoff": "Bestel vandaag, dan is het meestal overmorgen in huis via DHL in NL en BE. Gratis bezorging vanaf €{threshold}.",
       "returns": "30 dagen bedenktijd. Geld terug bij retour, zonder gedoe.",
-      "madeInWithSpec": "Made in Groningen. {spec}.",
-      "madeInBare": "Made in Groningen. Premium katoen, regular fit.",
+      "madeInWithSpec": "MOSE · {spec}",
+      "madeInBare": "MOSE essentials",
       "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard.",
       "warranty": "Twee jaar fabrieksgarantie tegen materiaal- en fabricagefouten.",
       "shippingBeforeCutoffAltijd": "Voor 17:00 besteld? Meestal morgen in huis via DHL in NL en BE. Bezorging is altijd gratis.",
@@ -736,7 +736,7 @@
     "klarna": {
       "installment": "of 3× {amount} met Klarna, geen rente"
     },
-    "madeInGroningenBadge": "Made in Groningen",
+    "madeInGroningenBadge": "MOSE ESSENTIALS",
     "activity": {
       "viewing": "{count} mensen bekijken dit nu",
       "sold24h": "{count, plural, =1 {1 keer} other {{count} keer}} besteld in de afgelopen 24 uur",
@@ -759,8 +759,8 @@
           "answer": "Geen punt. Binnen 30 dagen retourneren of omruilen voor een andere maat. We mailen je het retourlabel zodra je de retour aanmeldt op je accountpagina."
         },
         {
-          "question": "Is dit echt in Groningen gemaakt?",
-          "answer": "Ja, 100%. We werken samen met één lokaal atelier in Groningen waar elk stuk met de hand wordt afgewerkt. Geen sweatshops, geen lange transportlijnen."
+          "question": "Wat maakt dit een MOSE kledingstuk?",
+          "answer": "Een duidelijke pasvorm en rustige details. Bekijk de productbeschrijving voor de stof, afwerking en uitvoering van dit model."
         },
         {
           "question": "Kan ik in termijnen betalen?",
@@ -868,10 +868,10 @@
   "shop": {
     "title": "Shop",
     "eyebrow": "Collectie",
-    "heroSubtitle": "Streetwear uit Groningen.",
+    "heroSubtitle": "Hoodies, shirts, sweaters en broeken. Kies de pasvorm die bij je past.",
     "pageTitle": "Shop - MOSE",
     "categoryPageTitle": "{category} - MOSE",
-    "heroAlt": "MOSE shop, streetwear uit Groningen",
+    "heroAlt": "Mannen in MOSE kleding",
     "loadError": "Producten konden niet worden geladen. Probeer het opnieuw.",
     "retry": "Opnieuw proberen",
     "filters": {
@@ -1247,17 +1247,17 @@
   },
   "metadata": {
     "title": "MOSE | Kleding en accessoires voor mannen",
-    "description": "Tijdloze basics zonder gedoe. Ontdek MOSE vanuit Groningen: hoodies, sweaters en t-shirts met aandacht voor pasvorm en detail. Altijd gratis verzending.",
-    "keywords": "MOSE, mannenkleding, premium basics, hoodies, t-shirts, Groningen, vanuit Groningen",
+    "description": "Ontdek MOSE: mannenkleding met karakter. Shop hoodies, T-shirts, sweaters en broeken met aandacht voor pasvorm en detail.",
+    "keywords": "MOSE, mannenkleding, hoodies, T-shirts, sweaters, broeken, streetwear",
     "shop": {
       "title": "Shop",
-      "description": "Ontdek onze collectie premium basics. Tijdloze kleding en accessoires voor mannen, vanuit Groningen. Gratis verzending vanaf €{threshold}.",
-      "keywords": "MOSE shop, premium basics, hoodies, t-shirts, mannenkleding, Groningen, vanuit Groningen, streetwear"
+      "description": "Ontdek de MOSE collectie voor mannen: hoodies, T-shirts, sweaters en broeken. Rustige kleuren, stevige vormen en subtiele details.",
+      "keywords": "MOSE, mannenkleding, hoodies, T-shirts, broeken, sweaters"
     },
     "lookbook": {
       "title": "Lookbook",
-      "description": "Hoodie, sweater en tee, gefotografeerd in Groningen. Vanuit Groningen. Shop de stukken uit de shoot.",
-      "keywords": "MOSE lookbook, outfit inspiratie, basics, Groningen, streetwear, campagne"
+      "description": "Bekijk hoe we MOSE dragen. Inspiratie voor outfits met hoodies, shirts en sweaters uit de collectie.",
+      "keywords": "MOSE, lookbook, mannenkleding, outfits, hoodies, sweaters"
     },
     "product": {
       "notFound": "Product niet gevonden",
@@ -1282,7 +1282,7 @@
       },
       "about": {
         "title": "Over MOSE",
-        "description": "Wie zitten er achter MOSE? Lees het verhaal van Irma en Rick en hun kledingmerk uit Groningen."
+        "description": "Dit is MOSE. Kleding voor mannen, met aandacht voor pasvorm, materiaal en rustige details. Geen poespas. Wel karakter."
       },
       "cart": {
         "title": "Winkelwagen"
@@ -1375,11 +1375,11 @@
   },
   "homepage": {
     "hero": {
-      "badge": "Vanuit Groningen",
+      "badge": "MANNENKLEDING MET KARAKTER",
       "title1": "GEEN POESPAS.",
       "title2": "WEL KARAKTER.",
-      "subtitle": "Vanuit Groningen. Kwaliteit die blijft.",
-      "imageAlt": "MOSE, vanuit Groningen, gedragen in de stad",
+      "subtitle": "Stevige hoodies, goede shirts en broeken met een eigen pasvorm.",
+      "imageAlt": "Mannen in MOSE hoodies",
       "cta1": {
         "text": "Shop MOSE",
         "aria": "Bekijk onze shop met alle MOSE producten"
@@ -1391,12 +1391,12 @@
       "scroll": "Scroll"
     },
     "stats": {
-      "local": "Vanuit Groningen",
+      "local": "Eigen stijl",
       "returns": "Dagen retourrecht",
       "quality": "Premium kwaliteit"
     },
     "trust": {
-      "local": "Vanuit Groningen",
+      "local": "Kleding met karakter",
       "freeShipping": "Gratis verzending vanaf €{threshold}",
       "returns": "{days} dagen retour",
       "secure": "Veilig betalen",
@@ -1404,8 +1404,8 @@
     },
     "featured": {
       "label": "Bestsellers",
-      "title": "ESSENTIALS DIE BLIJVEN",
-      "description": "No-nonsense basics die jarenlang meegaan",
+      "title": "VIND JOUW FAVORIET",
+      "description": "Goede basics en uitgesproken pasvormen. Ontdek de collectie van MOSE.",
       "noProducts": "Geen featured producten ingesteld.",
       "noProductsDesc": "Selecteer producten in de admin homepage settings.",
       "inStock": "Op voorraad",
@@ -1421,28 +1421,28 @@
       "noCategories": "Geen categorieën geselecteerd. Configureer ze in het admin panel."
     },
     "story": {
-      "badge": "Ons verhaal",
-      "title": "VANUIT",
-      "titleHighlight": "GRONINGEN",
-      "description1": "Geen poespas. Alleen karakter. Vanuit Groningen werken we aan kleding met aandacht voor pasvorm, materiaal en afwerking.",
-      "description2": "Premium basics met een ziel. Gebouwd voor het echte leven.",
+      "badge": "Dit is MOSE",
+      "title": "GOEDE KLEDING.",
+      "titleHighlight": "EIGEN KARAKTER.",
+      "description1": "MOSE is er voor mannen die houden van goede kleding. Van een stevig T-shirt en een comfortabele hoodie tot een broek met een ruimere pasvorm. Rustig in kleur, sterk in vorm.",
+      "description2": "We letten op hoe iets zit, hoe de stof aanvoelt en hoe je het combineert. Zo ontstaat een collectie die je makkelijk naar je eigen hand zet.",
       "stat1": {
-        "label": "Uit Groningen",
-        "sublabel": "Ons merk"
+        "label": "Pasvorm",
+        "sublabel": "Ruimte om te bewegen"
       },
       "stat2": {
-        "label": "Built 2024",
-        "sublabel": "Opgericht"
+        "label": "Details",
+        "sublabel": "Subtiel en verzorgd"
       },
       "stat3": {
-        "label": "Premium",
-        "sublabel": "Materialen"
+        "label": "Karakter",
+        "sublabel": "Op jouw manier"
       },
       "cta": {
-        "text": "Lees ons verhaal",
-        "aria": "Lees het volledige verhaal over MOSE en onze roots in Groningen"
+        "text": "Meer over MOSE",
+        "aria": "Lees waar MOSE voor staat"
       },
-      "imageAlt": "MOSE, gedragen in het echte leven"
+      "imageAlt": "Vier mannen in MOSE sweaters"
     },
     "newsletter": {
       "title": "JOIN THE PACK",
@@ -1500,11 +1500,11 @@
     "items": [
       {
         "question": "Hoe vallen de MOSE kledingstukken?",
-        "answer": "Onze kleding valt normaal qua maat. We adviseren je gebruikelijke maat te bestellen. Bij twijfel tussen twee maten? Kies dan de grotere maat voor een relaxed fit. Alle maten zijn ontworpen voor optimaal comfort."
+        "answer": "De pasvorm verschilt per model, van regular tot boxy en ruimvallend. Bekijk de maattabel bij het artikel en vergelijk de afmetingen met een kledingstuk dat je goed past. Hulp nodig? Neem contact met ons op."
       },
       {
         "question": "Wat zijn de verzendkosten en levertijd?",
-        "answer": "Verzending binnen Nederland en België is gratis vanaf €{freeShipping}. Daaronder reken je €{shippingCost}. Bestel je voor 17:00, dan gaat je pakket dezelfde dag de deur uit en heb je het meestal de volgende werkdag in huis, anders de dag erna."
+        "answer": "Je ziet de verzendkosten en beschikbare bezorgopties bij het afrekenen. De verwerking en levertijd kunnen per artikel verschillen. Een bestelling kan in meerdere pakketten aankomen. Zodra er tracking beschikbaar is, kun je je zending volgen."
       },
       {
         "question": "Kan ik mijn bestelling retourneren?",
@@ -1515,15 +1515,15 @@
         "answer": "Was op 30°C binnenstebuiten, gebruik geen bleekmiddel en droog bij voorkeur niet in de droger. Strijk op lage temperatuur als dat nodig is. Zo blijft je MOSE kledingstuk jarenlang mooi."
       },
       {
-        "question": "Waar komt MOSE vandaan en waar wordt de kleding gemaakt?",
-        "answer": "MOSE komt uit Groningen. De productie en bedrukking kunnen per artikel verschillen. Bekijk de productinformatie voor de herkomst, materialen en uitvoering, of neem contact met ons op als je iets wilt weten."
+        "question": "Waar staat MOSE voor?",
+        "answer": "MOSE maakt kleding voor mannen met aandacht voor pasvorm, materiaal en rustige details. Van T-shirts en hoodies tot sweaters en broeken. Bij ieder artikel lees je wat je van dat model kunt verwachten."
       },
       {
         "question": "Welke betaalmethoden accepteren jullie?",
-        "answer": "We accepteren iDEAL, Mastercard, Visa, American Express, PayPal en Bancontact. Alle betalingen worden veilig verwerkt via Mollie. Je betaalgegevens zijn altijd beschermd."
+        "answer": "De beschikbare betaalmethoden zie je bij het afrekenen. Ze hangen onder meer af van je land en valuta. Kies daar de optie die je wilt gebruiken; je betaling wordt beveiligd verwerkt."
       }
     ],
-    "answerVerzendingAltijd": "Verzending binnen Nederland en België is altijd gratis, zonder minimumbedrag. Bestel je voor 17:00, dan ligt je pakket er meestal de volgende werkdag."
+    "answerVerzendingAltijd": "Je ziet de beschikbare bezorgopties bij het afrekenen. De verwerking en levertijd kunnen per artikel verschillen; een bestelling kan in meerdere pakketten aankomen."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -1788,50 +1788,50 @@
       "subtitle": "Geen poespas. Wel karakter."
     },
     "story": {
-      "title": "ONS VERHAAL",
-      "paragraph1": "Wij zijn Irma en Rick, de oprichters van MOSE.\n\nWe wonen met onze katten Bob en Marley en onze daggoe Guus in Groningen, in Helpman. Sinds september zijn we zelfs getrouwd. Wow, serieuze shit.\n\n“Waarom MOSE?” Onze overleden poes heette Mosie, we noemden haar Moos. Dit is ons eerbetoon. 🐱",
-      "paragraph2": "We zijn MOSE gestart omdat fast fashion ons irriteert. We kochten vaak dure t-shirts die na een paar keer wassen klaar waren voor de prullenbak. Daarom bouwen we vanuit Groningen aan een kledingmerk met aandacht voor pasvorm, materiaal en afwerking. Waar een artikel wordt gemaakt en hoe je het verzorgt, vind je bij het product."
+      "title": "GOEDE KLEDING. ELKE DAG.",
+      "paragraph1": "MOSE maakt kleding voor mannen die houden van een stevige hoodie, een goed T-shirt en een broek die lekker zit. Duidelijke vormen, rustige kleuren en details die het verschil maken. Kleding die je makkelijk combineert en graag uit je kast pakt.",
+      "paragraph2": "Het begint bij hoe iets valt en aanvoelt. Een ruime pasvorm waar dat past, een stevige stof en een logo dat niet alle aandacht opeist. Van een eenvoudige Tee tot een boxy hoodie of barrel jeans: elk model heeft zijn eigen vorm en karakter."
     },
     "local": {
-      "title": "VANUIT GRONINGEN",
-      "text": "MOSE is een kledingmerk uit Groningen. Vanuit hier werken we aan onze collectie en helpen we je met vragen over producten, bestellingen en retouren. De herkomst en uitvoering kunnen per product verschillen; bekijk daarvoor de productinformatie."
+      "title": "GEEN POESPAS. WEL KARAKTER.",
+      "text": "Voor ons zit een sterke outfit in de combinatie. Een goed shirt op je favoriete jeans. Een hoodie voor onderweg. Een sweater die je zo aantrekt. MOSE geeft je de basis; jij maakt er je eigen outfit van."
     },
     "values": {
-      "title": "ONZE WAARDEN",
+      "title": "WAAR WE OP LETTEN",
       "quality": {
-        "title": "Premium kwaliteit",
-        "text": "Alleen de beste materialen en perfecte afwerking. Kleding die jarenlang meegaat."
+        "title": "De stof",
+        "text": "Hoe een stof aanvoelt en valt, bepaalt veel. Bij elk artikel vind je de samenstelling en de details van het materiaal."
       },
       "localMade": {
-        "title": "Vanuit Groningen",
-        "text": "Ons merk en onze klantenservice zijn gevestigd in Groningen. Bekijk de informatie bij ieder artikel voor de herkomst en uitvoering."
+        "title": "De pasvorm",
+        "text": "Van regular tot boxy en ruimvallend. We kiezen de vorm die bij het kledingstuk past. De maattabel helpt je kiezen."
       },
       "fairPricing": {
-        "title": "Eerlijke prijzen",
-        "text": "Geen opgeblazen prijzen of fake sales. Gewoon eerlijk geprijsd voor wat je krijgt."
+        "title": "De details",
+        "text": "Rustige kleuren, subtiele logo’s en een verzorgde afwerking. Precies genoeg om het kledingstuk eigen te maken."
       },
       "noHassle": {
-        "title": "Geen gedoe",
-        "text": "{days} dagen retour, gratis verzending vanaf €{threshold}, en snelle klantenservice. Simpel.",
-        "textAltijd": "{days} dagen retour, altijd gratis verzending, en snelle klantenservice. Simpel."
+        "title": "Duidelijk geregeld",
+        "text": "Hulp nodig met je maat of bestelling? Neem contact met ons op. Je hebt {days} dagen om je retour aan te melden.",
+        "textAltijd": "Hulp nodig met je maat of bestelling? Neem contact met ons op. Je hebt {days} dagen om je retour aan te melden."
       }
     },
     "why": {
-      "title": "WAAROM MOSE?",
+      "title": "DIT IS MOSE",
       "sustainable": {
-        "title": "Duurzaam zonder bullshit",
-        "text": "Kleding die lang meegaat. Dat is de beste sustainability."
+        "title": "Voor elke dag",
+        "text": "Kleding voor de dagen waarop je iets goeds aan wilt trekken zonder er lang over na te denken."
       },
       "stylish": {
-        "title": "Stoer maar stijlvol",
-        "text": "Basics met karakter. Voor moderne mannen die weten wat ze willen."
+        "title": "Makkelijk te combineren",
+        "text": "Hoodies, shirts, sweaters en broeken die samen werken, maar ook bij wat je al draagt."
       },
       "local": {
-        "title": "Trots lokaal",
-        "text": "Vanuit Groningen, gedragen door heel Nederland."
+        "title": "Een eigen karakter",
+        "text": "Stevige vormen en ingetogen details. Een stoere uitstraling, zonder dat het schreeuwerig wordt."
       }
     },
-    "cta": "Ontdek de collectie"
+    "cta": "Bekijk de collectie"
   },
   "newsletterWelcome": {
     "subject": "Welkom bij de MOSE nieuwsbrief! 🎉",
@@ -1987,8 +1987,8 @@
         "desc": "Wees de eerste die nieuwe releases ziet"
       },
       "gift": {
-        "title": "Vanuit Groningen",
-        "desc": "Een merk uit Groningen"
+        "title": "Een eigen stijl",
+        "desc": "Kleding met karakter"
       },
       "shipping": {
         "title": "Gratis verzending",
@@ -2009,8 +2009,8 @@
     "subtitle": "Je bent binnen. Hier is wat dat betekent.",
     "intro": "Bedankt dat je deel uitmaakt van de inner circle. Je bent nu officieel MOSE insider: een van de eersten die hoort wanneer nieuwe drops landen, voordat het uitverkocht is.",
     "perksTitle": "Wat je krijgt als insider:",
-    "perk1Title": "Vanuit Groningen",
-    "perk1Text": "Een merk uit Groningen",
+    "perk1Title": "Ontdek MOSE",
+    "perk1Text": "Hoodies, shirts en broeken met een eigen karakter.",
     "perk2Title": "Gratis verzending",
     "perk2Text": "Op je eerste order",
     "perk3Title": "First dibs op drops",
@@ -2030,22 +2030,22 @@
     "ps": "P.S. Houd je inbox in de gaten. We sturen je meer insider content voor de launch."
   },
   "insiderCommunity": {
-    "title": "JE BENT NIET DE ENIGE",
-    "subtitle": "Een blik achter de schermen van onze community",
-    "intro": "Er zijn nu honderden insiders die op de launch wachten. Geen willekeurige shoppers, maar mensen die snappen waar MOSE voor staat.",
-    "numbers": "De cijfers:",
+    "title": "MEER VAN MOSE",
+    "subtitle": "Nieuwe kleding en inspiratie uit de collectie",
+    "intro": "Via onze updates ontdek je nieuwe modellen, aangevulde maten en manieren om de collectie te combineren.",
+    "numbers": "Wat je kunt verwachten:",
     "stat1": "{count}+ insiders op de lijst",
-    "stat2": "Meest populair: Hoodies (al 40% van voorraad gereserveerd)",
-    "stat3": "Top 3 landen: Nederland, België, Duitsland",
-    "communityTitle": "Wat de community zegt:",
-    "testimonial1": "\"Eindelijk een Nederlands merk dat geen bullshit verkoopt. Just clean, solid basics.\"",
-    "testimonial2": "\"Die hoodies zien er insane uit. Kan niet wachten tot 2 maart.\"",
-    "testimonial3": "\"Love dat ze lokaal produceren. Dat maakt het verschil.\"",
+    "stat2": "Nieuws over hoodies, shirts en broeken",
+    "stat3": "Inspiratie om je eigen outfit samen te stellen",
+    "communityTitle": "Daar draait MOSE om:",
+    "testimonial1": "Goede kleding die prettig zit.",
+    "testimonial2": "Rustige kleuren en duidelijke pasvormen.",
+    "testimonial3": "Subtiele details met een eigen karakter.",
     "joinTitle": "Word deel van de community",
-    "joinText": "Volg ons op Instagram en Facebook voor daily updates, drops en insider content:",
+    "joinText": "Volg MOSE op Instagram en Facebook voor nieuwe kleding en outfitinspiratie.",
     "socialInsta": "Instagram: @mosewearcom",
     "socialFb": "Facebook: @mosewearcom",
-    "closing": "We bouwen dit samen. Tot de launch.",
+    "closing": "Bedankt dat je MOSE volgt.",
     "ps": "P.S. Nog {days} dagen tot lancering. Ben je er klaar voor?"
   },
   "insiderBehindScenes": {
@@ -2053,12 +2053,12 @@
     "subtitle": "Een kijkje in het proces",
     "intro": "Je vroeg erom. Zo gaat het achter de schermen bij MOSE: van idee tot product.",
     "processTitle": "Het proces:",
-    "process1": "Lokaal ontworpen in Groningen. Alles start hier.",
-    "process2": "Gemaakt met premium materialen. Geen goedkope troep.",
-    "process3": "Limited runs. Als het op is, is het op.",
-    "limitedTitle": "Waarom limited edition?",
-    "limitedText": "We maken geen massa-productie. Elke drop is gelimiteerd. Dat betekent uniek, exclusief en niet voor iedereen. Vroege toegang zorgt ervoor dat jij niet misloopt.",
-    "closing": "Dit is wat je steunt als je bij MOSE koopt. Geen corporate bullshit. Just honest design, vanuit Groningen.",
+    "process1": "We beginnen bij de pasvorm en het gevoel van de stof.",
+    "process2": "Kleuren en details moeten passen bij de rest van de collectie.",
+    "process3": "Bij ieder model vind je de maten, materialen en uitvoering.",
+    "limitedTitle": "Kies wat bij je past",
+    "limitedText": "Een goed kledingstuk past bij hoe je het wilt dragen. Bekijk de foto’s en maattabel en vergelijk de afmetingen met een favoriet uit je kast.",
+    "closing": "Daar letten we op bij MOSE: pasvorm, materiaal en karakter.",
     "followCTA": "Volg het proces",
     "followSubtext": "@mosewearcom voor real-time updates",
     "ps": "P.S. Launch is over {days} dagen. Je hebt vroege toegang. Gebruik het."
@@ -2073,7 +2073,7 @@
     "info3": "Limited items verdwijnen snel. Vroege toegang telt.",
     "perksRemainTitle": "Je insider perks blijven:",
     "perk1": "24u vroege toegang (1 maart om 00:00)",
-    "perk2": "Vanuit Groningen",
+    "perk2": "Kleding met karakter, op jouw manier.",
     "perk3": "Gratis verzending op je eerste order",
     "statusTitle": "Check je status:",
     "statusNotYet": "✓ Als je nog niet hebt geshopt: wacht tot 1 maart 00:00 voor vroege toegang",
@@ -2166,7 +2166,7 @@
   },
   "surveyPopup": {
     "introTitle": "Mogen wij 1 minuutje van je tijd?",
-    "introText": "Wij zijn MOSE, een beginnend kledingmerk uit Groningen. We willen de beste webshop maken. Jouw feedback is cruciaal.",
+    "introText": "Help ons de collectie verder te ontwikkelen. Welke kleding en pasvormen zie jij graag bij MOSE?",
     "introYes": "Ja, help MOSE",
     "introNo": "Nee, bedankt",
     "question1": "Hoe groot acht je de kans dat je iets gaat kopen in onze webshop?",
@@ -2206,8 +2206,8 @@
   "blog": {
     "title": "Blog",
     "eyebrow": "Verhalen",
-    "heroSubtitle": "Drops, style & behind the scenes vanuit Groningen.",
-    "heroAlt": "MOSE blog, verhalen uit Groningen",
+    "heroSubtitle": "Over pasvorm, combineren en goed voor je kleding zorgen.",
+    "heroAlt": "MOSE kleding en outfitinspiratie",
     "readMore": "Lees meer",
     "allCategories": "Alle",
     "minuteRead": "{minutes} min leestijd",
@@ -2231,7 +2231,7 @@
     }
   },
   "lookbook": {
-    "eyebrow": "MOSE UIT GRONINGEN",
+    "eyebrow": "MOSE · DE COLLECTIE",
     "chapterLabel": "HOOFDSTUK",
     "emptyState": {
       "title": "Binnenkort meer.",
@@ -2265,10 +2265,10 @@
         "next": "Volgende"
       },
       "fallbackMeta": {
-        "materialLabel": "MATERIAAL",
-        "materialValue": "Goede basics",
-        "madeInLabel": "GEMAAKT IN",
-        "madeInValue": "Groningen, NL"
+        "materialLabel": "DETAILS",
+        "materialValue": "Bekijk de productinformatie",
+        "madeInLabel": "COLLECTIE",
+        "madeInValue": "MOSE essentials"
       }
     }
   },
