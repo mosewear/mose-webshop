@@ -21,7 +21,7 @@ describe('unified admin source normalization',()=>{
   expect(v.payment_status).toBe('partially_refunded')
  })
  it('keeps partial shipment separate from full shipment',()=>{
-  expect(normalizeShopifyAdminOrder(row({...order,displayFulfillmentStatus:'PARTIALLY_FULFILLED'}),meta).status).toBe('partially_shipped')
+  expect(normalizeShopifyAdminOrder(row({...order,displayFulfillmentStatus:'PARTIALLY_FULFILLED'}),meta).status).toBe('processing')
  })
  it('fails closed on missing creation date or foreign currency rather than corrupting metrics',()=>{
   expect(()=>normalizeShopifyAdminOrder(row(order),undefined)).toThrow('ORDER_METADATA_UNAVAILABLE')
@@ -32,7 +32,8 @@ describe('unified admin source normalization',()=>{
   const shipment={id:'gid://shopify/Fulfillment/1',status:'SUCCESS',displayStatus:'DELIVERED',createdAt:time,updatedAt:time,location:null,trackingInfo:[],fulfillmentLineItems:{nodes:[{quantity:1,lineItem:{id:line.id}}],pageInfo}}
   const shipped={...order,displayFulfillmentStatus:'FULFILLED',lineItems:{nodes:[line],pageInfo},fulfillments:[shipment]}
   expect(normalizeShopifyAdminOrder(row(shipped),meta).status).toBe('delivered')
-  expect(normalizeShopifyAdminOrder(row({...shipped,fulfillments:[{...shipment,displayStatus:'LABEL_PRINTED'}]}),meta).status).toBe('shipped')
+  expect(normalizeShopifyAdminOrder(row({...shipped,fulfillments:[{...shipment,displayStatus:'IN_TRANSIT'}]}),meta).status).toBe('shipped')
+  expect(normalizeShopifyAdminOrder(row({...shipped,fulfillments:[{...shipment,displayStatus:'LABEL_PRINTED'}]}),meta).status).toBe('fulfilled')
   expect(normalizeShopifyAdminOrder(row({...shipped,lineItems:{nodes:[line,{...line,id:'gid://shopify/LineItem/2'}],pageInfo}}),meta).status).not.toBe('delivered')
  })
  it('does not expose private account proof or raw provider snapshot',()=>{

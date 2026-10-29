@@ -305,7 +305,7 @@ export default function AdminDashboard() {
         totalCustomers,
       })
       setPrevStats(previousPeriod)
-      setOrdersToFulfill(unifiedOrders.filter(o=>['paid','partially_refunded'].includes(o.payment_status)&&['pending','paid','processing','partially_shipped'].includes(o.status)).length)
+      setOrdersToFulfill(unifiedOrders.filter(o=>['paid','partially_refunded'].includes(o.payment_status)&&['pending','paid','processing','fulfilled','partially_shipped'].includes(o.status)).length)
       setLastUpdate(new Date())
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
