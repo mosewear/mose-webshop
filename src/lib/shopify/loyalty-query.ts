@@ -2,6 +2,7 @@
 export const LOYALTY_PAYMENT_QUERY = `query MoseLoyaltyPayment($id: ID!) {
   order(id: $id) {
     id updatedAt currencyCode presentmentCurrencyCode test displayFinancialStatus
+    currentTotalPriceSet { shopMoney { amount currencyCode } presentmentMoney { amount currencyCode } }
     totalPriceSet { shopMoney { amount currencyCode } presentmentMoney { amount currencyCode } }
     totalReceivedSet { shopMoney { amount currencyCode } presentmentMoney { amount currencyCode } }
     totalRefundedSet { shopMoney { amount currencyCode } presentmentMoney { amount currencyCode } }

@@ -81,3 +81,9 @@ describe('authoritative Shopify loyalty payment adapter', () => {
     await expect(fetchLoyaltySettlement(expected, execute as AdminExecutor)).rejects.toThrow('LOYALTY_ORDER_NOT_ACCESSIBLE')
   })
 })
+
+ it('accepts a fully paid size edit using the current total without earning on historical removed items',()=>{
+  const order={...fixture(),totalPriceSet:bag('21.98'),currentTotalPriceSet:bag('10.99')}
+  expect(paymentToLoyaltySettlement(order,expected).eligiblePaidCents).toBe(1099)
+  expect(()=>paymentToLoyaltySettlement({...order,currentTotalPriceSet:bag('11.00')},expected)).toThrow('LOYALTY_PAYMENT_TOTAL_MISMATCH')
+ })
