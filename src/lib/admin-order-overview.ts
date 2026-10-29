@@ -40,7 +40,12 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
     const paid=['PAID','PARTIALLY_PAID','PARTIALLY_REFUNDED','REFUNDED'].includes(o.displayFinancialStatus ?? '')
     const activeLines=o.lineItems.nodes.filter(l=>l.currentQuantity>0)
     const delivered=activeLines.length>0 && activeLines.every(line=>o.fulfillments.filter(f=>f.status==='SUCCESS' && f.displayStatus==='DELIVERED').reduce((sum,f)=>sum+f.fulfillmentLineItems.nodes.filter(l=>l.lineItem.id===line.id).reduce((n,l)=>n+l.quantity,0),0)>=line.currentQuantity)
-    const status=o.cancelledAt ? 'cancelled' : delivered ? 'delivered' : o.displayFulfillmentStatus==='FULFILLED' ? 'shipped' : o.displayFulfillmentStatus==='PARTIALLY_FULFILLED' ? 'partially_shipped' : 'processing'
+    const physicalStatuses=new Set(['CARRIER_PICKED_UP','PICKED_UP','IN_TRANSIT','OUT_FOR_DELIVERY','DELIVERED','ATTEMPTED_DELIVERY'])
+    const inTransport=(line:typeof activeLines[number])=>o.fulfillments.filter(f=>f.status==='SUCCESS' && physicalStatuses.has(f.displayStatus??'')).reduce((sum,f)=>sum+f.fulfillmentLineItems.nodes.filter(l=>l.lineItem.id===line.id).reduce((n,l)=>n+l.quantity,0),0)
+    const allTransport=activeLines.length>0 && activeLines.every(l=>inTransport(l)>=l.currentQuantity)
+    const someTransport=activeLines.some(l=>inTransport(l)>0)
+    const status=o.cancelledAt ? 'cancelled' : delivered ? 'delivered' : allTransport ? 'shipped' : someTransport ? 'partially_shipped' : o.displayFulfillmentStatus==='FULFILLED' ? 'fulfilled' : 'processing'
+
     return {id:o.id, source:'shopify', name:o.name,email:meta.email ?? '', user_id:null,
       status, payment_status:(o.displayFinancialStatus ?? 'unknown').toLowerCase(),
       total:Number(o.currentTotalPriceSet.shopMoney.amount), currency:o.currencyCode,

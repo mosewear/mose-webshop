@@ -43,6 +43,7 @@ export const ORDER_STATUS: Record<string, StatusMeta> = {
   pending: { label: 'In afwachting', tone: 'pending', mark: '○' },
   paid: { label: 'Betaald', tone: 'info', mark: '◆' },
   processing: { label: 'In behandeling', tone: 'info', mark: '◆' },
+  fulfilled: { label: 'Afhandeling gemeld', tone: 'info', mark: '◆' },
   partially_shipped: { label: 'Deels verzonden', tone: 'brand', mark: '→' },
   shipped: { label: 'Verzonden', tone: 'brand', mark: '→' },
   delivered: { label: 'Afgeleverd', tone: 'success', mark: '✓' },
