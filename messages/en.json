@@ -1510,11 +1510,11 @@
       "imageAlt": "Four men wearing MOSE sweaters"
     },
     "newsletter": {
-      "title": "JOIN THE PACK",
-      "description": "News about drops, restocks and what happens behind the scenes.",
-      "noSpam": "No spam. Only MOSE.",
+      "title": "NEWS FROM MOSE",
+      "description": "New clothes, restocked sizes and inspiration from the collection.",
+      "noSpam": "An occasional email from us. Unsubscribe at any time.",
       "placeholder": "Your email address",
-      "submit": "JOIN NOW",
+      "submit": "Sign up",
       "submitting": "Submitting...",
       "subscribed": "Subscribed!",
       "success": "You're subscribed! Check your inbox.",
@@ -1577,7 +1577,7 @@
       },
       {
         "question": "How do I care for my MOSE clothing?",
-        "answer": "Wash at 30°C inside out, do not use bleach and preferably do not tumble dry. Iron at low temperature if necessary. This way your MOSE garment will stay beautiful for years."
+        "answer": "Always follow the garment care label. Wash printed clothing inside out and do not iron directly on a print. See the product information for care details for that style. Ask us if you are unsure."
       },
       {
         "question": "What does MOSE stand for?",
