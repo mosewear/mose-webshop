@@ -12,7 +12,7 @@ The official Sendcloud Shopify integration is installed. Shipment feedback waits
 
 Tapstitch uses the custom MOSE Netherlands shipping profile and international fulfillment. Supplier payment remains manual. All eight models have approved labels and hangtags; hoodie chest artwork is black 6 cm DTF, raglan chest artwork is black 6 cm DTG, and trousers have no chest artwork. Twenty generated product images were updated, including five recentered neck-label details. Five rear views were preserved. These are visualizations; actual manufacturing placement requires physical sample inspection.
 
-Shopify store name is MOSE. Password protection is disabled. The eight sample products remain unlisted and available only through the intended Headless publication. The sample checkout displays eight size-M items totaling EUR 658, free Netherlands shipping, and EUR 114.21 included VAT after the merchant-provided Netherlands VAT registration was saved. VAT invoices are enabled. Prices remain VAT inclusive. The tax identifier is stored in Shopify, not in this repository.
+Shopify store name is MOSE. Password protection is disabled. The eight sample products remain unlisted and available only through the intended Headless publication. The sample checkout displays eight size-M items totaling EUR 658, free Netherlands shipping, and EUR 114.21 included VAT after the merchant-provided Netherlands VAT registration was saved. VAT invoices are enabled. Prices remain VAT inclusive. The merchant-authorized VAT identifier is configured in Shopify and Sendcloud and published in the website company details (PR #21).
 
 The custom supplier profile charges EUR 4.95 below EUR 100 and offers free shipping from EUR 100, with production 1–3 working days and transit 5–14 working days. An unpaid Tapstitch eight-item quote was EUR 256.16 after the merchant's sample discount, including EUR 83.62 shipping. Import VAT, duties and carrier fees are not proven included; supplier rate changes require requoting before payment. Discount credentials are not recorded here.
 
@@ -25,3 +25,9 @@ Code validation for PR #20 passed: 529 Vitest tests, TypeScript, lint and produc
 Public Shopify checkout remains gated. Outstanding: physical supplier sample approval; own-stock ownership/cutover and legacy pending-order reconciliation; benefit, loyalty and worker runtime evidence; mixed-location/partial-fulfillment and returns verification; a merchant-paid end-to-end order and reconciliation. One later private sample-cart attempt has unknown outcome without a persisted provider cart ID and must not be blindly released or retried. The earlier ready sample checkout is available; no payment was submitted by the agent.
 
 The social-sharing image upload remains unresolved. iDEAL availability depends on Shopify's eligibility review. Supplier import-tax handling and custom outer packaging are not established. These limits must remain visible in handoff; do not describe the complete launch as flawless or fully verified.
+
+## Follow-up verification — 29 October 2026
+
+Sample attempts now preserve returned provider cart identifiers when subsequent validation fails, without exposing unchecked checkout URLs. Browser attempts share a durable key across tabs under a Web Lock and preserve conflicting or uncertain attempts for review. Existing unknown attempts without provider identifiers still require reconciliation.
+
+Loyalty release evidence now uses measured runtime readiness instead of an unconditional legacy-account blocker. Unknown counts, promotion/staffel parity, gift balances and physical sample gates remain conservative. Shipping-page links no longer duplicate the locale prefix. Targeted verification: 36 Vitest tests, TypeScript and scoped ESLint.

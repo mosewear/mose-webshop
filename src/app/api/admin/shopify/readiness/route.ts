@@ -59,6 +59,7 @@ export async function GET() {
     const complete = (result: { error: unknown; count: number | null; data: unknown[] | null }) =>
       !result.error && result.count !== null && result.data !== null && result.count === result.data.length
     const activeIds = new Set((products.data ?? []).map((product: { id: string }) => product.id))
+    const runtimeChecks = await runtimeReadiness(db, now.getTime())
     const audit = auditShopifyRelease({
       products: (products.data ?? []) as AuditProduct[], variants: (variants.data ?? []) as AuditVariant[], mappings: (mappings.data ?? []) as MappedVariant[],
       complete: complete(products) && complete(variants) && complete(mappings),
@@ -68,7 +69,7 @@ export async function GET() {
       loyaltyAccounts: loyalty.error ? null : loyalty.count,
       giftCardsWithBalance: giftBalances.error ? null : giftBalances.count,
       scheduledGiftCards: scheduledGifts.error ? null : scheduledGifts.count,
-    })
+    }, { loyaltyRuntime: runtimeChecks.find(check => check.key === 'loyaltyRuntime')?.status ?? 'unknown' })
     const inventory = await db.rpc('shopify_inventory_evidence').abortSignal(signal)
     const inventoryCheck = inventoryReadiness(inventory.error || !Array.isArray(inventory.data) ? null : inventory.data, released.error ? null : released.count, now.getTime())
     const readiness = attachReleaseAudit(summarizeReadiness(state.error ? null : state.data as IntegrationState | null, {
@@ -80,7 +81,6 @@ export async function GET() {
     readiness.checks.push(inventoryCheck)
     if (inventoryCheck.status === 'missing') readiness.status = 'blocked'
     else if (inventoryCheck.status === 'unknown' && readiness.status === 'technical_checks_passed') readiness.status = 'unknown'
-    const runtimeChecks = await runtimeReadiness(db, now.getTime())
     readiness.checks.push(...runtimeChecks)
     if (runtimeChecks.some(check => check.status === 'missing')) readiness.status = 'blocked'
     else if (runtimeChecks.some(check => check.status === 'unknown') && readiness.status === 'technical_checks_passed') readiness.status = 'unknown'

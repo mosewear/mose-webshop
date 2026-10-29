@@ -1,12 +1,13 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-const mocks = vi.hoisted(() => ({ authorize: vi.fn(), database: vi.fn() }))
+const mocks = vi.hoisted(() => ({ authorize: vi.fn(), database: vi.fn(), runtime: vi.fn() }))
 vi.mock('@/lib/supabase/admin', () => ({ requireAdmin: mocks.authorize }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: mocks.database }))
+vi.mock('@/lib/shopify/runtime-readiness', () => ({ runtimeReadiness: mocks.runtime }))
 import { GET } from '@/app/api/admin/shopify/readiness/route'
 
 describe('private Shopify readiness endpoint', () => {
-  beforeEach(() => { vi.resetAllMocks() })
+  beforeEach(() => { vi.resetAllMocks(); mocks.runtime.mockResolvedValue([{ key: 'loyaltyRuntime', label: 'Measured loyalty', status: 'missing' }]) })
   it('does not create a privileged database client for unauthorized callers', async () => {
     mocks.authorize.mockResolvedValue({ authorized: false })
     const response = await GET()
@@ -37,7 +38,8 @@ describe('private Shopify readiness endpoint', () => {
     expect(data.releaseAudit.catalog.sellableVariants).toBeNull()
   })
 
-  it('audits every variant and never launches more than three reads at once', async () => {
+  it.each(['verified', 'missing', 'unknown'])('aggregates %s loyalty evidence while retaining catalog blockers', async runtimeStatus => {
+    mocks.runtime.mockResolvedValue([{ key: 'loyaltyRuntime', label: 'Measured loyalty', status: runtimeStatus }])
     mocks.authorize.mockResolvedValue({ authorized: true })
     const stamp = new Date().toISOString()
     const responses = [
@@ -67,7 +69,7 @@ describe('private Shopify readiness endpoint', () => {
     expect(from).toHaveBeenCalledTimes(13)
     expect(peak).toBeLessThanOrEqual(3)
     expect(data.releaseAudit.catalog).toMatchObject({ sellableVariants: 2, coveredVariants: 1, missingMappings: 1 })
-    expect(data.checks.find((check: { key: string }) => check.key === 'loyaltyLedger').status).toBe('missing')
+    expect(data.checks.find((check: { key: string }) => check.key === 'loyaltyLedger').status).toBe(runtimeStatus)
     expect(data.status).toBe('blocked')
   })
 

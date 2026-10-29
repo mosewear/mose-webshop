@@ -1,20 +1,19 @@
 'use client'
 import { useEffect, useState } from 'react'
 type Model={model:string;name:string;priceCents:number;variants:{localId:string;color:string;size:string}[]}
-const key='mose-admin-sample-attempt-v1'
+import { sampleAttemptKey as key, readSampleAttempt, reserveSampleAttempt, withSampleAttemptLock } from './sample-attempt'
 const euros=(cents:number)=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(cents/100)
 export default function SampleForm(){
- const [models,setModels]=useState<Model[]>([]),[selected,setSelected]=useState<Record<string,string>>({}),[ready,setReady]=useState(false),[ack,setAck]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[retrySafe,setRetrySafe]=useState(false)
- useEffect(()=>{const controller=new AbortController();fetch('/api/admin/shopify/samples',{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw new Error('De samplecollectie kon niet worden geladen.');return r.json()}).then(data=>{setModels(data.models);setReady(data.enabled);const stored=sessionStorage.getItem(key);if(stored){try{const prior=JSON.parse(stored);setSelected(Object.fromEntries(data.models.map((m:Model)=>[m.model,m.variants.find(v=>prior.variants?.includes(v.localId))?.localId||''])))}catch{setError('Een eerdere poging moet eerst worden gecontroleerd.')}}}).catch(e=>{if(!controller.signal.aborted)setError(e.message)});return()=>controller.abort()},[])
+ const [models,setModels]=useState<Model[]>([]),[selected,setSelected]=useState<Record<string,string>>({}),[ready,setReady]=useState(false),[ack,setAck]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[retrySafe,setRetrySafe]=useState(false),[rejectedId,setRejectedId]=useState<string|null>(null)
+ useEffect(()=>{const controller=new AbortController();fetch('/api/admin/shopify/samples',{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw new Error('De samplecollectie kon niet worden geladen.');return r.json()}).then(async data=>{setModels(data.models);setReady(data.enabled);const prior=await withSampleAttemptLock(()=>readSampleAttempt(localStorage,sessionStorage));if(prior){try{setSelected(Object.fromEntries(data.models.map((m:Model)=>[m.model,m.variants.find(v=>prior.variants?.includes(v.localId))?.localId||''])))}catch{setError('Een eerdere poging moet eerst worden gecontroleerd.')}}}).catch(e=>{if(!controller.signal.aborted)setError(e.message)});return()=>controller.abort()},[])
  async function checkout(){
   setBusy(true);setError('');setRetrySafe(false)
   try{
-   const variants=models.map(m=>selected[m.model]);const stored=sessionStorage.getItem(key)
-   let attempt:{id:string;variants:string[]}
-   if(stored){attempt=JSON.parse(stored);if(JSON.stringify([...attempt.variants].sort())!==JSON.stringify([...variants].sort()))throw new Error('Je eerdere poging gebruikt andere maten. Rond die poging eerst af of laat hem controleren.')}else{attempt={id:crypto.randomUUID(),variants};sessionStorage.setItem(key,JSON.stringify(attempt))}
+   const variants=models.map(m=>selected[m.model])
+   const attempt=await withSampleAttemptLock(()=>reserveSampleAttempt(localStorage,sessionStorage,variants,()=>crypto.randomUUID()))
    const session=await fetch('/api/shopify/session',{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(15000)});if(!session.ok)throw new Error('De veilige afrekensessie kon niet worden gestart.')
    const response=await fetch('/api/admin/shopify/samples',{method:'POST',signal:AbortSignal.timeout(45000),headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({attemptId:attempt.id,variants:attempt.variants,acknowledgedCosts:true})})
-   const data=await response.json();if(!response.ok){setRetrySafe(data.retrySafe===true);throw new Error(data.error||'Afrekenen is nog niet beschikbaar.')}
+   const data=await response.json();if(!response.ok){setRetrySafe(data.retrySafe===true);setRejectedId(data.retrySafe===true?attempt.id:null);throw new Error(data.error||'Afrekenen is nog niet beschikbaar.')}
    if(typeof data.checkoutUrl!=='string')throw new Error('Geen bevestigde afrekenlink ontvangen. Gebruik dezelfde poging.')
    window.location.assign(data.checkoutUrl)
   }catch(e){setError(e instanceof Error && ['TimeoutError','AbortError'].includes(e.name)?'Geen bevestiging ontvangen. Je poging blijft bewaard; probeer dezelfde poging opnieuw.':e instanceof Error?e.message:'Afrekenen is nog niet beschikbaar.')}finally{setBusy(false)}
@@ -28,7 +27,7 @@ export default function SampleForm(){
   <label className="flex gap-3 items-start text-sm"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)} disabled={busy} className="mt-1"/><span>Ik begrijp dat dit een betaalde proefbestelling is, dat Tapstitch apart betaald moet worden en dat de kortingscode alleen daar geldt.</span></label>
   {error&&<p role="alert" className="border-2 border-red-700 p-4 text-red-800">{error}</p>}
   <button className="bg-black text-white px-6 py-4 font-bold disabled:opacity-40" disabled={!ready||busy||!ack||models.length!==8||models.some(m=>!selected[m.model])} onClick={checkout}>{busy?'Winkelmand wordt veilig gecontroleerd…':'Controleer en ga naar Shopify'}</button>
-  {retrySafe&&<button className="block underline" onClick={()=>{sessionStorage.removeItem(key);setRetrySafe(false);setError('De vorige poging is zonder winkelmand geweigerd. Je kunt veilig opnieuw proberen.')}}>Nieuwe poging na bevestigde weigering</button>}
+  {retrySafe&&<button className="block underline" onClick={async()=>{try{await withSampleAttemptLock(()=>{const prior=readSampleAttempt(localStorage,sessionStorage);if(prior?.id!==rejectedId)throw new Error('De bewaarde poging is gewijzigd. Vernieuw de pagina.');localStorage.removeItem(key)});setRetrySafe(false);setRejectedId(null);setError('De vorige poging is zonder winkelmand geweigerd. Je kunt veilig opnieuw proberen.')}catch(e){setError(e instanceof Error?e.message:'De poging kon niet worden gecontroleerd.')}}}>Nieuwe poging na bevestigde weigering</button>}
   <p className="text-xs text-gray-600">Bij een onderbroken aanvraag blijft dezelfde poging bewaard. Een onbekende uitkomst wordt eerst gecontroleerd om dubbele bestellingen te voorkomen.</p>
  </main>
 }

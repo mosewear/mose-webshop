@@ -55,6 +55,19 @@ describe('complete-catalog Shopify release audit', () => {
     expect(attachReleaseAudit(oldReadiness, result).status).toBe('blocked')
     expect(status(auditShopifyRelease(catalog), 'giftBalanceMigration')).toBe('unknown')
   })
+  it.each(['verified', 'missing', 'unknown'] as const)('uses measured loyalty runtime evidence: %s', runtimeStatus => {
+    const result = auditShopifyRelease(catalog, { ...obligations, loyaltyAccounts: 54, activePromotions: 22, activeQuantityTiers: 3 }, { loyaltyRuntime: runtimeStatus })
+    expect(status(result, 'loyaltyLedger')).toBe(runtimeStatus)
+    // A working ledger cannot prove checkout discount equivalence or remove gift obligations.
+    expect(status(result, 'promoParity')).toBe('unknown')
+    expect(status(result, 'quantityParity')).toBe('unknown')
+  })
+  it('does not let healthy runtime mask unavailable obligation counts or unsupported gift balances', () => {
+    const result = auditShopifyRelease(catalog, { ...obligations, loyaltyAccounts: null, giftCardsWithBalance: 1, scheduledGiftCards: 1 }, { loyaltyRuntime: 'verified' })
+    expect(status(result, 'loyaltyLedger')).toBe('unknown')
+    expect(status(result, 'giftBalanceMigration')).toBe('missing')
+    expect(status(result, 'giftDeliveryOwner')).toBe('missing')
+  })
   it('rejects digital variants on the server even if a mapping is manually enabled', () => {
     expect(() => authorizeLines({ locale: 'nl', country: 'NL', attemptId: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', lines: [{ variantId: 'v1', quantity: 1 }] }, [{ ...mapping, fulfillment_owner: 'digital' }])).toThrow('VARIANT_NOT_RELEASED')
   })

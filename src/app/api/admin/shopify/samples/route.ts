@@ -43,6 +43,7 @@ export async function POST(request:NextRequest){
  if(!buyerIp || !isIP(buyerIp))return reply({error:'Veilige kopersessie ontbreekt.'},503)
  const db=createServiceClient(),lease=randomUUID()
  let reserved=false
+ let providerCartId:string|null=null
  try{
   const state=await db.from('shopify_integration_state').select('app_installed').eq('id',1).single()
   if(state.error || state.data?.app_installed!==true)return reply({error:'Shopify-koppeling is nog niet gecontroleerd.',code:'SAMPLE_NOT_READY'},503)
@@ -60,6 +61,9 @@ export async function POST(request:NextRequest){
   if(owner.error)throw new Error('ACCOUNT_LINK_UNAVAILABLE')
   const created=await storefront<Created>(CART_CREATE,{country:'NL',language:'NL',input:{buyerIdentity:{countryCode:'NL'},lines:lines.map(l=>({merchandiseId:l.merchandiseId,quantity:1})),attributes:[{key:'mose_source',value:'unified-checkout'},{key:'mose_order_kind',value:'admin-sample'},{key:'mose_attempt',value:input.attemptId},{key:'mose_account_proof',value:proof}]}},buyerIp)
   const {cart,userErrors,warnings}=created.cartCreate
+  // Keep provider evidence even when price, benefits or URL validation fails.
+  // The recovery identifier stays server-side; an unchecked URL is never saved.
+  providerCartId=typeof cart?.id==='string' && cart.id.startsWith('gid://shopify/Cart/')?cart.id:null
   if(!cart && userErrors.length){const saved=await db.rpc('finish_shopify_checkout',{p_id:input.attemptId,p_lease:lease,p_status:'failed',p_error:'SAMPLE_CART_REJECTED'});if(saved.error||saved.data!==true)throw new Error('SAVE_FAILED');return reply({error:'Shopify heeft de samplewinkelmand geweigerd.',code:'ATTEMPT_FAILED',retrySafe:true},409)}
   if(!cart || userErrors.length || warnings.length || cart.totalQuantity!==8 || cart.lines.nodes.length!==8 || cart.cost.subtotalAmount.currencyCode!=='EUR' || moneyToCents(cart.cost.subtotalAmount.amount)!==lines.reduce((s,l)=>s+l.expectedPriceCents,0) || lines.some(l=>!cart.lines.nodes.some(n=>n.merchandise.id===l.merchandiseId && n.quantity===1)))throw new Error('SAMPLE_CART_MISMATCH')
   // Shopify subtotal precedes order-level discounts. Inspect every actual
@@ -72,7 +76,7 @@ export async function POST(request:NextRequest){
   if(saved.error||saved.data!==true)throw new Error('SAVE_FAILED')
   return reply({checkoutUrl,attemptId:input.attemptId})
  }catch{
-  if(reserved){try{await db.rpc('finish_shopify_checkout',{p_id:input.attemptId,p_lease:lease,p_status:'unknown',p_error:'SAMPLE_OUTCOME_UNKNOWN'})}catch{/* uncertain cart must never be recreated */}}
+  if(reserved){try{await db.rpc('finish_shopify_checkout',{p_id:input.attemptId,p_lease:lease,p_status:'unknown',p_cart_id:providerCartId,p_error:'SAMPLE_OUTCOME_UNKNOWN'})}catch{/* uncertain cart must never be recreated */}}
   return reply({error:reserved?'Uitkomst nog onbekend. Gebruik dezelfde poging; maak geen tweede bestelling.':'Samplebestelling nog niet beschikbaar.',code:reserved?'ATTEMPT_PENDING':'SAMPLE_NOT_READY'},503)
  }
 }

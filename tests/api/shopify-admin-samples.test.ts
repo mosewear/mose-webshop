@@ -36,4 +36,38 @@ describe('private eight-model sample order',()=>{
   const r=await POST(req());expect(r.status).toBe(503);expect(await r.json()).not.toHaveProperty('checkoutUrl');expect(m.rpc).toHaveBeenLastCalledWith('finish_shopify_checkout',expect.objectContaining({p_status:'unknown'}))
  })
 
+ it.each(['unsafe-url','wrong-price','benefits-unavailable'])('retains provider cart evidence for recovery after %s without exposing its URL',async(failure)=>{
+  const original=m.storefront.getMockImplementation()!
+  m.storefront.mockImplementation(async(query:string,...args:unknown[])=>{
+   if(failure==='benefits-unavailable' && query.includes('MoseBenefitsCart'))throw new Error('network interrupted')
+   const result=await original(query,...args)
+   if(result.cartCreate?.cart){
+    if(failure==='unsafe-url')result.cartCreate.cart.checkoutUrl='https://untrusted.example/checkout'
+    if(failure==='wrong-price')result.cartCreate.cart.cost.subtotalAmount.amount='1.00'
+   }
+   return result
+  })
+  const response=await POST(req())
+  expect(response.status).toBe(503)
+  const body=await response.json()
+  expect(body.code).toBe('ATTEMPT_PENDING')
+  expect(body).not.toHaveProperty('checkoutUrl')
+  expect(body).not.toHaveProperty('cartId')
+  expect(body).not.toHaveProperty('retrySafe',true)
+  const final=m.rpc.mock.calls.at(-1)!
+  expect(final[0]).toBe('finish_shopify_checkout')
+  expect(final[1]).toEqual(expect.objectContaining({p_status:'unknown',p_cart_id:'gid://shopify/Cart/1'}))
+  expect(final[1]).not.toHaveProperty('p_checkout_url')
+ })
+ it('keeps an interrupted cart creation unknown without inventing a provider identifier',async()=>{
+  const original=m.storefront.getMockImplementation()!
+  m.storefront.mockImplementation(async(query:string,...args:unknown[])=>{
+   if(!query.includes('MoseSampleVariants'))throw new Error('network interrupted')
+   return original(query,...args)
+  })
+  const response=await POST(req())
+  expect(response.status).toBe(503)
+  expect(m.rpc).toHaveBeenLastCalledWith('finish_shopify_checkout',expect.objectContaining({p_status:'unknown',p_cart_id:null}))
+ })
+
 })
