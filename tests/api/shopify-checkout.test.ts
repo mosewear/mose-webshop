@@ -270,7 +270,7 @@ describe('native gift mixed checkout contract',()=>{
  function reflectNativeCart(){
   let cartLines:{quantity:number;merchandise:{id:string};attributes:{key:string;value:string}[];discountAllocations:never[];cost:{amountPerQuantity:{amount:string;currencyCode:string};subtotalAmount:{amount:string;currencyCode:string}}}[]=[]
   mock.storefront.mockReset().mockImplementation(async(query:string,variables:Record<string,unknown>)=>{
-   if(query.includes('MoseVariants'))return {nodes:(variables.ids as string[]).map(id=>({id,availableForSale:true,quantityAvailable:id===gid?5:null,price:{amount:id===gid?'69.95':'20.01',currencyCode:'EUR'}}))}
+   if(query.includes('MoseVariants'))return {nodes:(variables.ids as string[]).map(id=>({id,availableForSale:true,quantityAvailable:id===gid?5:0,price:{amount:id===gid?'69.95':'20.01',currencyCode:'EUR'}}))}
    if(query.includes('MoseCart(')){
     const input=variables.input as {lines:{merchandiseId:string;quantity:number;attributes?:{key:string;value:string}[]}[]}
     cartLines=input.lines.map(line=>{const amount=line.merchandiseId===gid?6995:2001;return {quantity:line.quantity,merchandise:{id:line.merchandiseId},attributes:line.attributes??[],discountAllocations:[],cost:{amountPerQuantity:{amount:(amount/100).toFixed(2),currencyCode:'EUR'},subtotalAmount:{amount:(amount*line.quantity/100).toFixed(2),currencyCode:'EUR'}}}})
@@ -309,5 +309,22 @@ describe('native gift mixed checkout contract',()=>{
   expect(await response.json()).toMatchObject({code:'NATIVE_GIFT_NOT_READY'})
   expect(mock.storefront).not.toHaveBeenCalled()
   expect(mock.issueBenefits).not.toHaveBeenCalled()
+ })
+ it.each(['physical-stock','gift-disabled','gift-price'] as const)('still rejects changed availability or price: %s',async(reason)=>{
+  reflectNativeCart()
+  const base=mock.storefront.getMockImplementation()!
+  mock.storefront.mockImplementation(async(query,variables,...rest)=>{
+   const result=await base(query,variables,...rest)
+   if(query.includes('MoseVariants'))for(const node of result.nodes){
+    if(reason==='physical-stock'&&node.id===gid)node.quantityAvailable=0
+    if(reason==='gift-disabled'&&node.id!==gid)node.availableForSale=false
+    if(reason==='gift-price'&&node.id!==gid)node.price.amount='20.02'
+   }
+   return result
+  })
+  const response=await POST(request({...body,giftCards:[gift]}))
+  expect(response.status).toBe(409)
+  expect(await response.json()).toMatchObject({code:'CART_CHANGED'})
+  expect(mock.storefront.mock.calls.some(([query])=>query.includes('MoseCart('))).toBe(false)
  })
 })
