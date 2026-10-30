@@ -11,7 +11,7 @@ const fixture = () => ({
   id: expected.orderId, updatedAt: expected.sourceUpdatedAt, currencyCode: 'EUR', presentmentCurrencyCode: 'EUR', test: false,
   displayFinancialStatus: 'PAID', totalPriceSet: bag('10.99'), totalReceivedSet: bag('10.99'), totalRefundedSet: bag('0'), totalOutstandingSet: bag('0'),
   transactionsCount: { count: 1, precision: 'EXACT' },
-  transactions: [{ id: 'gid://shopify/OrderTransaction/1', kind: 'SALE', status: 'SUCCESS', test: false, gateway: 'shopify_payments', manualPaymentGateway: false, amountSet: bag('10.99') }],
+  transactions: [{ id: 'gid://shopify/OrderTransaction/1', kind: 'SALE', status: 'SUCCESS', test: false, gateway: 'shopify_payments', parentTransaction: null as { id: string } | null, manualPaymentGateway: false, amountSet: bag('10.99') }],
   discountApplications: { nodes: [{ __typename: 'DiscountCodeApplication', index: 0, code }], pageInfo: { hasNextPage: false } },
   lineItems: { nodes: [{ id: 'gid://shopify/LineItem/1', discountAllocations: [{ allocatedAmountSet: bag('5.00'), discountApplication: { index: 0 } }] }], pageInfo: { hasNextPage: false } },
   shippingLines: { nodes: [], pageInfo: { hasNextPage: false } },
@@ -28,7 +28,7 @@ describe('authoritative Shopify loyalty payment adapter', () => {
   })
   it('sums partial cash refunds and uses cumulative proportional redemption restoration', () => {
     const order = fixture(); order.displayFinancialStatus = 'PARTIALLY_REFUNDED'; order.totalRefundedSet = bag('1.20')
-    order.transactions.push({ ...order.transactions[0], id: 'gid://shopify/OrderTransaction/2', kind: 'REFUND', amountSet: bag('0.60') }, { ...order.transactions[0], id: 'gid://shopify/OrderTransaction/3', kind: 'REFUND', amountSet: bag('0.60') })
+    order.transactions.push({ ...order.transactions[0], id: 'gid://shopify/OrderTransaction/2', kind: 'REFUND', parentTransaction: { id: 'gid://shopify/OrderTransaction/1' }, amountSet: bag('0.60') }, { ...order.transactions[0], id: 'gid://shopify/OrderTransaction/3', kind: 'REFUND', parentTransaction: { id: 'gid://shopify/OrderTransaction/1' }, amountSet: bag('0.60') })
     order.transactionsCount.count = 3
     expect(paymentToLoyaltySettlement(order, { ...expected, redemption: binding })).toMatchObject({ eligiblePaidCents: 1099, eligibleRefundedCents: 120, redemptionRestoredPoints: 10 })
     order.displayFinancialStatus = 'REFUNDED'; order.totalRefundedSet = bag('10.99'); order.transactions[2].amountSet = bag('10.39')
@@ -55,7 +55,7 @@ describe('authoritative Shopify loyalty payment adapter', () => {
     const order = fixture(); mutate(order)
     expect(() => paymentToLoyaltySettlement(order, expected)).toThrow('LOYALTY_PAYMENT_UNSUPPORTED')
   })
-  it.each(['gift_card', 'store_credit', 'bogus'])('rejects unsupported tender %s', gateway => {
+  it.each(['lookalike_gift_card', 'store_credit', 'bogus'])('rejects unsupported tender %s', gateway => {
     const order = fixture(); order.transactions[0].gateway = gateway
     expect(() => paymentToLoyaltySettlement(order, expected)).toThrow('LOYALTY_TENDER_UNSUPPORTED')
   })
@@ -87,3 +87,59 @@ describe('authoritative Shopify loyalty payment adapter', () => {
   expect(paymentToLoyaltySettlement(order,expected).eligiblePaidCents).toBe(1099)
   expect(()=>paymentToLoyaltySettlement({...order,currentTotalPriceSet:bag('11.00')},expected)).toThrow('LOYALTY_PAYMENT_TOTAL_MISMATCH')
  })
+
+
+const withGiftTender = () => {
+  const order = fixture()
+  order.totalPriceSet = bag('15.99')
+  order.totalReceivedSet = bag('15.99')
+  order.transactions.push({ ...order.transactions[0], id: 'gid://shopify/OrderTransaction/2', gateway: 'gift_card', amountSet: bag('5.00') })
+  order.transactionsCount.count = 2
+  return order
+}
+it('proves all tenders while earning only on the external cash portion of gift-card redemption', () => {
+  expect(paymentToLoyaltySettlement(withGiftTender(), expected)).toMatchObject({ eligiblePaidCents: 1099, eligibleRefundedCents: 0 })
+  const giftOnly = fixture()
+  giftOnly.transactions[0].gateway = 'gift_card'
+  expect(paymentToLoyaltySettlement(giftOnly, expected)).toMatchObject({ eligiblePaidCents: 0, eligibleRefundedCents: 0 })
+  const inconsistent = withGiftTender()
+  inconsistent.totalReceivedSet = bag('10.99')
+  expect(() => paymentToLoyaltySettlement(inconsistent, expected)).toThrow('LOYALTY_PAYMENT_TOTAL_MISMATCH')
+})
+it('separates cash and gift-card refund reversals, but restores the loyalty discount across all refunded tender', () => {
+  const order = withGiftTender()
+  order.displayFinancialStatus = 'PARTIALLY_REFUNDED'
+  order.totalRefundedSet = bag('3.99')
+  order.transactions.push(
+    { ...order.transactions[0], id: 'gid://shopify/OrderTransaction/3', kind: 'REFUND', parentTransaction: { id: order.transactions[0].id }, amountSet: bag('1.99') },
+    { ...order.transactions[1], id: 'gid://shopify/OrderTransaction/4', kind: 'REFUND', parentTransaction: { id: order.transactions[1].id }, amountSet: bag('2.00') },
+  )
+  order.transactionsCount.count = 4
+  expect(paymentToLoyaltySettlement(order, { ...expected, redemption: binding })).toMatchObject({ eligiblePaidCents: 1099, eligibleRefundedCents: 199, redemptionRestoredPoints: 24 })
+  order.displayFinancialStatus = 'REFUNDED'
+  order.totalRefundedSet = bag('15.99')
+  order.transactions[2].amountSet = bag('10.99')
+  order.transactions[3].amountSet = bag('5.00')
+  expect(paymentToLoyaltySettlement(order, { ...expected, redemption: binding })).toMatchObject({ eligiblePaidCents: 1099, eligibleRefundedCents: 1099, redemptionRestoredPoints: 100 })
+})
+it('refuses unbound refunds, wrong tender parents and cumulative refunds beyond their original payment', () => {
+  const order = withGiftTender()
+  order.displayFinancialStatus = 'PARTIALLY_REFUNDED'
+  order.totalRefundedSet = bag('5.01')
+  order.transactions.push({ ...order.transactions[1], id: 'gid://shopify/OrderTransaction/3', kind: 'REFUND', parentTransaction: null, amountSet: bag('5.01') })
+  order.transactionsCount.count = 3
+  expect(() => paymentToLoyaltySettlement(order, expected)).toThrow('LOYALTY_REFUND_TENDER_UNVERIFIED')
+  order.transactions[2].parentTransaction = { id: order.transactions[0].id }
+  expect(() => paymentToLoyaltySettlement(order, expected)).toThrow('LOYALTY_REFUND_TENDER_UNVERIFIED')
+  order.transactions[2].parentTransaction = { id: order.transactions[1].id }
+  expect(() => paymentToLoyaltySettlement(order, expected)).toThrow('LOYALTY_REFUND_EXCEEDS_PARENT')
+})
+it('restores redeemed loyalty points on an all-gift-tender refund without manufacturing earned cash points', () => {
+  const order = fixture()
+  order.transactions[0].gateway = 'gift_card'
+  order.displayFinancialStatus = 'REFUNDED'
+  order.totalRefundedSet = bag('10.99')
+  order.transactions.push({ ...order.transactions[0], id: 'gid://shopify/OrderTransaction/2', kind: 'REFUND', parentTransaction: { id: order.transactions[0].id } })
+  order.transactionsCount.count = 2
+  expect(paymentToLoyaltySettlement(order, { ...expected, redemption: binding })).toMatchObject({ eligiblePaidCents: 0, eligibleRefundedCents: 0, redemptionRestoredPoints: 100 })
+})

@@ -34,6 +34,12 @@ const ALLOWED_EVENTS = new Set<string>([
   'purchase',
   'chat_opened',
   'chat_closed',
+  'catalog_results',
+  'catalog_filter_change',
+  'catalog_search_results',
+  'catalog_product_impression',
+  'catalog_product_click',
+  'catalog_web_vital',
 ])
 
 // Module-level bucket. In-memory is fine here: if a Lambda recycles we just

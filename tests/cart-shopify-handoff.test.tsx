@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { CartItem } from '@/store/cart'
+import { SHOPIFY_ATTEMPT_STORAGE_KEY, createShopifyCartSnapshot } from '@/lib/shopify-cart'
 import { ShopifyCheckoutHandoff } from '@/components/shopify/ShopifyCheckoutHandoff'
 
 const { state, clearCart } = vi.hoisted(() => ({ state: { items: [] as CartItem[] }, clearCart: vi.fn() }))
@@ -23,6 +24,8 @@ describe('Shopify handoff', () => {
     clearCart.mockClear()
     const storage = new Map<string, string>()
     vi.stubGlobal('sessionStorage', { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value) })
+    const local = new Map<string,string>()
+    vi.stubGlobal('localStorage', {getItem:(key:string)=>local.get(key)??null,setItem:(key:string,value:string)=>local.set(key,value)})
     vi.stubGlobal('crypto', { randomUUID: () => attemptId })
   })
   afterEach(() => { cleanup(); vi.unstubAllGlobals() })
@@ -44,6 +47,29 @@ describe('Shopify handoff', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Veilig verder naar betalen' }))
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))
     expect(JSON.parse(fetch.mock.calls[3][1].body).attemptId).toBe(attemptId)
+  })
+
+  it('carries an already applied cart promo into the server-authoritative Shopify checkout', async () => {
+    localStorage.setItem('mose_promo_code', ' saved-15 ')
+    localStorage.setItem('mose_promo_discount', '99999')
+    const fetch = vi.fn().mockImplementation((url:string) => Promise.resolve(url.endsWith('/session')
+      ? {ok:true,json:async()=>({ready:true})}
+      : {ok:false,status:503,json:async()=>({code:'CHECKOUT_UNAVAILABLE'})}))
+    vi.stubGlobal('fetch',fetch)
+    render(<ShopifyCheckoutHandoff />)
+    expect(screen.getByLabelText('Kortingscode')).toHaveValue('SAVED-15')
+    fireEvent.click(screen.getByRole('button',{name:'Veilig verder naar betalen'}))
+    await screen.findByRole('alert')
+    const body=JSON.parse(fetch.mock.calls[1][1].body)
+    expect(body.promoCode).toBe('SAVED-15')
+    expect(body).not.toHaveProperty('discountAmount')
+  })
+
+  it.each([undefined,'RETAINED-10'])('keeps the locked attempt promo %s authoritative over the saved cart code', (promoCode) => {
+    localStorage.setItem('mose_promo_code','OTHER-25')
+    sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, JSON.stringify({attemptId,locked:true,snapshot:JSON.stringify(createShopifyCartSnapshot(state.items,'nl',{promoCode}))}))
+    render(<ShopifyCheckoutHandoff />)
+    expect(screen.getByLabelText('Kortingscode')).toHaveValue(promoCode??'')
   })
 
   it('ignores double submission and refuses a stale response when another tab changes the bag', async () => {
@@ -81,8 +107,8 @@ describe('Shopify handoff', () => {
     const fetch = vi.fn()
     vi.stubGlobal('fetch', fetch)
     render(<ShopifyCheckoutHandoff />)
-    expect(screen.getByRole('button', { name: 'Veilig verder naar betalen' })).toBeDisabled()
-    expect(screen.getByText(/Afrekenen met cadeaubonnen is via deze route nog niet beschikbaar/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Veilig verder naar betalen' })).toBeEnabled()
+    expect(screen.getByText(/Je cadeaubon wordt per e-mail geleverd/)).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
     expect(state.items).toHaveLength(3)
   })

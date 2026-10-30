@@ -9,7 +9,6 @@ import type { LookbookGlobalSettings } from '@/lib/lookbook-data'
 import LookbookChapter from './LookbookChapter'
 import LookbookStamp from './LookbookStamp'
 import { MotionFadeIn, MotionStaggerItem } from './motion'
-import PaginaKop from '@/components/layout/PaginaKop'
 
 interface LookbookClientProps {
   settings: LookbookGlobalSettings | null
@@ -35,17 +34,6 @@ export default function LookbookClient({
   collection,
 }: LookbookClientProps) {
   const t = useTranslations('lookbook')
-
-  const headerTitle = pickLocalized(
-    settings?.header_title ?? 'THE LOOKBOOK',
-    settings?.header_title_en ?? null,
-    locale,
-  )
-  const headerSubtitle = pickLocalized(
-    settings?.header_subtitle ?? '',
-    settings?.header_subtitle_en ?? null,
-    locale,
-  )
 
   // Use the brand stamp if no editorial stamp has been configured.
   const stampLeft = pickLocalized(
@@ -82,8 +70,10 @@ export default function LookbookClient({
     // the fixed announcement banner + header. Only the homepage opts
     // out of that rule because its hero intentionally sits behind it.
     <div className="min-h-screen bg-white">
-      {/* HEADER: zelfde kop als de shop (PaginaKop). */}
-      <PaginaKop titel={headerTitle} ondertitel={headerSubtitle || undefined} />
+      <header className="mx-auto max-w-[1440px] px-4 py-4 md:px-8 md:py-6">
+        <h1 className="font-display text-3xl uppercase leading-none md:text-5xl">{t('collection.heading')}</h1>
+        <p className="mt-2 text-sm text-gray-600">{t('collection.shortIntro')}</p>
+      </header>
 
       {collection}
 
@@ -96,7 +86,7 @@ export default function LookbookClient({
       )}
 
       {/* EMPTY STATE -------------------------------------------------- */}
-      {chapters.length === 0 ? (
+      {chapters.length === 0 && !collection ? (
         <div className="max-w-3xl mx-auto p-10 md:p-16 text-center border-b-2 border-black">
           <p className="text-lg font-bold uppercase tracking-wider text-gray-700 mb-2">
             {t('emptyState.title')}

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
@@ -20,8 +20,11 @@ import {
 } from '@/lib/product-display'
 import {
   availableVariant,
+  catalogVariants,
+  emptyCatalogFilters,
+  type CatalogFilters,
   colorKey,
-  productPrice,
+  productPriceRange,
   type CatalogProduct,
 } from '@/lib/catalog-filters'
 
@@ -30,10 +33,20 @@ export default function CatalogProductCard({
   tile,
   priority = false,
   showCategoryLabels = true,
+  index,
+  onProductClick,
+  allowedColors,
+  filters = emptyCatalogFilters,
+  imageSizes,
 }: {
   tile: ShopTile<CatalogProduct>
   priority?: boolean
   showCategoryLabels?: boolean
+  allowedColors?: string[]
+  filters?: CatalogFilters
+  imageSizes?: string
+  index?: number
+  onProductClick?: (tile: ShopTile<CatalogProduct>) => void
 }) {
   const locale = useLocale(),
     t = useTranslations('shop.catalog'),
@@ -46,50 +59,58 @@ export default function CatalogProductCard({
     name = locale === 'en' ? p.name_en || p.name : p.name,
     title = name.replace(/^MOSE\s+/i, ''),
     saved = isInWishlist(p.id)
-  const image = getImageForColor(p.images, tile.color),
-    second = getHoverImageForColor(p.images, tile.color, image)
-  const inStock =
-    p.is_gift_card ||
-    (p.variants ?? []).some(
-      (v) =>
-        availableVariant(v) &&
-        (!tile.color || colorKey(v.color ?? '') === colorKey(tile.color)),
-    )
-  const stock = getColorStock(p.variants, tile.color),
+  const [preferredColor, setSelectedColor] = useState(tile.color)
+  const selectedColor = preferredColor && (!allowedColors || allowedColors.includes(colorKey(preferredColor))) ? preferredColor : tile.color
+  const [feedback, setFeedback] = useState('')
+  const image = getImageForColor(p.images, selectedColor),
+    second = getHoverImageForColor(p.images, selectedColor, image)
+  useEffect(() => {
+    setFailed(false)
+  }, [image])
+  const matchingVariants = catalogVariants(p, filters, selectedColor)
+  const inStock = p.is_gift_card || matchingVariants.some(variant => availableVariant(variant))
+  const stock = getColorStock(matchingVariants.filter(v => v.is_available === true), selectedColor),
     colors = getUniqueColors(p.variants),
-    price = productPrice(p),
-    sale = p.sale_price !== null && p.sale_price < p.base_price
-  const href = buildPdpHref(p.slug, tile.color),
+    priceRange = productPriceRange(p, selectedColor, filters),
+    price = priceRange.min,
+    originalPrice = p.base_price + price - (p.sale_price ?? p.base_price),
+    sale = p.sale_price !== null && price < originalPrice
+  const href = buildPdpHref(p.slug, selectedColor),
     category =
       locale === 'en'
         ? p.category?.name_en || p.category?.name
         : p.category?.name
   return (
     <article
-      className="group flex h-full min-w-0 flex-col overflow-hidden border-2 border-black bg-white transition-all duration-300 md:hover:-translate-y-2 motion-reduce:transform-none motion-reduce:transition-none"
-      onPointerEnter={() => setHover(true)}
+      data-catalog-index={index}
+      data-catalog-color={selectedColor ?? ''}
+      data-catalog-product-id={p.id}
+      className="group relative flex h-full min-w-0 flex-col overflow-hidden border-2 border-black bg-white transition-all duration-300 md:hover:-translate-y-2 motion-reduce:transform-none motion-reduce:transition-none"
+      onPointerEnter={(event) => { if (event.pointerType !== 'touch') setHover(true) }}
       onPointerLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
+      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHover(false) }}
     >
       <div className="relative aspect-[3/4.2] flex-shrink-0 overflow-hidden bg-gray-100 md:aspect-[3/4]">
         <Link
           href={href}
+          onClick={() => onProductClick?.({ ...tile, color: selectedColor })}
           className="absolute inset-0 block focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand-primary"
           aria-label={
-            tile.color
-              ? `${name}, ${formatColorLabel(tile.color, locale)}`
+            selectedColor
+              ? `${name}, ${formatColorLabel(selectedColor, locale)}`
               : name
           }
         >
           <Image
             src={failed ? '/placeholder-product.svg' : image}
             alt={
-              tile.color
-                ? `${name}, ${formatColorLabel(tile.color, locale)}`
+              selectedColor
+                ? `${name}, ${formatColorLabel(selectedColor, locale)}`
                 : name
             }
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 420px"
+            sizes={imageSizes ?? "(max-width: 767px) calc((100vw - 48px) / 2), (max-width: 1023px) calc((100vw - 56px) / 2), (max-width: 1279px) calc((100vw - 368px) / 3), 304px"}
             quality={90}
             priority={priority}
             className="object-cover object-center"
@@ -103,7 +124,7 @@ export default function CatalogProductCard({
               alt=""
               aria-hidden="true"
               fill
-              sizes="(max-width: 1280px) 33vw, 420px"
+              sizes={imageSizes ?? "(max-width: 1023px) calc((100vw - 56px) / 2), (max-width: 1279px) calc((100vw - 368px) / 3), 304px"}
               quality={90}
               className="hidden object-cover object-center md:block"
             />
@@ -113,7 +134,7 @@ export default function CatalogProductCard({
         <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col items-start gap-2 md:left-4 md:top-4">
           {sale && (
             <span className="border-2 border-black bg-black px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-              -{Math.round((1 - price / p.base_price) * 100)}%
+              -{Math.round((1 - price / originalPrice) * 100)}%
             </span>
           )}
         </div>
@@ -151,8 +172,9 @@ export default function CatalogProductCard({
           onClick={async () => {
             setSaving(true)
             try {
-              if (saved) await removeFromWishlist(p.id)
-              else await addToWishlist(p.id)
+              const notify = (message: string) => setFeedback(t(message))
+              if (saved) await removeFromWishlist(p.id, notify)
+              else await addToWishlist(p.id, notify)
             } finally {
               setSaving(false)
             }
@@ -171,51 +193,31 @@ export default function CatalogProductCard({
         <h3 className="mb-1 line-clamp-2 text-xs font-bold uppercase tracking-wide transition-colors group-hover:text-brand-primary md:mb-2 md:text-lg">
           <Link
             href={href}
-            className="focus-visible:outline-2 focus-visible:outline-brand-primary"
+          onClick={() => onProductClick?.({ ...tile, color: selectedColor })}
+            className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-brand-primary"
           >
             {title}
           </Link>
         </h3>
-        {tile.color ? (
-          <div className="mb-2 flex items-center gap-1.5">
-            <span
-              aria-hidden="true"
-              className="h-3 w-3 border-2 border-black md:h-4 md:w-4"
-              style={{ backgroundColor: tile.color_hex || '#000000' }}
-            />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-700 md:text-xs">
-              {formatColorLabel(tile.color, locale)}
-            </span>
-          </div>
-        ) : (
-          colors.length > 1 && (
-            <div
-              className="-ml-2 mb-2 flex flex-wrap items-center"
-              aria-label={t('colors')}
-            >
-              {colors.map((c) => (
-                <Link
-                  key={c.color}
-                  href={buildPdpHref(p.slug, c.color)}
-                  aria-label={`${name}, ${formatColorLabel(c.color, locale)}`}
-                  title={formatColorLabel(c.color, locale)}
-                  className="flex min-h-11 min-w-8 items-center justify-center focus-visible:outline-2 focus-visible:outline-brand-primary"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-3 w-3 border-2 border-black md:h-4 md:w-4"
-                    style={{ backgroundColor: c.color_hex || '#000000' }}
-                  />
-                </Link>
-              ))}
-              <span className="ml-1 text-[10px] font-bold uppercase tracking-wider text-gray-700 md:text-xs">
-                {shop('colorCount', { count: colors.length })}
-              </span>
+        {colors.length > 0 && (
+          <div className="mb-2">
+            <div className="-ml-2 flex flex-wrap" role="group" aria-label={t('colors')}>
+              {colors.map(c => <button
+                type="button" key={c.color}
+                aria-label={`${name}, ${formatColorLabel(c.color, locale)}`}
+                aria-pressed={selectedColor === c.color}
+                disabled={!!allowedColors && !allowedColors.includes(colorKey(c.color))}
+                title={formatColorLabel(c.color, locale)}
+                onClick={() => { setSelectedColor(c.color); setFailed(false); setHover(false) }}
+                className="relative z-10 flex min-h-11 min-w-11 items-center justify-center focus-visible:outline-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-35"
+              ><span aria-hidden="true" className={`h-3 w-3 border-2 border-black md:h-4 md:w-4 ${selectedColor === c.color ? 'outline outline-1 outline-offset-4 outline-black' : ''}`} style={{backgroundColor:c.color_hex || '#000000'}} /></button>)}
             </div>
-          )
+            {selectedColor && <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700 md:text-xs" aria-live="polite">{formatColorLabel(selectedColor, locale)}</p>}
+          </div>
         )}
+        {feedback && <p role="status" className="mb-2 text-xs text-gray-700">{feedback}</p>}
         <div className="mt-auto flex items-baseline gap-2 pt-1">
-          {p.is_gift_card && (
+          {(p.is_gift_card || priceRange.min !== priceRange.max) && (
             <span className="text-xs font-bold">{t('from')}</span>
           )}
           <span
@@ -225,7 +227,7 @@ export default function CatalogProductCard({
           </span>
           {sale && (
             <del className="text-xs text-gray-500 md:text-sm">
-              {formatPrice(p.base_price, locale)}
+              {formatPrice(originalPrice, locale)}
             </del>
           )}
         </div>

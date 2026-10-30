@@ -16,11 +16,15 @@ import { runtimeReadiness } from '@/lib/shopify/runtime-readiness'
 import { readCheckoutBenefitQuote, issueCheckoutBenefits } from '@/lib/shopify/checkout-benefits'
 import { recordDefinitiveNoCart } from '@/lib/shopify/benefit-recovery'
 import { BENEFITS_CART_QUERY, assertCartBenefits } from '@/lib/shopify/benefits'
+import { normalizeNativeGiftLines, nativeGiftRecipientAttributes, type NativeGiftLine } from '@/lib/shopify/native-gift-input'
+import { resolveNativeGiftVariant } from '@/lib/shopify/native-gift-catalog'
+import { assertNativeGiftCutover, nativeGiftRuntimeReadiness } from '@/lib/shopify/native-gift-cutover'
+import { assertCreatedCartLines, aggregateBenefitLines } from '@/lib/shopify/cart-line-proof'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
 type CreatedCart = { cartCreate: {
-  cart: null | { id: string; checkoutUrl: string; totalQuantity: number; cost: { subtotalAmount: { amount: string; currencyCode: string } }; lines: { nodes: { quantity: number; merchandise: { id: string } }[] } }
+  cart: null | { id: string; checkoutUrl: string; totalQuantity: number; cost: { subtotalAmount: { amount: string; currencyCode: string } }; lines: { nodes: { quantity: number; attributes?: { key: string; value: string }[]; merchandise: { id: string } }[] } }
   userErrors: unknown[]; warnings: unknown[]
 } }
 
@@ -87,34 +91,66 @@ export async function POST(request: NextRequest) {
     if (runtimeChecks.some(check => check.status !== 'verified')) {
       return respond({ error: 'Voorraad en klantvoordelen worden gecontroleerd. Je winkelmand blijft bewaard.', code: 'RUNTIME_NOT_READY' }, 503)
     }
-    const { data, error } = await db.from('shopify_variant_mappings').select('*').in('mose_variant_id', input.lines.map(l => l.variantId))
+    const { data, error } = input.lines.length ? await db.from('shopify_variant_mappings').select('*').in('mose_variant_id', input.lines.map(l => l.variantId)) : { data: [], error: null }
     if (error) throw new Error('MAPPING_UNAVAILABLE')
-    let lines: ReturnType<typeof authorizeLines>
+    let lines: (ReturnType<typeof authorizeLines>[number] & { gift?: NativeGiftLine; attributes?: { key: string; value: string }[] })[]
     try { lines = authorizeLines(input, data ?? []) } catch {
       return respond({ error: 'Een artikel is nog niet beschikbaar voor deze bestelroute.', code: 'VARIANT_NOT_RELEASED' }, 409)
     }
-    const inventory = await db.rpc('shopify_inventory_evidence', { p_ids: lines.map(line => line.localVariantId) })
+    const physicalLines = [...lines]
+    const inventory = physicalLines.length ? await db.rpc('shopify_inventory_evidence', { p_ids: physicalLines.map(line => line.localVariantId) }) : { data: [], error: null }
     try {
       if (inventory.error || !Array.isArray(inventory.data)) throw new Error('INVENTORY_UNAVAILABLE')
-      assertInventoryEvidence(lines, inventory.data, Date.now(), new Map<string, string>((data ?? []).map(mapping => [mapping.mose_variant_id, mapping.inventory_revision])))
+      assertInventoryEvidence(physicalLines, inventory.data, Date.now(), new Map<string, string>((data ?? []).map(mapping => [mapping.mose_variant_id, mapping.inventory_revision])))
     } catch {
       return respond({ error: 'Voorraad wordt gecontroleerd. Je winkelmand blijft bewaard.', code: 'INVENTORY_NOT_READY' }, 409)
     }
     // Read current local publication and price from the variant's database parent, never a client product ID.
-    const localVariants = await db.from('product_variants')
+    const localVariants = physicalLines.length ? await db.from('product_variants')
       .select('id,product_id,is_available,price_adjustment,presale_enabled,presale_stock_quantity')
-      .in('id', lines.map(line => line.localVariantId))
+      .in('id', physicalLines.map(line => line.localVariantId)) : { data: [], error: null }
     if (localVariants.error) throw new Error('LOCAL_CATALOG_UNAVAILABLE')
     const productIds = [...new Set((localVariants.data ?? []).map(variant => variant.product_id as string))]
-    if (!productIds.length) return respond({ error: 'Een artikel is niet meer beschikbaar. Controleer je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
-    const localProducts = await db.from('products').select('id,status,is_active,is_gift_card,base_price,sale_price').in('id', productIds)
+    if (!productIds.length && !input.giftCards?.length) return respond({ error: 'Een artikel is niet meer beschikbaar. Controleer je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
+    const localProducts = productIds.length ? await db.from('products').select('id,status,is_active,is_gift_card,base_price,sale_price').in('id', productIds) : { data: [], error: null }
     if (localProducts.error) throw new Error('LOCAL_CATALOG_UNAVAILABLE')
-    try { assertCurrentLocalCatalog(lines, localVariants.data ?? [], localProducts.data ?? [], data ?? []) } catch {
+    try { assertCurrentLocalCatalog(physicalLines, localVariants.data ?? [], localProducts.data ?? [], data ?? []) } catch {
       return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'LOCAL_CATALOG_CHANGED' }, 409)
     }
     // Vercel replaces this platform header. No arbitrary X-Forwarded-For fallback.
     const buyerIp = process.env.VERCEL === '1' ? request.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim() : process.env.SHOPIFY_DEV_BUYER_IP
     if (!buyerIp || !isIP(buyerIp)) throw new Error('BUYER_IP_UNAVAILABLE')
+    const rejectNativeGiftInput = async () => {
+      // A failed catalog preparation proves no NEW cart, but the supplied ID
+      // may already own an older payable cart. Fence it before permitting rotation.
+      const fingerprint = createHash('sha256').update(JSON.stringify({ domain: 'rejected-native-gift-input:v1', input, userId })).digest('hex')
+      const rejected = await db!.rpc('reserve_shopify_checkout', { p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'), p_fingerprint: fingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'), p_snapshot: { rejectedNativeGiftInput: true }, p_lease: lease })
+      const decision = rejected.error ? null : decideCheckoutAttempt(rejected.data?.[0], fingerprint, lease)
+      let retrySafe = decision?.kind === 'reject' && decision.retrySafe
+      if (decision?.kind === 'create') {
+        const failed = await db!.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'failed', p_error: 'NATIVE_GIFT_INPUT_UNAVAILABLE' })
+        retrySafe = !failed.error && failed.data === true
+      }
+      return respond({ error: 'Cadeaubonbedrag of ontvanger kan nu niet worden bevestigd. Je winkelmand blijft bewaard.', code: 'NATIVE_GIFT_NOT_READY', retrySafe: Boolean(retrySafe) }, 409)
+    }
+    const giftRuntime = await nativeGiftRuntimeReadiness(db, buyerIp)
+    if (giftRuntime.status !== 'verified') return rejectNativeGiftInput()
+    if (input.giftCards?.length) {
+      try {
+        const cutover = await assertNativeGiftCutover(db)
+        const gifts = normalizeNativeGiftLines(input.giftCards)
+        for (const [index, gift] of gifts.entries()) {
+          const resolved = await resolveNativeGiftVariant(db, { productId: gift.productId, amountCents: gift.amountCents, buyerIp })
+          if (!resolved.nativeGiftCard || resolved.amountCents !== gift.amountCents || !cutover.shopifyProductIds.includes(resolved.shopifyProductId)) throw new Error('NATIVE_GIFT_PRODUCT_NOT_BOUND')
+          const attributes = nativeGiftRecipientAttributes(gift, input.locale)
+          const proof = createHmac('sha256', secret).update(JSON.stringify({ domain: 'native-gift-line:v1', attempt: input.attemptId, index, gift, merchandise: resolved.shopifyVariantId })).digest('hex')
+          attributes.push({ key: '_mose_gift_proof', value: proof })
+          lines.push({ localVariantId: 'native-gift:' + index, merchandiseId: resolved.shopifyVariantId, quantity: gift.quantity, expectedPriceCents: gift.amountCents, gift, attributes })
+        }
+      } catch {
+        return rejectNativeGiftInput()
+      }
+    }
     const context = { country: 'NL', language: input.locale.toUpperCase() }
     const result = await storefront<{ nodes: (Variant | null)[] }>(VARIANTS_QUERY, { ...context, ids: lines.map(l => l.merchandiseId) }, buyerIp)
     for (const line of lines) {
@@ -125,13 +161,14 @@ export async function POST(request: NextRequest) {
         return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'CART_CHANGED' }, 409)
       }
     }
-    const benefitLines = lines.map(line => {
+    const benefitLines = aggregateBenefitLines(lines.map(line => {
+      if (line.gift) return { variantId: line.merchandiseId, quantity: line.quantity, unitCents: line.expectedPriceCents, productId: line.gift.productId, giftCard: true, onSale: false }
       const variant = localVariants.data!.find(v => v.id === line.localVariantId)!
       const product = localProducts.data!.find(p => p.id === variant.product_id)!
       return { variantId: line.merchandiseId, quantity: line.quantity, unitCents: line.expectedPriceCents,
         productId: product.id, giftCard: Boolean(product.is_gift_card),
         onSale: product.sale_price != null && Number(product.sale_price) > 0 && Number(product.sale_price) < Number(product.base_price) }
-    })
+    }))
     let preparedBenefits: Awaited<ReturnType<typeof readCheckoutBenefitQuote>>
     try {
       preparedBenefits = await readCheckoutBenefitQuote(db, { lines: benefitLines, promoCode: input.promoCode, points: input.loyaltyPoints, user: verifiedUser })
@@ -184,7 +221,7 @@ export async function POST(request: NextRequest) {
     const created = await storefront<CreatedCart>(CART_CREATE, {
       ...context, input: {
         buyerIdentity: { countryCode: 'NL', ...(verifiedUser?.email_confirmed_at && verifiedUser.email ? { email: verifiedUser.email } : {}) },
-        lines: lines.map(({ merchandiseId, quantity }) => ({ merchandiseId, quantity })),
+        lines: lines.map(({ merchandiseId, quantity, attributes: lineAttributes }) => ({ merchandiseId, quantity, ...(lineAttributes?.length ? { attributes: lineAttributes } : {}) })),
         ...(expectedBenefits.length ? { discountCodes: expectedBenefits.map(benefit => benefit.code) } : {}),
         attributes,
       },
@@ -200,8 +237,8 @@ export async function POST(request: NextRequest) {
       return respond({ error: 'Shopify kon deze winkelmand niet aanmaken. Controleer je artikelen en probeer opnieuw.', code: 'ATTEMPT_FAILED', retrySafe: true }, 409)
     }
     if (!cart || userErrors.length || warnings.length || cart.cost.subtotalAmount.currencyCode !== 'EUR' ||
-      cart.totalQuantity !== lines.reduce((n, l) => n + l.quantity, 0) || cart.lines.nodes.length !== lines.length ||
-      lines.some(l => !cart.lines.nodes.some(c => c.merchandise.id === l.merchandiseId && c.quantity === l.quantity))) throw new Error('CART_MISMATCH')
+      cart.totalQuantity !== lines.reduce((n, l) => n + l.quantity, 0)) throw new Error('CART_MISMATCH')
+    assertCreatedCartLines(cart.lines.nodes, lines)
     if (moneyToCents(cart.cost.subtotalAmount.amount) !== preparedBenefits.expectedSubtotalBeforeOrderCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
     const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: cart.id }, buyerIp)
     assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })

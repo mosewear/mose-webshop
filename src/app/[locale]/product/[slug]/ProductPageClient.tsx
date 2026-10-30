@@ -33,6 +33,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
 import { isTapstitchProduct } from '@/lib/tapstitch-products'
+import { availableVariant, isMadeToOrderAvailable, variantQuantityLimit, type VariantAvailability } from '@/lib/variant-availability'
 import { PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import GiftCardProductView from '@/components/product/GiftCardProductView'
@@ -109,7 +110,7 @@ interface ProductImage {
   model_size_worn?: string | null
 }
 
-interface ProductVariant {
+interface ProductVariant extends VariantAvailability {
   id: string
   size: string
   color: string
@@ -374,7 +375,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   const initialColorVariants = requestedColorParam
     ? initialVariants.filter(variant => variant.color?.toLowerCase() === requestedColorParam.toLowerCase())
     : initialVariants
-  const initialVariant = initialColorVariants.find(variant => variant.is_available && variant.stock_quantity + (variant.presale_stock_quantity || 0) > 0)
+  const initialVariant = initialColorVariants.find(variant => availableVariant(variant))
     ?? initialColorVariants.find(variant => variant.is_available) ?? initialColorVariants[0]
   const [selectedSize, setSelectedSize] = useState<string>(initialVariant?.size ?? '')
 
@@ -536,8 +537,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
     const sized =
       sameColor.find(
         (v) =>
-          v.is_available &&
-          v.stock_quantity + (v.presale_stock_quantity || 0) > 0,
+          availableVariant(v),
       ) || sameColor[0]
     if (sized) setSelectedSize(sized.size)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -642,8 +642,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       // fall back to "first available across the whole product".
       if (data.product_variants.length > 0) {
         const hasStock = (v: ProductVariant) =>
-          v.is_available &&
-          v.stock_quantity + (v.presale_stock_quantity || 0) > 0
+          availableVariant(v)
 
         let chosen: ProductVariant | undefined
         if (requestedColorParam) {
@@ -687,6 +686,9 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
             color_hex,
             sku,
             stock_quantity,
+            fulfillment_mode,
+            supplier_orderable,
+            supplier_checked_at,
             presale_stock_quantity,
             presale_enabled,
             presale_expected_date,
@@ -964,13 +966,14 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   }
 
   const handleAddToCart = async (herkomst: 'hoofdknop' | 'vaste_balk' = 'hoofdknop') => {
-    if (!product || !selectedVariant) return
+    if (!product || !selectedVariant || !availableVariant(selectedVariant)) return
 
     // Get first IMAGE (not video) for cart thumbnail
     const firstImage = displayImages.find(img => img.media_type === 'image')
     const cartImage = firstImage?.url || displayImages[0]?.url || '/placeholder-product.svg'
 
-    const isPresaleItem = selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity > 0
+    const madeToOrderItem = isMadeToOrderAvailable(selectedVariant)
+    const isPresaleItem = !madeToOrderItem && selectedVariant.stock_quantity <= 0 && selectedVariant.presale_enabled && selectedVariant.presale_stock_quantity > 0
     
     const cartItem = {
       productId: product.id,
@@ -981,10 +984,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       color: selectedVariant.color,
       colorHex: selectedVariant.color_hex,
       price: finalPrice,
-      quantity: quantity,
+      quantity: Math.min(quantity, variantQuantityLimit(selectedVariant)),
       image: cartImage,
       sku: selectedVariant.sku,
       stock: selectedVariant.stock_quantity,
+      isMadeToOrder: madeToOrderItem,
       // PRESALE INFO: Detect if item is from presale stock
       isPresale: isPresaleItem,
       presaleExpectedDate: selectedVariant.presale_enabled ? (selectedVariant.presale_expected_date ?? undefined) : undefined,
@@ -1208,11 +1212,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
     )
   }
 
-  const inStock = selectedVariant ? selectedVariant.stock_quantity > 0 : false
-  const lowStock = selectedVariant && selectedVariant.stock_quantity > 0 && selectedVariant.stock_quantity <= 5
-  const isPresale = selectedVariant && selectedVariant.presale_enabled && selectedVariant.stock_quantity === 0 && selectedVariant.presale_stock_quantity > 0
-  const totalStock = selectedVariant ? selectedVariant.stock_quantity + selectedVariant.presale_stock_quantity : 0
-  const hasAnyStock = totalStock > 0
+  const madeToOrder = selectedVariant ? isMadeToOrderAvailable(selectedVariant) : false
+  const inStock = selectedVariant ? !madeToOrder && availableVariant(selectedVariant) && selectedVariant.stock_quantity > 0 : false
+  const lowStock = inStock && selectedVariant!.stock_quantity <= 5
+  const isPresale = selectedVariant && !madeToOrder && selectedVariant.is_available && selectedVariant.presale_enabled && selectedVariant.stock_quantity === 0 && selectedVariant.presale_stock_quantity > 0
+  const hasAnyStock = selectedVariant ? availableVariant(selectedVariant) : false
 
   return (
     <>
@@ -1687,7 +1691,8 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
               </div>
 
               {/* AVAILABILITY & TRUST - Desktop */}
-              {selectedVariant && !isPresale && (
+              {madeToOrder && <p role="status" className="border-2 border-black px-4 py-3 text-sm font-bold uppercase tracking-wide">{locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'}</p>}
+              {selectedVariant && !isPresale && !madeToOrder && (
                 <div className="hidden md:block border-2 border-black">
                   <div className={`px-4 py-3 flex items-center justify-between ${
                     inStock 
@@ -1794,9 +1799,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                         const hasStockInColor = product.product_variants.some(
                           (v) => {
                             if (v.color !== color) return false
-                            const total =
-                              v.stock_quantity + (v.presale_stock_quantity || 0)
-                            return v.is_available && total > 0
+                            return availableVariant(v)
                           },
                         )
                         const colorAvailable = hasStockInColor
@@ -1817,18 +1820,13 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                           const currentSizeAvailableInNewColor =
                             product.product_variants.some((v) => {
                               if (v.color !== color || v.size !== selectedSize) return false
-                              const total =
-                                v.stock_quantity + (v.presale_stock_quantity || 0)
-                              return v.is_available && total > 0
+                              return availableVariant(v)
                             })
                           if (!currentSizeAvailableInNewColor) {
                             const fallbackSize = availableSizes.find((size) =>
                               product.product_variants.some((v) => {
                                 if (v.color !== color || v.size !== size) return false
-                                const total =
-                                  v.stock_quantity +
-                                  (v.presale_stock_quantity || 0)
-                                return v.is_available && total > 0
+                                return availableVariant(v)
                               }),
                             )
                             if (fallbackSize) {
@@ -1981,8 +1979,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     {availableSizes.map((size) => {
                       const sizeVariants = product.product_variants.filter((v) => v.size === size)
                       const sizeAvailable = sizeVariants.some((v) => {
-                        const totalStock = v.stock_quantity + (v.presale_stock_quantity || 0)
-                        return v.is_available && totalStock > 0
+                        return availableVariant(v)
                       })
                       return (
                         <button
@@ -2328,7 +2325,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {relatedProducts.map((relProd) => {
                   const primaryImage = relProd.product_images.find((img: ProductImage) => img.is_primary) || relProd.product_images[0]
-                  const hasStock = relProd.product_variants.some((v: ProductVariant) => v.stock_quantity > 0)
+                  const hasStock = relProd.product_variants.some((v: ProductVariant) => availableVariant(v))
                   
                   return (
                     <LocaleLink

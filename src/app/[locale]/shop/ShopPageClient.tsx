@@ -9,21 +9,22 @@ import {
   catalogDimensions,
   emptyCatalogFilters,
   filterCatalog,
+  catalogTiles,
   matchesCatalogProduct,
-  productPrice,
+  productPriceRange,
   type CatalogCategory,
   type CatalogFilters,
   type CatalogProduct,
   type CatalogSort,
 } from '@/lib/catalog-filters'
-import { expandToShopTiles, formatColorLabel } from '@/lib/product-display'
+import { formatColorLabel } from '@/lib/product-display'
 import { formatPrice } from '@/lib/format-price'
 import { useWishlist } from '@/store/wishlist'
 import { useCatalogFilters } from '@/components/shop/useCatalogFilters'
+import { useCatalogTracking } from '@/components/shop/useCatalogTracking'
 import CatalogProductCard from '@/components/shop/CatalogProductCard'
-import PaginaKop from '@/components/layout/PaginaKop'
 import RecentlyViewed from '@/components/RecentlyViewed'
-import CategorieKiezer from '@/components/shop/CategorieKiezer'
+import ShopCategoryNav from '@/components/shop/ShopCategoryNav'
 import DetailBlok from '@/components/shop/DetailBlok'
 import DualRangeSlider from '@/components/DualRangeSlider'
 import { getSiteSettings } from '@/lib/settings'
@@ -33,6 +34,7 @@ export type ShopProduct = CatalogProduct
 export type ShopCategory = CatalogCategory
 const fieldClass =
   'min-h-11 w-full border-2 border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-black transition-colors focus:border-brand-primary focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary'
+const categoryOrder = ['hoodies', 't-shirts', 'longsleeves', 'sweaters', 'broeken', 'cadeaubonnen']
 
 export default function ShopPageClient({
   initialProducts,
@@ -46,10 +48,18 @@ export default function ShopPageClient({
   const locale = useLocale(),
     t = useTranslations('shop.catalog'),
     page = useTranslations('shop')
-  const [products, setProducts] = useState(initialProducts ?? []),
-    [categories, setCategories] = useState(initialCategories ?? []),
-    [loading, setLoading] = useState(!initialProducts),
-    [error, setError] = useState('')
+  // Server props can change during an RSC refresh without remounting this
+  // component. Keep them authoritative; local state serves only the client
+  // fallback when no complete server catalog was supplied.
+  const [fallbackProducts, setFallbackProducts] = useState<CatalogProduct[]>([]),
+    [fallbackCategories, setFallbackCategories] = useState<CatalogCategory[]>([]),
+    [fallbackLoading, setFallbackLoading] = useState(true),
+    [fallbackError, setFallbackError] = useState('')
+  const products = initialProducts ?? fallbackProducts,
+    categories = initialCategories ?? fallbackCategories,
+    serverCatalog = initialProducts !== undefined && initialCategories !== undefined,
+    loading = !serverCatalog && fallbackLoading,
+    error = serverCatalog ? '' : fallbackError
   const [showCategoryLabels, setShowCategoryLabels] = useState(true)
   useEffect(() => {
     let stopped = false
@@ -71,7 +81,8 @@ export default function ShopPageClient({
     void loadWishlist()
   }, [loadWishlist])
   useEffect(() => {
-    if (initialProducts && initialCategories) return
+    if (serverCatalog) return
+    setFallbackLoading(true)
     let stopped = false
     const abort = new AbortController()
     async function load() {
@@ -94,14 +105,14 @@ export default function ShopPageClient({
         ])
         if (p.error || c.error) throw Error()
         if (!stopped) {
-          setProducts(p.data as CatalogProduct[])
-          setCategories(c.data)
-          setError('')
+          setFallbackProducts(p.data as CatalogProduct[])
+          setFallbackCategories(c.data)
+          setFallbackError('')
         }
       } catch {
-        if (!stopped) setError(t('loadError'))
+        if (!stopped) setFallbackError(t('loadError'))
       } finally {
-        if (!stopped) setLoading(false)
+        if (!stopped) setFallbackLoading(false)
       }
     }
     void load()
@@ -109,7 +120,7 @@ export default function ShopPageClient({
       stopped = true
       abort.abort()
     }
-  }, [initialProducts, initialCategories, t])
+  }, [serverCatalog, t])
   useEffect(() => {
     if (mobileOpen && !dialog.current?.open) dialog.current?.showModal()
     else if (!mobileOpen && dialog.current?.open) dialog.current?.close()
@@ -125,7 +136,13 @@ export default function ShopPageClient({
     () =>
       categories.filter((c) =>
         products.some((p) => p.category?.slug === c.slug),
-      ),
+      ).sort((a, b) => {
+        const rank = (slug: string) => {
+          const index = categoryOrder.indexOf(slug)
+          return index < 0 ? categoryOrder.length : index
+        }
+        return rank(a.slug) - rank(b.slug)
+      }),
     [categories, products],
   )
   useEffect(() => {
@@ -142,11 +159,10 @@ export default function ShopPageClient({
   )
   const tiles = useMemo(
     () =>
-      expandToShopTiles(filtered).filter((tile) =>
-        matchesCatalogProduct(tile.product, filters, tile.color),
-      ),
+      catalogTiles(filtered, filters),
     [filtered, filters],
   )
+  const { trackSelect } = useCatalogTracking({ tiles, filters, locale })
   useEffect(() => {
     if (!filters.q) return
     const timer = window.setTimeout(
@@ -169,14 +185,12 @@ export default function ShopPageClient({
     () =>
       products.length
         ? [
-            Math.floor(Math.min(...products.map(productPrice))),
-            Math.ceil(Math.max(...products.map(productPrice))),
+            Math.floor(Math.min(...products.map(p => productPriceRange(p).min))),
+            Math.ceil(Math.max(...products.map(p => productPriceRange(p).max))),
           ]
         : [0, 500],
     [products],
   )
-  const countCategory = (slug: string) =>
-    filterCatalog(products, { ...filters, category: slug }, locale).length
   const activeCount =
     (filters.category === 'all' ? 0 : 1) +
     (filters.q.trim() ? 1 : 0) +
@@ -199,28 +213,6 @@ export default function ShopPageClient({
     )
       update({ min: filters.max, max: filters.min }, 'replace')
   }
-  const categoryButtons = (
-    <fieldset>
-      <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
-        {t('category')}
-      </legend>
-      <div className="space-y-2">
-        {[{ id: 'all', slug: 'all', name: t('all') }, ...categoryChoices].map(
-          (c) => (
-            <button
-              type="button"
-              key={c.id}
-              aria-pressed={filters.category === c.slug}
-              onClick={() => update({ category: c.slug })}
-              className={`min-h-11 w-full border-2 px-4 py-2 text-left text-sm font-semibold uppercase tracking-wide transition-colors ${filters.category === c.slug ? 'border-brand-primary bg-brand-primary text-white' : 'border-gray-300 text-gray-700 hover:border-black'}`}
-            >
-              {name(c)} ({countCategory(c.slug)})
-            </button>
-          ),
-        )}
-      </div>
-    </fieldset>
-  )
   const searchField = (
     <label className="block">
       <span className="mb-3 block text-sm font-bold uppercase tracking-wide text-gray-900">
@@ -266,7 +258,17 @@ export default function ShopPageClient({
   const filterPanel = (prefix: string) => (
     <div className="space-y-6">
       {searchField}
-      {categoryButtons}
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-2 border-gray-300 p-3 text-sm font-bold uppercase tracking-wide">
+        <input
+          type="checkbox"
+          checked={filters.stock}
+          onChange={(e) => update({ stock: e.target.checked })}
+          className="h-4 w-4 accent-brand-primary"
+        />
+        {t('available')}
+      </label>
+      <p className="text-xs leading-relaxed text-gray-500">{t('availableHelp')}</p>
+      {sortField}
       <p className="text-xs leading-relaxed text-gray-500">{t('filterHelp')}</p>
       {!!dimensions.sizes.length && (
         <fieldset>
@@ -416,16 +418,6 @@ export default function ShopPageClient({
           </label>
         </div>
       </fieldset>
-      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-2 border-gray-300 p-3 text-sm font-bold uppercase tracking-wide">
-        <input
-          type="checkbox"
-          checked={filters.stock}
-          onChange={(e) => update({ stock: e.target.checked })}
-          className="h-4 w-4 accent-brand-primary"
-        />
-        {t('available')}
-      </label>
-      {sortField}
       {activeCount > 0 && (
         <button
           type="button"
@@ -438,18 +430,6 @@ export default function ShopPageClient({
     </div>
   )
   const chips: Array<{ key: string; label: string; clear: () => void }> = []
-  if (filters.category !== 'all')
-    chips.push({
-      key: 'category',
-      label: name(
-        categoryChoices.find((c) => c.slug === filters.category) ?? {
-          id: '',
-          slug: '',
-          name: filters.category,
-        },
-      ),
-      clear: () => update({ category: 'all' }),
-    })
   if (filters.q.trim())
     chips.push({
       key: 'q',
@@ -485,51 +465,39 @@ export default function ShopPageClient({
     })
   return (
     <div className="bg-white">
-      <PaginaKop
-        titel={page('title')}
-        ondertitel={page('heroSubtitle')}
-        bedieningHoogte="min-h-[96px] sm:min-h-[44px]"
-      >
-        <CategorieKiezer
-          items={categoryChoices.map((c) => ({
-            slug: c.slug,
-            naam: name(c),
-            aantal: expandToShopTiles(
-              products.filter((p) => p.category?.slug === c.slug),
-            ).length,
-          }))}
-          actief={filters.category}
-          onKies={(slug) => update({ category: slug })}
-          allesLabel={page('filters.allShort')}
-          groepLabel={page('categorieLabel')}
-          totaalAantal={expandToShopTiles(products).length}
-        />
-      </PaginaKop>
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 md:py-12">
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          aria-haspopup="dialog"
-          aria-controls="catalog-filter-dialog"
-          className="relative z-20 mb-6 flex min-h-14 w-full items-center justify-center gap-3 border-2 border-black bg-black px-6 py-4 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-gray-900 lg:hidden"
-        >
-          <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
-          {t('filters')} &amp; {t('sort')}
-          {activeCount > 0 && (
-            <span className="bg-brand-primary px-2 py-1 text-xs font-bold text-white">
-              {activeCount}
-            </span>
-          )}
-        </button>
+      <header className="border-b-2 border-black bg-[#F5F4F1]">
+        <div className="mx-auto max-w-7xl px-4 pb-2 pt-3 md:pt-5">
+          <h1 className="mb-2 font-display text-2xl uppercase leading-none md:text-4xl">{page('title')}</h1>
+          <ShopCategoryNav
+            items={[{slug: 'all', label: t('all')}, ...categoryChoices.map(c => ({slug: c.slug, label: name(c)}))]}
+            active={filters.category}
+            onSelect={category => update({category})}
+            label={t('category')}
+            previousLabel={t('previousCategories')}
+            nextLabel={t('nextCategories')}
+          />
+        </div>
+      </header>
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-4 pt-2 md:pb-8 md:pt-4">
+        <div className="mb-3 flex min-h-11 items-center justify-between gap-3 border-b-2 border-black pb-2 lg:justify-end">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="flex min-h-11 shrink-0 items-center justify-center gap-2 border-2 border-black bg-white px-3 text-xs font-bold uppercase tracking-wide text-black lg:hidden">
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+            {t('filters')} &amp; {t('sort')}
+            {activeCount > 0 && <span className="bg-brand-primary px-1.5 py-0.5 text-xs text-white">{activeCount}</span>}
+          </button>
+          <p role="status" aria-live="polite" className="text-right text-xs font-bold text-gray-900 md:text-sm">
+            {loading ? t('loading') : t('models', {count: filtered.length})}
+          </p>
+        </div>
         {!!chips.length && (
-          <div className="mb-5 flex flex-wrap gap-2">
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
             {chips.map((chip) => (
               <button
                 type="button"
                 key={chip.key}
                 onClick={chip.clear}
                 aria-label={t('removeFilter', { filter: chip.label })}
-                className="flex min-h-11 items-center gap-2 border-2 border-gray-300 border-l-brand-primary bg-gray-100 px-3 text-xs font-bold uppercase tracking-wide hover:border-black"
+                className="flex min-h-11 shrink-0 items-center gap-2 border-2 border-gray-300 border-l-brand-primary bg-gray-100 px-3 text-xs font-bold uppercase tracking-wide hover:border-black"
               >
                 {chip.label}
                 <X size={12} aria-hidden="true" />
@@ -538,7 +506,7 @@ export default function ShopPageClient({
             <button
               type="button"
               onClick={reset}
-              className="min-h-10 px-2 text-xs font-semibold underline underline-offset-4"
+              className="min-h-11 shrink-0 px-2 text-xs font-semibold underline underline-offset-4"
             >
               {t('reset')}
             </button>
@@ -549,16 +517,6 @@ export default function ShopPageClient({
             <div className="lg:sticky lg:top-24">{filterPanel('desktop')}</div>
           </aside>
           <section aria-label={t('collection')} className="min-w-0">
-            <p
-              role="status"
-              aria-live="polite"
-              className="mb-6 border-b-2 border-gray-200 pb-4 text-lg font-bold text-gray-900"
-            >
-              {loading ? t('loading') : t('results', { count: tiles.length })}
-              {!loading &&
-                tiles.length !== filtered.length &&
-                ` · ${t('models', { count: filtered.length })}`}
-            </p>
             {error ? (
               <div
                 role="alert"
@@ -595,7 +553,11 @@ export default function ShopPageClient({
                   <CatalogProductCard
                     key={tile.tileKey}
                     tile={tile}
-                    priority={index < 3}
+                    filters={filters}
+                    index={index}
+                    allowedColors={dimensions.colors.filter(c => matchesCatalogProduct(tile.product, filters, c.label)).map(c => c.key)}
+                    onProductClick={(selectedTile) => trackSelect(selectedTile, index)}
+                    priority={index < 2}
                     showCategoryLabels={showCategoryLabels}
                   />
                 ))}
@@ -612,6 +574,20 @@ export default function ShopPageClient({
         id="catalog-filter-dialog"
         ref={dialog}
         onClose={() => setMobileOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab') return
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          )).filter(control => control.getClientRects().length > 0)
+          const first = controls[0], last = controls[controls.length - 1]
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault()
+            last?.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first?.focus()
+          }
+        }}
         aria-labelledby="catalog-filter-title"
         className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[92%] max-w-sm flex-col border-0 border-l-4 border-black bg-white p-0 shadow-2xl backdrop:bg-black/80 open:flex"
       >

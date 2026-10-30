@@ -8,6 +8,7 @@ import PdpInstagramFetcher from '@/components/product/PdpInstagramFetcher'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { mapLocalizedProduct } from '@/lib/i18n-db'
 import { notFound } from 'next/navigation'
+import { offerAvailability } from '@/lib/variant-availability'
 
 export const revalidate = 60
 
@@ -134,8 +135,7 @@ export default async function ProductPage({
     const imageUrl = primaryImage?.url || 'https://www.mosewear.com/logomose.png'
     const price = product.sale_price || product.base_price
     
-    // Check if product is in stock
-    const inStock = product.product_variants?.some((v: any) => v.is_available && v.stock_quantity > 0)
+    const availability = offerAvailability(product.product_variants ?? [], product.is_gift_card)
 
     structuredData = {
       '@context': 'https://schema.org',
@@ -152,9 +152,7 @@ export default async function ProductPage({
         url: `https://www.mosewear.com/${localeParam}/product/${slug}`,
         priceCurrency: 'EUR',
         price: price,
-        availability: inStock
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
+        availability,
         // Dit is een server
         // component: hij rendert één keer per request, er is geen re-render
         // waarbij deze waarde kan verschuiven. priceValidUntil hoort juist

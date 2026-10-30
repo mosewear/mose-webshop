@@ -1,7 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import MobileProductCarousel from '@/components/MobileProductCarousel'
+import CatalogProductCard from '@/components/shop/CatalogProductCard'
+import { catalogTiles, emptyCatalogFilters, type CatalogProduct } from '@/lib/catalog-filters'
 import FAQAccordion from '@/components/FAQAccordion'
 import { type HomepageSettings } from '@/lib/homepage'
 import { useWishlist } from '@/store/wishlist'
@@ -17,7 +18,6 @@ import { useState, FormEvent, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
-import { formatPrice } from '@/lib/format-price'
 
 interface HomePageClientProps {
   siteSettings: {
@@ -25,8 +25,8 @@ interface HomePageClientProps {
     return_days: number
   }
   homepageSettings: HomepageSettings
-  featuredProducts: any[]
-  categories: any[]
+  featuredProducts: CatalogProduct[]
+  categories: Array<{id: string; slug: string; name: string; image_url: string | null}>
   instagramSlot?: React.ReactNode
 }
 
@@ -38,9 +38,8 @@ export default function HomePageClient({
   instagramSlot,
 }: HomePageClientProps) {
   const t = useTranslations('homepage')
-  const tProduct = useTranslations('product')
   const locale = useLocale()
-  const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
+  const { loadWishlist } = useWishlist()
   
   const settings = initialSettings
   const homepageSettings = initialHomepageSettings
@@ -61,13 +60,15 @@ export default function HomePageClient({
       '/hero-mobile.webp',
   )
 
+  const [storyImageSrc, setStoryImageSrc] = useState('/mose-about-collection.webp')
+
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterLoading, setNewsletterLoading] = useState(false)
   const [newsletterSuccess, setNewsletterSuccess] = useState(false)
 
   useEffect(() => {
     loadWishlist()
-  }, [])
+  }, [loadWishlist])
 
   const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -326,204 +327,27 @@ export default function HomePageClient({
               brand-primary text met groene • bullet (zelfde patroon
               als de IG-eyebrow in het mobiele menu en de PDP-reviews),
               i.p.v. de tinted bg-brand-primary/10 chip. */}
-          <div className="text-center mb-12 md:mb-16 px-4">
+          <div className="text-center mb-6 md:mb-8 px-4">
             <div className="inline-flex items-center justify-center gap-2 mb-4 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
               <span aria-hidden="true">•</span>
-              <span>{homepageSettings?.featured_label || t('featured.label')}</span>
+              <span>{t('featured.label')}</span>
               <span aria-hidden="true">•</span>
             </div>
-            <h2 className="font-display text-4xl md:text-6xl mb-4 tracking-tight uppercase">{homepageSettings?.featured_title || t('featured.title')}</h2>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              {homepageSettings?.featured_description || t('featured.description')}
+            <h2 className="font-display text-3xl md:text-5xl mb-3 tracking-tight uppercase">{t('featured.title')}</h2>
+            <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">
+              {t('featured.description')}
             </p>
           </div>
 
-          {/* Mobile: Snap Scroll Carousel.
-              De carousel rendert null zonder producten, dus mobiel krijgt hier
-              dezelfde eerlijke lege staat als de desktopgrid hieronder. Eerder
-              vulde de carousel dat gat met drie verzonnen producten waarvan de
-              slugs niet in de catalogus bestonden. */}
-          {featuredProducts && featuredProducts.length > 0 ? (
-            <MobileProductCarousel products={featuredProducts} />
-          ) : (
-            <div className="md:hidden text-center py-12 px-4 text-gray-500">
-              <p className="text-lg">{t('featured.noProducts')}</p>
-              <p className="text-sm mt-2">{t('featured.noProductsDesc')}</p>
+          {featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
+              {catalogTiles(featuredProducts, emptyCatalogFilters).map(tile => <CatalogProductCard
+                key={tile.tileKey} tile={tile} showCategoryLabels={false}
+                imageSizes="(max-width: 767px) calc((100vw - 48px) / 2), (max-width: 1023px) calc((100vw - 56px) / 2), (max-width: 1279px) calc((100vw - 104px) / 4), 294px"
+              />)}
             </div>
-          )}
-
-          {/* Desktop: Grid - Dynamic Products */}
-          <div className="hidden md:grid grid-cols-3 gap-8">
-            {featuredProducts && featuredProducts.length > 0 ? (
-              featuredProducts.slice(0, 3).map((product: any) => {
-                const isWishlisted = isInWishlist(product.id)
-
-                return (
-                  <LocaleLink
-                    key={product.id}
-                    href={`/product/${product.slug}`}
-                    className="group block"
-                  >
-                    <div className="bg-white overflow-hidden border-2 border-black transition-colors">
-                    {/* Product Image Container */}
-                    <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                      <Image
-                        src={failedImages.has(product.id) ? '/placeholder-product.svg' : (product.image_url || '/placeholder-product.svg')}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        quality={90}
-                        className="object-cover object-center md:group-hover:scale-110 transition-transform duration-700"
-                        onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
-                      />
-
-                      {/* Stock-badge — flat brutalist tile met 2px zwarte
-                          border, geen shadow (consistent met menu pills
-                          en PDP variant-chips). */}
-                      {(() => {
-                        const totalStock = product.stock_quantity + (product.presale_stock_quantity || 0)
-                        const isPresale = product.stock_quantity === 0 && product.presale_stock_quantity > 0
-
-                        if (isPresale) {
-                          return (
-                            <div className="absolute top-3 left-3 bg-brand-primary text-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] border-2 border-black leading-none">
-                              PRE-SALE
-                            </div>
-                          )
-                        } else if (product.stock_quantity > 0) {
-                          return (
-                            <div className="absolute top-3 left-3 bg-brand-primary text-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] border-2 border-black leading-none">
-                              {t('featured.inStock')}
-                            </div>
-                          )
-                        } else if (totalStock === 0) {
-                          return (
-                            <div className="absolute top-3 left-3 bg-black text-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] border-2 border-black leading-none">
-                              {t('featured.outOfStock')}
-                            </div>
-                          )
-                        }
-                        return null
-                      })()}
-                      
-                      {/* Wishlist Button — flat brutalist tile met 2px
-                          zwarte border, geen backdrop-blur, geen scale.
-                          Hover-flip wit → groen. */}
-                      <button
-                        className={`absolute top-3 right-3 z-20 w-10 h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-colors border-2 border-black ${
-                          isWishlisted
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-white hover:bg-brand-primary hover:text-white'
-                        }`}
-                        onClick={async (e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-
-                          const wasWishlisted = isInWishlist(product.id)
-                          if (wasWishlisted) {
-                            await removeFromWishlist(product.id)
-                          } else {
-                            await addToWishlist(product.id)
-                          }
-
-                          const nowWishlisted = isInWishlist(product.id)
-                          if (!wasWishlisted && nowWishlisted) {
-                            toast.success(tProduct('wishlist.added'))
-                          } else if (wasWishlisted && !nowWishlisted) {
-                            toast.success(tProduct('wishlist.removed'))
-                          }
-                        }}
-                        title={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
-                        aria-label={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            fill={isWishlisted ? 'currentColor' : 'none'}
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                          />
-                        </svg>
-                      </button>
-                      
-                      {/* Gradient Overlay on Hover (Desktop only) */}
-                      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
-                      {/* Quick View Button — brutalist filled-white met
-                          2px zwarte border, hover-flip wit → groen. Geen
-                          shadow, geen scale-fluff. */}
-                      <div className="absolute bottom-3 left-3 right-3 transform translate-y-[calc(100%+1rem)] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                        <button className="w-full bg-white text-black font-bold py-3 px-6 uppercase tracking-[0.2em] text-xs border-2 border-black hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-colors flex items-center justify-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          {t('featured.quickView')}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Product Info — font-display titel matched de
-                        editorial typografie van menu/PDP/shop. */}
-                    <div className="p-6 text-center">
-                      <h3 className="font-display text-xl md:text-2xl mb-2 uppercase tracking-tight leading-none group-hover:text-brand-primary transition-colors">
-                        {product.name}
-                      </h3>
-                      {(() => {
-                        const hasDiscount = product.sale_price && product.sale_price < product.price
-                        const discountPercentage = hasDiscount && product.sale_price
-                          ? Math.round(((product.price - product.sale_price) / product.price) * 100) 
-                          : 0
-
-                        if (hasDiscount && product.sale_price) {
-                          return (
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-center gap-2">
-                                <p className="text-2xl font-bold text-brand-primary">
-                                  {formatPrice(product.sale_price, locale)}
-                                </p>
-                                <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-black text-white border-2 border-black">
-                                  -{discountPercentage}%
-                                </span>
-                              </div>
-                              <p className="text-base text-gray-500 line-through">
-                                {formatPrice(product.price, locale)}
-                              </p>
-                            </div>
-                          )
-                        }
-
-                        return (
-                          <p className="text-2xl font-bold text-brand-primary">
-                            {typeof product.price === 'number' ? formatPrice(product.price, locale) : '€0'}
-                          </p>
-                        )
-                      })()}
-                      
-                      {/* Available Sizes - from variants */}
-                      {product.variants && product.variants.length > 0 && (
-                        <div className="flex justify-center gap-2 mt-4 transition-opacity duration-300">
-                          {Array.from(new Set<string>(product.variants.map((v: any) => v.size))).slice(0, 4).map((size) => (
-                            <span key={size} className="w-8 h-8 border-2 border-gray-300 flex items-center justify-center text-xs font-semibold hover:border-brand-primary hover:text-brand-primary transition-colors cursor-pointer">
-                              {size}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    </div>
-                  </LocaleLink>
-                )
-              })
-            ) : (
-              // Fallback: show placeholder if no products
-              <div className="col-span-3 text-center py-12 text-gray-500">
-                <p className="text-lg">{t('featured.noProducts')}</p>
-                <p className="text-sm mt-2">{t('featured.noProductsDesc')}</p>
-              </div>
-            )}
-          </div>
+          ) : <p className="py-8 text-center text-gray-600">{t('featured.noProducts')}</p>}
+          <div className="mt-8 text-center"><LocaleLink href="/shop" className="inline-flex min-h-11 items-center gap-3 border-2 border-black bg-black px-6 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-brand-primary">{t('featured.browse')}<ArrowRight size={18} aria-hidden="true" /></LocaleLink></div>
         </div>
       </section>
 
@@ -531,20 +355,20 @@ export default function HomePageClient({
           geen draai-corner-accent. Vaste groene 3px topbar (i.p.v.
           opacity-tint hover-laag), tracking + typografie consistent
           met menu/PDP. */}
-      <section className="py-16 md:py-24 px-4 bg-white border-t-2 border-black">
+      <section className="py-10 md:py-16 px-4 bg-white border-t-2 border-black">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 md:mb-16">
+          <div className="text-center mb-6 md:mb-8">
             <div className="inline-flex items-center justify-center gap-2 mb-4 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary leading-none">
               <span aria-hidden="true">•</span>
               <span>{t('categories.subtitle')}</span>
               <span aria-hidden="true">•</span>
             </div>
-            <h2 className="font-display text-4xl md:text-6xl tracking-tight uppercase">{t('categories.title')}</h2>
+            <h2 className="font-display text-3xl md:text-5xl tracking-tight uppercase">{t('categories.title')}</h2>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {categories.length > 0 ? (
-              categories.map((category: any) => {
+              categories.map((category) => {
                 const categoryImage = category.image_url || '/og-default.jpg'
                 const categoryHref = `/shop?category=${category.slug}`
 
@@ -555,13 +379,13 @@ export default function HomePageClient({
                     className="group relative aspect-[3/4] overflow-hidden border-2 border-black bg-black"
                   >
                     <Image
-                      src={failedImages.has(category.id) ? '/placeholder-product.svg' : categoryImage}
+                      src={failedImages.has(categoryImage) ? '/placeholder-product.svg' : categoryImage}
                       alt={category.name}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
                       quality={90}
                       className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                      onError={() => setFailedImages(prev => new Set(prev).add(category.id))}
+                      onError={() => setFailedImages(prev => new Set(prev).add(categoryImage))}
                     />
 
                     {/* Hard gradient overlay voor leesbaarheid van het
@@ -696,7 +520,8 @@ export default function HomePageClient({
             <div className="relative">
               <div className="relative aspect-square overflow-hidden border-2 border-white">
                 <Image
-                  src={homepageSettings?.story_image_url || '/og-default.jpg'}
+                  src={storyImageSrc}
+                  onError={() => setStoryImageSrc(homepageSettings?.story_image_url || '/og-default.jpg')}
                   alt={t('story.imageAlt')}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"

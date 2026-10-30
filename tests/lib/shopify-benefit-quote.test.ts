@@ -15,12 +15,18 @@ it('blocks promo plus staffel and excludes sale from quantity savings',()=>{
  expect(()=>quoteCheckoutBenefits({lines:[line],tiers,promo})).toThrow('PROMO_STAFFEL_CONFLICT')
  expect(quoteCheckoutBenefits({lines:[{...line,onSale:true}],tiers})).toMatchObject({staffelCents:0})
 })
-it('does not overdiscount or silently include unsupported gift card obligations',()=>{
+it('does not overdiscount or discount native gift card face value',()=>{
  expect(()=>quoteCheckoutBenefits({lines:[line],tiers:[],points:100000})).toThrow('BENEFITS_EXCEED_CART')
- expect(()=>quoteCheckoutBenefits({lines:[{...line,giftCard:true}],tiers:[]})).toThrow('BENEFIT_GIFT_CARD_PARITY_REQUIRED')
+ expect(quoteCheckoutBenefits({lines:[{...line,giftCard:true}],tiers:[],loyalty:{tier:'gold',lifetimePoints:1000}})).toMatchObject({discountCents:0,payableMerchandiseCents:11800})
 })
 
 it('quotes the exact native percentage amount before payable proof, including fractional cents',()=>{
  const result=quoteCheckoutBenefits({lines:[{...line,variantId:'gid://shopify/ProductVariant/2',unitCents:7900,quantity:1},line],tiers:[],promo:{...promo,value:7.5}})
  expect(result).toMatchObject({subtotalCents:19700,promo:{discountCents:1477},payableMerchandiseCents:18223})
+})
+
+it('excludes native gift value from all mixed-cart tier, promo, quantity and points benefits',()=>{
+ const gift={...line,productId:'bc6c495d-fbc9-48e4-8d24-a9f8f23e3b8c',variantId:'gid://shopify/ProductVariant/50',unitCents:5000,quantity:1,giftCard:true}
+ expect(quoteCheckoutBenefits({lines:[line,gift],tiers:[],promo,loyalty:{tier:'silver',lifetimePoints:500},points:100})).toMatchObject({subtotalCents:16800,tierCents:590,promo:{discountCents:1180,eligibleVariants:[line.variantId]},redemptionCents:500,discountCents:2270,payableMerchandiseCents:14530})
+ expect(()=>quoteCheckoutBenefits({lines:[{...line,quantity:1},gift],tiers:[],points:2000})).toThrow('BENEFITS_EXCEED_CART')
 })

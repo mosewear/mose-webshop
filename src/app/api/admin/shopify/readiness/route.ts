@@ -1,3 +1,4 @@
+import { nativeGiftRuntimeReadiness } from '@/lib/shopify/native-gift-cutover'
 import { readPromoParity } from '@/lib/shopify/promo-parity'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/supabase/admin'
@@ -11,7 +12,7 @@ import { adminCredentialsConfigured } from '@/lib/shopify/admin-auth'
 import { runtimeReadiness } from '@/lib/shopify/runtime-readiness'
 
 export const dynamic = 'force-dynamic'
-export async function GET() {
+export async function GET(request: Request) {
   const headers = { 'Cache-Control': 'private, no-store' }
   const { authorized } = await requireAdmin(['admin', 'manager'])
   if (!authorized) return NextResponse.json({ error: 'Geen toegang.' }, { status: 403, headers })
@@ -35,7 +36,7 @@ export async function GET() {
     if (state.error || !state.data) throw new Error('INTEGRATION_STATE_UNAVAILABLE')
     if (signal.aborted) throw new Error('READINESS_TIMEOUT')
     const [mappings, released, pending] = await Promise.all([
-      db.from('shopify_variant_mappings').select('mose_variant_id,shopify_variant_id,fulfillment_owner,supplier_model,supplier_link_verified,sample_verified,enabled,price_eur_cents', { count: 'exact' }).limit(1000).abortSignal(signal),
+      db.from('shopify_variant_mappings').select('mose_variant_id,shopify_variant_id,fulfillment_owner,supplier_model,supplier_link_verified,sample_verified,owner_release_authorized_at,owner_release_reference,fulfillment_mode,enabled,price_eur_cents', { count: 'exact' }).limit(1000).abortSignal(signal),
       db.from('shopify_variant_mappings').select('*', { count: 'exact', head: true }).eq('enabled', true).abortSignal(signal),
       db.from('shopify_webhook_inbox').select('*', { count: 'exact', head: true }).is('processed_at', null).is('dead_letter_at', null).abortSignal(signal),
     ])
@@ -62,6 +63,8 @@ export async function GET() {
     const activeIds = new Set((products.data ?? []).map((product: { id: string }) => product.id))
     const runtimeChecks = await runtimeReadiness(db, now.getTime())
     const promoParity = await readPromoParity(db, now.getTime())
+    const buyerIp = process.env.VERCEL === '1' ? request?.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim() : process.env.SHOPIFY_DEV_BUYER_IP
+    const giftRuntime = await nativeGiftRuntimeReadiness(db, buyerIp, now.getTime())
     const audit = auditShopifyRelease({
       products: (products.data ?? []) as AuditProduct[], variants: (variants.data ?? []) as AuditVariant[], mappings: (mappings.data ?? []) as MappedVariant[],
       complete: complete(products) && complete(variants) && complete(mappings),
@@ -71,7 +74,7 @@ export async function GET() {
       loyaltyAccounts: loyalty.error ? null : loyalty.count,
       giftCardsWithBalance: giftBalances.error ? null : giftBalances.count,
       scheduledGiftCards: scheduledGifts.error ? null : scheduledGifts.count,
-    }, { loyaltyRuntime: runtimeChecks.find(check => check.key === 'loyaltyRuntime')?.status ?? 'unknown', promoParity })
+    }, { loyaltyRuntime: runtimeChecks.find(check => check.key === 'loyaltyRuntime')?.status ?? 'unknown', promoParity, nativeGiftRuntime: giftRuntime.status })
     const inventory = await db.rpc('shopify_inventory_evidence').abortSignal(signal)
     const inventoryCheck = inventoryReadiness(inventory.error || !Array.isArray(inventory.data) ? null : inventory.data, released.error ? null : released.count, now.getTime())
     const readiness = attachReleaseAudit(summarizeReadiness(state.error ? null : state.data as IntegrationState | null, {

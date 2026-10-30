@@ -50,7 +50,7 @@ export async function readCheckoutBenefitQuote(db:SupabaseClient,input:{lines:Se
  }
  // Native order percentage combinations preserve source arithmetic only when
  // promo has no excluded lines. Do not silently undergrant a sale basket.
- if(quote.promo&&quote.tierCents>0&&(!orderWidePromo||quote.promo.eligibleVariants.length!==input.lines.length)) throw new Error('MIXED_SALE_TIER_PARITY_REQUIRED')
+ if(quote.promo&&quote.tierCents>0&&(!orderWidePromo||quote.promo.eligibleVariants.length!==input.lines.filter(l=>!l.giftCard).length)) throw new Error('MIXED_SALE_TIER_PARITY_REQUIRED')
  const componentCount=groupQuantityBenefits(quote.staffel).length+Number(quote.tierCents>0)+Number(!!quote.promo)+Number(quote.redemptionCents>0)
  if(componentCount>5) throw new Error('BENEFIT_CODE_LIMIT')
  const expectedSubtotalBeforeOrderCents=quote.subtotalCents-quote.staffelCents-(orderWidePromo?0:(quote.promo?.discountCents??0))
@@ -89,7 +89,7 @@ export async function issueCheckoutBenefits(db:SupabaseClient,input:Awaited<Retu
   customerId=(await bindAuthenticatedShopifyCustomer(db,user,input.secret)).customerId
  }
  const expected:Expected[]=[]
- const variants=lines.map(l=>l.variantId)
+ const variants=lines.filter(l=>!l.giftCard).map(l=>l.variantId)
  if(input.promo) expected.push(await reserveAndIssuePromo(db,{attemptId:input.attemptId,checkoutLease:input.checkoutLease,issuanceLease:randomUUID(),secret:input.secret,promo:input.promo,lines,staffelCents:quote.staffelCents,customerId,orderWide:input.orderWidePromo}))
  for(const staffel of groupQuantityBenefits(quote.staffel)){
   const component=`staffel:${createHash('sha256').update(staffel.eligibleVariants.join(',')).digest('hex').slice(0,16)}`

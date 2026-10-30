@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import { admin } from './client'
+import { MAX_ORDER_QUANTITY } from '@/lib/variant-availability'
+import { supplierReleaseAuthorized } from './policy'
 import { moneyToCents } from './policy'
 import { createServiceClient } from '@/lib/supabase/service'
 import { assertSyncBudget, boundedSyncQuery } from './sync-deadline'
@@ -23,8 +25,8 @@ const nodeSchema = z.object({ id: z.string(), price: z.string(), inventoryPolicy
       quantities: z.array(z.object({ name: z.string(), quantity: z.number().int().safe() })) }).nullable() }) })
 const responseSchema = z.object({ shop: z.object({ currencyCode: z.string() }), nodes: z.array(nodeSchema.nullable()) })
 export type InventoryMapping = { mose_variant_id: string; shopify_variant_id: string; shopify_product_id: string;
-  inventory_location_id: string | null; inventory_item_id?: string | null; inventory_revision: string; inventory_lease_token: string; price_eur_cents: number }
-type Observation = { status: 'known' | 'unknown' | 'error'; quantity: number | null; reason: string }
+  inventory_location_id: string | null; inventory_item_id?: string | null; inventory_revision: string; inventory_lease_token: string; price_eur_cents: number; fulfillment_owner?: string; fulfillment_mode?: string; supplier_link_verified?: boolean; sample_verified?: boolean; owner_release_authorized_at?: string | null; owner_release_reference?: string | null }
+type Observation = { status: 'known' | 'made_to_order' | 'unknown' | 'error'; quantity: number | null; reason: string }
 export function projectInventory(mapping: InventoryMapping, response: z.infer<typeof responseSchema>): Observation {
   const unknown = (reason: string): Observation => ({ status: 'unknown', quantity: null, reason })
   const nodes = response.nodes.filter(n => n?.id === mapping.shopify_variant_id)
@@ -33,13 +35,23 @@ export function projectInventory(mapping: InventoryMapping, response: z.infer<ty
   if (node.product.id !== mapping.shopify_product_id) return unknown('INVENTORY_MAPPING_CHANGED')
   if (response.shop.currencyCode !== 'EUR' || moneyToCents(node.price) !== mapping.price_eur_cents) return unknown('INVENTORY_PRICE_CHANGED')
   if (mapping.inventory_item_id && node.inventoryItem.id !== mapping.inventory_item_id) return unknown('INVENTORY_ITEM_CHANGED')
-  if (node.product.status !== 'ACTIVE') return unknown('INVENTORY_PRODUCT_INACTIVE')
-  // Check tracking before touching quantity: 9,999,999 from an untracked supplier is not stock.
-  if (!node.inventoryItem.tracked) return unknown('INVENTORY_UNTRACKED')
-  if (node.inventoryPolicy !== 'DENY') return unknown('INVENTORY_OVERSELL_ALLOWED')
+  // UNLISTED is active for direct-ID Storefront purchase (Shopify 2025-10+).
+  // Only explicitly released supplier links may use that direct-sale status.
+  if (node.product.status !== 'ACTIVE' && !(mapping.fulfillment_mode === 'made_to_order' && node.product.status === 'UNLISTED')) return unknown('INVENTORY_PRODUCT_INACTIVE')
   const level = node.inventoryItem.inventoryLevel
   if (!mapping.inventory_location_id || !level || level.location.id !== mapping.inventory_location_id ||
     !level.location.isActive || !level.location.fulfillsOnlineOrders) return unknown('INVENTORY_LOCATION_UNVERIFIED')
+  if (mapping.fulfillment_mode === 'made_to_order') {
+    if (mapping.fulfillment_owner !== 'tapstitch' || mapping.supplier_link_verified !== true ||
+      !supplierReleaseAuthorized({ sample_verified: mapping.sample_verified === true, owner_release_authorized_at: mapping.owner_release_authorized_at, owner_release_reference: mapping.owner_release_reference }) || !mapping.inventory_item_id ||
+      node.inventoryItem.tracked || node.inventoryPolicy !== 'CONTINUE') return unknown('SUPPLIER_CONTRACT_UNVERIFIED')
+    // Shopify's untracked quantity is deliberately ignored. Fresh storefront
+    // availability is checked again immediately before issuing the payable cart.
+    return { status: 'made_to_order', quantity: null, reason: 'SUPPLIER_MADE_TO_ORDER_VERIFIED' }
+  }
+  // 9,999,999 from an untracked supplier is never physical merchant stock.
+  if (!node.inventoryItem.tracked) return unknown('INVENTORY_UNTRACKED')
+  if (node.inventoryPolicy !== 'DENY') return unknown('INVENTORY_OVERSELL_ALLOWED')
   const quantities = level.quantities.filter(q => q.name === 'available')
   if (quantities.length !== 1) return unknown('INVENTORY_QUANTITY_UNKNOWN')
   if (quantities[0].quantity < 0) return unknown('INVENTORY_NEGATIVE_QUANTITY')
@@ -86,8 +98,10 @@ export function assertInventoryEvidence(lines: { localVariantId: string; quantit
     const matches = evidence.filter(s => s.mose_variant_id === line.localVariantId)
     const s = matches[0], age = now - Date.parse(s?.observed_at ?? '')
     if ((expectedRevisions && (typeof expectedRevisions.get(line.localVariantId) !== 'string' || s?.mapping_revision !== expectedRevisions.get(line.localVariantId))) ||
-      matches.length !== 1 || s.mapping_current !== true || s.status !== 'known' || !Number.isFinite(age) || age < 0 || age > 900_000 ||
-      !Number.isSafeInteger(s.available_quantity) || s.available_quantity === null || s.available_quantity < line.quantity) throw new Error('INVENTORY_NOT_READY')
+      matches.length !== 1 || s.mapping_current !== true || !['known', 'made_to_order'].includes(s.status ?? '') || !Number.isFinite(age) || age < 0 || age > 900_000 ||
+      (s.status === 'made_to_order'
+        ? s.available_quantity !== null || s.reason !== 'SUPPLIER_MADE_TO_ORDER_VERIFIED' || line.quantity > MAX_ORDER_QUANTITY
+        : !Number.isSafeInteger(s.available_quantity) || s.available_quantity === null || s.available_quantity < line.quantity)) throw new Error('INVENTORY_NOT_READY')
   }
 }
 

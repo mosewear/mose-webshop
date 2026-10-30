@@ -12,7 +12,7 @@
  *      - commit_gift_card_redemptions_for_order(p_order_id)
  *      - reverse_gift_card_redemptions_for_order(p_order_id)
  *  - `issueGiftCardsForOrder(orderId)` is idempotent via
- *    `orders.gift_cards_issued_at` and only runs for paid orders.
+ *    `orders.gift_cards_issued_at` inside the same database transaction as every unit.
  */
 
 import crypto from 'crypto'
@@ -328,113 +328,30 @@ export async function issueGiftCardsForOrder(
   supabase: SupabaseClient,
   orderId: string
 ): Promise<{ issued: IssuedGiftCardEmailPayload[]; skipped: boolean }> {
-  const { data: orderRow, error: orderErr } = await supabase
-    .from('orders')
-    .select('id, email, gift_cards_issued_at, payment_status, locale')
-    .eq('id', orderId)
-    .maybeSingle()
-
-  if (orderErr || !orderRow) {
-    console.warn('[gift-cards] issue: order not found', { orderId, orderErr })
-    return { issued: [], skipped: true }
-  }
-
-  if (orderRow.payment_status !== 'paid') {
-    console.log('[gift-cards] issue: order not paid yet', { orderId })
-    return { issued: [], skipped: true }
-  }
-
-  if (orderRow.gift_cards_issued_at) {
-    return { issued: [], skipped: true }
-  }
-
-  const { data: items, error: itemsErr } = await supabase
-    .from('order_items')
-    .select('id, product_id, quantity, price_at_purchase, is_gift_card, gift_card_metadata')
-    .eq('order_id', orderId)
-
-  if (itemsErr || !items || items.length === 0) {
-    await supabase
-      .from('orders')
-      .update({ gift_cards_issued_at: new Date().toISOString() })
-      .eq('id', orderId)
-    return { issued: [], skipped: true }
-  }
-
-  const giftItems = items.filter((it: any) => it.is_gift_card)
-  if (giftItems.length === 0) {
-    await supabase
-      .from('orders')
-      .update({ gift_cards_issued_at: new Date().toISOString() })
-      .eq('id', orderId)
-    return { issued: [], skipped: true }
-  }
-
-  const productIds = Array.from(
-    new Set(giftItems.map((it: any) => it.product_id).filter(Boolean))
-  )
-  const validityByProduct = new Map<string, number | null>()
-  if (productIds.length > 0) {
-    const { data: prods } = await supabase
-      .from('products')
-      .select('id, gift_card_default_validity_months')
-      .in('id', productIds)
-    for (const p of (prods as any[]) || []) {
-      validityByProduct.set(p.id, p.gift_card_default_validity_months ?? null)
-    }
-  }
-
-  const purchaserEmail = (orderRow as any).email || ''
-  const issued: IssuedGiftCardEmailPayload[] = []
-
-  for (const item of giftItems) {
-    const meta: GiftCardOrderItemMetadata =
-      ((item as any).gift_card_metadata as GiftCardOrderItemMetadata | null) || {}
-    const perUnitAmount = Math.round(
-      (Number(meta.amount) > 0
-        ? Number(meta.amount)
-        : Number((item as any).price_at_purchase)) * 100
-    ) / 100
-    const quantity = Math.max(1, Number((item as any).quantity) || 1)
-    const validityMonths = validityByProduct.get((item as any).product_id) ?? 24
-
-    for (let n = 0; n < quantity; n++) {
-      const recipientEmail =
-        (meta.recipientEmail && meta.recipientEmail.trim()) || purchaserEmail
-      const card = await createGiftCard(supabase, {
-        amount: perUnitAmount,
-        source: 'purchase',
-        purchasedByEmail: purchaserEmail,
-        purchasedByOrderId: orderId,
-        recipientEmail,
-        recipientName: meta.recipientName?.trim() || null,
-        senderName: meta.senderName?.trim() || null,
-        personalMessage: meta.personalMessage?.trim() || null,
-        scheduledSendAt: meta.scheduledSendAt || null,
-        validityMonths,
+  // The database locks the paid order, inserts all units and marks issuance in
+  // one transaction. Retries return only the existing undelivered capabilities.
+  // An application-side timestamp check cannot prevent parallel webhook issues.
+  const { data: order, error: orderError } = await supabase
+    .from('orders').select('id,payment_status,gift_cards_issued_at').eq('id', orderId).maybeSingle()
+  if (orderError || !order) throw new Error('GIFT_ORDER_UNAVAILABLE')
+  if (order.payment_status !== 'paid') return { issued: [], skipped: true }
+  let units: { orderItemId: string; unitIndex: number; code: string; codeHash: string }[] = []
+  if (!order.gift_cards_issued_at) {
+    const { data: items, error: itemsError } = await supabase.from('order_items')
+      .select('id,quantity').eq('order_id', orderId).eq('is_gift_card', true)
+    if (itemsError || !Array.isArray(items)) throw new Error('GIFT_ORDER_ITEMS_UNAVAILABLE')
+    units = items.flatMap(item => {
+      if (!Number.isSafeInteger(item.quantity) || item.quantity < 1) throw new Error('GIFT_INVALID_QUANTITY')
+      return Array.from({ length: item.quantity }, (_, unitIndex) => {
+        const code = generateGiftCardCode()
+        return { orderItemId: item.id, unitIndex, code, codeHash: hashGiftCardCode(code) }
       })
-
-      issued.push({
-        code: card.code,
-        amount: card.initialAmount,
-        currency: 'EUR',
-        expiresAt: card.expiresAt,
-        recipientEmail,
-        recipientName: meta.recipientName?.trim() || null,
-        senderName: meta.senderName?.trim() || null,
-        personalMessage: meta.personalMessage?.trim() || null,
-        purchaserEmail,
-        scheduledSendAt: meta.scheduledSendAt || null,
-      })
-    }
+    })
   }
-
-  await supabase
-    .from('orders')
-    .update({ gift_cards_issued_at: new Date().toISOString() })
-    .eq('id', orderId)
-
-  return { issued, skipped: false }
+  const result = await supabase.rpc('issue_paid_order_gift_cards', { p_order_id: orderId, p_units: units })
+  if (result.error || !Array.isArray(result.data)) throw new Error('GIFT_ATOMIC_ISSUANCE_UNCONFIRMED')
+  const issued = result.data as IssuedGiftCardEmailPayload[]
+  return { issued, skipped: issued.length === 0 }
 }
 
 // -----------------------------------------------------------------------------

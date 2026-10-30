@@ -25,7 +25,7 @@ describe('one Shopify cart for the whole MOSE collection', () => {
     expect(getCheckoutAttempt(createShopifyCartSnapshot([item('a', 3), item('b')], 'nl'), attempt, () => id2).attemptId).toBe(id2)
   })
   it('does not silently omit unsupported gift-card recipient data or accept impossible quantities', () => {
-    expect(() => createShopifyCartSnapshot([item('regular'), { ...item('gift'), isGiftCard: true, giftCardRecipient: { recipientEmail: 'gift@example.test' } }], 'nl')).toThrow('UNSUPPORTED_CART')
+    expect(() => createShopifyCartSnapshot([item('regular'), { ...item('gift'), isGiftCard: true, giftCardRecipient: { recipientEmail: 'gift@example.test' } }], 'nl')).toThrow('INVALID_GIFT_RECIPIENT')
     expect(() => createShopifyCartSnapshot([item('a', 6), item('a', 6)], 'nl')).toThrow('INVALID_CART')
     expect(() => createShopifyCartSnapshot([item('a', NaN)], 'nl')).toThrow('INVALID_CART')
   })
@@ -68,4 +68,12 @@ describe('one Shopify cart for the whole MOSE collection', () => {
     expect(getCheckoutAttempt(createShopifyCartSnapshot([item('a')], 'nl'), locked, () => id2).attemptId).toBe(id1)
   })
 
+})
+
+it('keeps a native gift amount and recipient in mixed and gift-only snapshots without treating the client amount as a physical price',()=>{
+ const gift={...item('gift'),productId:'bc6c495d-fbc9-48e4-8d24-a9f8f23e3b8c',isGiftCard:true,giftCardAmount:20.01,giftCardRecipient:{recipientEmail:'gift@example.test',recipientName:'Gift recipient'}}
+ const snapshot=createShopifyCartSnapshot([item('clothing'),gift],'nl')
+ expect(snapshot.lines).toEqual([{variantId:'clothing',quantity:1}])
+ expect(snapshot.giftCards).toEqual([{productId:gift.productId,amountCents:2001,quantity:1,recipient:{recipientEmail:'gift@example.test',recipientName:'Gift recipient'}}])
+ expect(createShopifyCartSnapshot([gift],'nl').lines).toEqual([])
 })

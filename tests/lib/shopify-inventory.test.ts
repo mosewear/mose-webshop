@@ -80,3 +80,24 @@ describe('authoritative location inventory', () => {
     expect(() => assertInventoryEvidence([{ localVariantId: 'missing', quantity: 1 }], [e])).toThrow()
   })
 })
+
+it('verifies a specifically released supplier made-to-order contract without copying sentinel stock', () => {
+  const released = { ...mapping, fulfillment_owner: 'tapstitch', fulfillment_mode: 'made_to_order', supplier_link_verified: true,
+    sample_verified: false, owner_release_authorized_at: '2026-01-01T00:00:00Z', owner_release_reference: 'Owner expressly released before samples', inventory_item_id: 'gid://shopify/InventoryItem/7' }
+  const r = response()
+  Object.assign(r.nodes[0], { inventoryPolicy: 'CONTINUE' })
+  Object.assign(r.nodes[0].inventoryItem, { tracked: false, id: released.inventory_item_id })
+  r.nodes[0].inventoryItem.inventoryLevel.quantities[0].quantity = 9999999
+  expect(projectInventory(released, r)).toEqual({ status: 'made_to_order', quantity: null, reason: 'SUPPLIER_MADE_TO_ORDER_VERIFIED' })
+  r.nodes[0].product.status = 'UNLISTED'
+  expect(projectInventory(released, r)).toMatchObject({ status: 'made_to_order', quantity: null })
+  r.nodes[0].product.status = 'DRAFT'
+  expect(projectInventory(released, r)).toMatchObject({ status: 'unknown' })
+  r.nodes[0].product.status = 'ACTIVE'
+  expect(projectInventory({ ...released, owner_release_authorized_at: null }, r)).toMatchObject({ status: 'unknown', quantity: null })
+  const observed = { ...evidence(), status: 'made_to_order', available_quantity: null, reason: 'SUPPLIER_MADE_TO_ORDER_VERIFIED' }
+  expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 10 }], [observed])).not.toThrow()
+  expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 11 }], [observed])).toThrow()
+  expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 1 }], [{ ...observed, available_quantity: 9999999 }])).toThrow()
+  expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 1 }], [{ ...observed, observed_at: '2000-01-01T00:00:00Z' }])).toThrow()
+})

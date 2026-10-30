@@ -10,6 +10,7 @@ export const LOYALTY_PAYMENT_QUERY = `query MoseLoyaltyPayment($id: ID!) {
     transactionsCount { count precision }
     transactions(first: 100) {
       id kind status test gateway manualPaymentGateway
+      parentTransaction { id }
       amountSet { shopMoney { amount currencyCode } presentmentMoney { amount currencyCode } }
     }
     discountApplications(first: 100) {

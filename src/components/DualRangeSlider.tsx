@@ -11,6 +11,11 @@ interface DualRangeSliderProps {
   step?: number
 }
 
+const clampValues = ([low, high]: [number, number], min: number, max: number): [number, number] => [
+  Math.max(min, Math.min(max, Math.min(low, high))),
+  Math.max(min, Math.min(max, Math.max(low, high))),
+]
+
 export default function DualRangeSlider({ 
   min, 
   max, 
@@ -19,13 +24,13 @@ export default function DualRangeSlider({
   step = 1
 }: DualRangeSliderProps) {
   const t = useTranslations('shop')
-  const [localValue, setLocalValue] = useState(value)
+  const [localValue, setLocalValue] = useState(() => clampValues(value, min, max))
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null)
   const sliderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setLocalValue(value)
-  }, [value])
+    setLocalValue(clampValues(value, min, max))
+  }, [value, min, max])
 
   const handleMove = (clientX: number) => {
     if (!sliderRef.current || !isDragging) return
@@ -38,9 +43,9 @@ export default function DualRangeSlider({
     const newValue: [number, number] = [...localValue]
 
     if (isDragging === 'min') {
-      newValue[0] = Math.min(steppedValue, localValue[1] - step)
+      newValue[0] = Math.min(steppedValue, localValue[1])
     } else {
-      newValue[1] = Math.max(steppedValue, localValue[0] + step)
+      newValue[1] = Math.max(steppedValue, localValue[0])
     }
 
     newValue[0] = Math.max(min, Math.min(max, newValue[0]))
@@ -93,7 +98,7 @@ export default function DualRangeSlider({
     const index = handle === 'min' ? 0 : 1
     const next: [number, number] = [...localValue]
     const requested = event.key === 'Home' ? min : event.key === 'End' ? max : next[index] + directions[event.key]
-    next[index] = handle === 'min' ? Math.max(min, Math.min(requested, next[1] - step)) : Math.min(max, Math.max(requested, next[0] + step))
+    next[index] = handle === 'min' ? Math.max(min, Math.min(requested, next[1])) : Math.min(max, Math.max(requested, next[0]))
     setLocalValue(next)
     onChange(next)
   }
@@ -137,7 +142,7 @@ export default function DualRangeSlider({
             
             {/* Handle Square */}
             <div
-              className={`w-5 h-5 bg-white border-2 border-black cursor-grab transition-transform ${
+              className={`flex h-11 w-11 items-center justify-center cursor-grab focus-visible:outline-2 focus-visible:outline-brand-primary transition-transform ${
                 isDragging === 'min' ? 'cursor-grabbing scale-110' : 'hover:scale-110'
               }`}
               onMouseDown={() => handleMouseDown('min')}
@@ -145,12 +150,13 @@ export default function DualRangeSlider({
               onKeyDown={event => handleKeyDown(event, 'min')}
               role="slider"
               aria-valuemin={min}
-              aria-valuemax={max}
+              aria-valuemax={localValue[1]}
               aria-valuenow={localValue[0]}
+              aria-valuetext={`€${localValue[0]}`}
               aria-label={t('priceMin')}
               tabIndex={0}
               style={{ touchAction: 'none' }}
-            />
+            ><span aria-hidden="true" className="h-5 w-5 border-2 border-black bg-white" /></div>
           </div>
 
           {/* Max Handle */}
@@ -170,20 +176,21 @@ export default function DualRangeSlider({
             
             {/* Handle Square */}
             <div
-              className={`w-5 h-5 bg-white border-2 border-black cursor-grab transition-transform ${
+              className={`flex h-11 w-11 items-center justify-center cursor-grab focus-visible:outline-2 focus-visible:outline-brand-primary transition-transform ${
                 isDragging === 'max' ? 'cursor-grabbing scale-110' : 'hover:scale-110'
               }`}
               onMouseDown={() => handleMouseDown('max')}
               onTouchStart={() => handleMouseDown('max')}
               onKeyDown={event => handleKeyDown(event, 'max')}
               role="slider"
-              aria-valuemin={min}
+              aria-valuemin={localValue[0]}
               aria-valuemax={max}
               aria-valuenow={localValue[1]}
+              aria-valuetext={`€${localValue[1]}`}
               aria-label={t('priceMax')}
               tabIndex={0}
               style={{ touchAction: 'none' }}
-            />
+            ><span aria-hidden="true" className="h-5 w-5 border-2 border-black bg-white" /></div>
           </div>
         </div>
 

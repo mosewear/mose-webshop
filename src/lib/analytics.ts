@@ -53,12 +53,13 @@ interface TrackEventParams {
   event_name: string
   properties?: Record<string, any>
   user_id?: string
+  page_url?: string
 }
 
 /**
  * Track custom event (DUAL: PostHog + Supabase)
  */
-export async function trackEvent({ event_name, properties = {}, user_id }: TrackEventParams) {
+export async function trackEvent({ event_name, properties = {}, user_id, page_url }: TrackEventParams) {
   try {
     // First line of defense: never fire tracking requests from automation
     // browsers (Selenium / Puppeteer / Playwright / headless Chrome) or
@@ -94,13 +95,14 @@ export async function trackEvent({ event_name, properties = {}, user_id }: Track
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
+      keepalive: true,
       body: JSON.stringify({
         event_name,
         event_properties: properties,
         session_id: sessionId,
         anonymous_id: anonymousId,
         user_id: user_id || null,
-        page_url: window.location.href,
+        page_url: page_url ?? window.location.href,
         page_title: document.title,
         referrer: document.referrer || null,
         ...deviceInfo,

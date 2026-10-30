@@ -920,6 +920,8 @@
     "catalog": {
       "search": "Zoek een artikel",
       "searchPlaceholder": "Hoodie, jeans, longsleeve…",
+      "previousCategories": "Vorige categorieën",
+      "nextCategories": "Volgende categorieën",
       "category": "Categorie",
       "all": "Alles",
       "filters": "Filters",
@@ -941,7 +943,7 @@
       "removeFilter": "Verwijder filter: {filter}",
       "results": "{count, plural, =0 {Geen artikelen} one {# artikel} other {# artikelen}}",
       "models": "{count, plural, one {# model} other {# modellen}}",
-      "viewResults": "Bekijk {count, plural, one {# artikel} other {# artikelen}}",
+      "viewResults": "Bekijk {count, plural, one {# model} other {# modellen}}",
       "close": "Sluit filters",
       "emptyTitle": "Geen artikelen bij deze filters",
       "emptyBody": "Probeer een andere maat of kleur, of wis je filters om de hele collectie te zien.",
@@ -954,7 +956,13 @@
       "unavailable": "Niet beschikbaar",
       "from": "Vanaf",
       "collection": "De collectie",
+      "availableHelp": "Inclusief beschikbare pre-orders. Maat en kleur gelden voor dezelfde uitvoering.",
       "filterHelp": "Combineer maat en kleur om jouw uitvoering te vinden.",
+      "wishlistLogin": "Log in om dit model te bewaren.",
+      "wishlistAlready": "Dit model staat al in je favorieten.",
+      "wishlistError": "Bewaren is niet gelukt. Probeer het opnieuw.",
+      "wishlistSaved": "Model bewaard in je favorieten.",
+      "wishlistRemoved": "Model verwijderd uit je favorieten.",
       "oneSize": "One size"
     }
   },
@@ -1443,10 +1451,11 @@
       "freeShippingAltijd": "Altijd gratis verzending"
     },
     "featured": {
-      "label": "Bestsellers",
+      "label": "De collectie",
+      "browse": "Bekijk alle modellen",
       "title": "VIND JOUW FAVORIET",
       "description": "Goede basics en uitgesproken pasvormen. Ontdek de collectie van MOSE.",
-      "noProducts": "Geen featured producten ingesteld.",
+      "noProducts": "De collectie is niet beschikbaar. Probeer het later opnieuw.",
       "noProductsDesc": "Selecteer producten in de admin homepage settings.",
       "inStock": "Op voorraad",
       "outOfStock": "Uitverkocht",
@@ -1482,7 +1491,7 @@
         "text": "Meer over MOSE",
         "aria": "Lees waar MOSE voor staat"
       },
-      "imageAlt": "Vier mannen in MOSE sweaters"
+      "imageAlt": "Modellen in MOSE-hoodies en broeken"
     },
     "newsletter": {
       "title": "NIEUWS VAN MOSE",
@@ -2312,6 +2321,9 @@
       }
     },
     "collection": {
+      "heading": "Lookbook",
+      "shortIntro": "De MOSE-collectie in beeld.",
+      "ariaLabel": "De MOSE-collectie",
       "eyebrow": "DE COMPLETE COLLECTIE",
       "title": "ZO DRAAG JE MOSE.",
       "intro": "Een ruimere hoodie op een barrel jeans. Een longsleeve onder je jas. Of gewoon een goed T-shirt. Kies de pasvorm en kleur die bij je passen.",

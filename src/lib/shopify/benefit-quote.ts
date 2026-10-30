@@ -12,10 +12,10 @@ export function quoteCheckoutBenefits(input:{
 }) {
  const lines=z.array(quoteLine).min(1).max(100).parse(input.lines)
  if(new Set(lines.map(l=>l.variantId)).size!==lines.length) throw new Error('BENEFIT_DUPLICATE_VARIANT')
- if(lines.some(l=>l.giftCard)) throw new Error('BENEFIT_GIFT_CARD_PARITY_REQUIRED')
+ const physical=lines.filter(l=>!l.giftCard)
  const quantities=new Map<string,number>()
- lines.forEach(l=>quantities.set(l.productId,(quantities.get(l.productId)??0)+l.quantity))
- const staffel=lines.map(l=>{
+ physical.forEach(l=>quantities.set(l.productId,(quantities.get(l.productId)??0)+l.quantity))
+ const staffel=physical.map(l=>{
   const discounted=l.onSale?0:calculateQuantityDiscount(l.unitCents/100,quantities.get(l.productId)!,input.tiers.filter(t=>t.product_id===l.productId)).discountPerItem
   const perItemCents=Math.round(discounted*100)
   if(!Number.isSafeInteger(perItemCents)||perItemCents<0||perItemCents>l.unitCents) throw new Error('BENEFIT_INVALID_QUANTITY_TIER')
@@ -24,14 +24,15 @@ export function quoteCheckoutBenefits(input:{
  const subtotal=lines.reduce((n,l)=>n+l.unitCents*l.quantity,0)
  const staffelCents=staffel.reduce((n,l)=>n+l.totalCents,0)
  const afterStaffel=subtotal-staffelCents
+ const eligibleAfterStaffel=physical.reduce((n,l)=>n+l.unitCents*l.quantity,0)-staffelCents
  const promo=input.promo?planPromo(input.promo,lines,staffelCents):null
  const tier=input.loyalty?.tier??calculateTier(input.loyalty?.lifetimePoints??0)
- const tierCents=shopifyPercentageDiscountCents(afterStaffel,getTierDiscountPercent(tier))
+ const tierCents=shopifyPercentageDiscountCents(eligibleAfterStaffel,getTierDiscountPercent(tier))
  const points=input.points??0
  z.number().int().min(0).max(20_000_000).multipleOf(100).parse(points)
  const redemptionCents=points/100*500
  const discountCents=staffelCents+(promo?.discountCents??0)+tierCents+redemptionCents
- if(!Number.isSafeInteger(discountCents)||discountCents>subtotal) throw new Error('BENEFITS_EXCEED_CART')
+ if(!Number.isSafeInteger(discountCents)||discountCents>physical.reduce((n,l)=>n+l.unitCents*l.quantity,0)) throw new Error('BENEFITS_EXCEED_CART')
  if(redemptionCents>0&&discountCents===subtotal) throw new Error('LOYALTY_ZERO_SPEND_PARITY_REQUIRED')
  return {subtotalCents:subtotal,afterStaffelCents:afterStaffel,staffel,staffelCents,promo,tier,tierCents,redemptionCents,discountCents,payableMerchandiseCents:subtotal-discountCents}
 }

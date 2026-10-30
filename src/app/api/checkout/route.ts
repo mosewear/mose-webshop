@@ -1,3 +1,4 @@
+import { authorizeLegacyCatalog, LegacyCatalogError } from '@/lib/legacy-checkout-catalog'
 import { legacyCutoverFreezeResponse } from '@/lib/legacy-cutover-freeze'
 import { atomicPromoEnabled, createAtomicLegacyPromoOrder } from '@/lib/shopify/promo-reservation'
 import { createClient } from '@supabase/supabase-js'
@@ -64,6 +65,19 @@ export async function POST(request: Request) {
       }
     )
 
+    let checkedItems
+    try { checkedItems = await authorizeLegacyCatalog(supabase, items) }
+    catch (error) {
+      return NextResponse.json({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.',
+        code: error instanceof LegacyCatalogError ? error.code : 'CATALOG_UNAVAILABLE' }, { status: 409 })
+    }
+    items.splice(0, items.length, ...checkedItems)
+    // A client cannot mark an uncharged order paid or provide a stock stamp.
+    order.payment_status = 'pending'
+    order.status = 'pending'
+    delete order.stock_decremented_at
+    delete order.id
+
     // ============================================
     // STEP 1: VALIDATE STOCK AVAILABILITY (DUAL INVENTORY)
     // ============================================
@@ -96,6 +110,9 @@ export async function POST(request: Request) {
       }
     }
 
+    const requestedByVariant = new Map<string, number>()
+    for (const item of items) if (!item.is_gift_card) requestedByVariant.set(item.variant_id,
+      (requestedByVariant.get(item.variant_id) ?? 0) + item.quantity)
     for (const item of items) {
       // Gift cards are digital: no stock to check, no variant required.
       if (item.is_gift_card) continue
@@ -131,10 +148,10 @@ export async function POST(request: Request) {
 
       // DUAL INVENTORY CHECK: Check total available stock (regular + presale)
       const regular = variant.stock_quantity ?? 0
-      const presale = variant.presale_stock_quantity ?? 0
+      const presale = variant.presale_enabled === true ? (variant.presale_stock_quantity ?? 0) : 0
       const totalAvailable = regular + presale
 
-      if (totalAvailable < item.quantity) {
+      if (totalAvailable < (requestedByVariant.get(item.variant_id) ?? item.quantity)) {
         console.error('❌ Insufficient total stock:', item.product_name, 'Available:', totalAvailable, 'Requested:', item.quantity)
         return NextResponse.json(
           { 

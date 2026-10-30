@@ -1,10 +1,12 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-const mock = vi.hoisted(() => ({ benefitQuote: vi.fn(), issueBenefits: vi.fn(), runtimeReadiness: vi.fn(), from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[], localVariants: [] as Record<string, unknown>[], localProducts: [] as Record<string, unknown>[], localError: false }))
+const mock = vi.hoisted(() => ({ nativeRuntime: vi.fn(), nativeCutover: vi.fn(), nativeResolve: vi.fn(), benefitQuote: vi.fn(), issueBenefits: vi.fn(), runtimeReadiness: vi.fn(), from: vi.fn(), rpc: vi.fn(), storefront: vi.fn(), getUser: vi.fn(), insertOwner: vi.fn(), state: {} as Record<string, unknown>, mappings: [] as unknown[], localVariants: [] as Record<string, unknown>[], localProducts: [] as Record<string, unknown>[], localError: false }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: () => ({ from: mock.from, rpc: mock.rpc }) }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: mock.getUser } }) }))
 vi.mock('@/lib/shopify/client', () => ({ storefront: mock.storefront }))
+vi.mock('@/lib/shopify/native-gift-cutover', () => ({ nativeGiftRuntimeReadiness: mock.nativeRuntime, assertNativeGiftCutover: mock.nativeCutover }))
+vi.mock('@/lib/shopify/native-gift-catalog', () => ({ resolveNativeGiftVariant: mock.nativeResolve }))
 vi.mock('@/lib/shopify/runtime-readiness', () => ({ runtimeReadiness: mock.runtimeReadiness }))
 vi.mock('@/lib/shopify/checkout-benefits', () => ({ readCheckoutBenefitQuote: mock.benefitQuote, issueCheckoutBenefits: mock.issueBenefits }))
 import { POST } from '@/app/api/shopify/checkout/route'
@@ -20,6 +22,9 @@ function request(data: unknown = body, session: string | null = 'a'.repeat(64)) 
     headers: { origin: 'https://www.mosewear.com', ...(session ? { cookie: 'mose_shopify_session=' + session } : {}) } })
 }
 beforeEach(() => {
+  mock.nativeRuntime.mockReset().mockResolvedValue({key:'nativeGiftRuntime',status:'verified'})
+  mock.nativeCutover.mockReset().mockResolvedValue({shopifyProductIds:['gid://shopify/Product/999']})
+  mock.nativeResolve.mockReset().mockImplementation(async (_db,input) => ({shopifyVariantId:'gid://shopify/ProductVariant/999',shopifyProductId:'gid://shopify/Product/999',amountCents:input.amountCents,nativeGiftCard:true}))
   mock.benefitQuote.mockReset().mockImplementation(async (_db, input) => ({ ...input, expectedSubtotalBeforeOrderCents: input.lines.reduce((n: number,line: {unitCents:number;quantity:number})=>n+line.unitCents*line.quantity,0), quote: { payableMerchandiseCents: input.lines.reduce((n: number,line: {unitCents:number;quantity:number})=>n+line.unitCents*line.quantity,0), discountCents: 0 } }))
   mock.issueBenefits.mockReset().mockResolvedValue([])
   mock.runtimeReadiness.mockReset().mockResolvedValue([{ key: 'loyaltyRuntime', status: 'verified' }, { key: 'legacyStockBridge', status: 'verified' }])
@@ -257,4 +262,52 @@ describe('unified checkout boundary', () => {
     expect((await POST(request())).status).toBe(200)
   })
 
+})
+
+
+describe('native gift mixed checkout contract',()=>{
+ const gift={productId:'bc6c495d-fbc9-48e4-8d24-a9f8f23e3b8c',amountCents:2001,quantity:1,recipient:{recipientEmail:'gift@example.test'}}
+ function reflectNativeCart(){
+  let cartLines:{quantity:number;merchandise:{id:string};attributes:{key:string;value:string}[];discountAllocations:never[];cost:{amountPerQuantity:{amount:string;currencyCode:string};subtotalAmount:{amount:string;currencyCode:string}}}[]=[]
+  mock.storefront.mockReset().mockImplementation(async(query:string,variables:Record<string,unknown>)=>{
+   if(query.includes('MoseVariants'))return {nodes:(variables.ids as string[]).map(id=>({id,availableForSale:true,quantityAvailable:id===gid?5:null,price:{amount:id===gid?'69.95':'20.01',currencyCode:'EUR'}}))}
+   if(query.includes('MoseCart(')){
+    const input=variables.input as {lines:{merchandiseId:string;quantity:number;attributes?:{key:string;value:string}[]}[]}
+    cartLines=input.lines.map(line=>{const amount=line.merchandiseId===gid?6995:2001;return {quantity:line.quantity,merchandise:{id:line.merchandiseId},attributes:line.attributes??[],discountAllocations:[],cost:{amountPerQuantity:{amount:(amount/100).toFixed(2),currencyCode:'EUR'},subtotalAmount:{amount:(amount*line.quantity/100).toFixed(2),currencyCode:'EUR'}}}})
+    const total=cartLines.reduce((sum,line)=>sum+Number(line.cost.subtotalAmount.amount),0)
+    return {cartCreate:{cart:{id:'native-cart',checkoutUrl:url,totalQuantity:cartLines.reduce((sum,line)=>sum+line.quantity,0),cost:{subtotalAmount:{amount:total.toFixed(2),currencyCode:'EUR'}},lines:{nodes:cartLines}},userErrors:[],warnings:[]}}
+   }
+   if(query.includes('MoseBenefitsCart'))return {cart:{discountCodes:[],deliveryGroups:{pageInfo:{hasNextPage:false},nodes:[]},lines:{pageInfo:{hasNextPage:false},nodes:cartLines}}}
+   throw new Error('UNEXPECTED_TEST_QUERY')
+  })
+ }
+ it('creates one mixed physical/native gift cart, binds recipient properties and never calls a MOSE issuer',async()=>{
+  reflectNativeCart()
+  const response=await POST(request({...body,giftCards:[gift]}))
+  expect(response.status).toBe(200)
+  const create=mock.storefront.mock.calls.find(([query])=>query.includes('MoseCart('))![1].input
+  expect(create.lines).toHaveLength(2)
+  expect(create.lines[1].attributes).toContainEqual({key:'Recipient email',value:'gift@example.test'})
+  expect(create.lines[1].attributes).toContainEqual({key:'__shopify_send_gift_card_to_recipient',value:'true'})
+  expect(create.lines[1].attributes.find((a:{key:string})=>a.key==='_mose_gift_proof').value).toMatch(/^[a-f0-9]{64}$/)
+  expect(mock.rpc.mock.calls.some(([name])=>/issue.*gift/.test(name))).toBe(false)
+ })
+ it('keeps same-value gifts to distinct recipients as separate lines while proving their aggregate face value',async()=>{
+  reflectNativeCart()
+  const response=await POST(request({...body,lines:[],giftCards:[gift,{...gift,recipient:{recipientEmail:'second@example.test'}}]}))
+  expect(response.status).toBe(200)
+  expect(mock.nativeResolve).toHaveBeenCalledTimes(2)
+  const create=mock.storefront.mock.calls.find(([query])=>query.includes('MoseCart('))![1].input
+  expect(create.lines).toHaveLength(2)
+  expect(new Set(create.lines.map((line:{merchandiseId:string})=>line.merchandiseId)).size).toBe(1)
+  expect(mock.benefitQuote.mock.calls[0][1].lines).toMatchObject([{giftCard:true,quantity:2,unitCents:2001}])
+  expect(mock.rpc.mock.calls.some(([name])=>name==='shopify_inventory_evidence')).toBe(false)
+ })
+ it('retains the basket and creates no payable cart when native product proof or exclusive issuer is missing',async()=>{
+  mock.nativeCutover.mockRejectedValueOnce(new Error('LEGACY_OBLIGATIONS_REMAIN'))
+  const response=await POST(request({...body,giftCards:[gift]}))
+  expect(await response.json()).toMatchObject({code:'NATIVE_GIFT_NOT_READY'})
+  expect(mock.storefront).not.toHaveBeenCalled()
+  expect(mock.issueBenefits).not.toHaveBeenCalled()
+ })
 })

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { MAX_ORDER_QUANTITY } from '@/lib/variant-availability'
 
 export interface GiftCardRecipient {
   recipientName?: string
@@ -24,6 +25,8 @@ export interface CartItem {
   image: string
   stock: number
   sku: string
+  /** Order quantity cap is independent of physical stock for this supplier-backed item. */
+  isMadeToOrder?: boolean
   isPresale?: boolean
   presaleExpectedDate?: string
   presaleStock?: number
@@ -64,31 +67,15 @@ export const useCart = create<CartStore>()(
             (i) => i.variantId === item.variantId
           )
           
-          let newItems: CartItem[]
-          
-          if (existingItem) {
-            if (existingItem.isGiftCard) {
-              // Gift cards have no stock cap; just increment quantity
-              newItems = state.items.map((i) =>
-                i.variantId === item.variantId
-                  ? { ...i, quantity: i.quantity + item.quantity }
-                  : i
-              )
-            } else {
-              // Determine stock limit based on presale status
-              const maxStock = existingItem.isPresale
-                ? (existingItem.presaleStock || 0)
-                : existingItem.stock
-
-              newItems = state.items.map((i) =>
-                i.variantId === item.variantId
-                  ? { ...i, quantity: Math.min(i.quantity + item.quantity, maxStock) }
-                  : i
-              )
-            }
-          } else {
-            newItems = [...state.items, item]
-          }
+          const current = existingItem ? { ...existingItem, ...item } : item
+          const limit = cartItemQuantityLimit(current)
+          if (limit !== null && limit <= 0) return state
+          const requested = (existingItem?.quantity ?? 0) + item.quantity
+          const quantity = limit === null ? requested : Math.min(requested, limit)
+          if (!Number.isSafeInteger(quantity) || quantity < 1) return state
+          const newItems: CartItem[] = existingItem
+            ? state.items.map(i => i.variantId === item.variantId ? { ...current, quantity } : i)
+            : [...state.items, { ...item, quantity }]
           
           // Broadcast to other tabs
           if (cartChannel) {
@@ -113,16 +100,11 @@ export const useCart = create<CartStore>()(
       },
       
       updateQuantity: (variantId, quantity) => {
+        if (!Number.isSafeInteger(quantity) || quantity < 1) return
         set((state) => {
           const newItems = state.items.map((item) => {
             if (item.variantId === variantId) {
-              if (item.isGiftCard) {
-                return { ...item, quantity: Math.max(1, quantity) }
-              }
-              // Determine stock limit based on presale status
-              const maxStock = item.isPresale
-                ? (item.presaleStock || 0)
-                : item.stock
+              const maxStock = cartItemQuantityLimit(item) ?? Infinity
 
               return {
                 ...item,
@@ -151,6 +133,7 @@ export const useCart = create<CartStore>()(
       },
       
       setItems: (newItems) => {
+        newItems = newItems.map(capMadeToOrderQuantity)
         // Broadcast to other tabs
         if (cartChannel) {
           cartChannel.postMessage({ type: 'UPDATE', items: newItems })
@@ -195,15 +178,27 @@ if (cartChannel) {
       // Older persisted/recovered carts did not always include a slug. Accept
       // those messages and normalize them instead of losing the update after
       // the recovery flow has broadcast CLEAR.
-      useCart.setState({ items: message.items.map(item => ({ ...item, slug: item.slug ?? '' })) })
+      useCart.setState({ items: message.items.map(item => capMadeToOrderQuantity({ ...item, slug: item.slug ?? '' })) })
     }
   }
+}
+
+function capMadeToOrderQuantity(item: CartItem): CartItem {
+  return item.isMadeToOrder === true ? { ...item, quantity: Math.max(1, Math.min(MAX_ORDER_QUANTITY, Math.floor(item.quantity) || 1)) } : item
+}
+
+export function cartItemQuantityLimit(item: Pick<CartItem, 'stock' | 'isPresale' | 'presaleStock' | 'isGiftCard' | 'isMadeToOrder'>): number | null {
+  if (item.isGiftCard) return process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' ? MAX_ORDER_QUANTITY : null
+  if (item.isMadeToOrder === true) return MAX_ORDER_QUANTITY
+  const stock = item.isPresale ? item.presaleStock ?? 0 : item.stock
+  return Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0
 }
 
 function isCartSyncItem(value: unknown): value is Omit<CartItem, 'slug'> & { slug?: string } {
   if (!value || typeof value !== 'object') return false
   const item = value as Record<string, unknown>
-  return (item.slug === undefined || typeof item.slug === 'string') &&
+  return (item.isMadeToOrder === undefined || typeof item.isMadeToOrder === 'boolean') &&
+    (item.slug === undefined || typeof item.slug === 'string') &&
     ['productId', 'variantId', 'name', 'size', 'color', 'colorHex', 'image', 'sku']
     .every(key => typeof item[key] === 'string') &&
     typeof item.quantity === 'number' && Number.isSafeInteger(item.quantity) && item.quantity >= 1 &&

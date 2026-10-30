@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { nativeGiftLineSchema } from './native-gift-input'
 
 export const SHOPIFY_API_VERSION = '2026-10'
 export const SHOPIFY_STORE = 'hp5szr-te.myshopify.com'
@@ -13,11 +14,12 @@ export const checkoutInput = z.object({
   attemptId: z.string().uuid(),
   promoCode: z.string().trim().min(1).max(80).regex(/^[A-Za-z0-9_-]+$/).optional(),
   loyaltyPoints: z.number().int().min(0).max(20_000_000).multipleOf(100).optional(),
+  giftCards: z.array(nativeGiftLineSchema).max(30).optional(),
   lines: z.array(z.object({
     variantId: z.string().min(1).max(160).regex(/^[A-Za-z0-9_-]+$/),
     quantity: z.number().int().min(1).max(10),
-  }).strict()).min(1).max(30),
-}).strict()
+  }).strict()).max(30),
+}).strict().refine(input => input.lines.length + (input.giftCards?.length ?? 0) > 0 && input.lines.length + (input.giftCards?.length ?? 0) <= 30, 'INVALID_CART_SIZE')
 export type CheckoutInput = z.infer<typeof checkoutInput>
 export type FulfillmentOwner = 'mose' | 'tapstitch' | 'digital'
 export type MappedVariant = {
@@ -26,9 +28,19 @@ export type MappedVariant = {
   fulfillment_owner: FulfillmentOwner
   supplier_model: string | null
   supplier_link_verified: boolean
+  owner_release_authorized_at?: string | null
+  owner_release_reference?: string | null
+  fulfillment_mode?: 'local_stock' | 'made_to_order'
   sample_verified: boolean
   enabled: boolean
   price_eur_cents: number
+}
+
+/** Owner may explicitly release before quality samples; this never claims sample approval. */
+export function supplierReleaseAuthorized(mapping: Pick<MappedVariant, 'sample_verified' | 'owner_release_authorized_at' | 'owner_release_reference'>, now = Date.now()) {
+  if (mapping.sample_verified === true) return true
+  const authorizedAt = Date.parse(mapping.owner_release_authorized_at ?? '')
+  return Number.isFinite(authorizedAt) && authorizedAt <= now && (mapping.owner_release_reference?.trim().length ?? 0) >= 20
 }
 
 /** Local identity is never authority: every route/price comes from a released server mapping. */
@@ -38,7 +50,7 @@ export function authorizeLines(input: CheckoutInput, variants: MappedVariant[]) 
   const result = [...totals].map(([localVariantId, quantity]) => {
     const match = variants.find(v => v.mose_variant_id === localVariantId)
     const supplierReady = match?.fulfillment_owner !== 'tapstitch' ||
-      (match.supplier_link_verified && match.sample_verified && PILOT_MODELS.some(model => model === match.supplier_model))
+      (match.supplier_link_verified && supplierReleaseAuthorized(match) && PILOT_MODELS.some(model => model === match.supplier_model))
     if (!match || !match.enabled || !supplierReady ||
       !['mose', 'tapstitch'].includes(match.fulfillment_owner) ||
       !/^gid:\/\/shopify\/ProductVariant\/\d+$/.test(match.shopify_variant_id) ||

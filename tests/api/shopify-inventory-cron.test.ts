@@ -25,12 +25,12 @@ describe('inventory runner', () => {
     expect((await GET(req('Bearer wrong'))).status).toBe(401)
     expect(mocks.create).not.toHaveBeenCalled()
   })
-  it('runs at most two batches with the same deadline and stops at an empty batch', async () => {
+  it('runs at most four location batches with the same deadline', async () => {
     mocks.reconcile.mockResolvedValue({ processed: 50, unknown: 0, failed: 0, leaseLost: 0 })
     const response = await GET(req())
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('no-store')
-    expect(mocks.reconcile).toHaveBeenCalledTimes(2)
+    expect(mocks.reconcile).toHaveBeenCalledTimes(4)
     expect(mocks.reconcile.mock.calls[0][2]).toBe(mocks.reconcile.mock.calls[1][2])
   })
   it('reports untracked supplier availability and failures without claiming successful inventory', async () => {
@@ -43,4 +43,10 @@ describe('inventory runner', () => {
     expect(failed.status).toBe(503)
     expect(await failed.text()).not.toContain('private provider')
   })
+})
+
+it('stops inventory reconciliation immediately after an empty batch', async () => {
+  mocks.reconcile.mockResolvedValueOnce({ processed: 50, unknown: 0, failed: 0, leaseLost: 0 })
+  expect((await GET(req())).status).toBe(200)
+  expect(mocks.reconcile).toHaveBeenCalledTimes(2)
 })

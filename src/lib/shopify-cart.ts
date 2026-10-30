@@ -1,4 +1,5 @@
 import type { CartItem } from '@/store/cart'
+import { nativeGiftAmountCents, nativeGiftLineSchema, nativeGiftRecipientAttributes, normalizeNativeGiftLines, type NativeGiftLine } from '@/lib/shopify/native-gift-input'
 
 export type ShopifyCartSnapshot = {
   locale: 'nl' | 'en'
@@ -6,6 +7,7 @@ export type ShopifyCartSnapshot = {
   promoCode?: string
   loyaltyPoints?: number
   lines: { variantId: string; quantity: number }[]
+  giftCards?: NativeGiftLine[]
 }
 
 export const SHOPIFY_ATTEMPT_STORAGE_KEY = 'mose-shopify-checkout-attempt-v1'
@@ -15,20 +17,37 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 /** Only IDs and quantities go to the server. Client prices never authorize a sale. */
 export function createShopifyCartSnapshot(items: CartItem[], locale: string, benefits: { promoCode?: string; loyaltyPoints?: number } = {}): ShopifyCartSnapshot {
   if (!items.length) throw new Error('INVALID_CART')
-  if (items.some(item => item.isGiftCard)) throw new Error('UNSUPPORTED_CART')
   if (locale !== 'nl' && locale !== 'en') throw new Error('UNSUPPORTED_LOCALE')
   const promoCode = benefits.promoCode?.trim().toUpperCase() || undefined
   const loyaltyPoints = benefits.loyaltyPoints === 0 ? undefined : benefits.loyaltyPoints
   if (promoCode && (promoCode.length > 80 || !/^[A-Z0-9_-]+$/.test(promoCode))) throw new Error('INVALID_PROMO')
   if (loyaltyPoints !== undefined && (!Number.isSafeInteger(loyaltyPoints) || loyaltyPoints < 100 || loyaltyPoints > 20_000_000 || loyaltyPoints % 100 !== 0)) throw new Error('INVALID_LOYALTY')
   const quantities = new Map<string, number>()
+  const giftCards: NativeGiftLine[] = []
   for (const item of items) {
+    if (item.isGiftCard) {
+      const recipient = item.giftCardRecipient
+      let sendOn: string | undefined, timezoneOffsetMinutes: number | undefined
+      if (recipient?.scheduledSendAt) {
+        const date = new Date(recipient.scheduledSendAt)
+        if (!Number.isFinite(date.getTime())) throw new Error('INVALID_GIFT_RECIPIENT')
+        sendOn = /^\d{4}-\d{2}-\d{2}$/.test(recipient.scheduledSendAt) ? recipient.scheduledSendAt : [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-')
+        timezoneOffsetMinutes = date.getTimezoneOffset()
+      }
+      try {
+        giftCards.push(nativeGiftLineSchema.parse({ productId:item.productId, amountCents:nativeGiftAmountCents(item.giftCardAmount??item.price), quantity:item.quantity,
+          ...(recipient ? {recipient:{recipientEmail:recipient.recipientEmail,recipientName:recipient.recipientName,senderName:recipient.senderName,personalMessage:recipient.personalMessage,...(sendOn?{sendOn,timezoneOffsetMinutes}:{})}} : {}) }))
+      } catch { throw new Error('INVALID_GIFT_RECIPIENT') }
+      continue
+    }
     if (!item.variantId || !Number.isSafeInteger(item.quantity) || item.quantity < 1) {
       throw new Error('INVALID_CART')
     }
     quantities.set(item.variantId, (quantities.get(item.variantId) ?? 0) + item.quantity)
   }
-  if (quantities.size > 30 || [...quantities.values()].some(quantity => quantity > 10)) {
+  const normalizedGifts = normalizeNativeGiftLines(giftCards)
+  try { normalizedGifts.forEach(line => nativeGiftRecipientAttributes(line, locale)) } catch { throw new Error('INVALID_GIFT_RECIPIENT') }
+  if (quantities.size + normalizedGifts.length > 30 || [...quantities.values()].some(quantity => quantity > 10)) {
     throw new Error('INVALID_CART')
   }
   return {
@@ -36,6 +55,7 @@ export function createShopifyCartSnapshot(items: CartItem[], locale: string, ben
     country: 'NL',
     ...(promoCode ? { promoCode } : {}),
     ...(loyaltyPoints ? { loyaltyPoints } : {}),
+    ...(normalizedGifts.length ? {giftCards:normalizedGifts} : {}),
     lines: [...quantities].sort(([a], [b]) => a.localeCompare(b)).map(([variantId, quantity]) => ({ variantId, quantity })),
   }
 }
@@ -73,7 +93,7 @@ export function canRotateCheckoutAttempt(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
   const result = error as { code?: unknown; retrySafe?: unknown }
   return result.retrySafe === true && typeof result.code === 'string' &&
-    ['ATTEMPT_EXPIRED', 'ATTEMPT_FAILED', 'INPUT_CHANGED', 'BENEFIT_UNAVAILABLE'].includes(result.code)
+    ['ATTEMPT_EXPIRED', 'ATTEMPT_FAILED', 'INPUT_CHANGED', 'BENEFIT_UNAVAILABLE', 'NATIVE_GIFT_NOT_READY'].includes(result.code)
 }
 
 /** Existing Mollie payment recovery remains available after the new-cart cutover. */

@@ -64,3 +64,11 @@ describe('commercial scenario', () => {
     expect(contribution({ retailInclVat: 20, customerShippingInclVat: 0, vatRate: .21, landedProductCost: 30, supplierShippingCost: 10, paymentRate: .02, paymentFixed: .3, returnReserveRate: .1, overheadPerOrder: 2, acquisitionCost: 15, discountRate: 0 }).afterAds).toBeLessThan(0)
   })
 })
+
+it('separates explicit owner release from sample approval without accepting missing or future evidence', () => {
+  const released = { ...mapped, sample_verified: false, owner_release_authorized_at: '2026-01-01T00:00:00Z', owner_release_reference: 'Owner expressly authorizes public sales before physical sample delivery' }
+  expect(authorizeLines(input, [released])).toHaveLength(1)
+  expect(released.sample_verified).toBe(false)
+  expect(() => authorizeLines(input, [{ ...released, owner_release_reference: null }])).toThrow('VARIANT_NOT_RELEASED')
+  expect(() => authorizeLines(input, [{ ...released, owner_release_authorized_at: '2999-01-01T00:00:00Z' }])).toThrow('VARIANT_NOT_RELEASED')
+})
