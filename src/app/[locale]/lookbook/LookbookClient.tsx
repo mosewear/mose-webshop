@@ -85,6 +85,16 @@ export default function LookbookClient({
       {/* HEADER: zelfde kop als de shop (PaginaKop). */}
       <PaginaKop titel={headerTitle} ondertitel={headerSubtitle || undefined} />
 
+      {collection}
+
+      {collection && chapters.length > 0 && (
+        <div className="mx-auto max-w-7xl px-4 pb-6 pt-14 md:px-8">
+          <h2 className="font-display text-4xl uppercase md:text-6xl">
+            {t('collection.stories')}
+          </h2>
+        </div>
+      )}
+
       {/* EMPTY STATE -------------------------------------------------- */}
       {chapters.length === 0 ? (
         <div className="max-w-3xl mx-auto p-10 md:p-16 text-center border-b-2 border-black">
@@ -136,8 +146,6 @@ export default function LookbookClient({
           )
         })
       )}
-
-      {collection}
 
       {/* FINAL CTA ---------------------------------------------------- */}
       {(finalCtaTitle || finalCtaBody) && (
