@@ -16,6 +16,22 @@
  */
 
 const KLEUREN: Record<string, { nl: string; en: string }> = {
+  black: { nl: 'Zwart', en: 'Black' },
+  white: { nl: 'Wit', en: 'White' },
+  brown: { nl: 'Bruin', en: 'Brown' },
+  green: { nl: 'Groen', en: 'Green' },
+  blue: { nl: 'Blauw', en: 'Blue' },
+  gray: { nl: 'Grijs', en: 'Grey' },
+  grey: { nl: 'Grijs', en: 'Grey' },
+  silver: { nl: 'Zilver', en: 'Silver' },
+  coffee: { nl: 'Koffiebruin', en: 'Coffee' },
+  'dark green': { nl: 'Donkergroen', en: 'Dark green' },
+  'white with black': { nl: 'Wit / zwart', en: 'White / black' },
+  'white with coffee': { nl: 'Wit / koffiebruin', en: 'White / coffee' },
+  'jeans blue': { nl: 'Denimblauw', en: 'Denim blue' },
+  'gray green': { nl: 'Grijsgroen', en: 'Grey green' },
+  'brown tree camo': { nl: 'Bruine tree camo', en: 'Brown tree camo' },
+  'light blue': { nl: 'Lichtblauw', en: 'Light blue' },
   zwart: { nl: 'Zwart', en: 'Black' },
   wit: { nl: 'Wit', en: 'White' },
   'off white': { nl: 'Off White', en: 'Off White' },
