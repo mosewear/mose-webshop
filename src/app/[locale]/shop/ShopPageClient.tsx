@@ -23,12 +23,16 @@ import { useCatalogFilters } from '@/components/shop/useCatalogFilters'
 import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import PaginaKop from '@/components/layout/PaginaKop'
 import RecentlyViewed from '@/components/RecentlyViewed'
+import CategorieKiezer from '@/components/shop/CategorieKiezer'
+import DetailBlok from '@/components/shop/DetailBlok'
+import DualRangeSlider from '@/components/DualRangeSlider'
+import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 
 export type ShopProduct = CatalogProduct
 export type ShopCategory = CatalogCategory
 const fieldClass =
-  'min-h-11 w-full border border-gray-300 bg-white px-3 text-sm text-black focus:border-black focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary'
+  'min-h-11 w-full border-2 border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-black transition-colors focus:border-brand-primary focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary'
 
 export default function ShopPageClient({
   initialProducts,
@@ -46,6 +50,19 @@ export default function ShopPageClient({
     [categories, setCategories] = useState(initialCategories ?? []),
     [loading, setLoading] = useState(!initialProducts),
     [error, setError] = useState('')
+  const [showCategoryLabels, setShowCategoryLabels] = useState(true)
+  useEffect(() => {
+    let stopped = false
+    void getSiteSettings()
+      .then((settings) => {
+        if (!stopped)
+          setShowCategoryLabels(settings.show_category_labels ?? true)
+      })
+      .catch(() => {})
+    return () => {
+      stopped = true
+    }
+  }, [])
   const { filters, update } = useCatalogFilters(initialFilters)
   const [mobileOpen, setMobileOpen] = useState(false),
     dialog = useRef<HTMLDialogElement>(null)
@@ -182,21 +199,65 @@ export default function ShopPageClient({
     )
       update({ min: filters.max, max: filters.min }, 'replace')
   }
-  const categorySelect = (
-    <label className="block text-xs font-semibold">
-      <span className="mb-2 block">{t('category')}</span>
+  const categoryButtons = (
+    <fieldset>
+      <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
+        {t('category')}
+      </legend>
+      <div className="space-y-2">
+        {[{ id: 'all', slug: 'all', name: t('all') }, ...categoryChoices].map(
+          (c) => (
+            <button
+              type="button"
+              key={c.id}
+              aria-pressed={filters.category === c.slug}
+              onClick={() => update({ category: c.slug })}
+              className={`min-h-11 w-full border-2 px-4 py-2 text-left text-sm font-semibold uppercase tracking-wide transition-colors ${filters.category === c.slug ? 'border-brand-primary bg-brand-primary text-white' : 'border-gray-300 text-gray-700 hover:border-black'}`}
+            >
+              {name(c)} ({countCategory(c.slug)})
+            </button>
+          ),
+        )}
+      </div>
+    </fieldset>
+  )
+  const searchField = (
+    <label className="block">
+      <span className="mb-3 block text-sm font-bold uppercase tracking-wide text-gray-900">
+        {t('search')}
+      </span>
+      <div className="relative">
+        <input
+          type="search"
+          value={filters.q}
+          onChange={(e) => update({ q: e.target.value }, 'typing')}
+          placeholder={t('searchPlaceholder')}
+          className={fieldClass + ' pr-12'}
+        />
+        <Search
+          size={20}
+          aria-hidden="true"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+        />
+      </div>
+    </label>
+  )
+  const sortField = (
+    <label className="block">
+      <span className="mb-3 block text-sm font-bold uppercase tracking-wide text-gray-900">
+        {t('sort')}
+      </span>
       <select
-        value={filters.category}
-        onChange={(e) => update({ category: e.target.value })}
+        aria-label={t('sort')}
+        value={filters.sort}
+        onChange={(e) => update({ sort: e.target.value as CatalogSort })}
         className={fieldClass}
       >
-        <option value="all">
-          {t('all')} ({products.length})
-        </option>
-        {categoryChoices.map((c) => (
-          <option key={c.id} value={c.slug}>
-            {name(c)} (
-            {products.filter((p) => p.category?.slug === c.slug).length})
+        {(
+          ['featured', 'newest', 'price-asc', 'price-desc', 'name'] as const
+        ).map((value) => (
+          <option key={value} value={value}>
+            {t(value)}
           </option>
         ))}
       </select>
@@ -204,11 +265,14 @@ export default function ShopPageClient({
   )
   const filterPanel = (prefix: string) => (
     <div className="space-y-6">
-      {prefix === 'mobile' && categorySelect}
+      {searchField}
+      {categoryButtons}
       <p className="text-xs leading-relaxed text-gray-500">{t('filterHelp')}</p>
       {!!dimensions.sizes.length && (
         <fieldset>
-          <legend className="mb-3 text-sm font-semibold">{t('sizes')}</legend>
+          <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
+            {t('sizes')}
+          </legend>
           <div className="flex flex-wrap gap-2">
             {dimensions.sizes.map((size) => {
               const checked = filters.sizes.includes(size),
@@ -220,7 +284,7 @@ export default function ShopPageClient({
               return (
                 <label
                   key={size}
-                  className={`relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center border px-3 text-xs font-semibold ${checked ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-black'} ${!count && !checked ? 'cursor-not-allowed opacity-35' : ''}`}
+                  className={`relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center border-2 px-3 text-xs font-bold uppercase tracking-wide ${checked ? 'border-brand-primary bg-brand-primary text-white' : 'border-gray-300 bg-white text-black'} ${!count && !checked ? 'cursor-not-allowed opacity-35' : ''}`}
                 >
                   <input
                     type="checkbox"
@@ -243,7 +307,9 @@ export default function ShopPageClient({
       )}
       {!!dimensions.colors.length && (
         <fieldset>
-          <legend className="mb-3 text-sm font-semibold">{t('colors')}</legend>
+          <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
+            {t('colors')}
+          </legend>
           <div className="max-h-64 space-y-1 overflow-y-auto">
             {dimensions.colors.map((color) => {
               const checked = filters.colors.includes(color.key),
@@ -255,14 +321,14 @@ export default function ShopPageClient({
               return (
                 <label
                   key={color.key}
-                  className={`flex min-h-11 cursor-pointer items-center gap-3 text-sm ${!count && !checked ? 'cursor-not-allowed text-gray-400' : ''}`}
+                  className={`flex min-h-11 cursor-pointer items-center gap-3 border-2 px-3 text-xs font-bold uppercase tracking-wide ${!count && !checked ? 'cursor-not-allowed border-gray-200 text-gray-400' : checked ? 'border-brand-primary bg-brand-primary/5 text-black' : 'border-gray-300 hover:border-black'}`}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     disabled={!count && !checked}
                     onChange={() => toggle('colors', color.key)}
-                    className="h-4 w-4 accent-black"
+                    className="h-4 w-4 accent-brand-primary"
                   />
                   <span className="flex-1">
                     {formatColorLabel(color.label, locale)}
@@ -275,8 +341,25 @@ export default function ShopPageClient({
         </fieldset>
       )}
       <fieldset>
-        <legend className="mb-3 text-sm font-semibold">{t('price')}</legend>
-        <div className="grid grid-cols-2 gap-3">
+        <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
+          {t('price')}
+        </legend>
+        <DualRangeSlider
+          min={bounds[0]}
+          max={Math.max(bounds[0] + 1, bounds[1])}
+          value={[filters.min ?? bounds[0], filters.max ?? bounds[1]]}
+          onChange={([min, max]) =>
+            update(
+              {
+                min: min === bounds[0] ? null : min,
+                max: max === bounds[1] ? null : max,
+              },
+              'replace',
+            )
+          }
+          step={1}
+        />
+        <div className="mt-4 grid grid-cols-2 gap-3">
           <label className="text-xs text-gray-500">
             {t('fromPrice')}
             <input
@@ -333,20 +416,21 @@ export default function ShopPageClient({
           </label>
         </div>
       </fieldset>
-      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-t border-gray-200 pt-3 text-sm">
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-2 border-gray-300 p-3 text-sm font-bold uppercase tracking-wide">
         <input
           type="checkbox"
           checked={filters.stock}
           onChange={(e) => update({ stock: e.target.checked })}
-          className="h-4 w-4 accent-black"
+          className="h-4 w-4 accent-brand-primary"
         />
         {t('available')}
       </label>
+      {sortField}
       {activeCount > 0 && (
         <button
           type="button"
           onClick={reset}
-          className="min-h-11 text-sm font-semibold underline underline-offset-4"
+          className="min-h-11 w-full border-2 border-black bg-white px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors hover:bg-black hover:text-white"
         >
           {t('reset')}
         </button>
@@ -401,84 +485,42 @@ export default function ShopPageClient({
     })
   return (
     <div className="bg-white">
-      <PaginaKop titel={page('title')} ondertitel={page('heroSubtitle')}>
-        <div className="lg:hidden">{categorySelect}</div>
-        <nav
-          aria-label={t('category')}
-          className="hidden flex-wrap gap-2 lg:flex"
-        >
-          {[{ id: 'all', slug: 'all', name: t('all') }, ...categoryChoices].map(
-            (c) => (
-              <button
-                type="button"
-                key={c.id}
-                aria-pressed={filters.category === c.slug}
-                onClick={() => update({ category: c.slug })}
-                className={`min-h-11 border px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${filters.category === c.slug ? 'border-black bg-black text-white' : 'border-gray-300 bg-white hover:border-black'}`}
-              >
-                {name(c)}{' '}
-                <span className="ml-1 opacity-60">{countCategory(c.slug)}</span>
-              </button>
-            ),
-          )}
-        </nav>
+      <PaginaKop
+        titel={page('title')}
+        ondertitel={page('heroSubtitle')}
+        bedieningHoogte="min-h-[96px] sm:min-h-[44px]"
+      >
+        <CategorieKiezer
+          items={categoryChoices.map((c) => ({
+            slug: c.slug,
+            naam: name(c),
+            aantal: expandToShopTiles(
+              products.filter((p) => p.category?.slug === c.slug),
+            ).length,
+          }))}
+          actief={filters.category}
+          onKies={(slug) => update({ category: slug })}
+          allesLabel={page('filters.allShort')}
+          groepLabel={page('categorieLabel')}
+          totaalAantal={expandToShopTiles(products).length}
+        />
       </PaginaKop>
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
-        <div className="mb-5 grid grid-cols-2 items-end gap-3 lg:grid-cols-[1fr_240px]">
-          <label className="relative col-span-2 block lg:col-span-1">
-            <span className="sr-only">{t('search')}</span>
-            <Search
-              size={18}
-              aria-hidden="true"
-              className="absolute left-3 top-3.5 text-gray-500"
-            />
-            <input
-              type="search"
-              value={filters.q}
-              onChange={(e) => update({ q: e.target.value }, 'typing')}
-              placeholder={t('searchPlaceholder')}
-              className={fieldClass + ' pl-10'}
-            />
-          </label>
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            aria-haspopup="dialog"
-            aria-controls="catalog-filter-dialog"
-            className="flex min-h-11 items-center justify-center gap-2 border border-black px-3 text-sm font-semibold lg:hidden"
-          >
-            <SlidersHorizontal size={16} aria-hidden="true" />
-            {t('filters')}
-            {activeCount > 0 && (
-              <span className="rounded-full bg-black px-2 text-xs text-white">
-                {activeCount}
-              </span>
-            )}
-          </button>
-          <label className="text-xs font-semibold">
-            <span className="sr-only">{t('sort')}</span>
-            <select
-              aria-label={t('sort')}
-              value={filters.sort}
-              onChange={(e) => update({ sort: e.target.value as CatalogSort })}
-              className={fieldClass}
-            >
-              {(
-                [
-                  'featured',
-                  'newest',
-                  'price-asc',
-                  'price-desc',
-                  'name',
-                ] as const
-              ).map((s) => (
-                <option key={s} value={s}>
-                  {t(s)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 md:py-12">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-haspopup="dialog"
+          aria-controls="catalog-filter-dialog"
+          className="relative z-20 mb-6 flex min-h-14 w-full items-center justify-center gap-3 border-2 border-black bg-black px-6 py-4 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-gray-900 lg:hidden"
+        >
+          <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+          {t('filters')} &amp; {t('sort')}
+          {activeCount > 0 && (
+            <span className="bg-brand-primary px-2 py-1 text-xs font-bold text-white">
+              {activeCount}
+            </span>
+          )}
+        </button>
         {!!chips.length && (
           <div className="mb-5 flex flex-wrap gap-2">
             {chips.map((chip) => (
@@ -487,7 +529,7 @@ export default function ShopPageClient({
                 key={chip.key}
                 onClick={chip.clear}
                 aria-label={t('removeFilter', { filter: chip.label })}
-                className="flex min-h-10 items-center gap-2 border border-gray-200 bg-[#f5f4f1] px-3 text-xs hover:border-black"
+                className="flex min-h-11 items-center gap-2 border-2 border-gray-300 border-l-brand-primary bg-gray-100 px-3 text-xs font-bold uppercase tracking-wide hover:border-black"
               >
                 {chip.label}
                 <X size={12} aria-hidden="true" />
@@ -502,15 +544,15 @@ export default function ShopPageClient({
             </button>
           </div>
         )}
-        <div className="grid gap-8 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-9">
+        <div className="grid gap-8 lg:grid-cols-[256px_minmax(0,1fr)]">
           <aside className="hidden lg:block" aria-label={t('filters')}>
-            {filterPanel('desktop')}
+            <div className="lg:sticky lg:top-24">{filterPanel('desktop')}</div>
           </aside>
           <section aria-label={t('collection')} className="min-w-0">
             <p
               role="status"
               aria-live="polite"
-              className="mb-5 text-xs text-gray-500"
+              className="mb-6 border-b-2 border-gray-200 pb-4 text-lg font-bold text-gray-900"
             >
               {loading ? t('loading') : t('results', { count: tiles.length })}
               {!loading &&
@@ -533,7 +575,7 @@ export default function ShopPageClient({
               </div>
             ) : !loading && !tiles.length ? (
               <div className="border border-gray-200 p-8 text-center sm:p-12">
-                <h2 className="font-display text-2xl uppercase">
+                <h2 className="font-display text-xl uppercase tracking-wide">
                   {t('emptyTitle')}
                 </h2>
                 <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-gray-600">
@@ -548,19 +590,21 @@ export default function ShopPageClient({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-5 sm:gap-y-7 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
                 {tiles.map((tile, index) => (
                   <CatalogProductCard
                     key={tile.tileKey}
                     tile={tile}
                     priority={index < 3}
+                    showCategoryLabels={showCategoryLabels}
                   />
                 ))}
               </div>
             )}
           </section>
         </div>
-        <div className="mt-12 border-t border-gray-200 pt-8">
+        {!loading && <DetailBlok />}
+        <div>
           <RecentlyViewed />
         </div>
       </div>
@@ -569,20 +613,20 @@ export default function ShopPageClient({
         ref={dialog}
         onClose={() => setMobileOpen(false)}
         aria-labelledby="catalog-filter-title"
-        className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[min(100%,420px)] max-w-none flex-col border-0 border-l border-gray-200 bg-white p-0 shadow-xl backdrop:bg-black/50 open:flex"
+        className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[92%] max-w-sm flex-col border-0 border-l-4 border-black bg-white p-0 shadow-2xl backdrop:bg-black/80 open:flex"
       >
-        <header className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+        <header className="flex items-center justify-between gap-3 border-b-2 border-black bg-white px-5 py-4">
           <h2
             id="catalog-filter-title"
-            className="font-display text-2xl uppercase"
+            className="font-display text-xl uppercase tracking-wide"
           >
-            {t('filters')}
+            {t('filters')} &amp; {t('sort')}
           </h2>
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
             aria-label={t('close')}
-            className="flex min-h-11 min-w-11 items-center justify-center"
+            className="flex min-h-11 min-w-11 items-center justify-center border-2 border-black bg-white text-black transition-colors hover:bg-black hover:text-white"
           >
             <X size={22} aria-hidden="true" />
           </button>
@@ -590,11 +634,18 @@ export default function ShopPageClient({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
           {filterPanel('mobile')}
         </div>
-        <footer className="border-t border-gray-200 p-5">
+        <footer className="flex gap-3 border-t-2 border-black bg-white p-6">
+          <button
+            type="button"
+            onClick={reset}
+            className="min-h-12 flex-1 border-2 border-black bg-white px-3 py-3 text-sm font-bold uppercase tracking-wider text-black hover:bg-gray-100"
+          >
+            {t('reset')}
+          </button>
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="min-h-12 w-full bg-black px-4 py-3 text-sm font-semibold text-white"
+            className="min-h-12 flex-1 border-2 border-black bg-black px-3 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-gray-900"
           >
             {t('viewResults', { count: tiles.length })}
           </button>
