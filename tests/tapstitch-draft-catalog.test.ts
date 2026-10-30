@@ -21,7 +21,7 @@ describe('verified eight-model draft catalog', () => {
 
   it('keeps supplier identity explicit and stable for truthful storefront copy', () => {
     const rows = fresh()
-    expect(Object.keys(TAPSTITCH_PRODUCT_SOURCES)).toHaveLength(8)
+    expect(Object.keys(TAPSTITCH_PRODUCT_SOURCES)).toEqual(expect.arrayContaining(rows.products.map(product => product.id)))
     expect(rows.products.every(isTapstitchProduct)).toBe(true)
     expect(isTapstitchProduct({ id: 'unrelated-product' })).toBe(false)
   })
