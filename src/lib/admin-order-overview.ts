@@ -4,6 +4,7 @@ import { shipmentLabel } from '@/lib/shopify/shipping-status'
 import { orderSchema, type OrderProjection } from '@/lib/shopify/orders'
 import { moneyCents } from '@/lib/admin-order-metrics'
 import { z } from 'zod'
+import { productionPresentation, type StoredProduction } from '@/lib/tapstitch-production'
 
 export const METADATA = `query AdminOrderMetadata($ids:[ID!]!){ nodes(ids:$ids){ ... on Order { id createdAt email netPaymentSet { shopMoney { amount currencyCode } } } } }`
 /** Authorized server-only reader. Refuse truncation instead of reporting partial financial totals. */
@@ -35,10 +36,11 @@ export async function readAllAdminRows(table: string, select: string, key: strin
 
 export async function readAdminOrderOverview() {
   const all = readAllAdminRows
-  const [legacy, snapshots, refunds] = await Promise.all([
+  const [legacy, snapshots, refunds, production] = await Promise.all([
     all('orders', 'id,user_id,email,status,payment_status,total,delivery_method,shipping_address,tracking_code,label_url,created_at,updated_at,checkout_started_at,paid_at,payment_method', 'id'),
     all('shopify_order_snapshots', 'shopify_order_id,snapshot,synced_at', 'shopify_order_id'),
     all('returns', 'id,order_id,status,refund_amount,mollie_refund_id,stripe_refund_id,mollie_refund_status,stripe_refund_status,refunded_at', 'id'),
+    all('tapstitch_latest_production','shopify_order_id,supplier_order_id,shopify_order_name,status,header_text,source_url,observed_at,run_id','shopify_order_id'),
   ])
   const metadata = new Map<string, {createdAt:string;email:string|null;netPaymentSet:{shopMoney:{amount:string;currencyCode:string}}}>()
   // Retain authoritative metadata with each reconciled projection. Historical reports
@@ -55,7 +57,8 @@ export async function readAdminOrderOverview() {
     for(const row of result.nodes) if(row) metadata.set(row.id,row)
   }
 
-  const shopify = snapshots.map(row => normalizeShopifyAdminOrder(row,metadata.get(row.shopify_order_id)))
+  const shopify = snapshots.map(row => ({...normalizeShopifyAdminOrder(row,metadata.get(row.shopify_order_id)),
+    ...productionPresentation(production.find(p=>p.shopify_order_id===row.shopify_order_id) as StoredProduction|undefined)}))
   const confirmedRefunds = legacyRefundTotals(refunds)
   return [...legacy.map(o => normalizeLegacyAdminOrder(o, confirmedRefunds.get(o.id) ?? 0)), ...shopify]
     .sort((a,b)=>b.created_at.localeCompare(a.created_at)||a.id.localeCompare(b.id))

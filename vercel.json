@@ -63,6 +63,10 @@
     {
       "path": "/api/cron/shopify-legacy-stock",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/tapstitch",
+      "schedule": "*/5 * * * *"
     }
   ],
   "regions": [
