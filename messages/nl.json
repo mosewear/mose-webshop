@@ -956,6 +956,8 @@
       "unavailable": "Niet beschikbaar",
       "from": "Vanaf",
       "collection": "De collectie",
+      "availableHelpShort": "Ook beschikbare pre-orders.",
+      "resetRefinements": "Wis filters",
       "availableHelp": "Inclusief beschikbare pre-orders. Maat en kleur gelden voor dezelfde uitvoering.",
       "filterHelp": "Combineer maat en kleur om jouw uitvoering te vinden.",
       "wishlistLogin": "Log in om dit model te bewaren.",

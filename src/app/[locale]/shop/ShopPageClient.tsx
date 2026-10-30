@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { SHOP_PRODUCT_SELECT } from '@/lib/catalog-select'
@@ -34,8 +34,24 @@ import { trackPixelEvent } from '@/lib/facebook-pixel'
 export type ShopProduct = CatalogProduct
 export type ShopCategory = CatalogCategory
 const fieldClass =
-  'min-h-11 w-full border-2 border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-black transition-colors focus:border-brand-primary focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary'
+  'min-h-11 w-full border-2 border-gray-300 bg-white px-3 py-3 text-base font-semibold text-black transition-colors focus:border-brand-primary focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary sm:text-sm'
 const categoryOrder = ['hoodies', 't-shirts', 'longsleeves', 'sweaters', 'broeken', 'cadeaubonnen']
+
+function FilterGroup({ title, selection, mobile, initiallyOpen = false, children }: {
+  title: string; selection?: string; mobile: boolean; initiallyOpen?: boolean; children: ReactNode
+}) {
+  const [open, setOpen] = useState(initiallyOpen)
+  const id = useId()
+  if (!mobile) return <fieldset><legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">{title}</legend>{children}</fieldset>
+  return <section className="border-b border-black/15 pb-4">
+    <h3><button type="button" aria-label={selection ? `${title}: ${selection}` : title} aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)} className="flex min-h-11 w-full items-center justify-between gap-3 text-left focus-visible:outline-2 focus-visible:outline-brand-primary">
+      <span className="text-sm font-bold uppercase tracking-wide">{title}</span>
+      <span className="ml-auto max-w-[60%] truncate text-xs text-gray-600">{selection}</span>
+      <ChevronDown size={18} aria-hidden="true" className={open ? 'shrink-0 rotate-180' : 'shrink-0'} />
+    </button></h3>
+    <fieldset id={id} hidden={!open} className="pt-3"><legend className="sr-only">{title}</legend>{children}</fieldset>
+  </section>
+}
 
 export default function ShopPageClient({
   initialProducts,
@@ -200,6 +216,8 @@ export default function ShopPageClient({
     filters.colors.length +
     (filters.stock ? 1 : 0)
   const reset = () => update({ ...emptyCatalogFilters, sizes: [], colors: [] })
+  const refinementCount = activeCount - (filters.category === 'all' ? 0 : 1)
+  const resetRefinements = () => update({ ...emptyCatalogFilters, category: filters.category, sizes: [], colors: [] })
   const toggle = (field: 'sizes' | 'colors', value: string) =>
     update({
       [field]: filters[field].includes(value)
@@ -257,25 +275,10 @@ export default function ShopPageClient({
     </label>
   )
   const filterPanel = (prefix: string) => (
-    <div className="space-y-6">
-      {searchField}
-      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-2 border-gray-300 p-3 text-sm font-bold uppercase tracking-wide">
-        <input
-          type="checkbox"
-          checked={filters.stock}
-          onChange={(e) => update({ stock: e.target.checked })}
-          className="h-4 w-4 accent-brand-primary"
-        />
-        {t('available')}
-      </label>
-      <p className="text-xs leading-relaxed text-gray-500">{t('availableHelp')}</p>
+    <div className={prefix === 'mobile' ? 'space-y-4' : 'space-y-6'}>
       {sortField}
-      <p className="text-xs leading-relaxed text-gray-500">{t('filterHelp')}</p>
       {!!dimensions.sizes.length && (
-        <fieldset>
-          <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
-            {t('sizes')}
-          </legend>
+        <FilterGroup mobile={prefix === 'mobile'} title={t('sizes')} selection={filters.sizes.join(', ')} initiallyOpen>
           <div className="flex flex-wrap gap-2">
             {dimensions.sizes.map((size) => {
               const checked = filters.sizes.includes(size),
@@ -306,14 +309,11 @@ export default function ShopPageClient({
               )
             })}
           </div>
-        </fieldset>
+        </FilterGroup>
       )}
       {!!dimensions.colors.length && (
-        <fieldset>
-          <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
-            {t('colors')}
-          </legend>
-          <div className="max-h-64 space-y-1 overflow-y-auto">
+        <FilterGroup mobile={prefix === 'mobile'} title={t('colors')} selection={filters.colors.map(color => formatColorLabel(dimensions.colors.find(c => c.key === color)?.label ?? color, locale)).join(', ')}>
+          <div className={prefix === 'mobile' ? 'space-y-2' : 'max-h-64 space-y-1 overflow-y-auto'}>
             {dimensions.colors.map((color) => {
               const checked = filters.colors.includes(color.key),
                 count = filterCatalog(
@@ -341,12 +341,9 @@ export default function ShopPageClient({
               )
             })}
           </div>
-        </fieldset>
+        </FilterGroup>
       )}
-      <fieldset>
-        <legend className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-900">
-          {t('price')}
-        </legend>
+      <FilterGroup mobile={prefix === 'mobile'} title={t('price')} selection={filters.min !== null || filters.max !== null ? `${formatPrice(filters.min ?? bounds[0], locale)} – ${formatPrice(filters.max ?? bounds[1], locale)}` : undefined}>
         <DualRangeSlider
           min={bounds[0]}
           max={Math.max(bounds[0] + 1, bounds[1])}
@@ -418,8 +415,16 @@ export default function ShopPageClient({
             />
           </label>
         </div>
-      </fieldset>
-      {activeCount > 0 && (
+      </FilterGroup>
+      <div>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-bold">
+          <input type="checkbox" checked={filters.stock} onChange={(e) => update({ stock: e.target.checked })} className="h-5 w-5 shrink-0 accent-brand-primary" />
+          {t('available')}
+        </label>
+        <p className="pl-8 text-xs leading-relaxed text-gray-600">{t('availableHelpShort')}</p>
+      </div>
+      {searchField}
+      {prefix !== 'mobile' && activeCount > 0 && (
         <button
           type="button"
           onClick={reset}
@@ -590,9 +595,9 @@ export default function ShopPageClient({
           }
         }}
         aria-labelledby="catalog-filter-title"
-        className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[92%] max-w-sm flex-col border-0 border-l-4 border-black bg-white p-0 shadow-2xl backdrop:bg-black/80 open:flex"
+        className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-full max-w-md flex-col border-0 bg-white p-0 shadow-2xl backdrop:bg-black/70 open:flex sm:w-[92%] sm:border-l-2 sm:border-black"
       >
-        <header className="flex items-center justify-between gap-3 border-b-2 border-black bg-white px-5 py-4">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b-2 border-black bg-white px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <h2
             id="catalog-filter-title"
             className="font-display text-xl uppercase tracking-wide"
@@ -608,24 +613,28 @@ export default function ShopPageClient({
             <X size={22} aria-hidden="true" />
           </button>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
           {filterPanel('mobile')}
         </div>
-        <footer className="flex gap-3 border-t-2 border-black bg-white p-6">
+        <footer className="shrink-0 border-t-2 border-black bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <p role="status" aria-live="polite" className="sr-only">{t('models', {count: filtered.length})}</p>
+          <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={reset}
-            className="min-h-12 flex-1 border-2 border-black bg-white px-3 py-3 text-sm font-bold uppercase tracking-wider text-black hover:bg-gray-100"
+            onClick={resetRefinements}
+            disabled={refinementCount === 0 && filters.sort === 'featured'}
+            className="min-h-12 shrink-0 px-1 py-3 text-xs font-bold text-black underline underline-offset-4 disabled:cursor-default disabled:text-gray-400"
           >
-            {t('reset')}
+            {t('resetRefinements')}
           </button>
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="min-h-12 flex-1 border-2 border-black bg-black px-3 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-gray-900"
+            className="min-h-12 flex-1 border-2 border-black bg-black px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
           >
-            {t('viewResults', { count: tiles.length })}
+            {t('viewResults', { count: filtered.length })}
           </button>
+          </div>
         </footer>
       </dialog>
     </div>

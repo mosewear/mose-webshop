@@ -956,6 +956,8 @@
       "unavailable": "Unavailable",
       "from": "From",
       "collection": "The collection",
+      "availableHelpShort": "Includes available preorders.",
+      "resetRefinements": "Clear filters",
       "availableHelp": "Includes available preorders. Size and colour filters refer to the same variation.",
       "filterHelp": "Combine size and colour to find your variation.",
       "wishlistLogin": "Sign in to save this style.",
