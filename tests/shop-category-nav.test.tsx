@@ -1,6 +1,8 @@
-import {expect,it,vi} from 'vitest'
+import {afterEach,expect,it,vi} from 'vitest'
 import {fireEvent,render,screen} from '@testing-library/react'
 import ShopCategoryNav from '@/components/shop/ShopCategoryNav'
+
+afterEach(()=>vi.unstubAllGlobals())
 
 it('exposes the selected category and sends the original slug when choosing another',()=>{
   const onSelect=vi.fn()
@@ -13,7 +15,9 @@ it('exposes the selected category and sends the original slug when choosing anot
   expect(screen.getByRole('button',{name:'Trousers'})).toHaveAttribute('aria-pressed','true')
   expect(screen.getByRole('button',{name:'All'})).toHaveAttribute('aria-pressed','false')
 })
-it('shows scroll controls only where more categories exist and scrolls the strip',()=>{
+it.each([false,true])('shows only useful scroll controls and respects reduced motion (%s)',(reducedMotion)=>{
+  vi.stubGlobal('matchMedia',vi.fn(()=>({matches:reducedMotion})))
+  const behavior=reducedMotion?'auto':'smooth'
   const {container}=render(<ShopCategoryNav items={[{slug:'all',label:'All'}]} active="all" onSelect={vi.fn()} label="Category" previousLabel="Previous categories" nextLabel="Next categories"/>)
   const strip=container.querySelector('nav > div') as HTMLDivElement
   const scrollBy=vi.fn()
@@ -21,10 +25,10 @@ it('shows scroll controls only where more categories exist and scrolls the strip
   fireEvent.scroll(strip)
   expect(screen.queryByRole('button',{name:'Previous categories'})).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Next categories'}))
-  expect(scrollBy).toHaveBeenCalledWith({left:180,behavior:'smooth'})
+  expect(scrollBy).toHaveBeenCalledWith({left:180,behavior})
   strip.scrollLeft=360
   fireEvent.scroll(strip)
   expect(screen.queryByRole('button',{name:'Next categories'})).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Previous categories'}))
-  expect(scrollBy).toHaveBeenLastCalledWith({left:-180,behavior:'smooth'})
+  expect(scrollBy).toHaveBeenLastCalledWith({left:-180,behavior})
 })
