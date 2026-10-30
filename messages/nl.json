@@ -920,6 +920,8 @@
     "catalog": {
       "search": "Zoek een artikel",
       "searchPlaceholder": "Hoodie, jeans, longsleeve…",
+      "previousCategories": "Vorige categorieën",
+      "nextCategories": "Volgende categorieën",
       "category": "Categorie",
       "all": "Alles",
       "filters": "Filters",

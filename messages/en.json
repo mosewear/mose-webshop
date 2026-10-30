@@ -920,6 +920,8 @@
     "catalog": {
       "search": "Find an item",
       "searchPlaceholder": "Hoodie, jeans, long sleeve…",
+      "previousCategories": "Previous categories",
+      "nextCategories": "Next categories",
       "category": "Category",
       "all": "All",
       "filters": "Filters",

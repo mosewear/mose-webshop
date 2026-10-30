@@ -24,7 +24,7 @@ import { useCatalogFilters } from '@/components/shop/useCatalogFilters'
 import { useCatalogTracking } from '@/components/shop/useCatalogTracking'
 import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import RecentlyViewed from '@/components/RecentlyViewed'
-import CategorieKiezer from '@/components/shop/CategorieKiezer'
+import ShopCategoryNav from '@/components/shop/ShopCategoryNav'
 import DetailBlok from '@/components/shop/DetailBlok'
 import DualRangeSlider from '@/components/DualRangeSlider'
 import { getSiteSettings } from '@/lib/settings'
@@ -34,6 +34,7 @@ export type ShopProduct = CatalogProduct
 export type ShopCategory = CatalogCategory
 const fieldClass =
   'min-h-11 w-full border-2 border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-black transition-colors focus:border-brand-primary focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary'
+const categoryOrder = ['hoodies', 't-shirts', 'longsleeves', 'sweaters', 'broeken', 'cadeaubonnen']
 
 export default function ShopPageClient({
   initialProducts,
@@ -135,7 +136,13 @@ export default function ShopPageClient({
     () =>
       categories.filter((c) =>
         products.some((p) => p.category?.slug === c.slug),
-      ),
+      ).sort((a, b) => {
+        const rank = (slug: string) => {
+          const index = categoryOrder.indexOf(slug)
+          return index < 0 ? categoryOrder.length : index
+        }
+        return rank(a.slug) - rank(b.slug)
+      }),
     [categories, products],
   )
   useEffect(() => {
@@ -184,8 +191,6 @@ export default function ShopPageClient({
         : [0, 500],
     [products],
   )
-  const countCategory = (slug: string) =>
-    filterCatalog(products, { ...filters, category: slug }, locale).length
   const activeCount =
     (filters.category === 'all' ? 0 : 1) +
     (filters.q.trim() ? 1 : 0) +
@@ -253,13 +258,6 @@ export default function ShopPageClient({
   const filterPanel = (prefix: string) => (
     <div className="space-y-6">
       {searchField}
-      <label className={prefix === 'desktop' ? 'hidden' : 'block'}>
-        <span className="mb-3 block text-sm font-bold uppercase tracking-wide">{t('category')}</span>
-        <select value={filters.category} onChange={e => update({category: e.target.value})} className={fieldClass}>
-          <option value="all">{t('all')} ({countCategory('all')})</option>
-          {categoryChoices.map(c => <option key={c.id} value={c.slug}>{name(c)} ({countCategory(c.slug)})</option>)}
-        </select>
-      </label>
       <label className="flex min-h-11 cursor-pointer items-center gap-3 border-2 border-gray-300 p-3 text-sm font-bold uppercase tracking-wide">
         <input
           type="checkbox"
@@ -432,18 +430,6 @@ export default function ShopPageClient({
     </div>
   )
   const chips: Array<{ key: string; label: string; clear: () => void }> = []
-  if (filters.category !== 'all')
-    chips.push({
-      key: 'category',
-      label: name(
-        categoryChoices.find((c) => c.slug === filters.category) ?? {
-          id: '',
-          slug: '',
-          name: filters.category,
-        },
-      ),
-      clear: () => update({ category: 'all' }),
-    })
   if (filters.q.trim())
     chips.push({
       key: 'q',
@@ -479,50 +465,39 @@ export default function ShopPageClient({
     })
   return (
     <div className="bg-white">
-      <header className="bg-[#F5F4F1]">
-        <div className="mx-auto max-w-7xl px-4 py-4 md:py-8">
-          <h1 className="font-display text-3xl uppercase leading-none md:text-5xl">{page('title')}</h1>
-          <p className="mt-2 text-sm text-gray-600 md:text-base">{page('heroSubtitle')}</p>
-          <div className="mt-3 hidden sm:block">
-            <CategorieKiezer
-              items={categoryChoices.map((c) => ({ slug: c.slug, naam: name(c), aantal: countCategory(c.slug) }))}
-              actief={filters.category}
-              onKies={(slug) => update({ category: slug })}
-              allesLabel={page('filters.allShort')}
-              groepLabel={page('categorieLabel')}
-              totaalAantal={countCategory('all')}
-            />
-          </div>
-          <label className="mt-3 block sm:hidden">
-            <span className="sr-only">{t('category')}</span>
-            <select value={filters.category} onChange={(e) => update({ category: e.target.value })} className={fieldClass + ' py-2'}>
-              <option value="all">{t('all')} ({countCategory('all')})</option>
-              {categoryChoices.map(c => <option key={c.id} value={c.slug}>{name(c)} ({countCategory(c.slug)})</option>)}
-            </select>
-          </label>
+      <header className="border-b-2 border-black bg-[#F5F4F1]">
+        <div className="mx-auto max-w-7xl px-4 pb-2 pt-3 md:pt-5">
+          <h1 className="mb-2 font-display text-2xl uppercase leading-none md:text-4xl">{page('title')}</h1>
+          <ShopCategoryNav
+            items={[{slug: 'all', label: t('all')}, ...categoryChoices.map(c => ({slug: c.slug, label: name(c)}))]}
+            active={filters.category}
+            onSelect={category => update({category})}
+            label={t('category')}
+            previousLabel={t('previousCategories')}
+            nextLabel={t('nextCategories')}
+          />
         </div>
       </header>
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 md:py-8">
-        <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 lg:hidden">
-          <label className="min-w-0">
-            <span className="sr-only">{t('search')}</span>
-            <input type="search" value={filters.q} onChange={(e) => update({ q: e.target.value }, 'typing')} placeholder={t('searchPlaceholder')} className={fieldClass + ' px-3 py-2'} />
-          </label>
-          <button type="button" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="flex min-h-11 items-center justify-center gap-2 border-2 border-black bg-black px-3 text-xs font-bold uppercase tracking-wide text-white">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-4 pt-2 md:pb-8 md:pt-4">
+        <div className="mb-3 flex min-h-11 items-center justify-between gap-3 border-b-2 border-black pb-2 lg:justify-end">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="flex min-h-11 shrink-0 items-center justify-center gap-2 border-2 border-black bg-white px-3 text-xs font-bold uppercase tracking-wide text-black lg:hidden">
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            {t('filters')}
-            {activeCount > 0 && <span className="bg-brand-primary px-1.5 py-0.5 text-xs">{activeCount}</span>}
+            {t('filters')} &amp; {t('sort')}
+            {activeCount > 0 && <span className="bg-brand-primary px-1.5 py-0.5 text-xs text-white">{activeCount}</span>}
           </button>
+          <p role="status" aria-live="polite" className="text-right text-xs font-bold text-gray-900 md:text-sm">
+            {loading ? t('loading') : t('models', {count: filtered.length})}
+          </p>
         </div>
         {!!chips.length && (
-          <div className="mb-5 flex flex-wrap gap-2">
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
             {chips.map((chip) => (
               <button
                 type="button"
                 key={chip.key}
                 onClick={chip.clear}
                 aria-label={t('removeFilter', { filter: chip.label })}
-                className="flex min-h-11 items-center gap-2 border-2 border-gray-300 border-l-brand-primary bg-gray-100 px-3 text-xs font-bold uppercase tracking-wide hover:border-black"
+                className="flex min-h-11 shrink-0 items-center gap-2 border-2 border-gray-300 border-l-brand-primary bg-gray-100 px-3 text-xs font-bold uppercase tracking-wide hover:border-black"
               >
                 {chip.label}
                 <X size={12} aria-hidden="true" />
@@ -531,7 +506,7 @@ export default function ShopPageClient({
             <button
               type="button"
               onClick={reset}
-              className="min-h-10 px-2 text-xs font-semibold underline underline-offset-4"
+              className="min-h-11 shrink-0 px-2 text-xs font-semibold underline underline-offset-4"
             >
               {t('reset')}
             </button>
@@ -542,13 +517,6 @@ export default function ShopPageClient({
             <div className="lg:sticky lg:top-24">{filterPanel('desktop')}</div>
           </aside>
           <section aria-label={t('collection')} className="min-w-0">
-            <p
-              role="status"
-              aria-live="polite"
-              className="mb-3 border-b-2 border-gray-200 pb-2 text-sm font-bold text-gray-900 md:mb-6 md:pb-4 md:text-lg"
-            >
-              {loading ? t('loading') : t('models', { count: filtered.length })}
-            </p>
             {error ? (
               <div
                 role="alert"

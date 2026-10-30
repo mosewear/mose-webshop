@@ -65,7 +65,7 @@ it('renders one card per model with consistent category model counts despite col
   expect(document.querySelectorAll('article[data-catalog-index]')).toHaveLength(1)
   expect(document.querySelector('[role="status"]')?.textContent).toBe('1 model')
   const categoryNav = document.querySelector('nav[aria-label]')!
-  expect(categoryNav.textContent).toContain('Hoodies1')
+  expect(categoryNav.textContent).toContain('Hoodies')
   expect(document.querySelector('aside fieldset legend')?.textContent).not.toBe('Categorie')
 })
 
