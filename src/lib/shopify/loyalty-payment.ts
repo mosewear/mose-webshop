@@ -20,6 +20,7 @@ const paymentSchema = z.object({
     id: z.string().regex(/^gid:\/\/shopify\/OrderTransaction\/[1-9]\d*$/),
     kind: z.enum(['SALE', 'CAPTURE', 'REFUND', 'AUTHORIZATION', 'VOID']),
     status: z.enum(['SUCCESS', 'FAILURE', 'ERROR']), test: z.literal(false),
+    parentTransaction: z.object({ id: z.string().regex(/^gid:\/\/shopify\/OrderTransaction\/[1-9]\d*$/) }).nullable().optional(),
     gateway: z.string().min(1), manualPaymentGateway: z.literal(false), amountSet: moneyBag,
   })).max(100),
   discountApplications: z.object({ nodes: z.array(z.object({ __typename: z.string(), index: z.number().int().nonnegative(), code: z.string().optional() })), pageInfo: z.object({ hasNextPage: z.literal(false) }) }),
@@ -33,9 +34,10 @@ function cents(bag: z.infer<typeof moneyBag>) {
   return value
 }
 
-/** Match legacy earning on the final paid total including shipping/tax, after
- * discounts. Reject unsupported tender instead of changing point eligibility.
- * Successful captures/refunds must agree with independent Admin order totals.
+/** Match legacy external-money earning including shipping/tax after discounts.
+ * Native gift redemption is tender, not a discount or a second points purchase.
+ * All tenders still prove the independent totals; refund parent identities prove
+ * which original payment is reversed. Gift purchases paid with cash earn normally.
  */
 export function paymentToLoyaltySettlement(input: unknown, expected: { orderId: string; sourceUpdatedAt: string; redemption?: RedemptionBinding }): LoyaltySettlement {
   const parsed = paymentSchema.safeParse(input)
@@ -43,9 +45,23 @@ export function paymentToLoyaltySettlement(input: unknown, expected: { orderId: 
   const order = parsed.data
   if (order.id !== expected.orderId || Date.parse(order.updatedAt) !== Date.parse(expected.sourceUpdatedAt)) throw new Error('LOYALTY_PAYMENT_VERSION_MISMATCH')
   if (order.transactionsCount.count !== order.transactions.length || new Set(order.transactions.map(t => t.id)).size !== order.transactions.length) throw new Error('LOYALTY_PAYMENT_INCOMPLETE')
-  if (order.transactions.some(t => /gift.?card|store.?credit|bogus/i.test(t.gateway))) throw new Error('LOYALTY_TENDER_UNSUPPORTED')
-  const paid = order.transactions.filter(t => t.status === 'SUCCESS' && ['SALE', 'CAPTURE'].includes(t.kind)).reduce((n, t) => n + cents(t.amountSet), 0)
-  const refunded = order.transactions.filter(t => t.status === 'SUCCESS' && t.kind === 'REFUND').reduce((n, t) => n + cents(t.amountSet), 0)
+  const giftTender = (transaction: typeof order.transactions[number]) => transaction.gateway.toLowerCase() === 'gift_card'
+  if (order.transactions.some(t => /store.?credit|bogus/i.test(t.gateway) ||
+    (/gift.?card/i.test(t.gateway) && !giftTender(t)))) throw new Error('LOYALTY_TENDER_UNSUPPORTED')
+  const captures = order.transactions.filter(t => t.status === 'SUCCESS' && ['SALE', 'CAPTURE'].includes(t.kind))
+  const refunds = order.transactions.filter(t => t.status === 'SUCCESS' && t.kind === 'REFUND')
+  const paid = captures.reduce((n, t) => n + cents(t.amountSet), 0)
+  const refunded = refunds.reduce((n, t) => n + cents(t.amountSet), 0)
+  const refundByParent = new Map<string, number>()
+  for (const refund of refunds) {
+    const parent = captures.find(t => t.id === refund.parentTransaction?.id)
+    if (!parent || giftTender(refund) !== giftTender(parent)) throw new Error('LOYALTY_REFUND_TENDER_UNVERIFIED')
+    const amount = (refundByParent.get(parent.id) ?? 0) + cents(refund.amountSet)
+    if (amount > cents(parent.amountSet)) throw new Error('LOYALTY_REFUND_EXCEEDS_PARENT')
+    refundByParent.set(parent.id, amount)
+  }
+  const eligiblePaid = captures.filter(t => !giftTender(t)).reduce((n, t) => n + cents(t.amountSet), 0)
+  const eligibleRefunded = refunds.filter(t => !giftTender(t)).reduce((n, t) => n + cents(t.amountSet), 0)
   // Inspect even failed/authorization amounts for malformed currency/precision.
   order.transactions.forEach(t => cents(t.amountSet))
   // A completed order edit can retain the historical original total while the
@@ -67,10 +83,13 @@ export function paymentToLoyaltySettlement(input: unknown, expected: { orderId: 
       .filter(a => a.discountApplication.index === index).reduce((n, a) => n + cents(a.allocatedAmountSet), 0)
     if (discount !== binding.points / 100 * 500) throw new Error('LOYALTY_DISCOUNT_MISMATCH')
     if (paid === 0) throw new Error('LOYALTY_ZERO_SPEND_REDEMPTION_UNSUPPORTED')
+    // Restoring a redeemed loyalty discount follows the total order refund,
+    // including money returned to a gift card. This is separate from reversing
+    // earned points, which follows external cash refunds only.
     restored = Math.floor(binding.points * refunded / paid)
   }
   return loyaltySettlementSchema.parse({ orderId: order.id, sourceUpdatedAt: order.updatedAt,
-    eligiblePaidCents: paid, eligibleRefundedCents: refunded, redemptionDiscountCents: discount, redemptionRestoredPoints: restored })
+    eligiblePaidCents: eligiblePaid, eligibleRefundedCents: eligibleRefunded, redemptionDiscountCents: discount, redemptionRestoredPoints: restored })
 }
 
 export async function fetchLoyaltySettlement(expected: Parameters<typeof paymentToLoyaltySettlement>[1], execute: AdminExecutor = admin) {

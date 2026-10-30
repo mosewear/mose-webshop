@@ -941,7 +941,7 @@
       "removeFilter": "Remove filter: {filter}",
       "results": "{count, plural, =0 {No items} one {# item} other {# items}}",
       "models": "{count, plural, one {# style} other {# styles}}",
-      "viewResults": "View {count, plural, one {# item} other {# items}}",
+      "viewResults": "View {count, plural, one {# style} other {# styles}}",
       "close": "Close filters",
       "emptyTitle": "No items match these filters",
       "emptyBody": "Try another size or colour, or clear your filters to see the full collection.",
@@ -954,7 +954,13 @@
       "unavailable": "Unavailable",
       "from": "From",
       "collection": "The collection",
+      "availableHelp": "Includes available preorders. Size and colour filters refer to the same variation.",
       "filterHelp": "Combine size and colour to find your variation.",
+      "wishlistLogin": "Sign in to save this style.",
+      "wishlistAlready": "This style is already in your favourites.",
+      "wishlistError": "Could not update your favourites. Please try again.",
+      "wishlistSaved": "Style saved to your favourites.",
+      "wishlistRemoved": "Style removed from your favourites.",
       "oneSize": "One size"
     }
   },
@@ -1508,10 +1514,11 @@
       "freeShippingAltijd": "Free shipping, always"
     },
     "featured": {
-      "label": "Bestsellers",
+      "label": "The collection",
+      "browse": "Explore all styles",
       "title": "FIND YOUR FAVOURITE",
       "description": "Good basics and distinctive fits. Explore the MOSE collection.",
-      "noProducts": "No featured products set.",
+      "noProducts": "The collection is unavailable. Please try again later.",
       "noProductsDesc": "Select products in the admin homepage settings.",
       "inStock": "In stock",
       "outOfStock": "Out of stock",
@@ -1547,7 +1554,7 @@
         "text": "More about MOSE",
         "aria": "Read what MOSE stands for"
       },
-      "imageAlt": "Four men wearing MOSE sweaters"
+      "imageAlt": "Models wearing MOSE hoodies and trousers"
     },
     "newsletter": {
       "title": "NEWS FROM MOSE",
@@ -2312,6 +2319,9 @@
       }
     },
     "collection": {
+      "heading": "Lookbook",
+      "shortIntro": "The MOSE collection in pictures.",
+      "ariaLabel": "The MOSE collection",
       "eyebrow": "THE COMPLETE COLLECTION",
       "title": "HOW TO WEAR MOSE.",
       "intro": "A relaxed hoodie with barrel jeans. A long-sleeve tee under your jacket. Or simply a good T-shirt. Choose the fit and colour that work for you.",

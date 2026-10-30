@@ -16,12 +16,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('status', 'active')
     .order('updated_at', { ascending: false })
 
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('slug, updated_at')
-    .eq('status', 'active')
-    .order('updated_at', { ascending: false })
-
   const { data: blogPosts } = await supabase
     .from('blog_posts')
     .select('slug, updated_at')
@@ -75,22 +69,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  for (const category of categories || []) {
-    for (const locale of locales) {
-      entries.push({
-        url: `${baseUrl}/${locale}/shop?category=${category.slug}`,
-        lastModified: category.updated_at ? new Date(category.updated_at) : new Date(),
-        changeFrequency: 'daily',
-        priority: 0.7,
-        alternates: {
-          languages: {
-            nl: `${baseUrl}/nl/shop?category=${category.slug}`,
-            en: `${baseUrl}/en/shop?category=${category.slug}`,
-          },
-        },
-      })
-    }
-  }
+  // Filter URLs canonicalize to /shop. Submit only canonical pages, rather
+  // than conflicting category-query URLs, until dedicated category landings exist.
 
   for (const post of blogPosts || []) {
     for (const locale of locales) {

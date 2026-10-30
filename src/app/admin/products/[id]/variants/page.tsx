@@ -1,5 +1,7 @@
 'use client'
 
+import { invalidatePublicCatalog } from '@/lib/catalog-invalidation'
+
 import { use, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -165,6 +167,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         is_available: true,
       })
       setShowAddForm(false)
+      await invalidatePublicCatalog()
       fetchVariants()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -211,6 +214,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       setPendingChanges({})
 
       // Refresh variants to show updated data
+      await invalidatePublicCatalog()
       fetchVariants()
 
       // Show success message
@@ -235,6 +239,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         .eq('id', variantId)
 
       if (error) throw error
+      await invalidatePublicCatalog()
       fetchVariants()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -251,6 +256,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         .eq('id', variantId)
 
       if (error) throw error
+      await invalidatePublicCatalog()
       fetchVariants()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -274,6 +280,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         .update({ display_order: currentOrder - 1 })
         .eq('id', variantId)
 
+      await invalidatePublicCatalog()
       fetchVariants()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -297,6 +304,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         .update({ display_order: currentOrder + 1 })
         .eq('id', variantId)
 
+      await invalidatePublicCatalog()
       fetchVariants()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)

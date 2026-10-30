@@ -1,99 +1,80 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import Image from 'next/image'
+import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { ArrowRight } from 'lucide-react'
 import { Link } from '@/i18n/routing'
-import type { CatalogProduct } from '@/lib/catalog-filters'
-import CatalogProductCard from '@/components/shop/CatalogProductCard'
+import {
+  availableVariant,
+  catalogTiles,
+  colorKey,
+  emptyCatalogFilters,
+  filterCatalog,
+  productPriceRange,
+  type CatalogProduct,
+} from '@/lib/catalog-filters'
+import { buildPdpHref, formatColorLabel, getImageForColor, type ShopTile } from '@/lib/product-display'
+import { formatPrice } from '@/lib/format-price'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
-// Every published product appears once. Category-driven sections also pick up
-// future products, without hardcoded product IDs or a second catalogue query.
-export function lookbookGroup(product: CatalogProduct) {
-  const category = product.category?.slug
-  if (category === 'broeken') return 'pants'
-  if (category === 'longsleeves' || product.slug === 'boxy-fleece-hoodie')
-    return 'tops'
-  if (
-    product.is_gift_card ||
-    ['accessoires', 'horloges'].includes(category ?? '')
-  )
-    return 'details'
-  return 'essentials'
+/** One photograph and a short factual caption, without shop controls. */
+function CollectionPhotograph({tile, priority}: {tile: ShopTile<CatalogProduct>; priority: boolean}) {
+  const locale = useLocale()
+  const shop = useTranslations('shop.catalog')
+  const [failedSource, setFailedSource] = useState<string | null>(null)
+  const {product, color} = tile
+  const name = (locale === 'en' ? product.name_en || product.name : product.name).replace(/^MOSE\s+/i, '')
+  const colorLabel = color ? formatColorLabel(color, locale) : null
+  const href = buildPdpHref(product.slug, color)
+  const price = productPriceRange(product, color)
+  const image = getImageForColor(product.images, color)
+  const orderable = product.is_gift_card || product.variants?.some(v => availableVariant(v) && (!color || colorKey(v.color ?? '') === colorKey(color)))
+  return <figure className="min-w-0">
+    <Link href={href} aria-label={colorLabel ? `${name}, ${colorLabel}` : name} className="relative block aspect-[4/5] overflow-hidden border-2 border-black bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-primary">
+      <Image
+        src={failedSource === image ? '/placeholder-product.svg' : image}
+        alt={colorLabel ? `${name}, ${colorLabel}` : name}
+        fill
+        sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1439px) calc((100vw - 88px) / 2), 676px"
+        priority={priority}
+        quality={90}
+        placeholder="blur"
+        blurDataURL={BLUR_DATA_URL}
+        className="object-cover object-center"
+        onError={() => setFailedSource(image)}
+      />
+    </Link>
+    <figcaption className="flex items-start justify-between gap-3 pt-3">
+      <div className="min-w-0">
+        <h2 className="text-sm font-bold uppercase tracking-wide md:text-base"><Link href={href} className="hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary">{name}</Link></h2>
+        {colorLabel && <p className="mt-1 text-xs text-gray-600">{colorLabel}</p>}
+        {!orderable && <p className="mt-1 text-xs font-bold uppercase text-gray-600">{shop('unavailable')}</p>}
+      </div>
+      <p className="shrink-0 text-sm font-bold md:text-base">
+        {(product.is_gift_card || price.min !== price.max) && <span className="mr-1 text-xs">{shop('from')}</span>}
+        {formatPrice(price.min, locale)}
+      </p>
+    </figcaption>
+  </figure>
 }
 
-export default function LookbookCollection({
-  products,
-}: {
-  products: CatalogProduct[]
-}) {
+// The server catalogue already includes only active products. The explicit
+// guard also prevents stale draft rows from rendering if supplied during a refresh.
+export default function LookbookCollection({products}: {products: Array<CatalogProduct & {is_active?: boolean; status?: string | null}>}) {
   const t = useTranslations('lookbook.collection')
-  if (!products.length) return null
-  return (
-    <section
-      aria-labelledby="lookbook-collection"
-      className="border-t-2 border-black bg-[#f5f5f1]"
-    >
-      <div className="mx-auto max-w-[1440px] px-4 py-14 md:px-8 md:py-24">
-        <header className="mb-12 max-w-3xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-brand-primary">
-            {t('eyebrow')}
-          </p>
-          <h2
-            id="lookbook-collection"
-            className="scroll-mt-40 font-display text-5xl leading-none md:text-7xl"
-          >
-            {t('title')}
-          </h2>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-gray-700 md:text-lg">
-            {t('intro')}
-          </p>
-        </header>
-        {(['tops', 'pants', 'essentials', 'details'] as const).map((group) => {
-          const selection = products.filter((p) => lookbookGroup(p) === group)
-          if (!selection.length) return null
-          return (
-            <section
-              key={group}
-              aria-labelledby={`collection-${group}`}
-              className="mb-16 last:mb-0 md:mb-24"
-            >
-              <div className="mb-6 grid gap-4 border-t border-black/20 pt-6 md:grid-cols-2 md:gap-12">
-                <h3
-                  id={`collection-${group}`}
-                  className="font-display text-3xl uppercase md:text-4xl"
-                >
-                  {t(group)}
-                </h3>
-                <p className="max-w-xl text-sm leading-relaxed text-gray-600 md:text-base">
-                  {t(`${group}Body`)}
-                </p>
-              </div>
-              <div
-                className={`grid grid-cols-2 gap-x-4 gap-y-8 md:gap-x-6 ${selection.length <= 2 ? 'md:grid-cols-2' : selection.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-3 xl:grid-cols-4'}`}
-              >
-                {selection.map((product) => (
-                  <CatalogProductCard
-                    key={product.id}
-                    tile={{
-                      tileKey: product.id,
-                      product,
-                      color: null,
-                      color_hex: null,
-                    }}
-                  />
-                ))}
-              </div>
-            </section>
-          )
-        })}
-        <Link
-          href="/shop"
-          className="mt-10 inline-flex min-h-12 items-center gap-4 border-b-2 border-black py-3 text-sm font-bold uppercase tracking-wide hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary"
-        >
-          {t('browse')}
-          <ArrowRight size={20} aria-hidden="true" />
-        </Link>
+  const locale = useLocale()
+  const published = products.filter(p => p.is_active !== false && (!p.status || p.status === 'active'))
+  const tiles = catalogTiles(filterCatalog(published, emptyCatalogFilters, locale), emptyCatalogFilters)
+  if (!tiles.length) return null
+  return <section aria-label={t('ariaLabel')} className="bg-white">
+    <div className="mx-auto max-w-[1440px] px-4 pb-10 md:px-8 md:pb-16">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 md:gap-y-12">
+        {tiles.map((tile, index) => <CollectionPhotograph key={tile.tileKey} tile={tile} priority={index === 0} />)}
       </div>
-    </section>
-  )
+      <Link href="/shop" className="mt-8 inline-flex min-h-12 items-center gap-4 border-b-2 border-black py-3 text-sm font-bold uppercase tracking-wide hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary">
+        {t('browse')}<ArrowRight size={20} aria-hidden="true" />
+      </Link>
+    </div>
+  </section>
 }

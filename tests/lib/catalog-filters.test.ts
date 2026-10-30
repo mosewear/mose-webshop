@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   catalogFilterParams,
+  catalogTiles,
+  productPriceRange,
   colorKey,
   emptyCatalogFilters,
   filterCatalog,
@@ -185,4 +187,52 @@ describe('search and price ordering', () => {
       'p2',
     ])
   })
+})
+
+
+describe('one truthful card per model', () => {
+  it('prioritizes and selects the freshly verified supplier colour at zero physical stock', () => {
+    const unavailable = { ...base, id: 'unavailable', display_order: 0, variants: [base.variants![0]] }
+    const supplier: CatalogProduct = { ...base, id: 'supplier', display_order: 9, variants: [
+      base.variants![0],
+      { size: 'L', color: 'Wit', stock_quantity: 0, is_available: true, fulfillment_mode: 'made_to_order', supplier_orderable: true, supplier_checked_at: new Date().toISOString() },
+    ] }
+    expect(filterCatalog([unavailable, supplier], f, 'nl').map(p => p.id)).toEqual(['supplier', 'unavailable'])
+    expect(catalogTiles([supplier], f)[0].color).toBe('Wit')
+    expect(matchesCatalogProduct(supplier, {...f, sizes: ['L'], colors: ['white'], stock: true})).toBe(true)
+  })
+  it('prioritizes buyable clothing only for the featured sort and keeps gift cards last', () => {
+    const unavailable = { ...base, id: 'unavailable', display_order: 0, variants: [{ size: 'L', color: 'Zwart', stock_quantity: 0, is_available: true }] }
+    const gift = { ...base, id: 'gift', display_order: -1, is_gift_card: true, variants: [] }
+    expect(filterCatalog([gift, unavailable, base], f, 'nl').map((p) => p.id)).toEqual(['p1', 'unavailable', 'gift'])
+    expect(filterCatalog([base, { ...unavailable, base_price: 25 }], { ...f, sort: 'price-asc' }, 'nl').map((p) => p.id)).toEqual(['unavailable', 'p1'])
+  })
+  it('selects an actual matching available colour without splitting a model', () => {
+    const split = { ...base, show_color_variants_on_shop: true }
+    expect(catalogTiles([split], f)).toMatchObject([{ tileKey: 'p1', color: 'Wit' }])
+    expect(catalogTiles([split], { ...f, sizes: ['L'], colors: ['black'] })).toMatchObject([{ tileKey: 'p1', color: 'Zwart' }])
+  })
+  it('uses actual variant prices in the same size-colour-price filter and card range', () => {
+    const adjusted = { ...base, variants: [
+      { size: 'L', color: 'Zwart', price_adjustment: 10, stock_quantity: 2, is_available: true },
+      { size: 'M', color: 'Wit', price_adjustment: 0, stock_quantity: 2, is_available: true },
+    ] }
+    expect(productPriceRange(adjusted)).toEqual({ min: 79, max: 89 })
+    expect(productPriceRange(adjusted, 'Zwart')).toEqual({ min: 89, max: 89 })
+    expect(matchesCatalogProduct(adjusted, { ...f, sizes: ['L'], max: 80 })).toBe(false)
+    expect(catalogTiles([adjusted], { ...f, min: 85 })[0].color).toBe('Zwart')
+  })
+  it('does not treat disabled presale units as available', () => {
+    expect(matchesCatalogProduct({ ...base, variants: [{ is_available: true, stock_quantity: 0, presale_stock_quantity: 5, presale_enabled: false }] }, { ...f, stock: true })).toBe(false)
+  })
+})
+it('uses the same filtered variation price for the range and explicit price ordering', () => {
+  const adjusted = { ...base, id: 'adjusted', base_price: 20, variants: [
+    { color: 'Zwart', size: 'M', price_adjustment: 0, stock_quantity: 5, is_available: true },
+    { color: 'Zwart', size: 'XL', price_adjustment: 30, stock_quantity: 1, is_available: true },
+  ] }
+  const other = { ...base, id: 'other', base_price: 40, variants: [{ color: 'Zwart', size: 'XL', stock_quantity: 1, is_available: true }] }
+  const filters = { ...f, sizes: ['XL'], sort: 'price-asc' as const }
+  expect(productPriceRange(adjusted, 'Zwart', filters)).toEqual({ min: 50, max: 50 })
+  expect(filterCatalog([adjusted, other], filters, 'nl').map(p => p.id)).toEqual(['other','adjusted'])
 })

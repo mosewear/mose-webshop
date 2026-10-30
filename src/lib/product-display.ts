@@ -40,6 +40,9 @@ export interface ProductDisplayImage {
 }
 
 export interface ProductDisplayVariant {
+  fulfillment_mode?: 'local_stock' | 'made_to_order' | null
+  supplier_orderable?: boolean | null
+  supplier_checked_at?: string | null
   color?: string | null
   color_hex?: string | null
   stock_quantity?: number | null

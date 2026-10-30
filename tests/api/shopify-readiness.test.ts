@@ -11,7 +11,7 @@ describe('private Shopify readiness endpoint', () => {
   beforeEach(() => { vi.resetAllMocks(); mocks.promo.mockResolvedValue('unknown'); mocks.runtime.mockResolvedValue([{ key: 'loyaltyRuntime', label: 'Measured loyalty', status: 'missing' }]) })
   it('does not create a privileged database client for unauthorized callers', async () => {
     mocks.authorize.mockResolvedValue({ authorized: false })
-    const response = await GET()
+    const response = await GET(new Request('https://www.mosewear.com/api/admin/shopify/readiness'))
     expect(response.status).toBe(403)
     expect(mocks.database).not.toHaveBeenCalled()
     expect(response.headers.get('cache-control')).toBe('private, no-store')
@@ -19,7 +19,7 @@ describe('private Shopify readiness endpoint', () => {
   it('reports unknown evidence on database failure without exposing internals', async () => {
     mocks.authorize.mockResolvedValue({ authorized: true })
     mocks.database.mockImplementation(() => { throw new Error('private-database-secret') })
-    const response = await GET()
+    const response = await GET(new Request('https://www.mosewear.com/api/admin/shopify/readiness'))
     const text = await response.text()
     expect(response.status).toBe(200)
     expect(text).not.toContain('private-database-secret')
@@ -34,7 +34,7 @@ describe('private Shopify readiness endpoint', () => {
     const query = { select: () => query, eq: () => query, abortSignal: () => query, maybeSingle: () => Promise.resolve({ data: null, error: { code: '42P01' } }) }
     from.mockReturnValue(query)
     mocks.database.mockReturnValue({ from, rpc: vi.fn(() => ({ abortSignal: async () => ({ data: [], error: null }) })) })
-    const data = await (await GET()).json()
+    const data = await (await GET(new Request('https://www.mosewear.com/api/admin/shopify/readiness'))).json()
     expect(from).toHaveBeenCalledTimes(1)
     expect(data.releaseAudit.catalog.sellableVariants).toBeNull()
   })
@@ -66,8 +66,8 @@ describe('private Shopify readiness endpoint', () => {
       return query
     })
     mocks.database.mockReturnValue({ from, rpc: vi.fn(() => ({ abortSignal: async () => ({ data: [], error: null }) })) })
-    const data = await (await GET()).json()
-    expect(from).toHaveBeenCalledTimes(13)
+    const data = await (await GET(new Request('https://www.mosewear.com/api/admin/shopify/readiness'))).json()
+    expect(from).toHaveBeenCalledTimes(14)
     expect(peak).toBeLessThanOrEqual(3)
     expect(data.releaseAudit.catalog).toMatchObject({ sellableVariants: 2, coveredVariants: 1, missingMappings: 1 })
     expect(data.checks.find((check: { key: string }) => check.key === 'loyaltyLedger').status).toBe(runtimeStatus)

@@ -1,5 +1,7 @@
 'use client'
 
+import { invalidatePublicCatalog } from '@/lib/catalog-invalidation'
+
 import { use, useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -170,6 +172,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         }
       }
 
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -243,6 +246,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       console.log(`✅ Auto-generated thumbnail for video ${imageId}`)
       
       // Refresh images to show new thumbnail
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (error: any) {
       console.error(`❌ Failed to auto-generate thumbnail for video ${imageId}:`, error)
@@ -265,6 +269,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         .eq('id', imageId)
 
       if (error) throw error
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -279,6 +284,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         .eq('id', imageId)
 
       if (error) throw error
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -306,6 +312,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
         .update({ [field]: value })
         .eq('id', imageId)
       if (error) throw error
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -328,6 +335,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
       if (error) throw error
 
       console.log(`✅ Afbeelding ontkoppeld. File blijft in Media Library.`)
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (err: any) {
       console.error('❌ Error ontkoppelen:', err)
@@ -354,6 +362,7 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           .eq('id', sorted[i].id)
         if (error) throw error
       }
+      await invalidatePublicCatalog()
       fetchImages()
     } catch (err: any) {
       alert(`Fout: ${err.message}`)
@@ -758,7 +767,8 @@ export default function ProductImagesPage({ params }: { params: Promise<{ id: st
           videoUrl={editingThumbnail.videoUrl}
           currentThumbnailUrl={editingThumbnail.currentThumbnailUrl}
           onClose={() => setEditingThumbnail(null)}
-          onSaved={() => {
+          onSaved={async () => {
+            await invalidatePublicCatalog()
             fetchImages()
             setEditingThumbnail(null)
           }}

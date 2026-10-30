@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   ChevronDown,
 } from 'lucide-react'
+import { nativeGiftScheduleWithinWindow } from '@/lib/shopify/native-gift-input'
 import { useCart, type GiftCardRecipient } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
 import { formatPrice } from '@/lib/format-price'
@@ -105,6 +106,8 @@ function safeT(
 
 export default function GiftCardProductView({ product }: GiftCardProductViewProps) {
   const locale = useLocale()
+  const nativeGiftCheckout = process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true'
+  const quantityLimit = nativeGiftCheckout ? 10 : 50
   const t = useTranslations('giftCard')
   const tCommon = useTranslations('common')
   const tProduct = useTranslations('product')
@@ -158,6 +161,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const [recipientEmail, setRecipientEmail] = useState('')
   const [senderName, setSenderName] = useState('')
   const [message, setMessage] = useState('')
+  const senderPrefixLength = senderName.trim() ? (locale === 'en' ? 'From: ' : 'Van: ').length + senderName.trim().length + 2 : 0
+  const messageLimit = nativeGiftCheckout ? Math.max(0, 200 - senderPrefixLength) : 500
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduleDate, setScheduleDate] = useState('')
   const [justAdded, setJustAdded] = useState(false)
@@ -210,9 +215,9 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     // waarde die bij mount is bevroren. Anders zou een formulier dat lang
     // openstaat een inmiddels verstreken bezorgmoment blijven goedkeuren.
     // eslint-disable-next-line react-hooks/purity
-    (!!scheduleDate && new Date(scheduleDate).getTime() > Date.now())
+    (nativeGiftCheckout ? nativeGiftScheduleWithinWindow(scheduleDate, new Date(scheduleDate).getTimezoneOffset()) : (!!scheduleDate && new Date(scheduleDate).getTime() > Date.now()))
 
-  const canAdd = hasAmount && validCustom && presetSelected && recipientValid && scheduleValid
+  const canAdd = hasAmount && validCustom && presetSelected && recipientValid && scheduleValid && message.length <= messageLimit
 
   const primaryImage =
     product.product_images.find((i) => i.is_primary) || product.product_images[0]
@@ -253,7 +258,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     locale === 'en' ? `From ${formatPrice(minCustom)}` : `Vanaf ${formatPrice(minCustom)}`,
     { amount: formatPrice(minCustom) }
   )
-  const sValidity = validityMonths
+  const sValidity = nativeGiftCheckout && validityMonths === null ? (locale === 'en' ? 'No expiry date' : 'Geen vervaldatum') : validityMonths
     ? safeT(
         t,
         'validityNote',
@@ -331,7 +336,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     'trustDelivery',
     locale === 'en' ? 'Instant delivery' : 'Direct geleverd'
   )
-  const sTrustValidity = validityMonths
+  const sTrustValidity = nativeGiftCheckout && validityMonths === null ? (locale === 'en' ? 'No expiry date' : 'Geen vervaldatum') : validityMonths
     ? safeT(
         t,
         'trustValidity',
@@ -487,7 +492,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
           personalMessage: message.trim() || undefined,
           scheduledSendAt:
             scheduleEnabled && scheduleDate
-              ? new Date(scheduleDate).toISOString()
+              ? nativeGiftCheckout ? scheduleDate : new Date(scheduleDate).toISOString()
               : undefined,
         }
       : null
@@ -525,7 +530,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
       quantity,
       image: imageUrl,
       sku: activeDenomination?.sku || `GIFTCARD-${Math.round(resolvedAmount)}`,
-      stock: 9999,
+      stock: 0,
       isGiftCard: true,
       giftCardAmount: resolvedAmount,
       giftCardRecipient: recipient,
@@ -647,7 +652,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               </label>
               <input
                 type="text"
-                value={recipientName}
+                maxLength={nativeGiftCheckout ? 255 : undefined}
+              value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 className="w-full border-2 border-gray-300 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"
               />
@@ -658,7 +664,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               </label>
               <input
                 type="email"
-                value={recipientEmail}
+                maxLength={254}
+              value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
                 inputMode="email"
                 autoComplete="email"
@@ -672,6 +679,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
             </label>
             <input
               type="text"
+              maxLength={nativeGiftCheckout ? 100 : undefined}
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
               placeholder={locale === 'en' ? 'Your name' : 'Jouw naam'}
@@ -685,12 +693,12 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={500}
+              maxLength={messageLimit}
               rows={3}
               className="w-full border-2 border-gray-300 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors resize-none"
             />
             <div className="text-[10px] text-gray-500 mt-1 text-right font-medium">
-              {message.length}/500
+              {message.length}/{messageLimit}
             </div>
           </div>
 
@@ -707,13 +715,16 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
           {scheduleEnabled ? (
             <div>
               <input
-                type="datetime-local"
+                type={nativeGiftCheckout ? "date" : "datetime-local"}
                 value={scheduleDate}
                 // Zelfde reden
                 // als hierboven: de ondergrens van de datumkiezer is "over een
                 // uur", en die moet meeschuiven zolang het formulier openstaat.
                 // eslint-disable-next-line react-hooks/purity
-                min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
+                min={nativeGiftCheckout ? new Date().toLocaleDateString('en-CA') : new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
+                // Native date limits must move with the current day, just like the server check.
+                // eslint-disable-next-line react-hooks/purity
+                max={nativeGiftCheckout ? new Date(Date.now() + 90 * 86400000).toLocaleDateString('en-CA') : undefined}
                 onChange={(e) => setScheduleDate(e.target.value)}
                 className="w-full border-2 border-gray-300 px-3 py-2.5 text-sm md:text-base focus:outline-none focus:border-brand-primary transition-colors"
               />
@@ -750,8 +761,8 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         </div>
         <button
           type="button"
-          onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-          disabled={quantity >= 50}
+          onClick={() => setQuantity((q) => Math.min(quantityLimit, q + 1))}
+          disabled={quantity >= quantityLimit}
           className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
             quantity >= 50
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'

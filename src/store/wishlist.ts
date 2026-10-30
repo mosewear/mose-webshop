@@ -11,8 +11,8 @@ interface WishlistItem {
 interface WishlistStore {
   items: WishlistItem[]
   isLoading: boolean
-  addToWishlist: (productId: string) => Promise<void>
-  removeFromWishlist: (productId: string) => Promise<void>
+  addToWishlist: (productId: string, notify?: (message: string) => void) => Promise<void>
+  removeFromWishlist: (productId: string, notify?: (message: string) => void) => Promise<void>
   isInWishlist: (productId: string) => boolean
   loadWishlist: () => Promise<void>
 }
@@ -50,12 +50,12 @@ export const useWishlist = create<WishlistStore>()(
         }
       },
 
-      addToWishlist: async (productId: string) => {
+      addToWishlist: async (productId: string, notify?: (message: string) => void) => {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
-          alert('Je moet ingelogd zijn om items aan je wishlist toe te voegen')
+          if (notify) notify('wishlistLogin'); else alert('Je moet ingelogd zijn om items aan je wishlist toe te voegen')
           return
         }
 
@@ -71,17 +71,18 @@ export const useWishlist = create<WishlistStore>()(
           set((state) => ({
             items: [data, ...state.items],
           }))
+          notify?.('wishlistSaved')
         } catch (error: any) {
           console.error('Error adding to wishlist:', error)
           if (error.code === '23505') {
-            alert('Dit item staat al in je wishlist')
+            if (notify) notify('wishlistAlready'); else alert('Dit item staat al in je wishlist')
           } else {
-            alert('Er ging iets mis bij het toevoegen aan je wishlist')
+            if (notify) notify('wishlistError'); else alert('Er ging iets mis bij het toevoegen aan je wishlist')
           }
         }
       },
 
-      removeFromWishlist: async (productId: string) => {
+      removeFromWishlist: async (productId: string, notify?: (message: string) => void) => {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -99,9 +100,10 @@ export const useWishlist = create<WishlistStore>()(
           set((state) => ({
             items: state.items.filter((item) => item.product_id !== productId),
           }))
+          notify?.('wishlistRemoved')
         } catch (error) {
           console.error('Error removing from wishlist:', error)
-          alert('Er ging iets mis bij het verwijderen uit je wishlist')
+          if (notify) notify('wishlistError'); else alert('Er ging iets mis bij het verwijderen uit je wishlist')
         }
       },
 

@@ -1,5 +1,5 @@
 import type { Readiness, ReadinessCheck } from '@/lib/shopify-readiness'
-import { PILOT_MODELS, type MappedVariant } from '@/lib/shopify/policy'
+import { PILOT_MODELS, supplierReleaseAuthorized, type MappedVariant } from '@/lib/shopify/policy'
 import { localVariantPriceCents } from '@/lib/shopify/local-checkout'
 import { TAPSTITCH_PRODUCT_SOURCES } from '@/lib/tapstitch-products'
 
@@ -32,6 +32,7 @@ export type ReleaseRuntimeEvidence = {
    * fresh worker heartbeat, no dead letters, and no stale pending work. */
   loyaltyRuntime: ReadinessCheck['status']
   promoParity?: ReadinessCheck['status']
+  nativeGiftRuntime?: ReadinessCheck['status']
 }
 export type ReleaseAudit = {
   checks: ReadinessCheck[]
@@ -59,7 +60,7 @@ export function auditShopifyRelease(catalog: CatalogEvidence | null, obligations
     const cents = localVariantPriceCents(product, variant)
     if (cents === null || cents <= 0 || mapping.price_eur_cents !== cents) priceMismatches++
     if (!['mose', 'tapstitch'].includes(mapping.fulfillment_owner) ||
-      (mapping.fulfillment_owner === 'tapstitch' && (!mapping.supplier_link_verified || !mapping.sample_verified || !PILOT_MODELS.some(model => model === mapping.supplier_model)))) supplierUnverified = true
+      (mapping.fulfillment_owner === 'tapstitch' && (!mapping.supplier_link_verified || !supplierReleaseAuthorized(mapping) || !PILOT_MODELS.some(model => model === mapping.supplier_model)))) supplierUnverified = true
     const supplierSource = TAPSTITCH_PRODUCT_SOURCES[product.id]
     if (supplierSource && (mapping.fulfillment_owner !== 'tapstitch' || mapping.supplier_model !== supplierSource.sourceCode)) supplierUnverified = true
     coveredIds.add(variant.id)
@@ -69,7 +70,7 @@ export function auditShopifyRelease(catalog: CatalogEvidence | null, obligations
     check('catalogCoverage', 'Iedere actieve verkoopbare MOSE-variant heeft één vrijgegeven Shopify-koppeling', unknown ? 'unknown' : variants.length > 0 && missingMappings === 0 && !duplicateMappings ? 'verified' : 'missing'),
     check('catalogPrices', 'Alle actieve variantprijzen komen tot op de cent overeen met de koppeling', unknown ? 'unknown' : missingMappings === 0 && priceMismatches === 0 ? 'verified' : 'missing'),
     check('catalogRouting', 'Alle actieve varianten hebben een geverifieerde fysieke fulfillmentroute', unknown ? 'unknown' : missingMappings === 0 && !supplierUnverified ? 'verified' : 'missing'),
-    check('digitalContract', 'Geen actieve cadeaubonverkoop zonder ondersteund digitaal checkoutcontract', unknown ? 'unknown' : products.some(product => product.is_gift_card) ? 'missing' : 'verified'),
+    check('digitalContract', 'Geen actieve cadeaubonverkoop zonder ondersteund digitaal checkoutcontract', unknown ? 'unknown' : products.some(product => product.is_gift_card) ? runtime?.nativeGiftRuntime ?? 'missing' : 'verified'),
     check('presaleContract', 'Geen actieve presalevoorraad zonder aparte Shopify-leverbelofte', unknown ? 'unknown' : variants.some(variant => variant.presale_enabled && variant.presale_stock_quantity > 0) ? 'missing' : 'verified'),
   ]
   // These checks deliberately do not inherit a broad benefits_verified switch.

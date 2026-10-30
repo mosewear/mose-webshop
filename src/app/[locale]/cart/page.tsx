@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { formatPrice, formatAmount, formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import Image from 'next/image'
-import { useCart, useCartGehydrateerd } from '@/store/cart'
+import { useCart, useCartGehydrateerd, cartItemQuantityLimit } from '@/store/cart'
 import { getSiteSettings } from '@/lib/settings'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -33,18 +33,20 @@ export default function CartPage() {
   const [staffelHints, setStaffelHints] = useState<StaffelHint[]>([])
   
   const subtotal = getTotal()
+  const giftFaceValue = items.filter(item => item.isGiftCard).reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const digitalOnly = items.length > 0 && items.every(item => item.isGiftCard)
   const subtotalAfterStaffel = subtotal - staffelSavings
-  const shipping = subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
+  const shipping = digitalOnly || subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
   // Bij altijd gratis verzending heeft een voortgangsbalk geen betekenis meer:
   // hij zou permanent op honderd procent staan met "nog €0 te gaan".
-  const altijdGratisVerzending = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
+  const altijdGratisVerzending = digitalOnly || isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
 
   
   // De BTW zit in de prijzen, dus hier wordt hij eruit gerekend en niet
   // opgeteld. Hij stond als losse regel tussen subtotaal en verzending, waar
   // hij las alsof hij er nog bovenop kwam. Nu staat hij onder het totaal.
   const vatRate = 0.21
-  const totalBtw = (subtotalAfterStaffel + shipping) * (vatRate / (1 + vatRate))
+  const totalBtw = (Math.max(0, subtotalAfterStaffel - giftFaceValue) + shipping) * (vatRate / (1 + vatRate))
   
   const total = subtotalAfterStaffel + shipping
 
@@ -154,11 +156,7 @@ export default function CartPage() {
    * hebben geen voorraad). Zonder deze grens kon je hier met de plusknop tien
    * stuks van een laatste exemplaar bestellen; in de la zat die grens wel.
    */
-  const maxAantal = (item: { stock: number; isPresale?: boolean; presaleStock?: number; isGiftCard?: boolean }) => {
-    if (item.isGiftCard) return null
-    const max = item.isPresale ? (item.presaleStock ?? 0) : item.stock
-    return Number.isFinite(max) && max > 0 ? max : null
-  }
+  const maxAantal = cartItemQuantityLimit
 
   const tekortVoorGratis = altijdGratisVerzending
     ? 0
@@ -302,7 +300,7 @@ export default function CartPage() {
               {items.map((item) => {
                 const max = maxAantal(item)
                 const opMaximum = max !== null && item.quantity >= max
-                const bijnaOp = max !== null && max <= 3
+                const bijnaOp = !item.isMadeToOrder && max !== null && max > 0 && max <= 3
                 return (
                   <li key={item.variantId} className="border-b border-gray-200 py-5 md:py-6">
                     <div className="flex gap-4 md:gap-6">
@@ -372,6 +370,7 @@ export default function CartPage() {
                               </p>
                             )}
 
+                            {item.isMadeToOrder && <p className="mt-2 text-xs font-semibold uppercase tracking-wide">{locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'}</p>}
                             {bijnaOp && (
                               <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-brand-primary">
                                 {max === 1 ? t('lastOne') : t('onlyLeft', { count: max })}

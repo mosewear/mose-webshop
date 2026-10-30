@@ -25,7 +25,7 @@ const copy = {
     pending: 'Je eerdere betaalpoging wordt nog gecontroleerd. Je winkelmand blijft bewaard. Probeer het later opnieuw.',
     review: 'Je eerdere betaalpoging moet eerst worden gecontroleerd. Neem contact met ons op voordat je opnieuw betaalt.',
     changed: 'Je winkelmand, prijs of beschikbaarheid is gewijzigd. Controleer je artikelen en probeer het opnieuw.',
-    gift: 'Afrekenen met cadeaubonnen is via deze route nog niet beschikbaar. Je winkelmand is behouden. Neem contact met ons op voor hulp.',
+    gift: 'Controleer het bedrag en de ontvanger van je cadeaubon. Je winkelmand is behouden.', giftInfo: 'Je cadeaubon wordt per e-mail geleverd. Een ontvangen cadeaubon verzilver je op de betaalpagina.', invalidGift: 'Controleer de ontvanger, het bericht (maximaal 200 tekens inclusief afzender) en de verzenddatum (maximaal 90 dagen vooruit).',
     invalid: 'We kunnen deze winkelmand nog niet verwerken. Controleer de aantallen in je winkelmand.',
     contact: 'Neem contact op', quantity: 'Aantal',
     storageError: 'Je browser kan de veilige betaalpoging niet bewaren. Sta sessieopslag toe en probeer opnieuw.', promo: 'Kortingscode', promoPlaceholder: 'Jouw code', promoNote: 'De geldigheid en combinatie met andere voordelen worden bij afrekenen gecontroleerd.',
@@ -43,7 +43,7 @@ const copy = {
     pending: 'Your earlier checkout is still being checked. Your bag has been saved. Please try again later.',
     review: 'Your earlier checkout needs to be checked first. Please contact us before making another payment.',
     changed: 'Your bag, price or availability has changed. Check your items and try again.',
-    gift: 'Gift card checkout is not available on this route yet. Your bag has been saved. Contact us for help.',
+    gift: 'Check your gift card value and recipient. Your bag has been saved.', giftInfo: 'Your gift card is delivered by email. Redeem a received gift card on the payment page.', invalidGift: 'Check the recipient, message (up to 200 characters including sender) and delivery date (up to 90 days ahead).',
     invalid: 'We cannot process this bag yet. Please check the quantities in your bag.',
     contact: 'Contact us', quantity: 'Quantity',
     storageError: 'Your browser cannot save the secure checkout attempt. Allow session storage and try again.', promo: 'Discount code', promoPlaceholder: 'Your code', promoNote: 'Eligibility and combinations with other benefits are checked at checkout.',
@@ -86,12 +86,21 @@ export function ShopifyCheckoutHandoff() {
     finally { clearTimeout(timeout) }
   }, [])
   useEffect(() => {
+    let locked = false
     try {
       const stored = JSON.parse(sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) || 'null')
-      const snapshot = stored?.locked && JSON.parse(stored.snapshot)
+      locked = stored?.locked === true
+      const snapshot = locked && JSON.parse(stored.snapshot)
       if (snapshot && typeof snapshot.promoCode === 'string') setPromoCode(snapshot.promoCode)
       if (snapshot && Number.isSafeInteger(snapshot.loyaltyPoints) && snapshot.loyaltyPoints > 0) { setLoyaltyPoints(snapshot.loyaltyPoints); void loadLoyalty() }
     } catch { /* A malformed optional browser record grants no benefits. */ }
+    // A potentially issued attempt owns its exact benefits fingerprint, even
+    // when it contains no promo. Never replace it with another tab's code.
+    if (locked) return
+    try {
+      const saved = localStorage.getItem('mose_promo_code')?.trim().toUpperCase()
+      if (saved && saved.length <= 80 && /^[A-Z0-9_-]+$/.test(saved)) setPromoCode(saved)
+    } catch { /* Storage is optional; the customer can enter the code manually. */ }
   }, [loadLoyalty])
 
   async function proceed() {
@@ -164,7 +173,7 @@ export function ShopifyCheckoutHandoff() {
       window.location.assign(url)
     } catch (failure) {
       const code = failure instanceof Error ? failure.message : ''
-      setError(code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
+      setError(code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_GIFT_RECIPIENT' ? text.invalidGift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
     } finally {
       clearTimeout(timeout)
       controller.current = null
@@ -181,7 +190,8 @@ export function ShopifyCheckoutHandoff() {
       <Link href="/shop" className={buttonVariants({ variant: 'secondary' })}>{text.shop}</Link>
     </section>
   )
-  const unsupported = items.some(item => item.isGiftCard)
+  const hasGiftCards = items.some(item => item.isGiftCard)
+  const hasPhysicalItems = items.some(item => !item.isGiftCard)
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 md:py-12">
       <Link href="/cart" className="mb-6 inline-flex min-h-[44px] items-center gap-2 text-sm font-bold uppercase tracking-wide underline underline-offset-4">
@@ -208,9 +218,7 @@ export function ShopifyCheckoutHandoff() {
           <p className="mt-1 font-display text-3xl tabular-nums">{formatBedrag(items.reduce((sum, item) => sum + item.price * item.quantity, 0), locale)}</p>
           <p className="mt-3 text-sm leading-relaxed text-gray-700">{text.final}</p>
           <div className="my-5 space-y-2 border-y border-gray-200 py-4 text-sm">
-            <p className="font-semibold">{text.delivery}</p>
-            <p className="text-gray-600">{text.deliveryNote}</p>
-            <p>{text.parcels}</p>
+            {hasPhysicalItems ? <><p className="font-semibold">{text.delivery}</p><p className="text-gray-600">{text.deliveryNote}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
           </div>
           <div className="mb-5 space-y-4">
             <div><label htmlFor="checkout-promo" className="block text-sm font-bold">{text.promo}</label><input id="checkout-promo" value={promoCode} onChange={event => setPromoCode(event.target.value)} disabled={busy} maxLength={80} autoComplete="off" autoCapitalize="characters" placeholder={text.promoPlaceholder} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-promo-note"/><p id="checkout-promo-note" className="mt-2 text-xs text-gray-600">{text.promoNote}</p></div>
@@ -219,9 +227,9 @@ export function ShopifyCheckoutHandoff() {
             {loyaltyStatus === 'error' && <p className="text-sm" role="status">{text.pointsError}</p>}
             {loyaltyStatus === 'ready' && loyalty && <div><p className="mb-2 text-sm">{loyalty.points} {text.pointsAvailable} · {text.tier}: <span className="capitalize">{loyalty.tier}</span></p><label htmlFor="checkout-points" className="block text-sm font-bold">{text.pointsLabel}</label><input id="checkout-points" type="number" min={0} max={Math.floor(loyalty.points / 100) * 100} step={100} value={loyaltyPoints} onChange={event => setLoyaltyPoints(Number(event.target.value))} disabled={busy || loyalty.points < 100} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-points-note"/><p id="checkout-points-note" className="mt-2 text-xs text-gray-600">{text.pointsNote}</p></div>}
           </div>
-          {unsupported && <p className="mb-4 text-sm leading-relaxed text-red-800">{text.gift} <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></p>}
+          {hasGiftCards && <p className="mb-4 text-sm leading-relaxed text-gray-700">{text.giftInfo}</p>}
           {error && <p role="alert" className="mb-4 border-l-2 border-red-700 pl-3 text-sm leading-relaxed text-red-800">{error}{error === text.review && <> <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></>}</p>}
-          <Button fullWidth isLoading={busy} loadingLabel={text.loading} disabled={unsupported} onClick={proceed}
+          <Button fullWidth isLoading={busy} loadingLabel={text.loading} onClick={proceed}
             className="text-black hover:text-black focus-visible:ring-black">
             <Lock size={17} aria-hidden="true" />{text.button}
           </Button>

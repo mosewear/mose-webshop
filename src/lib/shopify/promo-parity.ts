@@ -4,7 +4,7 @@ import type { ReadinessCheck } from '@/lib/shopify-readiness'
 import { LOYALTY_CONFIG } from '@/lib/loyalty'
 
 export const PROMO_PARITY_API_VERSION = '2026-10'
-export const PROMO_PARITY_CONTRACT = 'native-order-percentage-floor-v1'
+export const PROMO_PARITY_CONTRACT = 'native-order-percentage-floor-physical-v2'
 type Row = Record<string, unknown>
 export type PromoParitySnapshot = { complete: boolean; promotions: Row[]; products: Row[]; variants: Row[]; mappings: Row[]; tiers: Row[]; settings?: unknown }
 const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))) : value && typeof value==='object' ? Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,stable(v)])) : value
@@ -14,8 +14,12 @@ export function promoParityFingerprint(s: PromoParitySnapshot) {
 }
 const promoFields = new Set(['id','code','description','discount_type','discount_value','min_order_value','usage_limit','usage_count','expires_at','is_active','created_at','updated_at','created_by','subscriber_id','applies_to_sale_items'])
 export function promoParityRequirements(s: PromoParitySnapshot): string[] | null {
-  if(!s.complete||s.tiers.length||s.products.some(p=>p.is_gift_card===true))return null
-  const sale=s.products.some(p=>p.sale_price!=null&&Number(p.sale_price)>0&&Number(p.sale_price)<Number(p.base_price))
+  if(!s.complete||s.tiers.length)return null
+  // This evidence covers the physical-only checkout contract. Gift lines are
+  // rejected by quoteCheckoutBenefits; digital sale/balances have independent
+  // release gates. Keep gift rows in the fingerprint so a changed catalogue
+  // still invalidates evidence without conflating separate obligations.
+  const sale=s.products.filter(p=>p.is_gift_card!==true).some(p=>p.sale_price!=null&&Number(p.sale_price)>0&&Number(p.sale_price)<Number(p.base_price))
   for(const p of s.promotions){
     if(Object.keys(p).some(k=>!promoFields.has(k))||p.discount_type!=='percentage'||p.is_active!==true||
       !Number.isFinite(Number(p.discount_value))||Number(p.discount_value)<=0||Number(p.discount_value)>100||

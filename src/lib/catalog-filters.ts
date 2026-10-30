@@ -1,10 +1,14 @@
+import { availableVariant } from './variant-availability'
+export { availableVariant } from './variant-availability'
 import type {
+  ShopTile,
   ProductDisplayRow,
   ProductDisplayVariant,
 } from './product-display'
 export type CatalogVariant = ProductDisplayVariant & {
   id?: string
   size?: string | null
+  price_adjustment?: number | null
 }
 export interface CatalogProduct extends ProductDisplayRow {
   name: string
@@ -142,19 +146,28 @@ export function catalogFilterParams(
   if (filters.sort !== 'featured') p.set('sort', filters.sort)
   return p
 }
-export const productPrice = (p: CatalogProduct) => p.sale_price ?? p.base_price
+/** The same base + selected-variant adjustment used by the PDP. */
+export function variantPrice(p: CatalogProduct, v?: CatalogVariant) {
+  return (p.sale_price ?? p.base_price) + (v?.price_adjustment ?? 0)
+}
+export function catalogVariants(p: CatalogProduct, filters = emptyCatalogFilters, color?: string | null) {
+  return (p.variants ?? []).filter((v) =>
+    matchesCatalogVariant(v, filters, color) &&
+    (filters.min === null || variantPrice(p, v) >= filters.min) &&
+    (filters.max === null || variantPrice(p, v) <= filters.max),
+  )
+}
+export function productPriceRange(p: CatalogProduct, color?: string | null, filters = emptyCatalogFilters) {
+  const variants = catalogVariants(p, filters, color)
+  const prices = variants.length ? variants.map((v) => variantPrice(p, v)) : [variantPrice(p)]
+  return { min: Math.min(...prices), max: Math.max(...prices) }
+}
+export const productPrice = (p: CatalogProduct) => productPriceRange(p).min
 const searchText = (value: string) =>
   value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase()
-export function availableVariant(v: CatalogVariant) {
-  return (
-    v.is_available === true &&
-    ((v.stock_quantity ?? 0) > 0 ||
-      (v.presale_enabled === true && (v.presale_stock_quantity ?? 0) > 0))
-  )
-}
 export function matchesCatalogVariant(
   v: CatalogVariant,
   f: CatalogFilters,
@@ -172,18 +185,18 @@ export function matchesCatalogProduct(
   f: CatalogFilters,
   tileColor?: string | null,
 ) {
-  const price = productPrice(p),
-    terms = searchText(f.q).trim().split(/\s+/).filter(Boolean)
+  const terms = searchText(f.q).trim().split(/\s+/).filter(Boolean)
   if (f.category !== 'all' && p.category?.slug !== f.category) return false
   const searchable = searchText(
     `${p.name} ${p.name_en ?? ''} ${p.category?.name ?? ''} ${p.category?.name_en ?? ''} ${(p.variants ?? []).map((v) => v.color ?? '').join(' ')}`,
   )
   if (terms.some((term) => !searchable.includes(term))) return false
-  if ((f.min !== null && price < f.min) || (f.max !== null && price > f.max))
-    return false
-  if (!f.sizes.length && !f.colors.length && !f.stock) return true
-  if (p.is_gift_card) return !f.sizes.length && !f.colors.length
-  return (p.variants ?? []).some((v) => matchesCatalogVariant(v, f, tileColor))
+  const priceMatches = (price: number) =>
+    (f.min === null || price >= f.min) && (f.max === null || price <= f.max)
+  if (p.is_gift_card) return !f.sizes.length && !f.colors.length && priceMatches(productPrice(p))
+  if (!(p.variants ?? []).length)
+    return !f.sizes.length && !f.colors.length && !f.stock && priceMatches(productPrice(p))
+  return catalogVariants(p, f, tileColor).length > 0
 }
 export function filterCatalog(
   products: CatalogProduct[],
@@ -198,8 +211,8 @@ export function filterCatalog(
     .filter((p) => matchesCatalogProduct(p, f))
     .sort((a, b) => {
       let diff = 0
-      if (f.sort === 'price-asc') diff = productPrice(a) - productPrice(b)
-      else if (f.sort === 'price-desc') diff = productPrice(b) - productPrice(a)
+      if (f.sort === 'price-asc') diff = catalogDisplayPrice(a, f) - catalogDisplayPrice(b, f)
+      else if (f.sort === 'price-desc') diff = catalogDisplayPrice(b, f) - catalogDisplayPrice(a, f)
       else if (f.sort === 'name')
         diff = collator.compare(
           locale === 'en' ? a.name_en || a.name : a.name,
@@ -209,6 +222,7 @@ export function filterCatalog(
         diff = Date.parse(b.created_at) - Date.parse(a.created_at)
       else
         diff =
+          catalogRank(a, f) - catalogRank(b, f) ||
           (a.display_order ?? 999) - (b.display_order ?? 999) ||
           Date.parse(b.created_at) - Date.parse(a.created_at)
       return (Number.isFinite(diff) ? diff : 0) || a.id.localeCompare(b.id)
@@ -243,4 +257,31 @@ export function catalogDimensions(products: CatalogProduct[]) {
     }),
     colors: [...colors].map(([key, label]) => ({ key, label })),
   }
+}
+
+/** Keep unavailable models discoverable; never invent stock to improve order. */
+function catalogRank(p: CatalogProduct, f: CatalogFilters) {
+  if (p.is_gift_card) return 2
+  return catalogVariants(p, f).some(variant => availableVariant(variant)) ? 0 : 1
+}
+
+/** One model per card, with a real colour satisfying the same variant facets. */
+export function catalogTiles(products: CatalogProduct[], filters: CatalogFilters): ShopTile<CatalogProduct>[] {
+  return products.map((product) => {
+    const matches = catalogVariants(product, filters)
+    const selected = matches.find(variant => availableVariant(variant)) ?? matches[0]
+    return {
+      tileKey: product.id,
+      product,
+      color: product.is_gift_card ? null : selected?.color?.trim() || null,
+      color_hex: product.is_gift_card ? null : selected?.color_hex || null,
+    }
+  })
+}
+
+/** Sorting and cards must describe the same representative colour and facets. */
+function catalogDisplayPrice(product: CatalogProduct, filters: CatalogFilters) {
+  const variants = catalogVariants(product, filters)
+  const selected = variants.find(variant => availableVariant(variant)) ?? variants[0]
+  return productPriceRange(product, selected?.color, filters).min
 }

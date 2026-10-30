@@ -1,5 +1,7 @@
 'use client'
 
+import { invalidatePublicCatalog } from '@/lib/catalog-invalidation'
+
 import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -317,6 +319,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         .eq('id', id)
 
       if (updateError) throw updateError
+      await invalidatePublicCatalog()
 
       router.push('/admin/products')
       router.refresh()

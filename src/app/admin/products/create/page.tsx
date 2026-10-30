@@ -1,5 +1,7 @@
 'use client'
 
+import { invalidatePublicCatalog } from '@/lib/catalog-invalidation'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -161,6 +163,7 @@ export default function CreateProductPage() {
         .single()
 
       if (insertError) throw insertError
+      await invalidatePublicCatalog()
 
       // Cadeaubon → direct naar coupures zodat ze meteen beheerd kunnen worden.
       if (isGift && data?.id) {

@@ -108,17 +108,20 @@ export function assertCartBenefits(raw: unknown, expected: { code: string; disco
   if (proof) {
     const source = z.array(z.object({ variantId: variant, quantity: z.number().int().positive(), unitCents: cents })).min(1).max(100).parse(proof.lines)
     const actual = cart.lines.nodes
-    if (new Set(source.map(l => l.variantId)).size !== source.length || new Set(actual.map(l => l.merchandise.id)).size !== actual.length || source.length !== actual.length)
+    if (new Set(source.map(l => l.variantId)).size !== source.length || new Set(actual.map(l => l.merchandise.id)).size !== source.length)
       throw new Error('BENEFITS_LINE_PROOF_MISMATCH')
     let originalSubtotal = 0
+    const actualQuantities = new Map<string, number>()
     for (const line of actual) {
       const trusted = source.find(l => l.variantId === line.merchandise.id)
-      if (!trusted || trusted.quantity !== line.quantity || !line.cost ||
+      if (!trusted || !line.cost ||
         moneyToCents(line.cost.amountPerQuantity.amount) !== trusted.unitCents ||
-        moneyToCents(line.cost.subtotalAmount.amount) !== trusted.unitCents * trusted.quantity)
+        moneyToCents(line.cost.subtotalAmount.amount) !== trusted.unitCents * line.quantity)
         throw new Error('BENEFITS_LINE_PROOF_MISMATCH')
       originalSubtotal += moneyToCents(line.cost.subtotalAmount.amount)
+      actualQuantities.set(line.merchandise.id, (actualQuantities.get(line.merchandise.id) ?? 0) + line.quantity)
     }
+    if (source.some(line => actualQuantities.get(line.variantId) !== line.quantity)) throw new Error('BENEFITS_LINE_PROOF_MISMATCH')
     const allocated = [...totals.values()].reduce((sum, value) => sum + value, 0)
     if (!Number.isSafeInteger(originalSubtotal) || !Number.isSafeInteger(proof.payableMerchandiseCents) ||
       originalSubtotal - allocated !== proof.payableMerchandiseCents) throw new Error('BENEFITS_PAYABLE_PROOF_MISMATCH')

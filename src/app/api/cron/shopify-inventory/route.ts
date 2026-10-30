@@ -7,7 +7,9 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
-/** Independent budget: order backlog must not starve inventory checks. No local stock writes. */
+/** Four bounded batches cover 27 owned + 63 supplier variants across their
+ * separate locations every five minutes. Supplier presentation updates never
+ * populate physical inventory. Orders cannot starve this independent budget. */
 export async function GET(request: Request) {
   const headers = { 'Cache-Control': 'no-store' }
   if (process.env.SHOPIFY_SYNC_ENABLED !== 'true' || process.env.SHOPIFY_INVENTORY_SYNC_ENABLED !== 'true') {
@@ -17,7 +19,7 @@ export async function GET(request: Request) {
   const options = { deadline: Date.now() + 90_000, signal: AbortSignal.timeout(90_000) }
   try {
     const db = createServiceClient(), batches = []
-    for (let batch = 0; batch < 2 && Date.now() + 18_000 < options.deadline; batch++) {
+    for (let batch = 0; batch < 4 && Date.now() + 18_000 < options.deadline; batch++) {
       const result = await reconcileInventory(db, undefined, options)
       batches.push(result)
       if (result.processed === 0 && result.leaseLost === 0) break

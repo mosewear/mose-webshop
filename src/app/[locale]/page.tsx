@@ -1,5 +1,7 @@
 import { getSiteSettings } from '@/lib/settings'
-import { getHomepageSettings, getFeaturedProducts, getCategoryData } from '@/lib/homepage'
+import { getHomepageSettings } from '@/lib/homepage'
+import { getShopCatalog } from '@/lib/catalog-server'
+import { homepageCategories, selectHomepageProducts } from '@/lib/homepage-catalog'
 import HomePageClient from '@/components/HomePageClient'
 import InstagramFeed from '@/components/home/InstagramFeed'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -8,8 +10,8 @@ import { routing } from '@/i18n/routing'
 import { formatPromiseAmount } from '@/lib/settings-server'
 
 // ✅ ISR with On-Demand Revalidation
-// Homepage cached for 1 hour, auto-updates when admin saves changes
-export const revalidate = 3600 // Cache for 1 hour
+// Homepage follows the public catalogue refresh interval.
+export const revalidate = 60 // Match the public catalogue refresh interval
 
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -19,7 +21,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params
   
   // Ensure that the incoming `locale` is valid
-  if (!routing.locales.includes(locale as any)) {
+  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
     notFound()
   }
 
@@ -28,27 +30,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: 'metadata' })
 
   // Fetch all data server-side
-  const [siteSettings, homepageSettings] = await Promise.all([
+  const [siteSettings, homepageSettings, catalog] = await Promise.all([
     getSiteSettings(),
     getHomepageSettings(locale),
+    getShopCatalog(),
   ])
 
-  // Fetch featured products
-  const productIds = [
+  const featuredProducts = selectHomepageProducts(catalog.products, locale, [
     homepageSettings.featured_product_1_id,
     homepageSettings.featured_product_2_id,
     homepageSettings.featured_product_3_id,
-  ]
-  const featuredProducts = await getFeaturedProducts(productIds, locale)
-
-  // Fetch categories
-  const categoryIds = [
-    homepageSettings.category_1_id,
-    homepageSettings.category_2_id,
-    homepageSettings.category_3_id,
-    homepageSettings.category_4_id,
-  ]
-  const categories = await getCategoryData(categoryIds, locale)
+  ])
+  const categories = homepageCategories(catalog.products, catalog.categories, locale)
 
   // Structured Data for SEO - localized
   const structuredData = {

@@ -7,7 +7,7 @@ import { trackAddToCart } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { catalogContentId } from '@/lib/catalog-ids'
 import Image from 'next/image'
-import { useCart } from '@/store/cart'
+import { useCart, cartItemQuantityLimit } from '@/store/cart'
 import { X, Minus, Plus, Trash2, ShoppingBag, Ticket, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { getSiteSettings } from '@/lib/settings'
@@ -91,13 +91,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     return computeCartStaffelBreakdown(items, flatTiers, saleByProductId)
   }, [items, quantityDiscountTiers, productSalePrices])
 
+  const giftFaceValue = items.filter(item => item.isGiftCard).reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const digitalOnly = items.length > 0 && items.every(item => item.isGiftCard)
   const subtotalAfterDiscount = subtotal - promoDiscount - staffelBreakdown.totalSavings
-  const shipping = subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
+  const shipping = digitalOnly || subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
   // BTW berekening (21% is al inbegrepen in de prijzen)
   const vatRate = 0.21
-  const subtotalExclBtw = subtotalAfterDiscount / (1 + vatRate)
-  const btwAmount = subtotalAfterDiscount - subtotalExclBtw
+  const taxableSubtotal = Math.max(0, subtotalAfterDiscount - giftFaceValue)
+  const subtotalExclBtw = taxableSubtotal / (1 + vatRate)
+  const btwAmount = taxableSubtotal - subtotalExclBtw
   const totalBtw = btwAmount + (shipping / (1 + vatRate) * vatRate)
   
   const total = subtotalAfterDiscount + shipping
@@ -220,11 +223,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
    * Hoeveel er nog van deze regel bij kan. `null` betekent onbeperkt
    * (cadeaubonnen hebben geen voorraad).
    */
-  const maxAantal = (item: { stock: number; isPresale?: boolean; presaleStock?: number; isGiftCard?: boolean }) => {
-    if (item.isGiftCard) return null
-    const max = item.isPresale ? (item.presaleStock ?? 0) : item.stock
-    return Number.isFinite(max) && max > 0 ? max : null
-  }
+  const maxAantal = cartItemQuantityLimit
 
   /** Bestanden die in product_images staan maar geen afbeelding zijn. Een
    *  <Image> kan ze niet tonen en levert een leeg grijs vlak op: dat gebeurde
@@ -742,6 +741,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             )}
                           </div>
 
+                          {item.isMadeToOrder && <p className="mt-2 text-xs font-semibold uppercase tracking-wide">{locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'}</p>}
                           {/* Bottom Section - Quantity & Price */}
                           <div className="flex items-center justify-between mt-3">
                             {/* Quantity Controls */}
@@ -798,7 +798,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               knoppen: ingeklemd tussen het aantal en de prijs
                               brak "Laatste exemplaar" over twee regels en liep
                               het tegen het bedrag aan. */}
-                          {maxAantal(item) !== null && maxAantal(item)! <= 3 && (
+                          {!item.isMadeToOrder && maxAantal(item) !== null && maxAantal(item)! > 0 && maxAantal(item)! <= 3 && (
                             <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
                               {maxAantal(item) === 1
                                 ? t('lastOne')
@@ -856,7 +856,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               {/* Desktop Summary */}
               <div className="hidden md:block p-3 space-y-2">
                 {/* Progress to Free Shipping - Enhanced with Progress Bar */}
-                {freeShippingThreshold > 0 && subtotalAfterDiscount < freeShippingThreshold && (
+                {!digitalOnly && freeShippingThreshold > 0 && subtotalAfterDiscount < freeShippingThreshold && (
                   <div className="bg-white border-l-2 border-brand-primary px-2 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-gray-600">
@@ -1164,7 +1164,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </LocaleLink>
                   </div>
                   {/* Enhanced shipping progress for mobile */}
-                  {freeShippingThreshold > 0 && subtotalAfterDiscount < freeShippingThreshold ? (
+                  {!digitalOnly && freeShippingThreshold > 0 && subtotalAfterDiscount < freeShippingThreshold ? (
                     <div className="border-t border-gray-700 pt-2">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-xs text-gray-400">
