@@ -157,7 +157,9 @@ export async function POST(request: NextRequest) {
       const variant = result.nodes.find(v => v?.id === line.merchandiseId)
       if (!variant || !variant.availableForSale || variant.price.currencyCode !== 'EUR' ||
         moneyToCents(variant.price.amount) !== line.expectedPriceCents ||
-        (variant.quantityAvailable !== null && variant.quantityAvailable < line.quantity)) {
+        // Native digital gifts are proven untracked/non-shipping by the resolver.
+        // Shopify can return quantityAvailable=0 while they remain availableForSale.
+        (!line.gift && variant.quantityAvailable !== null && variant.quantityAvailable < line.quantity)) {
         return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'CART_CHANGED' }, 409)
       }
     }
