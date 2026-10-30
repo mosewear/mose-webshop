@@ -1,1307 +1,605 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { SHOP_PRODUCT_SELECT } from '@/lib/catalog-select'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import Image from 'next/image'
-import { X, SlidersHorizontal, Search } from 'lucide-react'
-import { trackPixelEvent } from '@/lib/facebook-pixel'
-import RecentlyViewed from '@/components/RecentlyViewed'
-import DualRangeSlider from '@/components/DualRangeSlider'
-import PresaleBadge from '@/components/PresaleBadge'
-import { useTranslations, useLocale } from 'next-intl'
-import { Link as LocaleLink } from '@/i18n/routing'
-import { formatPrice } from '@/lib/format-price'
-import { getSiteSettings } from '@/lib/settings'
-import { useWishlist } from '@/store/wishlist'
-import toast from 'react-hot-toast'
-import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
+import { SHOP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import {
-  buildPdpHref,
-  expandToShopTiles,
-  formatColorLabel,
-  getColorStock,
-  getImageForColor,
-  getHoverImageForColor,
-} from '@/lib/product-display'
+  catalogDimensions,
+  emptyCatalogFilters,
+  filterCatalog,
+  matchesCatalogProduct,
+  productPrice,
+  type CatalogCategory,
+  type CatalogFilters,
+  type CatalogProduct,
+  type CatalogSort,
+} from '@/lib/catalog-filters'
+import { expandToShopTiles, formatColorLabel } from '@/lib/product-display'
+import { formatPrice } from '@/lib/format-price'
+import { useWishlist } from '@/store/wishlist'
+import { useCatalogFilters } from '@/components/shop/useCatalogFilters'
+import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import PaginaKop from '@/components/layout/PaginaKop'
-import CategorieKiezer, { type CategorieItem } from '@/components/shop/CategorieKiezer'
-import DetailBlok from '@/components/shop/DetailBlok'
+import RecentlyViewed from '@/components/RecentlyViewed'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 
-export interface ShopProduct {
-  id: string
-  name: string
-  name_en?: string
-  slug: string
-  base_price: number
-  sale_price: number | null
-  category_id: string | null
-  is_gift_card?: boolean
-  /**
-   * Per-product admin opt-in (zie /admin/products/[id]/edit). Wanneer
-   * true splitst de shop-grid dit product in één tegel per unieke
-   * variant-kleur. Producten met 0–1 kleuren en cadeaubonnen blijven
-   * altijd één tegel, ongeacht de waarde van dit veld.
-   */
-  show_color_variants_on_shop?: boolean
-  /**
-   * Handmatige sort-key beheerd via /admin/products (kolom Volgorde).
-   * Smaller = higher in de grid. Wordt gebruikt voor de 'featured'
-   * sort die nu de default is.
-   */
-  display_order: number
-  created_at: string
-  category?: {
-    name: string
-    name_en?: string
-    slug: string
-  } | null
-  images?: Array<{
-    url: string
-    alt_text: string | null
-    is_primary: boolean
-    media_type?: 'image' | 'video'
-    color?: string | null
-    position?: number
-  }>
-  variants?: Array<{
-    color?: string
-    color_hex?: string
-    stock_quantity: number
-    presale_stock_quantity: number
-    presale_enabled: boolean
-    presale_expected_date?: string | null
-    is_available: boolean
-  }>
-}
+export type ShopProduct = CatalogProduct
+export type ShopCategory = CatalogCategory
+const fieldClass =
+  'min-h-11 w-full border border-gray-300 bg-white px-3 text-sm text-black focus:border-black focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary'
 
-export interface ShopCategory {
-  id: string
-  name: string
-  name_en?: string
-  slug: string
-}
-
-export default function ShopPageClient({ initialProducts, initialCategories }: { initialProducts?: ShopProduct[]; initialCategories?: ShopCategory[] }) {
-  const t = useTranslations('shop')
-  const tProduct = useTranslations('product')
-  const locale = useLocale()
-  const [products, setProducts] = useState<ShopProduct[]>(initialProducts ?? [])
-  const [categories, setCategories] = useState<ShopCategory[]>(initialCategories ?? [])
-  const [loading, setLoading] = useState(!initialProducts)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [showCategoryLabels, setShowCategoryLabels] = useState(true) // Default to true
-  
-  // Helper for locale-aware links
-  
-  // Helper to get localized names
-  const getProductName = (product: ShopProduct) =>
-    locale === 'en' && product.name_en ? product.name_en : product.name
-
-  /**
-   * De naam zoals hij op een tegel staat, zonder het merk ervoor.
-   *
-   * Op mosewear.com begint elke productnaam met "MOSE", dus elke tegel in de
-   * grid begon met hetzelfde woord. Dat kost een halve regel op een tegel van
-   * 175 pixels breed en laat vier verschillende producten identiek beginnen.
-   * In de paginatitel, de productpagina en de Google-feed blijft het merk wel
-   * staan; daar staat de naam zonder context.
-   */
-  const getTileName = (product: ShopProduct) =>
-    getProductName(product).replace(/^MOSE\s+/i, '')
-  const getCategoryName = (category: ShopCategory | { name: string; name_en?: string }) =>
-    locale === 'en' && category.name_en ? category.name_en : category.name
-  
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  // Default = handmatige volgorde uit /admin/products (kolom Volgorde).
-  // Klanten kunnen via de filter-dropdown alsnog op 'Nieuwste',
-  // 'Prijs' of 'Naam' sorteren — dat blijft volledig werken.
-  const [sortBy, setSortBy] = useState<string>('featured')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500])
-  const [minPrice, setMinPrice] = useState(0)
-  const [maxPrice, setMaxPrice] = useState(500)
-  const [showInStockOnly, setShowInStockOnly] = useState(false)
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-  const [hoveredTile, setHoveredTile] = useState<string | null>(null)
-  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
-  // Tracks whether we are mounted on the client so the mobile drawer portal
-  // can safely target document.body without breaking SSR.
-  const [isMounted, setIsMounted] = useState(false)
-  const supabase = createClient()
-  const { addToWishlist, removeFromWishlist, isInWishlist, loadWishlist } = useWishlist()
-
+export default function ShopPageClient({
+  initialProducts,
+  initialCategories,
+  initialFilters = emptyCatalogFilters,
+}: {
+  initialProducts?: CatalogProduct[]
+  initialCategories?: CatalogCategory[]
+  initialFilters?: CatalogFilters
+}) {
+  const locale = useLocale(),
+    t = useTranslations('shop.catalog'),
+    page = useTranslations('shop')
+  const [products, setProducts] = useState(initialProducts ?? []),
+    [categories, setCategories] = useState(initialCategories ?? []),
+    [loading, setLoading] = useState(!initialProducts),
+    [error, setError] = useState('')
+  const { filters, update } = useCatalogFilters(initialFilters)
+  const [mobileOpen, setMobileOpen] = useState(false),
+    dialog = useRef<HTMLDialogElement>(null)
+  const { loadWishlist } = useWishlist()
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  // Body scroll lock when drawer is open
+    void loadWishlist()
+  }, [loadWishlist])
   useEffect(() => {
-    if (mobileFiltersOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [mobileFiltersOpen])
-
-  // Close on ESC key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileFiltersOpen) {
-        setMobileFiltersOpen(false)
-      }
-    }
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [mobileFiltersOpen])
-
-  useEffect(() => {
-    loadWishlist()
-    if (!initialCategories) void fetchCategories()
-    if (!initialProducts) void fetchProducts()
-    loadSettings()
-  }, [])
-
-  // Set page title based on selected category (locale-aware)
-  useEffect(() => {
-    if (selectedCategory === 'all') {
-      document.title = t('pageTitle')
-    } else {
-      const category = categories.find(c => c.slug === selectedCategory)
-      if (category) {
-        document.title = t('categoryPageTitle', {
-          category: getCategoryName(category),
-        })
-      }
-    }
-  }, [selectedCategory, categories, t, locale])
-
-  // Auto-select category from URL parameter (from homepage category links)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const categorySlug = params.get('category')
-    if (categorySlug) {
-      setSelectedCategory(categorySlug)
-    } else {
-      // Reset to 'all' when no category parameter is present
-      setSelectedCategory('all')
-    }
-  }, [])
-
-  // Track search event (debounced to avoid tracking every keystroke)
-  useEffect(() => {
-    if (searchQuery.trim().length > 2) {
-      const timer = setTimeout(() => {
-        trackPixelEvent('Search', {
-          search_string: searchQuery.trim()
-        })
-      }, 1000) // Wait 1 second after user stops typing
-      
-      return () => clearTimeout(timer)
-    }
-  }, [searchQuery])
-
-  const fetchCategories = async () => {
-    const { data } = await supabase
-      .from('categories')
-      .select('id, name, name_en, slug')
-      .eq('status', 'active')
-      .order('name')
-      .abortSignal(AbortSignal.timeout(8000))
-    
-    if (data) setCategories(data)
-  }
-
-  const loadSettings = async () => {
-    try {
-      const settings = await getSiteSettings()
-      setShowCategoryLabels(settings.show_category_labels ?? true) // Default to true if not set
-    } catch (error) {
-      console.error('Error loading settings:', error)
-      setShowCategoryLabels(true) // Fallback to true on error
-    }
-  }
-
-  const fetchProducts = async () => {
-    try {
-      setLoading(true)
-      setLoadError(null)
-      // Server-side sort keeps the network payload deterministic;
-      // the client-side `sortBy` switch below re-sorts when the
-      // visitor picks an option other than 'featured'.
-      const { data, error } = await supabase
-        .from('products')
-        .select(SHOP_PRODUCT_SELECT)
-        .eq('is_active', true)
-        .eq('status', 'active')
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false })
-        .abortSignal(AbortSignal.timeout(8000))
-
-      if (error) throw error
-      
-      // Sort images by position for consistent ordering
-      if (data) {
-        data.forEach(product => {
-          if (product.images) {
-            product.images.sort((a: any, b: any) => (a.position ?? 999) - (b.position ?? 999))
-          }
-        })
-      }
-      
-      // Calculate min/max prices from products
-      if (data && data.length > 0) {
-        const prices = data.map(p => p.sale_price || p.base_price)
-        const calculatedMin = Math.floor(Math.min(...prices) / 10) * 10
-        const calculatedMax = Math.ceil(Math.max(...prices) / 10) * 10
-        
-        setProducts(data)
-        
-        // Only update price range if it's different (prevent re-render)
-        setMinPrice(prev => prev === calculatedMin ? prev : calculatedMin)
-        setMaxPrice(prev => prev === calculatedMax ? prev : calculatedMax)
-        
-        // CRITICAL: Only update if currently at default [0, 500]
-        // This prevents the re-render that causes layout shift
-        setPriceRange(prev => {
-          if (prev[0] === 0 && prev[1] === 500) {
-            return [calculatedMin, calculatedMax]
-          }
-          return prev
-        })
-      } else {
-        setProducts(data || [])
-      }
-    } catch (err) {
-      console.error('Error fetching products:', err)
-      setLoadError(t('loadError'))
-      setProducts([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!initialProducts?.length) return
-    const prices = initialProducts.map(p => p.sale_price ?? p.base_price)
-    const min = Math.floor(Math.min(...prices) / 10) * 10
-    const max = Math.ceil(Math.max(...prices) / 10) * 10
-    setMinPrice(min)
-    setMaxPrice(max)
-    setPriceRange([min, max])
-  }, [initialProducts])
-
-  // Memoize filtered and sorted products to prevent re-sorts
-  const filteredProducts = useMemo(() => {
-    let filtered = [...products]
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category?.slug === selectedCategory)
-    }
-
-    // Filter by search (match both NL and EN names)
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase()
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(q) ||
-        (p.name_en && p.name_en.toLowerCase().includes(q))
-      )
-    }
-
-    // Filter by price range
-    const isPriceFiltered = priceRange[0] !== minPrice || priceRange[1] !== maxPrice
-    if (isPriceFiltered) {
-      filtered = filtered.filter(p => {
-        const price = p.sale_price || p.base_price
-        return price >= priceRange[0] && price <= priceRange[1]
-      })
-    }
-
-    // Filter by stock availability (presale-aware, same rules as shop tiles)
-    if (showInStockOnly) {
-      filtered = filtered.filter(p => {
-        if (p.is_gift_card) return true
-        return getColorStock(p.variants, null).in_stock
-      })
-    }
-
-    // Sort - STABLE SORT with fallback to ID
-    switch (sortBy) {
-      case 'price-asc':
-        filtered.sort((a, b) => {
-          const priceA = a.sale_price ?? a.base_price
-          const priceB = b.sale_price ?? b.base_price
-          const diff = priceA - priceB
-          return diff !== 0 ? diff : a.id.localeCompare(b.id)
-        })
-        break
-      case 'price-desc':
-        filtered.sort((a, b) => {
-          const priceA = a.sale_price ?? a.base_price
-          const priceB = b.sale_price ?? b.base_price
-          const diff = priceB - priceA
-          return diff !== 0 ? diff : a.id.localeCompare(b.id)
-        })
-        break
-      case 'name':
-        filtered.sort((a, b) => {
-          const nameA = getProductName(a)
-          const nameB = getProductName(b)
-          const diff = nameA.localeCompare(nameB)
-          return diff !== 0 ? diff : a.id.localeCompare(b.id)
-        })
-        break
-      case 'newest':
-        filtered.sort((a, b) => {
-          const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          return timeDiff !== 0 ? timeDiff : a.id.localeCompare(b.id)
-        })
-        break
-      case 'featured':
-      default:
-        // Manual order managed via /admin/products (kolom Volgorde).
-        // Smaller display_order = earlier in the grid; created_at DESC
-        // is the tiebreaker so unset/equal rows still produce a stable,
-        // newest-first order — and a brand-new product visibly moves
-        // to the top of its display_order bucket without merchant
-        // intervention.
-        filtered.sort((a, b) => {
-          const orderDiff = (a.display_order ?? 0) - (b.display_order ?? 0)
-          if (orderDiff !== 0) return orderDiff
-          const timeDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          return timeDiff !== 0 ? timeDiff : a.id.localeCompare(b.id)
-        })
-    }
-
-    return filtered
-  }, [products, selectedCategory, searchQuery, priceRange, minPrice, maxPrice, showInStockOnly, sortBy])
-
-  /**
-   * Expand each product into one or more shop tiles. Products with
-   * the `show_color_variants_on_shop` admin flag enabled AND 2+
-   * unique colors become one tile per color (linking to
-   * /product/<slug>?color=<color>), everyone else stays a single
-   * tile. The relative product order is preserved, color tiles of
-   * one product sit contiguously.
-   *
-   * `showInStockOnly` is re-applied at the tile level so an
-   * out-of-stock color tile disappears while in-stock colors of the
-   * same product remain — without this the product-level filter
-   * above would keep the OOS color visible.
-   */
-  /**
-   * Kaarten voor de categorierij. Alleen categorieën met voorraad, want een
-   * lege ingang is een doodlopende weg. Het beeld komt van het eerste product
-   * in die categorie, zodat de kaart toont wat erachter zit.
-   */
-  const categorieKaarten = useMemo<CategorieItem[]>(() => {
-    return categories
-      .map<CategorieItem | null>((categorie) => {
-        const vanCategorie = products.filter((p) => p.category?.slug === categorie.slug)
-        if (vanCategorie.length === 0) return null
-        const aantalTegels = expandToShopTiles(vanCategorie).length
-        return {
-          slug: categorie.slug,
-          naam: getCategoryName(categorie),
-          aantal: aantalTegels,
+    if (initialProducts && initialCategories) return
+    let stopped = false
+    const abort = new AbortController()
+    async function load() {
+      try {
+        const db = createClient()
+        const [p, c] = await Promise.all([
+          db
+            .from('products')
+            .select(SHOP_PRODUCT_SELECT)
+            .eq('is_active', true)
+            .eq('status', 'active')
+            .order('display_order')
+            .abortSignal(abort.signal),
+          db
+            .from('categories')
+            .select('id,name,name_en,slug')
+            .eq('status', 'active')
+            .order('name')
+            .abortSignal(abort.signal),
+        ])
+        if (p.error || c.error) throw Error()
+        if (!stopped) {
+          setProducts(p.data as CatalogProduct[])
+          setCategories(c.data)
+          setError('')
         }
-      })
-      .filter((x): x is CategorieItem => x !== null)
-  }, [categories, products, locale])
-
-  /**
-   * Categorie kiezen en de URL meeschrijven.
-   *
-   * Zonder dit is een gefilterde weergave niet te delen en springt de
-   * terugknop meteen de hele pagina uit. replaceState bij 'all' houdt de
-   * geschiedenis schoon; bij een echte categorie gebruiken we pushState zodat
-   * terug netjes naar de vorige keuze gaat.
-   */
-  const kiesCategorie = useCallback((slug: string) => {
-    setSelectedCategory(slug)
-    if (typeof window === 'undefined') return
-    const url = new URL(window.location.href)
-    if (slug === 'all') {
-      url.searchParams.delete('category')
-      window.history.replaceState({ category: 'all' }, '', url.pathname + url.search)
-    } else {
-      url.searchParams.set('category', slug)
-      window.history.pushState({ category: slug }, '', url.pathname + url.search)
+      } catch {
+        if (!stopped) setError(t('loadError'))
+      } finally {
+        if (!stopped) setLoading(false)
+      }
     }
-  }, [])
-
-  // Terug- en vooruitknop van de browser volgen.
+    void load()
+    return () => {
+      stopped = true
+      abort.abort()
+    }
+  }, [initialProducts, initialCategories, t])
   useEffect(() => {
-    const bijNavigatie = () => {
-      const params = new URLSearchParams(window.location.search)
-      setSelectedCategory(params.get('category') || 'all')
+    if (mobileOpen && !dialog.current?.open) dialog.current?.showModal()
+    else if (!mobileOpen && dialog.current?.open) dialog.current?.close()
+    const previous = document.body.style.overflow
+    if (mobileOpen) document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
     }
-    window.addEventListener('popstate', bijNavigatie)
-    return () => window.removeEventListener('popstate', bijNavigatie)
-  }, [])
-
-  const shopTiles = useMemo(() => {
-    const tiles = expandToShopTiles(filteredProducts)
-    if (!showInStockOnly) return tiles
-    return tiles.filter((tile) => {
-      if (tile.product.is_gift_card) return true
-      // For non-split tiles `tile.color` is null, which makes
-      // getColorStock aggregate across all variants — same outcome
-      // as the previous product-level in-stock check.
-      return getColorStock(tile.product.variants, tile.color).in_stock
+  }, [mobileOpen])
+  const name = (c: CatalogCategory) =>
+    locale === 'en' ? c.name_en || c.name : c.name
+  const categoryChoices = useMemo(
+    () =>
+      categories.filter((c) =>
+        products.some((p) => p.category?.slug === c.slug),
+      ),
+    [categories, products],
+  )
+  useEffect(() => {
+    if (
+      !loading &&
+      filters.category !== 'all' &&
+      !categoryChoices.some((c) => c.slug === filters.category)
+    )
+      update({ category: 'all' }, 'replace')
+  }, [categoryChoices, filters.category, loading, update])
+  const filtered = useMemo(
+    () => filterCatalog(products, filters, locale),
+    [products, filters, locale],
+  )
+  const tiles = useMemo(
+    () =>
+      expandToShopTiles(filtered).filter((tile) =>
+        matchesCatalogProduct(tile.product, filters, tile.color),
+      ),
+    [filtered, filters],
+  )
+  useEffect(() => {
+    if (!filters.q) return
+    const timer = window.setTimeout(
+      () => trackPixelEvent('Search', { search_string: filters.q }),
+      600,
+    )
+    return () => window.clearTimeout(timer)
+  }, [filters.q])
+  const dimensions = useMemo(
+    () =>
+      catalogDimensions(
+        products.filter(
+          (p) =>
+            filters.category === 'all' || p.category?.slug === filters.category,
+        ),
+      ),
+    [products, filters.category],
+  )
+  const bounds = useMemo(
+    () =>
+      products.length
+        ? [
+            Math.floor(Math.min(...products.map(productPrice))),
+            Math.ceil(Math.max(...products.map(productPrice))),
+          ]
+        : [0, 500],
+    [products],
+  )
+  const countCategory = (slug: string) =>
+    filterCatalog(products, { ...filters, category: slug }, locale).length
+  const activeCount =
+    (filters.category === 'all' ? 0 : 1) +
+    (filters.q.trim() ? 1 : 0) +
+    (filters.min !== null || filters.max !== null ? 1 : 0) +
+    filters.sizes.length +
+    filters.colors.length +
+    (filters.stock ? 1 : 0)
+  const reset = () => update({ ...emptyCatalogFilters, sizes: [], colors: [] })
+  const toggle = (field: 'sizes' | 'colors', value: string) =>
+    update({
+      [field]: filters[field].includes(value)
+        ? filters[field].filter((x) => x !== value)
+        : [...filters[field], value],
     })
-  }, [filteredProducts, showInStockOnly])
-
-  // Note: the legacy `getTotalStock`, `isInStock`, `getPrimaryImage`
-  // helpers used to live here. They were replaced by the color-aware
-  // `getColorStock` and `getImageForColor` in `src/lib/product-display`
-  // so the shop tile, PDP, and any future surface stay in sync.
-
-  const handleApplyFilters = () => {
-    setMobileFiltersOpen(false)
-    // Scroll to top of results
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  const normalizePrice = () => {
+    if (
+      filters.min !== null &&
+      filters.max !== null &&
+      filters.min > filters.max
+    )
+      update({ min: filters.max, max: filters.min }, 'replace')
   }
-
-  const handleResetFilters = () => {
-    setSelectedCategory('all')
-    setSearchQuery('')
-    setPriceRange([minPrice, maxPrice])
-    setShowInStockOnly(false)
-  }
-
-  /**
-   * Het filterapparaat staat uit zolang de catalogus klein is.
-   *
-   * Nagemeten: vier producten, vier categorieën met elk precies één artikel,
-   * plus een lege categorie. Een filter dat van tien tegels naar één gaat is
-   * geen filter maar een omweg. Op mobiel was het zwarte blok bovendien het
-   * zwaarste vlak op het scherm, in precies de vormtaal van de koopknop, dus
-   * de eerste tik ging naar een lade met filters in plaats van naar een
-   * product. Samen met de resultaatkop kostte dat 153 van de 540 bruikbare
-   * pixels.
-   *
-   * De markup blijft staan. Zet deze constante op true zodra het assortiment
-   * groeit en alles komt terug zoals het was.
-   */
-  const TOON_FILTERS = false
-
-  return (
-    <div className="bg-white">
-      {/* Compacte collectieheader in plaats van de fotobanner. Die kostte op
-          desktop 320 pixels voordat het eerste kledingstuk in beeld kwam.
-          De opbouw staat nu in PaginaKop, zodat alle pagina's dezelfde kop
-          hebben. De categorierij zit in de kop; de vaste minimale hoogte
-          houdt het blok even hoog tijdens het laden, zodat de producten niet
-          verspringen als de knoppen verschijnen. */}
-      <PaginaKop titel={t('title')} ondertitel={t('heroSubtitle')} bedieningHoogte="min-h-[96px] sm:min-h-[44px]">
-        <>
-          {!loading && categorieKaarten.length > 1 && (
-            <CategorieKiezer
-              items={categorieKaarten}
-              actief={selectedCategory}
-              onKies={kiesCategorie}
-              allesLabel={t('filters.allShort')}
-              groepLabel={t('categorieLabel')}
-              totaalAantal={expandToShopTiles(products).length}
-            />
-          )}
-        </>
-      </PaginaKop>
-
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
-        {/* Mobile Filter Button - Inline (bold & brutalist) */}
-        {TOON_FILTERS && <button
-          onClick={() => setMobileFiltersOpen(true)}
-          className="lg:hidden w-full mb-6 bg-black text-white font-bold py-4 px-6 border-2 border-black uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors relative z-20 cursor-pointer"
-        >
-          <SlidersHorizontal className="w-5 h-5" />
-          <span>{t('filters.title')} & {t('sort.title')}</span>
-          {(selectedCategory !== 'all' || searchQuery || (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) || showInStockOnly) && (
-            <span className="bg-brand-primary text-white text-xs font-bold px-2 py-1 rounded-sm">
-              {(selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + ((priceRange[0] !== minPrice || priceRange[1] !== maxPrice) ? 1 : 0) + (showInStockOnly ? 1 : 0)}
-            </span>
-          )}
-        </button>}
-
-        {/* Mobile Filter Drawer — rendered via a portal on <body> so it is
-            never trapped inside a parent stacking context (the surrounding
-            page wrapper uses `relative z-10`, which would otherwise keep the
-            drawer below the fixed announcement banner + site header). */}
-        {mobileFiltersOpen && isMounted && createPortal(
-          <>
-            {/* Backdrop */}
-            <div
-              className="lg:hidden fixed inset-0 bg-black/80 z-[60] transition-opacity"
-              onClick={() => setMobileFiltersOpen(false)}
-              aria-hidden="true"
-            />
-
-            {/* Drawer — z-index sits above the announcement banner (z-50) and
-                fixed header (z-40) so the filter overlays the entire top
-                chrome on mobile instead of starting below it. */}
-            <div 
-              data-filter-drawer
-              className="lg:hidden fixed top-0 bottom-0 right-0 w-[92%] max-w-sm bg-white z-[70] border-l-4 border-black flex flex-col animate-slideInRight shadow-2xl"
-            >
-              {/* Header - Fixed */}
-              <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 py-4 md:p-6 border-b-2 border-black bg-white">
-                <h2 className="font-display text-lg md:text-xl uppercase tracking-wide truncate">
-                  {t('filters.title')} & {t('sort.title')}
-                </h2>
-                <button
-                  onClick={() => setMobileFiltersOpen(false)}
-                  className="flex-shrink-0 w-11 h-11 flex items-center justify-center border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors active:scale-95"
-                  aria-label={t('filters.close')}
+  const categorySelect = (
+    <label className="block text-xs font-semibold">
+      <span className="mb-2 block">{t('category')}</span>
+      <select
+        value={filters.category}
+        onChange={(e) => update({ category: e.target.value })}
+        className={fieldClass}
+      >
+        <option value="all">
+          {t('all')} ({products.length})
+        </option>
+        {categoryChoices.map((c) => (
+          <option key={c.id} value={c.slug}>
+            {name(c)} (
+            {products.filter((p) => p.category?.slug === c.slug).length})
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+  const filterPanel = (prefix: string) => (
+    <div className="space-y-6">
+      {prefix === 'mobile' && categorySelect}
+      <p className="text-xs leading-relaxed text-gray-500">{t('filterHelp')}</p>
+      {!!dimensions.sizes.length && (
+        <fieldset>
+          <legend className="mb-3 text-sm font-semibold">{t('sizes')}</legend>
+          <div className="flex flex-wrap gap-2">
+            {dimensions.sizes.map((size) => {
+              const checked = filters.sizes.includes(size),
+                count = filterCatalog(
+                  products,
+                  { ...filters, sizes: [size] },
+                  locale,
+                ).length
+              return (
+                <label
+                  key={size}
+                  className={`relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center border px-3 text-xs font-semibold ${checked ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-black'} ${!count && !checked ? 'cursor-not-allowed opacity-35' : ''}`}
                 >
-                  <X className="w-5 h-5" strokeWidth={2.5} />
-                </button>
-              </div>
-
-              {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Search */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                    {t('filters.search')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t('filters.searchPlaceholder')}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                    />
-                    <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-
-                {/* Stock Filter */}
-                <div>
-                  <label className="flex items-center gap-3 p-4 border-2 border-gray-300 cursor-pointer transition-all hover:border-gray-400 active:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={showInStockOnly}
-                      onChange={(e) => setShowInStockOnly(e.target.checked)}
-                      className="w-5 h-5 border-2 border-gray-400 rounded text-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
-                    />
-                    <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      {t('filters.inStockOnly')}
-                    </span>
-                  </label>
-                </div>
-
-                {/* Categories */}
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                    {t('filters.category')}
-                  </h3>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setSelectedCategory('all')}
-                      className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                        selectedCategory === 'all'
-                          ? 'bg-brand-primary border-brand-primary text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                      }`}
-                    >
-                      {t('filters.allProducts')} ({products.length})
-                    </button>
-                    {categories.map(category => {
-                      const count = products.filter(p => p.category?.slug === category.slug).length
-                      // Een categorie zonder producten is een doodlopende klik. "CAPS (0)"
-                      // stond hier gewoon tussen de andere knoppen.
-                      if (count === 0) return null
-                      return (
-                        <button
-                          key={category.id}
-                          onClick={() => setSelectedCategory(category.slug)}
-                          className={`w-full text-left px-4 py-3 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                            selectedCategory === category.slug
-                              ? 'bg-brand-primary border-brand-primary text-white'
-                              : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                          }`}
-                        >
-                          {getCategoryName(category)} ({count})
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                    {t('filters.price')}
-                  </h3>
-                  <DualRangeSlider
-                    min={minPrice}
-                    max={maxPrice}
-                    value={priceRange}
-                    onChange={setPriceRange}
-                    step={5}
-                  />
-                </div>
-
-                {/* Sort */}
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                    {t('sort.title')}
-                  </h3>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-semibold"
-                  >
-                    <option value="featured">{t('sort.featured')}</option>
-                    <option value="newest">{t('sort.newest')}</option>
-                    <option value="price-asc">{t('sort.priceAsc')}</option>
-                    <option value="price-desc">{t('sort.priceDesc')}</option>
-                    <option value="name">{t('sort.name')}</option>
-                  </select>
-                </div>
-
-                {/* Active Filters Summary */}
-                {(selectedCategory !== 'all' || searchQuery || (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) || showInStockOnly) && (
-                  <div className="pt-4 border-t-2 border-gray-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                        {t('filters.active')}
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {selectedCategory !== 'all' && (() => {
-                        const category = categories.find(c => c.slug === selectedCategory)
-                        return category ? (
-                          <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
-                            <span className="text-sm font-semibold">
-                              {getCategoryName(category)}
-                            </span>
-                            <button
-                              onClick={() => setSelectedCategory('all')}
-                              className="text-gray-600 hover:text-black"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : null
-                      })()}
-                      {searchQuery && (
-                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
-                          <span className="text-sm font-semibold">"{searchQuery}"</span>
-                          <button
-                            onClick={() => setSearchQuery('')}
-                            className="text-gray-600 hover:text-black"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                      {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
-                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
-                          <span className="text-sm font-semibold">
-                            €{priceRange[0]} - €{priceRange[1]}
-                          </span>
-                          <button
-                            onClick={() => setPriceRange([minPrice, maxPrice])}
-                            className="text-gray-600 hover:text-black"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                      {showInStockOnly && (
-                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-l-2 border-brand-primary">
-                          <span className="text-sm font-semibold">{t('filters.inStockOnly')}</span>
-                          <button
-                            onClick={() => setShowInStockOnly(false)}
-                            className="text-gray-600 hover:text-black"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer - Fixed */}
-              <div className="flex-shrink-0 border-t-2 border-black bg-white p-6">
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleResetFilters}
-                    className="flex-1 py-3 bg-white text-black border-2 border-black font-bold text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors"
-                  >
-                    {t('filters.clear')}
-                  </button>
-                  <button
-                    onClick={handleApplyFilters}
-                    className="flex-1 py-3 bg-black text-white border-2 border-black font-bold text-sm uppercase tracking-wider hover:bg-gray-900 transition-colors"
-                  >
-                    {t('filters.show', { count: shopTiles.length })}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>,
-          document.body
-        )}
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Desktop Sidebar - Filters (hidden on mobile) */}
-          {TOON_FILTERS && <aside className="hidden lg:block lg:w-64 lg:flex-shrink-0">
-            <div className="space-y-6 lg:sticky lg:top-24">
-              {/* Search */}
-              <div>
-                <label className="block text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                  {t('filters.search')}
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t('filters.searchPlaceholder')}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors"
-                  />
-                  <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-
-              {/* Stock Filter */}
-              <div>
-                <label className="flex items-center gap-3 p-3 border-2 border-gray-300 cursor-pointer transition-all hover:border-gray-400 active:bg-gray-50">
                   <input
                     type="checkbox"
-                    checked={showInStockOnly}
-                    onChange={(e) => setShowInStockOnly(e.target.checked)}
-                    className="w-4 h-4 border-2 border-gray-400 rounded text-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
+                    className="peer sr-only"
+                    checked={checked}
+                    disabled={!count && !checked}
+                    onChange={() => toggle('sizes', size)}
                   />
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                    {t('filters.inStockOnly')}
-                  </span>
+                  <span
+                    className="absolute inset-0 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-primary"
+                    aria-hidden="true"
+                  />
+                  <span>{size === 'ONE SIZE' ? t('oneSize') : size}</span>
+                  <span className="sr-only"> ({count})</span>
                 </label>
-              </div>
-
-              {/* Categories */}
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                  {t('filters.category')}
-                </h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setSelectedCategory('all')}
-                    className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                      selectedCategory === 'all'
-                        ? 'bg-brand-primary border-brand-primary text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                    }`}
-                  >
-                    {t('filters.allProducts')} ({products.length})
-                  </button>
-                  {categories.map(category => {
-                    const count = products.filter(p => p.category?.slug === category.slug).length
-                    // Een categorie zonder producten is een doodlopende klik. "CAPS (0)"
-                    // stond hier gewoon tussen de andere knoppen.
-                    if (count === 0) return null
-                    return (
-                      <button
-                        key={category.id}
-                        onClick={() => setSelectedCategory(category.slug)}
-                        className={`w-full text-left px-4 py-2 border-2 transition-all font-semibold uppercase tracking-wide text-sm ${
-                          selectedCategory === category.slug
-                            ? 'bg-brand-primary border-brand-primary text-white'
-                            : 'border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-50'
-                        }`}
-                      >
-                        {getCategoryName(category)} ({count})
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                  {t('filters.price')}
-                </h3>
-                <DualRangeSlider
-                  min={minPrice}
-                  max={maxPrice}
-                  value={priceRange}
-                  onChange={setPriceRange}
-                  step={5}
-                />
-              </div>
-
-              {/* Sort */}
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-                  {t('sort.title')}
-                </h3>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none transition-colors font-semibold"
+              )
+            })}
+          </div>
+        </fieldset>
+      )}
+      {!!dimensions.colors.length && (
+        <fieldset>
+          <legend className="mb-3 text-sm font-semibold">{t('colors')}</legend>
+          <div className="max-h-64 space-y-1 overflow-y-auto">
+            {dimensions.colors.map((color) => {
+              const checked = filters.colors.includes(color.key),
+                count = filterCatalog(
+                  products,
+                  { ...filters, colors: [color.key] },
+                  locale,
+                ).length
+              return (
+                <label
+                  key={color.key}
+                  className={`flex min-h-11 cursor-pointer items-center gap-3 text-sm ${!count && !checked ? 'cursor-not-allowed text-gray-400' : ''}`}
                 >
-                  <option value="featured">{t('sort.featured')}</option>
-                  <option value="newest">{t('sort.newest')}</option>
-                  <option value="price-asc">{t('sort.priceAsc')}</option>
-                  <option value="price-desc">{t('sort.priceDesc')}</option>
-                  <option value="name">{t('sort.name')}</option>
-                </select>
-              </div>
-
-              {/* Active Filters Summary */}
-              {(selectedCategory !== 'all' || searchQuery || (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) || showInStockOnly) && (
-                <div className="pt-4 border-t-2 border-gray-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      {t('filters.active')}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory('all')
-                        setSearchQuery('')
-                        setPriceRange([minPrice, maxPrice])
-                        setShowInStockOnly(false)
-                      }}
-                      className="text-xs text-brand-primary hover:text-brand-primary-hover font-bold uppercase"
-                    >
-                      {t('filters.clear')}
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {selectedCategory !== 'all' && (() => {
-                      const category = categories.find(c => c.slug === selectedCategory)
-                      return category ? (
-                        <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
-                          <span className="text-sm font-semibold">
-                            {getCategoryName(category)}
-                          </span>
-                          <button
-                            onClick={() => setSelectedCategory('all')}
-                            className="text-gray-600 hover:text-black"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : null
-                    })()}
-                    {searchQuery && (
-                      <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
-                        <span className="text-sm font-semibold">"{searchQuery}"</span>
-                        <button
-                          onClick={() => setSearchQuery('')}
-                          className="text-gray-600 hover:text-black"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                    {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
-                      <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
-                        <span className="text-sm font-semibold">
-                          €{priceRange[0]} - €{priceRange[1]}
-                        </span>
-                        <button
-                          onClick={() => setPriceRange([minPrice, maxPrice])}
-                          className="text-gray-600 hover:text-black"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                    {showInStockOnly && (
-                      <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
-                        <span className="text-sm font-semibold">{t('filters.inStockOnly')}</span>
-                        <button
-                          onClick={() => setShowInStockOnly(false)}
-                          className="text-gray-600 hover:text-black"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </aside>}
-
-          {/* Main Content - Products Grid */}
-          {/* Geen <main>: de locale-layout levert er al een. Genest
-              main is ongeldige HTML en geeft twee main-landmarks, waardoor
-              de skip-link niet bij de productgrid uitkomt. */}
-          <section className="flex-1" aria-labelledby="shop-results-heading">
-            {/* De resultaatkop stond hier. Bij vier tegels telt niemand
-                producten, en hij zei bovendien iets anders dan het filter
-                ernaast: "10 producten gevonden" naast "ALLE PRODUCTEN (4)".
-                Komt terug zodra er gefilterd kan worden. */}
-            {TOON_FILTERS ? (
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-4 border-b-2 border-gray-200">
-                <h2 id="shop-results-heading" className="text-lg font-bold text-gray-900 mb-2 sm:mb-0">
-                  {t('results', { count: shopTiles.length })}
-                </h2>
-              </div>
-            ) : (
-              // Onzichtbaar, maar wel aanwezig: de sectie verwijst er met
-              // aria-labelledby naar, en een schermlezer hoort zo nog steeds
-              // hoeveel er staat.
-              <h2 id="shop-results-heading" className="sr-only">
-                {t('results', { count: shopTiles.length })}
-              </h2>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={!count && !checked}
+                    onChange={() => toggle('colors', color.key)}
+                    className="h-4 w-4 accent-black"
+                  />
+                  <span className="flex-1">
+                    {formatColorLabel(color.label, locale)}
+                  </span>
+                  <span className="text-xs text-gray-500">{count}</span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
+      )}
+      <fieldset>
+        <legend className="mb-3 text-sm font-semibold">{t('price')}</legend>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-xs text-gray-500">
+            {t('fromPrice')}
+            <input
+              id={`${prefix}-minimum`}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max="100000"
+              step="1"
+              aria-label={t('minimum')}
+              placeholder={String(bounds[0])}
+              value={filters.min ?? ''}
+              onBlur={normalizePrice}
+              onChange={(e) =>
+                update(
+                  {
+                    min:
+                      e.target.value === ''
+                        ? null
+                        : Math.max(0, Math.min(100000, Number(e.target.value))),
+                  },
+                  'typing',
+                )
+              }
+              className={fieldClass + ' mt-1'}
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            {t('toPrice')}
+            <input
+              id={`${prefix}-maximum`}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max="100000"
+              step="1"
+              aria-label={t('maximum')}
+              placeholder={String(bounds[1])}
+              value={filters.max ?? ''}
+              onBlur={normalizePrice}
+              onChange={(e) =>
+                update(
+                  {
+                    max:
+                      e.target.value === ''
+                        ? null
+                        : Math.max(0, Math.min(100000, Number(e.target.value))),
+                  },
+                  'typing',
+                )
+              }
+              className={fieldClass + ' mt-1'}
+            />
+          </label>
+        </div>
+      </fieldset>
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 border-t border-gray-200 pt-3 text-sm">
+        <input
+          type="checkbox"
+          checked={filters.stock}
+          onChange={(e) => update({ stock: e.target.checked })}
+          className="h-4 w-4 accent-black"
+        />
+        {t('available')}
+      </label>
+      {activeCount > 0 && (
+        <button
+          type="button"
+          onClick={reset}
+          className="min-h-11 text-sm font-semibold underline underline-offset-4"
+        >
+          {t('reset')}
+        </button>
+      )}
+    </div>
+  )
+  const chips: Array<{ key: string; label: string; clear: () => void }> = []
+  if (filters.category !== 'all')
+    chips.push({
+      key: 'category',
+      label: name(
+        categoryChoices.find((c) => c.slug === filters.category) ?? {
+          id: '',
+          slug: '',
+          name: filters.category,
+        },
+      ),
+      clear: () => update({ category: 'all' }),
+    })
+  if (filters.q.trim())
+    chips.push({
+      key: 'q',
+      label: `“${filters.q.trim()}”`,
+      clear: () => update({ q: '' }),
+    })
+  if (filters.min !== null || filters.max !== null)
+    chips.push({
+      key: 'price',
+      label: `${formatPrice(filters.min ?? bounds[0], locale)} – ${formatPrice(filters.max ?? bounds[1], locale)}`,
+      clear: () => update({ min: null, max: null }),
+    })
+  for (const size of filters.sizes)
+    chips.push({
+      key: 'size-' + size,
+      label: size,
+      clear: () => toggle('sizes', size),
+    })
+  for (const color of filters.colors)
+    chips.push({
+      key: 'color-' + color,
+      label: formatColorLabel(
+        dimensions.colors.find((c) => c.key === color)?.label ?? color,
+        locale,
+      ),
+      clear: () => toggle('colors', color),
+    })
+  if (filters.stock)
+    chips.push({
+      key: 'stock',
+      label: t('available'),
+      clear: () => update({ stock: false }),
+    })
+  return (
+    <div className="bg-white">
+      <PaginaKop titel={page('title')} ondertitel={page('heroSubtitle')}>
+        <div className="lg:hidden">{categorySelect}</div>
+        <nav
+          aria-label={t('category')}
+          className="hidden flex-wrap gap-2 lg:flex"
+        >
+          {[{ id: 'all', slug: 'all', name: t('all') }, ...categoryChoices].map(
+            (c) => (
+              <button
+                type="button"
+                key={c.id}
+                aria-pressed={filters.category === c.slug}
+                onClick={() => update({ category: c.slug })}
+                className={`min-h-11 border px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary ${filters.category === c.slug ? 'border-black bg-black text-white' : 'border-gray-300 bg-white hover:border-black'}`}
+              >
+                {name(c)}{' '}
+                <span className="ml-1 opacity-60">{countCategory(c.slug)}</span>
+              </button>
+            ),
+          )}
+        </nav>
+      </PaginaKop>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+        <div className="mb-5 grid grid-cols-2 items-end gap-3 lg:grid-cols-[1fr_240px]">
+          <label className="relative col-span-2 block lg:col-span-1">
+            <span className="sr-only">{t('search')}</span>
+            <Search
+              size={18}
+              aria-hidden="true"
+              className="absolute left-3 top-3.5 text-gray-500"
+            />
+            <input
+              type="search"
+              value={filters.q}
+              onChange={(e) => update({ q: e.target.value }, 'typing')}
+              placeholder={t('searchPlaceholder')}
+              className={fieldClass + ' pl-10'}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-haspopup="dialog"
+            aria-controls="catalog-filter-dialog"
+            className="flex min-h-11 items-center justify-center gap-2 border border-black px-3 text-sm font-semibold lg:hidden"
+          >
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            {t('filters')}
+            {activeCount > 0 && (
+              <span className="rounded-full bg-black px-2 text-xs text-white">
+                {activeCount}
+              </span>
             )}
-
-            {/* Loading State */}
-            {loading && (
-              <div className={'grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3'}>
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="bg-gray-100 aspect-[3/4] animate-pulse" />
-                ))}
-              </div>
-            )}
-
-            {/* Load error (distinct from empty catalog / filters) */}
-            {!loading && loadError && (
-              <div className="text-center py-16 border-2 border-red-200 bg-red-50 px-4">
-                <h3 className="text-2xl font-display mb-2 text-red-800">
-                  {loadError}
-                </h3>
+          </button>
+          <label className="text-xs font-semibold">
+            <span className="sr-only">{t('sort')}</span>
+            <select
+              aria-label={t('sort')}
+              value={filters.sort}
+              onChange={(e) => update({ sort: e.target.value as CatalogSort })}
+              className={fieldClass}
+            >
+              {(
+                [
+                  'featured',
+                  'newest',
+                  'price-asc',
+                  'price-desc',
+                  'name',
+                ] as const
+              ).map((s) => (
+                <option key={s} value={s}>
+                  {t(s)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {!!chips.length && (
+          <div className="mb-5 flex flex-wrap gap-2">
+            {chips.map((chip) => (
+              <button
+                type="button"
+                key={chip.key}
+                onClick={chip.clear}
+                aria-label={t('removeFilter', { filter: chip.label })}
+                className="flex min-h-10 items-center gap-2 border border-gray-200 bg-[#f5f4f1] px-3 text-xs hover:border-black"
+              >
+                {chip.label}
+                <X size={12} aria-hidden="true" />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={reset}
+              className="min-h-10 px-2 text-xs font-semibold underline underline-offset-4"
+            >
+              {t('reset')}
+            </button>
+          </div>
+        )}
+        <div className="grid gap-8 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-9">
+          <aside className="hidden lg:block" aria-label={t('filters')}>
+            {filterPanel('desktop')}
+          </aside>
+          <section aria-label={t('collection')} className="min-w-0">
+            <p
+              role="status"
+              aria-live="polite"
+              className="mb-5 text-xs text-gray-500"
+            >
+              {loading ? t('loading') : t('results', { count: tiles.length })}
+              {!loading &&
+                tiles.length !== filtered.length &&
+                ` · ${t('models', { count: filtered.length })}`}
+            </p>
+            {error ? (
+              <div
+                role="alert"
+                className="border border-gray-300 bg-[#f5f4f1] p-6 text-sm"
+              >
+                <p>{error}</p>
                 <button
-                  onClick={() => fetchProducts()}
-                  className="mt-4 inline-block bg-black hover:bg-gray-900 text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors"
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="mt-4 min-h-11 font-semibold underline"
                 >
                   {t('retry')}
                 </button>
               </div>
-            )}
-
-            {/* Empty State */}
-            {!loading && !loadError && shopTiles.length === 0 && (
-              <div className="text-center py-16">
-                <svg className="w-20 h-20 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-                <h3 className="text-2xl font-display mb-2 text-gray-800">
-                  {t('noResults')}
-                </h3>
-                <p className="text-gray-600 mb-8">
-                  {t('noResultsDesc')}
+            ) : !loading && !tiles.length ? (
+              <div className="border border-gray-200 p-8 text-center sm:p-12">
+                <h2 className="font-display text-2xl uppercase">
+                  {t('emptyTitle')}
+                </h2>
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-gray-600">
+                  {t('emptyBody')}
                 </p>
                 <button
-                  onClick={handleResetFilters}
-                  className="inline-block bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors"
+                  type="button"
+                  onClick={reset}
+                  className="mt-6 min-h-11 bg-black px-6 py-3 text-sm font-semibold text-white"
                 >
-                  {t('filters.clear')}
+                  {t('reset')}
                 </button>
               </div>
-            )}
-
-            {/* Products Grid */}
-            {!loading && shopTiles.length > 0 && (
-              <div
-                className={'grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3'}
-                style={{
-                  contain: 'layout style paint',
-                  contentVisibility: 'auto'
-                }}
-              >
-                {shopTiles.map((tile, index) => {
-                  const { product, color, color_hex } = tile
-
-                  // Color-aware stock aggregation. `color === null`
-                  // means this is a single-product tile and we
-                  // aggregate across all variants, matching the
-                  // pre-color-split behaviour exactly.
-                  const stock = getColorStock(product.variants, color)
-                  const totalStock = product.is_gift_card
-                    ? Number.MAX_SAFE_INTEGER
-                    : stock.stock_quantity
-                  const inStock = product.is_gift_card ? true : stock.in_stock
-                  const hasPresale = stock.has_presale
-
-                  // Image: color-specific hero when split, else the
-                  // legacy product-primary fallback chain. Both go
-                  // through the same shared helper so a tile and its
-                  // PDP always lead with the same image.
-                  const imageSrc = getImageForColor(product.images, color)
-                  // Tweede beeld voor de muis-wissel. Alleen op desktop zichtbaar:
-                  // op touch bestaat hover niet en zou het beeld nooit wisselen.
-                  const hoverSrc = getHoverImageForColor(product.images, color, imageSrc)
-
-                  // PDP link: appends `?color=<color>` only when the
-                  // tile represents a specific color, which the PDP
-                  // reads via useSearchParams to preselect.
-                  const pdpHref = buildPdpHref(product.slug, color)
-
-                  // Wishlist remains product-scoped — we don't track
-                  // wishlist-per-color in the schema and adding that
-                  // is intentionally out of scope here.
-                  const isWishlisted = isInWishlist(product.id)
-
-                  // Suffix the localized color name on color-split
-                  // tiles so a row of identical product titles stays
-                  // scannable ("HOODIE / BRUIN" vs "HOODIE / STONE").
-                  const colorLabel = color ? formatColorLabel(color, locale) : null
-
-                  // Priority-load the first visible desktop row (3 tiles) to avoid CLS at
-                  // the top of the viewport. Split products can put
-                  // more tiles in that window than before, so this
-                  // applies to tiles (not products).
-                  const isPriority = index < 3
-
-                  return (
-                    <LocaleLink
-                      key={tile.tileKey}
-                      href={pdpHref}
-                      className="group block h-full"
-                      onPointerEnter={() => setHoveredTile(tile.tileKey)}
-                      onFocus={() => setHoveredTile(tile.tileKey)}
-                      style={{
-                        contain: 'layout style paint',
-                        transform: 'translateZ(0)',
-                        backfaceVisibility: 'hidden' as const,
-                        perspective: 1000,
-                        visibility: 'visible',
-                        opacity: 1
-                      }}
-                    >
-                      <div className="group bg-white border-2 border-black overflow-hidden transition-all duration-300 md:hover:-translate-y-2 h-full flex flex-col">
-                        {/* Image - Larger on mobile */}
-                        <div className="relative aspect-[3/4.2] md:aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0">
-                          <Image
-                            src={failedImages.has(tile.tileKey) ? '/placeholder-product.svg' : imageSrc}
-                            alt={
-                              colorLabel
-                                ? `${getProductName(product)}, ${colorLabel}`
-                                : getProductName(product)
-                            }
-                            fill
-                            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 420px"
-                            quality={90}
-                            className="object-cover object-center"
-                            priority={isPriority}
-                            loading={isPriority ? 'eager' : 'lazy'}
-                            placeholder="blur"
-                            blurDataURL={BLUR_DATA_URL}
-                            onError={() => setFailedImages(prev => new Set(prev).add(tile.tileKey))}
-                          />
-
-                          {hoverSrc && hoveredTile === tile.tileKey && !failedImages.has(tile.tileKey) && (
-                            <Image
-                              src={hoverSrc}
-                              alt=""
-                              aria-hidden="true"
-                              fill
-                              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 420px"
-                              quality={90}
-                              loading="lazy"
-                              className="hidden md:block object-cover object-center opacity-0 transition-opacity duration-500 ease-out md:group-hover:opacity-100 motion-reduce:transition-none"
-                            />
-                          )}
-
-                          {/* Stock Badge */}
-                          {hasPresale && !inStock && (
-                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 z-10">
-                              <PresaleBadge variant="compact" />
-                            </div>
-                          )}
-                          {!hasPresale && !inStock && (
-                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-red-600 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
-                              {t('outOfStock')}
-                            </div>
-                          )}
-                          {inStock && totalStock < 5 && (
-                            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-orange-500 text-white px-2 py-1 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider z-10">
-                              {t('lastItems')}
-                            </div>
-                          )}
-
-                          {/* Discount Badge */}
-                          {(() => {
-                            const hasDiscount = product.sale_price && product.sale_price < product.base_price
-                            if (!hasDiscount || !product.sale_price) return null
-
-                            const discountPercentage = Math.round(
-                              ((product.base_price - product.sale_price) / product.base_price) * 100
-                            )
-
-                            return (
-                              <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-black text-white px-1.5 py-0.5 md:px-2 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider border-2 border-black">
-                                -{discountPercentage}%
-                              </div>
-                            )
-                          })()}
-
-                          {/* Category Badge - Hidden on mobile, conditional based on settings */}
-                          {showCategoryLabels && product.category && (
-                            <div className="hidden md:block absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider border-2 border-black">
-                              {product.category && getCategoryName(product.category)}
-                            </div>
-                          )}
-
-                          {/* Wishlist Button - Hidden on mobile, shown on hover on desktop */}
-                          <button
-                            className={`hidden md:flex absolute bottom-4 right-4 z-20 w-12 h-12 backdrop-blur-sm items-center justify-center transition-all duration-300 border-2 border-black opacity-0 group-hover:opacity-100 active:scale-90 ${
-                              isWishlisted
-                                ? 'bg-red-500 text-white hover:bg-red-600'
-                                : 'bg-white/90 hover:bg-brand-primary hover:text-white'
-                            }`}
-                            onClick={async (e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-
-                              const wasWishlisted = isInWishlist(product.id)
-                              if (wasWishlisted) {
-                                await removeFromWishlist(product.id)
-                              } else {
-                                await addToWishlist(product.id)
-                              }
-
-                              const nowWishlisted = isInWishlist(product.id)
-                              if (!wasWishlisted && nowWishlisted) {
-                                toast.success(tProduct('wishlist.added'))
-                              } else if (wasWishlisted && !nowWishlisted) {
-                                toast.success(tProduct('wishlist.removed'))
-                              }
-                            }}
-                            title={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
-                            aria-label={isWishlisted ? tProduct('wishlist.remove') : tProduct('wishlist.add')}
-                          >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                fill={isWishlisted ? 'currentColor' : 'none'}
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                              />
-                            </svg>
-                          </button>
-
-                          {/* Gradient Overlay on Hover */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-
-                        {/* Product Info - Smaller padding on mobile */}
-                        <div className="p-2 md:p-4 flex flex-col flex-grow">
-                          <h3 className="font-bold text-xs md:text-lg uppercase tracking-wide mb-1 md:mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
-                            {getTileName(product)}
-                          </h3>
-
-                          {/* Color row.
-                              - Split tile: single swatch + localized
-                                color name so it reads as "BRUIN" etc.
-                                The legacy multi-dot strip is hidden
-                                because each color is now its own tile.
-                              - Non-split tile with >1 color: keep the
-                                informational color dots — visitors
-                                still need to know color choice exists. */}
-                          {color ? (
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <span
-                                aria-hidden="true"
-                                className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
-                                style={{ backgroundColor: color_hex || '#000000' }}
-                              />
-                              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-700">
-                                {colorLabel}
-                              </span>
-                            </div>
-                          ) : (
-                            (() => {
-                              const uniqueColors = Array.from(
-                                new Set(
-                                  product.variants
-                                    ?.map(v => v.color)
-                                    .filter(Boolean) as string[]
-                                )
-                              )
-                              if (uniqueColors.length <= 1) return null
-                              return (
-                                /* De blokjes plus het aantal. Met vier tegels
-                                   in de grid zijn de kleuren de enige breedte
-                                   die de winkel nog laat zien, dus die mag je
-                                   niet alleen impliciet tonen. Het aantal
-                                   staat er daarom in letters bij. */
-                                <div className="flex items-center gap-1.5 mb-2">
-                                  {uniqueColors.map(c => {
-                                    const variant = product.variants?.find(v => v.color === c)
-                                    const hex = variant?.color_hex || '#000000'
-                                    return (
-                                      <span
-                                        key={c}
-                                        aria-hidden="true"
-                                        className="w-3 h-3 md:w-4 md:h-4 border-2 border-black"
-                                        style={{ backgroundColor: hex }}
-                                        title={formatColorLabel(c, locale)}
-                                      />
-                                    )
-                                  })}
-                                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-700">
-                                    {t('colorCount', { count: uniqueColors.length })}
-                                  </span>
-                                </div>
-                              )
-                            })()
-                          )}
-
-                          <div className="flex items-center justify-between mt-auto">
-                            {(() => {
-                              const hasDiscount = product.sale_price && product.sale_price < product.base_price
-
-                              if (hasDiscount && product.sale_price) {
-                                return (
-                                  <div className="flex flex-col gap-1">
-                                    <span className="text-lg md:text-2xl font-bold text-brand-primary-hover">
-                                      {formatPrice(product.sale_price, locale)}
-                                    </span>
-                                    <span className="text-xs md:text-sm text-gray-500 line-through">
-                                      {formatPrice(product.base_price, locale)}
-                                    </span>
-                                  </div>
-                                )
-                              }
-
-                              return (
-                                /* Zwart, niet merkgroen. Groen op wit haalt bij
-                                   16px vet een contrast van 3,13 terwijl 4,5
-                                   nodig is, en de prijs is na het beeld het
-                                   eerste waar iemand naar kijkt. Groen blijft
-                                   voor een afgeprijsde regel, waar het iets
-                                   betekent. */
-                                <span className="text-lg md:text-2xl font-bold text-black">
-                                  {formatPrice(product.base_price, locale)}
-                                </span>
-                              )
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-                    </LocaleLink>
-                  )
-                })}
+            ) : (
+              <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-5 sm:gap-y-7 xl:grid-cols-3">
+                {tiles.map((tile, index) => (
+                  <CatalogProductCard
+                    key={tile.tileKey}
+                    tile={tile}
+                    priority={index < 3}
+                  />
+                ))}
               </div>
             )}
           </section>
         </div>
-
-        {/* Eén rustig detailblok na de producten, voor de vervolgsecties. */}
-        {!loading && <DetailBlok />}
-
-        {/* Recently Viewed Products */}
-        <div>
+        <div className="mt-12 border-t border-gray-200 pt-8">
           <RecentlyViewed />
         </div>
       </div>
+      <dialog
+        id="catalog-filter-dialog"
+        ref={dialog}
+        onClose={() => setMobileOpen(false)}
+        aria-labelledby="catalog-filter-title"
+        className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[min(100%,420px)] max-w-none flex-col border-0 border-l border-gray-200 bg-white p-0 shadow-xl backdrop:bg-black/50 open:flex"
+      >
+        <header className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+          <h2
+            id="catalog-filter-title"
+            className="font-display text-2xl uppercase"
+          >
+            {t('filters')}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            aria-label={t('close')}
+            className="flex min-h-11 min-w-11 items-center justify-center"
+          >
+            <X size={22} aria-hidden="true" />
+          </button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
+          {filterPanel('mobile')}
+        </div>
+        <footer className="border-t border-gray-200 p-5">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="min-h-12 w-full bg-black px-4 py-3 text-sm font-semibold text-white"
+          >
+            {t('viewResults', { count: tiles.length })}
+          </button>
+        </footer>
+      </dialog>
     </div>
   )
 }

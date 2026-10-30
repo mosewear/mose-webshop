@@ -4,8 +4,13 @@ import ShopPageClient from './ShopPageClient'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import { getCommercePromises, formatPromiseAmount } from '@/lib/settings-server'
+import { parseCatalogFilters } from '@/lib/catalog-filters'
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'metadata' })
   // Zelfde reden als in [locale]/layout.tsx: de drempel stond hardgecodeerd
@@ -50,7 +55,13 @@ export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-export default async function ShopPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function ShopPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'metadata' })
@@ -61,6 +72,20 @@ export default async function ShopPage({ params }: { params: Promise<{ locale: s
   const threshold = formatPromiseAmount(free_shipping_threshold, locale)
 
   const catalog = await getShopCatalog()
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(await searchParams))
+    for (const item of Array.isArray(value)
+      ? value
+      : value === undefined
+        ? []
+        : [value])
+      query.append(key, item)
+  const filters = parseCatalogFilters(query)
+  if (
+    filters.category !== 'all' &&
+    !catalog.categories.some((c) => c.slug === filters.category)
+  )
+    filters.category = 'all'
 
   // Add structured data for CollectionPage
   const structuredData = {
@@ -100,7 +125,11 @@ export default async function ShopPage({ params }: { params: Promise<{ locale: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <ShopPageClient initialProducts={catalog.products} initialCategories={catalog.categories} />
+      <ShopPageClient
+        initialProducts={catalog.products}
+        initialCategories={catalog.categories}
+        initialFilters={filters}
+      />
     </>
   )
 }

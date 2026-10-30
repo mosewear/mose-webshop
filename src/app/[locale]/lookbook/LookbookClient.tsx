@@ -15,6 +15,7 @@ interface LookbookClientProps {
   settings: LookbookGlobalSettings | null
   chapters: LookbookChapterWithProducts[]
   locale: 'nl' | 'en'
+  collection?: React.ReactNode
 }
 
 /**
@@ -27,7 +28,12 @@ interface LookbookClientProps {
  * Admin-authored content (titles, captions, ticker text, final CTA
  * copy) still comes from the DB via `pickLocalized`.
  */
-export default function LookbookClient({ settings, chapters, locale }: LookbookClientProps) {
+export default function LookbookClient({
+  settings,
+  chapters,
+  locale,
+  collection,
+}: LookbookClientProps) {
   const t = useTranslations('lookbook')
 
   const headerTitle = pickLocalized(
@@ -79,6 +85,16 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
       {/* HEADER: zelfde kop als de shop (PaginaKop). */}
       <PaginaKop titel={headerTitle} ondertitel={headerSubtitle || undefined} />
 
+      {collection}
+
+      {collection && chapters.length > 0 && (
+        <div className="mx-auto max-w-7xl px-4 pb-6 pt-14 md:px-8">
+          <h2 className="font-display text-4xl uppercase md:text-6xl">
+            {t('collection.stories')}
+          </h2>
+        </div>
+      )}
+
       {/* EMPTY STATE -------------------------------------------------- */}
       {chapters.length === 0 ? (
         <div className="max-w-3xl mx-auto p-10 md:p-16 text-center border-b-2 border-black">
@@ -109,7 +125,11 @@ export default function LookbookClient({ settings, chapters, locale }: LookbookC
 
           return (
             <div key={chapter.id}>
-              <LookbookChapter chapter={chapter} index={index} locale={locale} />
+              <LookbookChapter
+                chapter={chapter}
+                index={index}
+                locale={locale}
+              />
               {/* Editorial stamp between chapters: location on the
                   left, hairline ruling, "next chapter" cue on the
                   right. Theme flips on dark chapters so contrast is

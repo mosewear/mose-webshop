@@ -1,3 +1,5 @@
+import { vertaalKleur } from './kleurnaam'
+
 /**
  * Shop / PDP shared display helpers.
  *
@@ -308,34 +310,7 @@ export function buildPdpHref(slug: string, color: string | null): string {
   return `/product/${slug}?color=${encodeURIComponent(color)}`
 }
 
-// Keys are lowercase NL canonical color names; values are the
-// localized uppercase labels we surface on shop cards + PDP. The PDP
-// keeps its own copy of this map for now (legacy) — both must stay in
-// sync; if you add a color here, mirror it in
-// `ProductPageClient#getTranslatedColor`.
-const COLOR_LABEL_MAP: Record<string, { nl: string; en: string }> = {
-  zwart: { nl: 'ZWART', en: 'BLACK' },
-  wit: { nl: 'WIT', en: 'WHITE' },
-  grijs: { nl: 'GRIJS', en: 'GREY' },
-  blauw: { nl: 'BLAUW', en: 'BLUE' },
-  rood: { nl: 'ROOD', en: 'RED' },
-  groen: { nl: 'GROEN', en: 'GREEN' },
-  geel: { nl: 'GEEL', en: 'YELLOW' },
-  bruin: { nl: 'BRUIN', en: 'BROWN' },
-  beige: { nl: 'BEIGE', en: 'BEIGE' },
-  roze: { nl: 'ROZE', en: 'PINK' },
-  paars: { nl: 'PAARS', en: 'PURPLE' },
-  oranje: { nl: 'ORANJE', en: 'ORANGE' },
-  stone: { nl: 'STONE', en: 'STONE' },
-}
-
-/**
- * Locale-aware uppercase color label for shop cards / chips.
- * Unknown colors fall back to a plain `toUpperCase()` so any new
- * color the admin invents still renders without a code change.
- */
+/** The same colour vocabulary is used by cards, filters, PDP and cart. */
 export function formatColorLabel(color: string, locale: string): string {
-  const entry = COLOR_LABEL_MAP[color.toLowerCase()]
-  if (entry) return locale === 'en' ? entry.en : entry.nl
-  return color.toUpperCase()
+  return vertaalKleur(color, locale).toUpperCase()
 }

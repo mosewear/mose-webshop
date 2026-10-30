@@ -82,7 +82,7 @@ export function MotionFadeIn({
   return (
     <MotionTag
       variants={stagger ? staggerContainer : entryVariants}
-      initial="hidden"
+      initial={false}
       whileInView="show"
       viewport={{ once: true, margin: rootMargin }}
       className={className}
@@ -126,6 +126,7 @@ export function MotionStaggerItem({
 
   return (
     <MotionTag
+      initial={false}
       variants={{
         hidden: { opacity: 0, y: 20 },
         show: {
