@@ -963,7 +963,24 @@
       "wishlistError": "Could not update your favourites. Please try again.",
       "wishlistSaved": "Style saved to your favourites.",
       "wishlistRemoved": "Style removed from your favourites.",
-      "oneSize": "One size"
+      "oneSize": "One size",
+      "quick": {
+        "title": "Choose your options",
+        "close": "Close product options",
+        "details": "View full product details",
+        "loading": "Checking availability…",
+        "color": "Colour",
+        "size": "Choose your size",
+        "chooseSize": "Choose a size first",
+        "add": "Add to bag",
+        "checking": "Checking…",
+        "loadError": "We cannot check availability right now. Please try again.",
+        "soldOut": "Unavailable",
+        "priceChanged": "The price has changed. Check the new price before adding to your bag.",
+        "quantityLimit": "The available quantity of this option is already in your bag.",
+        "retry": "Try again"
+      },
+      "quickAdd": "Choose size and colour for {name}"
     }
   },
   "errors": {

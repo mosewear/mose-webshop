@@ -25,6 +25,7 @@ import { useCatalogTracking } from '@/components/shop/useCatalogTracking'
 import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import ShopCategoryNav from '@/components/shop/ShopCategoryNav'
+import { getImageForColor } from '@/lib/product-display'
 import DetailBlok from '@/components/shop/DetailBlok'
 import DualRangeSlider from '@/components/DualRangeSlider'
 import { getSiteSettings } from '@/lib/settings'
@@ -465,11 +466,11 @@ export default function ShopPageClient({
     })
   return (
     <div className="bg-white">
-      <header className="border-b-2 border-black bg-[#F5F4F1]">
+      <header className="border-b border-black/15 bg-[#F5F4F1]">
         <div className="mx-auto max-w-7xl px-4 pb-2 pt-3 md:pt-5">
           <h1 className="mb-2 font-display text-2xl uppercase leading-none md:text-4xl">{page('title')}</h1>
           <ShopCategoryNav
-            items={[{slug: 'all', label: t('all')}, ...categoryChoices.map(c => ({slug: c.slug, label: name(c)}))]}
+            items={[{slug: 'all', label: t('all')}, ...categoryChoices.map(c => ({slug: c.slug, label: name(c), image: getImageForColor(products.find(p => p.category_id === c.id)?.images, null)}))]}
             active={filters.category}
             onSelect={category => update({category})}
             label={t('category')}
@@ -479,13 +480,13 @@ export default function ShopPageClient({
         </div>
       </header>
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-4 pt-2 md:pb-8 md:pt-4">
-        <div className="mb-3 flex min-h-11 items-center justify-between gap-3 border-b-2 border-black pb-2 lg:justify-end">
-          <button type="button" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="flex min-h-11 shrink-0 items-center justify-center gap-2 border-2 border-black bg-white px-3 text-xs font-bold uppercase tracking-wide text-black lg:hidden">
+        <div className="mb-3 flex min-h-11 items-center justify-between gap-3 border-b border-black/20">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="order-2 flex min-h-11 shrink-0 items-center justify-center gap-2 bg-white pl-3 text-[11px] font-bold text-black focus-visible:outline-2 focus-visible:outline-brand-primary lg:hidden">
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
             {t('filters')} &amp; {t('sort')}
             {activeCount > 0 && <span className="bg-brand-primary px-1.5 py-0.5 text-xs text-white">{activeCount}</span>}
           </button>
-          <p role="status" aria-live="polite" className="text-right text-xs font-bold text-gray-900 md:text-sm">
+          <p role="status" aria-live="polite" className="text-xs text-gray-700 md:text-sm">
             {loading ? t('loading') : t('models', {count: filtered.length})}
           </p>
         </div>
@@ -512,7 +513,7 @@ export default function ShopPageClient({
             </button>
           </div>
         )}
-        <div className="grid gap-8 lg:grid-cols-[256px_minmax(0,1fr)]">
+        <div className="grid gap-6 lg:grid-cols-[224px_minmax(0,1fr)]">
           <aside className="hidden lg:block" aria-label={t('filters')}>
             <div className="lg:sticky lg:top-24">{filterPanel('desktop')}</div>
           </aside>
@@ -548,7 +549,7 @@ export default function ShopPageClient({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-5 md:gap-x-4 md:gap-y-7 lg:grid-cols-3">
                 {tiles.map((tile, index) => (
                   <CatalogProductCard
                     key={tile.tileKey}

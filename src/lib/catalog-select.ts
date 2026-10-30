@@ -4,7 +4,7 @@ export const SHOP_PRODUCT_SELECT = `
           description_en,
           category:categories(name, name_en, slug),
           images:product_images(url, alt_text, is_primary, media_type, color, position),
-          variants:product_variants(id, fulfillment_mode, supplier_orderable, supplier_checked_at, price_adjustment, size, color, color_hex, stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
+          variants:product_variants(id, sku, fulfillment_mode, supplier_orderable, supplier_checked_at, price_adjustment, size, color, color_hex, stock_quantity, presale_stock_quantity, presale_enabled, presale_expected_date, is_available)
         ` as const
 
 export const PDP_PRODUCT_SELECT = `

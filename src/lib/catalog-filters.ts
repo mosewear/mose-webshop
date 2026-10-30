@@ -7,6 +7,7 @@ import type {
 } from './product-display'
 export type CatalogVariant = ProductDisplayVariant & {
   id?: string
+  sku?: string | null
   size?: string | null
   price_adjustment?: number | null
 }
