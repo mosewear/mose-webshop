@@ -214,6 +214,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
    *  - erboven: de bevestiging
    */
   const belofte = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') return t('promise.fast')
     // Lege wagen: vertel over snelheid, maar alleen wat waar IS. De regel stond
     // hier vast op "morgen in huis", ook op zaterdagavond. De gedeelde functie
     // kijkt nu naar het uur EN de weekdag.

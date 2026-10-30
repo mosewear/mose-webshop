@@ -32,7 +32,7 @@ import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
-import { isTapstitchProduct } from '@/lib/tapstitch-products'
+import { isTapstitchProduct, matchingSetProductIds } from '@/lib/tapstitch-products'
 import { availableVariant, isMadeToOrderAvailable, variantQuantityLimit, type VariantAvailability } from '@/lib/variant-availability'
 import { PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
@@ -671,8 +671,9 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       // Recommendations must never delay the main product or buy controls.
       setLoading(false)
 
-      // Fetch related products from same category
-      const { data: related } = await supabase
+      // A matching set takes priority over generic price-based recommendations.
+      const matchingIds = matchingSetProductIds(data.id)
+      let relatedQuery = supabase
         .from('products')
         .select(`
           *,
@@ -700,13 +701,12 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
           ),
           categories(name, name_en, slug)
         `)
-        // GEEN filter op category_id meer. Dat stond er wel, en daardoor heeft
-        // dit blok nooit iets getoond: MOSE heeft vier categorieën met elk
-        // precies één product, dus "andere producten in dezelfde categorie"
-        // leverde altijd nul rijen op. Het blok was er, de query vond niets.
         .eq('is_active', true)
         .eq('status', 'active')
         .neq('id', data.id)
+        .or('is_gift_card.is.null,is_gift_card.eq.false')
+      if (matchingIds.length) relatedQuery = relatedQuery.in('id', matchingIds)
+      const { data: related } = await relatedQuery
         .order('base_price', { ascending: true })
         .limit(6)
         .abortSignal(AbortSignal.timeout(8000))
@@ -2324,13 +2324,18 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
               <h2 className="text-3xl md:text-4xl font-display mb-8 text-center">{t('related.title')}</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {relatedProducts.map((relProd) => {
-                  const primaryImage = relProd.product_images.find((img: ProductImage) => img.is_primary) || relProd.product_images[0]
+                  const matchingColor = matchingSetProductIds(product.id).includes(relProd.id)
+                    && relProd.product_variants.some((v) => v.color === selectedColor)
+                    ? selectedColor : null
+                  const primaryImage = (matchingColor && relProd.product_images.find((img) => img.color === matchingColor))
+                    || relProd.product_images.find((img: ProductImage) => img.is_primary) || relProd.product_images[0]
                   const hasStock = relProd.product_variants.some((v: ProductVariant) => availableVariant(v))
+                  const relatedName = locale === 'en' && relProd.name_en ? relProd.name_en : relProd.name
                   
                   return (
                     <LocaleLink
                       key={relProd.id}
-                      href={`/product/${relProd.slug}`}
+                      href={`/product/${relProd.slug}${matchingColor ? `?color=${encodeURIComponent(matchingColor)}` : ''}`}
                       className="group block"
                     >
                       <div className="bg-white border-2 border-black overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
@@ -2338,7 +2343,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                           {primaryImage && (
                             <Image
                               src={primaryImage.url}
-                              alt={relProd.name}
+                              alt={relatedName}
                               fill
                               sizes="(max-width: 640px) 50vw, 25vw"
                               quality={90}
@@ -2352,7 +2357,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                           )}
                         </div>
                         <div className="p-3 md:p-4">
-                          <h3 className="font-bold text-sm md:text-base mb-1 line-clamp-2">{relProd.name}</h3>
+                          <h3 className="font-bold text-sm md:text-base mb-1 line-clamp-2">{relatedName}</h3>
                           {(() => {
                             const hasDiscount = relProd.sale_price && relProd.sale_price < relProd.base_price
                             if (hasDiscount && relProd.sale_price) {
