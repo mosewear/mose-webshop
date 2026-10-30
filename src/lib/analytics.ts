@@ -161,7 +161,7 @@ export function trackAddToCart(product: {
   variantId?: string | null
   sku?: string | null
   /** Waar de klant hem in de mand legde: productpagina, winkelmand, verlanglijst. */
-  source?: 'pdp' | 'cart_upsell' | 'wishlist' | 'giftcard'
+  source?: 'pdp' | 'cart_upsell' | 'wishlist' | 'giftcard' | 'catalog'
   /** Op welke knop gedrukt is: de knop in de pagina of de vaste balk onderin. */
   button?: 'hoofdknop' | 'vaste_balk'
   /** Heeft de bezoeker de maat zelf aangetikt, of stond onze voorselectie er nog? */

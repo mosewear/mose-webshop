@@ -963,7 +963,24 @@
       "wishlistError": "Bewaren is niet gelukt. Probeer het opnieuw.",
       "wishlistSaved": "Model bewaard in je favorieten.",
       "wishlistRemoved": "Model verwijderd uit je favorieten.",
-      "oneSize": "One size"
+      "oneSize": "One size",
+      "quick": {
+        "title": "Kies je uitvoering",
+        "close": "Sluit productkeuze",
+        "details": "Bekijk alle productdetails",
+        "loading": "Beschikbaarheid controleren…",
+        "color": "Kleur",
+        "size": "Kies je maat",
+        "chooseSize": "Kies eerst je maat",
+        "add": "In winkelmand",
+        "checking": "Controleren…",
+        "loadError": "We kunnen de beschikbaarheid nu niet controleren. Probeer het opnieuw.",
+        "soldOut": "Niet beschikbaar",
+        "priceChanged": "De prijs is bijgewerkt. Controleer de nieuwe prijs en voeg opnieuw toe.",
+        "quantityLimit": "Het beschikbare aantal van deze uitvoering zit al in je winkelmand.",
+        "retry": "Probeer opnieuw"
+      },
+      "quickAdd": "Kies maat en kleur voor {name}"
     }
   },
   "errors": {
