@@ -4,7 +4,7 @@ import { assertInventoryEvidence, inventoryReadiness, projectInventory, reconcil
 import type { AdminExecutor } from '@/lib/shopify/orders'
 const mapping: InventoryMapping = { mose_variant_id: 'v1', shopify_variant_id: 'gid://shopify/ProductVariant/1', shopify_product_id: 'gid://shopify/Product/2',
   inventory_location_id: 'gid://shopify/Location/3', inventory_revision: 'revision', inventory_lease_token: 'lease', price_eur_cents: 7900 }
-const response = () => ({ shop: { currencyCode: 'EUR' }, nodes: [{ id: mapping.shopify_variant_id, price: '79.00', inventoryPolicy: 'DENY' as const,
+const response = () => ({ shop: { currencyCode: 'EUR' }, nodes: [{ id: mapping.shopify_variant_id, sku: 'supplier-sku', selectedOptions: [{ name: 'Color', value: 'Black' }, { name: 'Size', value: 'L' }], price: '79.00', inventoryPolicy: 'DENY' as const,
   product: { id: mapping.shopify_product_id, status: 'ACTIVE' }, inventoryItem: { tracked: true, inventoryLevel: {
     location: { id: mapping.inventory_location_id!, isActive: true, fulfillsOnlineOrders: true }, quantities: [{ name: 'available', quantity: 3 }] } } }] })
 const evidence = () => ({ mose_variant_id: 'v1', mapping_current: true, status: 'known', available_quantity: 3, observed_at: new Date().toISOString() })
@@ -82,7 +82,7 @@ describe('authoritative location inventory', () => {
 })
 
 it('verifies a specifically released supplier made-to-order contract without copying sentinel stock', () => {
-  const released = { ...mapping, fulfillment_owner: 'tapstitch', fulfillment_mode: 'made_to_order', supplier_link_verified: true,
+  const released = { ...mapping, supplier_reference: 'supplier-sku', supplier_color: 'Black', size: 'L', fulfillment_owner: 'tapstitch', fulfillment_mode: 'made_to_order', supplier_link_verified: true,
     sample_verified: false, owner_release_authorized_at: '2026-01-01T00:00:00Z', owner_release_reference: 'Owner expressly released before samples', inventory_item_id: 'gid://shopify/InventoryItem/7' }
   const r = response()
   Object.assign(r.nodes[0], { inventoryPolicy: 'CONTINUE' })
@@ -100,4 +100,15 @@ it('verifies a specifically released supplier made-to-order contract without cop
   expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 11 }], [observed])).toThrow()
   expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 1 }], [{ ...observed, available_quantity: 9999999 }])).toThrow()
   expect(() => assertInventoryEvidence([{ localVariantId: 'v1', quantity: 1 }], [{ ...observed, observed_at: '2000-01-01T00:00:00Z' }])).toThrow()
+})
+
+it.each(['sku', 'size', 'color', 'missing-size', 'duplicate-color'])('rejects a changed supplier %s after product metadata invalidation', change => {
+  const m = { ...mapping, fulfillment_owner: 'tapstitch', supplier_reference: 'supplier-sku', supplier_color: 'Black', size: 'L' }
+  const r = response(), n = r.nodes[0]
+  if (change === 'sku') n.sku = 'different-supplier-route'
+  if (change === 'size') n.selectedOptions[1].value = 'M'
+  if (change === 'color') n.selectedOptions[0].value = 'White'
+  if (change === 'missing-size') n.selectedOptions.pop()
+  if (change === 'duplicate-color') n.selectedOptions.push({ name: 'Color', value: 'Black' })
+  expect(projectInventory(m, r)).toMatchObject({ status: 'unknown', reason: 'SUPPLIER_VARIANT_CHANGED' })
 })

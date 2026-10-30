@@ -6,6 +6,8 @@ export const SHOPIFY_STORE = 'hp5szr-te.myshopify.com'
 export const PILOT_MODELS = [
   'RW0041-P001-V3', 'RT0028-C001-V2', 'MB0001-C001-V2', 'MB0057-C001-V2',
   'UB0083-C001-V2', 'MB0030-C001-V2', 'MB0010-C001-V2', 'UB0018-C001-V2',
+  'R00099-C001-V6', 'UT0276-C001-V2', 'RT0086-C001-V4',
+  'UT0289-P001-V4', 'UB0051-P001-V2', 'UT0320-P001-V2',
 ] as const
 
 export const checkoutInput = z.object({

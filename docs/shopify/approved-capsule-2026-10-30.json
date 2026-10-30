@@ -1,0 +1,123 @@
+[
+  {
+    "sku": "R00099",
+    "productId": "ea0018da-0cf1-426c-90ca-e3be31c7b6a3",
+    "sourceCode": "R00099-C001-V6",
+    "sourceProductId": "1534521211260899328",
+    "sourcePage": "https://www.tapstitch.com/custom/r00099-acid-wash-oversize-long-sleeve-t-shirt",
+    "name": "MOSE Washed Longsleeve",
+    "priceEur": 59.0,
+    "colors": [
+      "Black Beauty",
+      "Pirate Gray"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL"
+    ]
+  },
+  {
+    "sku": "UT0276",
+    "productId": "d4432b58-9b22-4321-9f4e-a2b7a6a3f287",
+    "sourceCode": "UT0276-C001-V2",
+    "sourceProductId": "1537861503506665472",
+    "sourcePage": "https://www.tapstitch.com/custom/ut0276-unisex-mineral-wash-boxy-waffle-t-shirt",
+    "name": "MOSE Waffle Tee",
+    "priceEur": 59.0,
+    "colors": [
+      "Coffee",
+      "Black"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL"
+    ]
+  },
+  {
+    "sku": "RT0086",
+    "productId": "b2c48e1c-5156-488c-8630-d3310080ba79",
+    "sourceCode": "RT0086-C001-V4",
+    "sourceProductId": "1532420050923966464",
+    "sourcePage": "https://www.tapstitch.com/custom/rt0086-unisex-oversized-t-shirt",
+    "name": "MOSE Heavy Tee",
+    "priceEur": 49.0,
+    "colors": [
+      "White",
+      "Black"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL"
+    ]
+  },
+  {
+    "sku": "UT0289",
+    "productId": "3625ae2c-df78-48ce-b547-48e39eb51c7f",
+    "sourceCode": "UT0289-P001-V4",
+    "sourceProductId": "1562826538737659904",
+    "sourcePage": "https://www.tapstitch.com/custom/ut0289-unisex-fleece-full-zip-hoodie",
+    "name": "MOSE Fleece Zip Hoodie",
+    "priceEur": 79.0,
+    "colors": [
+      "Black",
+      "Flower Gray"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL",
+      "3XL"
+    ]
+  },
+  {
+    "sku": "UB0051",
+    "productId": "5d6ea2f4-d8ef-4d60-a6a4-f86690482272",
+    "sourceCode": "UB0051-P001-V2",
+    "sourceProductId": "1522631120397766656",
+    "sourcePage": "https://www.tapstitch.com/custom/ub0051-unisex-barrel-leg-sweatpants",
+    "name": "MOSE Barrel Sweatpants",
+    "priceEur": 69.0,
+    "colors": [
+      "Black",
+      "Flower Gray"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL"
+    ]
+  },
+  {
+    "sku": "UT0320",
+    "productId": "d3a6ae5f-d370-4e9d-b120-c3c16b105f72",
+    "sourceCode": "UT0320-P001-V2",
+    "sourceProductId": "1542124365611745280",
+    "sourcePage": "https://www.tapstitch.com/custom/ut0320-unisex-raw-edge-fleece-shorts",
+    "name": "MOSE Fleece Shorts",
+    "priceEur": 49.0,
+    "colors": [
+      "Black",
+      "Flower Gray"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL"
+    ]
+  }
+]

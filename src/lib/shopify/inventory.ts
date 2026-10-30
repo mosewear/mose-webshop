@@ -12,20 +12,20 @@ import type { AdminExecutor } from './orders'
 export const INVENTORY_QUERY = `query MoseInventory($ids: [ID!]!, $location: ID!) {
   shop { currencyCode }
   nodes(ids: $ids) { ... on ProductVariant {
-    id price inventoryPolicy product { id status }
+    id sku selectedOptions { name value } price inventoryPolicy product { id status }
     inventoryItem { id tracked inventoryLevel(locationId: $location) {
       location { id isActive fulfillsOnlineOrders }
       quantities(names: ["available"]) { name quantity }
     } }
   } }
 }`
-const nodeSchema = z.object({ id: z.string(), price: z.string(), inventoryPolicy: z.enum(['DENY','CONTINUE']),
+const nodeSchema = z.object({ id: z.string(), sku: z.string().nullable(), selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })), price: z.string(), inventoryPolicy: z.enum(['DENY','CONTINUE']),
   product: z.object({ id: z.string(), status: z.string() }), inventoryItem: z.object({ id: z.string().optional(), tracked: z.boolean(),
     inventoryLevel: z.object({ location: z.object({ id: z.string(), isActive: z.boolean(), fulfillsOnlineOrders: z.boolean() }),
       quantities: z.array(z.object({ name: z.string(), quantity: z.number().int().safe() })) }).nullable() }) })
 const responseSchema = z.object({ shop: z.object({ currencyCode: z.string() }), nodes: z.array(nodeSchema.nullable()) })
 export type InventoryMapping = { mose_variant_id: string; shopify_variant_id: string; shopify_product_id: string;
-  inventory_location_id: string | null; inventory_item_id?: string | null; inventory_revision: string; inventory_lease_token: string; price_eur_cents: number; fulfillment_owner?: string; fulfillment_mode?: string; supplier_link_verified?: boolean; sample_verified?: boolean; owner_release_authorized_at?: string | null; owner_release_reference?: string | null }
+  supplier_reference?: string | null; supplier_color?: string | null; size?: string | null; inventory_location_id: string | null; inventory_item_id?: string | null; inventory_revision: string; inventory_lease_token: string; price_eur_cents: number; fulfillment_owner?: string; fulfillment_mode?: string; supplier_link_verified?: boolean; sample_verified?: boolean; owner_release_authorized_at?: string | null; owner_release_reference?: string | null }
 type Observation = { status: 'known' | 'made_to_order' | 'unknown' | 'error'; quantity: number | null; reason: string }
 export function projectInventory(mapping: InventoryMapping, response: z.infer<typeof responseSchema>): Observation {
   const unknown = (reason: string): Observation => ({ status: 'unknown', quantity: null, reason })
@@ -41,6 +41,14 @@ export function projectInventory(mapping: InventoryMapping, response: z.infer<ty
   const level = node.inventoryItem.inventoryLevel
   if (!mapping.inventory_location_id || !level || level.location.id !== mapping.inventory_location_id ||
     !level.location.isActive || !level.location.fulfillsOnlineOrders) return unknown('INVENTORY_LOCATION_UNVERIFIED')
+  if (mapping.fulfillment_owner === 'tapstitch') {
+    // A product edit may change the supplier route without changing Shopify IDs.
+    const sizes = node.selectedOptions.filter(o => /^(size|maat)$/i.test(o.name))
+    const colors = node.selectedOptions.filter(o => /^(color|colour|kleur)$/i.test(o.name))
+    if (!mapping.supplier_reference || node.sku !== mapping.supplier_reference || !mapping.size || !mapping.supplier_color ||
+      sizes.length !== 1 || sizes[0].value !== mapping.size || colors.length !== 1 || colors[0].value !== mapping.supplier_color)
+      return unknown('SUPPLIER_VARIANT_CHANGED')
+  }
   if (mapping.fulfillment_mode === 'made_to_order') {
     if (mapping.fulfillment_owner !== 'tapstitch' || mapping.supplier_link_verified !== true ||
       !supplierReleaseAuthorized({ sample_verified: mapping.sample_verified === true, owner_release_authorized_at: mapping.owner_release_authorized_at, owner_release_reference: mapping.owner_release_reference }) || !mapping.inventory_item_id ||
