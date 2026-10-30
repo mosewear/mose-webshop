@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { RefreshCw, Plus, Search, Printer, Tag, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StatusBadge from '@/components/admin/StatusBadge'
+import ProductionStatus from '@/components/admin/ProductionStatus'
+import ProductionFeedNotice from '@/components/admin/ProductionFeedNotice'
 import { orderStatus } from '@/lib/status-registry'
 import { formatBedrag } from '@/lib/format-price'
 
@@ -18,6 +20,9 @@ interface Order {
   shipping_status?: string
   synced_at?: string
   production_status?: string
+  production_checked_at?: string | null
+  production_stale?: boolean
+  production_source_url?: string | null
   user_id: string | null
   email: string
   status: string
@@ -396,7 +401,9 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-3xl font-display font-bold mb-2">Orders</h1>
           <p className="text-gray-600 text-sm md:text-base">Beheer alle bestellingen</p>
-          <p className="text-xs text-gray-500 mt-2">Alle MOSE- en Shopify-bestellingen. Productie wordt pas bevestigd na een leveranciersmelding.</p>
+          <p className="text-xs text-gray-500 mt-2">Alle MOSE- en Shopify-bestellingen. Productie, betaling en verzending worden afzonderlijk gecontroleerd.</p>
+          <Link href="/admin/shopify/production" className="inline-block mt-2 text-xs font-semibold underline underline-offset-2">Productiecontrole en verbindingsstatus</Link>
+          <ProductionFeedNotice />
         </div>
         {/* Laat de knoppen afbreken. Vanaf md werden het er vier naast elkaar op
             volle tekstbreedte, en op een tablet van 768 pixels stak de knop
@@ -660,7 +667,7 @@ export default function AdminOrdersPage() {
                     <StatusBadge status={order.payment_status || 'unpaid'} kind="payment" />
                     <div className="flex items-center flex-wrap gap-1">
                       <StatusBadge status={order.status} kind="order" />
-                      {order.production_status && <p className="text-xs text-gray-600 mt-1">{order.production_status}</p>}
+                      <ProductionStatus order={order} />
                       {order.shipping_status && <p className="text-xs text-gray-600 mt-1">{order.shipping_status}</p>}
                       {order.label_url && order.status === 'processing' ? (
                       <span
@@ -777,7 +784,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} kind="order" />
-                      {order.production_status && <p className="text-xs text-gray-600 mt-1">{order.production_status}</p>}
+                      <ProductionStatus order={order} />
                       {order.shipping_status && <p className="text-xs text-gray-600 mt-1">{order.shipping_status}</p>}
                       {order.label_url && order.status === 'processing' ? (
                       <span
