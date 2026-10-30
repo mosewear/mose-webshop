@@ -3,17 +3,38 @@ import {fireEvent,render,screen,within} from '@testing-library/react'
 import {NextIntlClientProvider} from 'next-intl'
 import messages from '../messages/nl.json'
 import ShopPageClient from '@/app/[locale]/shop/ShopPageClient'
+import {emptyCatalogFilters,type CatalogProduct} from '@/lib/catalog-filters'
 vi.mock('@/i18n/routing',()=>({Link:({children,...props}:React.ComponentProps<'a'>)=><a {...props}>{children}</a>}))
 vi.mock('@/lib/settings',()=>({getSiteSettings:async()=>({})}))
 vi.mock('@/store/wishlist',()=>({useWishlist:()=>({loadWishlist:vi.fn()})}))
 vi.mock('@/components/shop/useCatalogTracking',()=>({useCatalogTracking:()=>({trackSelect:vi.fn()})}))
 vi.mock('@/components/RecentlyViewed',()=>({default:()=>null}))
 vi.mock('@/components/shop/DetailBlok',()=>({default:()=>null}))
+vi.mock('@/components/shop/CatalogProductCard',()=>({default:()=>null}))
 vi.mock('@/lib/supabase/client',()=>({createClient:vi.fn()}))
 beforeEach(()=>{
+  window.history.replaceState(null,'','/nl/shop')
   // jsdom does not lay out controls or implement native modal focus behavior.
   vi.spyOn(HTMLElement.prototype,'getClientRects').mockReturnValue([{width:44,height:44}] as never)
   Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(this:HTMLDialogElement){this.setAttribute('open','')}})
+})
+it('keeps the category when clearing refinements and exposes selections in collapsed groups',()=>{
+  const product:CatalogProduct={id:'pants',name:'Broek',slug:'broek',base_price:79,sale_price:null,category_id:'trousers',category:{slug:'broeken',name:'Broeken'},display_order:1,created_at:'2026-10-30',variants:[{color:'Black',size:'L',is_available:true,stock_quantity:2}]}
+  render(<NextIntlClientProvider locale="nl" messages={messages}><ShopPageClient initialProducts={[product]} initialCategories={[{id:'trousers',slug:'broeken',name:'Broeken'}]} initialFilters={{...emptyCatalogFilters,category:'broeken',sizes:['L'],colors:['black'],sort:'price-asc'}}/></NextIntlClientProvider>)
+  fireEvent.click(screen.getByRole('button',{name:/Filters & Sorteren/}))
+  const drawer=within(screen.getByRole('dialog'))
+  const colors=drawer.getByRole('button',{name:'Kleur: ZWART'})
+  expect(colors).toHaveAttribute('aria-expanded','false')
+  fireEvent.click(colors)
+  expect(drawer.getByRole('checkbox',{name:/ZWART.*1/})).toBeChecked()
+  fireEvent.click(colors)
+  expect(colors).toHaveAttribute('aria-expanded','false')
+  expect(drawer.getAllByRole('button',{name:'Wis filters'})).toHaveLength(1)
+  fireEvent.click(drawer.getByRole('button',{name:'Wis filters'}))
+  expect(window.location.search).toBe('?category=broeken')
+  expect(drawer.getByRole('button',{name:'Wis filters'})).toBeDisabled()
+  expect(drawer.getByRole('button',{name:'Bekijk 1 model'})).toBeEnabled()
+  expect(drawer.getByRole('button',{name:'Kleur'})).toHaveAttribute('aria-expanded','false')
 })
 it('keeps Shift+Tab and Tab inside the filter dialog at both boundaries',()=>{
   render(<NextIntlClientProvider locale="nl" messages={messages}><ShopPageClient initialProducts={[]} initialCategories={[]}/></NextIntlClientProvider>)
