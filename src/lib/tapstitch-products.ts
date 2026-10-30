@@ -77,3 +77,16 @@ export const TAPSTITCH_PRODUCT_SOURCES: Readonly<Record<string, { sourceProductI
 export function isTapstitchProduct(product: { id?: string | null }): boolean {
   return typeof product.id === 'string' && Object.prototype.hasOwnProperty.call(TAPSTITCH_PRODUCT_SOURCES, product.id)
 }
+
+/** The approved 345 gsm fleece set shares fabric and supplier colour names. */
+const FLEECE_SET_IDS = [
+  '3625ae2c-df78-48ce-b547-48e39eb51c7f',
+  '5d6ea2f4-d8ef-4d60-a6a4-f86690482272',
+  'd3a6ae5f-d370-4e9d-b120-c3c16b105f72',
+] as const
+
+export function matchingSetProductIds(productId: string): string[] {
+  return FLEECE_SET_IDS.some((id) => id === productId)
+    ? FLEECE_SET_IDS.filter((id) => id !== productId)
+    : []
+}
