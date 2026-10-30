@@ -86,8 +86,20 @@ export default function DualRangeSlider({
     }
   }, [isDragging, localValue])
 
-  const minPercent = ((localValue[0] - min) / (max - min)) * 100
-  const maxPercent = ((localValue[1] - min) / (max - min)) * 100
+  const handleKeyDown = (event: React.KeyboardEvent, handle: 'min' | 'max') => {
+    const directions: Record<string, number> = { ArrowLeft: -step, ArrowDown: -step, ArrowRight: step, ArrowUp: step, PageDown: -step * 10, PageUp: step * 10 }
+    if (!(event.key in directions) && event.key !== 'Home' && event.key !== 'End') return
+    event.preventDefault()
+    const index = handle === 'min' ? 0 : 1
+    const next: [number, number] = [...localValue]
+    const requested = event.key === 'Home' ? min : event.key === 'End' ? max : next[index] + directions[event.key]
+    next[index] = handle === 'min' ? Math.max(min, Math.min(requested, next[1] - step)) : Math.min(max, Math.max(requested, next[0] + step))
+    setLocalValue(next)
+    onChange(next)
+  }
+
+  const minPercent = ((localValue[0] - min) / Math.max(1, max - min)) * 100
+  const maxPercent = ((localValue[1] - min) / Math.max(1, max - min)) * 100
 
   return (
     <div className="py-2 px-2">
@@ -130,6 +142,7 @@ export default function DualRangeSlider({
               }`}
               onMouseDown={() => handleMouseDown('min')}
               onTouchStart={() => handleMouseDown('min')}
+              onKeyDown={event => handleKeyDown(event, 'min')}
               role="slider"
               aria-valuemin={min}
               aria-valuemax={max}
@@ -162,6 +175,7 @@ export default function DualRangeSlider({
               }`}
               onMouseDown={() => handleMouseDown('max')}
               onTouchStart={() => handleMouseDown('max')}
+              onKeyDown={event => handleKeyDown(event, 'max')}
               role="slider"
               aria-valuemin={min}
               aria-valuemax={max}
