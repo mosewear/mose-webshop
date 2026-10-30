@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
-/** Four bounded batches cover 27 owned + 63 supplier variants across their
+/** Four bounded batches cover 27 owned + 125 supplier variants across their
  * separate locations every five minutes. Supplier presentation updates never
  * populate physical inventory. Orders cannot starve this independent budget. */
 export async function GET(request: Request) {
