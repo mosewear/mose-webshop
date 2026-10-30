@@ -40,7 +40,7 @@ export default function LookbookCollection({
           </p>
           <h2
             id="lookbook-collection"
-            className="font-display text-5xl leading-none md:text-7xl"
+            className="scroll-mt-40 font-display text-5xl leading-none md:text-7xl"
           >
             {t('title')}
           </h2>
@@ -68,7 +68,9 @@ export default function LookbookCollection({
                   {t(`${group}Body`)}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
+              <div
+                className={`grid grid-cols-2 gap-x-4 gap-y-8 md:gap-x-6 ${selection.length <= 2 ? 'md:grid-cols-2' : selection.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-3 xl:grid-cols-4'}`}
+              >
                 {selection.map((product) => (
                   <CatalogProductCard
                     key={product.id}

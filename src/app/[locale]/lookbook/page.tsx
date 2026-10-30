@@ -128,7 +128,12 @@ export default async function LookbookPage({
         settings={settings}
         chapters={chapters}
         locale={normalizedLocale}
-        collection={<LookbookCollection key="complete-collection" products={catalog.products} />}
+        collection={
+          <LookbookCollection
+            key="complete-collection"
+            products={catalog.products}
+          />
+        }
       />
     </>
   )
