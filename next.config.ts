@@ -84,6 +84,14 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      { source: '/:locale(nl|en)/product/tapstitch-rw0041-boxy-fleece-hoodie', destination: '/:locale/product/boxy-fleece-hoodie', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-rt0028-raglan-longsleeve', destination: '/:locale/product/raglan-longsleeve', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-mb0001-barrel-pants', destination: '/:locale/product/barrel-pants', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-mb0057-tree-camo-barrel-pants', destination: '/:locale/product/tree-camo-barrel-pants', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-ub0083-vintage-barrel-jeans', destination: '/:locale/product/vintage-barrel-jeans', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-mb0030-washed-barrel-jeans', destination: '/:locale/product/washed-barrel-jeans', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-mb0010-sunfade-barrel-jeans', destination: '/:locale/product/sunfade-barrel-jeans', permanent: true },
+      { source: '/:locale(nl|en)/product/tapstitch-ub0018-distressed-barrel-jeans', destination: '/:locale/product/distressed-barrel-jeans', permanent: true },
       // Redirect mosewear.nl → www.mosewear.com
       {
         source: '/:path*',
