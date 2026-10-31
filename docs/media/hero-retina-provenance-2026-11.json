@@ -1,0 +1,60 @@
+[
+  {
+    "source": "mose-hero-desktop-hq-2026-11.png",
+    "sourceSha256": "28e989d2c4e853f6ee82125b13c6d0639985777d8febaa7283a78773a40d796a",
+    "sourceSize": [
+      1672,
+      941
+    ],
+    "output": "mose-hero-desktop-retina-2026-11.webp",
+    "outputSize": [
+      3344,
+      1882
+    ],
+    "bytes": 6770900,
+    "method": "Real-ESRGAN x4plus NCNN Vulkan, 4x downsampled to 2x; 45% enhancement, 55% original Lanczos; original logo regions restored; lossless WebP master",
+    "protectedLogoRegionsSourcePixels": [
+      [
+        996,
+        238,
+        1050,
+        273
+      ],
+      [
+        1230,
+        251,
+        1279,
+        286
+      ]
+    ]
+  },
+  {
+    "source": "mose-hero-mobile-hq-2026-11.png",
+    "sourceSha256": "f2b0a6afb509e746574b4d5dc61d3915079f59058df2c45623d01c3276b7a404",
+    "sourceSize": [
+      1024,
+      1536
+    ],
+    "output": "mose-hero-mobile-retina-2026-11.webp",
+    "outputSize": [
+      2048,
+      3072
+    ],
+    "bytes": 6310584,
+    "method": "Real-ESRGAN x4plus NCNN Vulkan, 4x downsampled to 2x; 45% enhancement, 55% original Lanczos; original logo regions restored; lossless WebP master",
+    "protectedLogoRegionsSourcePixels": [
+      [
+        419,
+        383,
+        482,
+        426
+      ],
+      [
+        716,
+        409,
+        774,
+        447
+      ]
+    ]
+  }
+]
