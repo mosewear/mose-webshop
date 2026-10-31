@@ -38,47 +38,7 @@ const LANGUAGES = [
 
 const INSTAGRAM_URL = 'https://instagram.com/mosewearcom'
 
-/**
- * MOSE MOBIEL MENU
- *
- * Herbouwd na een beoordeling door drie specialisten (merchandising bij een
- * grote herenmodewinkel, mobiele navigatie, en merk). Wat de vorige versie
- * mankeerde, en wat hier anders is:
- *
- *  1. HET WAS EEN INHOUDSOPGAVE, GEEN WINKEL. Vijf identieke regels (SHOP,
- *     LOOKBOOK, BLOG, OVER MOSE, CONTACT) in hetzelfde formaat, allemaal met
- *     hetzelfde pijltje. SHOP is het enige dat omzet oplevert en zag eruit als
- *     BLOG. Nu staan de vier producten zelf in het menu, met foto en prijs.
- *     Een categorietegel was geen optie: MOSE heeft vier categorieën met elk
- *     precies één product, dus die laag verbergt één artikel achter een extra
- *     tik. Zie `src/lib/menu-products.ts`.
- *
- *  2. DE BELOFTE WAS EEN REM. "Gratis verzending vanaf €150" bij een mediane
- *     order van €75 vertelt vier op de vijf bezoekers dat ze verzendkosten
- *     gaan betalen. De regel is nu contextafhankelijk: snelheid bij een lege
- *     wagen, het restbedrag zodra er iets in zit, en de bevestiging zodra de
- *     drempel gehaald is. Zwarte tekst op merkgroen, want wit haalt daar maar
- *     3,13:1 en dat is onder de leesnorm.
- *
- *  3. DE COOKIEBANNER LAG EROVERHEEN. Die staat op z-[100], de lade stond op
- *     z-50. Bij elke eerste bezoeker dekte de banner de onderste 127px van het
- *     menu af. De lade staat nu hoger, en houdt onderaan rekening met de
- *     veilige zone van het toestel.
- *
- *  4. DE MERKSTEM ONTBRAK. In de vertalingen stond al een waardenticker
- *     ("GEEN FAST FASHION", "GEMAAKT IN GRONINGEN", "DOOR IRMA & RICK") die
- *     nergens werd gerenderd. Die staat nu direct onder de kop: eerst wie je
- *     bent, dan pas wat je verkoopt.
- *
- *  5. WAT ER HELEMAAL NIET IN ZAT. Geen winkelwagen (het tasje in de header
- *     verdween achter de lade), geen bestelling volgen, geen retour, en geen
- *     woord over pasvorm, terwijl maattwijfel bij herenmode op mobiel de
- *     grootste afhaakreden is.
- *
- * Bewust NIET gedaan: een zoekveld over de volle breedte bovenaan. Bij vier
- * producten kan zoeken niets vinden wat het menu niet al toont; het icoon in
- * de kop volstaat.
- */
+/** MOSE navigation with four curated clothing highlights and keyboard focus containment. */
 export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenuProps) {
   const t = useTranslations('mobileMenu')
   const tCommon = useTranslations('common')
@@ -277,7 +237,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
       <div
         aria-hidden="true"
         onClick={onClose}
-        className={`fixed inset-0 z-[105] bg-black/50 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none md:hidden ${
+        className={`fixed inset-0 z-[105] bg-black/50 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none lg:hidden ${
           isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       />
@@ -294,7 +254,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
         // links en knoppen gewoon bereikbaar met Tab. Zeven keer Tab vanaf de
         // pagina zette de focus op het logo ín het onzichtbare menu.
         inert={!isOpen}
-        className={`fixed inset-y-0 right-0 z-[110] flex w-[90%] max-w-[430px] transform flex-col bg-white transition-transform duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:hidden ${
+        className={`fixed inset-y-0 right-0 z-[110] flex w-[90%] max-w-[430px] transform flex-col bg-white transition-transform duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:hidden ${
           isOpen ? 'translate-x-0' : 'pointer-events-none translate-x-full'
         }`}
       >
