@@ -134,7 +134,7 @@ export function Header() {
               {/* Desktop Icons - All visible */}
               <button 
                 onClick={() => setSearchOpen(true)}
-                className="hidden lg:block p-2 hover:text-brand-primary transition-colors" 
+                className="hidden lg:block p-2 hover:text-brand-primary transition-colors"
                 aria-label={t('search')}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
