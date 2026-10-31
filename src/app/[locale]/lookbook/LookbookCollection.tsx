@@ -1,5 +1,7 @@
 'use client'
 
+import { useLiveAvailability } from '@/hooks/useLiveAvailability'
+
 import Image from 'next/image'
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -61,9 +63,10 @@ function CollectionPhotograph({tile, priority}: {tile: ShopTile<CatalogProduct>;
 
 // The server catalogue already includes only active products. The explicit
 // guard also prevents stale draft rows from rendering if supplied during a refresh.
-export default function LookbookCollection({products}: {products: Array<CatalogProduct & {is_active?: boolean; status?: string | null}>}) {
+export default function LookbookCollection({products: initialProducts}: {products: Array<CatalogProduct & {is_active?: boolean; status?: string | null}>}) {
   const t = useTranslations('lookbook.collection')
   const locale = useLocale()
+  const products = useLiveAvailability(initialProducts)
   const published = products.filter(p => p.is_active !== false && (!p.status || p.status === 'active'))
   const tiles = catalogTiles(filterCatalog(published, emptyCatalogFilters, locale), emptyCatalogFilters)
   if (!tiles.length) return null

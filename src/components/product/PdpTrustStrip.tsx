@@ -60,7 +60,9 @@ export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, s
     locale === 'en' ? 'Check the size chart for this specific model.' : 'Bekijk de maattabel van dit specifieke model.',
     locale === 'en' ? 'Secure payment at checkout.' : 'Veilig betalen bij het afrekenen.',
   ] : [
-    beforeCutoff
+    process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true'
+      ? (locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.')
+      : beforeCutoff
       ? (altijdGratis
           ? t('shippingBeforeCutoffAltijd')
           : t('shippingBeforeCutoff', { threshold: freeShippingThreshold }))

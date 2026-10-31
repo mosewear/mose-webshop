@@ -146,7 +146,7 @@
     "cartAria": "Winkelwagen, {count, plural, one {# artikel} other {# artikelen}}",
     "cartEmptyAria": "Winkelwagen, leeg",
     "login": "Inloggen",
-    "fit": "Vergelijk de pasvormen en kies jouw maat.",
+    "fit": "Alles over bezorging en retourneren.",
     "promise": {
       "fast": "Bezorgopties bij het afrekenen",
       "toFree": "Nog €{amount} tot gratis verzending",
@@ -169,7 +169,9 @@
       "hoodies": "Hoodies",
       "tshirts": "T-Shirts",
       "caps": "Caps",
-      "all": "Alle producten"
+      "all": "Alle producten",
+      "longsleeves": "Longsleeves",
+      "trousers": "Broeken"
     },
     "info": {
       "title": "Info",
@@ -852,7 +854,10 @@
     "goToAccount": "Ga naar je",
     "account": "account",
     "orUseTrack": "of gebruik de track & trace link in je verzendbevestiging.",
-    "freeFromAltijd": "Altijd gratis"
+    "freeFromAltijd": "Altijd gratis",
+    "checkoutDelivery": "Bezorging met tracking",
+    "checkoutCosts": "Bij afrekenen",
+    "checkoutDeliveryBody": "Je ziet de beschikbare bezorgopties en de volledige verzendkosten in de checkout, voordat je betaalt. De opties hangen af van je artikelen en afleveradres."
   },
   "returns": {
     "title": "Retourneren",
@@ -986,7 +991,12 @@
         "quantityLimit": "Het beschikbare aantal van deze uitvoering zit al in je winkelmand.",
         "retry": "Probeer opnieuw"
       },
-      "quickAdd": "Kies maat en kleur voor {name}"
+      "quickAdd": "Kies maat en kleur voor {name}",
+      "view": {
+        "label": "Productweergave",
+        "large": "Grote productfoto’s",
+        "compact": "Twee producten per rij"
+      }
     }
   },
   "errors": {
@@ -1386,10 +1396,10 @@
   },
   "trackOrder": {
     "title": "Volg je bestelling",
-    "description": "Voer je order nummer en email in om de status te bekijken",
+    "description": "Vul je bestelnummer en e-mailadres in om je bestelling te volgen.",
     "orderNumber": "Ordernummer",
-    "orderNumberPlaceholder": "bijv: ABC12345",
-    "orderNumberHint": "Vind je dit in je bevestigingsmail (eerste 8 tekens)",
+    "orderNumberPlaceholder": "Bijv. #1001",
+    "orderNumberHint": "Gebruik het bestelnummer uit je bevestigingsmail.",
     "emailAddress": "E-mailadres",
     "emailPlaceholder": "jouw@email.nl",
     "searchButton": "Volg bestelling",
@@ -1413,7 +1423,11 @@
       "delivered": "Afgeleverd",
       "deliveredDesc": "Je pakket is bezorgd! Geniet van je nieuwe MOSE items.",
       "cancelled": "Geannuleerd",
-      "cancelledDesc": "Deze bestelling is geannuleerd. Je ontvangt een terugbetaling."
+      "cancelledDesc": "Deze bestelling is geannuleerd. Je ontvangt een terugbetaling.",
+      "partiallyShipped": "Gedeeltelijk verzonden",
+      "partiallyShippedDesc": "Een deel van je bestelling is onderweg. De overige artikelen volgen apart.",
+      "refunded": "Terugbetaald",
+      "refundedDesc": "Deze bestelling is terugbetaald."
     },
     "progress": {
       "ordered": "Besteld",
@@ -1595,7 +1609,8 @@
         "answer": "De beschikbare betaalmethoden zie je bij het afrekenen. Ze hangen onder meer af van je land en valuta. Kies daar de optie die je wilt gebruiken; je betaling wordt beveiligd verwerkt."
       }
     ],
-    "answerVerzendingAltijd": "Je ziet de beschikbare bezorgopties bij het afrekenen. De verwerking en levertijd kunnen per artikel verschillen; een bestelling kan in meerdere pakketten aankomen."
+    "answerVerzendingAltijd": "Je ziet de beschikbare bezorgopties bij het afrekenen. De verwerking en levertijd kunnen per artikel verschillen; een bestelling kan in meerdere pakketten aankomen.",
+    "checkoutDelivery": "Je ziet de beschikbare bezorgopties en de volledige verzendkosten in de checkout, voordat je betaalt. De opties hangen af van je artikelen en afleveradres."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -1636,9 +1651,9 @@
         "country": "Nederland"
       },
       "faq": {
-        "title": "Veelgestelde vragen?",
-        "description": "Check eerst onze FAQ. Misschien staat je antwoord er al!",
-        "button": "Naar voorwaarden"
+        "title": "Bezorging of retour?",
+        "description": "Bekijk de informatie over verzenden, bezorgen en terugsturen.",
+        "button": "Verzending en retour"
       }
     }
   },
@@ -2032,12 +2047,12 @@
   "earlyAccess": {
     "meta": {
       "title": "Early Access | MOSE",
-      "description": "Schrijf je in voor vroege toegang tot de MOSE launch en exclusieve drops."
+      "description": "Ontvang nieuws over nieuwe MOSE-kleding, kleuren en collecties."
     },
     "hero": {
-      "preTitle": "Er komt iets bijzonders aan...",
-      "title": "WEES ER ALS EERSTE BIJ",
-      "subtitle": "Check als eerste onze nieuwe releases. Exclusieve toegang tot onze launch + first dibs op limited edition drops.",
+      "preTitle": "NIEUWS VAN MOSE",
+      "title": "ALS EERSTE OP DE HOOGTE",
+      "subtitle": "Nieuwe kleding, nieuwe kleuren en combinaties die werken. Schrijf je in voor de MOSE-nieuwsbrief.",
       "countdown": {
         "title": "Lancering over:",
         "days": "dagen",
@@ -2048,33 +2063,33 @@
     },
     "form": {
       "placeholder": "jouw@email.com",
-      "button": "Claim je spot",
+      "button": "Schrijf me in",
       "submitting": "Bezig...",
-      "success": "Welkom insider! Check je inbox.",
+      "success": "Je staat op de lijst. Houd je inbox in de gaten.",
       "error": "Er ging iets mis. Probeer het opnieuw."
     },
     "benefits": {
       "earlyAccess": {
-        "title": "First dibs op drops",
-        "desc": "Wees de eerste die nieuwe releases ziet"
+        "title": "Nieuwe collecties",
+        "desc": "Hoor wanneer er iets nieuws is"
       },
       "gift": {
         "title": "Een eigen stijl",
         "desc": "Kleding met karakter"
       },
       "shipping": {
-        "title": "Gratis verzending",
-        "desc": "Op je eerste order"
+        "title": "Zo combineer je het",
+        "desc": "Ideeën voor je volgende outfit"
       },
       "updates": {
-        "title": "Insider updates",
-        "desc": "Behind-the-scenes content"
+        "title": "Nieuws van MOSE",
+        "desc": "Rechtstreeks in je inbox"
       }
     },
     "social": {
       "count": "Sluit je aan bij {count}+ insiders die al op de lijst staan"
     },
-    "trust": "Geen spam. Alleen drops. Presale is voor iedereen. Deze perks niet."
+    "trust": "Je ontvangt de MOSE-nieuwsbrief per e-mail. Uitschrijven kan altijd via de link in elke nieuwsbrief."
   },
   "insiderWelcome": {
     "title": "WELKOM BIJ DE INSIDERS",

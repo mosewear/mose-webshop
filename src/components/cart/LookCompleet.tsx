@@ -17,6 +17,8 @@
  * het kleurlabel wisselen mee, zodat je ziet wat je toevoegt.
  */
 
+import { availableVariant, type VariantAvailability } from '@/lib/variant-availability'
+import { useLiveAvailability } from '@/hooks/useLiveAvailability'
 import { useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -24,13 +26,14 @@ import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
 import { getImageForColor, type ProductDisplayImage } from '@/lib/product-display'
 
-export interface LookVariant {
+export interface LookVariant extends VariantAvailability {
   id: string
   sku: string
   size: string
   color: string | null
   color_hex: string | null
   stock_quantity: number
+  price_adjustment?: number | null
   is_available: boolean
 }
 
@@ -61,7 +64,7 @@ interface Props {
   onNaarProduct: () => void
 }
 
-const MAATVOLGORDE = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+const MAATVOLGORDE = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL']
 
 /**
  * Welke kleur het best combineert met een kleur in de mand. Eerst het
@@ -106,7 +109,8 @@ function soortVan(naam: string): { nl: string; en: string } | null {
   return null
 }
 
-export default function LookCompleet({ producten, mand, locale, bezigMet, onToevoegen, onNaarProduct }: Props) {
+export default function LookCompleet({ producten: initialProducts, mand, locale, bezigMet, onToevoegen, onNaarProduct }: Props) {
+  const producten = useLiveAvailability(initialProducts)
   const t = useTranslations('cart.upsell')
   const en = locale === 'en'
   const [open, setOpen] = useState<string | null>(null)
@@ -126,9 +130,9 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
       const ib = volgorde.indexOf(b.toLowerCase())
       return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
     })
-    const opVoorraad = (kleur: string) => varianten.some((v) => v.color === kleur && v.stock_quantity > 0)
+    const opVoorraad = (kleur: string) => varianten.some((v) => v.color === kleur && availableVariant(v))
     const inMandMaat = (kleur: string) =>
-      !!mandMaat && varianten.some((v) => v.color === kleur && v.size.toUpperCase() === mandMaat && v.stock_quantity > 0)
+      !!mandMaat && varianten.some((v) => v.color === kleur && v.size.toUpperCase() === mandMaat && availableVariant(v))
     // Liefst de best combinerende kleur die er in jouw maat is; anders de
     // best combinerende die er überhaupt is.
     const besteKleur = kleuren.find(inMandMaat) || kleuren.find(opVoorraad) || kleuren[0]
@@ -140,7 +144,7 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
   const huidige = (id: string, besteKleur: string, varianten: LookVariant[]) => {
     const k = keuze[id]
     if (k) return k
-    const maatOk = mandMaat && varianten.some((v) => v.color === besteKleur && v.size.toUpperCase() === mandMaat && v.stock_quantity > 0)
+    const maatOk = mandMaat && varianten.some((v) => v.color === besteKleur && v.size.toUpperCase() === mandMaat && availableVariant(v))
     return { kleur: besteKleur, maat: maatOk ? mandMaat : null }
   }
 
@@ -154,12 +158,12 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
           const k = huidige(p.id, besteKleur, varianten)
           const isOpen = open === p.id
           const naam = en && p.name_en ? p.name_en : p.name
-          const prijs = p.sale_price && p.sale_price < p.base_price ? p.sale_price : p.base_price
           const beeld = getImageForColor(p.product_images, k.kleur)
           const maten = [...new Set(varianten.filter((v) => v.color === k.kleur).map((v) => v.size))].sort(
             (a, b) => MAATVOLGORDE.indexOf(a.toUpperCase()) - MAATVOLGORDE.indexOf(b.toUpperCase()),
           )
           const variant = k.maat ? varianten.find((v) => v.color === k.kleur && v.size.toUpperCase() === k.maat) : undefined
+          const prijs = (p.sale_price ?? p.base_price) + (variant?.price_adjustment ?? 0)
           const kleurLabel = KLEURNAAM[k.kleur.toLowerCase()]?.[en ? 'en' : 'nl'] || k.kleur
           const ankerSoort = anker ? soortVan(anker.name) : null
           const reden =
@@ -227,7 +231,7 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
                     <div className="flex flex-wrap gap-2">
                       {kleuren.map((c) => {
                         const hex = varianten.find((v) => v.color === c)?.color_hex || '#ccc'
-                        const leeg = !varianten.some((v) => v.color === c && v.stock_quantity > 0)
+                        const leeg = !varianten.some((v) => v.color === c && availableVariant(v))
                         const actief = c === k.kleur
                         const label = KLEURNAAM[c.toLowerCase()]?.[en ? 'en' : 'nl'] || c
                         return (
@@ -236,7 +240,7 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
                             type="button"
                             disabled={leeg}
                             onClick={() => {
-                              const maatOk = k.maat && varianten.some((v) => v.color === c && v.size.toUpperCase() === k.maat && v.stock_quantity > 0)
+                              const maatOk = k.maat && varianten.some((v) => v.color === c && v.size.toUpperCase() === k.maat && availableVariant(v))
                               setKeuze((prev) => ({ ...prev, [p.id]: { kleur: c, maat: maatOk ? k.maat : null } }))
                             }}
                             aria-pressed={actief}
@@ -262,7 +266,7 @@ export default function LookCompleet({ producten, mand, locale, bezigMet, onToev
                     <div className="flex gap-2">
                       {maten.map((maat) => {
                         const v = varianten.find((x) => x.color === k.kleur && x.size === maat)
-                        const leeg = !v || v.stock_quantity <= 0
+                        const leeg = !v || !availableVariant(v)
                         const actief = k.maat === maat.toUpperCase()
                         return (
                           <button

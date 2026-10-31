@@ -40,6 +40,7 @@ export default function CatalogProductCard({
   allowedColors,
   filters = emptyCatalogFilters,
   imageSizes,
+  largeMobile = false,
 }: {
   tile: ShopTile<CatalogProduct>
   priority?: boolean
@@ -47,6 +48,7 @@ export default function CatalogProductCard({
   allowedColors?: string[]
   filters?: CatalogFilters
   imageSizes?: string
+  largeMobile?: boolean
   index?: number
   onProductClick?: (tile: ShopTile<CatalogProduct>) => void
 }) {
@@ -193,12 +195,12 @@ export default function CatalogProductCard({
         </button>
         {!p.is_gift_card && <button type="button" aria-label={t('quickAdd', {name})} aria-haspopup="dialog" onClick={() => setQuickOpen(true)} className="absolute bottom-2 right-2 z-20 flex h-11 w-11 items-center justify-center border border-black bg-black text-white transition-colors hover:bg-brand-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"><Plus size={21} strokeWidth={1.7} aria-hidden="true"/></button>}
       </div>
-      <div className="flex flex-1 flex-col px-2 py-2.5 md:px-3 md:py-3">
+      <div className={`flex flex-1 flex-col md:px-3 md:py-3 ${largeMobile ? 'px-3 py-3' : 'px-2 py-2.5'}`}>
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 text-[11px] font-bold uppercase leading-snug tracking-wide group-hover:text-brand-primary md:text-sm">
+          <h3 className={`line-clamp-2 font-bold uppercase leading-snug tracking-wide group-hover:text-brand-primary md:text-sm ${largeMobile ? 'text-sm' : 'text-[11px]'}`}>
             <Link href={href} onClick={() => onProductClick?.({ ...tile, color: selectedColor })} className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-brand-primary">{title}</Link>
           </h3>
-          <div className="shrink-0 text-right text-xs font-bold leading-snug md:text-sm">
+          <div className={`shrink-0 text-right font-bold leading-snug md:text-sm ${largeMobile ? 'text-sm' : 'text-xs'}`}>
             {(p.is_gift_card || priceRange.min !== priceRange.max) && <span className="block text-[10px] font-normal">{t('from')}</span>}
             <span className={sale ? 'text-brand-primary-hover' : 'text-black'}>{formatPrice(price, locale)}</span>
             {sale && <del className="block text-[10px] font-normal text-gray-500">{formatPrice(originalPrice, locale)}</del>}

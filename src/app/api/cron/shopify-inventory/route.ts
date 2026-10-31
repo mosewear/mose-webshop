@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { workerAuthorized } from '@/lib/shopify/http'
@@ -24,6 +25,7 @@ export async function GET(request: Request) {
       batches.push(result)
       if (result.processed === 0 && result.leaseLost === 0) break
     }
+    if (batches.some(batch => batch.processed > 0)) revalidateTag('public-catalog', { expire: 0 })
     const ok = batches.length > 0 && batches.every(b => b.failed === 0 && b.unknown === 0 && b.leaseLost === 0)
     return NextResponse.json({ ok, skipped: false, batches, ...(ok ? {} : { error: 'INVENTORY_NOT_READY' }) }, { status: ok ? 200 : 503, headers })
   } catch {

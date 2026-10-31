@@ -1,6 +1,8 @@
 'use client'
 
-import { Suspense, use, useState, useEffect, useRef, useCallback, ReactElement } from 'react'
+import { useLiveAvailability } from '@/hooks/useLiveAvailability'
+
+import { Suspense, use, useState, useMemo, useEffect, useRef, useCallback, ReactElement } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -366,8 +368,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   const getLocalizedCategoryName = (product: Product) => 
     locale === 'en' && product.categories?.name_en ? product.categories?.name_en : product.categories?.name
   
-  const [product, setProduct] = useState<Product | null>(initialProduct ?? null)
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [productSource, setProduct] = useState<Product | null>(initialProduct ?? null)
+  const productInput = useMemo(() => productSource ? [productSource] : [], [productSource])
+  const product = useLiveAvailability(productInput)[0] ?? null
+  const [relatedSource, setRelatedProducts] = useState<Product[]>([])
+  const relatedProducts = useLiveAvailability(relatedSource)
   const [loading, setLoading] = useState(!initialProduct)
   const [loadError, setLoadError] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -520,9 +525,9 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
    * canonical (case-preserved) string from the DB row.
    */
   useEffect(() => {
-    if (!product || !requestedColorParam) return
+    if (!productSource || !requestedColorParam) return
     const target = requestedColorParam.toLowerCase()
-    const matchVariant = product.product_variants.find(
+    const matchVariant = productSource.product_variants.find(
       (v) => v.color?.toLowerCase() === target,
     )
     if (!matchVariant) return
@@ -531,7 +536,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
     // Snap the size to one with stock in the requested color so the
     // ATC button keeps working without an extra click — matches the
     // initial-load behaviour inside fetchProduct.
-    const sameColor = product.product_variants.filter(
+    const sameColor = productSource.product_variants.filter(
       (v) => v.color === matchVariant.color,
     )
     const sized =
@@ -541,24 +546,24 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       ) || sameColor[0]
     if (sized) setSelectedSize(sized.size)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestedColorParam, product])
+  }, [requestedColorParam, productSource])
 
   useEffect(() => {
-    if (product) {
-      setIsWishlisted(isInWishlist(product.id))
+    if (productSource) {
+      setIsWishlisted(isInWishlist(productSource.id))
       
       // Add to recently viewed
-      addToRecentlyViewed(product.id, product.slug)
+      addToRecentlyViewed(productSource.id, productSource.slug)
       
       // Track product view in custom analytics
       trackProductView({
-        id: product.id,
-        name: product.name,
-        category: product.categories?.name || 'uncategorized',
-        price: product.sale_price || product.base_price,
+        id: productSource.id,
+        name: productSource.name,
+        category: productSource.categories?.name || 'uncategorized',
+        price: productSource.sale_price || productSource.base_price,
       })
     }
-  }, [product, isInWishlist])
+  }, [productSource, isInWishlist])
 
   // Size guide modal: body scroll lock & ESC key
   useEffect(() => {
@@ -1731,7 +1736,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Truck className="w-3.5 h-3.5" />
-                        {supplierFulfilled ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                        {(supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
@@ -2179,7 +2184,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">
-                            {supplierFulfilled ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                            {(supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                               ? tShipping('alwaysFreeShipping')
                               : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                             }
@@ -2300,7 +2305,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     {activeTab === 'shipping' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {
-                          supplierFulfilled ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                             ? tShipping('alwaysFreeShipping')
                             : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }</p>

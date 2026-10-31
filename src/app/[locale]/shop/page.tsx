@@ -19,7 +19,7 @@ export async function generateMetadata({
   const threshold = formatPromiseAmount(free_shipping_threshold, locale)
 
   return {
-    title: `${t('shop.title')} - MOSE`,
+    title: t('shop.title'),
     description: t('shop.description', { threshold }),
     keywords: t('shop.keywords').split(', '),
     openGraph: {

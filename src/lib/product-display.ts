@@ -1,3 +1,4 @@
+import { availableVariant } from './variant-availability'
 import { vertaalKleur } from './kleurnaam'
 
 /**
@@ -231,6 +232,7 @@ export function getColorStock(
   let expected: string | null = null
 
   for (const v of filtered) {
+    if (v.is_available === false || v.fulfillment_mode === 'made_to_order') continue
     stock += v.stock_quantity ?? 0
     if (v.presale_enabled) {
       const ps = v.presale_stock_quantity ?? 0
@@ -249,7 +251,7 @@ export function getColorStock(
     presale_stock_quantity: presaleStock,
     has_presale: hasPresale,
     presale_expected_date: expected,
-    in_stock: stock > 0 || (hasPresale && presaleStock > 0),
+    in_stock: stock > 0 || (hasPresale && presaleStock > 0) || filtered.some(v => v.fulfillment_mode === 'made_to_order' && availableVariant(v)),
   }
 }
 

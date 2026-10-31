@@ -146,7 +146,7 @@
     "cartAria": "Cart, {count, plural, one {# item} other {# items}}",
     "cartEmptyAria": "Cart, empty",
     "login": "Log in",
-    "fit": "Compare fits and find your size.",
+    "fit": "Everything about delivery and returns.",
     "promise": {
       "fast": "Delivery options at checkout",
       "toFree": "€{amount} to go for free shipping",
@@ -169,7 +169,9 @@
       "hoodies": "Hoodies",
       "tshirts": "T-Shirts",
       "caps": "Caps",
-      "all": "All Products"
+      "all": "All Products",
+      "longsleeves": "Long sleeves",
+      "trousers": "Trousers"
     },
     "info": {
       "title": "Info",
@@ -852,7 +854,10 @@
     "goToAccount": "Go to your",
     "account": "account",
     "orUseTrack": "or use the track & trace link in your shipping confirmation.",
-    "freeFromAltijd": "Always free"
+    "freeFromAltijd": "Always free",
+    "checkoutDelivery": "Tracked delivery",
+    "checkoutCosts": "At checkout",
+    "checkoutDeliveryBody": "You will see the available delivery options and full shipping costs at checkout, before you pay. Options depend on your items and delivery address."
   },
   "returns": {
     "title": "Return",
@@ -986,7 +991,12 @@
         "quantityLimit": "The available quantity of this option is already in your bag.",
         "retry": "Try again"
       },
-      "quickAdd": "Choose size and colour for {name}"
+      "quickAdd": "Choose size and colour for {name}",
+      "view": {
+        "label": "Product view",
+        "large": "Large product photos",
+        "compact": "Two products per row"
+      }
     }
   },
   "errors": {
@@ -1451,10 +1461,10 @@
   },
   "trackOrder": {
     "title": "Track Your Order",
-    "description": "Enter your order number and email to view the status",
+    "description": "Enter your order number and email address to track your order.",
     "orderNumber": "Order Number",
-    "orderNumberPlaceholder": "e.g: ABC12345",
-    "orderNumberHint": "Find this in your confirmation email (first 8 characters)",
+    "orderNumberPlaceholder": "e.g. #1001",
+    "orderNumberHint": "Use the order number from your confirmation email.",
     "emailAddress": "Email Address",
     "emailPlaceholder": "your@email.com",
     "searchButton": "Track Order",
@@ -1478,7 +1488,11 @@
       "delivered": "Delivered",
       "deliveredDesc": "Your package has been delivered! Enjoy your new MOSE items.",
       "cancelled": "Cancelled",
-      "cancelledDesc": "This order has been cancelled. You will receive a refund."
+      "cancelledDesc": "This order has been cancelled. You will receive a refund.",
+      "partiallyShipped": "Partially shipped",
+      "partiallyShippedDesc": "Part of your order is on its way. The remaining items will follow separately.",
+      "refunded": "Refunded",
+      "refundedDesc": "This order has been refunded."
     },
     "progress": {
       "ordered": "Ordered",
@@ -1660,7 +1674,8 @@
         "answer": "Available payment methods appear at checkout and depend on factors such as your country and currency. Choose the option you prefer; payments are processed securely."
       }
     ],
-    "answerVerzendingAltijd": "Available delivery options appear at checkout. Processing and delivery times can vary by item, and an order may arrive in separate parcels."
+    "answerVerzendingAltijd": "Available delivery options appear at checkout. Processing and delivery times can vary by item, and an order may arrive in separate parcels.",
+    "checkoutDelivery": "You will see the available delivery options and full shipping costs at checkout, before you pay. Options depend on your items and delivery address."
   },
   "contactPage": {
     "title": "CONTACT",
@@ -1701,9 +1716,9 @@
         "country": "The Netherlands"
       },
       "faq": {
-        "title": "Frequently asked questions?",
-        "description": "Check our FAQ first. Your answer might already be there!",
-        "button": "To Terms & Conditions"
+        "title": "Delivery or returns?",
+        "description": "Find details about shipping, delivery and returning an item.",
+        "button": "Shipping and returns"
       }
     }
   },
@@ -2032,12 +2047,12 @@
   "earlyAccess": {
     "meta": {
       "title": "Early Access | MOSE",
-      "description": "Sign up for early access to the MOSE launch and exclusive drops."
+      "description": "Get updates on new MOSE clothing, colours and collections."
     },
     "hero": {
-      "preTitle": "Something special is coming...",
+      "preTitle": "NEWS FROM MOSE",
       "title": "BE THE FIRST TO KNOW",
-      "subtitle": "Be the first to see new releases. Exclusive access to our launch + first dibs on limited edition drops.",
+      "subtitle": "New clothing, new colours and combinations that work. Sign up for the MOSE newsletter.",
       "countdown": {
         "title": "Launch in:",
         "days": "days",
@@ -2048,33 +2063,33 @@
     },
     "form": {
       "placeholder": "your@email.com",
-      "button": "Claim your spot",
+      "button": "Sign me up",
       "submitting": "Submitting...",
-      "success": "Welcome insider! Check your inbox.",
+      "success": "You’re on the list. Keep an eye on your inbox.",
       "error": "Something went wrong. Please try again."
     },
     "benefits": {
       "earlyAccess": {
-        "title": "First dibs on drops",
-        "desc": "Be the first to see new releases"
+        "title": "New collections",
+        "desc": "Hear when something new arrives"
       },
       "gift": {
         "title": "A style of your own",
         "desc": "Clothes with character"
       },
       "shipping": {
-        "title": "Free Shipping",
-        "desc": "On your first order"
+        "title": "Wear it your way",
+        "desc": "Ideas for your next outfit"
       },
       "updates": {
-        "title": "Insider Updates",
-        "desc": "Behind-the-scenes content"
+        "title": "News from MOSE",
+        "desc": "Straight to your inbox"
       }
     },
     "social": {
       "count": "Join {count}+ insiders already on the list"
     },
-    "trust": "No spam. Just drops. Presale is for everyone. These perks aren't."
+    "trust": "You will receive the MOSE newsletter by email. Unsubscribe at any time using the link in each newsletter."
   },
   "insiderWelcome": {
     "title": "WELCOME TO THE INSIDERS",

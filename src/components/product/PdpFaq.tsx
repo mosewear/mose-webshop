@@ -56,6 +56,7 @@ export default function PdpFaq({
   // op. Het hele antwoord wordt dan vervangen in plaats van de waarden ingevuld.
   const altijdGratis = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
   const fill = (text: string) => {
+    if (process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' && text.includes('{freeShipping}')) return locale === 'en' ? 'Delivery options and shipping costs are shown at checkout, before you pay.' : 'Bezorgopties en verzendkosten staan bij het afrekenen, voordat je betaalt.'
     if (altijdGratis && text.includes('{freeShipping}')) {
       return t('answerVerzendingAltijd').replace('{returnDays}', String(returnDays))
     }

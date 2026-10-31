@@ -741,7 +741,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   )
 
   const renderPrimaryCta = () => (
-    <div className="flex gap-2 md:gap-3">
+    <div className="flex flex-wrap gap-2 md:gap-3">
       <div className="flex border-2 border-black">
         <button
           type="button"
@@ -764,7 +764,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
           onClick={() => setQuantity((q) => Math.min(quantityLimit, q + 1))}
           disabled={quantity >= quantityLimit}
           className={`w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-bold text-xl transition-colors ${
-            quantity >= 50
+            quantity >= quantityLimit
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-black text-white hover:bg-gray-800'
           }`}
@@ -777,7 +777,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         type="button"
         onClick={handleAdd}
         disabled={!canAdd || justAdded}
-        className={`flex-1 min-w-0 py-3 md:py-4 text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+        className={`flex-1 min-w-[180px] px-3 py-3 md:py-4 text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
           justAdded
             ? 'bg-black text-white cursor-default'
             : canAdd
@@ -813,7 +813,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
       <div className="min-h-screen px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb — identical to regular PDP */}
-          <div className="mb-6 md:mb-8 text-sm">
+          <div className="mb-6 md:mb-8 text-sm break-words">
             <LocaleLink
               href="/"
               className="text-gray-600 hover:text-brand-primary transition-colors"
@@ -842,7 +842,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
             <span className="text-black font-semibold">{displayName}</span>
           </div>
 
-          <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-6 md:gap-12">
             {/* LEFT: visual */}
             <div className="space-y-4">
               <div className="relative aspect-[3/4] md:aspect-[3/3] bg-gray-100 border-2 border-black overflow-hidden">
@@ -930,7 +930,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
             </div>
 
             {/* RIGHT: info column (sticky on desktop) */}
-            <div className="space-y-4 md:sticky md:top-24 md:self-start">
+            <div className="min-w-0 space-y-4 md:sticky md:top-24 md:self-start">
               <div>
                 <div className="mb-1 md:mb-2">
                   <TrustpilotWidget variant="product" />

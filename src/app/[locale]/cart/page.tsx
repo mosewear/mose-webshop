@@ -35,8 +35,9 @@ export default function CartPage() {
   const subtotal = getTotal()
   const giftFaceValue = items.filter(item => item.isGiftCard).reduce((sum, item) => sum + item.price * item.quantity, 0)
   const digitalOnly = items.length > 0 && items.every(item => item.isGiftCard)
+  const nativeShipping = process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' && !digitalOnly
   const subtotalAfterStaffel = subtotal - staffelSavings
-  const shipping = digitalOnly || subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
+  const shipping = nativeShipping || digitalOnly || subtotalAfterStaffel >= freeShippingThreshold ? 0 : shippingCost
   // Bij altijd gratis verzending heeft een voortgangsbalk geen betekenis meer:
   // hij zou permanent op honderd procent staan met "nog €0 te gaan".
   const altijdGratisVerzending = digitalOnly || isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
@@ -133,7 +134,7 @@ export default function CartPage() {
           <ul className="mx-auto mt-12 max-w-xs space-y-2.5 border-t border-gray-200 pt-8 text-left text-sm text-gray-600">
             <li className="flex items-center gap-2.5">
               <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
-              <span>{altijdGratisVerzending
+              <span>{nativeShipping ? t('shippingAtCheckout') : altijdGratisVerzending
                   ? t('trust.freeShippingAltijd')
                   : t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
             </li>
@@ -158,7 +159,7 @@ export default function CartPage() {
    */
   const maxAantal = cartItemQuantityLimit
 
-  const tekortVoorGratis = altijdGratisVerzending
+  const tekortVoorGratis = nativeShipping || altijdGratisVerzending
     ? 0
     : Math.max(0, freeShippingThreshold - subtotalAfterStaffel)
   const voortgang = freeShippingThreshold > 0
@@ -175,13 +176,13 @@ export default function CartPage() {
    */
   const prijsopbouw = (
     <div className="space-y-3">
-      <div className="flex justify-between text-base">
+      <div className="flex justify-between gap-3 text-sm sm:text-base">
         <span className="uppercase tracking-wider text-gray-600">{t('subtotal')}</span>
         <span className="font-semibold tabular-nums">{formatBedrag(subtotal, locale)}</span>
       </div>
 
       {staffelSavings > 0 && (
-        <div className="flex justify-between text-base">
+        <div className="flex justify-between gap-3 text-sm sm:text-base">
           <span className="uppercase tracking-wider text-gray-600">{t('staffel.label')}</span>
           <span className="font-semibold tabular-nums text-brand-primary">
             −{formatBedrag(staffelSavings, locale)}
@@ -203,10 +204,10 @@ export default function CartPage() {
         </div>
       )}
 
-      <div className="flex justify-between text-base">
+      <div className="flex justify-between gap-3 text-sm sm:text-base">
         <span className="uppercase tracking-wider text-gray-600">{t('shipping')}</span>
-        <span className="font-semibold tabular-nums">
-          {shipping === 0 ? (
+        <span className="max-w-[60%] text-right font-semibold tabular-nums">
+          {nativeShipping ? t('shippingAtCheckoutShort') : shipping === 0 ? (
             <span className="text-brand-primary">{t('shippingFree')}</span>
           ) : (
             formatBedrag(shipping, locale)
@@ -250,7 +251,7 @@ export default function CartPage() {
     <ul className="space-y-2.5 text-sm text-gray-600">
       <li className="flex items-center gap-2.5">
         <Truck size={17} className="flex-shrink-0 text-black" aria-hidden="true" />
-        <span>{altijdGratisVerzending
+        <span>{nativeShipping ? t('shippingAtCheckout') : altijdGratisVerzending
           ? t('trust.freeShippingAltijd')
           : t('trust.freeShipping', { amount: formatAmount(freeShippingThreshold, locale) })}</span>
       </li>
@@ -292,7 +293,7 @@ export default function CartPage() {
             meelopend. Hiervoor stond de samenvatting ónder de volledige lijst,
             waardoor je op een breed scherm langs alles moest scrollen om bij de
             afrekenknop te komen, met een half lege grijze band ernaast. */}
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_368px] lg:gap-14 lg:items-start">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_368px] lg:gap-14 lg:items-start">
 
           {/* Artikelen */}
           <section aria-label={t('title')}>
@@ -387,7 +388,7 @@ export default function CartPage() {
                           </button>
                         </div>
 
-                        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                        <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-4">
                           <div>
                             <div className="flex w-max items-center border border-black">
                               <button
@@ -455,20 +456,20 @@ export default function CartPage() {
             aria-label={t('total')}
             className="lg:sticky lg:top-[calc(var(--header-total-height,90px)+1.5rem)]"
           >
-            <div className="border-2 border-black bg-gray-50 p-6">
+            <div className="border-2 border-black bg-gray-50 p-4 sm:p-6">
               {prijsopbouw}
 
               <div className="mt-5">
-                {!altijdGratisVerzending && verzendbalk}
+                {!nativeShipping && !altijdGratisVerzending && verzendbalk}
               </div>
 
               <div className="mt-5 border-t-2 border-black pt-5">
                 <div className="flex items-baseline justify-between">
-                  <span className="font-display text-xl uppercase">{t('total')}</span>
+                  <span className="font-display text-xl uppercase">{t(nativeShipping ? 'subtotal' : 'total')}</span>
                   <span className="font-display text-3xl tabular-nums">{formatBedrag(total, locale)}</span>
                 </div>
                 <p className="mt-1 text-right text-xs uppercase tracking-wider text-gray-500">
-                  {t('totalInclusive')} · {locale === 'en' ? 'VAT' : 'BTW'}{' '}
+                  {t(nativeShipping ? 'subtotalInclusive' : 'totalInclusive')} · {locale === 'en' ? 'VAT' : 'BTW'}{' '}
                   {formatBedrag(totalBtw, locale)}
                 </p>
               </div>
@@ -502,7 +503,7 @@ export default function CartPage() {
         <div className="flex-1 py-3 pl-4 pr-2">
           <div className="font-display text-2xl leading-tight tabular-nums">{formatBedrag(total, locale)}</div>
           <div className="text-[11px] uppercase tracking-wider text-gray-300">
-            {tekortVoorGratis > 0
+            {nativeShipping ? t('subtotalInclusive') : tekortVoorGratis > 0
               ? t('freeShippingProgressMobile', { amount: formatBedragKaal(tekortVoorGratis, locale) })
               : t('freeShippingReached')}
           </div>

@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'earlyAccess.meta' })
   
   return {
-    title: t('title'),
+    title: { absolute: t('title') },
     description: t('description'),
     openGraph: {
       title: t('title'),

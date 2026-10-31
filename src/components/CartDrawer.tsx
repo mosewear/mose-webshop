@@ -1,5 +1,8 @@
 'use client'
 
+import toast from 'react-hot-toast'
+import { availableVariant, isMadeToOrderAvailable, variantQuantityLimit } from '@/lib/variant-availability'
+import { AVAILABILITY_SELECT } from '@/hooks/useLiveAvailability'
 import { useEffect, useMemo, useRef } from 'react'
 import { shopifyPercentageDiscountCents } from '@/lib/shopify/discount-rounding'
 import { formatPrice, formatBedrag, formatBedragKaal } from '@/lib/format-price'
@@ -267,7 +270,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           base_price,
           sale_price,
           product_images!inner(url, is_primary, color, position, media_type),
-          product_variants!inner(id, sku, size, color, color_hex, stock_quantity, is_available)
+          product_variants!inner(id, sku, size, color, color_hex, stock_quantity, is_available, price_adjustment, presale_enabled, presale_stock_quantity, fulfillment_mode, supplier_orderable, supplier_checked_at)
         `)
         // Alleen wat ook in de shop staat. Zonder deze twee regels verscheen
         // het horloge hier terwijl het op concept stond, en kon je het met één
@@ -276,7 +279,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         .eq('status', 'active')
         // Alle beelden, niet alleen het primaire: de suggestie toont de foto
         // van de kleur die je kiest.
-        .gt('product_variants.stock_quantity', 0)
+        .or('is_gift_card.is.null,is_gift_card.eq.false')
         .eq('product_variants.is_available', true)
         // Was `.limit(3)` zonder ordening, dus de volgorde was willekeurig. Bij
         // een mand van €50 verscheen het horloge als eerste
@@ -301,9 +304,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         const mandwaarde = getTotal()
         const plafond = mandwaarde > 0 ? mandwaarde * 2 : Infinity
         const passend = (data as any[]).filter(
-          (p) => Number(p.sale_price ?? p.base_price ?? 0) <= plafond
+          (p) => Number(p.sale_price ?? p.base_price ?? 0) <= plafond && p.product_variants.some((variant: LookVariant) => availableVariant(variant))
         )
-        setUpsellProducts((passend.length > 0 ? passend : (data as any[])).slice(0, 3))
+        setUpsellProducts(passend.slice(0, 3))
         
       }
     }
@@ -508,57 +511,75 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   // kwam er dus een willekeurige kleur in de mand.
   const handleQuickAdd = async (product: LookProduct, variant: LookVariant, beeld: string) => {
     setAddingProduct(product.id)
-    const prijs = product.sale_price && product.sale_price < product.base_price ? product.sale_price : product.base_price
+    try {
+      const { data: fresh, error } = await createClient().from('products')
+        .select(`base_price,sale_price,product_variants(${AVAILABILITY_SELECT},sku,size,color,color_hex,price_adjustment)`)
+        .eq('id', product.id).eq('is_active', true).eq('status', 'active').abortSignal(AbortSignal.timeout(8000)).single()
+      const current = fresh?.product_variants?.find(v => v.id === variant.id)
+      const priceBefore = (product.sale_price ?? product.base_price) + (variant.price_adjustment ?? 0)
+      const prijs = fresh ? (fresh.sale_price ?? fresh.base_price) + (current?.price_adjustment ?? 0) : 0
+      if (error || !current || !availableVariant(current) || current.size !== variant.size || current.color !== variant.color || current.sku !== variant.sku || prijs !== priceBefore) {
+        toast.error(locale === 'en' ? 'This item has changed. Open the product to check availability and price.' : 'Dit artikel is gewijzigd. Open het product voor de actuele beschikbaarheid en prijs.')
+        setAddingProduct(null)
+        return
+      }
+      const existing = items.find(item => item.variantId === current.id)?.quantity ?? 0
+      if (existing >= variantQuantityLimit(current)) { setAddingProduct(null); return }
+      const madeToOrder = isMadeToOrderAvailable(current)
+      addItem({
+        productId: product.id,
+        variantId: variant.id,
+        slug: product.slug,
+        name: getProductName(product),
+        size: variant.size,
+        color: variant.color || 'Zwart',
+        colorHex: variant.color_hex || '#000000',
+        price: prijs,
+        quantity: 1,
+        image: beeld,
+        sku: variant.sku,
+        stock: current.stock_quantity ?? 0,
+        isMadeToOrder: madeToOrder,
+        isPresale: !madeToOrder && (current.stock_quantity ?? 0) <= 0 && current.presale_enabled === true,
+        presaleStock: current.presale_stock_quantity ?? 0,
+      })
 
-    addItem({
-      productId: product.id,
-      variantId: variant.id,
-      slug: product.slug,
-      name: getProductName(product),
-      size: variant.size,
-      color: variant.color || 'Zwart',
-      colorHex: variant.color_hex || '#000000',
-      price: prijs,
-      quantity: 1,
-      image: beeld,
-      sku: variant.sku,
-      stock: variant.stock_quantity,
-    })
+      // Dit toevoegen werd nergens gemeld: niet aan Meta en niet aan onze eigen
+      // meting. Wie via "maak je look compleet" een tweede stuk in de mand legde,
+      // bestond in de cijfers niet. Dat kost twee dingen: je ziet niet of de
+      // kruisverkoop werkt, en Meta krijgt minder signaal om op te sturen.
+      const contentId = catalogContentId(product.id, variant.color)
+      trackPixelEvent('AddToCart', {
+        content_ids: [contentId],
+        contents: [{ id: contentId, quantity: 1, item_price: Number(prijs) }],
+        content_name: `${getProductName(product)} - ${variant.size} - ${variant.color}`,
+        content_type: 'product',
+        value: Number(prijs),
+        currency: 'EUR',
+        num_items: 1,
+      })
 
-    // Dit toevoegen werd nergens gemeld: niet aan Meta en niet aan onze eigen
-    // meting. Wie via "maak je look compleet" een tweede stuk in de mand legde,
-    // bestond in de cijfers niet. Dat kost twee dingen: je ziet niet of de
-    // kruisverkoop werkt, en Meta krijgt minder signaal om op te sturen.
-    const contentId = catalogContentId(product.id, variant.color)
-    trackPixelEvent('AddToCart', {
-      content_ids: [contentId],
-      contents: [{ id: contentId, quantity: 1, item_price: Number(prijs) }],
-      content_name: `${getProductName(product)} - ${variant.size} - ${variant.color}`,
-      content_type: 'product',
-      value: Number(prijs),
-      currency: 'EUR',
-      num_items: 1,
-    })
+      trackAddToCart({
+        id: product.id,
+        name: product.name,
+        category: 'uncategorized',
+        price: Number(prijs),
+        quantity: 1,
+        color: variant.color,
+        size: variant.size,
+        variantId: variant.id,
+        sku: variant.sku,
+        source: 'cart_upsell',
+        sizeChosenByUser: true,
+        colorChosenByUser: true,
+      })
 
-    trackAddToCart({
-      id: product.id,
-      name: product.name,
-      category: 'uncategorized',
-      price: Number(prijs),
-      quantity: 1,
-      color: variant.color,
-      size: variant.size,
-      variantId: variant.id,
-      sku: variant.sku,
-      source: 'cart_upsell',
-      sizeChosenByUser: true,
-      colorChosenByUser: true,
-    })
-
-    // Even "Toegevoegd" laten zien, dan verdwijnt de suggestie: hij ligt nu in de mand.
-    await new Promise((r) => setTimeout(r, 900))
-    setUpsellProducts(prev => prev.filter(p => p.id !== product.id))
-    setAddingProduct(null)
+      // Even "Toegevoegd" laten zien, dan verdwijnt de suggestie: hij ligt nu in de mand.
+      await new Promise((r) => setTimeout(r, 900))
+      setUpsellProducts(prev => prev.filter(p => p.id !== product.id))
+    } catch {
+      toast.error(locale === 'en' ? 'Could not check this item. Please try again.' : 'Dit artikel kon niet worden gecontroleerd. Probeer het opnieuw.')
+    } finally { setAddingProduct(null) }
   }
 
   if (!isOpen) return null

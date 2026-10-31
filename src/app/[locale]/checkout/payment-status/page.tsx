@@ -36,6 +36,7 @@ function PaymentStatusContent() {
 
         if (data.status === 'succeeded' || data.mollie_status === 'paid') {
           clearCart()
+          for (const key of ['mose_promo_code', 'mose_promo_discount', 'mose_promo_type', 'mose_promo_value']) localStorage.removeItem(key)
           const confQs = new URLSearchParams()
           if (data.orderId || orderId) {
             confQs.set('order_id', data.orderId || orderId!)
