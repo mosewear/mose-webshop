@@ -158,7 +158,7 @@ export default function HomePageClient({
               <LocaleLink
                 href={homepageSettings?.hero_cta1_link || '/shop'}
                 aria-label={t('hero.cta1.aria')}
-                className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-brand-action bg-brand-action px-2 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-brand-action-hover hover:bg-brand-action-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:px-5 sm:text-xs lg:text-sm"
+                className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-brand-primary bg-brand-primary px-2 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-brand-primary-hover hover:bg-brand-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:px-5 sm:text-xs lg:text-sm"
               >
                 {homepageSettings?.hero_cta1_text || t('hero.cta1.text')}
                 <ArrowRight size={18} aria-hidden="true" />
