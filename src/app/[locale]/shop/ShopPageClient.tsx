@@ -79,7 +79,7 @@ export default function ShopPageClient({
     serverCatalog = initialProducts !== undefined && initialCategories !== undefined,
     loading = !serverCatalog && fallbackLoading,
     error = serverCatalog ? '' : fallbackError
-  const [compactView, setCompactView] = useState(false)
+  const [compactView, setCompactView] = useState(true)
   const [showCategoryLabels, setShowCategoryLabels] = useState(true)
   useEffect(() => {
     let stopped = false
@@ -564,14 +564,14 @@ export default function ShopPageClient({
                 </button>
               </div>
             ) : (
-              <div className={`grid gap-x-2 gap-y-5 sm:grid-cols-2 md:gap-x-4 md:gap-y-7 lg:grid-cols-3 ${compactView ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`-mx-3 grid gap-x-1 gap-y-5 sm:mx-0 sm:grid-cols-2 sm:gap-x-2 md:gap-x-4 md:gap-y-7 lg:grid-cols-3 ${compactView ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {tiles.map((tile, index) => (
                   <CatalogProductCard
                     key={tile.tileKey}
                     tile={tile}
                     filters={filters}
                     largeMobile={!compactView}
-                    imageSizes={`${compactView ? '(max-width: 639px) calc((100vw - 32px) / 2)' : '(max-width: 639px) calc(100vw - 24px)'}, (max-width: 1023px) calc((100vw - 48px) / 2), (max-width: 1439px) calc((100vw - 304px) / 3), 378px`}
+                    imageSizes={`${compactView ? '(max-width: 639px) calc((100vw - 4px) / 2)' : '(max-width: 639px) 100vw'}, (max-width: 1023px) calc((100vw - 48px) / 2), (max-width: 1439px) calc((100vw - 304px) / 3), 378px`}
                     index={index}
                     allowedColors={dimensions.colors.filter(c => matchesCatalogProduct(tile.product, filters, c.label)).map(c => c.key)}
                     onProductClick={(selectedTile) => trackSelect(selectedTile, index)}
