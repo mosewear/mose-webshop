@@ -184,16 +184,25 @@ export default function CatalogProductCard({
               setSaving(false)
             }
           }}
-          className={`absolute right-1 top-1 z-20 flex h-11 w-11 items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary disabled:opacity-50 ${saved ? 'bg-white/95 text-brand-primary' : 'bg-white/90 text-black hover:text-brand-primary'}`}
+          className={`absolute right-1 top-1 z-20 flex h-11 w-11 items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary disabled:opacity-50 ${saved ? 'text-brand-primary' : 'text-black hover:text-brand-primary'}`}
         >
-          <Heart
-            size={19}
-            strokeWidth={1.8}
-            fill={saved ? 'currentColor' : 'none'}
-            aria-hidden="true"
-          />
+          <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center bg-white/95 md:h-9 md:w-9">
+            <Heart size={18} strokeWidth={1.8} fill={saved ? 'currentColor' : 'none'} />
+          </span>
         </button>
-        {!p.is_gift_card && <button type="button" aria-label={t('quickAdd', {name})} aria-haspopup="dialog" onClick={() => setQuickOpen(true)} className="absolute bottom-2 right-2 z-20 flex h-11 w-11 items-center justify-center border border-black bg-black text-white transition-colors hover:bg-brand-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"><Plus size={21} strokeWidth={1.7} aria-hidden="true"/></button>}
+        {!p.is_gift_card && (
+          <button
+            type="button"
+            aria-label={t('quickAdd', {name})}
+            aria-haspopup="dialog"
+            onClick={() => setQuickOpen(true)}
+            className="group/quick-add absolute bottom-1 right-1 z-20 flex h-11 w-11 items-center justify-center text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+          >
+            <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center bg-black transition-colors group-hover/quick-add:bg-brand-primary md:h-9 md:w-9">
+              <Plus size={18} strokeWidth={1.7} />
+            </span>
+          </button>
+        )}
       </div>
       <div className={`flex flex-1 flex-col md:px-3 md:py-3 ${largeMobile ? 'px-3 py-3' : 'px-2 py-2.5'}`}>
         <div className="flex items-start justify-between gap-2">
