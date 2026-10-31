@@ -22,7 +22,7 @@ import { ShoppingCart } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { useCartDrawer } from '@/store/cartDrawer'
-import { availableVariant, isMadeToOrderAvailable, type VariantAvailability } from '@/lib/variant-availability'
+import { availableVariant, type VariantAvailability } from '@/lib/variant-availability'
 import { formatPrice } from '@/lib/format-price'
 
 interface AvailableColor {
@@ -173,8 +173,6 @@ export default function StickyVariantPicker({
     return map
   }, [availableColors, variants])
 
-  const selectedMadeToOrder = variants.some(v => v.color === selectedColor && v.size === selectedSize && isMadeToOrderAvailable(v))
-  const madeToOrderLabel = locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'
 
   const ctaState: 'pickColor' | 'pickSize' | 'oos' | 'add' | 'adding' = (() => {
     if (isAdding) return 'adding'
@@ -291,7 +289,6 @@ export default function StickyVariantPicker({
             : 'translate-y-full opacity-0 pointer-events-none'
         }`}
       >
-        {selectedMadeToOrder && <p className="px-4 pt-2 text-center text-xs font-semibold uppercase tracking-wide">{madeToOrderLabel}</p>}
         <StickyContent
           variant="desktop"
           availableColors={availableColors}
@@ -328,7 +325,6 @@ export default function StickyVariantPicker({
             : 'translate-y-full opacity-0 pointer-events-none'
         }`}
       >
-        {selectedMadeToOrder && <p className="px-4 pt-2 text-center text-xs font-semibold uppercase tracking-wide">{madeToOrderLabel}</p>}
         <StickyMobileTwoRow
           availableColors={availableColors}
           availableSizes={availableSizes}

@@ -15,7 +15,7 @@ describe('sticky made-to-order selection', () => {
     const sizes = [...doc.querySelectorAll('button')].filter(button=>button.textContent==='M')
     expect(sizes.length).toBeGreaterThan(0)
     expect(sizes.every(button=>!button.hasAttribute('disabled'))).toBe(true)
-    expect(doc.body.textContent).toContain('Op bestelling gemaakt')
+    expect(doc.body.textContent).not.toContain('Op bestelling gemaakt')
   })
   it('does not enable a disabled or stale supplier size, or disabled presale stock', () => {
     for (const variant of [{is_available:false},{supplier_checked_at:'2026-01-01T00:00:00Z'},{fulfillment_mode:'local_stock',presale_stock_quantity:10,presale_enabled:false}]) {

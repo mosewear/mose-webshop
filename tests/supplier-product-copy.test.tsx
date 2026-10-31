@@ -12,9 +12,9 @@ function render(supplierFulfilled: boolean) {
   </NextIntlClientProvider>)
 }
 describe('supplier fulfilment promises', () => {
-  it('does not reuse local manufacturing, shipping cutoff, fit or warranty claims for Tapstitch', () => {
+  it('keeps supplier and internal production details private', () => {
     const html = render(true)
-    expect(html).toContain('Tapstitch')
+    expect(html).not.toMatch(/Tapstitch|productiepartner|production partner|fulfilled by/i)
     expect(html).toContain('Bezorgopties en verzendkosten staan bij het afrekenen')
     expect(html).toContain('dit specifieke model')
     expect(html).not.toMatch(/overmorgen|DHL|regular fit|fabrieksgarantie|Made in Groningen|MADE IN GRONINGEN/)

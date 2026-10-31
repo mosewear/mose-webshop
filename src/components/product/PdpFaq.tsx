@@ -38,12 +38,12 @@ export default function PdpFaq({
   const items = supplierFulfilled ? (locale === 'en' ? [
     { question: 'How does this model fit?', answer: 'Use the model-specific size chart and product description. Compare the garment measurements with a similar item you already own.' },
     { question: 'When will my order arrive?', answer: 'Delivery options and shipping costs are shown at checkout. Items fulfilled by different partners may arrive separately.' },
-    { question: 'Who fulfils this product?', answer: 'This item is supplied through our production partner Tapstitch.' },
+    { question: 'What makes this model different?', answer: 'See the product description for the fit, fabric and details selected for this MOSE model.' },
     { question: 'What if the size does not fit?', answer: 'See our returns policy or contact MOSE for help with your return.' },
   ] : [
     { question: 'Hoe valt dit model?', answer: 'Gebruik de maattabel en beschrijving van dit specifieke model. Vergelijk de kledingmaten met een vergelijkbaar kledingstuk dat je al hebt.' },
     { question: 'Wanneer ontvang ik mijn bestelling?', answer: 'Bezorgopties en verzendkosten staan bij het afrekenen. Artikelen van verschillende partners kunnen afzonderlijk aankomen.' },
-    { question: 'Wie levert dit product?', answer: 'Dit artikel leveren we via onze productiepartner Tapstitch.' },
+    { question: 'Wat maakt dit model bijzonder?', answer: 'Bekijk de productbeschrijving voor de pasvorm, stof en details van dit MOSE-model.' },
     { question: 'Wat als de maat niet past?', answer: 'Bekijk ons retourbeleid of neem contact op met MOSE voor hulp bij je retour.' },
   ]) : (t.raw('items') as Array<{ question: string; answer: string }>) || []
   if (!items.length) return null
