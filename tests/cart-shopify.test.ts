@@ -31,10 +31,13 @@ describe('one Shopify cart for the whole MOSE collection', () => {
   })
   it('rejects malicious or malformed redirects, allowing only verified Shopify hosts', () => {
     expect(checkoutRedirectUrl('https://mosewear.myshopify.com/checkouts/cart')).toContain('mosewear.myshopify.com')
-    for (const value of ['javascript:alert(1)', 'https://mosewear.myshopify.com.evil.test/cart', 'https://evil.test/cart', 'https://user@mosewear.myshopify.com/cart']) {
+    for (const value of ['javascript:alert(1)', 'https://mosewear.myshopify.com.evil.test/cart', 'https://evil.test/cart', 'https://user@mosewear.myshopify.com/cart', 'https://checkout.mosewear.com.evil.test/cart', 'https://checkout.mosewear.com:8443/cart', 'http://checkout.mosewear.com/cart']) {
       expect(() => checkoutRedirectUrl(value)).toThrow()
     }
     expect(checkoutRedirectUrl('https://checkout.mosewear.com/checkouts/a', 'checkout.mosewear.com')).toContain('checkout.mosewear.com')
+    // Production's verified custom domain must work without an optional public
+    // build variable; the server already returns this host for real carts.
+    expect(checkoutRedirectUrl('https://checkout.mosewear.com/cart/c/test?key=example')).toBe('https://checkout.mosewear.com/cart/c/test?key=example')
   })
   it('keeps historical payment recovery on the old screen without letting a stale order ID select it', () => {
     expect(shouldUseLegacyRecovery('order', null, null)).toBe(true)

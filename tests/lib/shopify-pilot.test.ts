@@ -27,6 +27,7 @@ describe('pilot purchase boundary', () => {
   })
   it('rejects lookalike checkout domains and embedded credentials', () => {
     expect(assertCheckoutUrl('https://mosewear.myshopify.com/cart/c/abc')).toContain('/cart/c/abc')
+    expect(assertCheckoutUrl('https://checkout.mosewear.com/checkouts/abc')).toBe('https://checkout.mosewear.com/checkouts/abc')
     for (const url of ['https://mosewear.myshopify.com.evil.test/cart', 'http://mosewear.myshopify.com/cart', 'https://u:p@mosewear.myshopify.com/cart', 'https://mosewear.myshopify.com:444/cart']) expect(() => assertCheckoutUrl(url)).toThrow()
   })
   it('parses money without binary floating point price comparisons', () => {
