@@ -119,8 +119,9 @@ export default function HomePageClient({
     <>
       <div className="min-h-screen bg-white">
       <section
+        data-home-hero
         aria-labelledby="home-hero-title"
-        className="relative isolate flex min-h-[620px] max-h-[900px] w-full overflow-hidden bg-black lg:min-h-[560px] lg:max-h-[820px]"
+        className="relative isolate flex min-h-[440px] max-h-[760px] w-full overflow-hidden bg-black lg:min-h-[560px] lg:max-h-[820px]"
         style={{ height: 'calc(100svh - var(--announcement-banner-height, 0px) - var(--header-total-height, 0px))' }}
       >
         <picture>
@@ -140,24 +141,24 @@ export default function HomePageClient({
         </picture>
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.78)_20%,rgba(0,0,0,0.20)_43%,transparent_58%)] lg:hidden" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(to_right,rgba(0,0,0,0.76)_0%,rgba(0,0,0,0.48)_32%,transparent_62%)] lg:block" />
-        <div className="relative z-10 mx-auto flex w-full max-w-[1600px] items-end px-5 pb-7 pt-10 sm:px-8 lg:items-center lg:px-10 lg:py-12 xl:px-16">
-          <div className="max-w-lg text-left lg:w-[44%] lg:max-w-[640px]">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white sm:text-xs lg:mb-5">
+        <div className="relative z-10 mx-auto flex w-full max-w-[1600px] items-end px-4 pb-5 pt-8 sm:px-8 lg:items-center lg:px-10 lg:py-12 xl:px-16">
+          <div className="w-full max-w-lg text-left lg:w-[44%] lg:max-w-[640px]">
+            <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.16em] text-white sm:text-xs lg:mb-5">
               {homepageSettings?.hero_badge_text || t('hero.badge')}
             </p>
-            <h1 id="home-hero-title" className="mb-3 font-display text-[38px] leading-[1.02] tracking-tight text-white sm:text-5xl lg:mb-5 lg:text-[clamp(40px,5.2vw,84px)]">
+            <h1 id="home-hero-title" className="mb-3 font-display text-[clamp(30px,8.5vw,44px)] leading-[1.02] tracking-tight text-white sm:text-5xl lg:mb-5 lg:text-[clamp(40px,5.2vw,84px)]">
               {homepageSettings?.hero_title_line1 || t('hero.title1')}
               <br />
               <span className="text-brand-primary">{homepageSettings?.hero_title_line2 || t('hero.title2')}</span>
             </h1>
-            <p className="mb-5 max-w-[38ch] text-sm font-medium leading-relaxed text-white lg:mb-7 lg:max-w-[34ch] lg:text-base xl:text-lg">
+            <p className="mb-4 max-w-[38ch] text-[13px] font-medium leading-relaxed text-white lg:mb-7 lg:max-w-[34ch] lg:text-base xl:text-lg">
               {homepageSettings?.hero_subtitle || t('hero.subtitle')}
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div data-hero-actions className="grid grid-cols-2 items-stretch gap-2 lg:flex lg:flex-wrap lg:gap-3">
               <LocaleLink
                 href={homepageSettings?.hero_cta1_link || '/shop'}
                 aria-label={t('hero.cta1.aria')}
-                className="inline-flex min-h-12 items-center justify-center gap-3 border-2 border-brand-primary bg-brand-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-black transition-colors hover:border-white hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:text-sm"
+                className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-brand-action bg-brand-action px-2 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-brand-action-hover hover:bg-brand-action-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:px-5 sm:text-xs lg:text-sm"
               >
                 {homepageSettings?.hero_cta1_text || t('hero.cta1.text')}
                 <ArrowRight size={18} aria-hidden="true" />
@@ -165,7 +166,7 @@ export default function HomePageClient({
               <LocaleLink
                 href={homepageSettings?.hero_cta2_link || '/lookbook'}
                 aria-label={t('hero.cta2.aria')}
-                className="inline-flex min-h-12 items-center justify-center border-2 border-white px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:text-sm"
+                className="inline-flex min-h-12 items-center justify-center border-2 border-white px-2 py-3 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:px-5 sm:text-xs lg:text-sm"
               >
                 {homepageSettings?.hero_cta2_text || t('hero.cta2.text')}
               </LocaleLink>
