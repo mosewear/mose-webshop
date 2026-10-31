@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactElement } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import Image from 'next/image'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   ChevronDown,
 } from 'lucide-react'
+import { giftCardCartKey } from '@/lib/gift-card-cart-key'
 import { nativeGiftScheduleWithinWindow } from '@/lib/shopify/native-gift-input'
 import { useCart, type GiftCardRecipient } from '@/store/cart'
 import { useCartDrawer } from '@/store/cartDrawer'
@@ -166,6 +167,7 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduleDate, setScheduleDate] = useState('')
   const [justAdded, setJustAdded] = useState(false)
+  const addingGift = useRef(false)
   const [descExpanded, setDescExpanded] = useState(false)
   const [openMobilePanel, setOpenMobilePanel] = useState<
     'description' | 'how' | 'faq' | ''
@@ -481,67 +483,55 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
     return sStickyChoose
   })()
 
-  function handleAdd() {
-    if (!canAdd) return
+  async function handleAdd() {
+    if (!canAdd || justAdded || addingGift.current) return
+    addingGift.current = true
+    try {
+      const recipient: GiftCardRecipient | null = isGift
+        ? {
+            recipientName: recipientName.trim(),
+            recipientEmail: recipientEmail.trim(),
+            senderName: senderName.trim() || undefined,
+            personalMessage: message.trim() || undefined,
+            scheduledSendAt:
+              scheduleEnabled && scheduleDate
+                ? nativeGiftCheckout ? scheduleDate : new Date(scheduleDate).toISOString()
+                : undefined,
+          }
+        : null
 
-    const recipient: GiftCardRecipient | null = isGift
-      ? {
-          recipientName: recipientName.trim(),
-          recipientEmail: recipientEmail.trim(),
-          senderName: senderName.trim() || undefined,
-          personalMessage: message.trim() || undefined,
-          scheduledSendAt:
-            scheduleEnabled && scheduleDate
-              ? nativeGiftCheckout ? scheduleDate : new Date(scheduleDate).toISOString()
-              : undefined,
-        }
-      : null
+      const syntheticVariantId = await giftCardCartKey(product.id, resolvedAmount, recipient)
 
-    // Deterministic synthetic variantId so identical lines merge while
-    // unique recipient/schedule/message/custom amount stay separate.
-    const uniquenessKey = [
-      resolvedAmount.toFixed(2),
-      isGift ? recipient?.recipientEmail || '' : '',
-      isGift ? recipient?.recipientName || '' : '',
-      isGift ? recipient?.senderName || '' : '',
-      isGift ? recipient?.personalMessage || '' : '',
-      isGift && recipient?.scheduledSendAt ? recipient.scheduledSendAt : '',
-    ].join('|')
-    const uniqueHash =
-      typeof globalThis !== 'undefined' && 'btoa' in globalThis
-        ? (globalThis as unknown as { btoa: (s: string) => string })
-            .btoa(unescape(encodeURIComponent(uniquenessKey)))
-            .replace(/=+$/, '')
-        : uniquenessKey
-    const syntheticVariantId = `giftcard:${product.id}:${uniqueHash.slice(0, 48)}`
+      addItem({
+        productId: product.id,
+        variantId: syntheticVariantId,
+        slug: product.slug,
+        name: displayName,
+        size:
+          mode === 'preset'
+            ? activeDenomination?.label || ''
+            : formatPrice(resolvedAmount),
+        color: '',
+        colorHex: '',
+        price: resolvedAmount,
+        quantity,
+        image: imageUrl,
+        sku: activeDenomination?.sku || `GIFTCARD-${Math.round(resolvedAmount)}`,
+        stock: 0,
+        isGiftCard: true,
+        giftCardAmount: resolvedAmount,
+        giftCardRecipient: recipient,
+      })
 
-    addItem({
-      productId: product.id,
-      variantId: syntheticVariantId,
-      slug: product.slug,
-      name: displayName,
-      size:
-        mode === 'preset'
-          ? activeDenomination?.label || ''
-          : formatPrice(resolvedAmount),
-      color: '',
-      colorHex: '',
-      price: resolvedAmount,
-      quantity,
-      image: imageUrl,
-      sku: activeDenomination?.sku || `GIFTCARD-${Math.round(resolvedAmount)}`,
-      stock: 0,
-      isGiftCard: true,
-      giftCardAmount: resolvedAmount,
-      giftCardRecipient: recipient,
-    })
-
-    toast.success(
-      safeT(t, 'addedToCart', locale === 'en' ? 'Gift card added' : 'Cadeaubon toegevoegd')
-    )
-    setJustAdded(true)
-    setTimeout(() => setJustAdded(false), 1500)
-    openDrawer()
+      toast.success(
+        safeT(t, 'addedToCart', locale === 'en' ? 'Gift card added' : 'Cadeaubon toegevoegd')
+      )
+      setJustAdded(true)
+      setTimeout(() => setJustAdded(false), 1500)
+      openDrawer()
+    } catch {
+      toast.error(locale === 'en' ? 'Could not add this gift card. Please try again.' : 'Deze cadeaubon kon niet worden toegevoegd. Probeer het opnieuw.')
+    } finally { addingGift.current = false }
   }
 
   // Reusable renderers
