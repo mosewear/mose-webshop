@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, MessageCircle } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import ChatWindow from './ChatWindow'
 import { trackEvent } from '@/lib/analytics'
 
@@ -25,6 +25,7 @@ const TIP_AAN = false
 
 export default function ChatButton() {
   const t = useTranslations('chat')
+  const locale = useLocale()
   const pathname = usePathname()
   const verminderdeBeweging = useReducedMotion()
 
@@ -39,6 +40,21 @@ export default function ChatButton() {
 
   const opProductpagina = Boolean(pathname?.includes('/product/'))
   const opHomepage = pathname === '/nl' || pathname === '/en' || pathname === '/nl/' || pathname === '/en/' || pathname === '/'
+  const [heroPassed, setHeroPassed] = useState(false)
+
+  // Keep the campaign and its actions unobstructed. Re-hide when returning to
+  // the top; an already opened conversation remains usable while scrolling.
+  useEffect(() => {
+    setHeroPassed(false)
+    if (!opHomepage) return
+    const hero = document.querySelector('[data-home-hero]')
+    if (!hero) return
+    const observer = new IntersectionObserver(([entry]) => {
+      setHeroPassed(!entry.isIntersecting && entry.boundingClientRect.bottom <= 0)
+    }, { threshold: 0 })
+    observer.observe(hero)
+    return () => observer.disconnect()
+  }, [opHomepage, pathname])
 
   // Eén MutationObserver voor alle drawer-detecties: één DOM-traversal
   // per mutatie i.p.v. drie aparte observers. Een gewijzigd attribute
@@ -199,7 +215,7 @@ export default function ChatButton() {
   // Verberg de knop wanneer een schermvullende laag open staat (filterlade,
   // winkelmandlade of mobiel menu). De knop heeft z-[9999] en zou er anders
   // doorheen prikken.
-  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isMobileMenuOpen
+  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isMobileMenuOpen || (opHomepage && !heroPassed && !isOpen)
 
   const handleToggle = () => {
     const wasOpen = isOpen
@@ -241,7 +257,7 @@ export default function ChatButton() {
     <>
       {!shouldHideButton && (
         <div
-          className={`chat-floating fixed right-4 z-[9999] flex flex-col items-end gap-2 md:right-6 ${opHomepage ? 'chat-floating-home' : ''}`}
+          className="chat-floating fixed right-4 z-[9999] flex flex-col items-end gap-2 md:right-6"
           style={{ bottom: onderMarge }}
         >
           {/* De tip, boven de knop. */}
@@ -328,7 +344,7 @@ export default function ChatButton() {
 
       {/* Chat Window */}
       <AnimatePresence>
-        {isOpen && <ChatWindow onClose={handleClose} />}
+        {isOpen && <ChatWindow key={locale} onClose={handleClose} />}
       </AnimatePresence>
 
       {/* De witte ring en de zweefschaduw staan altijd, de halo alleen zolang
@@ -343,16 +359,6 @@ export default function ChatButton() {
             0 0 0 2px #ffffff,
             0 14px 32px rgba(0, 0, 0, 0.26),
             0 4px 10px rgba(0, 0, 0, 0.14);
-        }
-
-        /* Keep the launcher clear of the two primary hero actions on mobile. */
-        .chat-floating-home {
-          bottom: calc(6.5rem + max(var(--cookie-consent-height, 0px), var(--chat-underbar-height, 0px))) !important;
-        }
-        @media (min-width: 768px) {
-          .chat-floating-home {
-            bottom: calc(1.5rem + max(var(--cookie-consent-height, 0px), var(--chat-underbar-height, 0px))) !important;
-          }
         }
 
         @keyframes chat-halo {

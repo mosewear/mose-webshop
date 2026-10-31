@@ -22,6 +22,9 @@ const config: Config = {
         foreground: "var(--foreground)",
         'brand-primary': '#00A676',
         'brand-primary-hover': '#008f66',
+        // Action variant: white text meets WCAG AA at normal text sizes.
+        'brand-action': '#007A56',
+        'brand-action-hover': '#006747',
         // Lichte merktint voor geselecteerde en hover-vlakken. Werd al op vijf
         // plekken in de retourflow als `bg-brand-light` gebruikt, maar stond
         // niet in de config, dus Tailwind genereerde de klasse nooit en een

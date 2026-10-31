@@ -230,7 +230,7 @@ export function ShopifyCheckoutHandoff() {
           {hasGiftCards && <p className="mb-4 text-sm leading-relaxed text-gray-700">{text.giftInfo}</p>}
           {error && <p role="alert" className="mb-4 border-l-2 border-red-700 pl-3 text-sm leading-relaxed text-red-800">{error}{error === text.review && <> <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></>}</p>}
           <Button fullWidth isLoading={busy} loadingLabel={text.loading} onClick={proceed}
-            className="text-black hover:text-black focus-visible:ring-black">
+            className="focus-visible:ring-black">
             <Lock size={17} aria-hidden="true" />{text.button}
           </Button>
           <p aria-live="polite" className="mt-3 text-center text-xs text-gray-600">{busy ? text.loading : text.preserved}</p>

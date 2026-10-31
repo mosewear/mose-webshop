@@ -46,10 +46,10 @@ type BewaardeDraad = { conversationId: string | null; messages: BewaardBericht[]
  * op het moment waarop het misgaat: iemand sluit de chat om zijn ordernummer op
  * te zoeken, komt terug, en moet zijn hele vraag opnieuw typen.
  */
-function leesDraad(): BewaardeDraad | null {
+function leesDraad(locale: string): BewaardeDraad | null {
   if (typeof window === 'undefined') return null
   try {
-    const rauw = sessionStorage.getItem(THREAD_KEY)
+    const rauw = sessionStorage.getItem(`${THREAD_KEY}_${locale}`)
     if (!rauw) return null
     const draad = JSON.parse(rauw) as BewaardeDraad
     if (!Array.isArray(draad.messages) || draad.messages.length === 0) return null
@@ -67,6 +67,7 @@ function isMobielScherm(): boolean {
 
 export default function ChatWindow({ onClose }: ChatWindowProps) {
   const t = useTranslations('chat')
+  const locale = useLocale()
   const [weergave, setWeergave] = useState<'gesprek' | 'contact'>('gesprek')
   const portalEl = typeof document !== 'undefined' ? document.body : null
   const panelRef = useRef<HTMLDivElement>(null)
@@ -93,7 +94,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   })
   const updateKeyboardOffsetRef = useRef<() => void>(() => {})
 
-  const hersteld = useRef<BewaardeDraad | null>(leesDraad())
+  const hersteld = useRef<BewaardeDraad | null>(leesDraad(locale))
   const [messages, setMessages] = useState<Message[]>(() => {
     const draad = hersteld.current
     if (draad) {
@@ -107,7 +108,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     return [{ id: '1', role: 'assistant', content: t('greeting'), timestamp: new Date() }]
   })
   const [isLoading, setIsLoading] = useState(false)
-  const locale = useLocale()
   const pathname = usePathname()
   const conversationIdRef = useRef<string | null>(hersteld.current?.conversationId ?? null)
   const sessionIdRef = useRef<string>(getSessionId())
@@ -124,12 +124,12 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           .filter((m) => !m.isTyping)
           .map((m) => ({ id: m.id, role: m.role, content: m.content, ts: m.timestamp.toISOString() })),
       }
-      sessionStorage.setItem(THREAD_KEY, JSON.stringify(draad))
+      sessionStorage.setItem(`${THREAD_KEY}_${locale}`, JSON.stringify(draad))
     } catch {
       // Opslag vol of geblokkeerd: de chat werkt verder gewoon, alleen zonder
       // geheugen. Geen reden om het gesprek te laten klappen.
     }
-  }, [messages])
+  }, [messages, locale])
 
   // Get context for AI
   const getContext = () => {

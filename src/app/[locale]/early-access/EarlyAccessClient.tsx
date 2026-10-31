@@ -129,7 +129,7 @@ export default function EarlyAccessClient() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full sm:w-auto px-8 py-4 bg-brand-primary hover:bg-brand-primary-hover text-black font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="w-full sm:w-auto px-8 py-4 bg-brand-action hover:bg-brand-action-hover text-white font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {isSubmitting ? t('form.submitting') : t('form.button')}
                   </button>
