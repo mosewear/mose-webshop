@@ -225,7 +225,7 @@ export default function MobileMenuInstagramRow({
           href={ctaUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-black text-white border-2 border-black px-3 h-11 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-brand-primary hover:border-brand-primary focus-visible:bg-brand-primary focus-visible:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-colors"
+          className="mose-button mose-button--secondary flex-shrink-0"
         >
           <span>{t('viewAllShort')}</span>
           <ArrowRight size={14} strokeWidth={2.5} aria-hidden="true" />

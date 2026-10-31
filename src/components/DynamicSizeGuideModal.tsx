@@ -150,7 +150,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
+            className="mose-button mose-button--primary mt-4 sm:mt-6 w-full"
           >
             {t('closeButton')}
           </button>
@@ -212,7 +212,7 @@ export default function DynamicSizeGuideModal({ content, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
+            className="mose-button mose-button--primary mt-4 sm:mt-6 w-full"
           >
             {t('closeButton')}
           </button>

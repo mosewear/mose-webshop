@@ -97,7 +97,7 @@ function PaymentStatusContent() {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => router.push('/cart')}
-            className="px-6 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+            className="mose-button mose-button--secondary"
           >
             {t('backToCart')}
           </button>

@@ -62,7 +62,7 @@ export default function UnsubscribeClient() {
           </p>
           <Link
             href="/"
-            className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+            className="mose-button mose-button--primary"
           >
             {t('backHome')}
           </Link>
@@ -85,7 +85,7 @@ export default function UnsubscribeClient() {
           </p>
           <Link
             href="/"
-            className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+            className="mose-button mose-button--primary"
           >
             {t('backHome')}
           </Link>

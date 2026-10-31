@@ -343,7 +343,7 @@ export default function NewsletterPopup({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 border-4 border-black uppercase tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:translate-x-1 hover:translate-y-1"
+                    className="mose-button mose-button--primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? t('ctaSubmitting') : t('ctaButton', { discount: discountPercentage })}
                   </button>

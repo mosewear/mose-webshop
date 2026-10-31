@@ -184,7 +184,7 @@ export default function PrivacyPage() {
         <div className="mt-12 pt-8 border-t-2 border-gray-200">
           <Link
             href="/"
-            className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+            className="mose-button mose-button--primary"
           >
             {t('backToHome')}
           </Link>

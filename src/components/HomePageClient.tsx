@@ -158,7 +158,7 @@ export default function HomePageClient({
               <LocaleLink
                 href={homepageSettings?.hero_cta1_link || '/shop'}
                 aria-label={t('hero.cta1.aria')}
-                className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-brand-primary bg-brand-primary px-2 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-brand-primary-hover hover:bg-brand-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:px-5 sm:text-xs lg:text-sm"
+                className="mose-button mose-button--primary px-2 md:px-8 focus-visible:ring-white"
               >
                 {homepageSettings?.hero_cta1_text || t('hero.cta1.text')}
                 <ArrowRight size={18} aria-hidden="true" />
@@ -166,7 +166,7 @@ export default function HomePageClient({
               <LocaleLink
                 href={homepageSettings?.hero_cta2_link || '/lookbook'}
                 aria-label={t('hero.cta2.aria')}
-                className="inline-flex min-h-12 items-center justify-center border-2 border-white px-2 py-3 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:px-5 sm:text-xs lg:text-sm"
+                className="mose-button border-white bg-transparent px-2 text-white hover:bg-white hover:text-black focus-visible:ring-white md:px-8"
               >
                 {homepageSettings?.hero_cta2_text || t('hero.cta2.text')}
               </LocaleLink>
@@ -270,7 +270,7 @@ export default function HomePageClient({
               />)}
             </div>
           ) : <p className="py-8 text-center text-gray-600">{t('featured.noProducts')}</p>}
-          <div className="mt-8 text-center"><LocaleLink href="/shop" className="inline-flex min-h-11 items-center gap-3 border-2 border-black bg-black px-6 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-brand-primary">{t('featured.browse')}<ArrowRight size={18} aria-hidden="true" /></LocaleLink></div>
+          <div className="mt-8 text-center"><LocaleLink href="/shop" className="mose-button mose-button--secondary">{t('featured.browse')}<ArrowRight size={18} aria-hidden="true" /></LocaleLink></div>
         </div>
       </section>
 
@@ -420,7 +420,7 @@ export default function HomePageClient({
                   blijft consistent met andere CTA's op de site. */}
               <LocaleLink
                 href="/over-mose"
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] border-2 border-black hover:bg-brand-primary-hover transition-colors"
+                className="mose-button mose-button--primary group"
                 aria-label={t('story.cta.aria')}
               >
                 {t('story.cta.text')}
@@ -535,7 +535,7 @@ export default function HomePageClient({
                 type="submit"
                 aria-label={t('newsletter.submitAria')}
                 disabled={newsletterLoading || newsletterSuccess}
-                className="group w-full sm:w-auto px-8 py-4 bg-black text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 transition-colors flex items-center justify-center gap-3 whitespace-nowrap border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
+                className="mose-button mose-button--secondary group w-full sm:w-auto whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
               >
                 {newsletterLoading ? (
                   <>

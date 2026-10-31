@@ -1833,7 +1833,7 @@ function LegacyCheckoutPage() {
     <button
     onClick={handleApplyPromo}
     disabled={!promoCode}
-    className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+    className="mose-button mose-button--secondary disabled:bg-gray-300 disabled:cursor-not-allowed"
     >
     {t('promo.apply')}
     </button>
@@ -2148,7 +2148,7 @@ function LegacyCheckoutPage() {
                         <button
                           type="submit"
                           disabled={isLoggingIn}
-                          className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          className="mose-button mose-button--primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                           {isLoggingIn ? t('login.submitting') : t('login.submit')}
                         </button>
@@ -2407,7 +2407,7 @@ function LegacyCheckoutPage() {
                               type="button"
                               onClick={handleAddressLookup}
                               disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                              className="w-full px-4 py-3 border-2 border-brand-primary bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover hover:border-brand-primary-hover transition-colors disabled:border-gray-300 disabled:bg-white disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                              className="mose-button mose-button--primary w-full disabled:border-gray-300 disabled:bg-white disabled:text-gray-500 disabled:cursor-not-allowed"
                             >
                               {addressLookup.isLookingUp ? (
                                 <>
@@ -2512,7 +2512,7 @@ function LegacyCheckoutPage() {
                             type="button"
                             onClick={handleAddressLookup}
                             disabled={addressLookup.isLookingUp || !form.postalCode || !form.huisnummer}
-                            className="w-full px-4 py-3 border-2 border-brand-primary bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:border-gray-300 disabled:bg-white disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="mose-button mose-button--primary w-full disabled:border-gray-300 disabled:bg-white disabled:text-gray-500 disabled:cursor-not-allowed"
                           >
                             {addressLookup.isLookingUp ? (
                               <>
@@ -2758,7 +2758,7 @@ function LegacyCheckoutPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full lg:hidden py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="mose-button mose-button--primary w-full lg:hidden disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {loading ? t('submitting') : (
                     <>
@@ -3076,7 +3076,7 @@ function LegacyCheckoutPage() {
                         type="button"
                         onClick={handleApplyGiftCard}
                         disabled={!giftCardInput || giftCardLoading}
-                        className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95"
+                        className="mose-button mose-button--secondary disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         {giftCardLoading ? '...' : t('promo.apply')}
                       </button>
@@ -3174,7 +3174,7 @@ function LegacyCheckoutPage() {
                             }
                           }}
                           disabled={loyaltyRedeemPoints < 100 || loyaltyLoading}
-                          className="px-4 py-2 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="mose-button mose-button--secondary disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {loyaltyLoading ? '...' : tLoyalty('apply')}
                         </button>
@@ -3210,7 +3210,7 @@ function LegacyCheckoutPage() {
                     type="submit"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="hidden lg:block w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="mose-button mose-button--primary hidden w-full disabled:bg-gray-400 disabled:cursor-not-allowed lg:inline-flex"
                   >
                     {loading ? t('submitting') : t('submit')}
                   </button>

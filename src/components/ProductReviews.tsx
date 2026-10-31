@@ -439,10 +439,10 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
-            className="hidden md:flex flex-col items-center justify-center gap-1.5 px-5 lg:px-7 bg-black text-white hover:bg-brand-primary transition-colors min-w-[140px]"
+            className="mose-button mose-button--secondary hidden min-w-[140px] flex-col md:inline-flex"
           >
             <PenLine size={18} aria-hidden="true" />
-            <span className="text-[11px] font-bold uppercase tracking-wider leading-tight text-center">
+            <span>
               {showForm ? t('close') : t('writeReview')}
             </span>
           </button>
@@ -454,7 +454,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       <button
         type="button"
         onClick={() => setShowForm(!showForm)}
-        className="md:hidden w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors flex items-center justify-center gap-2 mb-5"
+        className="mose-button mose-button--primary md:hidden w-full mb-5"
       >
         {showForm ? (
           t('close')
@@ -793,7 +793,7 @@ function ReviewForm({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full md:w-auto bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-8 uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mose-button mose-button--primary w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {submitting ? t('submitting') : t('submit')}
       </button>

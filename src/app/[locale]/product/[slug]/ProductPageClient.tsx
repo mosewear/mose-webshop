@@ -1137,7 +1137,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
     return <div role="alert" className="max-w-xl mx-auto px-6 py-20 text-center">
       <h1 className="font-display text-3xl mb-4">{locale === 'en' ? 'Unable to load this product' : 'Product tijdelijk niet bereikbaar'}</h1>
       <p className="mb-6">{locale === 'en' ? 'Please try again in a moment.' : 'Probeer het over een moment opnieuw.'}</p>
-      <button className="bg-brand-primary text-white px-6 py-3 font-bold" onClick={() => { setLoading(true); void fetchProduct() }}>{locale === 'en' ? 'Try again' : 'Opnieuw proberen'}</button>
+      <button className="mose-button mose-button--primary" onClick={() => { setLoading(true); void fetchProduct() }}>{locale === 'en' ? 'Try again' : 'Opnieuw proberen'}</button>
     </div>
   }
 
@@ -1148,7 +1148,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
           <h1 className="text-4xl md:text-5xl font-display mb-6">{t('notFound')}</h1>
           <LocaleLink
             href="/shop"
-            className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+            className="mose-button mose-button--primary"
           >
             {t('backToShop')}
           </LocaleLink>
@@ -2039,11 +2039,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                   data-pdp-main-atc
                   onClick={() => handleAddToCart('hoofdknop')}
                   disabled={!hasAnyStock || !selectedVariant || addedToCart}
-                  className={`flex-1 min-w-0 py-3 md:py-4 text-base md:text-lg font-bold uppercase tracking-wider transition-all ${
+                  className={`mose-button flex-1 min-w-0 ${
                     addedToCart
                       ? 'bg-black text-white cursor-default animate-success'
                       : hasAnyStock && selectedVariant
-                      ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
+                      ? 'mose-button--primary'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
@@ -2117,7 +2117,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                       />
                       <button
                         onClick={handleNotifyMe}
-                        className="px-6 py-2 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                        className="mose-button mose-button--primary"
                       >
                         {t('notify.submit')}
                       </button>
@@ -2493,7 +2493,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
             <div className="bg-white border-2 border-black p-6 max-w-md">
               <h2 className="font-display text-2xl mb-4">{t('sizeGuide.title')}</h2>
               <p>{locale === 'en' ? 'Please contact MOSE for the measurements of this specific model before ordering.' : 'Vraag MOSE vóór het bestellen naar de afmetingen van dit specifieke model.'}</p>
-              <button className="mt-6 bg-brand-primary text-white px-6 py-3 font-bold" onClick={() => setShowSizeGuide(false)}>{t('sizeGuide.closeButton')}</button>
+              <button className="mose-button mose-button--primary mt-6" onClick={() => setShowSizeGuide(false)}>{t('sizeGuide.closeButton')}</button>
             </div>
           </div>
         )
@@ -2588,7 +2588,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
 
               <button
                 onClick={() => setShowSizeGuide(false)}
-                className="mt-4 sm:mt-6 w-full py-3 sm:py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-sm sm:text-base"
+                className="mose-button mose-button--primary mt-4 sm:mt-6 w-full"
               >
                 {t('sizeGuide.closeButton')}
               </button>

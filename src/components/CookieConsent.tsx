@@ -118,7 +118,7 @@ export default function CookieConsent() {
               </button>
               <button
                 onClick={() => handleAccept('all')}
-                className="flex-1 md:flex-none px-4 md:px-6 py-2.5 md:py-3 min-h-[44px] bg-brand-primary text-white font-bold uppercase tracking-wide md:tracking-wider border-2 border-brand-primary hover:bg-brand-primary-hover transition-all md:hover:translate-x-1 md:hover:translate-y-1 text-xs md:text-sm leading-tight whitespace-normal md:whitespace-nowrap"
+                className="mose-button mose-button--primary flex-1 md:flex-none leading-tight whitespace-normal md:whitespace-nowrap"
               >
                 {t('acceptAll')}
               </button>

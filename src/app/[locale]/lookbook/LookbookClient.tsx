@@ -94,7 +94,7 @@ export default function LookbookClient({
           <p className="text-gray-500 mb-6">{t('emptyState.body')}</p>
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 font-bold uppercase tracking-wider hover:bg-brand-primary transition-colors"
+            className="mose-button mose-button--secondary"
           >
             {t('emptyState.cta')}
             <ArrowRight size={16} />

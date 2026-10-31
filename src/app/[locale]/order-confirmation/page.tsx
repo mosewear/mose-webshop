@@ -296,7 +296,7 @@ export default function OrderConfirmationPage({
           <p className="text-gray-600 mb-8">{t('notFound.message')}</p>
           <Link
             href="/shop"
-            className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+            className="mose-button mose-button--primary"
           >
             {t('notFound.button')}
           </Link>
@@ -549,7 +549,7 @@ export default function OrderConfirmationPage({
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <Link
               href="/shop"
-              className="block py-5 bg-brand-primary text-white text-center font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-all transform hover:scale-105"
+              className="mose-button mose-button--primary text-center"
             >
               {t('actions.continueShopping')}
             </Link>
