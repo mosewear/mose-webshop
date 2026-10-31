@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading || success}
-              className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="mose-button mose-button--primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? t('submitting') : t('submit')}
             </button>

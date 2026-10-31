@@ -636,7 +636,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <p className="text-gray-600 mb-6">{t('empty.message')}</p>
               <button
                 onClick={onClose}
-                className="min-h-[44px] px-8 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className="mose-button mose-button--secondary"
               >
                 {t('empty.continue')}
               </button>
@@ -956,7 +956,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <button
                           onClick={handleApplyPromo}
                           disabled={!promoCode}
-                          className="min-h-[44px] px-4 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="mose-button mose-button--secondary disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {t('promo.apply')}
                         </button>
@@ -1105,7 +1105,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <button
                           onClick={handleApplyPromo}
                           disabled={!promoCode}
-                          className="min-h-[44px] px-4 bg-black text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="mose-button mose-button--secondary disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {t('promo.apply')}
                         </button>
@@ -1180,7 +1180,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <LocaleLink
                       href="/checkout"
                       onClick={onClose}
-                      className="px-6 py-3 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                      className="mose-button mose-button--primary"
                     >
                       {t('checkout')}
                     </LocaleLink>

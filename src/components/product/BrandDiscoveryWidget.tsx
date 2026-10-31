@@ -771,7 +771,7 @@ function BrandDiscoveryModal({
                 href={igUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-brand-primary text-white font-bold text-sm uppercase tracking-wider border-2 border-black hover:bg-brand-primary-hover transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black"
+                className="mose-button mose-button--primary flex-1 motion-reduce:transition-none"
               >
                 <Instagram size={18} aria-hidden="true" />
                 <span>{tModalIgCta}</span>

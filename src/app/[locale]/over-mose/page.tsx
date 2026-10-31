@@ -212,7 +212,7 @@ export default async function AboutPage({
         <div className="mt-16 text-center">
           <Link
             href="/shop"
-            className="inline-block px-10 md:px-12 py-4 md:py-5 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors text-base md:text-lg border-2 border-black"
+            className="mose-button mose-button--primary"
           >
             {about.cta_text}
           </Link>

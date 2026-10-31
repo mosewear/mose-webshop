@@ -46,7 +46,7 @@ export default function LocaleError({
           <div className="space-y-3">
             <button
               onClick={reset}
-              className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+              className="mose-button mose-button--primary w-full"
             >
               {t('tryAgain')}
             </button>

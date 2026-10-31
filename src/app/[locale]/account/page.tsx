@@ -730,7 +730,7 @@ export default function AccountPage() {
                     <p className="text-gray-600 mb-6 text-lg">{t('ordersEmpty')}</p>
                     <LocaleLink
                       href="/shop"
-                      className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                      className="mose-button mose-button--primary"
                     >
                       {t('startShopping')}
                     </LocaleLink>
@@ -815,7 +815,7 @@ export default function AccountPage() {
                         <div className="border-t-2 border-gray-200 pt-4 mt-4 flex flex-col sm:flex-row gap-3">
                           <LocaleLink
                             href={`/order-confirmation?order=${order.id}`}
-                            className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
+                            className="mose-button mose-button--primary text-center"
                           >
                             {t('viewOrder')}
                           </LocaleLink>
@@ -897,7 +897,7 @@ export default function AccountPage() {
                     <button
                       onClick={updateProfile}
                       disabled={profileLoading}
-                      className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="mose-button mose-button--primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {profileLoading ? t('profileSection.saving') : t('profileSection.save')}
                     </button>
@@ -939,7 +939,7 @@ export default function AccountPage() {
                     <button
                       onClick={updatePassword}
                       disabled={passwordLoading}
-                      className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="mose-button mose-button--primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {passwordLoading ? t('passwordSection.saving') : t('passwordSection.save')}
                     </button>
@@ -956,7 +956,7 @@ export default function AccountPage() {
                   {!showAddressForm && (
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors"
+                      className="mose-button mose-button--primary"
                     >
                       {t('addressSection.add')}
                     </button>
@@ -1080,7 +1080,7 @@ export default function AccountPage() {
                       <div className="flex gap-3 pt-4">
                         <button
                           onClick={saveAddress}
-                          className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors"
+                          className="mose-button mose-button--primary"
                         >
                           {t('addressSection.save')}
                         </button>
@@ -1098,7 +1098,7 @@ export default function AccountPage() {
                     <p className="text-gray-600 mb-6 text-lg">{t('addressSection.empty')}</p>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                      className="mose-button mose-button--primary"
                     >
                       {t('addressSection.addFirst')}
                     </button>
@@ -1158,7 +1158,7 @@ export default function AccountPage() {
                   <h2 className="text-2xl md:text-3xl font-display">{t('myReturns')}</h2>
                   <LocaleLink
                     href="/returns/new"
-                    className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
+                    className="mose-button mose-button--primary text-center"
                   >
                     {t('newReturn')}
                     </LocaleLink>
@@ -1174,7 +1174,7 @@ export default function AccountPage() {
                     <p className="text-gray-600 mb-6 text-lg">{t('returnLabels.emptyMessage')}</p>
                     <LocaleLink
                       href="/returns/new"
-                      className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                      className="mose-button mose-button--primary"
                     >
                       {t('returnLabels.requestButton')}
                     </LocaleLink>
@@ -1270,7 +1270,7 @@ export default function AccountPage() {
                           <div className="border-t-2 border-gray-200 pt-4 mt-4 flex flex-col sm:flex-row gap-3">
                             <LocaleLink
                               href={`/returns/${returnItem.id}`}
-                              className="px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors text-center"
+                              className="mose-button mose-button--primary text-center"
                             >
                               {t('returnLabels.viewDetails')}
                             </LocaleLink>

@@ -291,7 +291,7 @@ export default function LookCompleet({ producten: initialProducts, mand, locale,
                     type="button"
                     disabled={!variant || bezig}
                     onClick={() => variant && onToevoegen(p, variant, beeld)}
-                    className="min-h-[48px] w-full bg-brand-primary text-[13px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-brand-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
+                    className="mose-button mose-button--primary w-full disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
                   >
                     {bezig ? t('added') : variant ? t('addWith', { kleur: kleurLabel, maat: variant.size }) : t('pickSize')}
                   </button>

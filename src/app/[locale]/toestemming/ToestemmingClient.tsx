@@ -16,7 +16,7 @@ import { Link } from '@/i18n/routing'
 type Stand = 'vraag' | 'bezig' | 'bevestigd' | 'afgemeld' | 'fout'
 
 const KNOP =
-  'inline-flex min-h-[48px] w-full items-center justify-center border-2 px-6 py-3 text-[14px] font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:opacity-60 sm:w-auto'
+  'mose-button w-full sm:w-auto'
 
 export default function ToestemmingClient() {
   const t = useTranslations('toestemming')
@@ -89,7 +89,7 @@ export default function ToestemmingClient() {
     tekst = t('tekst')
     acties = (
       <>
-        <button type="button" onClick={bevestig} disabled={stand === 'bezig'} className={`${KNOP} border-brand-primary bg-brand-primary text-white hover:bg-brand-primary-hover`}>
+        <button type="button" onClick={bevestig} disabled={stand === 'bezig'} className={`${KNOP} mose-button--primary`}>
           {stand === 'bezig' ? t('bezig') : t('knop')}
         </button>
         <button type="button" onClick={() => setAfmelden(true)} className="min-h-[44px] text-[14px] font-semibold text-gray-700 underline underline-offset-4 hover:text-black">

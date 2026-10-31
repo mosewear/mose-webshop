@@ -182,7 +182,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="mose-button mose-button--primary w-full disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? t('form.submitting') : t('form.submit')}
               </button>

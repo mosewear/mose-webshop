@@ -20,21 +20,21 @@ import { cn } from '@/lib/utils'
  * een <button>; een deel van de funnel-CTA's zijn links.
  */
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 min-h-[44px] font-bold uppercase tracking-wider transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-primary',
+  'mose-button',
   {
     variants: {
       variant: {
         primary:
-          'bg-brand-primary text-white border-2 border-brand-primary hover:bg-brand-primary-hover hover:border-brand-primary-hover',
-        secondary: 'bg-black text-white border-2 border-black hover:bg-gray-800 hover:border-gray-800',
-        outline: 'border-2 border-black bg-transparent text-black hover:bg-black hover:text-white',
+          'mose-button--primary',
+        secondary: 'mose-button--secondary',
+        outline: 'mose-button--outline',
         ghost: 'bg-transparent text-black border-2 border-transparent hover:bg-gray-100',
         danger: 'bg-white text-red-700 border-2 border-red-600 hover:bg-red-600 hover:text-white',
       },
       size: {
-        sm: 'px-4 py-2 text-sm',
-        md: 'px-6 py-3 text-base',
-        lg: 'px-8 py-4 text-lg',
+        sm: 'px-4 py-2 md:px-4 md:py-2',
+        md: '',
+        lg: 'px-8 py-4',
       },
       fullWidth: {
         true: 'w-full',

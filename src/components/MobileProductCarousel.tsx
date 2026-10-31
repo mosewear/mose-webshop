@@ -223,7 +223,7 @@ export default function MobileProductCarousel({ products: propProducts }: Mobile
                   
                   {/* Add to Cart Button */}
                   <button 
-                    className="w-full bg-brand-primary text-white font-bold py-3 px-4 uppercase tracking-wider text-xs hover:bg-brand-primary-hover transition-colors active:scale-95"
+                    className="mose-button mose-button--primary w-full"
                     onClick={(e) => {
                       e.preventDefault()
                     }}

@@ -111,7 +111,7 @@ function ThePiece({
         panel: 'bg-black text-white border-white',
         border: 'border-white',
         button:
-          'bg-brand-primary text-white border-brand-primary hover:bg-white hover:text-black hover:border-white',
+          'mose-button--primary',
         cross: 'text-white/80 hover:text-white',
         divider: 'border-white/20',
         meta: 'text-white/80',
@@ -120,7 +120,7 @@ function ThePiece({
         panel: 'bg-white text-black border-black',
         border: 'border-black',
         button:
-          'bg-black text-white border-black hover:bg-brand-primary hover:border-brand-primary',
+          'mose-button--secondary',
         cross: 'text-gray-700 hover:text-black',
         divider: 'border-gray-200',
         meta: 'text-gray-700',
@@ -212,7 +212,7 @@ function ThePiece({
           <Link
             href={`/product/${product.slug}`}
             onClick={() => trackClick(product.id, product.slug, name)}
-            className={`inline-flex items-center justify-center gap-2 border-2 px-6 py-3 font-bold uppercase tracking-wider text-sm transition-colors ${palette.button}`}
+            className={`mose-button ${palette.button}`}
           >
             <ShoppingBag size={16} />
             {ctaLabel}
@@ -253,12 +253,12 @@ function TheOutfit({
     ? {
         label: 'text-white',
         card: 'bg-black border-white text-white',
-        btn: 'bg-white text-black border-white hover:bg-brand-primary hover:text-white hover:border-brand-primary',
+        btn: 'bg-white text-black border-white hover:bg-gray-100',
       }
     : {
         label: 'text-black',
         card: 'bg-white border-black text-black',
-        btn: 'bg-black text-white border-black hover:bg-brand-primary hover:border-brand-primary',
+        btn: 'mose-button--secondary',
       }
 
   const gridClass =
@@ -325,7 +325,7 @@ function TheOutfit({
                 <Link
                   href={`/product/${p.slug}`}
                   onClick={() => trackClick(p.id, p.slug, name)}
-                  className={`inline-flex items-center gap-1 border-2 px-4 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider flex-shrink-0 transition-colors ${palette.btn}`}
+                  className={`mose-button shrink-0 px-4 md:px-4 ${palette.btn}`}
                 >
                   + {cta}
                 </Link>

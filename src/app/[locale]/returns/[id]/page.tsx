@@ -376,7 +376,7 @@ export default function ReturnDetailsPage() {
             <p className="text-gray-600 mb-6 text-lg">{t('returnNotFound')}</p>
             <Link
               href="/account"
-              className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+              className="mose-button mose-button--primary"
             >
               {t('backToAccount')}
             </Link>

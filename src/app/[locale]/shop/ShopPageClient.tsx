@@ -558,7 +558,7 @@ export default function ShopPageClient({
                 <button
                   type="button"
                   onClick={reset}
-                  className="mt-6 min-h-11 bg-black px-6 py-3 text-sm font-semibold text-white"
+                  className="mose-button mose-button--secondary mt-6"
                 >
                   {t('reset')}
                 </button>
@@ -642,7 +642,7 @@ export default function ShopPageClient({
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="min-h-12 flex-1 border-2 border-black bg-black px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+            className="mose-button mose-button--secondary flex-1"
           >
             {t('viewResults', { count: filtered.length })}
           </button>

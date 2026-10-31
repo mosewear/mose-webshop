@@ -316,7 +316,7 @@ export default function ShippingPageClient({settings}: {settings: CommercePromis
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <LocaleLink 
                 href="/contact"
-                className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-primary text-white font-bold text-lg uppercase tracking-wider hover:bg-brand-primary-hover transition-all duration-300 border-2 border-brand-primary"
+                className="mose-button mose-button--primary group"
               >
                 {t('contactUs')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />

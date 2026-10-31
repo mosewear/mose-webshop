@@ -767,11 +767,11 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         type="button"
         onClick={handleAdd}
         disabled={!canAdd || justAdded}
-        className={`flex-1 min-w-[180px] px-3 py-3 md:py-4 text-sm md:text-base lg:text-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+        className={`mose-button flex-1 min-w-[180px] ${
           justAdded
             ? 'bg-black text-white cursor-default'
             : canAdd
-              ? 'bg-brand-primary text-white hover:bg-brand-primary-hover active:scale-95'
+              ? 'mose-button--primary'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
@@ -1239,11 +1239,11 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
               type="button"
               onClick={handleAdd}
               disabled={!canAdd || justAdded}
-              className={`w-full flex items-center justify-center gap-2 px-3 py-3.5 border-2 font-bold uppercase tracking-wide text-sm transition-colors ${
+              className={`mose-button w-full ${
                 justAdded
                   ? 'bg-white text-black border-white'
                   : canAdd
-                    ? 'bg-brand-primary border-brand-primary text-white hover:bg-brand-primary-hover hover:border-brand-primary-hover'
+                    ? 'mose-button--primary'
                     : 'bg-gray-700 border-gray-700 text-gray-300 cursor-not-allowed'
               }`}
             >

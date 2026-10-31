@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  /* Storefront CTA standard, taken from the approved Instagram follow button.
+     Keep brand colour, Montserrat, lettering and square black borders shared. */
+  .mose-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-none border-2 border-black px-6 py-3 text-center font-sans text-sm font-bold uppercase tracking-wider transition-colors md:px-8 md:py-4 md:text-base;
+  }
+  .mose-button:focus-visible {
+    @apply outline-none ring-4 ring-black ring-offset-2;
+  }
+  .mose-button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+  .mose-button--primary {
+    @apply bg-brand-primary text-white;
+  }
+  .mose-button--secondary {
+    @apply bg-black text-white;
+  }
+  .mose-button--outline {
+    @apply bg-transparent text-black;
+  }
+  @media (hover: hover) {
+    .mose-button--primary:hover { @apply bg-brand-primary-hover; }
+    .mose-button--secondary:hover { @apply bg-gray-800; }
+    .mose-button--outline:hover { @apply bg-black text-white; }
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

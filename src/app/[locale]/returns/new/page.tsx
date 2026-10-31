@@ -116,7 +116,7 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
         </p>
         <Link
           href="/account"
-          className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+          className="mose-button mose-button--primary"
         >
           {t('backToAccount')}
         </Link>
@@ -164,7 +164,7 @@ function OrderSelectionList({ returnDays }: { returnDays: number }) {
                 </p>
               </div>
               <div className="text-right">
-                <span className="inline-block px-6 py-3 bg-brand-primary text-white font-bold uppercase text-sm hover:bg-brand-primary-hover transition-colors">
+                <span className="mose-button mose-button--primary">
                   {t('requestReturnArrow')}
                 </span>
               </div>
@@ -523,7 +523,7 @@ export default function NewReturnPage() {
                   <p className="text-gray-600 mb-4">{t('mustLogin')}</p>
                   <Link
                     href="/login?redirect=/returns/new"
-                    className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
+                    className="mose-button mose-button--primary"
                   >
                     {t('login')}
                   </Link>
@@ -546,7 +546,7 @@ export default function NewReturnPage() {
             <p className="text-gray-600 mb-6 text-lg">{t('orderNotFound')}</p>
             <Link
               href="/returns/new"
-              className="inline-block px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors mb-4"
+              className="mose-button mose-button--primary mb-4"
             >
               {t('chooseAnotherOrder')}
             </Link>
@@ -747,7 +747,7 @@ export default function NewReturnPage() {
           <button
             onClick={submitReturn}
             disabled={submitting || Object.keys(selectedItems).length === 0 || !returnReason}
-            className="flex-1 px-8 py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mose-button mose-button--primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? t('submitting') : t('requestReturn')}
           </button>

@@ -123,7 +123,7 @@ export default function CatalogQuickAdd({product, initialColor, onClose}: {
       </>}
       {error && <p role="alert" className="mb-3 text-sm text-red-700">{error}</p>}
       {!current && error ? <button type="button" onClick={() => {setError(''); setRevision(n => n+1)}} className="min-h-12 w-full border border-black p-3 font-bold">{t('retry')}</button> :
-        <button type="button" onClick={() => void add()} disabled={!current || !selected || !availableVariant(selected) || busy} className="min-h-12 w-full bg-black px-4 py-3 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-primary focus-visible:outline-brand-primary disabled:bg-gray-200 disabled:text-gray-500">{busy ? t('checking') : size ? t('add') : t('chooseSize')}</button>}
+        <button type="button" onClick={() => void add()} disabled={!current || !selected || !availableVariant(selected) || busy} className="mose-button mose-button--secondary w-full disabled:bg-gray-200 disabled:text-gray-500">{busy ? t('checking') : size ? t('add') : t('chooseSize')}</button>}
     </div>
   </dialog>, document.body)
 }

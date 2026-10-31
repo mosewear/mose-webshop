@@ -218,7 +218,7 @@ export default function TrackOrderPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mose-button mose-button--primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? t('searching') : t('searchButton')}
               </button>
@@ -358,7 +358,7 @@ export default function TrackOrderPage() {
               <p className="text-gray-600 mb-4">{t('help.description')}</p>
               <Link
                 href="/contact"
-                className="inline-block bg-black text-white px-8 py-3 font-bold uppercase text-sm hover:bg-gray-800 transition-colors"
+                className="mose-button mose-button--secondary"
               >
                 {t('help.button')}
               </Link>

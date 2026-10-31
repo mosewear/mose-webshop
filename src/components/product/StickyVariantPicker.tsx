@@ -497,12 +497,12 @@ function StickyContent({
       <button
         onClick={onClick}
         disabled={ctaDisabled}
-        className={`shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold uppercase tracking-wider transition-all border-2 ${
+        className={`mose-button shrink-0 ${
           ctaDisabled
             ? 'bg-gray-200 border-gray-200 text-gray-500 cursor-not-allowed'
             : ctaState === 'add'
-            ? 'bg-brand-primary border-brand-primary text-white hover:bg-brand-primary-hover hover:border-brand-primary-hover active:scale-95'
-            : 'bg-black border-black text-white hover:bg-gray-800 active:scale-95'
+            ? 'mose-button--primary'
+            : 'mose-button--secondary'
         } ${ctaPulse ? 'animate-pulse-subtle' : ''}`}
         aria-label={ctaLabel}
       >
@@ -648,12 +648,12 @@ function StickyMobileTwoRow({
       <button
         onClick={onClick}
         disabled={ctaDisabled}
-        className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all ${
+        className={`mose-button w-full ${
           ctaDisabled
             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
             : ctaState === 'add'
-            ? 'bg-brand-primary text-white active:bg-brand-primary-hover active:scale-[0.99]'
-            : 'bg-black text-white active:bg-gray-800 active:scale-[0.99]'
+            ? 'mose-button--primary'
+            : 'mose-button--secondary'
         } ${ctaPulse ? 'animate-pulse-subtle' : ''}`}
         aria-label={ctaPrice ? `${ctaLabel} · ${ctaPrice}` : ctaLabel}
       >
