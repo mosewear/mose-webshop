@@ -15,6 +15,8 @@ for (const [width, height] of [[320, 568], [375, 600], [390, 664], [430, 760], [
       await expect(hero).toBeVisible()
       const actions = page.locator('[data-hero-actions] a')
       await expect(actions).toHaveCount(2)
+      await expect(actions.first()).toHaveCSS('background-color', 'rgb(0, 122, 86)')
+      await expect(actions.first()).toHaveCSS('color', 'rgb(255, 255, 255)')
       for (const action of await actions.all()) {
         const box = await action.boundingBox()
         expect(box).not.toBeNull()
