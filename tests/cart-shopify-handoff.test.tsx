@@ -30,6 +30,17 @@ describe('Shopify handoff', () => {
   })
   afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
+  it('keeps an optional promo collapsed until opened and preserves its value', () => {
+    render(<ShopifyCheckoutHandoff />)
+    const input = screen.getByLabelText('Kortingscode')
+    const disclosure = input.closest('details')!
+    expect(disclosure.open).toBe(false)
+    fireEvent.click(disclosure.querySelector('summary')!)
+    fireEvent.change(input, { target: { value: 'MOSE10' } })
+    expect(input).toHaveValue('MOSE10')
+    expect(disclosure.open).toBe(true)
+  })
+
   it('sends the whole bag in one request and preserves it on a service failure', async () => {
     const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/session')
       ? { ok: true, json: async () => ({ ready: true }) }

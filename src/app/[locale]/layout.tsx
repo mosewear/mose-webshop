@@ -8,7 +8,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import MainContentWrapper from '@/components/layout/MainContentWrapper'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
-import { BuitenAfrekenen, AfrekenKop } from '@/components/AfrekenChrome'
+import { BuitenAfrekenen, AfrekenKop, AfrekenVoet } from '@/components/AfrekenChrome'
 import NewsletterPopupWrapper from '@/components/NewsletterPopupWrapper'
 import SurveyPopupWrapper from '@/components/SurveyPopupWrapper'
 import CookieConsent from '@/components/CookieConsent'
@@ -137,6 +137,7 @@ export default async function LocaleLayout({
       </BuitenAfrekenen>
       <AfrekenKop />
       <MainContentWrapper>{children}</MainContentWrapper>
+      <AfrekenVoet />
       <BuitenAfrekenen>
         <Footer />
         <CampaignPopupWrapper />
