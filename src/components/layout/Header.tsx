@@ -94,7 +94,7 @@ export function Header() {
             {/* Logo */}
             <Link 
               href={localeLink('/')}
-              className="flex items-center hover:opacity-80 transition-opacity"
+              className="flex lg:shrink-0 items-center hover:opacity-80 transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <Image
@@ -102,13 +102,13 @@ export function Header() {
                 alt="MOSE"
                 width={180}
                 height={60}
-                className="h-12 md:h-14 w-auto"
+                className="h-12 lg:h-14 w-auto"
                 priority
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-5 xl:space-x-8">
               <Link href={localeLink('/shop')} className="font-bold text-sm uppercase tracking-wider hover:text-brand-primary transition-colors">
                 {t('shop')}
               </Link>
@@ -134,7 +134,7 @@ export function Header() {
               {/* Desktop Icons - All visible */}
               <button 
                 onClick={() => setSearchOpen(true)}
-                className="hidden md:block p-2 hover:text-brand-primary transition-colors" 
+                className="hidden lg:block p-2 hover:text-brand-primary transition-colors"
                 aria-label={t('search')}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,13 +142,13 @@ export function Header() {
                 </svg>
               </button>
               
-              <Link href={localeLink('/account')} className="hidden md:block p-2 hover:text-brand-primary transition-colors" aria-label={t('account')}>
+              <Link href={localeLink('/account')} className="hidden lg:block p-2 hover:text-brand-primary transition-colors" aria-label={t('account')}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </Link>
 
-              <Link href={localeLink('/wishlist')} className="hidden md:block p-2 hover:text-brand-primary transition-colors" aria-label={t('wishlist')}>
+              <Link href={localeLink('/wishlist')} className="hidden lg:block p-2 hover:text-brand-primary transition-colors" aria-label={t('wishlist')}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -174,7 +174,7 @@ export function Header() {
               {/* 40x40 was te klein (de norm is 44) en een schermlezer hoorde
                   niet of het menu open of dicht stond. */}
               <button
-                className="md:hidden flex h-11 w-11 items-center justify-center"
+                className="lg:hidden flex h-11 w-11 items-center justify-center"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label={t('menu')}
                 aria-expanded={isMobileMenuOpen}
