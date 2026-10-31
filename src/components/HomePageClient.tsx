@@ -51,15 +51,15 @@ export default function HomePageClient({
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   // Versioned lossless masters avoid recompressing already-lossy WebP sources
   // and invalidate the old 30-day image cache without changing custom uploads.
-  const desktopFallback = '/campaign/mose-hero-desktop-hq-2026-11.png'
-  const mobileFallback = '/campaign/mose-hero-mobile-hq-2026-11.png'
+  const desktopFallback = '/campaign/mose-hero-desktop-retina-2026-11.webp'
+  const mobileFallback = '/campaign/mose-hero-mobile-retina-2026-11.webp'
   const desktopSetting = homepageSettings?.hero_image_url
   const mobileSetting = homepageSettings?.hero_image_url_mobile
   const [heroDesktopSrc, setHeroDesktopSrc] = useState(
-    !desktopSetting || desktopSetting === '/campaign/mose-hero-desktop-2026-10.webp' ? desktopFallback : desktopSetting,
+    !desktopSetting || ['/campaign/mose-hero-desktop-2026-10.webp', '/campaign/mose-hero-desktop-hq-2026-11.png'].includes(desktopSetting) ? desktopFallback : desktopSetting,
   )
   const [heroMobileSrc, setHeroMobileSrc] = useState(
-    !mobileSetting || mobileSetting === '/campaign/mose-hero-mobile-2026-10.webp' ? mobileFallback : mobileSetting,
+    !mobileSetting || ['/campaign/mose-hero-mobile-2026-10.webp', '/campaign/mose-hero-mobile-hq-2026-11.png'].includes(mobileSetting) ? mobileFallback : mobileSetting,
   )
   // A picture selects one art-directed source before downloading the hero.
   // object-cover can scale the image wider than the viewport. Account for the
