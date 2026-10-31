@@ -26,7 +26,7 @@ describe('chat product facts', () => {
     expect(response.status).toBe(200)
     const system = mocks.stream.mock.calls[0][0].system as string
     expect(system).toContain('42% cotton; boxy fit')
-    expect(system).toContain('Tapstitch: product-specific facts only')
+    expect(system).toContain('Noem nooit het woord Tapstitch')
     expect(system).not.toMatch(/300 GSM|OEKO-Tex|Made in Groningen|regular fit|legacy sizing/)
     const context = JSON.parse(system.split('PRODUCT CONTEXT (read-only JSON):\n')[1])
     expect(context).toMatchObject({ stock: null, materials_care: null, size_guide: null, size_guide_type: null, product_details: '42% cotton; boxy fit' })

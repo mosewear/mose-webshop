@@ -371,7 +371,6 @@ export default function CartPage() {
                               </p>
                             )}
 
-                            {item.isMadeToOrder && <p className="mt-2 text-xs font-semibold uppercase tracking-wide">{locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'}</p>}
                             {bijnaOp && (
                               <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-brand-primary">
                                 {max === 1 ? t('lastOne') : t('onlyLeft', { count: max })}

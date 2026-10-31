@@ -101,7 +101,7 @@ it('renders a fresh made-to-order PDP with enabled size/CTA and truthful stock c
     initialProduct={{id:'2307a99e-781a-8f4a-9da0-2374d3cb464f',name:'Boxy Fleece Hoodie',slug:'boxy-fleece-hoodie',description:'Heavy fleece',base_price:79,sale_price:null,category_id:null,categories:null,meta_title:'',meta_description:'',product_images:[{id:'image',url:'/pod.webp',alt_text:'Hoodie',position:0,is_primary:true,color:null,media_type:'image'}],product_variants:[{...variant,...override}]}}
   /></NextIntlClientProvider>)
   const document = new DOMParser().parseFromString(view(), 'text/html')
-  expect(document.body.textContent).toContain('Op bestelling gemaakt')
+  expect(document.body.textContent).not.toContain('Op bestelling gemaakt')
   expect(document.querySelector('[data-pdp-main-atc]')?.hasAttribute('disabled')).toBe(false)
   expect(document.body.textContent).not.toMatch(/Nog \d+ op voorraad|Op voorraad/)
   for (const override of [{supplier_checked_at:'2026-01-01T00:00:00Z'},{is_available:false},{supplier_orderable:false}]) {

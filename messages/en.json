@@ -377,7 +377,7 @@
     "shippingAtCheckout": "Delivery options and shipping costs at checkout.",
     "shippingAtCheckoutShort": "At checkout",
     "subtotalInclusive": "Incl. VAT · excl. shipping",
-    "productionDelivery": "Made-to-order items ship after production.",
+    "productionDelivery": "Delivery options and shipping costs are shown at checkout.",
     "freeShippingProgress": "€{amount} away from free shipping!",
     "freeShippingProgressMobile": "€{amount} to free shipping",
     "checkout": "Checkout",
@@ -842,9 +842,9 @@
     "shippingAreas": "Shipping Areas",
     "netherlands": "Netherlands",
     "belgium": "Belgium",
-    "processing": "In-stock items: see the delivery estimate on the product page.",
-    "delivery": "Made-to-order items: 1–3 business days for production.",
-    "total": "Then 5–14 business days in transit. Mixed orders may arrive separately.",
+    "processing": "See the delivery estimate on the product page.",
+    "delivery": "Delivery options and shipping costs are shown at checkout.",
+    "total": "Mixed orders may arrive in separate parcels.",
     "trackTrace": "Track & Trace",
     "viaDHL": "Tracked delivery. You receive:",
     "trackCode": "Track & trace code",
@@ -1834,8 +1834,8 @@
       "shipping": {
         "title": "5. SHIPPING",
         "items": [
-          "In-stock items ship from the Netherlands. Made-to-order items may ship directly from our production partner.",
-          "For in-stock items, see the delivery estimate on the product page. Made-to-order items take, where stated, 1–3 business days for production plus 5–14 business days in transit. Mixed orders may arrive in separate parcels.",
+          "Delivery options and shipping costs are shown at checkout.",
+          "Delivery estimates are shown before payment. Mixed orders may arrive in separate parcels.",
           "You will receive a track & trace code upon shipment",
           "Shipping costs: €{cost} (free from €{threshold})"
         ],

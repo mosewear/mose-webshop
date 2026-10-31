@@ -377,7 +377,7 @@
     "shippingAtCheckout": "Bezorgopties en verzendkosten bij het afrekenen.",
     "shippingAtCheckoutShort": "Bij het afrekenen",
     "subtotalInclusive": "Incl. BTW · excl. verzending",
-    "productionDelivery": "Op bestelling gemaakte artikelen worden na productie verzonden.",
+    "productionDelivery": "Bezorgopties en verzendkosten staan bij het afrekenen.",
     "freeShippingProgress": "Nog €{amount} tot gratis verzending!",
     "freeShippingProgressMobile": "Nog €{amount} tot gratis verzending",
     "checkout": "Afrekenen",
@@ -842,9 +842,9 @@
     "shippingAreas": "Verzendgebieden",
     "netherlands": "Nederland",
     "belgium": "België",
-    "processing": "Voorraadartikelen: de levertijd staat op de productpagina.",
-    "delivery": "Op bestelling gemaakt: 1–3 werkdagen productie.",
-    "total": "Daarna 5–14 werkdagen transport. Gemengde bestellingen kunnen apart aankomen.",
+    "processing": "De verwachte bezorging staat op de productpagina.",
+    "delivery": "Bezorgopties en verzendkosten staan bij het afrekenen.",
+    "total": "Een gemengde bestelling kan in meerdere pakketten aankomen.",
     "trackTrace": "Track & Trace",
     "viaDHL": "Met tracking. Je ontvangt:",
     "trackCode": "Track & trace code",
@@ -1834,8 +1834,8 @@
       "shipping": {
         "title": "5. VERZENDING",
         "items": [
-          "Voorraadartikelen worden vanuit Nederland verzonden. Artikelen die na bestelling worden geproduceerd kunnen rechtstreeks door onze productiepartner worden verzonden.",
-          "Voor voorraadartikelen geldt de levertijd op de productpagina. Voor productie op bestelling geldt, waar vermeld, 1–3 werkdagen productie plus 5–14 werkdagen transport. Een gemengde bestelling kan in meerdere pakketten aankomen.",
+          "Bezorgopties en verzendkosten staan bij het afrekenen.",
+          "De verwachte bezorging zie je vóór betaling. Een gemengde bestelling kan in meerdere pakketten aankomen.",
           "Je ontvangt een track & trace code bij verzending",
           "Verzendkosten: €{cost} (gratis vanaf €{threshold})"
         ],

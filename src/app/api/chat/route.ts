@@ -2,7 +2,7 @@ import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
-import { isTapstitchProduct, TAPSTITCH_PRODUCT_SOURCES } from '@/lib/tapstitch-products'
+import { isTapstitchProduct } from '@/lib/tapstitch-products'
 
 // Runtime config for streaming
 export const runtime = 'edge'
@@ -26,6 +26,8 @@ TONE OF VOICE:
 - Kort en to the point
 - Nederlands: informeel (je/jij)
 - Engels: casual but clear
+- Als de locale en is, antwoord volledig in het Engels. Als de locale nl is,
+  antwoord volledig in het Nederlands. Meng de talen nooit.
 
 EXPERTISE:
 - Het complete assortiment met actuele prijzen staat hieronder onder LIVE
@@ -34,10 +36,10 @@ EXPERTISE:
 - No-nonsense stijl (zonder poespas)
 - Materiaal, gewicht, certificering, pasvorm en herkomst verschillen per product.
   Gebruik uitsluitend de live productbeschrijving; vul ontbrekende feiten nooit aan.
-- Tapstitch-producten worden geleverd via onze productiepartner Tapstitch.
-  Pas hierop geen lokale productie-, voorraad-, afhaal- of leverbeloften toe.
-  Bezorgopties en verzendkosten worden voor deze producten bij het afrekenen getoond.
-  Algemene LIVE SETTINGS en SHIPPING CONTEXT gelden daarvoor niet als toezegging.
+- Noem nooit leveranciers, productiepartners, platforms of inkoopkanalen.
+  Noem nooit het woord Tapstitch. Klanten zien uitsluitend MOSE als merk.
+  Geef voor levering alleen aan dat bezorgopties en verzendkosten bij het
+  afrekenen worden getoond; doe geen uitspraken over interne voorraad of productie.
 
 OPMAAK:
 - Schrijf platte tekst. Geen markdown: geen sterretjes voor vet, geen koppen,
@@ -140,8 +142,6 @@ async function getProductDetails(productSlug: string, locale: 'nl' | 'en') {
     name,
     description,
     category: categoryName,
-    supplier: supplierFulfilled ? TAPSTITCH_PRODUCT_SOURCES[product.id] : null,
-    fulfillment: supplierFulfilled ? 'Tapstitch; delivery options and shipping costs shown at checkout; local stock and pickup unverified' : 'MOSE',
     price: `EUR ${formatEur(effectivePrice)}`,
     base_price: basePrice,
     sale_price: salePrice,
@@ -194,7 +194,7 @@ async function getCatalogSummary(locale: 'nl' | 'en') {
       const basis = Number(p.base_price || 0)
       const aanbieding = p.sale_price === null || p.sale_price === undefined ? null : Number(p.sale_price)
       const prijs = aanbieding !== null && aanbieding > 0 ? aanbieding : basis
-      return `${naam} (/product/${p.slug}): EUR ${formatEur(prijs)}${aanbieding !== null && aanbieding > 0 ? ` (was EUR ${formatEur(basis)})` : ''}${isTapstitchProduct(p) ? ' [Tapstitch: product-specific facts only; delivery and shipping costs at checkout]' : ''}`
+      return `${naam} (/product/${p.slug}): EUR ${formatEur(prijs)}${aanbieding !== null && aanbieding > 0 ? ` (was EUR ${formatEur(basis)})` : ''}`
     })
   } catch {
     return null

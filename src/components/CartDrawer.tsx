@@ -764,7 +764,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             )}
                           </div>
 
-                          {item.isMadeToOrder && <p className="mt-2 text-xs font-semibold uppercase tracking-wide">{locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'}</p>}
                           {/* Bottom Section - Quantity & Price */}
                           <div className="flex items-center justify-between mt-3">
                             {/* Quantity Controls */}

@@ -38,6 +38,7 @@ export default function ChatButton() {
   const knopRef = useRef<HTMLButtonElement>(null)
 
   const opProductpagina = Boolean(pathname?.includes('/product/'))
+  const opHomepage = pathname === '/nl' || pathname === '/en' || pathname === '/nl/' || pathname === '/en/' || pathname === '/'
 
   // Eén MutationObserver voor alle drawer-detecties: één DOM-traversal
   // per mutatie i.p.v. drie aparte observers. Een gewijzigd attribute
@@ -240,7 +241,7 @@ export default function ChatButton() {
     <>
       {!shouldHideButton && (
         <div
-          className="fixed right-4 z-[9999] flex flex-col items-end gap-2 md:right-6"
+          className={`chat-floating fixed right-4 z-[9999] flex flex-col items-end gap-2 md:right-6 ${opHomepage ? 'chat-floating-home' : ''}`}
           style={{ bottom: onderMarge }}
         >
           {/* De tip, boven de knop. */}
@@ -301,7 +302,7 @@ export default function ChatButton() {
             className={`chat-knop group relative flex items-center justify-center rounded-full transition-transform duration-200 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-black/70 focus-visible:ring-offset-2 ${
               isOpen
                 ? 'hidden h-14 w-14 bg-black text-brand-primary md:flex'
-                : 'h-[60px] w-[60px] bg-brand-primary text-black md:h-14 md:w-auto md:gap-2.5 md:px-6'
+                : 'h-[60px] w-[60px] bg-brand-primary text-white md:h-14 md:w-auto md:gap-2.5 md:px-6'
             } ${!isOpen && magPulseren ? 'chat-knop-pulse' : ''}`}
             aria-label={isOpen ? t('close') : t('launcher')}
             aria-expanded={isOpen}
@@ -342,6 +343,16 @@ export default function ChatButton() {
             0 0 0 2px #ffffff,
             0 14px 32px rgba(0, 0, 0, 0.26),
             0 4px 10px rgba(0, 0, 0, 0.14);
+        }
+
+        /* Keep the launcher clear of the two primary hero actions on mobile. */
+        .chat-floating-home {
+          bottom: calc(6.5rem + max(var(--cookie-consent-height, 0px), var(--chat-underbar-height, 0px))) !important;
+        }
+        @media (min-width: 768px) {
+          .chat-floating-home {
+            bottom: calc(1.5rem + max(var(--cookie-consent-height, 0px), var(--chat-underbar-height, 0px))) !important;
+          }
         }
 
         @keyframes chat-halo {

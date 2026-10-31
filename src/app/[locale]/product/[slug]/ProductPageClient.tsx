@@ -1159,7 +1159,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
 
   const supplierFulfilled = isTapstitchProduct(product)
   const supplierDelivery = locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.'
-  const supplierOrigin = locale === 'en' ? 'Fulfilled by our production partner Tapstitch.' : 'Geleverd via onze productiepartner Tapstitch.'
+  const supplierOrigin = locale === 'en' ? 'MOSE quality checked and ready to wear.' : 'Door MOSE geselecteerd en klaar om te dragen.'
 
   if (product.is_gift_card) {
     return (
@@ -1696,7 +1696,6 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
               </div>
 
               {/* AVAILABILITY & TRUST - Desktop */}
-              {madeToOrder && <p role="status" className="border-2 border-black px-4 py-3 text-sm font-bold uppercase tracking-wide">{locale === 'en' ? 'Made to order' : 'Op bestelling gemaakt'}</p>}
               {selectedVariant && !isPresale && !madeToOrder && (
                 <div className="hidden md:block border-2 border-black">
                   <div className={`px-4 py-3 flex items-center justify-between ${
