@@ -1,4 +1,5 @@
 import type { CartItem } from '@/store/cart'
+import { MOSE_CHECKOUT_HOSTS } from '@/lib/shopify/checkout-hosts'
 import { nativeGiftAmountCents, nativeGiftLineSchema, nativeGiftRecipientAttributes, normalizeNativeGiftLines, type NativeGiftLine } from '@/lib/shopify/native-gift-input'
 
 export type ShopifyCartSnapshot = {
@@ -79,7 +80,7 @@ export function getCheckoutAttempt(snapshot: ShopifyCartSnapshot, previous: unkn
 export function checkoutRedirectUrl(value: unknown, verifiedHost?: string): string {
   if (typeof value !== 'string') throw new Error('INVALID_REDIRECT')
   const url = new URL(value)
-  const hosts = ['hp5szr-te.myshopify.com', 'mosewear.myshopify.com']
+  const hosts: string[] = [...MOSE_CHECKOUT_HOSTS]
   if (verifiedHost && /^[a-z0-9.-]+$/.test(verifiedHost)) hosts.push(verifiedHost)
   if (url.protocol !== 'https:' || url.username || url.password || url.port || !hosts.includes(url.hostname)) {
     throw new Error('INVALID_REDIRECT')

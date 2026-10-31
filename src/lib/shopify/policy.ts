@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { nativeGiftLineSchema } from './native-gift-input'
+import { MOSE_CHECKOUT_HOSTS } from './checkout-hosts'
 
 export const SHOPIFY_API_VERSION = '2026-10'
 export const SHOPIFY_STORE = 'hp5szr-te.myshopify.com'
@@ -72,7 +73,7 @@ export function isShopifyIdentity(value: unknown): boolean {
 /** Redirect only to the configured shop or a separately verified checkout domain. */
 export function assertCheckoutUrl(value: string, extraHost?: string): string {
   const url = new URL(value)
-  const allowed = [SHOPIFY_STORE, 'mosewear.myshopify.com']
+  const allowed: string[] = [...MOSE_CHECKOUT_HOSTS]
   if (extraHost && /^[a-z0-9.-]+$/.test(extraHost)) allowed.push(extraHost)
   if (url.protocol !== 'https:' || url.username || url.password || url.port || !allowed.includes(url.hostname)) {
     throw new Error('INVALID_CHECKOUT_URL')
