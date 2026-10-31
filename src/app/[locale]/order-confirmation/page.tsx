@@ -4,7 +4,6 @@ import { use, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { MessageCircle, CalendarClock } from 'lucide-react'
-import { useCart } from '@/store/cart'
 import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { trackPurchase } from '@/lib/analytics'
@@ -66,7 +65,6 @@ export default function OrderConfirmationPage({
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
   const [contactPhone, setContactPhone] = useState('+31 50 234 0025')
-  const { clearCart } = useCart()
 
   // Staat bewust vóór de effecten die hem aanroepen: react-hooks/immutability
   // leest in bronvolgorde, dus een aanroep van een lager gedeclareerde functie
@@ -243,13 +241,8 @@ export default function OrderConfirmationPage({
   }
 
   useEffect(() => {
-    clearCart()
-
-    localStorage.removeItem('mose_promo_code')
-    localStorage.removeItem('mose_promo_discount')
-    localStorage.removeItem('mose_promo_type')
-    localStorage.removeItem('mose_promo_value')
-
+    // Visiting a confirmation link must never discard a current basket.
+    // Successful payment/zero-total handoff owns completion and cart cleanup.
     if (orderId || paymentId) {
       fetchOrder()
     } else {

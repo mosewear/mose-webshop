@@ -33,7 +33,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'metadata' })
 
   return {
-    title: `${t('lookbook.title')} - MOSE`,
+    title: t('lookbook.title'),
     description: t('lookbook.description'),
     keywords: t('lookbook.keywords').split(', '),
     openGraph: {

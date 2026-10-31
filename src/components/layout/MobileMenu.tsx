@@ -493,9 +493,7 @@ export default function MobileMenu({ isOpen, onClose, onOpenSearch }: MobileMenu
             </ul>
           )}
 
-          {/* [5] PASVORM — de grootste afhaakreden bij herenmode op mobiel is
-              twijfel over de maat, niet over verzendkosten. Dit antwoord stond
-              alleen onderaan een productpagina. */}
+          {/* Shipping guidance links to the matching service page. */}
           <LocaleLink
             href="/verzending"
             onClick={onClose}

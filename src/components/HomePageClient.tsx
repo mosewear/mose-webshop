@@ -1,5 +1,7 @@
 'use client'
 
+import { useLiveAvailability } from '@/hooks/useLiveAvailability'
+
 import Image from 'next/image'
 import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import { catalogTiles, emptyCatalogFilters, type CatalogProduct } from '@/lib/catalog-filters'
@@ -43,7 +45,7 @@ export default function HomePageClient({
   
   const settings = initialSettings
   const homepageSettings = initialHomepageSettings
-  const featuredProducts = initialFeaturedProducts
+  const featuredProducts = useLiveAvailability(initialFeaturedProducts)
   const categories = initialCategories
 
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())

@@ -11,7 +11,7 @@ export async function generateMetadata({
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'toestemming' })
   // Persoonlijke link uit een mail; hoort niet in zoekresultaten.
-  return { title: t('metaTitel'), robots: { index: false, follow: false } }
+  return { title: { absolute: t('metaTitel') }, robots: { index: false, follow: false } }
 }
 
 export default function ToestemmingPage() {

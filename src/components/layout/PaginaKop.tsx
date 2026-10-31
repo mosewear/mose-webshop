@@ -50,7 +50,7 @@ export default function PaginaKop({
 }: PaginaKopProps) {
   return (
     <header className="bg-[#F5F4F1]">
-      <div className={`mx-auto ${BREEDTE[breedte]} px-4 pb-7 pt-8 md:pb-9 md:pt-12`}>
+      <div className={`mx-auto ${BREEDTE[breedte]} px-4 pb-6 pt-6 md:pb-9 md:pt-10`}>
         {bovenregel && (
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-primary md:text-xs">{bovenregel}</p>
         )}

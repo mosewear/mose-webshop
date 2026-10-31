@@ -50,6 +50,7 @@ export default function FAQAccordion() {
 
     // Zelfde regel als in PdpFaq: bij altijd gratis verzending vervangen we het
     // hele antwoord, anders zou er "gratis vanaf €0" komen te staan.
+    if (process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' && answer.includes('{freeShipping}')) return t('checkoutDelivery')
     if (isAltijdGratis(settings) && answer.includes('{freeShipping}')) {
       return t('answerVerzendingAltijd').replace('{returnDays}', settings.return_days.toString())
     }

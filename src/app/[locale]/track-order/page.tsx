@@ -10,13 +10,15 @@ import PaginaKop from '@/components/layout/PaginaKop'
 interface OrderTrackingData {
   id: string
   status: string
-  created_at: string
+  created_at: string | null
   updated_at: string
   tracking_code: string | null
   tracking_url: string | null
   carrier: string | null
   estimated_delivery_date: string | null
   total: number
+  currency?: string
+  shipments?: Array<{ carrier: string | null; code: string | null; url: string | null }>
   order_items: Array<{
     product_name: string
     quantity: number
@@ -35,11 +37,11 @@ const STATUS_ICON: Record<
   },
   paid: {
     icon: <CheckCircle2 className="w-12 h-12" />,
-    color: 'text-blue-600',
+    color: 'text-brand-primary',
   },
   processing: {
     icon: <Package className="w-12 h-12" />,
-    color: 'text-purple-600',
+    color: 'text-black',
   },
   shipped: {
     icon: <Truck className="w-12 h-12" />,
@@ -118,6 +120,10 @@ export default function TrackOrderPage() {
           return { label: t('status.shipped'), description: t('status.shippedDesc') }
         case 'delivered':
           return { label: t('status.delivered'), description: t('status.deliveredDesc') }
+        case 'partially_shipped':
+          return { label: t('status.partiallyShipped'), description: t('status.partiallyShippedDesc') }
+        case 'refunded':
+          return { label: t('status.refunded'), description: t('status.refundedDesc') }
         case 'cancelled':
           return { label: t('status.cancelled'), description: t('status.cancelledDesc') }
         case 'pending':
@@ -126,7 +132,7 @@ export default function TrackOrderPage() {
       }
     })()
 
-    const visual = STATUS_ICON[status] ?? STATUS_ICON.pending
+    const visual = STATUS_ICON[status === 'partially_shipped' ? 'shipped' : status === 'refunded' ? 'cancelled' : status] ?? STATUS_ICON.pending
     return { ...labelDesc, ...visual }
   }
 
@@ -136,6 +142,7 @@ export default function TrackOrderPage() {
       paid: 40,
       processing: 60,
       shipped: 80,
+      partially_shipped: 70,
       delivered: 100,
       cancelled: 0,
     }
@@ -228,12 +235,12 @@ export default function TrackOrderPage() {
                     {t('orderDetails', { id: orderData.id.slice(0, 8).toUpperCase() })}
                   </h2>
                   <p className="text-sm text-gray-600">
-                    {t('placedOn')}{' '}
+                    {orderData.created_at && <>{t('placedOn')}{' '}
                     {formatDate(orderData.created_at, {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
-                    })}
+                    })}</>}
                   </p>
                 </div>
                 <button
@@ -253,7 +260,7 @@ export default function TrackOrderPage() {
                 <p className="text-gray-600">{statusInfo.description}</p>
               </div>
 
-              {orderData.status !== 'cancelled' && (
+              {!['cancelled', 'refunded'].includes(orderData.status) && (
                 <div className="mt-6">
                   <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                     <div
@@ -270,8 +277,13 @@ export default function TrackOrderPage() {
                 </div>
               )}
 
-              {orderData.tracking_code && (
-                <div className="mt-8 bg-brand-primary text-white p-6 rounded">
+              {(orderData.shipments?.length ?? 0) > 1 && <ul className="mt-6 space-y-3 border-t border-black/15 pt-4">
+                {orderData.shipments!.map((shipment, index) => <li key={index} className="break-words text-sm">
+                  {shipment.carrier} {shipment.code}{shipment.url && <a href={shipment.url} target="_blank" rel="noopener noreferrer" className="ml-2 inline-flex min-h-11 items-center font-bold underline underline-offset-4">{locale === 'en' ? 'Track parcel' : 'Volg pakket'}</a>}
+                </li>)}
+              </ul>}
+              {orderData.tracking_code && (orderData.shipments?.length ?? 0) <= 1 && (
+                <div className="mt-8 bg-brand-primary text-white p-6 border-2 border-black">
                   <div className="flex items-center gap-3 mb-3">
                     <Truck className="w-6 h-6" />
                     <h4 className="font-bold text-lg">{t('tracking.title')}</h4>
@@ -323,11 +335,11 @@ export default function TrackOrderPage() {
                     <div>
                       <p className="font-semibold">{item.product_name}</p>
                       <p className="text-sm text-gray-600">
-                        {t('items.line', {
+                        {item.size || item.color ? t('items.line', {
                           size: item.size,
                           color: item.color,
                           quantity: item.quantity,
-                        })}
+                        }) : `${locale === 'en' ? 'Quantity' : 'Aantal'}: ${item.quantity}`}
                       </p>
                     </div>
                   </div>

@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     : 'Lees de laatste verhalen, stijlgidsen en behind-the-scenes content van MOSE streetwear.'
 
   return {
-    title,
+    title: t('title'),
     description,
     openGraph: {
       title,

@@ -271,7 +271,7 @@ export default function ContactPage() {
                 {t('info.faq.description')}
               </p>
               <Link
-                href={`/${locale}/algemene-voorwaarden`}
+                href={`/${locale}/verzending`}
                 className="inline-block px-6 py-3 bg-white text-brand-primary font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors text-sm"
               >
                 {t('info.faq.button')}

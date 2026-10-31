@@ -3,91 +3,17 @@
 import { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, MapPin, Truck, Mail } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { Zap, Shirt, Layers, Mail } from 'lucide-react'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
-
-const LAUNCH_DATE = new Date('2026-03-02T00:00:00').getTime()
 
 export default function EarlyAccessClient() {
   const t = useTranslations('earlyAccess')
   const locale = useLocale()
-  const supabase = createClient()
   
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-  const [subscriberCount, setSubscriberCount] = useState(633)
-  const [countdown, setCountdown] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  })
-
-  // Countdown timer
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = Date.now()
-      const distance = LAUNCH_DATE - now
-
-      if (distance < 0) {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-        return
-      }
-
-      setCountdown({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000)
-      })
-    }
-
-    updateCountdown()
-    const interval = setInterval(updateCountdown, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // Get subscriber count
-  useEffect(() => {
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from('newsletter_subscribers')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active')
-      
-      if (count !== null) {
-        // Start at 633 and add real subscriber count
-        setSubscriberCount(633 + count)
-      }
-    }
-
-    fetchCount()
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('subscriber_count')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'newsletter_subscribers'
-        },
-        () => {
-          fetchCount()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
   // Track page view
   useEffect(() => {
     trackPixelEvent('ViewContent', {
@@ -98,6 +24,7 @@ export default function EarlyAccessClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     setError('')
     setIsSubmitting(true)
 
@@ -127,9 +54,6 @@ export default function EarlyAccessClient() {
       // Track successful newsletter subscription
       trackPixelEvent('Subscribe', {
         content_name: 'Early Access Newsletter',
-        currency: 'EUR',
-        value: 4.95, // Free shipping value
-        predicted_ltv: 150 // Average customer lifetime value
       })
 
       setSubmitted(true)
@@ -179,31 +103,6 @@ export default function EarlyAccessClient() {
             {t('hero.subtitle')}
           </p>
 
-          {/* Countdown */}
-          <div className="mb-12">
-            <p className="text-sm text-gray-400 uppercase tracking-wider mb-4">
-              {t('hero.countdown.title')}
-            </p>
-            <div className="flex justify-center gap-4 md:gap-6">
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 md:px-6 md:py-4 min-w-[70px] md:min-w-[90px]">
-                <div className="text-3xl md:text-4xl font-bold text-brand-primary">{countdown.days}</div>
-                <div className="text-xs text-gray-400 uppercase mt-1">{t('hero.countdown.days')}</div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 md:px-6 md:py-4 min-w-[70px] md:min-w-[90px]">
-                <div className="text-3xl md:text-4xl font-bold text-brand-primary">{countdown.hours}</div>
-                <div className="text-xs text-gray-400 uppercase mt-1">{t('hero.countdown.hours')}</div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 md:px-6 md:py-4 min-w-[70px] md:min-w-[90px]">
-                <div className="text-3xl md:text-4xl font-bold text-brand-primary">{countdown.minutes}</div>
-                <div className="text-xs text-gray-400 uppercase mt-1">{t('hero.countdown.minutes')}</div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 md:px-6 md:py-4 min-w-[70px] md:min-w-[90px]">
-                <div className="text-3xl md:text-4xl font-bold text-brand-primary">{countdown.seconds}</div>
-                <div className="text-xs text-gray-400 uppercase mt-1">{t('hero.countdown.seconds')}</div>
-              </div>
-            </div>
-          </div>
-
           {/* Form */}
           <AnimatePresence mode="wait">
             {!submitted ? (
@@ -218,6 +117,8 @@ export default function EarlyAccessClient() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full px-4">
                   <input
                     type="email"
+                    aria-label={locale === 'en' ? 'Email address' : 'E-mailadres'}
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('form.placeholder')}
@@ -242,7 +143,7 @@ export default function EarlyAccessClient() {
                 key="success"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-8 p-6 bg-brand-primary/20 border border-brand-primary rounded-lg max-w-md mx-auto"
+                className="mb-8 p-6 bg-brand-primary/20 border border-brand-primary  max-w-md mx-auto"
               >
                 <p className="text-brand-primary font-bold text-lg">
                   {t('form.success')}
@@ -262,14 +163,14 @@ export default function EarlyAccessClient() {
             </div>
             <div className="text-center">
               <div className="flex justify-center mb-3">
-                <MapPin className="w-8 h-8 text-brand-primary" />
+                <Shirt className="w-8 h-8 text-brand-primary" />
               </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.gift.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.gift.desc')}</p>
             </div>
             <div className="text-center">
               <div className="flex justify-center mb-3">
-                <Truck className="w-8 h-8 text-brand-primary" />
+                <Layers className="w-8 h-8 text-brand-primary" />
               </div>
               <h3 className="font-bold text-sm md:text-base mb-1">{t('benefits.shipping.title')}</h3>
               <p className="text-xs text-gray-400">{t('benefits.shipping.desc')}</p>
@@ -282,11 +183,6 @@ export default function EarlyAccessClient() {
               <p className="text-xs text-gray-400">{t('benefits.updates.desc')}</p>
             </div>
           </div>
-
-          {/* Social proof */}
-          <p className="text-gray-400 text-sm mb-4">
-            {t('social.count', { count: subscriberCount })}
-          </p>
 
           {/* Trust line */}
           <p className="text-xs text-gray-500 max-w-lg mx-auto leading-relaxed">
