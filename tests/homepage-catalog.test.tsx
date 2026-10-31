@@ -6,7 +6,7 @@ import { homepageCategories, selectHomepageProducts } from '@/lib/homepage-catal
 import { availableVariant, type CatalogProduct } from '@/lib/catalog-filters'
 import HomePageClient from '@/components/HomePageClient'
 import type { HomepageSettings } from '@/lib/homepage'
-vi.mock('next/image', () => ({default:({fill,priority,blurDataURL,placeholder,...props}:Record<string,unknown>)=><img {...props}/>}))
+vi.mock('next/image', () => ({getImageProps:(props:Record<string,unknown>)=>({props}),default:({fill,priority,blurDataURL,placeholder,...props}:Record<string,unknown>)=><img {...props}/>}))
 vi.mock('@/i18n/routing', () => ({Link:({children,...props}:React.ComponentProps<'a'>)=><a {...props}>{children}</a>}))
 vi.mock('@/components/FAQAccordion',()=>({default:()=>null}))
 vi.mock('@/store/wishlist',()=>({useWishlist:()=>({loadWishlist:vi.fn(),isInWishlist:()=>false,addToWishlist:vi.fn(),removeFromWishlist:vi.fn()})}))

@@ -2,7 +2,7 @@
 
 import { useLiveAvailability } from '@/hooks/useLiveAvailability'
 
-import Image from 'next/image'
+import Image, { getImageProps } from 'next/image'
 import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import { catalogTiles, emptyCatalogFilters, type CatalogProduct } from '@/lib/catalog-filters'
 import FAQAccordion from '@/components/FAQAccordion'
@@ -49,18 +49,13 @@ export default function HomePageClient({
   const categories = initialCategories
 
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
-  // Fall back to the static /public asset if the Storage desktop hero
-  // 404s (happened after a photoshoot deploy that wrote the DB URL but
-  // never uploaded hero-desktop-desktop.webp). Without this, desktop
-  // shows a black gradient with no photo while mobile still works.
-  const [heroDesktopSrc, setHeroDesktopSrc] = useState(
-    homepageSettings?.hero_image_url || '/hero-desktop.webp',
-  )
-  const [heroMobileSrc, setHeroMobileSrc] = useState(
-    homepageSettings?.hero_image_url_mobile ||
-      homepageSettings?.hero_image_url ||
-      '/hero-mobile.webp',
-  )
+  const desktopFallback = '/campaign/mose-hero-desktop-2026-10.webp'
+  const mobileFallback = '/campaign/mose-hero-mobile-2026-10.webp'
+  const [heroDesktopSrc, setHeroDesktopSrc] = useState(homepageSettings?.hero_image_url || desktopFallback)
+  const [heroMobileSrc, setHeroMobileSrc] = useState(homepageSettings?.hero_image_url_mobile || mobileFallback)
+  // A picture selects one art-directed source before downloading the hero.
+  const desktopHero = getImageProps({ src: heroDesktopSrc, alt: '', fill: true, sizes: '100vw', quality: 90 }).props
+  const mobileHero = getImageProps({ src: heroMobileSrc, alt: t('hero.imageAlt'), fill: true, sizes: '100vw', quality: 90 }).props
 
   const [storyImageSrc, setStoryImageSrc] = useState('/mose-about-collection.webp')
 
@@ -122,134 +117,59 @@ export default function HomePageClient({
 
   return (
     <>
-      <div className="min-h-screen bg-white" data-full-bleed-top>
-      {/* Hero Section - Full Viewport */}
-      <section className="relative h-screen w-full overflow-hidden">
-        {/* Background Image with art-directed mobile/desktop split */}
-        <div className="absolute inset-0">
-          {/* Desktop / tablet: landscape group shot */}
-          <Image
-            src={heroDesktopSrc}
+      <div className="min-h-screen bg-white">
+      <section
+        aria-labelledby="home-hero-title"
+        className="relative isolate flex min-h-[620px] max-h-[900px] w-full overflow-hidden bg-black lg:min-h-[560px] lg:max-h-[820px]"
+        style={{ height: 'calc(100svh - var(--announcement-banner-height, 0px) - var(--header-total-height, 0px))' }}
+      >
+        <picture>
+          <source media="(min-width: 1024px)" srcSet={desktopHero.srcSet} sizes={desktopHero.sizes} />
+          {/* getImageProps keeps Next image optimisation while picture avoids loading both crops. */}
+          <img
+            {...mobileHero}
             alt={t('hero.imageAlt')}
-            fill
-            sizes="(max-width: 767px) 0px, 100vw"
-            quality={95}
-            className="hidden md:block object-cover object-center scale-105"
-            priority
+            loading="eager"
+            fetchPriority="high"
+            className="object-cover object-top"
             onError={() => {
-              if (heroDesktopSrc !== '/hero-desktop.webp') {
-                setHeroDesktopSrc('/hero-desktop.webp')
-              }
+              setHeroDesktopSrc(desktopFallback)
+              setHeroMobileSrc(mobileFallback)
             }}
           />
-          {/* Mobile: portrait crop with the trio in frame */}
-          <Image
-            src={heroMobileSrc}
-            alt={t('hero.imageAlt')}
-            fill
-            sizes="(min-width: 768px) 0px, 100vw"
-            quality={95}
-            className="block md:hidden object-cover object-center scale-105"
-            priority
-            onError={() => {
-              if (heroMobileSrc !== '/hero-mobile.webp') {
-                setHeroMobileSrc('/hero-mobile.webp')
-              }
-            }}
-          />
-          {/* Lighter overlay so the photoshoot hero stays readable */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] opacity-25" />
-        </div>
-        
-        {/* Subtle claw watermark — no pulse (less visual noise over hero) */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.08]">
-          <Image
-            src="/claw.png"
-            alt=""
-            width={600}
-            height={600}
-            className="absolute top-1/4 right-1/4 transform rotate-12"
-          />
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 h-full flex items-center justify-center px-4 animate-fadeInUp">
-              <div className="text-center max-w-5xl">
-                {/* Hero badge — kleiner formaat + tightere tracking op
-                    mobiel zodat lange admin-teksten als "ONS NIEUWSTE
-                    LOOKBOOK IS UIT" niet over de viewport-grens gaan.
-                    Op iPhone SE (375px - 32px container = 343px content)
-                    moet de badge altijd binnen de viewport blijven. */}
-                <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 px-3 sm:px-5 py-2 sm:py-3 bg-transparent border-2 border-white text-white text-[11px] sm:text-sm font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] max-w-[calc(100vw-2rem)]">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="break-words">{homepageSettings?.hero_badge_text || t('hero.badge')}</span>
-                </div>
-
-            {/* Main Heading - Responsive Sizes */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl text-white mb-6 md:mb-8 leading-[0.95] tracking-tight drop-shadow-2xl">
+        </picture>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.78)_20%,rgba(0,0,0,0.20)_43%,transparent_58%)] lg:hidden" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(to_right,rgba(0,0,0,0.76)_0%,rgba(0,0,0,0.48)_32%,transparent_62%)] lg:block" />
+        <div className="relative z-10 mx-auto flex w-full max-w-[1600px] items-end px-5 pb-7 pt-10 sm:px-8 lg:items-center lg:px-10 lg:py-12 xl:px-16">
+          <div className="max-w-lg text-left lg:w-[44%] lg:max-w-[640px]">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white sm:text-xs lg:mb-5">
+              {homepageSettings?.hero_badge_text || t('hero.badge')}
+            </p>
+            <h1 id="home-hero-title" className="mb-3 font-display text-[38px] leading-[1.02] tracking-tight text-white sm:text-5xl lg:mb-5 lg:text-[clamp(40px,5.2vw,84px)]">
               {homepageSettings?.hero_title_line1 || t('hero.title1')}
               <br />
               <span className="text-brand-primary">{homepageSettings?.hero_title_line2 || t('hero.title2')}</span>
             </h1>
-
-            {/* Subtitle - Responsive */}
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-8 md:mb-12 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+            <p className="mb-5 max-w-[38ch] text-sm font-medium leading-relaxed text-white lg:mb-7 lg:max-w-[34ch] lg:text-base xl:text-lg">
               {homepageSettings?.hero_subtitle || t('hero.subtitle')}
             </p>
-
-            {/* Brutalist CTA Buttons — flat vlakken, harde randen, geen
-                scale of drop-shadow. De primary CTA behoudt de
-                scale-x-fill (links → rechts) animatie omdat dat een
-                editorial brutalist micro-interactie is, geen "fluffy
-                modern web". Tracking gelijk getrokken naar 0.2em
-                (site-brede eyebrow-standaard). */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-wrap items-center gap-3">
               <LocaleLink
                 href={homepageSettings?.hero_cta1_link || '/shop'}
-                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-brand-primary text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] overflow-hidden border-2 border-brand-primary block text-center transition-colors"
                 aria-label={t('hero.cta1.aria')}
+                className="inline-flex min-h-12 items-center justify-center gap-3 border-2 border-brand-primary bg-brand-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-black transition-colors hover:border-white hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:text-sm"
               >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {homepageSettings?.hero_cta1_text || t('hero.cta1.text')}
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-                <div className="absolute inset-0 bg-brand-primary-hover transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" aria-hidden="true" />
+                {homepageSettings?.hero_cta1_text || t('hero.cta1.text')}
+                <ArrowRight size={18} aria-hidden="true" />
               </LocaleLink>
               <LocaleLink
                 href={homepageSettings?.hero_cta2_link || '/lookbook'}
-                className="group w-full sm:w-auto relative sm:min-w-[220px] px-8 py-4 bg-transparent border-2 border-white text-white font-bold text-base md:text-lg uppercase tracking-[0.2em] transition-colors hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-primary block text-center"
                 aria-label={t('hero.cta2.aria')}
+                className="inline-flex min-h-12 items-center justify-center border-2 border-white px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:text-sm"
               >
-                <span className="flex items-center justify-center gap-2">
-                  {homepageSettings?.hero_cta2_text || t('hero.cta2.text')}
-                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </span>
+                {homepageSettings?.hero_cta2_text || t('hero.cta2.text')}
               </LocaleLink>
             </div>
-          </div>
-        </div>
-
-        {/* Brutalist scroll-indicator — verticale 2px lijn met groene
-            pulsing punt. Vervangt de "rounded-full mouse"-icon die het
-            meest niet-brutalist element op de pagina was. Editorial:
-            label boven, ↓ pijl, dan een dunne lijn die naar beneden
-            wijst. Hele groep heeft de animate-bounce voor de subtiele
-            "scroll-prompt" cue, identiek aan de oude indicator. */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-          <div className="flex flex-col items-center gap-3 animate-bounce">
-            <span className="text-white text-[10px] font-bold uppercase tracking-[0.3em] leading-none">
-              {t('hero.scroll')}
-            </span>
-            <span aria-hidden="true" className="block w-px h-10 bg-white/80" />
-            <span aria-hidden="true" className="block w-2 h-2 bg-brand-primary animate-pulse" style={{ animationDuration: '1.6s' }} />
           </div>
         </div>
       </section>
