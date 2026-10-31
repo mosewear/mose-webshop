@@ -5,22 +5,9 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Lock, ChevronLeft } from 'lucide-react'
 import { Link } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
-/**
- * Het afrekenscherm krijgt zijn eigen, kale omlijsting.
- *
- * Op de gewone pagina's staat boven het formulier de volledige navigatie
- * (Shop, Lookbook, Blog, Over MOSE, Contact, zoeken, account, verlanglijst en
- * het hamburgermenu) en eronder een voettekst met nog eens twaalf links. Dat
- * zijn ongeveer twintig manieren om weg te lopen van de enige pagina die maar
- * één taak heeft. Elke grote winkel strijkt dat weg: logo, een regel over
- * veilig betalen, en verder niets.
- *
- * De aankondigingsbalk en de drie popups (campagne, nieuwsbrief, enquête) gaan
- * hier om dezelfde reden uit. Een venster met "10% korting" over een
- * betaalformulier heen is geen aanbod meer maar een obstakel.
- */
+/** Keep checkout focused, with essential service and policy links available. */
 
 const AFREKENPADEN = ['/checkout', '/payment']
 
@@ -66,7 +53,7 @@ export function AfrekenKop() {
   // nodig, en met sticky schoof de stappenbalk eronder weg.
   return (
     <header className="border-b-2 border-black bg-white">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         {/* Terug naar de winkelwagen, niet naar de winkel. Dat is de enige
             uitgang die binnen de trechter blijft. */}
         <Link
@@ -88,4 +75,23 @@ export function AfrekenKop() {
       </div>
     </header>
   )
+}
+
+/** Essential help remains reachable without the full shopping navigation. */
+export function AfrekenVoet() {
+  const pathname = usePathname()
+  const locale = useLocale()
+  if (!isAfrekenen(pathname)) return null
+  const en = locale === 'en'
+  const links = [
+    ['/contact', en ? 'Need help?' : 'Hulp nodig?'],
+    ['/verzending', en ? 'Delivery & returns' : 'Bezorgen & retourneren'],
+    ['/privacy', 'Privacy'],
+    ['/algemene-voorwaarden', en ? 'Terms & conditions' : 'Algemene voorwaarden'],
+  ]
+  return <footer className="border-t border-gray-200 bg-white">
+    <nav aria-label={en ? 'Checkout help and policies' : 'Hulp en voorwaarden bij afrekenen'} className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 px-4 py-5 text-xs text-gray-600">
+      {links.map(([href,label]) => <Link key={href} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-black focus-visible:outline-2 focus-visible:outline-black">{label}<span className="sr-only">{en ? ' (opens in a new tab)' : ' (opent in een nieuw tabblad)'}</span></Link>)}
+    </nav>
+  </footer>
 }

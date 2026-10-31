@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useLocale } from 'next-intl'
-import { Lock, ArrowLeft, ShoppingBag } from 'lucide-react'
+import { Lock, ArrowLeft, ShoppingBag, ChevronDown } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
 import { formatBedrag } from '@/lib/format-price'
+import { vertaalKleur } from '@/lib/kleurnaam'
 import {
   canRotateCheckoutAttempt, checkoutRedirectUrl, createShopifyCartSnapshot, getCheckoutAttempt,
   SHOPIFY_ATTEMPT_STORAGE_KEY, type CheckoutAttempt,
@@ -17,7 +18,7 @@ const copy = {
   nl: {
     title: 'Veilig afrekenen', intro: 'Je rekent alle artikelen samen af in één betaling.',
     back: 'Terug naar je winkelmand', empty: 'Je winkelmand is nog leeg.', shop: 'Bekijk de collectie',
-    subtotal: 'Artikelen, vóór korting en verzending', final: 'De definitieve prijs, korting en verzendkosten zie je vóór je betaalt.',
+    subtotal: 'Subtotaal', final: 'Korting en verzendkosten worden bij de volgende stap berekend. Je ziet het totaal vóór je betaalt.',
     delivery: 'Bezorgland: Nederland', deliveryNote: 'Bezorging is momenteel alleen mogelijk in Nederland.',
     parcels: 'Je bestelling kan in meerdere pakketten worden geleverd.',
     button: 'Veilig verder naar betalen', loading: 'Je bestelling voorbereiden…', hydrated: 'Je winkelmand laden…',
@@ -35,7 +36,7 @@ const copy = {
   en: {
     title: 'Secure checkout', intro: 'Pay for all your items together in one payment.',
     back: 'Back to your bag', empty: 'Your bag is empty.', shop: 'Shop the collection',
-    subtotal: 'Items, before discounts and shipping', final: 'You will see the final price, discounts and shipping costs before you pay.',
+    subtotal: 'Subtotal', final: 'Discounts and shipping are calculated in the next step. Review your total before you pay.',
     delivery: 'Delivery country: Netherlands', deliveryNote: 'Delivery is currently available in the Netherlands only.',
     parcels: 'Your order may arrive in separate parcels.',
     button: 'Continue to secure payment', loading: 'Preparing your order…', hydrated: 'Loading your bag…',
@@ -193,35 +194,35 @@ export function ShopifyCheckoutHandoff() {
   const hasGiftCards = items.some(item => item.isGiftCard)
   const hasPhysicalItems = items.some(item => !item.isGiftCard)
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 md:py-12">
-      <Link href="/cart" className="mb-6 inline-flex min-h-[44px] items-center gap-2 text-sm font-bold uppercase tracking-wide underline underline-offset-4">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:py-10">
+      <Link href="/cart" className="mb-3 inline-flex min-h-[44px] items-center gap-2 text-sm font-bold uppercase tracking-wide underline underline-offset-4">
         <ArrowLeft size={16} aria-hidden="true" />{text.back}
       </Link>
       <h1 className="font-display text-4xl uppercase md:text-5xl">{text.title}</h1>
-      <p className="mt-3 mb-8 text-gray-700">{text.intro}</p>
-      <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_340px]">
+      <p className="mt-2 mb-6 max-w-xl text-sm leading-relaxed text-gray-600 md:mb-8 md:text-base">{text.intro}</p>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
         <ul aria-label={locale === 'en' ? 'Your items' : 'Je artikelen'} className="border-t-2 border-black">
           {items.map(item => (
-            <li key={item.variantId} className="flex gap-4 border-b border-gray-200 py-5">
-              {item.image && <div className="relative h-28 w-20 shrink-0 bg-gray-100"><Image src={item.image} alt={item.name} fill sizes="80px" className="object-contain" /></div>}
+            <li key={item.variantId} className="flex gap-4 border-b border-gray-200 py-5 sm:gap-5">
+              {item.image && <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden bg-gray-100 sm:w-28"><Image src={item.image} alt={item.name} fill sizes="(min-width: 640px) 112px, 96px" className="object-cover" /></div>}
               <div className="min-w-0 flex-1">
-                <h2 className="font-display text-xl uppercase">{item.name}</h2>
-                <p className="mt-1 text-sm text-gray-600">{[item.color, item.size].filter(Boolean).join(' · ')}</p>
+                <h2 className="break-words font-sans text-sm font-bold uppercase leading-snug sm:text-base">{item.name}</h2>
+                <p className="mt-1 text-sm text-gray-600">{[item.color ? vertaalKleur(item.color, locale) : null, item.size].filter(Boolean).join(' · ')}</p>
                 <p className="mt-2 text-sm">{text.quantity}: {item.quantity}</p>
-                <p className="mt-2 font-semibold tabular-nums">{formatBedrag(item.price * item.quantity, locale)}</p>
+                <p className="mt-3 text-base font-bold tabular-nums">{formatBedrag(item.price * item.quantity, locale)}</p>
               </div>
             </li>
           ))}
         </ul>
-        <section aria-label={locale === 'en' ? 'Order summary' : 'Besteloverzicht'} className="self-start border-2 border-black p-5 md:sticky md:top-6">
-          <p className="text-sm text-gray-600">{text.subtotal}</p>
-          <p className="mt-1 font-display text-3xl tabular-nums">{formatBedrag(items.reduce((sum, item) => sum + item.price * item.quantity, 0), locale)}</p>
+        <section aria-label={locale === 'en' ? 'Order summary' : 'Besteloverzicht'} className="min-w-0 self-start border-2 border-black bg-gray-50 p-4 sm:p-6 lg:sticky lg:top-6">
+          <div className="flex items-baseline justify-between gap-4"><h2 className="text-base font-bold">{text.subtotal}</h2>
+          <p className="text-2xl font-bold tabular-nums">{formatBedrag(items.reduce((sum, item) => sum + item.price * item.quantity, 0), locale)}</p></div>
           <p className="mt-3 text-sm leading-relaxed text-gray-700">{text.final}</p>
           <div className="my-5 space-y-2 border-y border-gray-200 py-4 text-sm">
-            {hasPhysicalItems ? <><p className="font-semibold">{text.delivery}</p><p className="text-gray-600">{text.deliveryNote}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
+            {hasPhysicalItems ? <><p className="font-semibold">{text.delivery}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
           </div>
           <div className="mb-5 space-y-4">
-            <div><label htmlFor="checkout-promo" className="block text-sm font-bold">{text.promo}</label><input id="checkout-promo" value={promoCode} onChange={event => setPromoCode(event.target.value)} disabled={busy} maxLength={80} autoComplete="off" autoCapitalize="characters" placeholder={text.promoPlaceholder} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-promo-note"/><p id="checkout-promo-note" className="mt-2 text-xs text-gray-600">{text.promoNote}</p></div>
+            <details className="group border-b border-gray-200 pb-4" open={promoCode.length > 0 || error === text.invalidPromo || error === text.benefitError}><summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold [&::-webkit-details-marker]:hidden">{text.promo}<ChevronDown size={18} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180" /></summary><label htmlFor="checkout-promo" className="sr-only">{text.promo}</label><input id="checkout-promo" value={promoCode} onChange={event => setPromoCode(event.target.value)} disabled={busy} maxLength={80} autoComplete="off" autoCapitalize="characters" placeholder={text.promoPlaceholder} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-promo-note"/><p id="checkout-promo-note" className="mt-2 text-xs text-gray-600">{text.promoNote}</p></details>
             <button type="button" onClick={() => void loadLoyalty()} disabled={busy || loyaltyStatus === 'loading'} className="min-h-[44px] text-sm font-bold underline underline-offset-4 disabled:opacity-50">{loyaltyStatus === 'loading' ? text.pointsLoading : text.pointsButton}</button>
             {loyaltyStatus === 'guest' && <p className="text-sm">{text.pointsGuest} <Link href="/account" className="underline">{text.login}</Link></p>}
             {loyaltyStatus === 'error' && <p className="text-sm" role="status">{text.pointsError}</p>}
