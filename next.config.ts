@@ -54,10 +54,9 @@ const nextConfig: NextConfig = {
     // enough that returning visitors and shared-CDN edges almost always
     // serve from cache instead of re-encoding from origin.
     minimumCacheTTL: 60 * 60 * 24 * 30,
-    // Tightened to the breakpoints we actually design for. Default
-    // includes 3840 which we never serve, and skipping unused sizes
-    // reduces the srcset payload Next emits in the HTML.
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    // Retina desktop heroes need more than 2048px. The browser still selects
+    // the smallest suitable candidate from sizes and its device pixel ratio.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
     // 95 is er voor de beelden waar het echt op aankomt: de
     // shopbanner en de productgalerij. Zie het commentaar daar.
     qualities: [75, 90, 95],

@@ -49,13 +49,24 @@ export default function HomePageClient({
   const categories = initialCategories
 
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
-  const desktopFallback = '/campaign/mose-hero-desktop-2026-10.webp'
-  const mobileFallback = '/campaign/mose-hero-mobile-2026-10.webp'
-  const [heroDesktopSrc, setHeroDesktopSrc] = useState(homepageSettings?.hero_image_url || desktopFallback)
-  const [heroMobileSrc, setHeroMobileSrc] = useState(homepageSettings?.hero_image_url_mobile || mobileFallback)
+  // Versioned lossless masters avoid recompressing already-lossy WebP sources
+  // and invalidate the old 30-day image cache without changing custom uploads.
+  const desktopFallback = '/campaign/mose-hero-desktop-hq-2026-11.png'
+  const mobileFallback = '/campaign/mose-hero-mobile-hq-2026-11.png'
+  const desktopSetting = homepageSettings?.hero_image_url
+  const mobileSetting = homepageSettings?.hero_image_url_mobile
+  const [heroDesktopSrc, setHeroDesktopSrc] = useState(
+    !desktopSetting || desktopSetting === '/campaign/mose-hero-desktop-2026-10.webp' ? desktopFallback : desktopSetting,
+  )
+  const [heroMobileSrc, setHeroMobileSrc] = useState(
+    !mobileSetting || mobileSetting === '/campaign/mose-hero-mobile-2026-10.webp' ? mobileFallback : mobileSetting,
+  )
   // A picture selects one art-directed source before downloading the hero.
-  const desktopHero = getImageProps({ src: heroDesktopSrc, alt: '', fill: true, sizes: '100vw', quality: 90 }).props
-  const mobileHero = getImageProps({ src: heroMobileSrc, alt: t('hero.imageAlt'), fill: true, sizes: '100vw', quality: 90 }).props
+  // object-cover can scale the image wider than the viewport. Account for the
+  // tallest hero (820px desktop / 760px mobile), so high-density screens do
+  // not receive a source sized only for the narrower visible crop.
+  const desktopHero = getImageProps({ src: heroDesktopSrc, alt: '', fill: true, sizes: '(min-width: 1458px) 100vw, 1458px', quality: 95 }).props
+  const mobileHero = getImageProps({ src: heroMobileSrc, alt: t('hero.imageAlt'), fill: true, sizes: '(max-width: 506px) 507px, 100vw', quality: 95 }).props
 
   const [storyImageSrc, setStoryImageSrc] = useState('/mose-about-collection.webp')
 
