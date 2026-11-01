@@ -1114,7 +1114,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       <div className="min-h-screen px-4 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
-            <div className="space-y-4">
+            <div className="space-y-4" data-product-gallery>
               <div className="aspect-[3/4] md:aspect-[3/3] bg-gray-100 animate-pulse"></div>
               <div className="grid grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
@@ -1235,7 +1235,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
 
           <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-12">
             {/* LEFT: Image Gallery (55% width) */}
-            <div className="space-y-4">
+            <div className="space-y-4" data-product-gallery>
               {/* Main Media Display - Native CSS Scroll-Snap Gallery */}
               {/* De uitloop over de schermbreedte zit op DEZE wrapper, niet op
                   de scroller eronder. Alles wat vast over het beeld moet staan
@@ -1529,7 +1529,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                   href={`/shop?category=${product.categories.slug}`}
                   className="hover:text-brand-primary transition-colors"
                 >
-                  {product.categories.name}
+                  {getLocalizedCategoryName(product)}
                 </LocaleLink>
                 <span aria-hidden="true" className="mx-1.5 text-gray-300">/</span></>}
                 <span className="text-gray-700 font-medium">

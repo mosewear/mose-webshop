@@ -234,6 +234,7 @@ export default function PdpImageLightbox({
   return (
     <div
       role="dialog"
+      data-product-gallery-dialog
       aria-modal="true"
       aria-label={t('title')}
       className="fixed inset-0 z-50 bg-black/95 flex flex-col animate-fadeIn"
