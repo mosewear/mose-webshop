@@ -1,5 +1,7 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -48,7 +50,7 @@ export default function EarlyAccessClient() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong')
+        throw data
       }
 
       // Track successful newsletter subscription
@@ -60,7 +62,7 @@ export default function EarlyAccessClient() {
       setEmail('')
     } catch (err: any) {
       console.error('Newsletter subscription error:', err)
-      setError(err.message || t('form.error'))
+      setError(publicError(err, locale, t('form.error')))
     } finally {
       setIsSubmitting(false)
     }

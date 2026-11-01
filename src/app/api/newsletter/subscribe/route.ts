@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     // Validate email
     if (!email || typeof email !== 'string') {
       return NextResponse.json(
-        { success: false, error: 'Email is verplicht' },
+        { success: false, code: 'required', error: 'Email is verplicht' },
         { status: 400 }
       )
     }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { success: false, error: 'Ongeldig email adres' },
+        { success: false, code: 'invalid_email', error: 'Ongeldig email adres' },
         { status: 400 }
       )
     }
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       const rateLimitKey = getRateLimitKey(req)
       if (!checkRateLimit(rateLimitKey)) {
         return NextResponse.json(
-          { success: false, error: 'Te veel aanvragen. Probeer het over 10 minuten opnieuw.' },
+          { success: false, code: 'rate_limited', error: 'Te veel aanvragen. Probeer het over 10 minuten opnieuw.' },
           { status: 429 }
         )
       }
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       // PGRST116 = not found (which is fine)
       console.error('Error checking existing subscriber:', checkError)
       return NextResponse.json(
-        { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
+        { success: false, code: 'server_error', error: 'Er ging iets mis. Probeer het opnieuw.' },
         { status: 500 }
       )
     }
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
         if (updateError) {
           console.error('Error resubscribing user:', updateError)
           return NextResponse.json(
-            { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
+            { success: false, code: 'server_error', error: 'Er ging iets mis. Probeer het opnieuw.' },
             { status: 500 }
           )
         }
@@ -213,7 +213,7 @@ export async function POST(req: NextRequest) {
     if (insertError) {
       console.error('Error inserting subscriber:', insertError)
       return NextResponse.json(
-        { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
+        { success: false, code: 'server_error', error: 'Er ging iets mis. Probeer het opnieuw.' },
         { status: 500 }
       )
     }
@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Newsletter subscribe error:', error)
     return NextResponse.json(
-      { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
+      { success: false, code: 'server_error', error: 'Er ging iets mis. Probeer het opnieuw.' },
       { status: 500 }
     )
   }

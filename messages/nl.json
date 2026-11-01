@@ -85,7 +85,7 @@
     "contact": "Contact",
     "cart": "Winkelwagen",
     "account": "Account",
-    "wishlist": "Wishlist",
+    "wishlist": "Favorieten",
     "search": "Zoeken",
     "menu": "Menu",
     "close": "Sluiten",
@@ -680,10 +680,10 @@
       "subscribed": "Je bent aangemeld! We sturen je een email wanneer het product weer op voorraad is."
     },
     "wishlist": {
-      "add": "Toevoegen aan wishlist",
-      "remove": "Verwijderen uit wishlist",
-      "added": "Toegevoegd aan wishlist!",
-      "removed": "Verwijderd uit wishlist"
+      "add": "Toevoegen aan favorieten",
+      "remove": "Verwijderen uit favorieten",
+      "added": "Toegevoegd aan favorieten!",
+      "removed": "Verwijderd uit favorieten"
     },
     "tabs": {
       "description": "Productbeschrijving",
@@ -998,6 +998,20 @@
         "large": "Grote productfoto’s",
         "compact": "Twee producten per rij"
       }
+    },
+    "stories": {
+      "denim": {
+        "eyebrow": "Uitgelicht",
+        "title": "Denim. Op jouw manier.",
+        "body": "Een rustig shirt. Een stevig jack. Makkelijk te combineren.",
+        "cta": "Bekijk de jassen"
+      },
+      "sport": {
+        "eyebrow": "MOSE sport",
+        "title": "Tijd om te trainen.",
+        "body": "Trainingsshirts, shorts en broeken die bij elkaar passen.",
+        "cta": "Ontdek sport"
+      }
     }
   },
   "errors": {
@@ -1164,19 +1178,19 @@
     "orderAgain": "Bestel opnieuw"
   },
   "wishlist": {
-    "title": "Mijn wishlist",
+    "title": "Mijn favorieten",
     "empty": {
-      "title": "Je wishlist is leeg",
-      "description": "Ontdek onze collectie en voeg je favoriete items toe aan je wishlist",
+      "title": "Je hebt nog geen favorieten",
+      "description": "Ontdek onze collectie en voeg je favoriete items toe aan je favorieten",
       "cta": "Shop nu"
     },
     "itemCount": "{count} {count, plural, =1 {item} other {items}}",
-    "loading": "Wishlist laden...",
+    "loading": "Favorieten laden...",
     "addToCart": "Toevoegen",
-    "remove": "Verwijderen uit wishlist",
-    "removeTitle": "Verwijderen uit wishlist",
-    "added": "Toegevoegd aan wishlist!",
-    "removed": "Verwijderd uit wishlist",
+    "remove": "Verwijderen uit favorieten",
+    "removeTitle": "Verwijderen uit favorieten",
+    "added": "Toegevoegd aan favorieten!",
+    "removed": "Verwijderd uit favorieten",
     "noImage": "Geen afbeelding",
     "outOfStock": "Dit product is helaas uitverkocht",
     "addedToCart": "Toegevoegd aan winkelwagen!"
@@ -1370,7 +1384,7 @@
         "title": "Winkelwagen"
       },
       "wishlist": {
-        "title": "Wishlist"
+        "title": "Favorieten"
       },
       "login": {
         "title": "Inloggen"
@@ -1499,7 +1513,7 @@
       "outOfStock": "Uitverkocht",
       "presale": "Pre-sale",
       "addToCart": "In winkelmand",
-      "quickView": "Quick View"
+      "quickView": "Snel bekijken"
     },
     "categories": {
       "title": "SHOP OP CATEGORIE",
@@ -2313,7 +2327,7 @@
       "algemeen": "Algemeen",
       "style": "Style",
       "drops": "Drops",
-      "behind-the-scenes": "Behind the Scenes",
+      "behind-the-scenes": "Achter de schermen",
       "sustainability": "Duurzaamheid",
       "groningen": "Groningen"
     }

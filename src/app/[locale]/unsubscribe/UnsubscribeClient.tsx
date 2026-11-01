@@ -1,14 +1,17 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import { CheckCircle, XCircle, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function UnsubscribeClient() {
   const t = useTranslations('unsubscribe')
+  const locale = useLocale()
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
   
@@ -34,8 +37,8 @@ export default function UnsubscribeClient() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        setError(data.error || t('errorRetry'))
-        toast.error(data.error || t('error'))
+        setError(publicError(data, locale, t('errorRetry')))
+        toast.error(publicError(data, locale, t('error')))
         setLoading(false)
         return
       }

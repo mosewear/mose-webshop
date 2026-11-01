@@ -1,5 +1,7 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { useLiveAvailability } from '@/hooks/useLiveAvailability'
 
 import Image, { getImageProps } from 'next/image'
@@ -101,7 +103,7 @@ export default function HomePageClient({
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        toast.error(data.error || t('newsletter.error'))
+        toast.error(publicError(data, locale, t('newsletter.error')))
         setNewsletterLoading(false)
         return
       }

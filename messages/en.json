@@ -364,7 +364,7 @@
     },
     "remove": "Remove item",
     "size": "Size",
-    "color": "Color",
+    "color": "Colour",
     "quantity": "Quantity",
     "price": "Price",
     "decrease": "Decrease quantity",
@@ -464,8 +464,8 @@
     "buyNow": "Buy Now",
     "outOfStock": "Out of stock",
     "size": "Size",
-    "color": "Color",
-    "selectColor": "Select color {color}",
+    "color": "Colour",
+    "selectColor": "Select colour {color}",
     "quantity": "Quantity",
     "decrease": "Decrease quantity",
     "increase": "Increase quantity",
@@ -715,9 +715,9 @@
       "addToCartWithPrice": "Add to bag · {price}",
       "addToCartFull": "Add to cart",
       "adding": "Adding...",
-      "pickColor": "Pick a color",
+      "pickColor": "Pick a colour",
       "pickSize": "Pick a size",
-      "colorLabel": "Color",
+      "colorLabel": "Colour",
       "sizeLabel": "Size"
     },
     "shippingMicro": {
@@ -892,7 +892,7 @@
       "category": "Category",
       "allProducts": "All Products",
       "size": "Size",
-      "color": "Color",
+      "color": "Colour",
       "price": "Price Range",
       "inStockOnly": "In Stock Only",
       "active": "Active Filters",
@@ -997,6 +997,20 @@
         "label": "Product view",
         "large": "Large product photos",
         "compact": "Two products per row"
+      }
+    },
+    "stories": {
+      "denim": {
+        "eyebrow": "In focus",
+        "title": "Denim. Your way.",
+        "body": "A simple tee. A solid jacket. Easy to wear together.",
+        "cta": "Explore jackets"
+      },
+      "sport": {
+        "eyebrow": "MOSE sport",
+        "title": "Time to train.",
+        "body": "Training tees, shorts and trousers made to wear together.",
+        "cta": "Explore sport"
       }
     }
   },
@@ -1344,7 +1358,7 @@
     "items": {
       "title": "YOUR ITEMS",
       "size": "Size:",
-      "color": "Color:",
+      "color": "Colour:",
       "quantity": "Quantity:"
     },
     "summary": {

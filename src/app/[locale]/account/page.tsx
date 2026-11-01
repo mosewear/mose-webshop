@@ -278,7 +278,7 @@ export default function AccountPage() {
       toast.success(t('profileSection.saveSuccess'))
       await fetchProfile()
     } catch (error: any) {
-      toast.error(error.message || t('profileSection.saveError'))
+      toast.error(t('profileSection.saveError'))
     } finally {
       setProfileLoading(false)
     }
@@ -317,7 +317,7 @@ export default function AccountPage() {
       })
       setPasswordError('')
     } catch (error: any) {
-      setPasswordError(error.message || t('passwordSection.saveError'))
+      setPasswordError(t('passwordSection.saveError'))
     } finally {
       setPasswordLoading(false)
     }
@@ -429,7 +429,7 @@ export default function AccountPage() {
       setAddressError('')
       await fetchAddresses()
     } catch (error: any) {
-      setAddressError(error.message || t('addressSection.saveError'))
+      setAddressError(t('addressSection.saveError'))
     }
   }
 

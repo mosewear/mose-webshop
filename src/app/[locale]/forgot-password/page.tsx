@@ -1,5 +1,7 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
@@ -28,7 +30,7 @@ export default function ForgotPasswordPage() {
       })
 
       if (resetError) {
-        setError(resetError.message)
+        setError(publicError(resetError, locale, tErrors('somethingWrong')))
         setLoading(false)
         return
       }
@@ -36,7 +38,7 @@ export default function ForgotPasswordPage() {
       setSuccess(true)
       setLoading(false)
     } catch (err: any) {
-      setError(err.message || tErrors('somethingWrong'))
+      setError(publicError(err, locale, tErrors('somethingWrong')))
       setLoading(false)
     }
   }

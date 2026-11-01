@@ -472,7 +472,7 @@ export default function NewReturnPage() {
       toast.success(t('submitted'))
       router.push(`/returns/${data.return_id}`)
     } catch (error: any) {
-      toast.error(error.message || t('createFailed'))
+      toast.error(t('createFailed'))
     } finally {
       setSubmitting(false)
     }

@@ -1,5 +1,7 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { X } from 'lucide-react'
@@ -219,7 +221,7 @@ export default function NewsletterPopup({
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || t('error'))
+        throw data
       }
 
       // Track successful subscription
@@ -242,7 +244,7 @@ export default function NewsletterPopup({
       }, 3000)
     } catch (err: any) {
       console.error('Newsletter subscription error:', err)
-      setError(err.message || t('error'))
+      setError(publicError(err, locale, t('error')))
     } finally {
       setIsSubmitting(false)
     }
