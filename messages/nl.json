@@ -159,7 +159,7 @@
       "returns": "Terugsturen"
     },
     "makers": "GEEN POESPAS. WEL KARAKTER.",
-    "wishlist": "Bewaard",
+    "wishlist": "Favorieten",
     "contact": "Mail ons"
   },
   "footer": {
@@ -2325,7 +2325,7 @@
     "noPosts": "Nog geen artikelen gepubliceerd.",
     "categories": {
       "algemeen": "Algemeen",
-      "style": "Style",
+      "style": "Stijl",
       "drops": "Drops",
       "behind-the-scenes": "Achter de schermen",
       "sustainability": "Duurzaamheid",
