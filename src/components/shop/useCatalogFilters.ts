@@ -8,6 +8,7 @@ import {
 export function useCatalogFilters(initial: CatalogFilters) {
   const [filters, setFilters] = useState(initial),
     current = useRef(initial),
+    serverInitial = useRef(initial),
     typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sync = useCallback(() => {
     if (typingTimer.current) clearTimeout(typingTimer.current)
@@ -17,6 +18,14 @@ export function useCatalogFilters(initial: CatalogFilters) {
     current.current = next
     setFilters(next)
   }, [])
+  // Next Link navigation to this same route preserves client state. Reconcile
+  // a new server response with the URL, just as Back/Forward already does.
+  useEffect(() => {
+    if (serverInitial.current !== initial) {
+      serverInitial.current = initial
+      sync()
+    }
+  }, [initial, sync])
   // The server supplies the initial URL state, so hydration needs no corrective render.
   useEffect(() => {
     window.addEventListener('popstate', sync)

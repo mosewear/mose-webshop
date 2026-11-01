@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     // Validation
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
-        { error: 'Vul alle velden in' },
+        { code: 'required', error: 'Vul alle velden in' },
         { status: 400 }
       )
     }
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: 'Ongeldig email adres' },
+        { code: 'invalid_email', error: 'Ongeldig email adres' },
         { status: 400 }
       )
     }
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     if (!emailResult.success) {
       console.error('Error sending contact email:', emailResult.error)
       return NextResponse.json(
-        { error: 'Kon email niet versturen. Probeer het later opnieuw.' },
+        { code: 'server_error', error: 'Kon email niet versturen. Probeer het later opnieuw.' },
         { status: 500 }
       )
     }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error in contact form:', error)
     return NextResponse.json(
-      { error: 'Er is een fout opgetreden' },
+      { code: 'server_error', error: 'Er is een fout opgetreden' },
       { status: 500 }
     )
   }

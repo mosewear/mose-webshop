@@ -1,5 +1,7 @@
 'use client'
 
+import { productImageAlt } from '@/lib/product-image-alt'
+
 import { useLiveAvailability } from '@/hooks/useLiveAvailability'
 
 import { Suspense, use, useState, useMemo, useEffect, useRef, useCallback, ReactElement } from 'react'
@@ -1288,7 +1290,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                           >
                             <Image
                               src={media.url || '/placeholder-product.svg'}
-                              alt={media.alt_text || product.name}
+                              alt={productImageAlt(media.alt_text, product.name, locale)}
                               fill
                               sizes="(max-width: 768px) 100vw, 50vw"
                               quality={95}
@@ -1428,7 +1430,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                         >
                           <Image
                             src={media.url}
-                            alt={media.alt_text || product.name}
+                            alt={productImageAlt(media.alt_text, product.name, locale)}
                             fill
                             sizes="(max-width: 768px) 25vw, 12vw"
                             quality={90}
@@ -1857,7 +1859,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                                     : 'border-gray-300 hover:border-black'
                                   : 'border-gray-300 cursor-not-allowed'
                               }`}
-                              aria-label={t('selectColor', { color })}
+                              aria-label={t('selectColor', { color: getTranslatedColor(color) })}
                               aria-pressed={isSelected}
                             >
                               {tileImage ? (
@@ -1929,7 +1931,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                                 ? 'border-gray-400 hover:border-black'
                                 : 'border-gray-300 cursor-not-allowed opacity-50'
                             }`}
-                            aria-label={t('selectColor', { color })}
+                            aria-label={t('selectColor', { color: getTranslatedColor(color) })}
                           >
                             <div
                               className="w-full h-full"
@@ -2418,7 +2420,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
           items={displayImages.map((m) => ({
             id: m.id,
             url: m.url,
-            alt_text: m.alt_text,
+            alt_text: productImageAlt(m.alt_text, product.name, locale),
             media_type: m.media_type,
             video_thumbnail_url: m.video_thumbnail_url,
           }))}
@@ -2453,7 +2455,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
             items={imageOnlyMedia.map(({ media }) => ({
               id: media.id,
               url: media.url,
-              alt_text: media.alt_text,
+              alt_text: productImageAlt(media.alt_text, product.name, locale),
             }))}
             initialIndex={initialLightboxIndex}
             productName={product.name}

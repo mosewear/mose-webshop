@@ -10,6 +10,20 @@ afterEach(() => {
   cleanup()
   vi.useRealTimers()
 })
+it('applies same-page collection links after a new server response and cancels pending typing', () => {
+  const { result, rerender } = renderHook(({ initial }) => useCatalogFilters(initial), {
+    initialProps: { initial: emptyCatalogFilters },
+  })
+  act(() => result.current.update({ q: 'unfinished' }, 'typing'))
+  act(() => window.history.pushState(null, '', '/en/shop?category=jassen'))
+  rerender({ initial: { ...emptyCatalogFilters, category: 'jassen' } })
+  act(() => vi.advanceTimersByTime(500))
+  expect(result.current.filters).toMatchObject({ category: 'jassen', q: '' })
+  expect(window.location.search).toBe('?category=jassen')
+  act(() => window.history.pushState(null, '', '/en/shop?collection=sport'))
+  rerender({ initial: { ...emptyCatalogFilters, collection: 'sport' } })
+  expect(result.current.filters).toMatchObject({ category: 'all', collection: 'sport' })
+})
 it('restores all facets from browser navigation and cancels a stale pending search write', () => {
   const { result } = renderHook(() => useCatalogFilters(emptyCatalogFilters))
   act(() => result.current.update({ q: 'hoodie' }, 'typing'))

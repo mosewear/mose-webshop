@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -11,17 +12,20 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const pathname = usePathname()
+  const locale = pathname?.split('/')[1] === 'en' ? 'en' : 'nl'
+  const en = locale === 'en'
   useEffect(() => {
     // Log error to console for debugging
     console.error('Application error:', error)
   }, [error])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <main id="main-content" className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full text-center">
         {/* Logo */}
         <div className="mb-8">
-          <Link href="/" className="inline-block">
+          <Link href={`/${locale}`} className="inline-block">
             <Image
               src="/logomose.png"
               alt="MOSE"
@@ -36,10 +40,10 @@ export default function Error({
         {/* Error Message */}
         <div className="bg-white border-2 border-black p-8 md:p-10">
           <h1 className="text-4xl md:text-5xl font-display mb-4">
-            Oeps!
+            {en ? 'Something went wrong' : 'Er ging iets mis'}
           </h1>
           <p className="text-gray-700 mb-6 text-lg">
-            Er is iets misgegaan. Geen zorgen, we zijn er mee bezig.
+            {en ? 'Please try again. If the problem continues, contact Team MOSE.' : 'Probeer het opnieuw. Blijft het probleem bestaan? Neem contact op met Team MOSE.'}
           </p>
 
           {/* Error Details (only in development) */}
@@ -57,26 +61,26 @@ export default function Error({
               onClick={reset}
               className="w-full py-3 bg-brand-primary text-white font-bold uppercase tracking-wider hover:bg-brand-primary-hover transition-colors"
             >
-              Probeer opnieuw
+              {en ? 'Try again' : 'Probeer opnieuw'}
             </button>
             <Link
-              href="/"
+              href={`/${locale}`}
               className="block w-full py-3 border-2 border-black font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors"
             >
-              Naar home
+              {en ? 'Back to home' : 'Naar home'}
             </Link>
           </div>
         </div>
 
         {/* Help Text */}
         <p className="mt-6 text-sm text-gray-600">
-          Blijft dit probleem bestaan?{' '}
-          <Link href="/contact" className="text-brand-primary hover:underline font-semibold">
-            Neem contact op
+          {en ? 'Need help? ' : 'Hulp nodig? '}
+          <Link href={`/${locale}/contact`} className="text-brand-primary hover:underline font-semibold">
+            {en ? 'Contact us' : 'Neem contact op'}
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   )
 }
 

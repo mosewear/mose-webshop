@@ -35,7 +35,7 @@ interface InstagramMarqueeProps {
 }
 
 function localizedCaption(post: InstagramPost, locale: string): string | null {
-  if (locale === 'en' && post.caption_en) return post.caption_en
+  if (locale === 'en') return post.caption_en || null
   return post.caption || null
 }
 

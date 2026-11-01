@@ -602,7 +602,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                   className={`w-2 h-2 rounded-full transition-colors ${
                     lightboxIndex === i ? 'bg-white' : 'bg-white/40'
                   }`}
-                  aria-label={`Foto ${i + 1}`}
+                  aria-label={`${locale === 'en' ? 'Photo' : 'Foto'} ${i + 1}`}
                 />
               ))}
             </div>

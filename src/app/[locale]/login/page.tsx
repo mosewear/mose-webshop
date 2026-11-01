@@ -81,7 +81,7 @@ export default function LoginPage() {
 
     if (ruw && !/[^\x00-\x7F]/.test(ruw) && /[a-z]/.test(ruw) && ruw.length > 60) return t('errors.serverProblem')
 
-    return err?.message || t('errors.generic')
+    return t('errors.generic')
 
   }
 

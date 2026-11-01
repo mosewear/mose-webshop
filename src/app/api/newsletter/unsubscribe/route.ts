@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     // Validate email
     if (!email || typeof email !== 'string') {
       return NextResponse.json(
-        { success: false, error: 'Email is verplicht' },
+        { success: false, code: 'required', error: 'Email is verplicht' },
         { status: 400 }
       )
     }
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     if (checkError || !existing) {
       return NextResponse.json(
-        { success: false, error: 'Dit email adres is niet gevonden in onze lijst' },
+        { success: false, code: 'subscriber_not_found', error: 'Dit email adres is niet gevonden in onze lijst' },
         { status: 404 }
       )
     }
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     if (updateError) {
       console.error('Error unsubscribing user:', updateError)
       return NextResponse.json(
-        { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
+        { success: false, code: 'server_error', error: 'Er ging iets mis. Probeer het opnieuw.' },
         { status: 500 }
       )
     }
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Newsletter unsubscribe error:', error)
     return NextResponse.json(
-      { success: false, error: 'Er ging iets mis. Probeer het opnieuw.' },
+      { success: false, code: 'server_error', error: 'Er ging iets mis. Probeer het opnieuw.' },
       { status: 500 }
     )
   }

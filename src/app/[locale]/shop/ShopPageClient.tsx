@@ -2,7 +2,7 @@
 
 import { useLiveAvailability } from '@/hooks/useLiveAvailability'
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, Search, SlidersHorizontal, X, RectangleVertical, Columns2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
@@ -29,7 +29,7 @@ import CatalogProductCard from '@/components/shop/CatalogProductCard'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import ShopCategoryNav from '@/components/shop/ShopCategoryNav'
 import { getImageForColor } from '@/lib/product-display'
-import DetailBlok from '@/components/shop/DetailBlok'
+import CollectionStory, { showCollectionStories, collectionStorySlots } from '@/components/shop/CollectionStory'
 import DualRangeSlider from '@/components/DualRangeSlider'
 import { getSiteSettings } from '@/lib/settings'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
@@ -200,6 +200,8 @@ export default function ShopPageClient({
       catalogTiles(filtered, filters),
     [filtered, filters],
   )
+  const storiesEnabled = showCollectionStories(filters)
+  const storyProducts = { denim: products.find(p => p.slug === 'mose-denim-zip-jacket'), sport: products.find(p => p.slug === 'mose-training-tee') }
   const { trackSelect } = useCatalogTracking({ tiles, filters, locale })
   useEffect(() => {
     if (!filters.q) return
@@ -590,6 +592,7 @@ export default function ShopPageClient({
             ) : (
               <div className={`-mx-3 grid gap-x-1 gap-y-5 sm:mx-0 sm:grid-cols-2 sm:gap-x-2 md:gap-x-4 md:gap-y-7 lg:grid-cols-3 xl:grid-cols-4 ${compactView ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {tiles.map((tile, index) => (
+                <Fragment key={tile.tileKey}>
                   <CatalogProductCard
                     key={tile.tileKey}
                     tile={tile}
@@ -602,12 +605,16 @@ export default function ShopPageClient({
                     priority={index < 2}
                     showCategoryLabels={showCategoryLabels}
                   />
+                  {storiesEnabled && index < tiles.length - 1 && collectionStorySlots(index + 1).map(slot => {
+                    const product = storyProducts[slot.story]
+                    return product ? <CollectionStory key={`${slot.story}-${slot.className}`} {...slot} product={product} /> : null
+                  })}
+                </Fragment>
                 ))}
               </div>
             )}
           </section>
         </div>
-        {!loading && selectedNavigation === 'all' && refinementCount === 0 && <DetailBlok />}
         <div>
           <RecentlyViewed />
         </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { COMPANY } from '@/lib/company'
 
 import { useState, useEffect } from 'react'
@@ -54,23 +56,10 @@ export default function ContactPage() {
         body: JSON.stringify(form),
       })
 
-      let data
-      try {
-        data = await response.json()
-      } catch (jsonError) {
-        // If response is not JSON, still show success if status is ok
-        if (response.ok) {
-          setSubmitted(true)
-          setLoading(false)
-          setForm({ name: '', email: '', subject: '', message: '' })
-          setTimeout(() => setSubmitted(false), 5000)
-          return
-        }
-        throw new Error('Invalid response from server')
-      }
+      const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || t('form.error'))
+        setError(publicError(data, locale, t('form.error')))
         setLoading(false)
         return
       }
@@ -82,12 +71,9 @@ export default function ContactPage() {
       setTimeout(() => setSubmitted(false), 5000)
     } catch (error) {
       console.error('Error submitting contact form:', error)
-      // If we get here but email was sent, show success anyway
-      // This handles cases where response parsing fails but email was sent
-      setSubmitted(true)
+      setError(t('form.error'))
+      setSubmitted(false)
       setLoading(false)
-      setForm({ name: '', email: '', subject: '', message: '' })
-      setTimeout(() => setSubmitted(false), 5000)
     }
   }
 
@@ -109,7 +95,7 @@ export default function ContactPage() {
             )}
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border-2 border-red-600 text-red-900">
+              <div role="alert" className="mb-6 p-4 bg-red-50 border-2 border-red-600 text-red-900">
                 <strong>{locale === 'en' ? 'Error:' : 'Fout:'}</strong> {error}
               </div>
             )}

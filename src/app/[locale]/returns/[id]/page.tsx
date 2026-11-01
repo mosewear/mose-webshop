@@ -260,7 +260,7 @@ export default function ReturnDetailsPage() {
       // Return data voor gebruikers van deze functie
       return data.return
     } catch (error: any) {
-      toast.error(error.message || t('returnLoadFailed'))
+      toast.error(t('returnLoadFailed'))
       router.push('/account')
       return null
     } finally {
@@ -282,7 +282,7 @@ export default function ReturnDetailsPage() {
       toast.success(t('labelCreatedToast'))
       await fetchReturn()
     } catch (err: any) {
-      toast.error(err.message || t('labelCreateFailed'))
+      toast.error(t('labelCreateFailed'))
     } finally {
       setGeneratingFreeLabel(false)
     }
@@ -309,7 +309,7 @@ export default function ReturnDetailsPage() {
 
       window.location.href = data.checkoutUrl
     } catch (error: any) {
-      toast.error(error.message || t('paymentPrepareFailed'))
+      toast.error(t('paymentPrepareFailed'))
       setPaymentLoading(false)
     }
   }

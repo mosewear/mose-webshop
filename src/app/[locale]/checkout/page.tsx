@@ -822,7 +822,7 @@ function LegacyCheckoutPage() {
       
     } catch (error: any) {
       console.error('Error recovering order:', error)
-      toast.error(t('messages.orderRestoreFailed') + ': ' + (error.message || t('messages.unknownError')))
+      toast.error(t('messages.orderRestoreFailed'))
       router.replace('/checkout')
     } finally {
       setIsRecovering(false)
@@ -1472,7 +1472,7 @@ function LegacyCheckoutPage() {
       setLoading(false)
     } catch (error: any) {
       console.error('💥 CHECKOUT ERROR:', error)
-      toast.error(`${t('messages.errorOccurred')}: ${error.message}`)
+      toast.error(t('messages.errorOccurred'))
       setLoading(false)
       setIsSubmitting(false) // Unlock on error
     }
@@ -1523,7 +1523,7 @@ function LegacyCheckoutPage() {
       window.location.href = checkoutUrl
     } catch (error: any) {
       console.error('Mollie payment create error:', error)
-      toast.error(`${t('messages.errorOccurred')}: ${error.message}`)
+      toast.error(t('messages.errorOccurred'))
       setIsCreatingPayment(false)
       throw error
     }
@@ -1531,7 +1531,7 @@ function LegacyCheckoutPage() {
 
   const handlePaymentError = (error: string) => {
     console.error('Payment error:', error)
-    toast.error(`${t('messages.paymentFailed')}: ${error}`)
+    toast.error(t('messages.paymentFailed'))
     setIsCreatingPayment(false)
   }
 

@@ -1,3 +1,4 @@
+import { getLocale } from 'next-intl/server'
 import type { Metadata, Viewport } from "next";
 import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
@@ -28,20 +29,26 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const timestamp = Date.now()
+  const locale = await getLocale()
+  const en = locale === 'en'
+  const title = en ? 'MOSE - Clothing and accessories for men' : 'MOSE - Kleding en accessoires voor mannen'
+  const description = en
+    ? 'Menswear with character. Explore MOSE hoodies, T-shirts, sweaters and trousers, with attention to fit and detail.'
+    : 'Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.'
 
   return {
     title: {
-      default: "MOSE - Kleding en accessoires voor mannen",
+      default: title,
       template: "%s - MOSE"
     },
-    description: "Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.",
-    keywords: ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "broeken", "sweaters", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
+    description,
+    keywords: en ? ["MOSE", "menswear", "premium basics", "hoodies", "t-shirts", "trousers", "sweaters", "streetwear"] : ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "broeken", "sweaters", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
     authors: [{ name: "MOSE", url: "https://www.mosewear.com" }],
     creator: "MOSE",
     publisher: "MOSE",
     metadataBase: new URL('https://www.mosewear.com'),
     alternates: {
-      canonical: '/',
+      canonical: `/${locale}`,
     },
     icons: {
       icon: [
@@ -56,10 +63,10 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   openGraph: {
     type: "website",
-    locale: "nl_NL",
+    locale: en ? "en_GB" : "nl_NL",
     url: "https://www.mosewear.com",
-    title: "MOSE - Kleding en accessoires voor mannen",
-    description: "Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.",
+    title,
+    description,
     siteName: "MOSE",
     images: [
       {
@@ -72,8 +79,8 @@ export async function generateMetadata(): Promise<Metadata> {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MOSE - Kleding en accessoires voor mannen",
-    description: "Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.",
+    title,
+    description,
     images: ["/og-default.jpg"],
   },
   robots: {
@@ -93,11 +100,12 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale()
   // Preconnect to the Supabase Storage host so the very first product /
   // hero image starts streaming immediately, instead of paying a fresh
   // DNS + TLS roundtrip on the cold cache visit. We derive the host from
@@ -114,7 +122,7 @@ export default function RootLayout({
     : null
 
   return (
-    <html lang="nl" className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={locale} className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Connection warm-up to Supabase Storage (used for every product +
             editorial image). Both hints are kept: dns-prefetch is a cheap
@@ -146,7 +154,7 @@ export default function RootLayout({
                 fbq('init', '1447430483627328');
                 fbq('track', 'PageView');
               }
-              
+
               // Check if consent already given
               if (typeof window !== 'undefined') {
                 const consent = localStorage.getItem('mose_cookie_consent');
@@ -173,13 +181,13 @@ export default function RootLayout({
       </head>
       <body className="antialiased font-sans">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">
-          Skip to content
+          {locale === 'en' ? 'Skip to content' : 'Ga naar de inhoud'}
         </a>
         <HtmlLangUpdater />
         <PostHogProvider>
           {children}
         </PostHogProvider>
-        <Toaster 
+        <Toaster
           position="top-center"
           toastOptions={{
             duration: 4000,

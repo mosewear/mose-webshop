@@ -1,5 +1,7 @@
 'use client'
 
+import { publicError } from '@/lib/public-errors'
+
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from '@/i18n/routing'
@@ -58,7 +60,7 @@ export default function ResetPasswordPage() {
       })
 
       if (updateError) {
-        setError(updateError.message)
+        setError(publicError(updateError, locale, tErrors('somethingWrong')))
         setLoading(false)
         return
       }
@@ -71,7 +73,7 @@ export default function ResetPasswordPage() {
         router.push('/login?password_reset=success')
       }, 3000)
     } catch (err: any) {
-      setError(err.message || tErrors('somethingWrong'))
+      setError(publicError(err, locale, tErrors('somethingWrong')))
       setLoading(false)
     }
   }
