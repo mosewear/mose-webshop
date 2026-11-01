@@ -36,7 +36,10 @@ export async function runOrderWorker(db = createServiceClient(), fetchOrder = fe
   const result = { processed: 0, failed: 0, leaseLost: 0 }
   const deadline = Math.min(Date.now() + 50_000, options.deadline ?? Infinity)
   assertSyncBudget(options.signal, deadline - 16_000)
-  for (let count = 0; count < 5 && Date.now() + 16_000 < deadline; count++) {
+  // Catalogue edits can enqueue many cheap invalidations at once. Drain those
+  // within the same time budget without increasing the provider-read budget.
+  let orderReads = 0
+  for (let count = 0; count < 50 && orderReads < 5 && Date.now() + 16_000 < deadline; count++) {
     assertSyncBudget(options.signal, deadline)
     const claimed = await boundedSyncQuery(db.rpc('claim_shopify_events', { batch_size: 1 }), options.signal)
     if (claimed.error) throw new Error('QUEUE_UNAVAILABLE')
@@ -44,6 +47,7 @@ export async function runOrderWorker(db = createServiceClient(), fetchOrder = fe
     if (!event) break
     try {
       const plan = planEvent(event)
+      if (plan.kind === 'order') orderReads++
       const projection = plan.kind === 'order' ? await fetchOrder(plan.orderId, undefined, deadline) : null
       assertSyncBudget(options.signal, deadline)
       const saved = await boundedSyncQuery(db.rpc('complete_shopify_event', { p_id: event.id, p_lease: event.lease_token,

@@ -1,7 +1,32 @@
 /** Explicit source identities for the approved supplier catalogue.
  * These source IDs are NOT account-specific fulfillment mappings.
  */
-export const TAPSTITCH_PRODUCT_SOURCES: Readonly<Record<string, { sourceProductId: string; sourceCode: string; sourcePage: string }>> = {
+export const TAPSTITCH_PRODUCT_SOURCES: Readonly<Record<string, { sourceProductId: string | null; sourceCode: string; sourcePage: string }>> = {
+  "69ae6c7e-aee5-4f31-bd13-1383e95ce212": {
+    "sourceProductId": "1558069273950404608",
+    "sourceCode": "MT0067-P001-V2",
+    "sourcePage": "https://www.tapstitch.com/custom/1558069273950404608"
+  },
+  "a25a6db0-a6d3-4ab3-a6e9-d8484db47131": {
+    "sourceProductId": "1531632903807815680",
+    "sourceCode": "MB0035-P001-V2",
+    "sourcePage": "https://www.tapstitch.com/custom/1531632903807815680"
+  },
+  "776cb328-59c3-43fb-a790-8fd9dbf58aae": {
+    "sourceProductId": "1498631333608624128",
+    "sourceCode": "UB0026-O001-V2",
+    "sourcePage": "https://www.tapstitch.com/custom/1498631333608624128"
+  },
+  "a5ab5fe8-a065-48c6-b765-02e5a19ac7f0": {
+    "sourceProductId": null,
+    "sourceCode": "UT0101-C001-V2",
+    "sourcePage": "https://www.tapstitch.com/custom/ut0101-unisex-vintage-wash-full-zip-denim-jacket"
+  },
+  "1b2353ca-1081-4789-846c-a24592a4aff8": {
+    "sourceProductId": "1549095814578778112",
+    "sourceCode": "MT0063-P001-V2",
+    "sourcePage": "https://www.tapstitch.com/custom/1549095814578778112"
+  },
   "2307a99e-781a-8f4a-9da0-2374d3cb464f": {
     "sourceProductId": "1516805081033580544",
     "sourceCode": "RW0041-P001-V3",

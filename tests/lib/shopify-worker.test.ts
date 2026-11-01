@@ -44,6 +44,29 @@ describe('authoritative order projection', () => {
 })
 
 describe('webhook worker', () => {
+  it('drains a catalogue-update burst while limiting expensive order reads', async () => {
+    const events = Array.from({ length: 24 }, (_, id) => ({ id, topic: 'products/update', payload: { id: 123 }, lease_token: 'lease' }))
+    events.push(...Array.from({ length: 6 }, (_, id) => ({ id: 24 + id, topic: 'orders/paid', payload: { id: 123 }, lease_token: 'lease' })))
+    const rpc = vi.fn(async (name: string) => name === 'claim_shopify_events' ? { data: events.splice(0, 1) } : { data: true })
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const db = { rpc, from: () => ({ update: () => ({ eq }) }) } as unknown as ReturnType<typeof createServiceClient>
+    const fetchOrder = vi.fn().mockResolvedValue(order())
+    expect(await runOrderWorker(db, fetchOrder)).toEqual({ processed: 29, failed: 0, leaseLost: 0 })
+    expect(fetchOrder).toHaveBeenCalledTimes(5)
+    expect(events).toHaveLength(1)
+    expect(events[0].topic).toBe('orders/paid')
+  })
+
+  it('caps cheap catalogue invalidations even with a continuously growing queue', async () => {
+    const rpc = vi.fn(async (name: string) => name === 'claim_shopify_events'
+      ? { data: [{ id: 1, topic: 'products/update', payload: { id: 123 }, lease_token: 'lease' }] } : { data: true })
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const db = { rpc, from: () => ({ update: () => ({ eq }) }) } as unknown as ReturnType<typeof createServiceClient>
+    const fetchOrder = vi.fn()
+    expect(await runOrderWorker(db, fetchOrder)).toEqual({ processed: 50, failed: 0, leaseLost: 0 })
+    expect(fetchOrder).not.toHaveBeenCalled()
+  })
+
   it('closes checkout and retains a retryable event when order access is denied', async () => {
     const rpc = vi.fn().mockResolvedValueOnce({ data: [{ id: 1, topic: 'orders/paid', payload: { id: 123 }, lease_token: 'lease' }] })
       .mockResolvedValueOnce({ data: true }).mockResolvedValueOnce({ data: [] })
