@@ -19,6 +19,7 @@ interface Order {
   detail_url?: string
   shipping_status?: string
   synced_at?: string
+  production_sync_warning?: string | null
   production_status?: string
   production_checked_at?: string | null
   production_stale?: boolean

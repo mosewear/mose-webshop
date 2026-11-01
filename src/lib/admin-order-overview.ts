@@ -57,8 +57,12 @@ export async function readAdminOrderOverview() {
     for(const row of result.nodes) if(row) metadata.set(row.id,row)
   }
 
-  const shopify = snapshots.map(row => ({...normalizeShopifyAdminOrder(row,metadata.get(row.shopify_order_id)),
-    ...productionPresentation(production.find(p=>p.shopify_order_id===row.shopify_order_id) as StoredProduction|undefined)}))
+  const shopify = snapshots.map(row => {
+    const observation=production.find(p=>p.shopify_order_id===row.shopify_order_id) as StoredProduction|undefined
+    return {...normalizeShopifyAdminOrder(row,metadata.get(row.shopify_order_id)),
+      ...productionPresentation(observation),
+      production_sync_warning: supplierShippingSyncWarning(row.snapshot,observation)}
+  })
   const confirmedRefunds = legacyRefundTotals(refunds)
   return [...legacy.map(o => normalizeLegacyAdminOrder(o, confirmedRefunds.get(o.id) ?? 0)), ...shopify]
     .sort((a,b)=>b.created_at.localeCompare(a.created_at)||a.id.localeCompare(b.id))
@@ -149,4 +153,12 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
       production_status:'Productie niet afzonderlijk gemeld',
       shipping_status:o.fulfillments.filter(f=>f.status==='SUCCESS').map(f=>shipmentLabel(f.displayStatus)).join(' · ') || 'Nog geen verzendmelding',synced_at:row.synced_at,
       detail_url:'/admin/shopify/orders#'+o.id.split('/').pop()}
+}
+
+/** Show the source discrepancy without inventing a fulfillment or changing metrics. */
+export function supplierShippingSyncWarning(snapshot: unknown, observation: Pick<StoredProduction, 'status'> | undefined): string | null {
+  if (!observation || !['Shipped', 'Delivered'].includes(observation.status)) return null
+  const order = orderSchema.parse(snapshot)
+  if (order.cancelledAt || order.fulfillments.some(f => f.status === 'SUCCESS')) return null
+  return 'Tapstitch meldt verzending, maar Shopify heeft nog geen verzendmelding. Controleer de synchronisatie.'
 }

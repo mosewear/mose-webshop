@@ -2,7 +2,7 @@
 import {describe,it,expect,vi} from 'vitest'
 vi.mock('@/lib/supabase/service',()=>({createServiceClient:vi.fn()}))
 vi.mock('@/lib/shopify/client',()=>({admin:vi.fn()}))
-import {normalizeShopifyAdminOrder} from '@/lib/admin-order-overview'
+import {normalizeShopifyAdminOrder,supplierShippingSyncWarning} from '@/lib/admin-order-overview'
 const pageInfo={hasNextPage:false,endCursor:null}
 const money=(amount:string)=>({shopMoney:{amount,currencyCode:'EUR'}})
 const time='2026-10-29T21:02:55Z'
@@ -113,5 +113,27 @@ describe('financial evidence validation', () => {
  it('does not invent a capture amount for an unsupported partially-paid legacy record', async () => {
   const {normalizeLegacyAdminOrder}=await import('@/lib/admin-order-overview')
   expect(()=>normalizeLegacyAdminOrder({id:'o1',created_at:time,total:70,payment_status:'partially_paid'})).toThrow('LEGACY_CAPTURE_AMOUNT_REQUIRED')
+ })
+})
+
+describe('supplier shipment reconciliation notice',()=>{
+ it('surfaces a missing Shopify shipment without changing payment, shipping filters or revenue',()=>{
+  const before=normalizeShopifyAdminOrder(row(order),meta)
+  expect(supplierShippingSyncWarning(order,{status:'Shipped'})).toContain('Shopify heeft nog geen verzendmelding')
+  expect(supplierShippingSyncWarning(order,{status:'Delivered'})).not.toBeNull()
+  expect(normalizeShopifyAdminOrder(row(order),meta)).toEqual(before)
+  expect(before).toMatchObject({payment_status:'paid',revenue:0.01,shipping_status:'Nog geen verzendmelding'})
+ })
+ it('does not flag production-only, missing or cancelled observations',()=>{
+  for(const status of ['On Hold','In Review','In Production','Quality Check','Cancelled'] as const){
+   expect(supplierShippingSyncWarning(order,{status})).toBeNull()
+  }
+  expect(supplierShippingSyncWarning(order,undefined)).toBeNull()
+  expect(supplierShippingSyncWarning({...order,cancelledAt:time},{status:'Shipped'})).toBeNull()
+ })
+ it('clears once Shopify has a successful fulfillment; failed/cancelled shipments are not evidence',()=>{
+  const fulfillment={id:'gid://shopify/Fulfillment/1',status:'SUCCESS',displayStatus:'LABEL_PRINTED',createdAt:time,updatedAt:time,location:null,trackingInfo:[],fulfillmentLineItems:{nodes:[],pageInfo}}
+  expect(supplierShippingSyncWarning({...order,fulfillments:[fulfillment]},{status:'Shipped'})).toBeNull()
+  for(const status of ['FAILURE','CANCELLED'])expect(supplierShippingSyncWarning({...order,fulfillments:[{...fulfillment,status}]},{status:'Shipped'})).not.toBeNull()
  })
 })
