@@ -1001,16 +1001,16 @@
     },
     "stories": {
       "denim": {
-        "eyebrow": "In focus",
-        "title": "Denim. Your way.",
-        "body": "A simple tee. A solid jacket. Easy to wear together.",
-        "cta": "Explore jackets"
+        "eyebrow": "MOSE denim",
+        "title": "Denim with character.",
+        "body": "Washed black denim with a relaxed fit. Throw it on over a tee and make it part of your everyday rotation.",
+        "cta": "Explore the jacket"
       },
       "sport": {
         "eyebrow": "MOSE sport",
-        "title": "Time to train.",
-        "body": "Training tees, shorts and trousers made to wear together.",
-        "cta": "Explore sport"
+        "title": "Focus on your training.",
+        "body": "From warm-up to the final set. Build your training kit with MOSE tees, shorts and track pants.",
+        "cta": "Explore sportswear"
       }
     }
   },
