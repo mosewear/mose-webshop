@@ -59,3 +59,15 @@ it('puts search and sort in the drawer while category navigation has a single pu
   expect(window.location.search).toContain('sort=price-asc')
   expect(drawer.queryByRole('combobox',{name:'Categorie'})).not.toBeInTheDocument()
 })
+
+it('keeps sport selected when clearing refinements, and switches cleanly to a garment category',()=>{
+  const sport:CatalogProduct={id:'sport',name:'Training Tee',slug:'mose-training-tee',base_price:49,sale_price:null,category_id:'tees',category:{slug:'t-shirts',name:'T-shirts'},display_order:1,created_at:'2026-11-01',variants:[{color:'Black',size:'L',is_available:true,stock_quantity:2}]}
+  render(<NextIntlClientProvider locale="nl" messages={messages}><ShopPageClient initialProducts={[sport]} initialCategories={[{id:'tees',slug:'t-shirts',name:'T-shirts'}]} initialFilters={{...emptyCatalogFilters,collection:'sport',sizes:['L']}}/></NextIntlClientProvider>)
+  expect(screen.getByRole('navigation').querySelector('[aria-pressed="true"]')).toHaveTextContent('Sport')
+  fireEvent.click(screen.getByRole('button',{name:'Filters & Sorteren'}))
+  const drawer=within(screen.getByRole('dialog'))
+  fireEvent.click(drawer.getByRole('button',{name:'Wis filters'}))
+  expect(window.location.search).toBe('?collection=sport')
+  fireEvent.click(within(screen.getByRole('navigation')).getByRole('button',{name:'T-shirts'}))
+  expect(window.location.search).toBe('?category=t-shirts')
+})

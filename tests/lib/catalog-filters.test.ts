@@ -236,3 +236,38 @@ it('uses the same filtered variation price for the range and explicit price orde
   expect(productPriceRange(adjusted, 'Zwart', filters)).toEqual({ min: 50, max: 50 })
   expect(filterCatalog([adjusted, other], filters, 'nl').map(p => p.id)).toEqual(['other','adjusted'])
 })
+
+describe('shop merchandising and sport collection', () => {
+  const make = (slug: string, order: number, price = 79): CatalogProduct => ({
+    ...base, id: slug, slug, display_order: order, base_price: price,
+    variants: [{size: 'L', color: 'Black', stock_quantity: 2, is_available: true}],
+  })
+  it('round-trips the sport collection with facets and preserves unrelated URL parameters', () => {
+    const value = {...f, collection: 'sport' as const, sizes: ['L'], stock: true}
+    const params = catalogFilterParams(value, new URLSearchParams('utm_source=mail&collection=old'))
+    expect(params.get('utm_source')).toBe('mail')
+    expect(parseCatalogFilters(params)).toEqual(value)
+    expect(catalogFilterParams({...value, collection: undefined}, params).has('collection')).toBe(false)
+    expect(parseCatalogFilters(new URLSearchParams('collection=unverified')).collection).toBeUndefined()
+    expect(parseCatalogFilters(new URLSearchParams('collection=sport&category=hoodies')).category).toBe('all')
+  })
+  it('includes only verified sport models, and combines sport with the same real variant facets', () => {
+    const tee = {...make('mose-training-tee', 10), variants: [
+      {size:'L', color:'Black', stock_quantity:2, is_available:true},
+      {size:'M', color:'White', stock_quantity:2, is_available:true},
+    ]}
+    const items = [tee, make('mose-training-pants', 11), make('mose-fleece-shorts', 12)]
+    expect(filterCatalog(items, {...f, collection:'sport'}, 'nl').map(p => p.slug)).toEqual(['mose-training-tee', 'mose-training-pants'])
+    expect(filterCatalog(items, {...f, collection:'sport', sizes:['L'], colors:['white']}, 'nl')).toEqual([])
+    expect(filterCatalog(items, {...f, collection:'sport', sizes:['M'], colors:['white']}, 'nl').map(p => p.slug)).toEqual(['mose-training-tee'])
+  })
+  it('curates only recommended results, keeping availability and unknown admin ordering intact', () => {
+    const items = [make('new-unlisted-design', 1, 39), make('mose-denim-zip-jacket', 30, 119), make('boxy-fleece-hoodie', 40, 79), make('future-design', 2, 45)]
+    expect(filterCatalog(items, f, 'nl').map(p => p.slug)).toEqual(['boxy-fleece-hoodie','mose-denim-zip-jacket','new-unlisted-design','future-design'])
+    expect(filterCatalog(items, {...f, sort:'price-asc'}, 'nl').map(p => p.base_price)).toEqual([39,45,79,119])
+    const unavailable = {...items[2], variants: [{size:'L',color:'Black',stock_quantity:0,is_available:true}]}
+    expect(filterCatalog([unavailable, items[0]], f, 'nl')[0].slug).toBe('new-unlisted-design')
+    const gift = {...make('gift', 0, 20), is_gift_card:true}
+    expect(filterCatalog([gift, unavailable, items[0]], f, 'nl').map(p => p.slug)).toEqual(['new-unlisted-design','boxy-fleece-hoodie','gift'])
+  })
+})
