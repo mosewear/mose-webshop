@@ -1,3 +1,4 @@
+import { productImageAlt } from '@/lib/product-image-alt'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { getCommercePromises } from '@/lib/settings-server'
@@ -71,7 +72,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, 'mannenkleding', 'premium basics'].filter(Boolean) as string[],
+    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, isEn ? 'menswear' : 'mannenkleding', 'premium basics'].filter(Boolean) as string[],
     openGraph: {
       title,
       description,
@@ -82,7 +83,7 @@ export async function generateMetadata({
           url: imageUrl.startsWith('http') ? imageUrl : `https://www.mosewear.com${imageUrl}`,
           width: 1200,
           height: 1200,
-          alt: primaryImage?.alt_text || localizedProduct.name,
+          alt: productImageAlt(primaryImage?.alt_text, String(localizedProduct.name || 'MOSE'), locale),
         },
       ],
       siteName: 'MOSE',
