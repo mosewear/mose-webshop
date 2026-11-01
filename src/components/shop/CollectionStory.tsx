@@ -37,7 +37,7 @@ export default function CollectionStory({ story, product, className }: {
         <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-brand-primary sm:text-xs">{t('eyebrow')}</p>
         <h2 className="max-w-sm font-display text-[clamp(1.5rem,5vw,3.5rem)] uppercase leading-[1.08]">{t('title')}</h2>
         <p className="mb-5 mt-4 max-w-sm text-xs leading-relaxed text-white/85 sm:text-base">{t('body')}</p>
-        <Link href={story === 'denim' ? '/shop?category=jassen' : '/shop?collection=sport'}
+        <Link href={story === 'denim' ? `/product/${product.slug}` : '/shop?collection=sport'}
           className="inline-flex min-h-11 items-center gap-2 self-start border-b border-white py-2 text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-primary sm:text-sm">
           {t('cta')}<ArrowRight className="size-4 shrink-0" aria-hidden="true" />
         </Link>

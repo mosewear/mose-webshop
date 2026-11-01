@@ -26,12 +26,12 @@ describe('collection stories', () => {
       expect(position/columns).toBe(slot.story==='denim'?2:4)
     }
   })
-  it.each([['nl',nl,'Denim. Op jouw manier.','Bekijk de jassen'],['en',en,'Denim. Your way.','Explore jackets']] as const)('renders the approved photography and copy in %s', (locale,messages,title,cta) => {
+  it.each([['nl',nl,'Denim met karakter.','Ontdek het jack'],['en',en,'Denim with character.','Explore the jacket']] as const)('renders the approved photography and copy in %s', (locale,messages,title,cta) => {
     const html=renderToStaticMarkup(<NextIntlClientProvider locale={locale} messages={messages}><CollectionStory story="denim" product={product} className="" /></NextIntlClientProvider>)
     expect(html).toContain('/approved-denim.webp')
     expect(html).toContain(title)
     expect(html).toContain(cta)
-    expect(html).toContain('/shop?category=jassen')
+    expect(html).toContain('/product/mose-denim-zip-jacket')
   })
 })
 describe('public language boundaries', () => {
