@@ -2,21 +2,11 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
-import { getLookbookPageData } from '@/lib/lookbook-data'
-import { pickLocalized } from '@/lib/lookbook'
-import LookbookClient from './LookbookClient'
+import LookbookEditorial from './LookbookEditorial'
+import { resolveLookbookLooks } from '@/lib/lookbook-looks'
 import { getShopCatalog } from '@/lib/catalog-server'
-import LookbookCollection from './LookbookCollection'
 
-/**
- * Public lookbook page — server component.
- *
- * ISR-cached for 30 minutes; the admin's Force Rebuild button and
- * organic revalidation keep it fresh between campaigns. Renders as a
- * server component for SEO (real chapter titles in initial HTML) and
- * passes chapter data + settings to the LookbookClient wrapper for
- * hydration with motion hooks in Stage 3.
- */
+/** Approved image-first editorial page; live product facts remain catalogue-owned. */
 
 export const revalidate = 60
 
@@ -74,32 +64,21 @@ export default async function LookbookPage({
   }
   setRequestLocale(locale)
 
-  const [{ settings, chapters }, catalog] = await Promise.all([
-    getLookbookPageData(),
-    getShopCatalog(),
-  ])
+  const catalog = await getShopCatalog()
   const normalizedLocale = locale === 'en' ? 'en' : 'nl'
 
   // Structured data: a CollectionPage that references each chapter's
   // linked products. Helps Google surface the lookbook as a browse-able
   // collection and bridges it to the product graph already in the sitemap.
-  const featuredProducts = catalog.products
+  const featuredProducts = resolveLookbookLooks(catalog.products).flatMap(look => look.pieces.map(piece => piece.product))
   const uniqueProducts = Array.from(
     new Map(featuredProducts.map((p) => [p.id, p])).values(),
   )
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: pickLocalized(
-      settings?.header_title ?? 'MOSE Lookbook',
-      settings?.header_title_en ?? null,
-      normalizedLocale,
-    ),
-    description: pickLocalized(
-      settings?.header_subtitle ?? '',
-      settings?.header_subtitle_en ?? null,
-      normalizedLocale,
-    ),
+    name: 'MOSE Lookbook',
+    description: normalizedLocale === 'en' ? 'How we wear MOSE. Explore the combinations and find your fit.' : 'Zo draag je MOSE. Bekijk de combinaties en kies wat bij je past.',
     url: `https://www.mosewear.com/${normalizedLocale}/lookbook`,
     inLanguage: normalizedLocale,
     isPartOf: {
@@ -124,17 +103,7 @@ export default async function LookbookPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <LookbookClient
-        settings={settings}
-        chapters={chapters}
-        locale={normalizedLocale}
-        collection={
-          <LookbookCollection
-            key="complete-collection"
-            products={catalog.products}
-          />
-        }
-      />
+      <LookbookEditorial products={catalog.products} locale={normalizedLocale} />
     </>
   )
 }
