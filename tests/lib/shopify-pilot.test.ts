@@ -25,6 +25,14 @@ describe('pilot purchase boundary', () => {
     expect(authorizeLines({ ...input, lines: [...input.lines, ...input.lines] }, [mapped])[0].quantity).toBe(2)
     expect(() => authorizeLines({ ...input, lines: [{ variantId: id, quantity: 6 }, { variantId: id, quantity: 6 }] }, [mapped])).toThrow()
   })
+  it('releases only the approved sports and denim models with verified supplier routes', () => {
+    const approval = { ...mapped, sample_verified: false, owner_release_authorized_at: '2026-01-01T00:00:00Z', owner_release_reference: 'Owner approved the sports and denim selection; excluded waffle polo' }
+    for (const supplier_model of ['MT0067-P001-V2', 'MB0035-P001-V2', 'UB0026-O001-V2', 'UT0101-C001-V2', 'MT0063-P001-V2']) {
+      expect(authorizeLines(input, [{ ...approval, supplier_model }])).toHaveLength(1)
+      expect(() => authorizeLines(input, [{ ...approval, supplier_model, supplier_link_verified: false }])).toThrow('VARIANT_NOT_RELEASED')
+    }
+    expect(() => authorizeLines(input, [{ ...approval, supplier_model: 'UT0111-C001-V2' }])).toThrow('VARIANT_NOT_RELEASED')
+  })
   it('rejects lookalike checkout domains and embedded credentials', () => {
     expect(assertCheckoutUrl('https://mosewear.myshopify.com/cart/c/abc')).toContain('/cart/c/abc')
     expect(assertCheckoutUrl('https://checkout.mosewear.com/checkouts/abc')).toBe('https://checkout.mosewear.com/checkouts/abc')
