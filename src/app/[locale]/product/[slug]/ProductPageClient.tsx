@@ -1159,7 +1159,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
 
   const supplierFulfilled = isTapstitchProduct(product)
   const supplierDelivery = locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.'
-  const supplierOrigin = locale === 'en' ? 'MOSE quality checked and ready to wear.' : 'Door MOSE geselecteerd en klaar om te dragen.'
+  const supplierOrigin = locale === 'en' ? 'Team MOSE can help with sizing or your order.' : 'Team MOSE helpt je met vragen over maat of bestelling.'
 
   if (product.is_gift_card) {
     return (

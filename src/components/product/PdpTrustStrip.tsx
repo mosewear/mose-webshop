@@ -56,7 +56,7 @@ export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, s
 
   const lines = supplierFulfilled ? [
     locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.',
-    locale === 'en' ? 'MOSE quality checked and ready to wear.' : 'Door MOSE geselecteerd en klaar om te dragen.',
+    locale === 'en' ? 'Team MOSE can help with sizing or your order.' : 'Team MOSE helpt je met vragen over maat of bestelling.',
     locale === 'en' ? 'Check the size chart for this specific model.' : 'Bekijk de maattabel van dit specifieke model.',
     locale === 'en' ? 'Secure payment at checkout.' : 'Veilig betalen bij het afrekenen.',
   ] : [
