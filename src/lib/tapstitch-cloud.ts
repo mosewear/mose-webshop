@@ -100,11 +100,6 @@ export async function runTapstitchCloud(db: Db = createServiceClient(), request 
         spent_usd_micros:Number(state.spent_usd_micros)+cost,reserved_usd_micros:0,...release})
       return {checked:verified.orders.length,failed:verified.failed}
     }
-    if(Number(state.spent_usd_micros)+maximumRunMicros>Number(state.budget_usd_micros)) {await save({state:'unknown',last_error:'CLOUD_BUDGET_EXHAUSTED',...release});return {budgetExhausted:true}}
-    const wallet=z.object({available_balance:z.string(),auto_reload:z.object({state:z.string()}),rates:z.object({meters:z.array(z.object({label:z.string(),unit_amount:z.string()}))})}).parse(await request('/v1/wallet'))
-    if(wallet.auto_reload.state!=='unconfigured' && wallet.auto_reload.state!=='disabled') throw new Error('CLOUD_AUTO_RELOAD_REVIEW_REQUIRED')
-    if(Number(wallet.available_balance)<2.4) throw new Error('CLOUD_BROWSER_CREDITS_LOW')
-    if(wallet.rates.meters.find(m=>m.label==='TinyFish Agent')?.unit_amount!=='0.016') throw new Error('CLOUD_PRICE_REVIEW_REQUIRED')
     const pending=await db.from('shopify_order_snapshots').select('shopify_order_id,order_name,snapshot,cancelled_at').order('synced_at',{ascending:true}).limit(500)
     const links=await db.from('tapstitch_order_links').select('shopify_order_id,supplier_order_id')
     const lines=await db.from('shopify_order_lines').select('order_id').eq('fulfillment_owner','tapstitch').gt('current_quantity',0)
@@ -117,7 +112,14 @@ export async function runTapstitchCloud(db: Db = createServiceClient(), request 
       && (!s.cancelled_at || links.data.some(l=>l.shopify_order_id===s.shopify_order_id)))
       .sort((a,b)=>Date.parse(latest.data.find(x=>x.shopify_order_id===a.shopify_order_id)?.observed_at??'1970-01-01')-Date.parse(latest.data.find(x=>x.shopify_order_id===b.shopify_order_id)?.observed_at??'1970-01-01'))
       .slice(0,10).map(s=>targetSchema.parse({id:s.shopify_order_id,name:s.order_name,supplierId:links.data.find(l=>l.shopify_order_id===s.shopify_order_id)?.supplier_order_id}))
-    if(!targets.length) {await save({state:'idle',next_run_at:new Date(Date.now()+intervalMs).toISOString(),...release});return {noOrders:true}}
+    // Terminal supplier orders need no paid browser work. A healthy empty queue
+    // clears a historical error without pretending a new observation was made.
+    if(!targets.length) {await save({state:'idle',last_error:null,next_run_at:new Date(Date.now()+intervalMs).toISOString(),...release});return {noOrders:true}}
+    if(Number(state.spent_usd_micros)+maximumRunMicros>Number(state.budget_usd_micros)) {await save({state:'unknown',last_error:'CLOUD_BUDGET_EXHAUSTED',...release});return {budgetExhausted:true}}
+    const wallet=z.object({available_balance:z.string(),auto_reload:z.object({state:z.string()}),rates:z.object({meters:z.array(z.object({label:z.string(),unit_amount:z.string()}))})}).parse(await request('/v1/wallet'))
+    if(wallet.auto_reload.state!=='unconfigured' && wallet.auto_reload.state!=='disabled') throw new Error('CLOUD_AUTO_RELOAD_REVIEW_REQUIRED')
+    if(Number(wallet.available_balance)<2.4) throw new Error('CLOUD_BROWSER_CREDITS_LOW')
+    if(wallet.rates.meters.find(m=>m.label==='TinyFish Agent')?.unit_amount!=='0.016') throw new Error('CLOUD_PRICE_REVIEW_REQUIRED')
     const requestId=randomUUID(),startedAt=new Date().toISOString()
     await save({state:'starting',request_id:requestId,run_id:null,targets,started_at:startedAt,next_run_at:new Date(Date.now()+intervalMs).toISOString(),reserved_usd_micros:maximumRunMicros,last_error:null})
     const output= {type:'object',properties:{orders:{type:'array',items:{type:'object',properties:Object.fromEntries(['supplier_order_id','shopify_order_name','status','header_text','source_url'].map(k=>[k,{type:'string'}])),required:['supplier_order_id','shopify_order_name','status','header_text','source_url']}},errors:{type:'array',items:{type:'object',properties:{shopify_order_name:{type:'string'},error:{type:'string'}},required:['shopify_order_name','error']}}},required:['orders','errors']}
