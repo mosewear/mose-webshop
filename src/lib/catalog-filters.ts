@@ -1,4 +1,5 @@
 import { availableVariant } from './variant-availability'
+import { shopFeaturedRank, sportProductSlugs } from './catalog-merchandising'
 export { availableVariant } from './variant-availability'
 import type {
   ShopTile,
@@ -37,6 +38,7 @@ export type CatalogSort =
   | 'name'
 export type CatalogFilters = {
   category: string
+  collection?: 'sport'
   q: string
   min: number | null
   max: number | null
@@ -99,7 +101,8 @@ export function parseCatalogFilters(params: URLSearchParams): CatalogFilters {
   if (min !== null && max !== null && min > max) [min, max] = [max, min]
   const category = params.get('category')?.trim() || 'all'
   return {
-    category: /^[a-z0-9-]{1,80}$/.test(category) ? category : 'all',
+    category: params.get('collection') === 'sport' ? 'all' : /^[a-z0-9-]{1,80}$/.test(category) ? category : 'all',
+    ...(params.get('collection') === 'sport' ? { collection: 'sport' as const } : {}),
     q: (params.get('q') ?? '').trim().slice(0, 100),
     min,
     max,
@@ -128,6 +131,7 @@ export function catalogFilterParams(
   const p = new URLSearchParams(existing)
   for (const key of [
     'category',
+    'collection',
     'q',
     'min',
     'max',
@@ -138,6 +142,7 @@ export function catalogFilterParams(
   ])
     p.delete(key)
   if (filters.category !== 'all') p.set('category', filters.category)
+  if (filters.collection === 'sport') p.set('collection', 'sport')
   if (filters.q.trim()) p.set('q', filters.q.trim())
   if (filters.min !== null) p.set('min', String(filters.min))
   if (filters.max !== null) p.set('max', String(filters.max))
@@ -188,6 +193,7 @@ export function matchesCatalogProduct(
 ) {
   const terms = searchText(f.q).trim().split(/\s+/).filter(Boolean)
   if (f.category !== 'all' && p.category?.slug !== f.category) return false
+  if (f.collection === 'sport' && !sportProductSlugs.has(p.slug)) return false
   const searchable = searchText(
     `${p.name} ${p.name_en ?? ''} ${p.category?.name ?? ''} ${p.category?.name_en ?? ''} ${(p.variants ?? []).map((v) => v.color ?? '').join(' ')}`,
   )
@@ -224,6 +230,7 @@ export function filterCatalog(
       else
         diff =
           catalogRank(a, f) - catalogRank(b, f) ||
+          shopFeaturedRank(a.slug) - shopFeaturedRank(b.slug) ||
           (a.display_order ?? 999) - (b.display_order ?? 999) ||
           Date.parse(b.created_at) - Date.parse(a.created_at)
       return (Number.isFinite(diff) ? diff : 0) || a.id.localeCompare(b.id)

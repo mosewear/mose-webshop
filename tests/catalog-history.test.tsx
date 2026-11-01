@@ -49,3 +49,16 @@ it('commits typing to the previous history entry before pushing a discrete categ
   replace.mockRestore()
   push.mockRestore()
 })
+
+it('restores sport and its refinements without losing the collection during navigation', () => {
+  const { result } = renderHook(() => useCatalogFilters(emptyCatalogFilters))
+  act(() => result.current.update({collection:'sport', sizes:['L']}))
+  expect(window.location.search).toContain('collection=sport')
+  act(() => {
+    window.history.replaceState(null, '', '/nl/shop?collection=sport&size=M&sort=price-desc')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
+  expect(result.current.filters).toMatchObject({category:'all',collection:'sport',sizes:['M'],sort:'price-desc'})
+  act(() => result.current.update({category:'hoodies',collection:undefined}))
+  expect(window.location.search).not.toContain('collection')
+})

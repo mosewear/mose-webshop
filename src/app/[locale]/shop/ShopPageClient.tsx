@@ -19,6 +19,7 @@ import {
   type CatalogProduct,
   type CatalogSort,
 } from '@/lib/catalog-filters'
+import { shopCategoryOrder, shopCategoryImages, sportProductSlugs } from '@/lib/catalog-merchandising'
 import { formatColorLabel } from '@/lib/product-display'
 import { formatPrice } from '@/lib/format-price'
 import { useWishlist } from '@/store/wishlist'
@@ -37,7 +38,6 @@ export type ShopProduct = CatalogProduct
 export type ShopCategory = CatalogCategory
 const fieldClass =
   'min-h-11 w-full border-2 border-gray-300 bg-white px-3 py-3 text-base font-semibold text-black transition-colors focus:border-brand-primary focus:outline-2 focus:outline-offset-2 focus:outline-brand-primary sm:text-sm'
-const categoryOrder = ['hoodies', 't-shirts', 'longsleeves', 'sweaters', 'broeken', 'cadeaubonnen']
 
 function FilterGroup({ title, selection, mobile, initiallyOpen = false, children }: {
   title: string; selection?: string; mobile: boolean; initiallyOpen?: boolean; children: ReactNode
@@ -158,13 +158,31 @@ export default function ShopPageClient({
         products.some((p) => p.category?.slug === c.slug),
       ).sort((a, b) => {
         const rank = (slug: string) => {
-          const index = categoryOrder.indexOf(slug)
-          return index < 0 ? categoryOrder.length : index
+          const index = shopCategoryOrder.indexOf(slug)
+          return index < 0 ? shopCategoryOrder.length : index
         }
         return rank(a.slug) - rank(b.slug)
       }),
     [categories, products],
   )
+  const hasSport = products.some(p => sportProductSlugs.has(p.slug))
+  const navigationItems = [
+    { slug: 'all', label: t('all') },
+    ...[...categoryChoices.map(c => ({ slug: c.slug, label: name(c) })),
+      ...(hasSport ? [{ slug: 'sport', label: t('sport') }] : [])]
+      .sort((a, b) => {
+        const rank = (slug: string) => {
+          const index = shopCategoryOrder.indexOf(slug)
+          return index < 0 ? shopCategoryOrder.length - 1 : index
+        }
+        return rank(a.slug) - rank(b.slug)
+      })
+      .map(item => ({ ...item, image: getImageForColor(
+        (products.find(p => p.slug === shopCategoryImages[item.slug]) ?? products.find(p => p.category?.slug === item.slug))?.images, null,
+      ) })),
+  ]
+  const selectedNavigation = filters.collection === 'sport' ? 'sport' : filters.category
+  const selectedTitle = navigationItems.find(item => item.slug === selectedNavigation)?.label
   useEffect(() => {
     if (
       !loading &&
@@ -196,10 +214,11 @@ export default function ShopPageClient({
       catalogDimensions(
         products.filter(
           (p) =>
-            filters.category === 'all' || p.category?.slug === filters.category,
+            (filters.category === 'all' || p.category?.slug === filters.category) &&
+            (filters.collection !== 'sport' || sportProductSlugs.has(p.slug)),
         ),
       ),
-    [products, filters.category],
+    [products, filters.category, filters.collection],
   )
   const bounds = useMemo(
     () =>
@@ -213,14 +232,15 @@ export default function ShopPageClient({
   )
   const activeCount =
     (filters.category === 'all' ? 0 : 1) +
+    (filters.collection ? 1 : 0) +
     (filters.q.trim() ? 1 : 0) +
     (filters.min !== null || filters.max !== null ? 1 : 0) +
     filters.sizes.length +
     filters.colors.length +
     (filters.stock ? 1 : 0)
-  const reset = () => update({ ...emptyCatalogFilters, sizes: [], colors: [] })
-  const refinementCount = activeCount - (filters.category === 'all' ? 0 : 1)
-  const resetRefinements = () => update({ ...emptyCatalogFilters, category: filters.category, sizes: [], colors: [] })
+  const reset = () => update({ ...emptyCatalogFilters, collection: undefined, sizes: [], colors: [] })
+  const refinementCount = activeCount - (filters.category === 'all' ? 0 : 1) - (filters.collection ? 1 : 0)
+  const resetRefinements = () => update({ ...emptyCatalogFilters, category: filters.category, collection: filters.collection, sizes: [], colors: [] })
   const toggle = (field: 'sizes' | 'colors', value: string) =>
     update({
       [field]: filters[field].includes(value)
@@ -439,6 +459,7 @@ export default function ShopPageClient({
     </div>
   )
   const chips: Array<{ key: string; label: string; clear: () => void }> = []
+  if (filters.collection === 'sport') chips.push({ key: 'collection', label: t('sport'), clear: () => update({ collection: undefined }) })
   if (filters.q.trim())
     chips.push({
       key: 'q',
@@ -476,11 +497,11 @@ export default function ShopPageClient({
     <div className="bg-white">
       <header className="border-b border-black/15 bg-[#F5F4F1]">
         <div className="mx-auto max-w-[1440px] px-4 pb-2 lg:px-6 pt-3 md:pt-5">
-          <h1 className="mb-2 font-display text-2xl uppercase leading-none md:text-4xl">{page('title')}</h1>
+          <h1 className="mb-2 font-display text-2xl uppercase leading-none md:text-4xl">{selectedNavigation === 'all' ? page('title') : selectedTitle ?? page('title')}</h1>
           <ShopCategoryNav
-            items={[{slug: 'all', label: t('all')}, ...categoryChoices.map(c => ({slug: c.slug, label: name(c), image: getImageForColor(products.find(p => p.category_id === c.id)?.images, null)}))]}
-            active={filters.category}
-            onSelect={category => update({category})}
+            items={navigationItems}
+            active={selectedNavigation}
+            onSelect={selection => update({ category: selection === 'sport' ? 'all' : selection, collection: selection === 'sport' ? 'sport' : undefined })}
             label={t('category')}
             previousLabel={t('previousCategories')}
             nextLabel={t('nextCategories')}
@@ -489,16 +510,22 @@ export default function ShopPageClient({
       </header>
       <div className="relative z-10 mx-auto max-w-[1440px] px-3 pb-4 pt-2 sm:px-4 lg:px-6 md:pb-8 md:pt-4">
         <div className="mb-3 flex min-h-11 items-center justify-between gap-3 border-b border-black/20">
-          <button type="button" onClick={() => setMobileOpen(true)} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="order-2 flex min-h-11 shrink-0 items-center justify-center gap-2 bg-white pl-3 text-[11px] font-bold text-black focus-visible:outline-2 focus-visible:outline-brand-primary lg:hidden">
+          <button type="button" onClick={() => setMobileOpen(true)} aria-label={`${t('filters')} & ${t('sort')}`} aria-haspopup="dialog" aria-controls="catalog-filter-dialog" className="order-3 flex min-h-11 shrink-0 items-center justify-center gap-2 bg-white pl-3 text-[11px] font-bold text-black focus-visible:outline-2 focus-visible:outline-brand-primary">
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            {t('filters')} &amp; {t('sort')}
+            <span className="lg:hidden">{t('filters')}<span className="hidden min-[360px]:inline"> &amp; {t('sort')}</span></span><span className="hidden lg:inline">{t('filters')}</span>
             {activeCount > 0 && <span className="bg-brand-primary px-1.5 py-0.5 text-xs text-white">{activeCount}</span>}
           </button>
+          <label className="order-2 ml-auto hidden items-center gap-3 text-xs font-semibold lg:flex">
+            <span>{t('sort')}</span>
+            <select aria-label={t('sort')} value={filters.sort} onChange={event => update({sort: event.target.value as CatalogSort})} className="min-h-11 max-w-52 border-0 bg-white pr-6 text-sm font-semibold text-black focus-visible:outline-2 focus-visible:outline-brand-primary">
+              {(['featured', 'newest', 'price-asc', 'price-desc', 'name'] as const).map(value => <option key={value} value={value}>{t(value)}</option>)}
+            </select>
+          </label>
           <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <p role="status" aria-live="polite" className="text-xs text-gray-700 md:text-sm">
+          <p role="status" aria-live="polite" className="whitespace-nowrap text-xs text-gray-700 md:text-sm">
             {loading ? t('loading') : t('models', {count: filtered.length})}
           </p>
-          <div role="group" aria-label={t('view.label')} className="flex sm:hidden">
+          <div role="group" aria-label={t('view.label')} className="flex shrink-0 sm:hidden">
             {[false, true].map(compact => <button key={String(compact)} type="button" aria-label={t(compact ? 'view.compact' : 'view.large')} aria-pressed={compactView === compact} onClick={() => setCompactView(compact)} className={`flex h-11 w-11 items-center justify-center border-b-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary ${compactView === compact ? 'border-brand-primary text-black' : 'border-transparent text-gray-500'}`}>
               {compact ? <Columns2 size={18} aria-hidden="true" /> : <RectangleVertical size={18} aria-hidden="true" />}
             </button>)}
@@ -528,10 +555,7 @@ export default function ShopPageClient({
             </button>
           </div>
         )}
-        <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
-          <aside className="hidden lg:block" aria-label={t('filters')}>
-            <div className="lg:sticky lg:top-24">{filterPanel('desktop')}</div>
-          </aside>
+        <div className="min-w-0">
           <section aria-label={t('collection')} className="min-w-0">
             {error ? (
               <div
@@ -564,14 +588,14 @@ export default function ShopPageClient({
                 </button>
               </div>
             ) : (
-              <div className={`-mx-3 grid gap-x-1 gap-y-5 sm:mx-0 sm:grid-cols-2 sm:gap-x-2 md:gap-x-4 md:gap-y-7 lg:grid-cols-3 ${compactView ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`-mx-3 grid gap-x-1 gap-y-5 sm:mx-0 sm:grid-cols-2 sm:gap-x-2 md:gap-x-4 md:gap-y-7 lg:grid-cols-3 xl:grid-cols-4 ${compactView ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {tiles.map((tile, index) => (
                   <CatalogProductCard
                     key={tile.tileKey}
                     tile={tile}
                     filters={filters}
                     largeMobile={!compactView}
-                    imageSizes={`${compactView ? '(max-width: 639px) calc((100vw - 4px) / 2)' : '(max-width: 639px) 100vw'}, (max-width: 1023px) calc((100vw - 48px) / 2), (max-width: 1439px) calc((100vw - 304px) / 3), 378px`}
+                    imageSizes={`${compactView ? '(max-width: 639px) calc((100vw - 4px) / 2)' : '(max-width: 639px) 100vw'}, (max-width: 1023px) calc((100vw - 48px) / 2), (max-width: 1279px) calc((100vw - 80px) / 3), (max-width: 1439px) calc((100vw - 96px) / 4), 336px`}
                     index={index}
                     allowedColors={dimensions.colors.filter(c => matchesCatalogProduct(tile.product, filters, c.label)).map(c => c.key)}
                     onProductClick={(selectedTile) => trackSelect(selectedTile, index)}
@@ -583,7 +607,7 @@ export default function ShopPageClient({
             )}
           </section>
         </div>
-        {!loading && <DetailBlok />}
+        {!loading && selectedNavigation === 'all' && refinementCount === 0 && <DetailBlok />}
         <div>
           <RecentlyViewed />
         </div>
