@@ -99,6 +99,7 @@ export default function PdpGalleryLightbox({
     <div
       ref={dialogRef}
       role="dialog"
+      data-product-gallery-dialog
       aria-modal="true"
       aria-label={t('title')}
       // Klik op de buitenste container sluit. We pakken alleen klikken

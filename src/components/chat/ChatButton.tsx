@@ -33,7 +33,9 @@ export default function ChatButton() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProductGalleryOpen, setIsProductGalleryOpen] = useState(false)
   const [onderbalk, setOnderbalk] = useState(0)
+  const [mobileGalleryVisible, setMobileGalleryVisible] = useState(false)
   const [tipZichtbaar, setTipZichtbaar] = useState(false)
   const [magPulseren, setMagPulseren] = useState(false)
   const knopRef = useRef<HTMLButtonElement>(null)
@@ -65,6 +67,7 @@ export default function ChatButton() {
     const checkAllDrawers = () => {
       setIsFilterDrawerOpen(!!document.querySelector('[data-filter-drawer]'))
       setIsCartDrawerOpen(!!document.querySelector('[data-cart-drawer]'))
+      setIsProductGalleryOpen(!!document.querySelector('[data-product-gallery-dialog]'))
       // Mobile menu staat permanent in de DOM (translate off-canvas),
       // dus we checken op de attribuut-WAARDE i.p.v. enkel presence.
       setIsMobileMenuOpen(!!document.querySelector('[data-mobile-menu="open"]'))
@@ -97,6 +100,14 @@ export default function ChatButton() {
    * vouw en telt dus niet mee.
    */
   const meetOnderbalk = useCallback(() => {
+    // Leave product photography and its thumbnail controls unobstructed on
+    // mobile. The launcher returns at the product information and size picker.
+    const gallery = document.querySelector('[data-product-gallery]')
+    const galleryBounds = gallery?.getBoundingClientRect()
+    setMobileGalleryVisible(Boolean(
+      window.innerWidth < 768 && galleryBounds &&
+      galleryBounds.bottom > 0 && galleryBounds.top < window.innerHeight
+    ))
     const balken = Array.from(document.querySelectorAll('[data-onderbalk]'))
     let hoogste = 0
     for (const el of balken) {
@@ -215,7 +226,8 @@ export default function ChatButton() {
   // Verberg de knop wanneer een schermvullende laag open staat (filterlade,
   // winkelmandlade of mobiel menu). De knop heeft z-[9999] en zou er anders
   // doorheen prikken.
-  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isMobileMenuOpen || (opHomepage && !heroPassed && !isOpen)
+  const shouldHideButton = isFilterDrawerOpen || isCartDrawerOpen || isMobileMenuOpen || isProductGalleryOpen ||
+    (!isOpen && ((opHomepage && !heroPassed) || (opProductpagina && mobileGalleryVisible)))
 
   const handleToggle = () => {
     const wasOpen = isOpen
