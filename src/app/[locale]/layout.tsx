@@ -1,3 +1,5 @@
+import DocumentShell, { documentMetadata, viewport } from '@/components/layout/DocumentShell'
+export { viewport }
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -42,6 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const threshold = formatPromiseAmount(free_shipping_threshold, locale)
 
   return {
+    ...documentMetadata(locale),
     title: {
       default: t('title'),
       template: '%s - MOSE'
@@ -126,6 +129,7 @@ export default async function LocaleLayout({
     : null
 
   return (
+    <DocumentShell locale={locale}>
     <NextIntlClientProvider messages={messages}>
       <CampaignThemeProvider color={campaignThemeColor} />
       <CampaignAutoApply />
@@ -149,6 +153,7 @@ export default async function LocaleLayout({
       <PaginaWeergaveMeter />
       <MetingSchakelaar />
     </NextIntlClientProvider>
+    </DocumentShell>
   )
 }
 

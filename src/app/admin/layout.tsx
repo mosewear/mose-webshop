@@ -1,3 +1,5 @@
+import DocumentShell, { documentMetadata, viewport } from '@/components/layout/DocumentShell'
+export { viewport }
 import { requireAdmin } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
@@ -7,6 +9,7 @@ import InterneSessieMarkering from '@/components/admin/InterneSessieMarkering'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  ...documentMetadata('nl'),
   title: {
     default: 'MOSE Admin',
     template: '%s | MOSE Admin'
@@ -31,6 +34,7 @@ export default async function AdminLayout({
   }
 
   return (
+    <DocumentShell locale="nl">
     <div className="min-h-screen bg-gray-100 flex flex-col lg:flex-row">
       {/* Sidebar - Mobile: slide-in, Desktop: always visible */}
       <AdminSidebar adminUser={adminUser!} />
@@ -50,6 +54,7 @@ export default async function AdminLayout({
       <CommandPalette />
       <InterneSessieMarkering />
     </div>
+    </DocumentShell>
   )
 }
 

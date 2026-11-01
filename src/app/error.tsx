@@ -21,6 +21,7 @@ export default function Error({
   }, [error])
 
   return (
+    <html lang={locale}><body>
     <main id="main-content" className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full text-center">
         {/* Logo */}
@@ -81,6 +82,7 @@ export default function Error({
         </p>
       </div>
     </main>
+    </body></html>
   )
 }
 

@@ -1,0 +1,230 @@
+import type { Metadata, Viewport } from "next";
+import { Anton, Montserrat } from 'next/font/google'
+import { Toaster } from 'react-hot-toast'
+import Script from 'next/script'
+import { PostHogProvider } from '@/app/providers'
+import HtmlLangUpdater from '@/components/HtmlLangUpdater'
+
+
+const anton = Anton({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+// Variable font = one file / fewer link preloads (reduces Chrome “preloaded but not used” noise on routes like checkout).
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
+
+export function documentMetadata(locale: string): Metadata {
+  const timestamp = Date.now()
+  const en = locale === 'en'
+  const title = en ? 'MOSE - Clothing and accessories for men' : 'MOSE - Kleding en accessoires voor mannen'
+  const description = en
+    ? 'Menswear with character. Explore MOSE hoodies, T-shirts, sweaters and trousers, with attention to fit and detail.'
+    : 'Mannenkleding met karakter. Ontdek hoodies, T-shirts, sweaters en broeken van MOSE, met aandacht voor pasvorm en detail.'
+
+  return {
+    title: {
+      default: title,
+      template: "%s - MOSE"
+    },
+    description,
+    keywords: en ? ["MOSE", "menswear", "premium basics", "hoodies", "t-shirts", "trousers", "sweaters", "streetwear"] : ["MOSE", "mannenkleding", "premium basics", "hoodies", "t-shirts", "broeken", "sweaters", "mannenmode", "streetwear", "minimalistisch", "tijdloos"],
+    authors: [{ name: "MOSE", url: "https://www.mosewear.com" }],
+    creator: "MOSE",
+    publisher: "MOSE",
+    metadataBase: new URL('https://www.mosewear.com'),
+    alternates: {
+      canonical: `/${locale}`,
+    },
+    icons: {
+      icon: [
+        { url: `/favicon.ico?v=${timestamp}`, sizes: 'any' },
+        { url: `/favicon-16x16.png?v=${timestamp}`, sizes: '16x16', type: 'image/png' },
+        { url: `/favicon-32x32.png?v=${timestamp}`, sizes: '32x32', type: 'image/png' },
+      ],
+      shortcut: `/favicon.ico?v=${timestamp}`,
+      apple: [
+        { url: `/apple-touch-icon.png?v=${timestamp}`, sizes: '180x180', type: 'image/png' },
+      ],
+    },
+  openGraph: {
+    type: "website",
+    locale: en ? "en_GB" : "nl_NL",
+    url: "https://www.mosewear.com",
+    title,
+    description,
+    siteName: "MOSE",
+    images: [
+      {
+        url: "/og-default.jpg",
+        width: 1200,
+        height: 630,
+        alt: "MOSE - Premium Basics",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: ["/og-default.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // google: 'your-google-site-verification-code',
+  },
+  }
+}
+
+export default function DocumentShell({
+  children,
+  locale,
+}: Readonly<{
+  children: React.ReactNode;
+  locale: string;
+}>) {
+  // Preconnect to the Supabase Storage host so the very first product /
+  // hero image starts streaming immediately, instead of paying a fresh
+  // DNS + TLS roundtrip on the cold cache visit. We derive the host from
+  // NEXT_PUBLIC_SUPABASE_URL so no environment ever ships a stale literal.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseOrigin = supabaseUrl
+    ? (() => {
+        try {
+          return new URL(supabaseUrl).origin
+        } catch {
+          return null
+        }
+      })()
+    : null
+
+  return (
+    <html lang={locale} className={`${anton.variable} ${montserrat.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* Connection warm-up to Supabase Storage (used for every product +
+            editorial image). Both hints are kept: dns-prefetch is a cheap
+            hedge for browsers / proxies that ignore preconnect.
+            crossOrigin is required so the warmed connection can serve the
+            credentialless image fetches Next/Image issues. */}
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
+        {/* Facebook Pixel - Only load after consent */}
+        <Script
+          id="facebook-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Wait for cookie consent before initializing
+              function initFacebookPixel() {
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', '1447430483627328');
+                fbq('track', 'PageView');
+              }
+
+              // Check if consent already given
+              if (typeof window !== 'undefined') {
+                const consent = localStorage.getItem('mose_cookie_consent');
+                if (consent === 'all') {
+                  initFacebookPixel();
+                } else {
+                  // Listen for consent event
+                  window.addEventListener('mose-tracking-enabled', initFacebookPixel);
+                }
+              }
+            `,
+          }}
+        />
+        {/*
+          De noscript-fallbackpixel van Meta is bewust verwijderd. Hij stond
+          buiten de consentcheck hierboven en vuurde dus bij elke bezoeker,
+          ook bij wie "alleen noodzakelijke cookies" koos. Dat is in strijd met
+          de AVG/ePrivacy-toestemmingsplicht, en een noscript-img kan per
+          definitie niet op het mose-tracking-enabled-event wachten.
+          Gevolg: bezoekers zonder JavaScript worden niet meer getrackt. Dat is
+          een verwaarloosbaar deel van het verkeer, en zij gaven geen
+          toestemming die we konden uitlezen.
+        */}
+      </head>
+      <body className="antialiased font-sans">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">
+          {locale === 'en' ? 'Skip to content' : 'Ga naar de inhoud'}
+        </a>
+        <HtmlLangUpdater />
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#000',
+              color: '#fff',
+              border: '2px solid #000',
+              borderRadius: '0',
+              padding: '16px 20px',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
+              style: {
+                background: '#000',
+                color: '#10b981',
+                border: '2px solid #10b981',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+              style: {
+                background: '#000',
+                color: '#ef4444',
+                border: '2px solid #ef4444',
+              },
+            },
+          }}
+        />
+      </body>
+    </html>
+  );
+}
