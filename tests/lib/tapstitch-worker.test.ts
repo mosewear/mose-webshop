@@ -6,7 +6,7 @@ import {runTapstitchCloud} from '@/lib/tapstitch-cloud'
 const runId='025a0b20-fa68-4a42-843b-cf1ae91ab4b6',supplier='1565591867570204672',orderId='gid://shopify/Order/8302363115847'
 const wallet={available_balance:'10',auto_reload:{state:'unconfigured'},rates:{meters:[{label:'TinyFish Agent',unit_amount:'0.016'}]}}
 beforeEach(()=>{vi.stubEnv('TAPSTITCH_CLOUD_ENABLED','true');vi.stubEnv('TINYFISH_API_KEY','test-key');vi.stubEnv('TINYFISH_TAPSTITCH_PROFILE_ID','prof_mose')})
-function fixture(){
+function fixture(latestStatus?: string){
  const state:any={id:1,enabled:true,state:'idle',run_id:null,request_id:null,targets:[],lease_token:null,lease_until:null,next_run_at:new Date(0).toISOString(),started_at:null,last_success_at:null,last_error:null,budget_usd_micros:10000000,spent_usd_micros:0,reserved_usd_micros:0}
  const observations:any[]=[]
  const db:any={rpc:vi.fn(async()=>{
@@ -17,7 +17,7 @@ function fixture(){
   const q:any={select:()=>q,order:()=>q,limit:()=>q,is:()=>q,gt:()=>q,eq:(key:string,value:string)=>{if(key==='lease_token')lease=value;return q},update:(v:any)=>{patch=v;return q},upsert:(v:any)=>{insert=v;return q},then:(resolve:any)=>{
    if(patch){if(lease!==state.lease_token)return resolve({data:[],error:null});Object.assign(state,patch);return resolve({data:[{id:1}],error:null})}
    if(insert){for(const o of insert)if(!observations.some(x=>x.run_id===o.run_id&&x.shopify_order_id===o.shopify_order_id))observations.push(o);return resolve({data:[],error:null})}
-   const data=table==='shopify_order_snapshots'?[{shopify_order_id:orderId,order_name:'#1001',snapshot:{displayFulfillmentStatus:'UNFULFILLED'},cancelled_at:null}]:table==='shopify_order_lines'?[{order_id:orderId}]:table==='tapstitch_order_links'?[{shopify_order_id:orderId,supplier_order_id:supplier}]:[]
+   const data=table==='shopify_order_snapshots'?[{shopify_order_id:orderId,order_name:'#1001',snapshot:{displayFulfillmentStatus:'UNFULFILLED'},cancelled_at:null}]:table==='shopify_order_lines'?[{order_id:orderId}]:table==='tapstitch_order_links'?[{shopify_order_id:orderId,supplier_order_id:supplier}]:table==='tapstitch_latest_production'&&latestStatus?[{shopify_order_id:orderId,status:latestStatus,observed_at:new Date().toISOString()}]:[]
    return resolve({data,error:null})
   }};return q
  }}
@@ -42,6 +42,18 @@ describe('durable cloud collector',()=>{
   expect(f.state.spent_usd_micros).toBe(48000);expect(f.state.reserved_usd_micros).toBe(0)
   await expect(runTapstitchCloud(f.db,request)).resolves.toEqual({busyOrNotDue:true})
   expect(posts).toBe(1)
+ })
+ it.each(['Shipped','Delivered','Cancelled'])('leaves terminal %s orders idle without consulting or billing the browser provider',async(status)=>{
+  const f=fixture(status)
+  f.state.last_error='CLOUD_CHECK_FAILED'
+  f.state.spent_usd_micros=10000000
+  f.state.last_success_at='2026-10-31T08:20:00Z'
+  const request=vi.fn(async()=>{throw Error('provider unavailable')})
+  expect(await runTapstitchCloud(f.db,request)).toEqual({noOrders:true})
+  expect(request).not.toHaveBeenCalled()
+  expect(f.state).toMatchObject({state:'idle',last_error:null,spent_usd_micros:10000000,reserved_usd_micros:0,last_success_at:'2026-10-31T08:20:00Z',lease_token:null})
+  expect(Date.parse(f.state.next_run_at)).toBeGreaterThan(Date.now()+5*60*60_000)
+  expect(f.observations).toEqual([])
  })
  it('does not start a browser job when the maximum possible charge cannot be reserved',async()=>{
   const f=fixture();f.state.spent_usd_micros=9000000;const request=vi.fn()
