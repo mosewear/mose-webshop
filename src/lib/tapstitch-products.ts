@@ -2,6 +2,11 @@
  * These source IDs are NOT account-specific fulfillment mappings.
  */
 export const TAPSTITCH_PRODUCT_SOURCES: Readonly<Record<string, { sourceProductId: string | null; sourceCode: string; sourcePage: string }>> = {
+  "ecccfb41-11c6-4c47-a58d-ec332b0c10bd": {
+    "sourceProductId": "1516805081033580544",
+    "sourceCode": "RW0041-P001-V3",
+    "sourcePage": "https://www.tapstitch.com/custom/1516805081033580544"
+  },
   "69ae6c7e-aee5-4f31-bd13-1383e95ce212": {
     "sourceProductId": "1558069273950404608",
     "sourceCode": "MT0067-P001-V2",
