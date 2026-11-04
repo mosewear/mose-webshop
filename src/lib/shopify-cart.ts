@@ -4,7 +4,7 @@ import { nativeGiftAmountCents, nativeGiftLineSchema, nativeGiftRecipientAttribu
 
 export type ShopifyCartSnapshot = {
   locale: 'nl' | 'en'
-  country: 'NL'
+  country: 'NL' | 'US'
   promoCode?: string
   loyaltyPoints?: number
   lines: { variantId: string; quantity: number }[]
@@ -16,9 +16,10 @@ export type CheckoutAttempt = { snapshot: string; attemptId: string; locked?: bo
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 /** Only IDs and quantities go to the server. Client prices never authorize a sale. */
-export function createShopifyCartSnapshot(items: CartItem[], locale: string, benefits: { promoCode?: string; loyaltyPoints?: number } = {}): ShopifyCartSnapshot {
+export function createShopifyCartSnapshot(items: CartItem[], locale: string, benefits: { promoCode?: string; loyaltyPoints?: number } = {}, country: 'NL' | 'US' = 'NL'): ShopifyCartSnapshot {
   if (!items.length) throw new Error('INVALID_CART')
   if (locale !== 'nl' && locale !== 'en') throw new Error('UNSUPPORTED_LOCALE')
+  if (country !== 'NL' && country !== 'US') throw new Error('UNSUPPORTED_COUNTRY')
   const promoCode = benefits.promoCode?.trim().toUpperCase() || undefined
   const loyaltyPoints = benefits.loyaltyPoints === 0 ? undefined : benefits.loyaltyPoints
   if (promoCode && (promoCode.length > 80 || !/^[A-Z0-9_-]+$/.test(promoCode))) throw new Error('INVALID_PROMO')
@@ -53,7 +54,7 @@ export function createShopifyCartSnapshot(items: CartItem[], locale: string, ben
   }
   return {
     locale,
-    country: 'NL',
+    country,
     ...(promoCode ? { promoCode } : {}),
     ...(loyaltyPoints ? { loyaltyPoints } : {}),
     ...(normalizedGifts.length ? {giftCards:normalizedGifts} : {}),
