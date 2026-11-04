@@ -36,6 +36,7 @@ import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
+import { useMoseUsPrices } from '@/hooks/useMoseUsPrices'
 import { isTapstitchProduct, matchingSetProductIds } from '@/lib/tapstitch-products'
 import { availableVariant, isMadeToOrderAvailable, variantQuantityLimit, type VariantAvailability } from '@/lib/variant-availability'
 import { PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
@@ -755,6 +756,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   const selectedVariant = product?.product_variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor
   )
+  const usMarketPrice = useMoseUsPrices(selectedVariant && !product?.is_gift_card ? [selectedVariant.id] : [])
 
   // Calculate final price with sale price support
   const finalPrice = product 
@@ -974,6 +976,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
 
   const handleAddToCart = async (herkomst: 'hoofdknop' | 'vaste_balk' = 'hoofdknop') => {
     if (!product || !selectedVariant || !availableVariant(selectedVariant)) return
+    if (usMarketPrice.isUs && usMarketPrice.price(selectedVariant.id) === undefined) return
 
     // Get first IMAGE (not video) for cart thumbnail
     const firstImage = displayImages.find(img => img.media_type === 'image')
@@ -1560,9 +1563,16 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                   </span>
                 </div>
                 
-                {/* Price Display met Korting */}
+                {/* Price Display: show verified Shopify USD, or explicitly unavailable. */}
                 <div className="mb-2">
-                  {(() => {
+                  {usMarketPrice.isUs ? (
+                    <div aria-live="polite">
+                      {selectedVariant && usMarketPrice.price(selectedVariant.id) !== undefined
+                        ? <p className="text-xl md:text-2xl font-bold">{usMarketPrice.amount(usMarketPrice.price(selectedVariant.id)!)}</p>
+                        : <p className="text-base font-semibold text-gray-700">{selectedVariant ? (usMarketPrice.state === 'unavailable' ? 'USD price unavailable' : 'Checking USD price…') : 'Choose a size to see the USD price'}</p>}
+                      <p className="text-xs text-gray-500 mt-1">Shipping, taxes and import charges are calculated at checkout. US checkout is subject to availability.</p>
+                    </div>
+                  ) : (() => {
                     const basePrice = product.base_price + (selectedVariant?.price_adjustment || 0)
                     const salePrice = product.sale_price ? product.sale_price + (selectedVariant?.price_adjustment || 0) : null
                     const hasDiscount = salePrice && salePrice < basePrice
@@ -2040,7 +2050,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                   ref={mainAtcRef}
                   data-pdp-main-atc
                   onClick={() => handleAddToCart('hoofdknop')}
-                  disabled={!hasAnyStock || !selectedVariant || addedToCart}
+                  disabled={!hasAnyStock || !selectedVariant || addedToCart || (usMarketPrice.isUs && usMarketPrice.price(selectedVariant?.id ?? '') === undefined) }
                   className={`mose-button flex-1 min-w-0 ${
                     addedToCart
                       ? 'bg-black text-white cursor-default animate-success'
@@ -2606,7 +2616,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
           Admin kan dit globaal uitzetten via /admin/settings. We wachten
           tot settings geladen zijn voordat we renderen om geen flits van
           de sticky balk te krijgen wanneer deze uit hoort te staan. */}
-      {product && !settingsLoading && settings?.pdp_sticky_picker_enabled && (
+      {product && !settingsLoading && settings?.pdp_sticky_picker_enabled && !usMarketPrice.isUs && (
         <StickyVariantPicker
           productId={product.id}
           availableColors={availableColors}
