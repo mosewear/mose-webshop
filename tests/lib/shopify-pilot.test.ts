@@ -7,7 +7,7 @@ import { contribution } from '@/lib/shopify/pricing'
 
 const id = 'local-variant-123'
 const shopifyId = 'gid://shopify/ProductVariant/123'
-const mapped: MappedVariant = { mose_variant_id: id, shopify_variant_id: shopifyId, fulfillment_owner: 'tapstitch', supplier_model: 'RW0041-P001-V3', supplier_link_verified: true, sample_verified: true, enabled: true, price_eur_cents: 6995 }
+const mapped: MappedVariant = { mose_variant_id: id, shopify_variant_id: shopifyId, fulfillment_owner: 'tapstitch', supplier_model: 'RW0016-C001-V3', supplier_link_verified: true, sample_verified: true, enabled: true, price_eur_cents: 6995 }
 const input = { attemptId: '12345678-1234-4123-8123-123456789abc', locale: 'nl' as const, country: 'NL' as const, lines: [{ variantId: id, quantity: 1 }] }
 
 describe('pilot purchase boundary', () => {
