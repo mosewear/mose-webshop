@@ -51,7 +51,15 @@ export async function POST(request: NextRequest) {
   const input = parsed.data
   // US selling is independently approved only after USD payment, DDP and margin checks.
   // The NL/EUR checkout remains unchanged until that explicit release.
-  if (input.country === 'US' && process.env.MOSE_US_CHECKOUT_ENABLED !== 'true') {
+  if (input.country === 'US' && (
+    process.env.MOSE_US_CHECKOUT_ENABLED !== 'true' ||
+    process.env.MOSE_US_DDP_VERIFIED !== 'true' ||
+    process.env.MOSE_US_SHIPPING_RATES_VERIFIED !== 'true' ||
+    process.env.MOSE_US_PAYMENT_CURRENCY_VERIFIED !== 'true'
+  )) {
+    // Independent US checkout gates require exact supplier DDP evidence,
+    // live US shipping availability and charged-USD verification. The default
+    // is OFF even if the US storefront preview is enabled.
     return respond({ error: 'United States checkout is not available yet.', code: 'US_MARKET_NOT_READY' }, 503)
   }
   if (input.country === 'US' && (input.promoCode || input.loyaltyPoints || input.giftCards?.length)) {
