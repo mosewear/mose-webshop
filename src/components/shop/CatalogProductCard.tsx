@@ -84,9 +84,10 @@ export default function CatalogProductCard({
   }, [image])
   const matchingVariants = catalogVariants(p, filters, selectedColor)
   const inStock = p.is_gift_card || matchingVariants.some(variant => availableVariant(variant))
-  const marketPrices = useMoseUsPrices(inView && !p.is_gift_card ? matchingVariants.map(variant => variant.id) : [])
-  const pricedUsd = matchingVariants.map(variant => marketPrices.price(variant.id))
-  const usdPrice = pricedUsd.length > 0 && pricedUsd.every(value => value !== undefined)
+  const quotedVariantIds = matchingVariants.map(variant => variant.id).filter((id): id is string => typeof id === 'string' && id.length > 0)
+  const marketPrices = useMoseUsPrices(inView && !p.is_gift_card ? quotedVariantIds : [])
+  const pricedUsd = quotedVariantIds.map(id => marketPrices.price(id))
+  const usdPrice = quotedVariantIds.length === matchingVariants.length && pricedUsd.length > 0 && pricedUsd.every(value => value !== undefined)
     ? Math.min(...pricedUsd as number[]) : null
   const stock = getColorStock(matchingVariants.filter(v => v.is_available === true), selectedColor),
     colors = getUniqueColors(p.variants),
