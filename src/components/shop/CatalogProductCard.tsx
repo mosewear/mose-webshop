@@ -1,7 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useMoseUsPrices } from '@/hooks/useMoseUsPrices'
 import { Heart, Plus } from 'lucide-react'
 import dynamic from 'next/dynamic'
 const CatalogQuickAdd = dynamic(() => import('./CatalogQuickAdd'), {ssr: false})
@@ -67,6 +68,15 @@ export default function CatalogProductCard({
   const [preferredColor, setSelectedColor] = useState(tile.color)
   const selectedColor = preferredColor && (!allowedColors || allowedColors.includes(colorKey(preferredColor))) ? preferredColor : tile.color
   const [feedback, setFeedback] = useState('')
+  const tileRef = useRef<HTMLElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const node = tileRef.current
+    if (!node || process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED !== 'true') return
+    const observer = new IntersectionObserver(entries => { if (entries[0]?.isIntersecting) setInView(true) }, { rootMargin: '300px' })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
   const image = getImageForColor(p.images, selectedColor),
     second = getHoverImageForColor(p.images, selectedColor, image)
   useEffect(() => {
@@ -74,6 +84,10 @@ export default function CatalogProductCard({
   }, [image])
   const matchingVariants = catalogVariants(p, filters, selectedColor)
   const inStock = p.is_gift_card || matchingVariants.some(variant => availableVariant(variant))
+  const marketPrices = useMoseUsPrices(inView && !p.is_gift_card ? matchingVariants.map(variant => variant.id) : [])
+  const pricedUsd = matchingVariants.map(variant => marketPrices.price(variant.id))
+  const usdPrice = pricedUsd.length > 0 && pricedUsd.every(value => value !== undefined)
+    ? Math.min(...pricedUsd as number[]) : null
   const stock = getColorStock(matchingVariants.filter(v => v.is_available === true), selectedColor),
     colors = getUniqueColors(p.variants),
     priceRange = productPriceRange(p, selectedColor, filters),
@@ -87,6 +101,7 @@ export default function CatalogProductCard({
         : p.category?.name
   return (
     <article
+      ref={tileRef}
       data-catalog-index={index}
       data-catalog-color={selectedColor ?? ''}
       data-catalog-product-id={p.id}
@@ -190,7 +205,7 @@ export default function CatalogProductCard({
             <Heart size={18} strokeWidth={1.8} fill={saved ? 'currentColor' : 'none'} />
           </span>
         </button>
-        {!p.is_gift_card && (
+        {!p.is_gift_card && !marketPrices.isUs && (
           <button
             type="button"
             aria-label={t('quickAdd', {name})}
@@ -211,8 +226,9 @@ export default function CatalogProductCard({
           </h3>
           <div className={`shrink-0 text-right font-bold leading-snug md:text-sm ${largeMobile ? 'text-sm' : 'text-xs'}`}>
             {(p.is_gift_card || priceRange.min !== priceRange.max) && <span className="block text-[10px] font-normal">{t('from')}</span>}
-            <span className={sale ? 'text-brand-primary-hover' : 'text-black'}>{formatPrice(price, locale)}</span>
-            {sale && <del className="block text-[10px] font-normal text-gray-500">{formatPrice(originalPrice, locale)}</del>}
+            {marketPrices.isUs
+              ? <span className="text-black">{usdPrice !== null ? marketPrices.amount(usdPrice) : (marketPrices.state === 'unavailable' ? 'USD unavailable' : 'Checking USD…')}</span>
+              : <><span className={sale ? 'text-brand-primary-hover' : 'text-black'}>{formatPrice(price, locale)}</span>{sale && <del className="block text-[10px] font-normal text-gray-500">{formatPrice(originalPrice, locale)}</del>}</>}
           </div>
         </div>
         {colors.length > 0 && <div>
