@@ -977,6 +977,8 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   const handleAddToCart = async (herkomst: 'hoofdknop' | 'vaste_balk' = 'hoofdknop') => {
     if (!product || !selectedVariant || !availableVariant(selectedVariant)) return
     if (usMarketPrice.isUs && usMarketPrice.price(selectedVariant.id) === undefined) return
+    const trackingPrice = usMarketPrice.isUs ? usMarketPrice.price(selectedVariant.id)! : finalPrice
+    const trackingCurrency = usMarketPrice.isUs ? 'USD' : 'EUR'
 
     // Get first IMAGE (not video) for cart thumbnail
     const firstImage = displayImages.find(img => img.media_type === 'image')
@@ -1041,12 +1043,12 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       'AddToCart',
       {
         content_ids: [contentId],
-        contents: [{ id: contentId, quantity, item_price: finalPrice }],
+        contents: [{ id: contentId, quantity, item_price: trackingPrice }],
         content_name: `${getLocalizedName(product)} - ${selectedVariant.size} - ${selectedVariant.color}`,
         content_type: 'product',
         content_category: product.categories?.name,
-        value: finalPrice * quantity,
-        currency: 'EUR',
+        value: trackingPrice * quantity,
+        currency: trackingCurrency,
         num_items: quantity,
       },
       klantgegevens
@@ -1057,7 +1059,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       id: product.id,
       name: product.name,
       category: product.categories?.name || 'uncategorized',
-      price: finalPrice,
+      price: trackingPrice,
       quantity: quantity,
       color: selectedVariant.color,
       size: selectedVariant.size,
