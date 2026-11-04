@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type UsMarketQuote = {
   currency?: string
@@ -14,7 +14,7 @@ type UsMarketQuote = {
  */
 export function useMoseUsPrices(variantIds: string[]) {
   const enabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
-  const key = useMemo(() => [...new Set(variantIds)].filter(Boolean).sort().join('|'), [variantIds.join('|')])
+  const key = [...new Set(variantIds)].filter(Boolean).sort().join('|')
   const [isUs, setIsUs] = useState(false)
   const [prices, setPrices] = useState<Record<string, number> | null>(null)
   const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle')
