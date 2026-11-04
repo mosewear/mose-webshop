@@ -27,11 +27,20 @@ describe('MOSE United States market safety', () => {
     const usd = [{ ...eur[0], price: { amount: '89.00', currencyCode: 'USD' } }]
     expect(verifyMarketPriceSubtotal(lines, usd, 'US').subtotalCents).toBe(17800)
   })
+  it('preserves multiple gift recipients using the same Shopify variant', () => {
+    const giftLines = [
+      { merchandiseId: lines[0].merchandiseId, quantity: 1, expectedPriceCents: 5000, gift: true },
+      { merchandiseId: lines[0].merchandiseId, quantity: 1, expectedPriceCents: 5000, gift: true },
+    ]
+    const giftVariant = { ...eur[0], quantityAvailable: 0, price: { amount: '50.00', currencyCode: 'EUR' } }
+    expect(verifyMarketPriceSubtotal(giftLines, [giftVariant, giftVariant], 'NL').subtotalCents).toBe(10000)
+  })
   it('rejects unavailable, duplicate and malformed variants', () => {
     const usd = [{ ...eur[0], price: { amount: '89.00', currencyCode: 'USD' } }]
     expect(() => verifyMarketPriceSubtotal(lines, [{ ...usd[0], availableForSale: false }], 'US')).toThrow()
     expect(() => verifyMarketPriceSubtotal(lines, [{ ...usd[0], quantityAvailable: 1 }], 'US')).toThrow()
-    expect(() => verifyMarketPriceSubtotal(lines, [...usd, ...usd], 'US')).toThrow()
+    expect(verifyMarketPriceSubtotal(lines, [...usd, ...usd], 'US').subtotalCents).toBe(17800)
+    expect(() => verifyMarketPriceSubtotal(lines, [...usd, { ...usd[0], price: { amount: '90.00', currencyCode: 'USD' } }], 'US')).toThrow('INVALID_MARKET_VARIANTS')
     expect(() => verifyMarketPriceSubtotal(lines, [{ ...usd[0], price: { amount: '0', currencyCode: 'USD' } }], 'US')).toThrow()
     expect(() => verifyMarketPriceSubtotal(lines, [{ ...usd[0], price: { amount: '-1', currencyCode: 'USD' } }], 'US')).toThrow()
   })
