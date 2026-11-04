@@ -39,19 +39,30 @@ export function verifyMarketPriceSubtotal(
   const currency = currencyForCountry(country)
   const map = new Map<string, MarketVariant>()
   for (const variant of variants) {
-    if (!variant || map.has(variant.id)) throw new Error('INVALID_MARKET_VARIANTS')
-    map.set(variant.id, variant)
+    if (!variant) throw new Error('INVALID_MARKET_VARIANTS')
+    const previous = map.get(variant.id)
+    // Shopify nodes(ids:) can return the same merchandise more than once.
+    // Distinct gift recipients must remain distinct cart lines even when the
+    // same gift-card variant is reused. Reject inconsistent duplicate values.
+    if (previous) {
+      if (previous.price.amount !== variant.price.amount ||
+          previous.price.currencyCode !== variant.price.currencyCode ||
+          previous.quantityAvailable !== variant.quantityAvailable ||
+          previous.availableForSale !== variant.availableForSale) throw new Error('INVALID_MARKET_VARIANTS')
+    } else map.set(variant.id, variant)
   }
-  if (map.size !== lines.length || new Set(lines.map(line => line.merchandiseId)).size !== lines.length) {
+  if (map.size !== new Set(lines.map(line => line.merchandiseId)).size) {
     throw new Error('INVALID_MARKET_VARIANTS')
   }
+  const physicalTotals = new Map<string, number>()
+  for (const line of lines) if (!line.gift) physicalTotals.set(line.merchandiseId, (physicalTotals.get(line.merchandiseId) ?? 0) + line.quantity)
   let subtotalCents = 0
   const perVariantCents: Record<string, number> = {}
   for (const line of lines) {
     const variant = map.get(line.merchandiseId)
     if (!variant || !variant.availableForSale || variant.price.currencyCode !== currency ||
         !Number.isSafeInteger(line.quantity) || line.quantity <= 0 ||
-        (variant.quantityAvailable !== null && variant.quantityAvailable < line.quantity && !line.gift)) {
+        (variant.quantityAvailable !== null && variant.quantityAvailable < (physicalTotals.get(line.merchandiseId) ?? 0))) {
       throw new Error('MARKET_VARIANT_UNAVAILABLE')
     }
     const unitCents = cents(variant.price.amount)
