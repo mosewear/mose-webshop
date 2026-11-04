@@ -56,6 +56,11 @@ const copy = {
 export function ShopifyCheckoutHandoff() {
   const locale = useLocale()
   const text = copy[locale === 'en' ? 'en' : 'nl']
+  const usMarketEnabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
+  const [buyerCountry, setBuyerCountry] = useState<'NL' | 'US'>('NL')
+  const [usdUnitPrices, setUsdUnitPrices] = useState<Record<string, number> | null>(null)
+  const [usdQuoteLoading, setUsdQuoteLoading] = useState(false)
+  const [usdQuoteError, setUsdQuoteError] = useState(false)
   const items = useCart(state => state.items)
   const hydrated = useCartGehydrateerd()
   const [busy, setBusy] = useState(false)
@@ -71,6 +76,38 @@ export function ShopifyCheckoutHandoff() {
   const attempt = useRef<CheckoutAttempt | null>(null)
   const controller = useRef<AbortController | null>(null)
   useEffect(() => () => { controller.current?.abort(); loyaltyController.current?.abort() }, [])
+  useEffect(() => {
+    if (!usMarketEnabled) return
+    const saved = document.cookie.split(';').map(value => value.trim()).find(value => value.startsWith('mose-country='))?.split('=')[1]
+    if (saved === 'US' || saved === 'NL') setBuyerCountry(saved)
+  }, [usMarketEnabled])
+  useEffect(() => {
+    if (!usMarketEnabled || buyerCountry !== 'US') { setUsdUnitPrices(null); setUsdQuoteLoading(false); setUsdQuoteError(false); return }
+    if (items.some(item => item.isGiftCard) || !items.length) { setUsdUnitPrices(null); setUsdQuoteLoading(false); setUsdQuoteError(true); return }
+    const abort = new AbortController()
+    setUsdUnitPrices(null); setUsdQuoteLoading(true); setUsdQuoteError(false)
+    void (async () => {
+      try {
+        const response = await fetch('/api/shopify/us-market-prices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', signal: abort.signal,
+          body: JSON.stringify({ country: 'US', variantIds: items.map(item => item.variantId) }) })
+        const data: unknown = await response.json()
+        if (!response.ok || !data || typeof data !== 'object' || (data as { currency?: unknown }).currency !== 'USD') throw new Error('USD_QUOTE_UNAVAILABLE')
+        const quoted = (data as { lines?: unknown }).lines
+        if (!Array.isArray(quoted) || quoted.length !== new Set(items.map(item => item.variantId)).size) throw new Error('USD_QUOTE_INVALID')
+        const next: Record<string, number> = {}
+        for (const line of quoted) {
+          const record = line as { variantId?: unknown; unitAmount?: unknown }
+          if (typeof record.variantId !== 'string' || !items.some(item => item.variantId === record.variantId) || typeof record.unitAmount !== 'string' || !/^\d+\.\d{2}$/.test(record.unitAmount)) throw new Error('USD_QUOTE_INVALID')
+          const number = Number(record.unitAmount)
+          if (!Number.isFinite(number) || number <= 0 || next[record.variantId] !== undefined) throw new Error('USD_QUOTE_INVALID')
+          next[record.variantId] = number
+        }
+        if (!abort.signal.aborted) setUsdUnitPrices(next)
+      } catch { if (!abort.signal.aborted) setUsdQuoteError(true) }
+      finally { if (!abort.signal.aborted) setUsdQuoteLoading(false) }
+    })()
+    return () => abort.abort()
+  }, [buyerCountry, items, usMarketEnabled])
 
   const loadLoyalty = useCallback(async () => {
     loyaltyController.current?.abort()
@@ -113,7 +150,9 @@ export function ShopifyCheckoutHandoff() {
     controller.current = abort
     const timeout = setTimeout(() => abort.abort(), 60_000)
     try {
-      const snapshot = createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current)
+      if (buyerCountry === 'US' && (usdQuoteLoading || usdQuoteError || !usdUnitPrices)) throw new Error('US_MARKET_NOT_READY')
+      if (buyerCountry === 'US' && (promoCode.trim() || loyaltyPoints > 0 || items.some(item => item.isGiftCard))) throw new Error('US_BENEFITS_NOT_READY')
+      const snapshot = createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)
       let prior: unknown = attempt.current
       if (!prior) { try { prior = JSON.parse(sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) || 'null') } catch { /* Optional browser storage. */ } }
       const retained = prior && typeof prior === 'object' && (prior as CheckoutAttempt).locked === true && (prior as CheckoutAttempt).snapshot === JSON.stringify(snapshot)
@@ -131,7 +170,7 @@ export function ShopifyCheckoutHandoff() {
       if (!session || typeof session !== 'object' || (session as { ready?: unknown }).ready !== true) {
         throw new Error('CHECKOUT_UNAVAILABLE')
       }
-      if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current)) !== JSON.stringify(snapshot)) {
+      if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)) !== JSON.stringify(snapshot)) {
         throw new Error('CART_CHANGED')
       }
       let stored: unknown = attempt.current
@@ -166,7 +205,7 @@ export function ShopifyCheckoutHandoff() {
       const data = result as { checkoutUrl?: unknown; attemptId?: unknown }
       if (data.attemptId !== attempt.current.attemptId) throw new Error('INVALID_RESPONSE')
       // Another tab can change the bag while the server prepares checkout.
-      if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current)) !== attempt.current.snapshot) {
+      if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)) !== attempt.current.snapshot) {
         throw new Error('CART_CHANGED')
       }
       const url = checkoutRedirectUrl(data.checkoutUrl, process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST)
@@ -174,7 +213,7 @@ export function ShopifyCheckoutHandoff() {
       window.location.assign(url)
     } catch (failure) {
       const code = failure instanceof Error ? failure.message : ''
-      setError(code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_GIFT_RECIPIENT' ? text.invalidGift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
+      setError(code === 'US_MARKET_NOT_READY' || code === 'US_BENEFITS_NOT_READY' ? (locale === 'en' ? 'United States checkout is being prepared. Prices, shipping and duties must be verified before you can pay.' : 'Amerikaans afrekenen wordt voorbereid. Prijzen, verzending en invoerheffingen moeten eerst worden gecontroleerd.') : code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_GIFT_RECIPIENT' ? text.invalidGift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
     } finally {
       clearTimeout(timeout)
       controller.current = null
@@ -192,6 +231,13 @@ export function ShopifyCheckoutHandoff() {
     </section>
   )
   const hasGiftCards = items.some(item => item.isGiftCard)
+  const usdReady = buyerCountry === 'US' && usdUnitPrices !== null && !usdQuoteLoading && !usdQuoteError
+  const displayMarketPrice = (variantId: string, eurPrice: number, quantity: number) => buyerCountry === 'US'
+    ? (usdReady && usdUnitPrices[variantId] !== undefined ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(usdUnitPrices[variantId] * quantity) : 'USD price pending')
+    : formatBedrag(eurPrice * quantity, locale)
+  const subtotalLabel = buyerCountry === 'US'
+    ? (usdReady ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(items.reduce((sum, item) => sum + (usdUnitPrices[item.variantId] ?? 0) * item.quantity, 0)) : 'USD price pending')
+    : formatBedrag(items.reduce((sum, item) => sum + item.price * item.quantity, 0), locale)
   const hasPhysicalItems = items.some(item => !item.isGiftCard)
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:py-10">
@@ -200,6 +246,16 @@ export function ShopifyCheckoutHandoff() {
       </Link>
       <h1 className="font-display text-4xl uppercase md:text-5xl">{text.title}</h1>
       <p className="mt-2 mb-6 max-w-xl text-sm leading-relaxed text-gray-600 md:mb-8 md:text-base">{text.intro}</p>
+      {usMarketEnabled && <label className="mb-6 flex max-w-sm flex-col gap-2 text-sm font-bold" htmlFor="mose-delivery-market">{locale === 'en' ? 'Delivery country' : 'Bezorgland'}
+        <select id="mose-delivery-market" value={buyerCountry} onChange={event => {
+          const country = event.target.value === 'US' ? 'US' : 'NL'
+          document.cookie = 'mose-country=' + country + '; Path=/; Max-Age=2592000; SameSite=Lax; Secure'
+          setBuyerCountry(country)
+        }} className="min-h-11 border-2 border-black bg-white px-3 py-2">
+          <option value="NL">Netherlands</option><option value="US">United States</option>
+        </select>
+      </label>}
+      {buyerCountry === 'US' && <p role="status" className="mb-4 text-sm text-gray-700">{usdQuoteLoading ? 'Checking live USD prices with Shopify…' : usdQuoteError ? 'USD market pricing is not available. US checkout remains disabled.' : 'USD prices are checked with Shopify. Delivery costs, import duties and final tax are confirmed at checkout.'}</p>}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
         <ul aria-label={locale === 'en' ? 'Your items' : 'Je artikelen'} className="border-t-2 border-black">
           {items.map(item => (
@@ -209,17 +265,17 @@ export function ShopifyCheckoutHandoff() {
                 <h2 className="break-words font-sans text-sm font-bold uppercase leading-snug sm:text-base">{item.name}</h2>
                 <p className="mt-1 text-sm text-gray-600">{[item.color ? vertaalKleur(item.color, locale) : null, item.size].filter(Boolean).join(' · ')}</p>
                 <p className="mt-2 text-sm">{text.quantity}: {item.quantity}</p>
-                <p className="mt-3 text-base font-bold tabular-nums">{formatBedrag(item.price * item.quantity, locale)}</p>
+                <p className="mt-3 text-base font-bold tabular-nums">{displayMarketPrice(item.variantId, item.price, item.quantity)}</p>
               </div>
             </li>
           ))}
         </ul>
         <section aria-label={locale === 'en' ? 'Order summary' : 'Besteloverzicht'} className="min-w-0 self-start border-2 border-black bg-gray-50 p-4 sm:p-6 lg:sticky lg:top-6">
           <div className="flex items-baseline justify-between gap-4"><h2 className="text-base font-bold">{text.subtotal}</h2>
-          <p className="text-2xl font-bold tabular-nums">{formatBedrag(items.reduce((sum, item) => sum + item.price * item.quantity, 0), locale)}</p></div>
+          <p className="text-2xl font-bold tabular-nums">{subtotalLabel}</p></div>
           <p className="mt-3 text-sm leading-relaxed text-gray-700">{text.final}</p>
           <div className="my-5 space-y-2 border-y border-gray-200 py-4 text-sm">
-            {hasPhysicalItems ? <><p className="font-semibold">{text.delivery}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
+            {hasPhysicalItems ? <><p className="font-semibold">{buyerCountry === 'US' ? 'Delivery country: United States' : text.delivery}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
           </div>
           <div className="mb-5 space-y-4">
             <details className="group border-b border-gray-200 pb-4" open={promoCode.length > 0 || error === text.invalidPromo || error === text.benefitError}><summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold [&::-webkit-details-marker]:hidden">{text.promo}<ChevronDown size={18} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180" /></summary><label htmlFor="checkout-promo" className="sr-only">{text.promo}</label><input id="checkout-promo" value={promoCode} onChange={event => setPromoCode(event.target.value)} disabled={busy} maxLength={80} autoComplete="off" autoCapitalize="characters" placeholder={text.promoPlaceholder} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-promo-note"/><p id="checkout-promo-note" className="mt-2 text-xs text-gray-600">{text.promoNote}</p></details>
@@ -230,7 +286,7 @@ export function ShopifyCheckoutHandoff() {
           </div>
           {hasGiftCards && <p className="mb-4 text-sm leading-relaxed text-gray-700">{text.giftInfo}</p>}
           {error && <p role="alert" className="mb-4 border-l-2 border-red-700 pl-3 text-sm leading-relaxed text-red-800">{error}{error === text.review && <> <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></>}</p>}
-          <Button fullWidth isLoading={busy} loadingLabel={text.loading} onClick={proceed}
+          <Button fullWidth isLoading={busy} disabled={buyerCountry === 'US' && (!usdReady || hasGiftCards || Boolean(promoCode.trim()) || loyaltyPoints > 0)} loadingLabel={text.loading} onClick={proceed}
             className="focus-visible:ring-black">
             <Lock size={17} aria-hidden="true" />{text.button}
           </Button>
