@@ -23,7 +23,7 @@ export default function middleware(request: NextRequest) {
   // Only enable geographic discovery on an approved market rollout.
   // A user's own country selection in this cookie takes precedence over IP hints.
   const usMarketEnabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
-  if (usMarketEnabled && !['NL', 'US'].includes(request.cookies.get('mose-country')?.value ?? '')) {
+  if (!['NL', 'BE', ...(usMarketEnabled ? ['US'] : [])].includes(request.cookies.get('mose-country')?.value ?? '')) {
     const country = resolveMoseCountry(undefined, request.headers.get('x-vercel-ip-country'), true)
     response.cookies.set('mose-country', country, { path: '/', sameSite: 'lax', secure: true, maxAge: 60 * 60 * 24 * 30 })
   }
