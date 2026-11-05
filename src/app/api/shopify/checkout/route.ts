@@ -110,6 +110,13 @@ export async function POST(request: NextRequest) {
     }
     const { data, error } = input.lines.length ? await db.from('shopify_variant_mappings').select('*').in('mose_variant_id', input.lines.map(l => l.variantId)) : { data: [], error: null }
     if (error) throw new Error('MAPPING_UNAVAILABLE')
+    // Tapstitch parcels crossing the EU border may incur destination charges.
+    // Belgian orders from MOSE-owned NL stock remain unaffected; international
+    // supplier shipments require a documented landed-cost/DDP arrangement.
+    if (input.country === 'BE' && (data ?? []).some(row => row.fulfillment_owner === 'tapstitch') &&
+        process.env.MOSE_BE_TAPSTITCH_DDP_VERIFIED !== 'true') {
+      return respond({ error: 'Supplier shipping to Belgium is still being verified.', code: 'BE_SUPPLIER_DUTIES_NOT_READY' }, 503)
+    }
     let lines: (ReturnType<typeof authorizeLines>[number] & { gift?: NativeGiftLine; attributes?: { key: string; value: string }[] })[]
     try { lines = authorizeLines(input, data ?? []) } catch {
       return respond({ error: 'Een artikel is nog niet beschikbaar voor deze bestelroute.', code: 'VARIANT_NOT_RELEASED' }, 409)
