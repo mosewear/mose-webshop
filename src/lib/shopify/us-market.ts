@@ -66,7 +66,7 @@ export function verifyMarketPriceSubtotal(
       throw new Error('MARKET_VARIANT_UNAVAILABLE')
     }
     const unitCents = cents(variant.price.amount)
-    if (country === 'NL' && unitCents !== line.expectedPriceCents) throw new Error('MARKET_PRICE_MISMATCH')
+    if (country !== 'US' && unitCents !== line.expectedPriceCents) throw new Error('MARKET_PRICE_MISMATCH')
     subtotalCents += unitCents * line.quantity
     if (!Number.isSafeInteger(subtotalCents)) throw new Error('INVALID_MARKET_PRICE')
     perVariantCents[line.merchandiseId] = unitCents
