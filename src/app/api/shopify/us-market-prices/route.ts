@@ -51,7 +51,11 @@ export async function POST(request: NextRequest) {
       unitAmount: (market.perVariantCents[line.merchandiseId] / 100).toFixed(2),
     }))
     return respond({ country: 'US', currency: 'USD', lines }, 200)
-  } catch {
+  } catch (error) {
+    // Log only known error codes, never provider payloads, credentials or buyer IPs.
+    const code = error instanceof Error && /^[A-Z][A-Z0-9_]{2,80}$/.test(error.message)
+      ? error.message : 'UNEXPECTED_PRICE_ERROR'
+    console.error('[MOSE_US_PRICE]', code)
     return respond({ code: 'US_MARKET_PRICE_UNAVAILABLE' }, 503)
   }
 }
