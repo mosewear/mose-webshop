@@ -1,6 +1,8 @@
 'use client'
 
 import toast from 'react-hot-toast'
+import MarketProductPrice from '@/components/MarketProductPrice'
+import { useMoseCartPrices } from '@/hooks/useMoseCartPrices'
 import { availableVariant, isMadeToOrderAvailable, variantQuantityLimit } from '@/lib/variant-availability'
 import { AVAILABILITY_SELECT } from '@/hooks/useLiveAvailability'
 import { useEffect, useMemo, useRef } from 'react'
@@ -81,6 +83,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
   }, [])
 
+  const market = useMoseCartPrices(items, locale, isOpen)
   const subtotal = getTotal()
   const staffelBreakdown = useMemo(() => {
     if (items.length === 0) {
@@ -399,10 +402,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           // Eigen zin voor de voorlezer. `empty.message` nodigt uit om iets uit
           // te kiezen en is daarmee geen melding van wat er zojuist gebeurde.
           ? t('empty.announce')
-          : `${t('items', { count: aantal })}. ${t('subtotal')} ${formatBedrag(getTotal(), locale)}`
+          : `${t('items', { count: aantal })}. ${t('subtotal')} ${market.subtotalLabel}`
       )
     }
-  }, [isOpen, items, getItemCount, getTotal, locale, t])
+  }, [isOpen, items, getItemCount, getTotal, locale, t, market.subtotalLabel])
 
   // Escape sluit, en de focus blijft binnen de lade.
   //
@@ -669,7 +672,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           {locale === 'en' && product.name_en ? product.name_en : product.name}
                         </span>
                         <span className="text-sm font-bold text-brand-primary">
-                          {formatPrice(product.base_price, locale)}
+                          <MarketProductPrice variantId={product.product_variants?.find((v: LookVariant) => availableVariant(v))?.id}>{formatPrice(product.base_price, locale)}</MarketProductPrice>
                         </span>
                       </LocaleLink>
                     </li>
@@ -803,8 +806,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                             {/* Price */}
                             <div className="text-right">
-                              <div className="font-bold text-lg">{formatBedrag((item.price * item.quantity), locale)}</div>
-                              {(staffelBreakdown.lineSavingByVariantId[item.variantId] ?? 0) > 0 && (
+                              <div className="font-bold text-lg">{market.lineLabel(item)}</div>
+                              {!market.isUs && (staffelBreakdown.lineSavingByVariantId[item.variantId] ?? 0) > 0 && (
                                 <p className="text-xs text-gray-600 mt-1 max-w-[200px] ml-auto leading-snug">
                                   {t('staffel.lineSaving', {
                                     amount: formatBedragKaal(staffelBreakdown.lineSavingByVariantId[item.variantId], locale),
@@ -911,7 +914,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 )}
 
                 {/* Promo Code Section */}
-                <div className="border-t border-gray-300 pt-2">
+                <div className={market.isUs ? "hidden" : "border-t border-gray-300 pt-2"}>
                   {!promoCodeExpanded && promoDiscount === 0 ? (
                     <button
                       onClick={() => setPromoCodeExpanded(true)}
@@ -973,11 +976,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   {/* Subtotal */}
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-semibold uppercase tracking-wide">{t('subtotal')}</span>
-                    <span className="font-bold">{formatBedrag(subtotal, locale)}</span>
+                    <span className="font-bold">{market.subtotalLabel}</span>
                   </div>
 
                   {/* Staffelkorting */}
-                  {staffelBreakdown.totalSavings > 0 && (
+                  {!market.isUs && staffelBreakdown.totalSavings > 0 && (
                     <div className="flex justify-between items-center text-sm px-2 py-1.5 bg-gray-50 border-l-2 border-black">
                       <span className="font-semibold text-gray-800 uppercase tracking-wide text-xs">{t('staffel.label')}</span>
                       <span className="font-bold text-black">-{formatBedrag(staffelBreakdown.totalSavings, locale)}</span>
@@ -985,7 +988,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   )}
 
                   {/* Staffelkorting hint */}
-                  {staffelBreakdown.hints.length > 0 && (
+                  {!market.isUs && staffelBreakdown.hints.length > 0 && (
                     <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 border-l-2 border-gray-300 space-y-1">
                       {staffelBreakdown.hints.map((h, i) => (
                         <p key={`${h.productId}-${i}`} className="font-medium leading-snug">
@@ -1000,7 +1003,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   )}
 
                   {/* Promo Discount */}
-                  {promoDiscount > 0 && (
+                  {!market.isUs && promoDiscount > 0 && (
                     <>
                       <div className="h-px bg-gray-300"></div>
                       <div className="flex justify-between items-center py-1 px-2 bg-brand-primary/5 border-l-2 border-brand-primary">
@@ -1039,10 +1042,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="border-t-2 border-black pt-2">
                     <div className="flex justify-between items-baseline">
                       <span className="font-display text-xl uppercase tracking-wide">{nativeShipping ? t('subtotal') : t('total')}</span>
-                      <span className="font-display text-4xl">{formatBedrag(total, locale)}</span>
+                      <span className="font-display text-4xl">{market.isUs ? market.subtotalLabel : formatBedrag(total, locale)}</span>
                     </div>
                     <p className="text-xs text-gray-500 text-right mt-1">
-                      {nativeShipping ? t('subtotalInclusive') : t('totalInclusive')}
+                      {market.isUs ? 'Shipping and taxes at checkout' : nativeShipping ? t('subtotalInclusive') : t('totalInclusive')}
                     </p>
                   </div>
                 </div>
@@ -1060,7 +1063,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               {/* Mobile Fixed Bottom Bar */}
               <div className="md:hidden bg-white border-t-2 border-black">
                 {/* Promo Code Section - Mobile */}
-                <div className="p-3 border-b border-gray-200">
+                <div className={market.isUs ? "hidden" : "p-3 border-b border-gray-200"}>
                   {!promoCodeExpanded && promoDiscount === 0 ? (
                     <button
                       onClick={() => setPromoCodeExpanded(true)}
@@ -1117,7 +1120,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   ) : null}
 
                   {/* Applied Promo Display - Mobile */}
-                  {promoDiscount > 0 && (
+                  {!market.isUs && promoDiscount > 0 && (
                     <div className="flex justify-between items-center py-1 px-2 bg-brand-primary/5 border-l-2 border-brand-primary">
                       <div className="flex items-center gap-2">
                         <Ticket size={16} className="text-brand-primary" />
@@ -1146,7 +1149,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
 
                 {/* Staffelkorting hint - Mobile */}
-                {staffelBreakdown.hints.length > 0 && (
+                {!market.isUs && staffelBreakdown.hints.length > 0 && (
                   <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 space-y-1">
                     {staffelBreakdown.hints.map((h, i) => (
                       <p key={`${h.productId}-m-${i}`} className="text-xs text-gray-600 font-medium leading-snug">
@@ -1160,7 +1163,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   </div>
                 )}
 
-                {staffelBreakdown.totalSavings > 0 && (
+                {!market.isUs && staffelBreakdown.totalSavings > 0 && (
                   <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                     <span className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{t('staffel.label')}</span>
                     <span className="text-xs font-bold text-black">-{formatBedrag(staffelBreakdown.totalSavings, locale)}</span>
@@ -1172,9 +1175,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">{nativeShipping ? t('subtotal') : t('total')}</div>
-                      <div className="font-display text-3xl">{formatBedrag(total, locale)}</div>
+                      <div className="font-display text-3xl">{market.isUs ? market.subtotalLabel : formatBedrag(total, locale)}</div>
                       <div className="text-xs text-gray-400">
-                        {nativeShipping ? t('subtotalInclusive') : t('totalInclusive')}
+                        {market.isUs ? 'Shipping and taxes at checkout' : nativeShipping ? t('subtotalInclusive') : t('totalInclusive')}
                       </div>
                     </div>
                     <LocaleLink

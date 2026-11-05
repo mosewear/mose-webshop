@@ -87,8 +87,9 @@ export function ShopifyCheckoutHandoff() {
     setUsdUnitPrices(null); setUsdQuoteLoading(true); setUsdQuoteError(false)
     void (async () => {
       try {
-        const response = await fetch('/api/shopify/us-market-prices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', signal: abort.signal,
-          body: JSON.stringify({ country: 'US', variantIds: items.map(item => item.variantId) }) })
+        const search = new URLSearchParams({ country: 'US' })
+        for (const id of new Set(items.map(item => item.variantId))) search.append('variantId', id)
+        const response = await fetch('/api/shopify/us-market-prices?' + search.toString(), { credentials: 'same-origin', cache: 'no-store', signal: abort.signal })
         const data: unknown = await response.json()
         if (!response.ok || !data || typeof data !== 'object' || (data as { currency?: unknown }).currency !== 'USD') throw new Error('USD_QUOTE_UNAVAILABLE')
         const quoted = (data as { lines?: unknown }).lines
@@ -249,6 +250,7 @@ export function ShopifyCheckoutHandoff() {
         <select id="mose-delivery-market" value={buyerCountry} onChange={event => {
           const country = event.target.value === 'BE' ? 'BE' : event.target.value === 'US' && usMarketEnabled ? 'US' : 'NL'
           document.cookie = 'mose-country=' + country + '; Path=/; Max-Age=2592000; SameSite=Lax; Secure'
+          window.dispatchEvent(new Event('mose:country-change'))
           setBuyerCountry(country)
         }} className="min-h-11 border-2 border-black bg-white px-3 py-2">
           <option value="NL">Netherlands</option><option value="BE">Belgium</option>{usMarketEnabled && <option value="US">United States</option>}

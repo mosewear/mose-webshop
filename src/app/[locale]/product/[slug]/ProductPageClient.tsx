@@ -36,6 +36,7 @@ import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import { formatPrice } from '@/lib/format-price'
+import MarketProductPrice from '@/components/MarketProductPrice'
 import { useMoseUsPrices } from '@/hooks/useMoseUsPrices'
 import { isTapstitchProduct, matchingSetProductIds } from '@/lib/tapstitch-products'
 import { availableVariant, isMadeToOrderAvailable, variantQuantityLimit, type VariantAvailability } from '@/lib/variant-availability'
@@ -2376,7 +2377,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                         </div>
                         <div className="p-3 md:p-4">
                           <h3 className="font-bold text-sm md:text-base mb-1 line-clamp-2">{relatedName}</h3>
-                          {(() => {
+                          <MarketProductPrice variantId={relProd.product_variants.find(v => availableVariant(v))?.id}>{(() => {
                             const hasDiscount = relProd.sale_price && relProd.sale_price < relProd.base_price
                             if (hasDiscount && relProd.sale_price) {
                               return (
@@ -2387,7 +2388,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                               )
                             }
                             return <p className="text-lg font-bold">{formatPrice(relProd.base_price, locale)}</p>
-                          })()}
+                          })()}</MarketProductPrice>
                         </div>
                       </div>
                     </LocaleLink>

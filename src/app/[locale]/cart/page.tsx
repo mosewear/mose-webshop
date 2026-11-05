@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useMoseCartPrices } from '@/hooks/useMoseCartPrices'
 import { formatPrice, formatAmount, formatBedrag, formatBedragKaal } from '@/lib/format-price'
 import Image from 'next/image'
 import { useCart, useCartGehydrateerd, cartItemQuantityLimit } from '@/store/cart'
@@ -32,6 +33,7 @@ export default function CartPage() {
   const [lineStaffelByVariant, setLineStaffelByVariant] = useState<Record<string, number>>({})
   const [staffelHints, setStaffelHints] = useState<StaffelHint[]>([])
   
+  const market = useMoseCartPrices(items, locale)
   const subtotal = getTotal()
   const giftFaceValue = items.filter(item => item.isGiftCard).reduce((sum, item) => sum + item.price * item.quantity, 0)
   const digitalOnly = items.length > 0 && items.every(item => item.isGiftCard)
@@ -178,10 +180,10 @@ export default function CartPage() {
     <div className="space-y-3">
       <div className="flex justify-between gap-3 text-sm sm:text-base">
         <span className="uppercase tracking-wider text-gray-600">{t('subtotal')}</span>
-        <span className="font-semibold tabular-nums">{formatBedrag(subtotal, locale)}</span>
+        <span className="font-semibold tabular-nums">{market.subtotalLabel}</span>
       </div>
 
-      {staffelSavings > 0 && (
+      {!market.isUs && staffelSavings > 0 && (
         <div className="flex justify-between gap-3 text-sm sm:text-base">
           <span className="uppercase tracking-wider text-gray-600">{t('staffel.label')}</span>
           <span className="font-semibold tabular-nums text-brand-primary">
@@ -190,7 +192,7 @@ export default function CartPage() {
         </div>
       )}
 
-      {staffelHints.length > 0 && (
+      {!market.isUs && staffelHints.length > 0 && (
         <div className="space-y-1 border-l-2 border-gray-300 pl-3 py-1 text-sm text-gray-600">
           {staffelHints.map((h, i) => (
             <p key={`${h.productId}-${i}`} className="leading-snug">
@@ -367,7 +369,7 @@ export default function CartPage() {
                                  telefoon zag je alleen het regeltotaal. Bij twee stuks
                                  was dan niet te zien wat één exemplaar kost. */
                               <p className="mt-1.5 text-sm text-gray-600">
-                                {vertaalKleur(item.color, locale)} · {t('size')} {item.size} · {formatPrice(item.price, locale)}
+                                {vertaalKleur(item.color, locale)} · {t('size')} {item.size} · {market.lineLabel(item, 1)}
                               </p>
                             )}
 
@@ -420,9 +422,9 @@ export default function CartPage() {
 
                           <div className="text-right">
                             <div className="font-display text-xl tabular-nums md:text-2xl">
-                              {formatBedrag(item.price * item.quantity, locale)}
+                              {market.lineLabel(item)}
                             </div>
-                            {(lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
+                            {!market.isUs && (lineStaffelByVariant[item.variantId] ?? 0) > 0 && (
                               <p className="ml-auto mt-1 max-w-[200px] text-xs leading-snug text-gray-600">
                                 {t('staffel.lineSaving', {
                                   amount: formatBedragKaal(lineStaffelByVariant[item.variantId], locale),
@@ -465,11 +467,10 @@ export default function CartPage() {
               <div className="mt-5 border-t-2 border-black pt-5">
                 <div className="flex items-baseline justify-between">
                   <span className="font-display text-xl uppercase">{t(nativeShipping ? 'subtotal' : 'total')}</span>
-                  <span className="font-display text-3xl tabular-nums">{formatBedrag(total, locale)}</span>
+                  <span className="font-display text-3xl tabular-nums">{market.isUs ? market.subtotalLabel : formatBedrag(total, locale)}</span>
                 </div>
                 <p className="mt-1 text-right text-xs uppercase tracking-wider text-gray-500">
-                  {t(nativeShipping ? 'subtotalInclusive' : 'totalInclusive')} · {locale === 'en' ? 'VAT' : 'BTW'}{' '}
-                  {formatBedrag(totalBtw, locale)}
+                  {market.isUs ? 'Shipping and taxes at checkout' : <>{t(nativeShipping ? 'subtotalInclusive' : 'totalInclusive')} · {locale === 'en' ? 'VAT' : 'BTW'} {formatBedrag(totalBtw, locale)}</>}
                 </p>
               </div>
 
@@ -500,9 +501,9 @@ export default function CartPage() {
         className="fixed bottom-[var(--cookie-consent-height)] left-0 right-0 z-40 flex items-stretch bg-black pb-[env(safe-area-inset-bottom)] text-white md:hidden"
       >
         <div className="flex-1 py-3 pl-4 pr-2">
-          <div className="font-display text-2xl leading-tight tabular-nums">{formatBedrag(total, locale)}</div>
+          <div className="font-display text-2xl leading-tight tabular-nums">{market.isUs ? market.subtotalLabel : formatBedrag(total, locale)}</div>
           <div className="text-[11px] uppercase tracking-wider text-gray-300">
-            {nativeShipping ? t('subtotalInclusive') : tekortVoorGratis > 0
+            {market.isUs ? 'Shipping and taxes at checkout' : nativeShipping ? t('subtotalInclusive') : tekortVoorGratis > 0
               ? t('freeShippingProgressMobile', { amount: formatBedragKaal(tekortVoorGratis, locale) })
               : t('freeShippingReached')}
           </div>

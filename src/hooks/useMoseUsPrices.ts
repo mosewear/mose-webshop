@@ -27,7 +27,8 @@ export function useMoseUsPrices(variantIds: string[]) {
     }
     detect()
     window.addEventListener('pageshow', detect)
-    return () => window.removeEventListener('pageshow', detect)
+    window.addEventListener('mose:country-change', detect)
+    return () => { window.removeEventListener('pageshow', detect); window.removeEventListener('mose:country-change', detect) }
   }, [enabled])
 
   useEffect(() => {

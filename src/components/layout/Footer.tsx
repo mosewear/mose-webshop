@@ -8,11 +8,13 @@ import { getSiteSettings } from '@/lib/settings'
 import { useTranslations, useLocale } from 'next-intl'
 import { COMPANY, formatKvk, formatVat } from '@/lib/company'
 import { Link as LocaleLink } from '@/i18n/routing'
+import { useMoseUsPrices } from '@/hooks/useMoseUsPrices'
 import TrustpilotWidget from '@/components/TrustpilotWidget'
 
 export function Footer() {
   const t = useTranslations('footer')
   const locale = useLocale()
+  const market = useMoseUsPrices([])
   
   // Helper for locale-aware links
   const [settings, setSettings] = useState({
@@ -150,7 +152,7 @@ export function Footer() {
             {t('copyright', { year: new Date().getFullYear() })}
           </p>
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center text-sm text-gray-400">
-            <p>{t('prices', { rate: settings.tax_rate })}</p>
+            <p>{market.isUs ? 'Prices in USD. Shipping and taxes at checkout.' : t('prices', { rate: settings.tax_rate })}</p>
             <span className="hidden md:inline">•</span>
             <p>{t('made')}</p>
           </div>

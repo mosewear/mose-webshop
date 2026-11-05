@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { getRecentlyViewed, type RecentlyViewedProduct } from '@/lib/recentlyViewed'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslations, useLocale } from 'next-intl'
+import MarketProductPrice from '@/components/MarketProductPrice'
 import { formatPrice } from '@/lib/format-price'
 
 interface Product {
@@ -15,6 +16,7 @@ interface Product {
   slug: string
   base_price: number
   sale_price: number | null
+  product_variants: Array<{ id: string; is_available: boolean }>
   product_images: Array<{
     url: string
     alt_text: string | null
@@ -59,6 +61,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
           slug,
           base_price,
           sale_price,
+          product_variants(id, is_available),
           product_images(url, alt_text, is_primary, media_type)
         `)
         .in('id', filtered.map(p => p.id))
@@ -128,7 +131,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
                       kregen nullen achter de komma (€150.00 waar de shoppagina
                       €150 toont) en het decimaalteken was een punt in plaats van
                       een komma. */}
-                  {hasDiscount && product.sale_price ? (
+                  <MarketProductPrice variantId={product.product_variants?.find(v => v.is_available)?.id}>{hasDiscount && product.sale_price ? (
                     <div className="flex items-center gap-2">
                       <p className="text-sm md:text-base font-bold text-red-600">
                         {formatPrice(product.sale_price, locale)}
@@ -141,7 +144,7 @@ export default function RecentlyViewed({ currentProductId }: { currentProductId?
                     <p className="text-sm md:text-base font-bold">
                       {formatPrice(product.base_price, locale)}
                     </p>
-                  )}
+                  )}</MarketProductPrice>
                 </div>
               </div>
             </Link>

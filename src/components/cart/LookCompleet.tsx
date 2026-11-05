@@ -23,6 +23,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
+import MarketProductPrice from '@/components/MarketProductPrice'
 import { formatPrice } from '@/lib/format-price'
 import { getImageForColor, type ProductDisplayImage } from '@/lib/product-display'
 
@@ -190,7 +191,7 @@ export default function LookCompleet({ producten: initialProducts, mand, locale,
                   >
                     {naam}
                   </LocaleLink>
-                  <p className="mt-0.5 text-[13px] font-bold text-black">{formatPrice(prijs, locale)}</p>
+                  <p className="mt-0.5 text-[13px] font-bold text-black"><MarketProductPrice variantId={(variant ?? varianten.find(v => v.color === k.kleur && availableVariant(v)))?.id}>{formatPrice(prijs, locale)}</MarketProductPrice></p>
                   {reden ? (
                     <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-gray-600">{reden}</p>
                   ) : (
