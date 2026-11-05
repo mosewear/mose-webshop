@@ -14,13 +14,18 @@ describe('MOSE United States market safety', () => {
     expect(resolveMoseCountry('US', 'NL', true)).toBe('US')
     expect(resolveMoseCountry('bad', 'FR', true)).toBe('NL')
     expect(currencyForCountry('NL')).toBe('EUR')
+    expect(currencyForCountry('BE')).toBe('EUR')
     expect(currencyForCountry('US')).toBe('USD')
+    expect(resolveMoseCountry(undefined, 'BE', false)).toBe('BE')
+    expect(resolveMoseCountry('BE', 'US', true)).toBe('BE')
   })
   it('preserves existing EUR price integrity', () => {
     expect(verifyMarketPriceSubtotal(lines, eur, 'NL')).toEqual({
       currency: 'EUR', subtotalCents: 15800, perVariantCents: { [lines[0].merchandiseId]: 7900 },
     })
     expect(() => verifyMarketPriceSubtotal(lines, [{ ...eur[0], price: { amount: '78.99', currencyCode: 'EUR' } }], 'NL')).toThrow('MARKET_PRICE_MISMATCH')
+    expect(verifyMarketPriceSubtotal(lines, eur, 'BE').currency).toBe('EUR')
+    expect(() => verifyMarketPriceSubtotal(lines, [{ ...eur[0], price: { amount: '78.99', currencyCode: 'EUR' } }], 'BE')).toThrow('MARKET_PRICE_MISMATCH')
   })
   it('requires real Shopify USD prices; never infers USD from EUR', () => {
     expect(() => verifyMarketPriceSubtotal(lines, eur, 'US')).toThrow('MARKET_VARIANT_UNAVAILABLE')
