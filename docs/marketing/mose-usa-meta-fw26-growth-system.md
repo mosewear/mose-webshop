@@ -16,8 +16,20 @@ Five enabled ads, subject to Meta review:
 
 All ads use Shop Now, English direct product URLs and unique utm_content under mose_us_focus_v1. Native Ads Manager confirmed carousel format, ten pants cards, eight top/layer products, page mosewear.com, Instagram mosewearcom and selected pixel. The new live set and all five enabled ads were read back from Meta. Review status IN_REVIEW at activation is not delivery or conversion proof.
 
-## Enhanced exports requested afterwards
-Six additional denim edits rendered with animated typography: 1080x1080, 1080x1350, 1350x1080, 1080x1920, 1920x1080, 1910x1000. H264, 24fps, approximately ten seconds, no audio. Separate crops and portrait editorial frame preserve garment dimensions. Exports saved as MOSE-Denim-Edit-6-formaten.zip. These enhanced exports are not yet connected as Meta placement customizations; the earlier silent denim video above is the published one.
+## MOSE branding and published placement customization, 6 November 2026
+
+User rejected the generic first typography. Never substitute a standard system font or typeset a replacement MOSE wordmark. Verified from live website computed styles and repository tokens: Anton display, Montserrat supporting text, original public/logomose.png and logomose_white.png, primary #00A676, black and white, square geometry.
+
+All six files were rerendered as MOSE-Denim-Brand-V2 exports. The prior Library ZIP was replaced, preserving its identity, with MOSE-Denim-Brand-V2-6-formaten.zip.
+
+Published the revised video ad 120250771979890194 through native Ads Manager and reopened it afterwards. Ten feed placements use 1080x1350 brand V2 video 1819799305831894. Eight vertical placements use 1080x1920 brand V2 video 30120768357531147. Two wide placement group entries use 1920x1080 video 1120267077650998, subject to each placement supporting video. Native previews verified real MOSE logo and Anton typography after publication. Instagram identity mosewearcom is selected. Meta is reviewing the revised creative; ACTIVE is enabled status, not evidence of delivery.
+
+Multi-advertiser composition, flexible media, generated creative/text effects and automatic collection/sitelink variants were disabled for this video so they cannot replace its product imagery or typography. AI-media declaration is selected. One unsupported-placement warning remained for Threads identity; do not claim universal placement coverage. Right column supports images, not these video files.
+
+Six reference ads are PAUSED under paused set 120250752128150194 to retain platform-hosted video assets without extra live tests or spend. Square video 1203074985483761, 5:4 video 1145696324500816 and 1.91:1 video 1490600896313269 are available but not added as extra live tests. Only one group remains enabled at EUR35/day with the same five live ads. Four other ads were APPROVED, revised video IN_REVIEW on final readback.
+
+## Superseded first exports
+Six additional denim edits rendered with animated typography: 1080x1080, 1080x1350, 1350x1080, 1080x1920, 1920x1080, 1910x1000. H264, 24fps, approximately ten seconds, no audio. Separate crops and portrait editorial frame preserve garment dimensions. Exports saved as MOSE-Denim-Edit-6-formaten.zip. This paragraph describes superseded first exports only. The branded replacements and their publication status are recorded above.
 
 ## Validation and limits
 The production USD fix was already deployed at commit 1a6c38ce4e5fadfb316b4f920644a8a59df06aea. Prior browser testing reached native US checkout showing USD, valid shipping and a payable total for six pants and Training Tee. No paid order was submitted. English raglan product page was opened again and displayed selectable sizes and Add to cart. Headless pants routes differ from Shopify handles; retain the current frontend URLs. Do not change UNLISTED product status solely for these ads.
