@@ -1,5 +1,5 @@
 /** Shared, fail-closed currency contract for MOSE's NL and forthcoming US checkout. */
-export type MoseCheckoutCountry = 'NL' | 'US'
+export type MoseCheckoutCountry = 'NL' | 'BE' | 'US'
 export type MoseCheckoutCurrency = 'EUR' | 'USD'
 export type MarketLine = { merchandiseId: string; quantity: number; expectedPriceCents: number; gift?: unknown }
 export type MarketVariant = {
