@@ -51,6 +51,24 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('unified checkout boundary', () => {
+  it('creates a Belgian EUR checkout with the same server-verified benefits contract', async () => {
+    const response = await POST(request({ ...body, country: 'BE' }))
+    expect(response.status).toBe(200)
+    expect(mock.storefront.mock.calls[0][1].country).toBe('BE')
+    expect(mock.storefront.mock.calls[1][1].country).toBe('BE')
+    expect(mock.storefront.mock.calls[1][1].input.buyerIdentity.countryCode).toBe('BE')
+    expect(mock.issueBenefits).toHaveBeenCalledTimes(1)
+    expect(await response.json()).toEqual({ checkoutUrl: url, attemptId })
+  })
+  it('rejects a Belgian market price drift instead of applying a mismatched EUR discount', async () => {
+    mock.storefront.mockReset().mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5,
+      price: { amount: '68.95', currencyCode: 'EUR' } }] })
+    const response = await POST(request({ ...body, country: 'BE' }))
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ code: 'CART_CHANGED' })
+    expect(mock.issueBenefits).not.toHaveBeenCalled()
+    expect(mock.rpc.mock.calls.some(c => c[0] === 'reserve_shopify_checkout')).toBe(false)
+  })
   it('records definite rejected promo input before allowing an attempt replacement', async () => {
     mock.benefitQuote.mockRejectedValueOnce(new Error('PROMO_EXPIRED'))
     const result=await POST(request({...body,promoCode:'EXPIRED'}))
