@@ -1624,7 +1624,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                 </span>
 
                 {/* Staffelkorting badge */}
-                {product.product_quantity_discounts && product.product_quantity_discounts.length > 0
+                {!usMarketPrice.isUs && product.product_quantity_discounts && product.product_quantity_discounts.length > 0
                   && !(product.sale_price && product.sale_price < product.base_price) && (() => {
                   const activeTiers = product.product_quantity_discounts!
                     .filter(t => t.is_active)
