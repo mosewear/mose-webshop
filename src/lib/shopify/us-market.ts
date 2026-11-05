@@ -15,9 +15,10 @@ export function currencyForCountry(country: MoseCheckoutCountry): MoseCheckoutCu
 
 /** Location is a hint for the storefront, never permission to charge a buyer. */
 export function resolveMoseCountry(cookie: string | undefined, geoCountry: string | null, enabled: boolean): MoseCheckoutCountry {
-  if (!enabled) return 'NL'
-  if (cookie === 'NL' || cookie === 'US') return cookie
-  return geoCountry === 'US' ? 'US' : 'NL'
+  if (cookie === 'NL' || cookie === 'BE') return cookie
+  if (enabled && cookie === 'US') return 'US'
+  if (geoCountry === 'BE') return 'BE'
+  return enabled && geoCountry === 'US' ? 'US' : 'NL'
 }
 
 function cents(amount: string): number {
