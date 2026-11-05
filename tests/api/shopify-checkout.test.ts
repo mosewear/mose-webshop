@@ -51,6 +51,14 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('unified checkout boundary', () => {
+  it('does not allow a Belgian Tapstitch parcel before prepaid import charges are verified', async () => {
+    mock.mappings = [{ ...mock.mappings[0] as Record<string, unknown>, fulfillment_owner: 'tapstitch' }]
+    const response = await POST(request({ ...body, country: 'BE' }))
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ code: 'BE_SUPPLIER_DUTIES_NOT_READY' })
+    expect(mock.storefront).not.toHaveBeenCalled()
+    expect(mock.rpc.mock.calls.some(call => call[0] === 'reserve_shopify_checkout')).toBe(false)
+  })
   it('creates a Belgian EUR checkout with the same server-verified benefits contract', async () => {
     const response = await POST(request({ ...body, country: 'BE' }))
     expect(response.status).toBe(200)
