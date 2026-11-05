@@ -197,7 +197,7 @@ export function ShopifyCheckoutHandoff() {
         } else if (['ATTEMPT_EXPIRED', 'ATTEMPT_FAILED', 'INPUT_CHANGED', 'ATTEMPT_CONFLICT'].includes(String(code))) {
           throw new Error('ATTEMPT_REVIEW_REQUIRED')
         }
-        throw new Error(code === 'BENEFIT_UNAVAILABLE' ? 'BENEFIT_UNAVAILABLE' : code === 'ACCOUNT_SESSION_INVALID' ? 'ACCOUNT_SESSION_INVALID' : code === 'CART_CHANGED' || code === 'VARIANT_NOT_RELEASED' ? 'CART_CHANGED' : 'CHECKOUT_UNAVAILABLE')
+        throw new Error(code === 'BE_SUPPLIER_DUTIES_NOT_READY' ? 'BE_SUPPLIER_DUTIES_NOT_READY' : code === 'BENEFIT_UNAVAILABLE' ? 'BENEFIT_UNAVAILABLE' : code === 'ACCOUNT_SESSION_INVALID' ? 'ACCOUNT_SESSION_INVALID' : code === 'CART_CHANGED' || code === 'VARIANT_NOT_RELEASED' ? 'CART_CHANGED' : 'CHECKOUT_UNAVAILABLE')
       }
       const result: unknown = await response.json()
       if (!result || typeof result !== 'object') throw new Error('INVALID_RESPONSE')
@@ -212,7 +212,7 @@ export function ShopifyCheckoutHandoff() {
       window.location.assign(url)
     } catch (failure) {
       const code = failure instanceof Error ? failure.message : ''
-      setError(code === 'US_MARKET_NOT_READY' || code === 'US_BENEFITS_NOT_READY' ? (locale === 'en' ? 'United States checkout is being prepared. Prices, shipping and duties must be verified before you can pay.' : 'Amerikaans afrekenen wordt voorbereid. Prijzen, verzending en invoerheffingen moeten eerst worden gecontroleerd.') : code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_GIFT_RECIPIENT' ? text.invalidGift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
+      setError(code === 'BE_SUPPLIER_DUTIES_NOT_READY' ? (locale === 'en' ? 'Shipping for this item to Belgium is being checked for import fees. No order was placed.' : 'Verzending van dit artikel naar België wordt gecontroleerd op invoerkosten. Er is geen bestelling geplaatst.') : code === 'US_MARKET_NOT_READY' || code === 'US_BENEFITS_NOT_READY' ? (locale === 'en' ? 'United States checkout is being prepared. Prices, shipping and duties must be verified before you can pay.' : 'Amerikaans afrekenen wordt voorbereid. Prijzen, verzending en invoerheffingen moeten eerst worden gecontroleerd.') : code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_GIFT_RECIPIENT' ? text.invalidGift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
     } finally {
       clearTimeout(timeout)
       controller.current = null
