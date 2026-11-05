@@ -20,6 +20,7 @@ import { normalizeNativeGiftLines, nativeGiftRecipientAttributes, type NativeGif
 import { resolveNativeGiftVariant } from '@/lib/shopify/native-gift-catalog'
 import { assertNativeGiftCutover, nativeGiftRuntimeReadiness } from '@/lib/shopify/native-gift-cutover'
 import { assertCreatedCartLines, aggregateBenefitLines } from '@/lib/shopify/cart-line-proof'
+import { verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
@@ -48,6 +49,22 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return respond({ error: 'Ongeldige winkelmand.' }, 400)
 
   const input = parsed.data
+  // US selling is independently approved only after USD payment, DDP and margin checks.
+  // The NL/EUR checkout remains unchanged until that explicit release.
+  if (input.country === 'US' && (
+    process.env.MOSE_US_CHECKOUT_ENABLED !== 'true' ||
+    process.env.MOSE_US_DDP_VERIFIED !== 'true' ||
+    process.env.MOSE_US_SHIPPING_RATES_VERIFIED !== 'true' ||
+    process.env.MOSE_US_PAYMENT_CURRENCY_VERIFIED !== 'true'
+  )) {
+    // Independent US checkout gates require exact supplier DDP evidence,
+    // live US shipping availability and charged-USD verification. The default
+    // is OFF even if the US storefront preview is enabled.
+    return respond({ error: 'United States checkout is not available yet.', code: 'US_MARKET_NOT_READY' }, 503)
+  }
+  if (input.country === 'US' && (input.promoCode || input.loyaltyPoints || input.giftCards?.length)) {
+    return respond({ error: 'US discounts and gift cards are awaiting currency verification.', code: 'US_BENEFITS_NOT_READY' }, 409)
+  }
   const lease = randomUUID()
   let reserved = false
   let db: ReturnType<typeof createServiceClient> | undefined
@@ -151,17 +168,13 @@ export async function POST(request: NextRequest) {
         return rejectNativeGiftInput()
       }
     }
-    const context = { country: 'NL', language: input.locale.toUpperCase() }
+    const context = { country: input.country, language: input.locale.toUpperCase() }
     const result = await storefront<{ nodes: (Variant | null)[] }>(VARIANTS_QUERY, { ...context, ids: lines.map(l => l.merchandiseId) }, buyerIp)
-    for (const line of lines) {
-      const variant = result.nodes.find(v => v?.id === line.merchandiseId)
-      if (!variant || !variant.availableForSale || variant.price.currencyCode !== 'EUR' ||
-        moneyToCents(variant.price.amount) !== line.expectedPriceCents ||
-        // Native digital gifts are proven untracked/non-shipping by the resolver.
-        // Shopify can return quantityAvailable=0 while they remain availableForSale.
-        (!line.gift && variant.quantityAvailable !== null && variant.quantityAvailable < line.quantity)) {
-        return respond({ error: 'Prijs of beschikbaarheid is gewijzigd. Vernieuw je winkelmand.', code: 'CART_CHANGED' }, 409)
-      }
+    let marketPrice: ReturnType<typeof verifyMarketPriceSubtotal>
+    try {
+      marketPrice = verifyMarketPriceSubtotal(lines, result.nodes, input.country)
+    } catch {
+      return respond({ error: 'Price or availability changed for the selected market.', code: 'CART_CHANGED' }, 409)
     }
     const benefitLines = aggregateBenefitLines(lines.map(line => {
       if (line.gift) return { variantId: line.merchandiseId, quantity: line.quantity, unitCents: line.expectedPriceCents, productId: line.gift.productId, giftCard: true, onSale: false }
@@ -174,6 +187,11 @@ export async function POST(request: NextRequest) {
     let preparedBenefits: Awaited<ReturnType<typeof readCheckoutBenefitQuote>>
     try {
       preparedBenefits = await readCheckoutBenefitQuote(db, { lines: benefitLines, promoCode: input.promoCode, points: input.loyaltyPoints, user: verifiedUser })
+      // Local quantity and loyalty discount calculations are EUR-specific.
+      // Do not create a USD cart with an unverified discount or exchange rate.
+      if (input.country === 'US' && preparedBenefits.quote.discountCents !== 0) {
+        return respond({ error: 'US discounts are awaiting currency verification.', code: 'US_BENEFITS_NOT_READY' }, 409)
+      }
     } catch {
       // Claim a domain-separated rejected input before authorizing a fresh ID.
       // An existing payable/uncertain attempt must never be rotated just because
@@ -222,7 +240,7 @@ export async function POST(request: NextRequest) {
     const expectedBenefits = await issueCheckoutBenefits(db, { ...preparedBenefits, attemptId: input.attemptId, checkoutLease: lease, secret })
     const created = await storefront<CreatedCart>(CART_CREATE, {
       ...context, input: {
-        buyerIdentity: { countryCode: 'NL', ...(verifiedUser?.email_confirmed_at && verifiedUser.email ? { email: verifiedUser.email } : {}) },
+        buyerIdentity: { countryCode: input.country, ...(verifiedUser?.email_confirmed_at && verifiedUser.email ? { email: verifiedUser.email } : {}) },
         lines: lines.map(({ merchandiseId, quantity, attributes: lineAttributes }) => ({ merchandiseId, quantity, ...(lineAttributes?.length ? { attributes: lineAttributes } : {}) })),
         ...(expectedBenefits.length ? { discountCodes: expectedBenefits.map(benefit => benefit.code) } : {}),
         attributes,
@@ -238,12 +256,15 @@ export async function POST(request: NextRequest) {
       if (failed.error || failed.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')
       return respond({ error: 'Shopify kon deze winkelmand niet aanmaken. Controleer je artikelen en probeer opnieuw.', code: 'ATTEMPT_FAILED', retrySafe: true }, 409)
     }
-    if (!cart || userErrors.length || warnings.length || cart.cost.subtotalAmount.currencyCode !== 'EUR' ||
+    if (!cart || userErrors.length || warnings.length || cart.cost.subtotalAmount.currencyCode !== marketPrice.currency ||
       cart.totalQuantity !== lines.reduce((n, l) => n + l.quantity, 0)) throw new Error('CART_MISMATCH')
     assertCreatedCartLines(cart.lines.nodes, lines)
-    if (moneyToCents(cart.cost.subtotalAmount.amount) !== preparedBenefits.expectedSubtotalBeforeOrderCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
-    const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: cart.id }, buyerIp)
-    assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
+    const expectedSubtotalCents = input.country === 'US' ? marketPrice.subtotalCents : preparedBenefits.expectedSubtotalBeforeOrderCents
+    if (moneyToCents(cart.cost.subtotalAmount.amount) !== expectedSubtotalCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
+    if (input.country !== 'US') {
+      const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: cart.id }, buyerIp)
+      assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
+    }
     const checkoutUrl = assertCheckoutUrl(cart.checkoutUrl, process.env.SHOPIFY_CHECKOUT_HOST)
     const saved = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'ready', p_cart_id: cart.id, p_checkout_url: checkoutUrl })
     if (saved.error || saved.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')
