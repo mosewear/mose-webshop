@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
     assertCreatedCartLines(cart.lines.nodes, lines)
     const expectedSubtotalCents = input.country === 'US' ? marketPrice.subtotalCents : preparedBenefits.expectedSubtotalBeforeOrderCents
     if (moneyToCents(cart.cost.subtotalAmount.amount) !== expectedSubtotalCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
-    if (input.country === 'NL') {
+    if (input.country !== 'US') {
       const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: cart.id }, buyerIp)
       assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
     }
