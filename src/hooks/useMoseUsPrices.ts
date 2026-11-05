@@ -43,10 +43,10 @@ export function useMoseUsPrices(variantIds: string[]) {
       try {
         const ids = key.split('|')
         if (ids.length > 30) throw new Error('TOO_MANY_VARIANTS')
-        const response = await fetch('/api/shopify/us-market-prices', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+        const search = new URLSearchParams({ country: 'US' })
+        for (const id of ids) search.append('variantId', id)
+        const response = await fetch('/api/shopify/us-market-prices?' + search.toString(), {
           cache: 'no-store', credentials: 'same-origin', signal: controller.signal,
-          body: JSON.stringify({ country: 'US', variantIds: ids }),
         })
         if (!response.ok) throw new Error('US_PRICE_UNAVAILABLE')
         const payload = await response.json() as UsMarketQuote

@@ -17,17 +17,31 @@ const inputSchema = z.object({
 /** Read-only Shopify market-price quote for the custom storefront.
  * Display-only. The final payable cart is still checked in checkout/route.ts.
  * Never convert a EUR price on the client, and never disclose admin credentials. */
+const respond = (body: unknown, status: number) => NextResponse.json(body, {
+  status, headers: { 'Cache-Control': 'private, no-store, max-age=0' },
+})
+
+// Price quotes are public, read-only catalogue data. GET avoids a cross-origin
+// POST boundary for displaying prices; checkout retains its own authorization.
+export async function GET(request: NextRequest) {
+  const parsed = inputSchema.safeParse({ country: request.nextUrl.searchParams.get('country'),
+    variantIds: request.nextUrl.searchParams.getAll('variantId') })
+  if (!parsed.success) return respond({ code: 'INVALID_INPUT' }, 400)
+  return quote(request, parsed.data)
+}
+
 export async function POST(request: NextRequest) {
-  const respond = (body: unknown, status: number) => NextResponse.json(body, {
-    status, headers: { 'Cache-Control': 'private, no-store, max-age=0' },
-  })
-  if (process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED !== 'true') return respond({ code: 'US_MARKET_NOT_READY' }, 503)
   const origin = request.headers.get('origin')
-  if (origin !== request.nextUrl.origin && origin !== process.env.NEXT_PUBLIC_SITE_URL) return respond({ code: 'INVALID_ORIGIN' }, 403)
-  let parsed: z.infer<typeof inputSchema>
+  const configuredOrigin = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mosewear.com').origin
+  if (origin !== request.nextUrl.origin && origin !== configuredOrigin) return respond({ code: 'INVALID_ORIGIN' }, 403)
   try {
-    parsed = inputSchema.parse(JSON.parse((await readLimitedBody(request, 4000)).toString('utf8')))
+    const parsed = inputSchema.parse(JSON.parse((await readLimitedBody(request, 4000)).toString('utf8')))
+    return quote(request, parsed)
   } catch { return respond({ code: 'INVALID_INPUT' }, 400) }
+}
+
+async function quote(request: NextRequest, parsed: z.infer<typeof inputSchema>) {
+  if (process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED !== 'true') return respond({ code: 'US_MARKET_NOT_READY' }, 503)
   const variantIds = [...new Set(parsed.variantIds)]
   try {
     const db = createServiceClient()
