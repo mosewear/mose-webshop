@@ -19,7 +19,7 @@ const copy = {
     title: 'Veilig afrekenen', intro: 'Je rekent alle artikelen samen af in één betaling.',
     back: 'Terug naar je winkelmand', empty: 'Je winkelmand is nog leeg.', shop: 'Bekijk de collectie',
     subtotal: 'Subtotaal', final: 'Korting en verzendkosten worden bij de volgende stap berekend. Je ziet het totaal vóór je betaalt.',
-    delivery: 'Bezorgland: Nederland', deliveryNote: 'Bezorging is momenteel alleen mogelijk in Nederland.',
+    delivery: 'Bezorgland: Nederland', deliveryNote: 'Bezorging mogelijk in Nederland en België.',
     parcels: 'Je bestelling kan in meerdere pakketten worden geleverd.',
     button: 'Veilig verder naar betalen', loading: 'Je bestelling voorbereiden…', hydrated: 'Je winkelmand laden…',
     preserved: 'Je winkelmand blijft bewaard.', retry: 'Afrekenen lukt nu niet. Probeer het opnieuw; je winkelmand is behouden.',
@@ -37,7 +37,7 @@ const copy = {
     title: 'Secure checkout', intro: 'Pay for all your items together in one payment.',
     back: 'Back to your bag', empty: 'Your bag is empty.', shop: 'Shop the collection',
     subtotal: 'Subtotal', final: 'Discounts and shipping are calculated in the next step. Review your total before you pay.',
-    delivery: 'Delivery country: Netherlands', deliveryNote: 'Delivery is currently available in the Netherlands only.',
+    delivery: 'Delivery country: Netherlands', deliveryNote: 'Delivery is available in the Netherlands and Belgium.',
     parcels: 'Your order may arrive in separate parcels.',
     button: 'Continue to secure payment', loading: 'Preparing your order…', hydrated: 'Loading your bag…',
     preserved: 'Your bag will be saved.', retry: 'Checkout is currently unavailable. Please try again; your bag has been saved.',
@@ -57,7 +57,7 @@ export function ShopifyCheckoutHandoff() {
   const locale = useLocale()
   const text = copy[locale === 'en' ? 'en' : 'nl']
   const usMarketEnabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
-  const [buyerCountry, setBuyerCountry] = useState<'NL' | 'US'>('NL')
+  const [buyerCountry, setBuyerCountry] = useState<'NL' | 'BE' | 'US'>('NL')
   const [usdUnitPrices, setUsdUnitPrices] = useState<Record<string, number> | null>(null)
   const [usdQuoteLoading, setUsdQuoteLoading] = useState(false)
   const [usdQuoteError, setUsdQuoteError] = useState(false)
@@ -77,9 +77,8 @@ export function ShopifyCheckoutHandoff() {
   const controller = useRef<AbortController | null>(null)
   useEffect(() => () => { controller.current?.abort(); loyaltyController.current?.abort() }, [])
   useEffect(() => {
-    if (!usMarketEnabled) return
     const saved = document.cookie.split(';').map(value => value.trim()).find(value => value.startsWith('mose-country='))?.split('=')[1]
-    if (saved === 'US' || saved === 'NL') setBuyerCountry(saved)
+    if (saved === 'BE' || saved === 'NL' || (usMarketEnabled && saved === 'US')) setBuyerCountry(saved)
   }, [usMarketEnabled])
   useEffect(() => {
     if (!usMarketEnabled || buyerCountry !== 'US') { setUsdUnitPrices(null); setUsdQuoteLoading(false); setUsdQuoteError(false); return }
@@ -246,13 +245,13 @@ export function ShopifyCheckoutHandoff() {
       </Link>
       <h1 className="font-display text-4xl uppercase md:text-5xl">{text.title}</h1>
       <p className="mt-2 mb-6 max-w-xl text-sm leading-relaxed text-gray-600 md:mb-8 md:text-base">{text.intro}</p>
-      {usMarketEnabled && <label className="mb-6 flex max-w-sm flex-col gap-2 text-sm font-bold" htmlFor="mose-delivery-market">{locale === 'en' ? 'Delivery country' : 'Bezorgland'}
+      {<label className="mb-6 flex max-w-sm flex-col gap-2 text-sm font-bold" htmlFor="mose-delivery-market">{locale === 'en' ? 'Delivery country' : 'Bezorgland'}
         <select id="mose-delivery-market" value={buyerCountry} onChange={event => {
-          const country = event.target.value === 'US' ? 'US' : 'NL'
+          const country = event.target.value === 'BE' ? 'BE' : event.target.value === 'US' && usMarketEnabled ? 'US' : 'NL'
           document.cookie = 'mose-country=' + country + '; Path=/; Max-Age=2592000; SameSite=Lax; Secure'
           setBuyerCountry(country)
         }} className="min-h-11 border-2 border-black bg-white px-3 py-2">
-          <option value="NL">Netherlands</option><option value="US">United States</option>
+          <option value="NL">Netherlands</option><option value="BE">Belgium</option>{usMarketEnabled && <option value="US">United States</option>}
         </select>
       </label>}
       {buyerCountry === 'US' && <p role="status" className="mb-4 text-sm text-gray-700">{usdQuoteLoading ? 'Checking live USD prices with Shopify…' : usdQuoteError ? 'USD market pricing is not available. US checkout remains disabled.' : 'USD prices are checked with Shopify. Delivery costs, import duties and final tax are confirmed at checkout.'}</p>}
@@ -275,7 +274,7 @@ export function ShopifyCheckoutHandoff() {
           <p className="text-2xl font-bold tabular-nums">{subtotalLabel}</p></div>
           <p className="mt-3 text-sm leading-relaxed text-gray-700">{text.final}</p>
           <div className="my-5 space-y-2 border-y border-gray-200 py-4 text-sm">
-            {hasPhysicalItems ? <><p className="font-semibold">{buyerCountry === 'US' ? 'Delivery country: United States' : text.delivery}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
+            {hasPhysicalItems ? <><p className="font-semibold">{buyerCountry === 'US' ? 'Delivery country: United States' : buyerCountry === 'BE' ? (locale === 'en' ? 'Delivery country: Belgium' : 'Bezorgland: België') : text.delivery}</p><p>{text.parcels}</p></> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
           </div>
           <div className="mb-5 space-y-4">
             <details className="group border-b border-gray-200 pb-4" open={promoCode.length > 0 || error === text.invalidPromo || error === text.benefitError}><summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold [&::-webkit-details-marker]:hidden">{text.promo}<ChevronDown size={18} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180" /></summary><label htmlFor="checkout-promo" className="sr-only">{text.promo}</label><input id="checkout-promo" value={promoCode} onChange={event => setPromoCode(event.target.value)} disabled={busy} maxLength={80} autoComplete="off" autoCapitalize="characters" placeholder={text.promoPlaceholder} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-promo-note"/><p id="checkout-promo-note" className="mt-2 text-xs text-gray-600">{text.promoNote}</p></details>
