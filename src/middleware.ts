@@ -19,7 +19,24 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308)
   }
 
-  const response = intlMiddleware(request)
+  // A visitor's explicit /nl or /en URL always wins. On unprefixed URLs,
+  // prefer their manual language choice; otherwise use Vercel's country header.
+  // The IP is only a language hint, never shipping or payment authorization.
+  const pathname = request.nextUrl.pathname
+  const hasExplicitLocale = /^\\/(?:nl|en)(?:\\/|$)/.test(pathname)
+  const manualLocale = request.cookies.get('NEXT_LOCALE')?.value
+  const geoCountry = request.headers.get('x-vercel-ip-country')?.trim().toUpperCase()
+  let response: NextResponse
+  if (!hasExplicitLocale) {
+    const locale = manualLocale === 'nl' || manualLocale === 'en'
+      ? manualLocale
+      : !geoCountry || geoCountry === 'NL' || geoCountry === 'BE' ? 'nl' : 'en'
+    const url = request.nextUrl.clone()
+    url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`
+    response = NextResponse.redirect(url, 307)
+  } else {
+    response = intlMiddleware(request)
+  }
   // Only enable geographic discovery on an approved market rollout.
   // A user's own country selection in this cookie takes precedence over IP hints.
   const usMarketEnabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
