@@ -464,6 +464,10 @@
     "buyNow": "Buy Now",
     "outOfStock": "Out of stock",
     "size": "Size",
+    "pantsSizeAdvice": {
+      "title": "SIZE ADVICE",
+      "description": "Our trousers run slightly smaller than usual. We recommend ordering one size up from your usual size."
+    },
     "color": "Colour",
     "selectColor": "Select colour {color}",
     "quantity": "Quantity",
