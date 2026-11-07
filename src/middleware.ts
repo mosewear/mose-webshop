@@ -1,7 +1,7 @@
 import createMiddleware from 'next-intl/middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
-import { resolveMoseCountry } from './lib/shopify/us-market'
+import { resolveStorefrontCountry } from './lib/shopify/us-market'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -26,22 +26,28 @@ export default function middleware(request: NextRequest) {
   const hasExplicitLocale = /^\/(?:nl|en)(?:\/|$)/.test(pathname)
   const manualLocale = request.cookies.get('NEXT_LOCALE')?.value
   const geoCountry = request.headers.get('x-vercel-ip-country')?.trim().toUpperCase()
-  let response: NextResponse
-  if (!hasExplicitLocale) {
-    const locale = manualLocale === 'nl' || manualLocale === 'en'
+  // Route language and buyer market must agree: Dutch pages ALWAYS show EUR.
+  // Explicit locale links take priority even over a remembered US market.
+  const locale = hasExplicitLocale
+    ? pathname.startsWith('/nl') ? 'nl' : 'en'
+    : manualLocale === 'nl' || manualLocale === 'en'
       ? manualLocale
       : !geoCountry || geoCountry === 'NL' || geoCountry === 'BE' ? 'nl' : 'en'
+  let response: NextResponse
+  if (!hasExplicitLocale) {
     const url = request.nextUrl.clone()
     url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`
     response = NextResponse.redirect(url, 307)
   } else {
     response = intlMiddleware(request)
   }
-  // Only enable geographic discovery on an approved market rollout.
-  // A user's own country selection in this cookie takes precedence over IP hints.
+
+  // Repair saved USD cookies on /nl, also when switching from /en.
+  // Keep Belgium in EUR; the checkout still validates prices independently.
   const usMarketEnabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
-  if (!['NL', 'BE', ...(usMarketEnabled ? ['US'] : [])].includes(request.cookies.get('mose-country')?.value ?? '')) {
-    const country = resolveMoseCountry(undefined, request.headers.get('x-vercel-ip-country'), true)
+  const savedCountry = request.cookies.get('mose-country')?.value
+  const country = resolveStorefrontCountry(locale, savedCountry, geoCountry, usMarketEnabled)
+  if (savedCountry !== country) {
     response.cookies.set('mose-country', country, { path: '/', sameSite: 'lax', secure: true, maxAge: 60 * 60 * 24 * 30 })
   }
   return response
