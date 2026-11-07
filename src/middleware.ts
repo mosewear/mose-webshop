@@ -25,7 +25,7 @@ export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const hasExplicitLocale = /^\/(?:nl|en)(?:\/|$)/.test(pathname)
   const manualLocale = request.cookies.get('NEXT_LOCALE')?.value
-  const geoCountry = request.headers.get('x-vercel-ip-country')?.trim().toUpperCase()
+  const geoCountry = request.headers.get('x-vercel-ip-country')?.trim().toUpperCase() ?? null
   // Route language and buyer market must agree: Dutch pages ALWAYS show EUR.
   // Explicit locale links take priority even over a remembered US market.
   const locale = hasExplicitLocale
