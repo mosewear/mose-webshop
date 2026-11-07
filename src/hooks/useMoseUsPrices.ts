@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
 
 type UsMarketQuote = {
   currency?: string
@@ -14,8 +15,11 @@ type UsMarketQuote = {
  */
 export function useMoseUsPrices(variantIds: string[]) {
   const enabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
+  const locale = useLocale()
   const key = [...new Set(variantIds)].filter(Boolean).sort().join('|')
-  const [isUs, setIsUs] = useState(false)
+  const [usCountryCookie, setUsCountryCookie] = useState(false)
+  // Derive this synchronously so client-side /en → /nl navigation never flashes USD.
+  const isUs = enabled && locale === 'en' && usCountryCookie
   const [prices, setPrices] = useState<Record<string, number> | null>(null)
   const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle')
 
@@ -23,13 +27,13 @@ export function useMoseUsPrices(variantIds: string[]) {
     if (!enabled) return
     const detect = () => {
       const cookie = document.cookie.split(';').map(s => s.trim()).find(s => s.startsWith('mose-country='))
-      setIsUs(cookie?.slice('mose-country='.length) === 'US')
+      setUsCountryCookie(cookie?.slice('mose-country='.length) === 'US')
     }
     detect()
     window.addEventListener('pageshow', detect)
     window.addEventListener('mose:country-change', detect)
     return () => { window.removeEventListener('pageshow', detect); window.removeEventListener('mose:country-change', detect) }
-  }, [enabled])
+  }, [enabled, locale])
 
   useEffect(() => {
     if (!enabled || !isUs || !key) {
@@ -68,5 +72,5 @@ export function useMoseUsPrices(variantIds: string[]) {
   const price = (id: string) => state === 'ready' && prices ? prices[id] : undefined
   const amount = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 
-  return { isUs: enabled && isUs, price, amount, state }
+  return { isUs, price, amount, state }
 }
