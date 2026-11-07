@@ -464,6 +464,10 @@
     "buyNow": "Nu kopen",
     "outOfStock": "Uitverkocht",
     "size": "Maat",
+    "pantsSizeAdvice": {
+      "title": "MAATADVIES",
+      "description": "Onze broeken vallen iets kleiner dan normaal. We raden aan om één maat groter te bestellen dan je gebruikelijke maat."
+    },
     "color": "Kleur",
     "selectColor": "Selecteer kleur {color}",
     "quantity": "Aantal",
