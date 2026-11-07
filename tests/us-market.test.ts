@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { currencyForCountry, resolveMoseCountry, verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
+import { currencyForCountry, resolveMoseCountry, resolveStorefrontCountry, verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
 
 const lines = [{ merchandiseId: 'gid://shopify/ProductVariant/1', quantity: 2, expectedPriceCents: 7900 }]
 const eur = [{ id: lines[0].merchandiseId, availableForSale: true, quantityAvailable: 5,
@@ -18,6 +18,22 @@ describe('MOSE United States market safety', () => {
     expect(currencyForCountry('US')).toBe('USD')
     expect(resolveMoseCountry(undefined, 'BE', false)).toBe('BE')
     expect(resolveMoseCountry('BE', 'US', true)).toBe('BE')
+  })
+  it('forces all Dutch storefront routes to EUR, even with a stale US cookie', () => {
+    expect(resolveStorefrontCountry('nl', 'US', 'NL', true)).toBe('NL')
+    expect(resolveStorefrontCountry('nl', 'US', 'BE', true)).toBe('BE')
+    expect(resolveStorefrontCountry('nl', 'US', null, true)).toBe('NL')
+    expect(resolveStorefrontCountry('nl', 'NL', 'US', true)).toBe('NL')
+    expect(resolveStorefrontCountry('nl', 'BE', 'US', true)).toBe('BE')
+    expect(resolveStorefrontCountry('nl', undefined, 'US', true)).toBe('NL')
+    expect(currencyForCountry(resolveStorefrontCountry('nl', 'US', 'NL', true))).toBe('EUR')
+    expect(currencyForCountry(resolveStorefrontCountry('nl', 'US', 'BE', true))).toBe('EUR')
+  })
+  it('keeps actual US visitors in USD on English storefront URLs', () => {
+    expect(resolveStorefrontCountry('en', 'US', 'US', true)).toBe('US')
+    expect(resolveStorefrontCountry('en', undefined, 'US', true)).toBe('US')
+    expect(resolveStorefrontCountry('en', 'NL', 'US', true)).toBe('NL')
+    expect(currencyForCountry(resolveStorefrontCountry('en', 'US', 'US', true))).toBe('USD')
   })
   it('preserves existing EUR price integrity', () => {
     expect(verifyMarketPriceSubtotal(lines, eur, 'NL')).toEqual({
