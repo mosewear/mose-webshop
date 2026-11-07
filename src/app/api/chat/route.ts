@@ -3,6 +3,7 @@ import { openai } from '@ai-sdk/openai'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { getSiteSettings } from '@/lib/settings'
 import { isTapstitchProduct } from '@/lib/tapstitch-products'
+import { safeCustomerProductDescription } from '@/lib/public-chat-safety'
 
 // Runtime config for streaming
 export const runtime = 'edge'
@@ -37,7 +38,7 @@ EXPERTISE:
 - Materiaal, gewicht, certificering, pasvorm en herkomst verschillen per product.
   Gebruik uitsluitend de live productbeschrijving; vul ontbrekende feiten nooit aan.
 - Noem nooit leveranciers, productiepartners, platforms of inkoopkanalen.
-  Noem nooit het woord Tapstitch. Klanten zien uitsluitend MOSE als merk.
+  Verwijs uitsluitend naar MOSE als verkopend merk. Noem geen interne namen of externe productieprocessen.
   Geef voor levering alleen aan dat bezorgopties en verzendkosten bij het
   afrekenen worden getoond; doe geen uitspraken over interne voorraad of productie.
 
@@ -101,7 +102,7 @@ async function getProductDetails(productSlug: string, locale: 'nl' | 'en') {
 
   const supplierFulfilled = isTapstitchProduct(product)
   const name = (locale === 'en' && product.name_en) ? product.name_en : product.name
-  const description = (locale === 'en' && product.description_en) ? product.description_en : product.description
+  const description = safeCustomerProductDescription((locale === 'en' && product.description_en) ? product.description_en : (product.description || ''))
 
   const primaryImage =
     product.product_images?.find((img: any) => img.is_primary)?.url ||
