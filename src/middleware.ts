@@ -23,7 +23,7 @@ export default function middleware(request: NextRequest) {
   // prefer their manual language choice; otherwise use Vercel's country header.
   // The IP is only a language hint, never shipping or payment authorization.
   const pathname = request.nextUrl.pathname
-  const hasExplicitLocale = /^\\/(?:nl|en)(?:\\/|$)/.test(pathname)
+  const hasExplicitLocale = /^\/(?:nl|en)(?:\/|$)/.test(pathname)
   const manualLocale = request.cookies.get('NEXT_LOCALE')?.value
   const geoCountry = request.headers.get('x-vercel-ip-country')?.trim().toUpperCase()
   let response: NextResponse
