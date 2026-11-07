@@ -69,7 +69,8 @@ export function useMoseUsPrices(variantIds: string[]) {
     return () => controller.abort()
   }, [enabled, isUs, key])
 
-  const price = (id: string) => state === 'ready' && prices ? prices[id] : undefined
+  // Never expose a stale USD quote after a locale change, even for one render.
+  const price = (id: string) => isUs && state === 'ready' && prices ? prices[id] : undefined
   const amount = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 
   return { isUs, price, amount, state }
