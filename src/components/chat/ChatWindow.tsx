@@ -9,6 +9,7 @@ import ChatHeader from './ChatHeader'
 import ChatMessages from './ChatMessages'
 import ChatComposer from './ChatComposer'
 import ChatContact from './ChatContact'
+import { safeCustomerChatReply } from '@/lib/public-chat-safety'
 
 const THREAD_KEY = 'mose_chat_thread'
 
@@ -101,7 +102,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       return draad.messages.map((m) => ({
         id: m.id,
         role: m.role,
-        content: m.content,
+        content: m.role === 'assistant' ? safeCustomerChatReply(m.content, locale) : m.content,
         timestamp: new Date(m.ts),
       }))
     }
@@ -264,7 +265,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           }
         }
 
-        const finalAnswer = aiContent.trim() || t('aiOffline')
+        const finalAnswer = safeCustomerChatReply(aiContent.trim(), locale) || t('aiOffline')
         setMessages((prev) =>
           prev.map((m) => (m.id === typingMessageId ? { ...m, content: finalAnswer, isTyping: false } : m))
         )
