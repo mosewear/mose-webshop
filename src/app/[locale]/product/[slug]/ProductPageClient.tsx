@@ -44,6 +44,7 @@ import { PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import GiftCardProductView from '@/components/product/GiftCardProductView'
 import { vertaalKleur } from '@/lib/kleurnaam'
+import { isPantsProductForSizeAdvice } from '@/lib/pants-size-advice'
 
 const supabase = createClient()
 
@@ -2024,6 +2025,23 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                       )
                     })}
                   </div>
+                  {isPantsProductForSizeAdvice({
+                    slug: product.slug,
+                    categorySlug: product.categories?.slug,
+                  }) && (
+                    <div
+                      role="note"
+                      data-testid="pants-size-advice"
+                      className="mt-3 border-l-4 border-brand-primary bg-gray-50 px-3 py-3 text-sm text-gray-800"
+                    >
+                      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-black">
+                        {t('pantsSizeAdvice.title')}
+                      </p>
+                      <p className="leading-relaxed">
+                        {t('pantsSizeAdvice.description')}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Pasvorm-referentie verhuisd naar een compacte
                       overlay-tag linksonder op de hoofd-product-
