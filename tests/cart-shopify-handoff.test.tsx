@@ -28,7 +28,7 @@ describe('Shopify handoff', () => {
     vi.stubGlobal('localStorage', {getItem:(key:string)=>local.get(key)??null,setItem:(key:string,value:string)=>local.set(key,value)})
     vi.stubGlobal('crypto', { randomUUID: () => attemptId })
   })
-  afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+  afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); document.cookie = 'mose-country=; path=/; max-age=0' })
 
   it('keeps an optional promo collapsed until opened and preserves its value', () => {
     render(<ShopifyCheckoutHandoff />)
@@ -58,6 +58,21 @@ describe('Shopify handoff', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Veilig verder naar betalen' }))
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))
     expect(JSON.parse(fetch.mock.calls[3][1].body).attemptId).toBe(attemptId)
+  })
+
+  it('always sends EUR-country checkout for Dutch pages even after a US visit', async () => {
+    vi.stubEnv('NEXT_PUBLIC_MOSE_US_MARKET_ENABLED', 'true')
+    document.cookie = 'mose-country=US; path=/'
+    const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/session')
+      ? { ok: true, json: async () => ({ ready: true }) }
+      : { ok: false, status: 503, json: async () => ({ code: 'CHECKOUT_UNAVAILABLE' }) }))
+    vi.stubGlobal('fetch', fetch)
+    render(<ShopifyCheckoutHandoff />)
+    fireEvent.click(screen.getByRole('button', { name: 'Veilig verder naar betalen' }))
+    await screen.findByRole('alert')
+    const request = fetch.mock.calls.find(call => call[0] === '/api/shopify/checkout')!
+    expect(JSON.parse(request[1].body)).toMatchObject({ locale: 'nl', country: 'NL' })
+    expect(fetch.mock.calls.some(call => String(call[0]).includes('us-market-prices'))).toBe(false)
   })
 
   it('carries an already applied cart promo into the server-authoritative Shopify checkout', async () => {

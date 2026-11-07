@@ -7,6 +7,7 @@ import { Lock, ArrowLeft, ShoppingBag, ChevronDown } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
+import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
 import { vertaalKleur } from '@/lib/kleurnaam'
 import {
@@ -74,8 +75,9 @@ export function ShopifyCheckoutHandoff() {
   useEffect(() => () => { controller.current?.abort(); loyaltyController.current?.abort() }, [])
   useEffect(() => {
     const saved = document.cookie.split(';').map(value => value.trim()).find(value => value.startsWith('mose-country='))?.split('=')[1]
-    if (saved === 'BE' || saved === 'NL' || (usMarketEnabled && saved === 'US')) setBuyerCountry(saved)
-  }, [usMarketEnabled])
+    // Never hand off a Dutch-language EUR cart to a USD checkout from a stale cookie.
+    setBuyerCountry(resolveStorefrontCountry(locale, saved, null, usMarketEnabled))
+  }, [locale, usMarketEnabled])
   useEffect(() => {
     if (!usMarketEnabled || buyerCountry !== 'US') { setUsdUnitPrices(null); setUsdQuoteLoading(false); setUsdQuoteError(false); return }
     if (items.some(item => item.isGiftCard) || !items.length) { setUsdUnitPrices(null); setUsdQuoteLoading(false); setUsdQuoteError(true); return }

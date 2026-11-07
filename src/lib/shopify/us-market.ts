@@ -21,6 +21,27 @@ export function resolveMoseCountry(cookie: string | undefined, geoCountry: strin
   return enabled && geoCountry === 'US' ? 'US' : 'NL'
 }
 
+
+/**
+ * A Dutch-language store route always belongs to the EUR storefront.
+ * A stale US cookie must never turn a /nl product page or checkout into USD.
+ * Preserve Belgium when explicitly selected or verified by geolocation.
+ * English pages keep the buyer's country preference and can use USD for US.
+ */
+export function resolveStorefrontCountry(
+  locale: string,
+  savedCountry: string | undefined,
+  geoCountry: string | null,
+  usMarketEnabled: boolean,
+): MoseCheckoutCountry {
+  if (locale === 'nl') {
+    if (savedCountry === 'BE') return 'BE'
+    if (savedCountry === 'NL') return 'NL'
+    return geoCountry?.trim().toUpperCase() === 'BE' ? 'BE' : 'NL'
+  }
+  return resolveMoseCountry(savedCountry, geoCountry, usMarketEnabled)
+}
+
 function cents(amount: string): number {
   if (!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(amount)) throw new Error('INVALID_MARKET_PRICE')
   const [whole, fraction = ''] = amount.split('.')
