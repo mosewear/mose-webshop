@@ -199,14 +199,22 @@ export function trackAddToCart(product: {
 export function trackCheckoutStarted(cart: {
   items_count: number
   total_value: number
+  product_ids?: string[]
+  shopify_attempt_id?: string
 }) {
-  trackEvent({
+  void trackEvent({
     event_name: 'checkout_started',
     properties: {
       items_count: cart.items_count,
       value: cart.total_value,
+      product_ids: cart.product_ids,
+      shopify_attempt_id: cart.shopify_attempt_id,
     },
   })
+}
+
+export function trackCheckoutHandoffFailed(productIds: string[]) {
+  void trackEvent({ event_name: 'checkout_handoff_failed', properties: { product_ids: productIds } })
 }
 
 /**

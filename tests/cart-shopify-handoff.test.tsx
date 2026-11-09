@@ -5,10 +5,10 @@ import { SHOPIFY_ATTEMPT_STORAGE_KEY, createShopifyCartSnapshot } from '@/lib/sh
 import { ShopifyCheckoutHandoff } from '@/components/shopify/ShopifyCheckoutHandoff'
 
 const { state, clearCart } = vi.hoisted(() => ({ state: { items: [] as CartItem[] }, clearCart: vi.fn() }))
-const { trackCheckoutStarted, trackPixelEvent } = vi.hoisted(() => ({
-  trackCheckoutStarted: vi.fn(), trackPixelEvent: vi.fn(),
+const { trackCheckoutStarted, trackCheckoutHandoffFailed, trackPixelEvent } = vi.hoisted(() => ({
+  trackCheckoutStarted: vi.fn(), trackCheckoutHandoffFailed: vi.fn(), trackPixelEvent: vi.fn(),
 }))
-vi.mock('@/lib/analytics', () => ({ trackCheckoutStarted }))
+vi.mock('@/lib/analytics', () => ({ trackCheckoutStarted, trackCheckoutHandoffFailed }))
 vi.mock('@/lib/facebook-pixel', () => ({ trackPixelEvent }))
 vi.mock('@/store/cart', () => ({
   useCart: Object.assign((selector: (value: typeof state) => unknown) => selector(state), { getState: () => ({ ...state, clearCart }) }),
@@ -78,7 +78,7 @@ describe('Shopify handoff', () => {
     render(<ShopifyCheckoutHandoff />)
     const button = screen.getByRole('button', { name: 'Veilig verder naar betalen' })
     fireEvent.click(button)
-    await waitFor(() => expect(trackCheckoutStarted).toHaveBeenCalledWith({ items_count: 2, total_value: 150 }))
+    await waitFor(() => expect(trackCheckoutStarted).toHaveBeenCalledWith(expect.objectContaining({ items_count: 2, total_value: 150, shopify_attempt_id: expect.any(String), product_ids: expect.any(Array) })))
     expect(trackPixelEvent).toHaveBeenCalledWith(
       'InitiateCheckout', { currency: 'EUR', value: 150, num_items: 2 }, undefined, { eventId: attemptId },
     )

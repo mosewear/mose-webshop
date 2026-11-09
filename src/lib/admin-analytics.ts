@@ -1,5 +1,6 @@
 import { readAdminOrderOverview, readAllAdminRows } from '@/lib/admin-order-overview'
 import { computePeriodStats, moneyCents, resolveDateWindow, type OrderMetricRow } from '@/lib/admin-order-metrics'
+import { readAdminSalesFunnel } from '@/lib/admin-sales-funnel'
 import { orderSchema } from '@/lib/shopify/orders'
 
 type OverviewOrder = OrderMetricRow & { id: string; payment_method?: string | null }
@@ -77,8 +78,18 @@ export async function readAdminAnalytics(days: 7 | 30 | 90, readOverview: () => 
     return { order_id: line.order_id, product_id: line.product_id || 'legacy-name:' + line.product_name,
       product_name: names.get(line.product_id) || line.product_name, quantity }
   })
+  const paidCheckouts: { attemptId: string; products: string[] }[] = []
   for (const row of snapshots) {
     const order = orderSchema.parse(row.snapshot)
+    if (['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(order.displayFinancialStatus ?? '') &&
+      order.customAttributes.some(attribute => attribute.key === 'mose_source' && attribute.value === 'unified-checkout')) {
+      const attempts = order.customAttributes.filter(attribute => attribute.key === 'mose_attempt')
+      if (attempts.length === 1) {
+        const purchased = order.lineItems.nodes.map(line => productIds.get(line.variant?.id))
+          .filter((id): id is string => Boolean(id))
+        paidCheckouts.push({ attemptId: attempts[0].value, products: purchased })
+      }
+    }
     for (const line of order.lineItems.nodes) {
       // currentQuantity excludes removed M lines after an M→L edit and refunded units.
       if (!line.currentQuantity) continue
@@ -87,5 +98,6 @@ export async function readAdminAnalytics(days: 7 | 30 | 90, readOverview: () => 
     }
   }
   // Keep all customer details in the server reader; this endpoint returns only aggregates.
-  return buildAdminAnalytics(orders, lines, days)
+  const funnel = await readAdminSalesFunnel(days, paidCheckouts, names).catch(() => null)
+  return { ...buildAdminAnalytics(orders, lines, days), funnel }
 }

@@ -31,6 +31,7 @@ const ALLOWED_EVENTS = new Set<string>([
   'product_view',
   'add_to_cart',
   'checkout_started',
+  'checkout_handoff_failed',
   'purchase',
   'chat_opened',
   'chat_closed',

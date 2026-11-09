@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { TrendingUp, ShoppingCart, Package, CreditCard, DollarSign, Clock, AlertCircle, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatBedrag } from '@/lib/format-price'
+import AdminSalesFunnel from '@/components/admin/AdminSalesFunnel'
+import type { AdminSalesFunnel as FunnelData } from '@/lib/admin-sales-funnel'
 
 interface AnalyticsStats {
   totalOrders: number
@@ -44,6 +46,7 @@ export default function AnalyticsPage() {
     avgOrderValue: 0,
     conversionRate: 0,
   })
+  const [funnel, setFunnel] = useState<FunnelData | null>(null)
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodBreakdown[]>([])
   const [topProducts, setTopProducts] = useState<TopProduct[]>([])
   const [revenueHistory, setRevenueHistory] = useState<{ date: string; revenue: number }[]>([])
@@ -67,6 +70,7 @@ export default function AnalyticsPage() {
       if (!response.ok) throw new Error(data.error || 'De analyse kan niet worden geladen.')
       if (signal.aborted || request !== requestSequence.current) return
       setStats(data.stats)
+      setFunnel(data.funnel ?? null)
       setPaymentMethods(data.paymentMethods)
       setTopProducts(data.topProducts)
       setRevenueHistory(data.revenueHistory)
@@ -196,6 +200,8 @@ export default function AnalyticsPage() {
             </button>
           ))}
         </div>
+
+        <AdminSalesFunnel data={funnel} />
 
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
