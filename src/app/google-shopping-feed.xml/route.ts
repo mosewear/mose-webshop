@@ -8,7 +8,7 @@ import {
   type ProductDisplayImage,
   type ProductDisplayVariant,
 } from '@/lib/product-display'
-import { availableVariant } from '@/lib/variant-availability'
+import { availableVariant, MAX_ORDER_QUANTITY, variantQuantityLimit } from '@/lib/variant-availability'
 
 type FeedVariant = ProductDisplayVariant & { size?: string | null }
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -109,6 +109,7 @@ function buildItemXml(args: {
   primaryImage: string
   additionalImages: string[]
   inStock: boolean
+  metaOrderableQuantity: number | null
   basePrice: number
   salePrice: number | null
   color: string | null
@@ -124,6 +125,7 @@ function buildItemXml(args: {
     primaryImage,
     additionalImages,
     inStock,
+    metaOrderableQuantity,
     basePrice,
     salePrice,
     color,
@@ -156,6 +158,7 @@ function buildItemXml(args: {
       <g:image_link>${escapeXml(primaryImage)}</g:image_link>
       ${additionalXml}
       <g:availability>${inStock ? 'in_stock' : 'out_of_stock'}</g:availability>
+      ${metaOrderableQuantity === null ? '' : `<g:quantity_to_sell_on_facebook>${metaOrderableQuantity}</g:quantity_to_sell_on_facebook>`}
       <g:condition>new</g:condition>
       <g:price>${formatPrice(basePrice)}</g:price>
       ${onSale ? `<g:sale_price>${formatPrice(salePrice)}</g:sale_price>` : ''}
@@ -261,6 +264,10 @@ export async function GET(request?: Request) {
           primaryImage,
           additionalImages,
           inStock: stock.in_stock,
+          // Meta requires an orderable quantity even though checkout is on MOSE.
+          // Supplier sizes use our online order cap, never an inventory sentinel.
+          metaOrderableQuantity: forMeta ? Math.min(MAX_ORDER_QUANTITY,
+            availableVariants.reduce((sum, variant) => sum + variantQuantityLimit(variant), 0)) : null,
           basePrice: Number.isFinite(basePrice) ? basePrice : 0,
           salePrice,
           color,
