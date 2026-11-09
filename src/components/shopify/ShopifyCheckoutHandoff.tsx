@@ -7,7 +7,7 @@ import { Lock, ArrowLeft, ShoppingBag, ChevronDown } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
-import { trackCheckoutStarted } from '@/lib/analytics'
+import { trackCheckoutStarted, trackCheckoutHandoffFailed } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
@@ -152,6 +152,8 @@ export function ShopifyCheckoutHandoff() {
     const abort = new AbortController()
     controller.current = abort
     const timeout = setTimeout(() => abort.abort(), 60_000)
+    let handoffRequested = false
+    let handoffProducts: string[] = []
     try {
       if (buyerCountry === 'US' && (usdQuoteLoading || usdQuoteError || !usdUnitPrices)) throw new Error('US_MARKET_NOT_READY')
       if (buyerCountry === 'US' && (promoCode.trim() || loyaltyPoints > 0 || items.some(item => item.isGiftCard))) throw new Error('US_BENEFITS_NOT_READY')
@@ -185,6 +187,8 @@ export function ShopifyCheckoutHandoff() {
       try { const saved = JSON.stringify(attempt.current); sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, saved); if (sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) !== saved) throw new Error('STORAGE_FAILED') } catch { throw new Error('CHECKOUT_STORAGE_REQUIRED') }
       attempt.current = { ...attempt.current, locked: true }
       try { const saved = JSON.stringify(attempt.current); sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, saved); if (sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) !== saved) throw new Error('STORAGE_FAILED') } catch { throw new Error('CHECKOUT_STORAGE_REQUIRED') }
+      handoffProducts = [...new Set(useCart.getState().items.map(item => item.productId))]
+      handoffRequested = true
       const response = await fetch('/api/shopify/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
         body: JSON.stringify({ ...snapshot, attemptId: attempt.current.attemptId, ...(revision ? { editExisting: true } : {}) }), signal: abort.signal,
@@ -213,6 +217,7 @@ export function ShopifyCheckoutHandoff() {
         throw new Error('CART_CHANGED')
       }
       const url = checkoutRedirectUrl(data.checkoutUrl, process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST)
+      handoffRequested = false
       const { attemptId } = attempt.current
       if (revision) {
         attempt.current = { ...attempt.current, snapshot: JSON.stringify(snapshot) }
@@ -221,15 +226,16 @@ export function ShopifyCheckoutHandoff() {
       // A recovered checkout can return the same URL. Count the successful
       // handoff once, before navigation, without making checkout depend on tracking.
       try {
-        if (sessionStorage.getItem(CHECKOUT_TRACKED_STORAGE_KEY) !== attemptId) {
+        const firstHandoff = sessionStorage.getItem(CHECKOUT_TRACKED_STORAGE_KEY) !== attemptId
+        if (firstHandoff || revision) {
           const checkoutItems = useCart.getState().items
           const quantity = checkoutItems.reduce((sum, item) => sum + item.quantity, 0)
           const eurValue = checkoutItems.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0) / 100
           const usdValue = buyerCountry === 'US' && usdUnitPrices
             ? checkoutItems.reduce((sum, item) => sum + Math.round(usdUnitPrices[item.variantId] * 100) * item.quantity, 0) / 100
             : null
-          trackCheckoutStarted({ items_count: quantity, total_value: eurValue })
-          trackPixelEvent('InitiateCheckout', {
+          trackCheckoutStarted({ items_count: quantity, total_value: eurValue, product_ids: handoffProducts, shopify_attempt_id: attemptId })
+          if (firstHandoff) trackPixelEvent('InitiateCheckout', {
             currency: usdValue === null ? 'EUR' : 'USD',
             value: usdValue ?? eurValue,
             num_items: quantity,
@@ -240,6 +246,7 @@ export function ShopifyCheckoutHandoff() {
       // Creating a checkout is not payment. Never clear or alter cart contents here.
       window.location.assign(url)
     } catch (failure) {
+      if (handoffRequested) trackCheckoutHandoffFailed(handoffProducts)
       const code = failure instanceof Error ? failure.message : ''
       setError(code === 'BE_SUPPLIER_DUTIES_NOT_READY' ? (locale === 'en' ? 'Shipping for this item to Belgium is being checked for import fees. No order was placed.' : 'Verzending van dit artikel naar België wordt gecontroleerd op invoerkosten. Er is geen bestelling geplaatst.') : code === 'US_MARKET_NOT_READY' || code === 'US_BENEFITS_NOT_READY' ? (locale === 'en' ? 'United States checkout is being prepared. Prices, shipping and duties must be verified before you can pay.' : 'Amerikaans afrekenen wordt voorbereid. Prijzen, verzending en invoerheffingen moeten eerst worden gecontroleerd.') : code === 'ATTEMPT_PENDING' ? text.pending : code === 'ATTEMPT_REVIEW_REQUIRED' ? text.review : code === 'CART_CHANGED' ? text.changed : code === 'UNSUPPORTED_CART' ? text.gift : code === 'INVALID_GIFT_RECIPIENT' ? text.invalidGift : code === 'INVALID_CART' ? text.invalid : code === 'CHECKOUT_STORAGE_REQUIRED' ? text.storageError : code === 'BENEFIT_UNAVAILABLE' ? text.benefitError : code === 'INVALID_PROMO' ? text.invalidPromo : code === 'INVALID_LOYALTY' ? text.invalidPoints : code === 'ACCOUNT_SESSION_INVALID' ? text.pointsGuest : text.retry)
     } finally {
