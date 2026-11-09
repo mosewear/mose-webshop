@@ -1297,9 +1297,10 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                               alt={productImageAlt(media.alt_text, product.name, locale)}
                               fill
                               sizes="(max-width: 768px) 100vw, 50vw"
-                              quality={95}
+                              quality={index === selectedImage ? 95 : 90}
                               className="object-contain object-center"
-                              priority={index === selectedImage}
+                              loading={index === selectedImage ? 'eager' : 'lazy'}
+                              fetchPriority={index === selectedImage ? 'high' : 'low'}
                               placeholder="blur"
                               blurDataURL={BLUR_DATA_URL}
                             />
