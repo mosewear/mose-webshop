@@ -10,6 +10,10 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'metadata.pages.contact' })
   return {
     title: t('title'),
+    alternates: {
+      canonical: `/${locale}/contact`,
+      languages: { nl: '/nl/contact', en: '/en/contact', 'x-default': '/nl/contact' },
+    },
     ...(t.has('description') ? { description: t('description') } : {}),
   }
 }

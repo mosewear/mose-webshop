@@ -13,7 +13,7 @@ export async function generateMetadata({
   const post = await getBlogPost(slug)
 
   if (!post) {
-    return { title: 'Blog - MOSE' }
+    return { title: { absolute: 'Blog - MOSE' }, robots: { index: false, follow: false } }
   }
 
   const title = locale === 'en'
@@ -27,7 +27,7 @@ export async function generateMetadata({
   const modifiedTime = post.updated_at
 
   return {
-    title: `${title} - MOSE Blog`,
+    title: { absolute: /\bMOSE\b/i.test(title) ? title : `${title} | MOSE Blog` },
     description,
     authors: [{ name: post.author }],
     openGraph: {

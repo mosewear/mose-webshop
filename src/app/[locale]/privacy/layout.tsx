@@ -10,6 +10,10 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'metadata.pages.privacy' })
   return {
     title: t('title'),
+    alternates: {
+      canonical: `/${locale}/privacy`,
+      languages: { nl: '/nl/privacy', en: '/en/privacy', 'x-default': '/nl/privacy' },
+    },
     ...(t.has('description') ? { description: t('description') } : {}),
   }
 }
