@@ -50,6 +50,7 @@ export async function reviseShopifyCart(input: {
   const desiredIds = new Set(desired.map(line => line.merchandiseId))
   const removed = cart.lines.nodes.filter(line => !desiredIds.has(line.merchandise.id))
   const added = desired.filter(line => !current.has(line.merchandiseId))
+    .map(({ merchandiseId, quantity }) => ({ merchandiseId, quantity }))
   const updates = desired.flatMap(line => {
     const existing = current.get(line.merchandiseId)
     return existing && existing.quantity !== line.quantity ? [{ id: existing.id, quantity: line.quantity }] : []
@@ -71,7 +72,11 @@ export async function reviseShopifyCart(input: {
   // Keep the original lines intact if Shopify rejects a new variant.
   await mutate('cartLinesAdd', added)
   assertPlainCart(cart, id)
-  if (added.length) assertCreatedCartLines(cart.lines.nodes, [...previous, ...added])
+  if (added.length) {
+    const addedIds = new Set(added.map(line => line.merchandiseId))
+    assertCreatedCartLines(cart.lines.nodes.filter(line => addedIds.has(line.merchandise.id)), added)
+    assertCreatedCartLines(cart.lines.nodes.filter(line => !addedIds.has(line.merchandise.id)), previous)
+  }
   await mutate('cartLinesUpdate', updates)
   await mutate('cartLinesRemove', removed.map(line => line.id))
   assertPlainCart(cart, id)
