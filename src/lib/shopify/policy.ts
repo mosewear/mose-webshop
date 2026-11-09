@@ -17,6 +17,7 @@ export const checkoutInput = z.object({
   locale: z.enum(['nl', 'en']),
   country: z.enum(['NL', 'BE', 'US']),
   attemptId: z.string().uuid(),
+  editExisting: z.literal(true).optional(),
   promoCode: z.string().trim().min(1).max(80).regex(/^[A-Za-z0-9_-]+$/).optional(),
   loyaltyPoints: z.number().int().min(0).max(20_000_000).multipleOf(100).optional(),
   giftCards: z.array(nativeGiftLineSchema).max(30).optional(),

@@ -11,9 +11,10 @@ import { trackCheckoutStarted } from '@/lib/analytics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
+import { SHOPIFY_NL_SHIPPING } from '@/lib/shopify/shipping-policy'
 import { vertaalKleur } from '@/lib/kleurnaam'
 import {
-  canRotateCheckoutAttempt, checkoutRedirectUrl, createShopifyCartSnapshot, getCheckoutAttempt,
+  canRotateCheckoutAttempt, checkoutRedirectUrl, createShopifyCartSnapshot, getCartRevisionAttempt, getCheckoutAttempt,
   SHOPIFY_ATTEMPT_STORAGE_KEY, type CheckoutAttempt,
 } from '@/lib/shopify-cart'
 
@@ -179,13 +180,14 @@ export function ShopifyCheckoutHandoff() {
       if (!stored) {
         try { stored = JSON.parse(sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) || 'null') } catch { /* Storage is optional. */ }
       }
-      attempt.current = getCheckoutAttempt(snapshot, stored, () => crypto.randomUUID())
+      const revision = getCartRevisionAttempt(snapshot, stored)
+      attempt.current = revision ?? getCheckoutAttempt(snapshot, stored, () => crypto.randomUUID())
       try { const saved = JSON.stringify(attempt.current); sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, saved); if (sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) !== saved) throw new Error('STORAGE_FAILED') } catch { throw new Error('CHECKOUT_STORAGE_REQUIRED') }
       attempt.current = { ...attempt.current, locked: true }
       try { const saved = JSON.stringify(attempt.current); sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, saved); if (sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) !== saved) throw new Error('STORAGE_FAILED') } catch { throw new Error('CHECKOUT_STORAGE_REQUIRED') }
       const response = await fetch('/api/shopify/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-        body: JSON.stringify({ ...snapshot, attemptId: attempt.current.attemptId }), signal: abort.signal,
+        body: JSON.stringify({ ...snapshot, attemptId: attempt.current.attemptId, ...(revision ? { editExisting: true } : {}) }), signal: abort.signal,
       })
       if (!response.ok) {
         const failure: unknown = await response.json().catch(() => null)
@@ -207,11 +209,15 @@ export function ShopifyCheckoutHandoff() {
       const data = result as { checkoutUrl?: unknown; attemptId?: unknown }
       if (data.attemptId !== attempt.current.attemptId) throw new Error('INVALID_RESPONSE')
       // Another tab can change the bag while the server prepares checkout.
-      if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)) !== attempt.current.snapshot) {
+      if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)) !== JSON.stringify(snapshot)) {
         throw new Error('CART_CHANGED')
       }
       const url = checkoutRedirectUrl(data.checkoutUrl, process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST)
       const { attemptId } = attempt.current
+      if (revision) {
+        attempt.current = { ...attempt.current, snapshot: JSON.stringify(snapshot) }
+        try { sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, JSON.stringify(attempt.current)) } catch { /* Retrying with the original ID recovers the saved edit. */ }
+      }
       // A recovered checkout can return the same URL. Count the successful
       // handoff once, before navigation, without making checkout depend on tracking.
       try {
@@ -288,7 +294,11 @@ export function ShopifyCheckoutHandoff() {
           <p className="text-2xl font-bold tabular-nums">{subtotalLabel}</p></div>
           <p className="mt-3 text-sm leading-relaxed text-gray-700">{text.final}</p>
           <div className="my-5 space-y-2 border-y border-gray-200 py-4 text-sm">
-            {hasPhysicalItems ? <p>{locale === 'en' ? 'Shipping costs are shown before payment.' : 'Verzendkosten zie je vóór betaling.'}</p> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
+            {hasPhysicalItems ? <p>{buyerCountry === 'NL'
+              ? (locale === 'en'
+                ? `Netherlands shipping: ${formatBedrag(SHOPIFY_NL_SHIPPING.standard, locale)}. Free from ${formatBedrag(SHOPIFY_NL_SHIPPING.freeFrom, locale)}.`
+                : `Verzending in Nederland: ${formatBedrag(SHOPIFY_NL_SHIPPING.standard, locale)}. Gratis vanaf ${formatBedrag(SHOPIFY_NL_SHIPPING.freeFrom, locale)}.`)
+              : (locale === 'en' ? 'Shipping costs are shown before payment.' : 'Verzendkosten zie je vóór betaling.')}</p> : <p>{locale === 'en' ? 'Digital delivery by email. No shipping charge.' : 'Digitale levering per e-mail. Geen verzendkosten.'}</p>}
           </div>
           <div className="mb-5 space-y-4">
             <details className="group border-b border-gray-200 pb-4" open={promoCode.length > 0 || error === text.invalidPromo || error === text.benefitError}><summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold [&::-webkit-details-marker]:hidden">{text.promo}<ChevronDown size={18} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180" /></summary><label htmlFor="checkout-promo" className="sr-only">{text.promo}</label><input id="checkout-promo" value={promoCode} onChange={event => setPromoCode(event.target.value)} disabled={busy} maxLength={80} autoComplete="off" autoCapitalize="characters" placeholder={text.promoPlaceholder} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-promo-note"/><p id="checkout-promo-note" className="mt-2 text-xs text-gray-600">{text.promoNote}</p></details>

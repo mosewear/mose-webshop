@@ -21,6 +21,7 @@ import { resolveNativeGiftVariant } from '@/lib/shopify/native-gift-catalog'
 import { assertNativeGiftCutover, nativeGiftRuntimeReadiness } from '@/lib/shopify/native-gift-cutover'
 import { assertCreatedCartLines, aggregateBenefitLines } from '@/lib/shopify/cart-line-proof'
 import { verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
+import { reviseShopifyCart } from '@/lib/shopify/cart-revision'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
@@ -219,10 +220,69 @@ export async function POST(request: NextRequest) {
     }
     const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId,
       benefits: { quote: preparedBenefits.quote, points: input.loyaltyPoints ?? 0 } })).digest('hex')
+    const sessionHash = createHmac('sha256', secret).update(sessionToken).digest('hex')
+    const cartSnapshot = { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote }
+    if (input.editExisting) {
+      const review = () => respond({ code: 'INPUT_CHANGED', retrySafe: false }, 409)
+      const pendingEdit = () => respond({ code: 'ATTEMPT_PENDING' }, 409)
+      if (input.promoCode || input.loyaltyPoints || input.giftCards?.length || preparedBenefits.quote.discountCents !== 0) return review()
+
+      const attemptRow = () => db!.from('shopify_checkout_attempts')
+      const { data: old, error: readError } = await attemptRow()
+        .select('status,request_fingerprint,lease_token,expires_at,cart_id,checkout_url,cart_snapshot')
+        .eq('id', input.attemptId).eq('session_hash', sessionHash).maybeSingle()
+      if (readError) throw readError
+      if (!old) return review()
+      if (old.status === 'creating' || old.status === 'unknown') return pendingEdit()
+      const expiresAt = Date.parse(old.expires_at)
+      if (old.status !== 'ready' || !old.cart_id || !old.checkout_url || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) return review()
+
+      const { data: owner, error: ownerError } = await db.from('shopify_checkout_owners').select('user_id')
+        .eq('attempt_id', input.attemptId).maybeSingle()
+      if (ownerError) throw ownerError
+      if ((owner?.user_id ?? null) !== userId) return review()
+      const prior = old.cart_snapshot
+      if (prior?.country !== input.country || prior?.benefits?.discountCents !== 0 ||
+          !Array.isArray(prior?.lines) || prior.lines.some((line: { gift?: unknown }) => !line || line.gift)) return review()
+      if (old.request_fingerprint === fingerprint) {
+        return respond({ checkoutUrl: assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
+      }
+
+      // Fence edits on the same attempt and keep the Shopify cart identity.
+      // The regular checkout path also observes this creating state.
+      const { data: claimed, error: claimError } = await attemptRow()
+        .update({ status: 'creating', lease_token: lease }).eq('id', input.attemptId).eq('session_hash', sessionHash)
+        .eq('status', 'ready').eq('lease_token', old.lease_token).gt('expires_at', new Date().toISOString()).select('id').maybeSingle()
+      if (claimError) throw claimError
+      if (!claimed) return pendingEdit()
+      let mutationStarted = false
+      const saveEdit = (editState: Record<string, unknown>) => attemptRow().update(editState).eq('id', input.attemptId)
+        .eq('session_hash', sessionHash).eq('lease_token', lease).eq('status', 'creating').select('id').maybeSingle()
+      try {
+        const checkoutUrl = await reviseShopifyCart({
+          ...context, buyerIp, id: old.cart_id, previous: prior.lines, desired: lines,
+          currency: marketPrice.currency, subtotal: marketPrice.subtotalCents,
+          beforeMutation: () => { mutationStarted = true },
+        })
+        if (input.country !== 'US') {
+          const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: old.cart_id }, buyerIp)
+          assertCartBenefits(benefits.cart, [], { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
+        }
+        const saved = await saveEdit({ status: 'ready', request_fingerprint: fingerprint, cart_snapshot: cartSnapshot, checkout_url: checkoutUrl, last_error: null })
+        if (saved.error || !saved.data) throw new Error('CART_EDIT_SAVE_FAILED')
+        return respond({ checkoutUrl, attemptId: input.attemptId })
+      } catch {
+        // A failed read leaves the original cart reusable. A mutation with an
+        // uncertain result must never expose a stale cart or create another one.
+        const saved = await saveEdit(mutationStarted ? { status: 'unknown', last_error: 'CART_EDIT_OUTCOME_UNKNOWN' } : { status: 'ready' })
+        if (saved.error || !saved.data || mutationStarted) return pendingEdit()
+        return review()
+      }
+    }
     const booking = await db.rpc('reserve_shopify_checkout', {
-      p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'),
+      p_id: input.attemptId, p_session: sessionHash,
       p_fingerprint: fingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'),
-      p_snapshot: { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote }, p_lease: lease,
+      p_snapshot: cartSnapshot, p_lease: lease,
     })
     if (booking.error) {
       if (booking.error.message?.includes('CHECKOUT_RATE_LIMIT')) return respond({ error: 'Te veel afrekenpogingen. Probeer het over een minuut opnieuw.', code: 'RATE_LIMIT' }, 429)
