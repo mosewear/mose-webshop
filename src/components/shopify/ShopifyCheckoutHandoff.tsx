@@ -7,6 +7,8 @@ import { Lock, ArrowLeft, ShoppingBag, ChevronDown } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
+import { trackCheckoutStarted } from '@/lib/analytics'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
 import { vertaalKleur } from '@/lib/kleurnaam'
@@ -14,6 +16,8 @@ import {
   canRotateCheckoutAttempt, checkoutRedirectUrl, createShopifyCartSnapshot, getCheckoutAttempt,
   SHOPIFY_ATTEMPT_STORAGE_KEY, type CheckoutAttempt,
 } from '@/lib/shopify-cart'
+
+const CHECKOUT_TRACKED_STORAGE_KEY = 'mose-shopify-checkout-tracked-v1'
 
 const copy = {
   nl: {
@@ -207,6 +211,26 @@ export function ShopifyCheckoutHandoff() {
         throw new Error('CART_CHANGED')
       }
       const url = checkoutRedirectUrl(data.checkoutUrl, process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST)
+      const { attemptId } = attempt.current
+      // A recovered checkout can return the same URL. Count the successful
+      // handoff once, before navigation, without making checkout depend on tracking.
+      try {
+        if (sessionStorage.getItem(CHECKOUT_TRACKED_STORAGE_KEY) !== attemptId) {
+          const checkoutItems = useCart.getState().items
+          const quantity = checkoutItems.reduce((sum, item) => sum + item.quantity, 0)
+          const eurValue = checkoutItems.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0) / 100
+          const usdValue = buyerCountry === 'US' && usdUnitPrices
+            ? checkoutItems.reduce((sum, item) => sum + Math.round(usdUnitPrices[item.variantId] * 100) * item.quantity, 0) / 100
+            : null
+          trackCheckoutStarted({ items_count: quantity, total_value: eurValue })
+          trackPixelEvent('InitiateCheckout', {
+            currency: usdValue === null ? 'EUR' : 'USD',
+            value: usdValue ?? eurValue,
+            num_items: quantity,
+          }, undefined, { eventId: attemptId })
+          sessionStorage.setItem(CHECKOUT_TRACKED_STORAGE_KEY, attemptId)
+        }
+      } catch { /* Tracking must never prevent a successful checkout handoff. */ }
       // Creating a checkout is not payment. Never clear or alter cart contents here.
       window.location.assign(url)
     } catch (failure) {

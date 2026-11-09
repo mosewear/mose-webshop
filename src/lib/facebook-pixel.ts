@@ -91,6 +91,7 @@ async function sendToConversionsAPI(
     
     const response = await fetch('/api/facebook-capi', {
       method: 'POST',
+      keepalive: event === 'InitiateCheckout',
       headers: {
         'Content-Type': 'application/json',
       },
