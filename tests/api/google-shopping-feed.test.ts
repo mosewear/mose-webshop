@@ -27,7 +27,7 @@ it('lists supplier sizes as in stock only while the supplier confirms they can b
   const select = vi.fn().mockReturnValue({ eq })
   query.mockReturnValue({ select })
 
-  const xml = await (await GET()).text()
+  const xml = await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text()
   expect(select.mock.calls[0][0]).toContain('fulfillment_mode, supplier_orderable, supplier_checked_at')
   expect(xml).toContain('<g:id>denim:black</g:id>')
   expect(xml).toContain('<g:availability>in_stock</g:availability>')
@@ -42,7 +42,7 @@ it('fits long colors into the Google ID limit without changing Meta pixel IDs', 
   const order = vi.fn().mockResolvedValue({ data: products, error: null })
   query.mockReturnValue({ select: () => ({ eq: () => ({ eq: () => ({ order }) }) }) })
   const ids = (xml: string) => Array.from(xml.matchAll(/<g:id>([^<]+)<\/g:id>/g), m => m[1])
-  const google = ids(await (await GET()).text())
+  const google = ids(await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text())
   expect(new Set(google).size).toBe(3)
   expect(google.every(x => x.length <= 50)).toBe(true)
   expect(google).toContain(`${id}:black`)

@@ -171,8 +171,8 @@ function buildItemXml(args: {
     </item>`.trim()
 }
 
-export async function GET(request?: Request) {
-  const forMeta = request ? new URL(request.url).searchParams.get('channel') === 'meta' : false
+export async function GET(request: Request) {
+  const forMeta = new URL(request.url).searchParams.get('channel') === 'meta'
   const supabase = createServiceRoleClient()
 
   const { data: products, error } = await supabase
