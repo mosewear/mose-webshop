@@ -27,10 +27,28 @@ it('lists supplier sizes as in stock only while the supplier confirms they can b
   const select = vi.fn().mockReturnValue({ eq })
   query.mockReturnValue({ select })
 
-  const xml = await (await GET()).text()
+  const xml = await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text()
   expect(select.mock.calls[0][0]).toContain('fulfillment_mode, supplier_orderable, supplier_checked_at')
   expect(xml).toContain('<g:id>denim:black</g:id>')
   expect(xml).toContain('<g:availability>in_stock</g:availability>')
   expect(xml).toContain('<g:size>L</g:size>')
   expect(xml).not.toContain('XL')
+})
+
+it('fits long colors into the Google ID limit without changing Meta pixel IDs', async () => {
+  const id = '39ff9979-e4ff-84b4-8831-cf0b0cc713af'
+  const products = [{ id, slug: 'raglan-longsleeve', name: 'Raglan', base_price: 56,
+    product_variants: ['White with Black', 'White with Coffee', 'Black'].map(color => ({ color, is_available: true, stock_quantity: 1 })) }]
+  const order = vi.fn().mockResolvedValue({ data: products, error: null })
+  query.mockReturnValue({ select: () => ({ eq: () => ({ eq: () => ({ order }) }) }) })
+  const ids = (xml: string) => Array.from(xml.matchAll(/<g:id>([^<]+)<\/g:id>/g), m => m[1])
+  const google = ids(await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text())
+  expect(new Set(google).size).toBe(3)
+  expect(google.every(x => x.length <= 50)).toBe(true)
+  expect(google).toContain(`${id}:black`)
+  const metaXml = await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml?channel=meta'))).text()
+  expect(metaXml).toContain('<g:quantity_to_sell_on_facebook>1</g:quantity_to_sell_on_facebook>')
+  const meta = ids(metaXml)
+  expect(meta).toContain(`${id}:white-with-black`)
+  expect(meta).toContain(`${id}:white-with-coffee`)
 })

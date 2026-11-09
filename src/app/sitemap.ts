@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/blog', priority: 0.8, changeFrequency: 'daily' as const },
     { path: '/lookbook', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/over-mose', priority: 0.7, changeFrequency: 'monthly' as const },
+    { path: '/verzending', priority: 0.6, changeFrequency: 'monthly' as const },
     { path: '/contact', priority: 0.6, changeFrequency: 'monthly' as const },
     { path: '/privacy', priority: 0.5, changeFrequency: 'monthly' as const },
     { path: '/algemene-voorwaarden', priority: 0.5, changeFrequency: 'monthly' as const },
@@ -39,7 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const locale of locales) {
       entries.push({
         url: `${baseUrl}/${locale}${page.path}`,
-        lastModified: new Date(),
         changeFrequency: page.changeFrequency,
         priority: page.priority,
         alternates: {
@@ -56,13 +56,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const locale of locales) {
       entries.push({
         url: `${baseUrl}/${locale}/product/${product.slug}`,
-        lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
+        lastModified: product.updated_at ? new Date(product.updated_at) : undefined,
         changeFrequency: 'weekly',
         priority: 0.8,
         alternates: {
           languages: {
             nl: `${baseUrl}/nl/product/${product.slug}`,
             en: `${baseUrl}/en/product/${product.slug}`,
+            'x-default': `${baseUrl}/nl/product/${product.slug}`,
           },
         },
       })
@@ -76,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const locale of locales) {
       entries.push({
         url: `${baseUrl}/${locale}/blog/${post.slug}`,
-        lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
+        lastModified: post.updated_at ? new Date(post.updated_at) : undefined,
         changeFrequency: 'weekly',
         priority: 0.7,
         alternates: {

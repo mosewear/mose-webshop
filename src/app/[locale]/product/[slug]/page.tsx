@@ -2,7 +2,6 @@ import { productImageAlt } from '@/lib/product-image-alt'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { getCommercePromises } from '@/lib/settings-server'
-import { isTapstitchProduct } from '@/lib/tapstitch-products'
 import { getCatalogProduct } from '@/lib/catalog-server'
 import ProductPageClient from './ProductPageClient'
 import PdpInstagramFetcher from '@/components/product/PdpInstagramFetcher'
@@ -24,7 +23,7 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: `${t('product.notFound')} - MOSE`,
+      title: { absolute: `${t('product.notFound')} - MOSE` },
       description: t('product.notFoundDesc'),
       robots: {
         index: false,
@@ -35,44 +34,25 @@ export async function generateMetadata({
 
   // Map localized fields
   const localizedProduct = mapLocalizedProduct(product, locale)
-  // Categories is now a LEFT join — gift cards & uncategorised items
-  // come back with `null` here, so we always treat it optionally.
-  const category = product.categories as any as
-    | { name: string; name_en?: string; slug: string }
-    | null
-  const localizedCategory = category
-    ? { ...category, name: locale === 'en' && category.name_en ? category.name_en : category.name }
-    : null
-
   // Get primary image or first image
   const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
   const imageUrl = primaryImage?.url || 'https://www.mosewear.com/logomose.png'
 
-  // Use custom meta or generate from product data. We avoid appending
-  // "- MOSE" when the localized name already starts with the brand
-  // (e.g. "MOSE Giftcard") to prevent ugly "MOSE Giftcard - MOSE" titles.
-  const localizedName = localizedProduct.name as string | undefined
-  const fallbackTitle = localizedName
-    ? localizedName.toLowerCase().startsWith('mose')
-      ? localizedName
-      : `${localizedName} | MOSE`
-    : 'MOSE'
-  // Engelse meta per product. Die bestond niet: de Engelse pagina's kregen de
-  // Nederlandse zoekresultaattekst, of een afgekapte productbeschrijving.
-  const isEn = locale === "en"
-  const title =
-    (isEn ? product.meta_title_en || product.meta_title : product.meta_title) ||
-    fallbackTitle
-  const description =
-    (isEn
-      ? product.meta_description_en || product.meta_description
-      : product.meta_description) ||
-    `${localizedProduct.description?.substring(0, 155) ?? ''}${(localizedProduct.description?.length ?? 0) > 155 ? '...' : ''}`
-  
+  const isEn = locale === 'en'
+  const name = String(localizedProduct.name || 'MOSE').trim()
+  const customTitle = (isEn ? product.meta_title_en : product.meta_title)?.trim()
+  const titleCore = (customTitle || name).replace(/(?:\s*[|–—-]\s*MOSE)+$/i, '').trim() || name
+  const title = /\bMOSE\b/i.test(titleCore) ? titleCore : `${titleCore} | MOSE`
+  const customDescription = (isEn ? product.meta_description_en : product.meta_description)?.trim()
+  const sourceDescription = (isEn ? product.description_en : product.description)?.trim()
+  const plainDescription = sourceDescription?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  const description = customDescription || (plainDescription && plainDescription.length > 155
+    ? `${plainDescription.slice(0, 155).replace(/\s+\S*$/, '')}…`
+    : plainDescription) || (isEn ? `Discover ${name} in the MOSE online shop.` : `Ontdek ${name} in de MOSE-webshop.`)
+
   return {
-    title,
+    title: { absolute: title },
     description,
-    keywords: [localizedProduct.name, 'MOSE', localizedCategory?.name, isEn ? 'menswear' : 'mannenkleding', 'premium basics'].filter(Boolean) as string[],
     openGraph: {
       title,
       description,
@@ -96,6 +76,11 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: `/${locale}/product/${slug}`,
+      languages: {
+        nl: `/nl/product/${slug}`,
+        en: `/en/product/${slug}`,
+        'x-default': `/nl/product/${slug}`,
+      },
     },
   }
 }
@@ -136,7 +121,12 @@ export default async function ProductPage({
     const imageUrl = primaryImage?.url || 'https://www.mosewear.com/logomose.png'
     const price = product.sale_price || product.base_price
     
-    const availability = offerAvailability(product.product_variants ?? [], product.is_gift_card)
+    const fulfillmentAvailability = offerAvailability(product.product_variants ?? [], product.is_gift_card)
+    // Google Shopping uses InStock for an offer that accepts orders now.
+    // The storefront still identifies supplier fulfillment as made to order.
+    const availability = fulfillmentAvailability === 'https://schema.org/MadeToOrder'
+      ? 'https://schema.org/InStock'
+      : fulfillmentAvailability
 
     structuredData = {
       '@context': 'https://schema.org',
@@ -154,12 +144,7 @@ export default async function ProductPage({
         priceCurrency: 'EUR',
         price: price,
         availability,
-        // Dit is een server
-        // component: hij rendert één keer per request, er is geen re-render
-        // waarbij deze waarde kan verschuiven. priceValidUntil hoort juist
-        // relatief aan het moment van uitleveren te zijn.
-        // eslint-disable-next-line react-hooks/purity
-        priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        itemCondition: 'https://schema.org/NewCondition',
         seller: {
           '@type': 'Organization',
           name: 'MOSE',
@@ -218,7 +203,7 @@ export default async function ProductPage({
       {structuredData && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\u003c') }}
         />
       )}
       {/* Product and presentation settings arrive with the server HTML.

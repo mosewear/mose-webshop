@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { catalogContentId } from '@/lib/catalog-ids'
 import {
@@ -7,7 +8,7 @@ import {
   type ProductDisplayImage,
   type ProductDisplayVariant,
 } from '@/lib/product-display'
-import { availableVariant } from '@/lib/variant-availability'
+import { availableVariant, MAX_ORDER_QUANTITY, variantQuantityLimit } from '@/lib/variant-availability'
 
 type FeedVariant = ProductDisplayVariant & { size?: string | null }
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -40,6 +41,13 @@ function buildImageUrl(rawUrl: string) {
   if (!rawUrl) return `${BASE_URL}/logomose.png`
   if (rawUrl.startsWith('/')) return `${BASE_URL}${rawUrl}`
   return `${BASE_URL}/api/google-image?src=${encodeURIComponent(rawUrl)}`
+}
+
+// Merchant Center limits id to 50 characters. Keep every already-valid ID
+// stable, and leave Meta IDs untouched so the pixel can match the catalog.
+function googleOfferId(contentId: string) {
+  if (contentId.length <= 50) return contentId
+  return `${contentId.slice(0, 37)}${createHash('sha256').update(contentId).digest('hex').slice(0, 13)}`
 }
 
 function formatPrice(amount: number) {
@@ -101,6 +109,7 @@ function buildItemXml(args: {
   primaryImage: string
   additionalImages: string[]
   inStock: boolean
+  metaOrderableQuantity: number | null
   basePrice: number
   salePrice: number | null
   color: string | null
@@ -116,6 +125,7 @@ function buildItemXml(args: {
     primaryImage,
     additionalImages,
     inStock,
+    metaOrderableQuantity,
     basePrice,
     salePrice,
     color,
@@ -148,6 +158,7 @@ function buildItemXml(args: {
       <g:image_link>${escapeXml(primaryImage)}</g:image_link>
       ${additionalXml}
       <g:availability>${inStock ? 'in_stock' : 'out_of_stock'}</g:availability>
+      ${metaOrderableQuantity === null ? '' : `<g:quantity_to_sell_on_facebook>${metaOrderableQuantity}</g:quantity_to_sell_on_facebook>`}
       <g:condition>new</g:condition>
       <g:price>${formatPrice(basePrice)}</g:price>
       ${onSale ? `<g:sale_price>${formatPrice(salePrice)}</g:sale_price>` : ''}
@@ -160,7 +171,8 @@ function buildItemXml(args: {
     </item>`.trim()
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const forMeta = new URL(request.url).searchParams.get('channel') === 'meta'
   const supabase = createServiceRoleClient()
 
   const { data: products, error } = await supabase
@@ -244,7 +256,7 @@ export async function GET() {
           : `${BASE_URL}/${DEFAULT_LOCALE}/product/${encodeURIComponent(product.slug)}`
 
         return buildItemXml({
-          contentId,
+          contentId: forMeta ? contentId : googleOfferId(contentId),
           itemGroupId: product.id,
           title,
           description,
@@ -252,6 +264,10 @@ export async function GET() {
           primaryImage,
           additionalImages,
           inStock: stock.in_stock,
+          // Meta requires an orderable quantity even though checkout is on MOSE.
+          // Supplier sizes use our online order cap, never an inventory sentinel.
+          metaOrderableQuantity: forMeta ? Math.min(MAX_ORDER_QUANTITY,
+            availableVariants.reduce((sum, variant) => sum + variantQuantityLimit(variant), 0)) : null,
           basePrice: Number.isFinite(basePrice) ? basePrice : 0,
           salePrice,
           color,
@@ -267,7 +283,7 @@ export async function GET() {
   <channel>
     <title>MOSE Product Feed</title>
     <link>${BASE_URL}</link>
-    <description>Official Google Shopping + Meta catalog product feed for MOSE. Content ids are product UUIDs (with :colorSlug for multi-color items) and match pixel/CAPI content_ids.</description>
+    <description>Official ${forMeta ? 'Meta catalog' : 'Google Shopping'} product feed for MOSE.</description>
     ${itemsXml}
   </channel>
 </rss>`
