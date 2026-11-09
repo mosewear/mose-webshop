@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { catalogContentId } from '@/lib/catalog-ids'
 import {
@@ -40,6 +41,13 @@ function buildImageUrl(rawUrl: string) {
   if (!rawUrl) return `${BASE_URL}/logomose.png`
   if (rawUrl.startsWith('/')) return `${BASE_URL}${rawUrl}`
   return `${BASE_URL}/api/google-image?src=${encodeURIComponent(rawUrl)}`
+}
+
+// Merchant Center limits id to 50 characters. Keep every already-valid ID
+// stable, and leave Meta IDs untouched so the pixel can match the catalog.
+function googleOfferId(contentId: string) {
+  if (contentId.length <= 50) return contentId
+  return `${contentId.slice(0, 37)}${createHash('sha256').update(contentId).digest('hex').slice(0, 13)}`
 }
 
 function formatPrice(amount: number) {
@@ -160,7 +168,8 @@ function buildItemXml(args: {
     </item>`.trim()
 }
 
-export async function GET() {
+export async function GET(request?: Request) {
+  const forMeta = request ? new URL(request.url).searchParams.get('channel') === 'meta' : false
   const supabase = createServiceRoleClient()
 
   const { data: products, error } = await supabase
@@ -244,7 +253,7 @@ export async function GET() {
           : `${BASE_URL}/${DEFAULT_LOCALE}/product/${encodeURIComponent(product.slug)}`
 
         return buildItemXml({
-          contentId,
+          contentId: forMeta ? contentId : googleOfferId(contentId),
           itemGroupId: product.id,
           title,
           description,
@@ -267,7 +276,7 @@ export async function GET() {
   <channel>
     <title>MOSE Product Feed</title>
     <link>${BASE_URL}</link>
-    <description>Official Google Shopping + Meta catalog product feed for MOSE. Content ids are product UUIDs (with :colorSlug for multi-color items) and match pixel/CAPI content_ids.</description>
+    <description>Official ${forMeta ? 'Meta catalog' : 'Google Shopping'} product feed for MOSE.</description>
     ${itemsXml}
   </channel>
 </rss>`
