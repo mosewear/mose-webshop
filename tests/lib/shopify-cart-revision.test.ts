@@ -29,3 +29,23 @@ it('sends only Shopify line fields and proves the replacement was added before r
   expect(storefront.mock.calls[2][0]).toContain('cartLinesRemove(')
   expect(storefront.mock.calls[2][1].lines).toEqual(['old-line'])
 })
+
+it('keeps native tender and the exact gift recipient properties while updating the existing cart', async () => {
+  const id = 'gid://shopify/Cart/test?key=test'
+  const checkoutUrl = 'https://mosewear.myshopify.com/cart/c/test'
+  const merchandiseId = 'gid://shopify/ProductVariant/999'
+  const attributes = [{ key: 'Recipient email', value: 'gift@example.invalid' }, { key: '_mose_gift_proof', value: 'test-proof' }]
+  const previous = [{ merchandiseId, quantity: 1, attributes }]
+  const desired = [{ merchandiseId, quantity: 2, attributes }]
+  const cart = (quantity: number) => ({
+    id, checkoutUrl, discountCodes: [], appliedGiftCards: [{ id: 'gid://shopify/AppliedGiftCard/1' }],
+    lines: { pageInfo: { hasNextPage: false }, nodes: [{ id: 'gift-line', quantity, attributes, merchandise: { id: merchandiseId } }] },
+    cost: { subtotalAmount: { amount: (quantity * 20).toFixed(2), currencyCode: 'EUR' } },
+  })
+  storefront.mockReset().mockResolvedValueOnce({ cart: cart(1) })
+    .mockResolvedValueOnce({ cartLinesUpdate: { cart: cart(2), userErrors: [], warnings: [] } })
+
+  await expect(reviseShopifyCart({ id, country: 'NL', language: 'NL', buyerIp: '127.0.0.1',
+    previous, desired, currency: 'EUR', subtotal: 4000, beforeMutation: vi.fn() })).resolves.toBe(checkoutUrl)
+  expect(storefront.mock.calls[1][1].lines).toEqual([{ id: 'gift-line', quantity: 2 }])
+})

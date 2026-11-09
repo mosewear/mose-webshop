@@ -2,7 +2,7 @@ import { createHash, createHmac } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { groupQuantityBenefits } from './benefit-quote'
 import type { readCheckoutBenefitQuote } from './checkout-benefits'
-import { promoSnapshot } from './promo-reservation'
+import { promoExpiry, promoSnapshot } from './promo-reservation'
 
 type Prepared = Awaited<ReturnType<typeof readCheckoutBenefitQuote>>
 type Quote = Prepared['quote']
@@ -27,9 +27,8 @@ export async function existingCartBenefits(db: SupabaseClient, input: {
       .eq('attempt_id', attemptId).maybeSingle()
     const hold = held.data
     const snapshot = promoSnapshot(next.promo)
-    const expiry = (value: unknown) => typeof value === 'string' ? Date.parse(value) : null
     const samePolicy = Object.entries(snapshot).every(([key, value]) => key === 'expires_at'
-      ? expiry(hold?.promo_snapshot?.[key]) === expiry(value)
+      ? promoExpiry(hold?.promo_snapshot?.[key]) === promoExpiry(value)
       : hold?.promo_snapshot?.[key] === value)
     if (held.error || hold?.status !== 'reserved' || !hold.provider_discount_id || hold.promo_id !== quote.promo.promoId ||
         (next.promo.discount_type !== 'percentage' && hold.discount_cents !== quote.promo.discountCents) || hold.code_hash !== createHash('sha256').update(promoCode).digest('hex') ||

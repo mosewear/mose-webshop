@@ -19,7 +19,7 @@ begin
     for update;
   if not found then return false; end if;
   select * into r from public.shopify_promo_reservations where attempt_id=p_attempt for update;
-  if not found or r.status<>'reserved' or r.provider_discount_id is null or r.promo_snapshot->>'discount_type'<>'percentage'
+  if not found or r.status<>'reserved' or r.provider_discount_id is null or r.promo_snapshot->>'discount_type' is distinct from 'percentage'
   then return false; end if;
   if exists(select 1 from public.shopify_promo_revision_amounts where attempt_id=p_attempt and discount_cents=p_discount) then return true; end if;
   if (select count(*) from public.shopify_promo_revision_amounts where attempt_id=p_attempt)>=100 then return false; end if;

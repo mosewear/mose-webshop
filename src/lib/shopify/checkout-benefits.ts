@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { admin } from './client'
 import { groupQuantityBenefits, quoteCheckoutBenefits } from './benefit-quote'
 import { bindAuthenticatedShopifyCustomer } from './customer-binding'
+import { promoExpiry } from './promo-reservation'
 import { reserveAndIssuePromo } from './promo-issuer'
 import { CREATE_LOYALTY_DISCOUNT, reserveAndIssueLoyaltyDiscount } from './benefit-issuer'
 import type { BenefitLine } from './benefits'
@@ -40,7 +41,7 @@ export async function readCheckoutBenefitQuote(db:SupabaseClient,input:{lines:Se
  if((input.points??0)>0&&!input.user) throw new Error('LOYALTY_AUTH_REQUIRED')
  const p=promo
  const quote=quoteCheckoutBenefits({lines:input.lines,tiers:tiers.data as QuantityDiscountTier[],loyalty,points:input.points,
-  ...(p?{promo:{id:p.id,active:p.is_active,expiresAt:p.expires_at,type:p.discount_type,value:Number(p.discount_value),minOrderCents:Math.round(Number(p.min_order_value??0)*100),includeSale:p.applies_to_sale_items,usageLimit:p.usage_limit,usageCount:p.usage_count}}:{})})
+  ...(p?{promo:{id:p.id,active:p.is_active,expiresAt:promoExpiry(p.expires_at),type:p.discount_type,value:Number(p.discount_value),minOrderCents:Math.round(Number(p.min_order_value??0)*100),includeSale:p.applies_to_sale_items,usageLimit:p.usage_limit,usageCount:p.usage_count}}:{})})
  let orderWidePromo=!!p
  if(p&&!p.applies_to_sale_items){
   const products=await db.from('products').select('id,base_price,sale_price,is_gift_card',{count:'exact'}).eq('is_active',true)
