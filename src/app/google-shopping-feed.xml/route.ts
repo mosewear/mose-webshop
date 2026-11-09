@@ -56,8 +56,10 @@ function formatPrice(amount: number) {
 
 function googleShippingXml(madeToOrder: boolean, price: number): string {
   // MOSE Shopify profiles: both NL profiles are €6.95 below €55, free from
-  // €55. Belgian supplier shipping is gated pending duty verification.
-  if (!madeToOrder) return '<g:shipping><g:country>BE</g:country><g:price>0.00 EUR</g:price></g:shipping>'
+  // €55. Both Belgian profiles are free, and the checkout flag controls
+  // whether supplier items are actually offered in Belgium.
+  const belgium = '<g:shipping><g:country>BE</g:country><g:price>0.00 EUR</g:price></g:shipping>'
+  if (!madeToOrder) return belgium
   const cost = formatPrice(price >= 55 ? 0 : 6.95)
   // Tapstitch small-order production window plus NL Special Line transit.
   // The documented shipping estimate excludes production.
@@ -65,7 +67,7 @@ function googleShippingXml(madeToOrder: boolean, price: number): string {
       <g:country>NL</g:country><g:price>${cost}</g:price>
       <g:min_handling_time>3</g:min_handling_time><g:max_handling_time>8</g:max_handling_time>
       <g:min_transit_time>9</g:min_transit_time><g:max_transit_time>14</g:max_transit_time>
-    </g:shipping>`
+    </g:shipping>${process.env.MOSE_BE_TAPSTITCH_DDP_VERIFIED === 'true' ? belgium : ''}`
 }
 
 function googleProductCategory(slug: string | null | undefined): string {

@@ -35,7 +35,14 @@ it('lists supplier sizes as in stock only while the supplier confirms they can b
   expect(xml).not.toContain('XL')
   expect(xml).toContain('<g:country>NL</g:country><g:price>0.00 EUR</g:price>')
   expect(xml).toContain('<g:max_transit_time>14</g:max_transit_time>')
-  expect(xml).not.toContain('<g:country>BE</g:country>')
+  vi.stubEnv('MOSE_BE_TAPSTITCH_DDP_VERIFIED', 'false')
+  try {
+    expect(await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text()).not.toContain('<g:country>BE</g:country>')
+    vi.stubEnv('MOSE_BE_TAPSTITCH_DDP_VERIFIED', 'true')
+    expect(await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text()).toContain('<g:country>BE</g:country><g:price>0.00 EUR</g:price>')
+  } finally {
+    vi.unstubAllEnvs()
+  }
 })
 
 it('fits long colors into the Google ID limit without changing Meta pixel IDs', async () => {
