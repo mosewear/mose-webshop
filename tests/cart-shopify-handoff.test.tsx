@@ -5,6 +5,11 @@ import { SHOPIFY_ATTEMPT_STORAGE_KEY, createShopifyCartSnapshot } from '@/lib/sh
 import { ShopifyCheckoutHandoff } from '@/components/shopify/ShopifyCheckoutHandoff'
 
 const { state, clearCart } = vi.hoisted(() => ({ state: { items: [] as CartItem[] }, clearCart: vi.fn() }))
+const { trackCheckoutStarted, trackPixelEvent } = vi.hoisted(() => ({
+  trackCheckoutStarted: vi.fn(), trackPixelEvent: vi.fn(),
+}))
+vi.mock('@/lib/analytics', () => ({ trackCheckoutStarted }))
+vi.mock('@/lib/facebook-pixel', () => ({ trackPixelEvent }))
 vi.mock('@/store/cart', () => ({
   useCart: Object.assign((selector: (value: typeof state) => unknown) => selector(state), { getState: () => ({ ...state, clearCart }) }),
   useCartGehydrateerd: () => true,
@@ -22,6 +27,8 @@ describe('Shopify handoff', () => {
   beforeEach(() => {
     state.items = [item('mose-stock'), item('tapstitch')]
     clearCart.mockClear()
+    trackCheckoutStarted.mockClear()
+    trackPixelEvent.mockClear()
     const storage = new Map<string, string>()
     vi.stubGlobal('sessionStorage', { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value) })
     const local = new Map<string,string>()
@@ -55,9 +62,30 @@ describe('Shopify handoff', () => {
     ] })
     expect(state.items).toHaveLength(2)
     expect(clearCart).not.toHaveBeenCalled()
+    expect(trackCheckoutStarted).not.toHaveBeenCalled()
+    expect(trackPixelEvent).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Veilig verder naar betalen' }))
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))
     expect(JSON.parse(fetch.mock.calls[3][1].body).attemptId).toBe(attemptId)
+  })
+
+  it('tracks each successful Shopify handoff once, including a retry of the same attempt', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST', 'checkout.mosewear.com')
+    const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/session')
+      ? { ok: true, json: async () => ({ ready: true }) }
+      : { ok: true, json: async () => ({ checkoutUrl: 'https://checkout.mosewear.com/checkouts/cn/test', attemptId }) }))
+    vi.stubGlobal('fetch', fetch)
+    render(<ShopifyCheckoutHandoff />)
+    const button = screen.getByRole('button', { name: 'Veilig verder naar betalen' })
+    fireEvent.click(button)
+    await waitFor(() => expect(trackCheckoutStarted).toHaveBeenCalledWith({ items_count: 2, total_value: 150 }))
+    expect(trackPixelEvent).toHaveBeenCalledWith(
+      'InitiateCheckout', { currency: 'EUR', value: 150, num_items: 2 }, undefined, { eventId: attemptId },
+    )
+    fireEvent.click(button)
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))
+    expect(trackCheckoutStarted).toHaveBeenCalledOnce()
+    expect(trackPixelEvent).toHaveBeenCalledOnce()
   })
 
   it('always sends EUR-country checkout for Dutch pages even after a US visit', async () => {

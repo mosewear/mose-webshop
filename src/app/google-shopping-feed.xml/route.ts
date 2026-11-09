@@ -7,6 +7,7 @@ import {
   type ProductDisplayImage,
   type ProductDisplayVariant,
 } from '@/lib/product-display'
+import { availableVariant } from '@/lib/variant-availability'
 
 type FeedVariant = ProductDisplayVariant & { size?: string | null }
 import { createServiceRoleClient } from '@/lib/supabase/server'
@@ -81,6 +82,9 @@ type FeedProduct = {
         presale_stock_quantity: number | null
         presale_enabled: boolean | null
         is_available: boolean | null
+        fulfillment_mode: 'local_stock' | 'made_to_order' | null
+        supplier_orderable: boolean | null
+        supplier_checked_at: string | null
         color: string | null
         color_hex: string | null
         size: string | null
@@ -170,7 +174,7 @@ export async function GET() {
       sale_price,
       is_gift_card,
       product_images(url, is_primary, color, position, media_type),
-      product_variants(stock_quantity, presale_stock_quantity, presale_enabled, is_available, color, color_hex, size)
+      product_variants(stock_quantity, presale_stock_quantity, presale_enabled, is_available, fulfillment_mode, supplier_orderable, supplier_checked_at, color, color_hex, size)
     `)
     .eq('is_active', true)
     .eq('status', 'active')
@@ -210,7 +214,7 @@ export async function GET() {
         const stock = getColorStock(variants, color)
         const availableVariants = variants.filter((v) => {
           if (color && (v.color ?? '') !== color) return false
-          return v.is_available !== false
+          return availableVariant(v)
         })
         const sizes = Array.from(
           new Set(
@@ -271,7 +275,7 @@ export async function GET() {
   return new NextResponse(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=1800',
+      'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=60',
       // Hint for edge bot-management: this path is a public merchant feed.
       'X-Robots-Tag': 'all',
     },
