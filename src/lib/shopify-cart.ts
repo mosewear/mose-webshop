@@ -86,8 +86,7 @@ export function getCartRevisionAttempt(snapshot: ShopifyCartSnapshot, previous: 
       typeof candidate.snapshot !== 'string' || candidate.snapshot === JSON.stringify(snapshot)) return null
   try {
     const old = JSON.parse(candidate.snapshot) as ShopifyCartSnapshot
-    if (old.country !== snapshot.country || old.promoCode || old.loyaltyPoints || old.giftCards?.length ||
-        snapshot.promoCode || snapshot.loyaltyPoints || snapshot.giftCards?.length) return null
+    if (old.country !== snapshot.country || old.promoCode !== snapshot.promoCode || old.loyaltyPoints !== snapshot.loyaltyPoints) return null
     return candidate
   } catch { return null }
 }

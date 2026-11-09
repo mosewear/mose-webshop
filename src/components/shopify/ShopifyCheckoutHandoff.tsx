@@ -158,8 +158,8 @@ export function ShopifyCheckoutHandoff() {
       const snapshot = createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)
       let prior: unknown = attempt.current
       if (!prior) { try { prior = JSON.parse(sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) || 'null') } catch { /* Optional browser storage. */ } }
-      const retained = prior && typeof prior === 'object' && (prior as CheckoutAttempt).locked === true && (prior as CheckoutAttempt).snapshot === JSON.stringify(snapshot)
-      // A matching retained attempt may already have reserved these points. Its
+      const retained = getCartRevisionAttempt(snapshot, prior) || (prior && typeof prior === 'object' && (prior as CheckoutAttempt).locked === true && (prior as CheckoutAttempt).snapshot === JSON.stringify(snapshot))
+      // The server verifies the existing point hold for a resumed cart. Its
       // now-lower account balance must not prevent the server from recovering it.
       if (loyaltyPoints > 0 && (loyaltyStatus !== 'ready' || !loyalty || (!retained && loyaltyPoints > loyalty.points))) throw new Error(loyaltyStatus === 'guest' ? 'ACCOUNT_SESSION_INVALID' : 'INVALID_LOYALTY')
       // Acknowledge the HttpOnly ownership cookie before any cart mutation.
@@ -202,7 +202,7 @@ export function ShopifyCheckoutHandoff() {
         } else if (['ATTEMPT_EXPIRED', 'ATTEMPT_FAILED', 'INPUT_CHANGED', 'ATTEMPT_CONFLICT'].includes(String(code))) {
           throw new Error('ATTEMPT_REVIEW_REQUIRED')
         }
-        throw new Error(code === 'BE_SUPPLIER_DUTIES_NOT_READY' ? 'BE_SUPPLIER_DUTIES_NOT_READY' : code === 'BENEFIT_UNAVAILABLE' ? 'BENEFIT_UNAVAILABLE' : code === 'ACCOUNT_SESSION_INVALID' ? 'ACCOUNT_SESSION_INVALID' : code === 'CART_CHANGED' || code === 'VARIANT_NOT_RELEASED' ? 'CART_CHANGED' : 'CHECKOUT_UNAVAILABLE')
+        throw new Error(code === 'NATIVE_GIFT_NOT_READY' ? 'UNSUPPORTED_CART' : code === 'BE_SUPPLIER_DUTIES_NOT_READY' ? 'BE_SUPPLIER_DUTIES_NOT_READY' : code === 'BENEFIT_UNAVAILABLE' ? 'BENEFIT_UNAVAILABLE' : code === 'ACCOUNT_SESSION_INVALID' ? 'ACCOUNT_SESSION_INVALID' : code === 'CART_CHANGED' || code === 'VARIANT_NOT_RELEASED' ? 'CART_CHANGED' : 'CHECKOUT_UNAVAILABLE')
       }
       const result: unknown = await response.json()
       if (!result || typeof result !== 'object') throw new Error('INVALID_RESPONSE')

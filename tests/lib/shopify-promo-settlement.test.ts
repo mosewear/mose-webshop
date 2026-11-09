@@ -38,3 +38,9 @@ it('worker acknowledges only fenced verified settlement and refreshes health aft
  expect(rpc.mock.calls.some(c=>c[0]==='complete_shopify_benefits')).toBe(true)
  expect(rpc.mock.calls.at(-1)?.[0]).toBe('heartbeat_shopify_benefits')
 })
+
+it('accepts a verified revised amount under the original bound promo code',async()=>{
+ vi.mocked(admin).mockResolvedValue({order:order()})
+ await expect(fetchPromoSettlement({...input,discountCents:295})).rejects.toThrow('PROMO_DISCOUNT_AMOUNT_MISMATCH')
+ await expect(fetchPromoSettlement({...input,discountCents:295,revisedAmounts:[590]})).resolves.toMatchObject({discountCents:590})
+})
