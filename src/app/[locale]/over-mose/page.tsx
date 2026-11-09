@@ -20,7 +20,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'metadata.pages.about' })
-  return { title: t('title'), description: t('description') }
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: {
+      canonical: `/${locale}/over-mose`,
+      languages: { nl: '/nl/over-mose', en: '/en/over-mose', 'x-default': '/nl/over-mose' },
+    },
+  }
 }
 
 async function getReturnsAndShipping(): Promise<{

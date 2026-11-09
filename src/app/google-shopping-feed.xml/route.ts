@@ -54,6 +54,22 @@ function formatPrice(amount: number) {
   return `${Number(amount).toFixed(2)} EUR`
 }
 
+function googleShippingXml(madeToOrder: boolean, price: number): string {
+  // MOSE Shopify profiles: both NL profiles are €6.95 below €55, free from
+  // €55. Both Belgian profiles are free, and the checkout flag controls
+  // whether supplier items are actually offered in Belgium.
+  const belgium = '<g:shipping><g:country>BE</g:country><g:price>0.00 EUR</g:price></g:shipping>'
+  if (!madeToOrder) return belgium
+  const cost = formatPrice(price >= 55 ? 0 : 6.95)
+  // Tapstitch small-order production window plus NL Special Line transit.
+  // The documented shipping estimate excludes production.
+  return `<g:shipping>
+      <g:country>NL</g:country><g:price>${cost}</g:price>
+      <g:min_handling_time>3</g:min_handling_time><g:max_handling_time>8</g:max_handling_time>
+      <g:min_transit_time>9</g:min_transit_time><g:max_transit_time>14</g:max_transit_time>
+    </g:shipping>${process.env.MOSE_BE_TAPSTITCH_DDP_VERIFIED === 'true' ? belgium : ''}`
+}
+
 function googleProductCategory(slug: string | null | undefined): string {
   if (slug?.includes('horloge') || slug?.includes('watch')) {
     return 'Apparel & Accessories > Jewelry > Watches'
@@ -110,6 +126,7 @@ function buildItemXml(args: {
   additionalImages: string[]
   inStock: boolean
   metaOrderableQuantity: number | null
+  googleShippingXml: string
   basePrice: number
   salePrice: number | null
   color: string | null
@@ -126,6 +143,7 @@ function buildItemXml(args: {
     additionalImages,
     inStock,
     metaOrderableQuantity,
+    googleShippingXml,
     basePrice,
     salePrice,
     color,
@@ -168,6 +186,7 @@ function buildItemXml(args: {
       <g:google_product_category>${escapeXml(googleProductCategory(productSlug))}</g:google_product_category>
       ${colorXml}
       ${sizeXml}
+      ${googleShippingXml}
     </item>`.trim()
 }
 
@@ -224,6 +243,8 @@ export async function GET(request: Request) {
       return colorRows.map((color) => {
         const contentId = catalogContentId(product.id, color)
         const stock = getColorStock(variants, color)
+        const madeToOrder = variants.some(v => v.fulfillment_mode === 'made_to_order' && (!color || v.color === color))
+        const effectivePrice = salePrice && salePrice > 0 && salePrice < basePrice ? salePrice : basePrice
         const availableVariants = variants.filter((v) => {
           if (color && (v.color ?? '') !== color) return false
           return availableVariant(v)
@@ -268,6 +289,7 @@ export async function GET(request: Request) {
           // Supplier sizes use our online order cap, never an inventory sentinel.
           metaOrderableQuantity: forMeta ? Math.min(MAX_ORDER_QUANTITY,
             availableVariants.reduce((sum, variant) => sum + variantQuantityLimit(variant), 0)) : null,
+          googleShippingXml: forMeta ? '' : googleShippingXml(madeToOrder, effectivePrice),
           basePrice: Number.isFinite(basePrice) ? basePrice : 0,
           salePrice,
           color,

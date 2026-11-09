@@ -615,9 +615,6 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
       data.product_variants.sort((a: ProductVariant, b: ProductVariant) => a.display_order - b.display_order)
       setProduct(data)
 
-      // Set page title
-      document.title = `${data.name} - MOSE`
-
       // Track Facebook Pixel ViewContent. content_ids must match the
       // shopping feed / Meta catalogue (UUID, or UUID:colorSlug when
       // the URL already selects a color on a multi-color product).
