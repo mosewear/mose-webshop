@@ -52,14 +52,8 @@ export async function reviseShopifyCart(input: {
   const added = desired.filter(line => !current.has(line.merchandiseId))
   const updates = desired.flatMap(line => {
     const existing = current.get(line.merchandiseId)
-    return existing && existing.quantity !== line.quantity ? [{ id: existing.id, ...line }] : []
+    return existing && existing.quantity !== line.quantity ? [{ id: existing.id, quantity: line.quantity }] : []
   })
-  // Swap obsolete lines first. A full replacement can then finish in a single
-  // Shopify mutation, and the cart never passes through an empty state.
-  while (removed.length && added.length) {
-    updates.push({ id: removed.shift()!.id, ...added.shift()! })
-  }
-
   async function mutate(operation: keyof typeof mutations, lines: unknown[]) {
     if (!lines.length) return
     const [type, argument] = mutations[operation]
@@ -69,13 +63,16 @@ export async function reviseShopifyCart(input: {
         ${operation}(cartId: $id, ${argument}: $lines) { cart { ${fields} } userErrors { code } warnings { code } }
       }`, { ...variables, lines }, buyerIp)
     const response = result[operation]
-    if (response.userErrors.length || response.warnings.length) throw new Error('CART_REVISION_REJECTED')
+    if (response.userErrors.length || response.warnings.length) throw new Error(`CART_REVISION_REJECTED_${operation.toUpperCase()}`)
     assertPlainCart(response.cart, id)
     cart = response.cart
   }
 
-  await mutate('cartLinesUpdate', updates)
+  // Keep the original lines intact if Shopify rejects a new variant.
   await mutate('cartLinesAdd', added)
+  assertPlainCart(cart, id)
+  if (added.length) assertCreatedCartLines(cart.lines.nodes, [...previous, ...added])
+  await mutate('cartLinesUpdate', updates)
   await mutate('cartLinesRemove', removed.map(line => line.id))
   assertPlainCart(cart, id)
   assertCreatedCartLines(cart.lines.nodes, desired)

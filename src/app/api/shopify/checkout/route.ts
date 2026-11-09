@@ -271,7 +271,9 @@ export async function POST(request: NextRequest) {
         const saved = await saveEdit({ status: 'ready', request_fingerprint: fingerprint, cart_snapshot: cartSnapshot, checkout_url: checkoutUrl, last_error: null })
         if (saved.error || !saved.data) throw new Error('CART_EDIT_SAVE_FAILED')
         return respond({ checkoutUrl, attemptId: input.attemptId })
-      } catch {
+      } catch (error) {
+        const code = error instanceof Error && /^[A-Z_]{1,90}$/.test(error.message) ? error.message : 'CART_EDIT_UNEXPECTED'
+        console.error('Shopify cart revision stopped', { code, mutationStarted })
         // A failed read leaves the original cart reusable. A mutation with an
         // uncertain result must never expose a stale cart or create another one.
         const saved = await saveEdit(mutationStarted ? { status: 'unknown', last_error: 'CART_EDIT_OUTCOME_UNKNOWN' } : { status: 'ready' })
