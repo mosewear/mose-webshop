@@ -155,20 +155,15 @@ function formatTemplateText(text: string): ReactElement[] {
 
 // XSS-safe: eerst alle HTML escapen, dan alleen onze eigen <strong> en <br> injecteren.
 // Zo is DOMPurify niet nodig (SSR-veilig, geen jsdom-bundle issues).
-function escapeHtml(input: string): string {
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function renderHTMLContent(html: string): ReactElement {
-  const processedHTML = escapeHtml(html)
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>')
-  return <div dangerouslySetInnerHTML={{ __html: processedHTML }} />
+function renderProductText(text: string): ReactElement {
+  return (
+    <div className="space-y-2.5 leading-relaxed">
+      {text.split(/\r?\n/).map((line, index) => {
+        const value = line.trim().replace(/^(?:[-•]\s+|\*\s+)/, '')
+        return value ? <p key={index}>{formatBoldText(value)}</p> : null
+      })}
+    </div>
+  )
 }
 
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)
@@ -1755,7 +1750,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Truck className="w-3.5 h-3.5" />
-                        {(supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                        {showDutchShipping ? nlShipping : (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
@@ -2235,7 +2230,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">
-                            {(supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                            {showDutchShipping ? nlShipping : (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                               ? tShipping('alwaysFreeShipping')
                               : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                             }
@@ -2272,8 +2267,17 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     </button>
                     {activeTab === 'details' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {editorial ? <ul className="list-disc space-y-1.5 pl-5">{editorial.details.map(detail => <li key={detail}>{detail}</li>)}</ul> : supplierFulfilled ? <p>{formatBoldText(getLocalizedDescription(product))}</p> : product.categories?.default_product_details || product.categories?.default_product_details_en ? (
-                          renderHTMLContent(
+                        {editorial ? (
+                          <dl className="divide-y divide-gray-200">
+                            {editorial.details.map(([label, detail]) => (
+                              <div key={label} className="grid grid-cols-[6.25rem_minmax(0,1fr)] gap-2 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[7rem_minmax(0,1fr)]">
+                                <dt className="font-semibold text-black">{label}</dt>
+                                <dd className="leading-relaxed text-gray-700">{detail}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ) : supplierFulfilled ? renderProductText(getLocalizedDescription(product)) : product.categories?.default_product_details || product.categories?.default_product_details_en ? (
+                          renderProductText(
                             locale === 'en' && product.categories?.default_product_details_en
                               ? product.categories?.default_product_details_en
                               : product.categories?.default_product_details || ''
@@ -2319,12 +2323,18 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     {activeTab === 'materials' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         {editorial ? (
-                          <>
-                            <p><span className="font-semibold">Materiaal</span><br />{editorial.material}</p>
-                            <p><span className="font-semibold">Zo verzorg je dit kledingstuk</span><br />{careInstructionsNl[editorial.care]}</p>
-                          </>
+                          <dl className="space-y-4 leading-relaxed">
+                            <div>
+                              <dt className="font-semibold text-black">Materiaal</dt>
+                              <dd className="mt-1 text-gray-700">{editorial.material}</dd>
+                            </div>
+                            <div>
+                              <dt className="font-semibold text-black">Wasadvies</dt>
+                              <dd className="mt-1 text-gray-700">{careInstructionsNl[editorial.care]}</dd>
+                            </div>
+                          </dl>
                         ) : supplierFulfilled ? <p>{locale === 'en' ? 'Refer to the product description for the fabric composition. Follow the care label inside your garment.' : careInstructionsNl.label}</p> : product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
-                          renderHTMLContent(
+                          renderProductText(
                             locale === 'en' && product.categories?.default_materials_care_en
                               ? product.categories.default_materials_care_en
                               : product.categories.default_materials_care || ''
@@ -2354,11 +2364,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     {activeTab === 'shipping' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {
-                          (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          showDutchShipping ? nlShipping : (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                             ? tShipping('alwaysFreeShipping')
                             : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }</p>
-                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {supplierFulfilled ? supplierDelivery : t('shipping.deliveryTimeValue')}</p>
+                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {showDutchShipping && madeToOrder ? deliveryEstimate : supplierFulfilled ? supplierDelivery : t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
                         <p><span className="font-semibold">{t('returns.cost')}:</span> {supplierFulfilled ? (locale === 'en' ? 'See our returns policy for instructions and costs.' : 'Bekijk ons retourbeleid voor de werkwijze en kosten.') : t('returns.costValue', { cost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') })}</p>
                       </div>
