@@ -78,6 +78,20 @@ export function getCheckoutAttempt(snapshot: ShopifyCartSnapshot, previous: unkn
   return { snapshot: serialized, attemptId }
 }
 
+/** Keep the existing attempt ID when asking the server to edit its cart. */
+export function getCartRevisionAttempt(snapshot: ShopifyCartSnapshot, previous: unknown): CheckoutAttempt | null {
+  if (!previous || typeof previous !== 'object') return null
+  const candidate = previous as CheckoutAttempt
+  if (candidate.locked !== true || typeof candidate.attemptId !== 'string' || !UUID.test(candidate.attemptId) ||
+      typeof candidate.snapshot !== 'string' || candidate.snapshot === JSON.stringify(snapshot)) return null
+  try {
+    const old = JSON.parse(candidate.snapshot) as ShopifyCartSnapshot
+    if (old.country !== snapshot.country || old.promoCode || old.loyaltyPoints || old.giftCards?.length ||
+        snapshot.promoCode || snapshot.loyaltyPoints || snapshot.giftCards?.length) return null
+    return candidate
+  } catch { return null }
+}
+
 export function checkoutRedirectUrl(value: unknown, verifiedHost?: string): string {
   if (typeof value !== 'string') throw new Error('INVALID_REDIRECT')
   const url = new URL(value)

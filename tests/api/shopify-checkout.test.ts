@@ -51,6 +51,56 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('unified checkout boundary', () => {
+  it('updates the owned open cart after a quantity change and never creates a second cart', async () => {
+    const cartId = 'gid://shopify/Cart/private?key=test'
+    const makeCart = (quantity: number) => ({ id: cartId, checkoutUrl: url, discountCodes: [], appliedGiftCards: [],
+      cost: { subtotalAmount: { amount: quantity === 1 ? '69.95' : '139.90', currencyCode: 'EUR' } },
+      lines: { pageInfo: { hasNextPage: false }, nodes: [{ id: 'gid://shopify/CartLine/1', quantity, attributes: [], merchandise: { id: gid } }] } })
+    const old = { status: 'ready', request_fingerprint: 'old', lease_token: 'old-lease',
+      expires_at: new Date(Date.now() + 60000).toISOString(), cart_id: cartId, checkout_url: url,
+      cart_snapshot: { country: 'NL', benefits: { discountCents: 0 }, lines: [{ merchandiseId: gid, quantity: 1 }] } }
+    const updates = vi.fn()
+    const from = mock.from.getMockImplementation()!
+    mock.from.mockImplementation(table => {
+      if (!['shopify_checkout_attempts', 'shopify_checkout_owners'].includes(table)) return from(table)
+      let reading = true
+      const query = {
+        select: () => query, eq: () => query, gt: () => query,
+        update: (value: unknown) => { updates(value); reading = false; return query },
+        maybeSingle: async () => ({ data: table === 'shopify_checkout_owners' ? null : reading ? old : { id: attemptId } }),
+      }
+      return query
+    })
+    const benefit = emptyBenefitCart()
+    benefit.cart.lines.nodes[0].quantity = 2
+    benefit.cart.lines.nodes[0].cost.subtotalAmount.amount = '139.90'
+    mock.storefront.mockReset()
+      .mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5, price: { amount: '69.95', currencyCode: 'EUR' } }] })
+      .mockResolvedValueOnce({ cart: makeCart(1) })
+      .mockResolvedValueOnce({ cartLinesUpdate: { cart: makeCart(2), userErrors: [], warnings: [] } })
+      .mockResolvedValueOnce(benefit)
+
+    const response = await POST(request({ ...body, editExisting: true, lines: [{ variantId: 'local-123', quantity: 2 }] }))
+    expect(await response.json()).toEqual({ checkoutUrl: url, attemptId })
+    expect(mock.storefront.mock.calls[2][1]).toMatchObject({ id: cartId, lines: [{ id: 'gid://shopify/CartLine/1', quantity: 2 }] })
+    expect(updates.mock.calls.map(([value]) => value.status)).toEqual(['creating', 'ready'])
+    expect(mock.rpc.mock.calls.some(call => call[0] === 'reserve_shopify_checkout')).toBe(false)
+    expect(mock.issueBenefits).not.toHaveBeenCalled()
+  })
+
+  it('does not create a Shopify cart if a revision refers to an unowned attempt', async () => {
+    const from = mock.from.getMockImplementation()!
+    mock.from.mockImplementation(table => {
+      if (table !== 'shopify_checkout_attempts') return from(table)
+      const query = { select: () => query, eq: () => query, maybeSingle: async () => ({ data: null }) }
+      return query
+    })
+    const response = await POST(request({ ...body, editExisting: true }))
+    expect(response.status).toBe(409)
+    expect(mock.storefront).toHaveBeenCalledTimes(1)
+    expect(mock.rpc.mock.calls.some(call => call[0] === 'reserve_shopify_checkout')).toBe(false)
+  })
+
   it('does not allow a Belgian Tapstitch parcel before prepaid import charges are verified', async () => {
     mock.mappings = [{ ...mock.mappings[0] as Record<string, unknown>, fulfillment_owner: 'tapstitch' }]
     const response = await POST(request({ ...body, country: 'BE' }))

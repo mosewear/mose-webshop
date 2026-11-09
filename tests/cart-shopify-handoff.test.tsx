@@ -239,6 +239,23 @@ describe('Shopify handoff', () => {
     expect(state.items).toHaveLength(2); expect(clearCart).not.toHaveBeenCalled()
   })
 
+  it('sends a changed regular basket to the existing checkout after returning', async () => {
+    sessionStorage.setItem(SHOPIFY_ATTEMPT_STORAGE_KEY, JSON.stringify({
+      snapshot: JSON.stringify(createShopifyCartSnapshot([item('mose-stock')], 'nl')), attemptId, locked: true,
+    }))
+    const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/session')
+      ? { ok: true, json: async () => ({ ready: true }) }
+      : { ok: false, status: 409, json: async () => ({ code: 'ATTEMPT_PENDING' }) }))
+    vi.stubGlobal('fetch', fetch)
+    render(<ShopifyCheckoutHandoff />)
+    fireEvent.click(screen.getByRole('button', { name: 'Veilig verder naar betalen' }))
+    await screen.findByRole('alert')
+    const post = fetch.mock.calls.find(call => call[0] === '/api/shopify/checkout')!
+    expect(JSON.parse(post[1].body)).toMatchObject({
+      attemptId, editExisting: true, lines: [{ variantId: 'mose-stock', quantity: 1 }, { variantId: 'tapstitch', quantity: 1 }],
+    })
+  })
+
   it('recovers the same reserved-points attempt after reload even when available balance is now debited', async () => {
     const snapshot = { locale: 'nl', country: 'NL', loyaltyPoints: 100, lines: [{ variantId: 'mose-stock', quantity: 1 }, { variantId: 'tapstitch', quantity: 1 }] }
     sessionStorage.setItem('mose-shopify-checkout-attempt-v1', JSON.stringify({ snapshot: JSON.stringify(snapshot), attemptId, locked: true }))
