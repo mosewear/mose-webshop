@@ -103,7 +103,6 @@ export default function PdpInstagramFeed({
               post.media_type === 'VIDEO' && post.thumbnail_url
                 ? post.thumbnail_url
                 : post.media_url
-            const isPriority = idx < 4
 
             return (
               <a
@@ -119,10 +118,10 @@ export default function PdpInstagramFeed({
                   alt=""
                   fill
                   sizes="(min-width: 768px) 16vw, (min-width: 640px) 33vw, 50vw"
-                  quality={90}
+                  quality={75}
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  priority={isPriority}
-                  loading={isPriority ? undefined : 'lazy'}
+                  loading="lazy"
+                  fetchPriority="low"
                   onError={() => markFailed(post.id)}
                 />
 
