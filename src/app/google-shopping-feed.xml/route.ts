@@ -1,4 +1,4 @@
-import { SHOPIFY_NL_SHIPPING } from '@/lib/shopify/shipping-policy'
+import { SHOPIFY_NL_SHIPPING, TAPSTITCH_NL_DELIVERY } from '@/lib/shopify/shipping-policy'
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { catalogContentId } from '@/lib/catalog-ids'
@@ -66,8 +66,8 @@ function googleShippingXml(madeToOrder: boolean, price: number): string {
   // The documented shipping estimate excludes production.
   return `<g:shipping>
       <g:country>NL</g:country><g:price>${cost}</g:price>
-      <g:min_handling_time>3</g:min_handling_time><g:max_handling_time>8</g:max_handling_time>
-      <g:min_transit_time>9</g:min_transit_time><g:max_transit_time>14</g:max_transit_time>
+      <g:min_handling_time>${TAPSTITCH_NL_DELIVERY.handlingMin}</g:min_handling_time><g:max_handling_time>${TAPSTITCH_NL_DELIVERY.handlingMax}</g:max_handling_time>
+      <g:min_transit_time>${TAPSTITCH_NL_DELIVERY.transitMin}</g:min_transit_time><g:max_transit_time>${TAPSTITCH_NL_DELIVERY.transitMax}</g:max_transit_time>
     </g:shipping>${process.env.MOSE_BE_TAPSTITCH_DDP_VERIFIED === 'true' ? belgium : ''}`
 }
 

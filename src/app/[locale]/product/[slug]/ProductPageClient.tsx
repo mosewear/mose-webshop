@@ -35,7 +35,7 @@ import { trackProductView, trackAddToCart } from '@/lib/analytics'
 import { addToRecentlyViewed } from '@/lib/recentlyViewed'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
-import { formatPrice } from '@/lib/format-price'
+import { formatBedrag, formatPrice } from '@/lib/format-price'
 import MarketProductPrice from '@/components/MarketProductPrice'
 import { useMoseUsPrices } from '@/hooks/useMoseUsPrices'
 import { isTapstitchProduct, matchingSetProductIds } from '@/lib/tapstitch-products'
@@ -44,6 +44,8 @@ import { PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import GiftCardProductView from '@/components/product/GiftCardProductView'
 import { vertaalKleur } from '@/lib/kleurnaam'
+import { productEditorialNl, careInstructionsNl } from '@/lib/product-editorial-nl'
+import { SHOPIFY_NL_SHIPPING, TAPSTITCH_NL_DELIVERY } from '@/lib/shopify/shipping-policy'
 import { isPantsProductForSizeAdvice } from '@/lib/pants-size-advice'
 
 const supabase = createClient()
@@ -153,20 +155,15 @@ function formatTemplateText(text: string): ReactElement[] {
 
 // XSS-safe: eerst alle HTML escapen, dan alleen onze eigen <strong> en <br> injecteren.
 // Zo is DOMPurify niet nodig (SSR-veilig, geen jsdom-bundle issues).
-function escapeHtml(input: string): string {
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function renderHTMLContent(html: string): ReactElement {
-  const processedHTML = escapeHtml(html)
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>')
-  return <div dangerouslySetInnerHTML={{ __html: processedHTML }} />
+function renderProductText(text: string): ReactElement {
+  return (
+    <div className="space-y-2.5 leading-relaxed">
+      {text.split(/\r?\n/).map((line, index) => {
+        const value = line.trim().replace(/^(?:[-•]\s+|\*\s+)/, '')
+        return value ? <p key={index}>{formatBoldText(value)}</p> : null
+      })}
+    </div>
+  )
 }
 
 // Helper functie om ** te vervangen door <strong> tags (inline, voor description)
@@ -1164,6 +1161,10 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   }
 
   const supplierFulfilled = isTapstitchProduct(product)
+  const editorial = locale === 'nl' ? productEditorialNl[product.slug] : undefined
+  const showDutchShipping = Boolean(editorial && process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' && !usMarketPrice.isUs)
+  const nlShipping = `Nederland: ${formatBedrag(SHOPIFY_NL_SHIPPING.standard, 'nl')} verzending, gratis vanaf ${formatBedrag(SHOPIFY_NL_SHIPPING.freeFrom, 'nl')}.`
+  const deliveryEstimate = `Op bestelling gemaakt. Verwachte bezorging in Nederland: ${TAPSTITCH_NL_DELIVERY.handlingMin + TAPSTITCH_NL_DELIVERY.transitMin}–${TAPSTITCH_NL_DELIVERY.handlingMax + TAPSTITCH_NL_DELIVERY.transitMax} werkdagen.`
   const supplierDelivery = locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.'
   const supplierOrigin = locale === 'en' ? 'Team MOSE can help with sizing or your order.' : 'Team MOSE helpt je met vragen over maat of bestelling.'
 
@@ -1687,11 +1688,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
 
               {/* Description - Desktop: Expandable with line-clamp */}
               <div className="hidden md:block border-t border-b border-gray-200 py-3">
-                <div className={`text-sm text-gray-700 leading-relaxed ${descriptionExpanded ? '' : 'line-clamp-3'}`}>
+                <div className={`text-sm text-gray-700 leading-relaxed ${editorial || descriptionExpanded ? '' : 'line-clamp-3'}`}>
                   {formatBoldText(getLocalizedDescription(product))}
                 </div>
                 {/* Only show button if text is actually clamped (more than 3 lines worth of text) */}
-                {getLocalizedDescription(product) && getLocalizedDescription(product).split('\n').length > 3 && (
+                {!editorial && getLocalizedDescription(product) && getLocalizedDescription(product).split('\n').length > 3 && (
                   <button 
                     onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                     className="text-xs text-brand-primary hover:underline font-semibold mt-2 inline-flex items-center gap-1"
@@ -1749,7 +1750,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Truck className="w-3.5 h-3.5" />
-                        {(supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                        {showDutchShipping ? nlShipping : (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                           ? tShipping('alwaysFreeShipping')
                           : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }
@@ -2023,7 +2024,13 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                       )
                     })}
                   </div>
-                  {isPantsProductForSizeAdvice({
+                  {editorial && (
+                    <div className="mt-3 space-y-1 text-sm leading-snug text-gray-700">
+                      <p className="font-semibold">{editorial.fit}</p>
+                      {product.categories?.size_guide_type !== 'none' && <p>{editorial.measure}</p>}
+                    </div>
+                  )}
+                  {!editorial && isPantsProductForSizeAdvice({
                     slug: product.slug,
                     categorySlug: product.categories?.slug,
                   }) && (
@@ -2053,6 +2060,15 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                   klant z'n maat kiest en meteen kan kopen zonder te scrollen.
                   PdpTrustStrip + ProductActivityStrip volgen ERONDER als
                   post-decision reassurance + sociale bewijsvoering. */}
+              {showDutchShipping && hasAnyStock && selectedVariant && !isPresale && (
+                <div className="space-y-1 text-xs leading-relaxed text-gray-700 md:text-sm">
+                  <p className="font-semibold">{nlShipping}</p>
+                  {madeToOrder && <p>{deliveryEstimate}</p>}
+                  {!settingsLoading && settings.return_days > 0 && (
+                    <p>{settings.return_days} dagen om een retour aan te melden. <LocaleLink href="/verzending" className="underline underline-offset-2">Verzending en retour</LocaleLink></p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 md:gap-3">
                 {/* De aantalkiezer stond hier, naast de koopknop, en is weg.
                     Geen van de zeven onderzochte concurrenten (Asket, Norse
@@ -2162,7 +2178,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                   klant kiest maat, koopt, en ziet dan direct waarom dat
                   een veilige beslissing is (verzending, retour, herkomst,
                   betaalopties). */}
-              {hasAnyStock && (
+              {hasAnyStock && (!showDutchShipping || !selectedVariant || isPresale) && (
                 <div className="border-2 border-black p-3 md:p-4">
                   <PdpTrustStrip
                     supplierFulfilled={supplierFulfilled}
@@ -2214,7 +2230,7 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                         <div className="flex items-center gap-3">
                           <Truck className="w-5 h-5 text-brand-primary flex-shrink-0" />
                           <span className="text-sm font-semibold text-gray-900">
-                            {(supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                            {showDutchShipping ? nlShipping : (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                               ? tShipping('alwaysFreeShipping')
                               : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                             }
@@ -2251,8 +2267,17 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     </button>
                     {activeTab === 'details' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {supplierFulfilled ? <p>{getLocalizedDescription(product)}</p> : product.categories?.default_product_details || product.categories?.default_product_details_en ? (
-                          renderHTMLContent(
+                        {editorial ? (
+                          <dl className="divide-y divide-gray-200">
+                            {editorial.details.map(([label, detail]) => (
+                              <div key={label} className="grid grid-cols-[6.25rem_minmax(0,1fr)] gap-2 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[7rem_minmax(0,1fr)]">
+                                <dt className="font-semibold text-black">{label}</dt>
+                                <dd className="leading-relaxed text-gray-700">{detail}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ) : supplierFulfilled ? renderProductText(getLocalizedDescription(product)) : product.categories?.default_product_details || product.categories?.default_product_details_en ? (
+                          renderProductText(
                             locale === 'en' && product.categories?.default_product_details_en
                               ? product.categories?.default_product_details_en
                               : product.categories?.default_product_details || ''
@@ -2297,20 +2322,24 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     </button>
                     {activeTab === 'materials' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
-                        {supplierFulfilled ? <p>{locale === 'en' ? 'Refer to the product description for the fabric composition. Follow the care label inside your garment.' : 'Bekijk de productbeschrijving voor de samenstelling. Volg het waslabel in je kledingstuk.'}</p> : product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
-                          renderHTMLContent(
+                        {editorial ? (
+                          <dl className="space-y-4 leading-relaxed">
+                            <div>
+                              <dt className="font-semibold text-black">Materiaal</dt>
+                              <dd className="mt-1 text-gray-700">{editorial.material}</dd>
+                            </div>
+                            <div>
+                              <dt className="font-semibold text-black">Wasadvies</dt>
+                              <dd className="mt-1 text-gray-700">{careInstructionsNl[editorial.care]}</dd>
+                            </div>
+                          </dl>
+                        ) : supplierFulfilled ? <p>{locale === 'en' ? 'Refer to the product description for the fabric composition. Follow the care label inside your garment.' : careInstructionsNl.label}</p> : product.categories?.default_materials_care || product.categories?.default_materials_care_en ? (
+                          renderProductText(
                             locale === 'en' && product.categories?.default_materials_care_en
-                              ? product.categories?.default_materials_care_en
-                              : product.categories?.default_materials_care || ''
+                              ? product.categories.default_materials_care_en
+                              : product.categories.default_materials_care || ''
                           )
-                        ) : (
-                          <>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Material:' : 'Materiaal:'}</span> {locale === 'en' ? 'OEKO-Tex certified cotton, regular fit' : 'OEKO-Tex gecertificeerd katoen, regular fit'}</p>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Washing instructions:' : 'Was instructies:'}</span> {locale === 'en' ? 'Machine washable at 30°C, inside out' : 'Machinewasbaar op 30°C, binnenstebuiten'}</p>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Ironing:' : 'Strijken:'}</span> {locale === 'en' ? 'Low temperature, inside out' : 'Op lage temperatuur, binnenstebuiten'}</p>
-                            <p><span className="font-semibold">{locale === 'en' ? 'Drying:' : 'Drogen:'}</span> {locale === 'en' ? 'Do not tumble dry, hang to dry' : 'Niet in de droger, ophangen'}</p>
-                          </>
-                        )}
+                        ) : <p>{locale === 'en' ? 'Follow the instructions on the care label.' : careInstructionsNl.label}</p>}
                       </div>
                     )}
                   </div>
@@ -2335,11 +2364,11 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                     {activeTab === 'shipping' && (
                       <div className="px-4 py-4 border-t-2 border-black bg-gray-50 space-y-2 text-sm">
                         <p><span className="font-semibold">{t('shipping.label')}:</span> {
-                          (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
+                          showDutchShipping ? nlShipping : (supplierFulfilled || process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true') ? supplierDelivery : settings.free_shipping_threshold === 0 && settings.shipping_cost === 0
                             ? tShipping('alwaysFreeShipping')
                             : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }</p>
-                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {supplierFulfilled ? supplierDelivery : t('shipping.deliveryTimeValue')}</p>
+                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {showDutchShipping && madeToOrder ? deliveryEstimate : supplierFulfilled ? supplierDelivery : t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
                         <p><span className="font-semibold">{t('returns.cost')}:</span> {supplierFulfilled ? (locale === 'en' ? 'See our returns policy for instructions and costs.' : 'Bekijk ons retourbeleid voor de werkwijze en kosten.') : t('returns.costValue', { cost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') })}</p>
                       </div>
