@@ -108,7 +108,7 @@ export function assertCartBenefits(raw: unknown, expected: { code: string; disco
   if (proof) {
     const source = z.array(z.object({ variantId: variant, quantity: z.number().int().positive(), unitCents: cents })).min(1).max(100).parse(proof.lines)
     const actual = cart.lines.nodes
-    if (new Set(source.map(l => l.variantId)).size !== source.length || new Set(actual.map(l => l.merchandise.id)).size !== source.length)
+    if (new Set(source.map(l => l.variantId)).size !== source.length)
       throw new Error('BENEFITS_LINE_PROOF_MISMATCH')
     let originalSubtotal = 0
     const actualQuantities = new Map<string, number>()

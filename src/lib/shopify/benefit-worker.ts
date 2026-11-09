@@ -26,8 +26,15 @@ export async function runBenefitWorker(db:ReturnType<typeof createServiceClient>
    const query=db.from('shopify_promo_reservations').select('status,code_hash,discount_cents').eq('attempt_id',job.attempt_id)
    const reservation=await(options.signal?query.abortSignal(options.signal):query).single()
    if(reservation.error||!reservation.data?.code_hash||!['reserved','consumed'].includes(reservation.data.status)) throw new Error('PROMO_BINDING_UNAVAILABLE')
+   const input={orderId:job.order_id,sourceUpdatedAt:job.source_updated_at,attemptId:job.attempt_id,codeHash:reservation.data.code_hash,discountCents:reservation.data.discount_cents}
    assertSyncBudget(options.signal,deadline-15_000)
-   const settlement=await fetchSettlement({orderId:job.order_id,sourceUpdatedAt:job.source_updated_at,attemptId:job.attempt_id,codeHash:reservation.data.code_hash,discountCents:reservation.data.discount_cents})
+   const settlement=await fetchSettlement(input).catch(async error=>{
+    if(!(error instanceof Error)||error.message!=='PROMO_DISCOUNT_AMOUNT_MISMATCH'||reservation.data.status!=='reserved') throw error
+    const history=await boundedSyncQuery(db.rpc('read_shopify_promo_revisions',{p_attempt:job.attempt_id}),options.signal)
+    if(history.error||!Array.isArray(history.data)||!history.data.length) throw error
+    assertSyncBudget(options.signal,deadline-15_000)
+    return fetchSettlement({...input,revisedAmounts:history.data})
+   })
    assertSyncBudget(options.signal,deadline)
    const saved=await boundedSyncQuery(db.rpc('complete_shopify_benefits',{p_order:job.order_id,p_lease:job.lease_token,p_version:settlement.sourceUpdatedAt,p_code_hash:settlement.codeHash,p_discount:settlement.discountCents}),options.signal)
    if(saved.error) throw new Error('BENEFIT_SETTLEMENT_WRITE_FAILED')

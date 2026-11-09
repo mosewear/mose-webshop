@@ -22,6 +22,7 @@ import { assertNativeGiftCutover, nativeGiftRuntimeReadiness } from '@/lib/shopi
 import { assertCreatedCartLines, aggregateBenefitLines } from '@/lib/shopify/cart-line-proof'
 import { verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
 import { reviseShopifyCart } from '@/lib/shopify/cart-revision'
+import { existingCartBenefits } from '@/lib/shopify/cart-revision-benefits'
 
 export const runtime = 'nodejs'
 type Variant = { id: string; availableForSale: boolean; quantityAvailable: number | null; price: { amount: string; currencyCode: string } }
@@ -221,11 +222,10 @@ export async function POST(request: NextRequest) {
     const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId,
       benefits: { quote: preparedBenefits.quote, points: input.loyaltyPoints ?? 0 } })).digest('hex')
     const sessionHash = createHmac('sha256', secret).update(sessionToken).digest('hex')
-    const cartSnapshot = { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote }
+    const cartSnapshot = { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote, orderWidePromo: preparedBenefits.orderWidePromo }
     if (input.editExisting) {
       const review = () => respond({ code: 'INPUT_CHANGED', retrySafe: false }, 409)
       const pendingEdit = () => respond({ code: 'ATTEMPT_PENDING' }, 409)
-      if (input.promoCode || input.loyaltyPoints || input.giftCards?.length || preparedBenefits.quote.discountCents !== 0) return review()
 
       const attemptRow = () => db!.from('shopify_checkout_attempts')
       const { data: old, error: readError } = await attemptRow()
@@ -242,10 +242,17 @@ export async function POST(request: NextRequest) {
       if (ownerError) throw ownerError
       if ((owner?.user_id ?? null) !== userId) return review()
       const prior = old.cart_snapshot
-      if (prior?.country !== input.country || prior?.benefits?.discountCents !== 0 ||
-          !Array.isArray(prior?.lines) || prior.lines.some((line: { gift?: unknown }) => !line || line.gift)) return review()
+      if (prior?.country !== input.country || !prior.benefits || !Array.isArray(prior.lines)) return review()
       if (old.request_fingerprint === fingerprint) {
         return respond({ checkoutUrl: assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
+      }
+
+      let expectedBenefits: Awaited<ReturnType<typeof existingCartBenefits>>
+      try {
+        expectedBenefits = await existingCartBenefits(db, { attemptId: input.attemptId, secret, prior: prior.benefits,
+          orderWidePromo: prior.orderWidePromo, next: preparedBenefits })
+      } catch {
+        return respond({ code: 'BENEFIT_UNAVAILABLE', retrySafe: false }, 409)
       }
 
       // Fence edits on the same attempt and keep the Shopify cart identity.
@@ -258,17 +265,29 @@ export async function POST(request: NextRequest) {
       let mutationStarted = false
       const saveEdit = (editState: Record<string, unknown>) => attemptRow().update(editState).eq('id', input.attemptId)
         .eq('session_hash', sessionHash).eq('lease_token', lease).eq('status', 'creating').select('id').maybeSingle()
+      const priorPromoAmount = prior.benefits.promo?.discountCents
+      const nextPromoAmount = preparedBenefits.quote.promo?.discountCents
+      if (priorPromoAmount && nextPromoAmount && priorPromoAmount !== nextPromoAmount) {
+        const revision = await db.rpc('record_shopify_promo_revision', { p_attempt: input.attemptId,
+          p_lease: lease, p_discount: nextPromoAmount })
+        if (revision.error || revision.data !== true) {
+          const restored = await saveEdit({ status: 'ready' })
+          if (restored.error || !restored.data) return pendingEdit()
+          return respond({ code: 'BENEFIT_UNAVAILABLE', retrySafe: false }, 409)
+        }
+      }
       try {
         const checkoutUrl = await reviseShopifyCart({
           ...context, buyerIp, id: old.cart_id, previous: prior.lines, desired: lines,
-          currency: marketPrice.currency, subtotal: marketPrice.subtotalCents,
+          currency: marketPrice.currency, subtotal: input.country === 'US' ? marketPrice.subtotalCents : preparedBenefits.expectedSubtotalBeforeOrderCents,
+          codes: expectedBenefits.map(benefit => benefit.code),
           beforeMutation: () => { mutationStarted = true },
         })
         if (input.country !== 'US') {
           const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: old.cart_id }, buyerIp)
-          assertCartBenefits(benefits.cart, [], { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
+          assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
         }
-        const saved = await saveEdit({ status: 'ready', request_fingerprint: fingerprint, cart_snapshot: cartSnapshot, checkout_url: checkoutUrl, last_error: null })
+        const saved = await saveEdit({ status: 'ready', request_fingerprint: fingerprint, cart_snapshot: { ...cartSnapshot, orderWidePromo: prior.orderWidePromo }, checkout_url: checkoutUrl, last_error: null })
         if (saved.error || !saved.data) throw new Error('CART_EDIT_SAVE_FAILED')
         return respond({ checkoutUrl, attemptId: input.attemptId })
       } catch (error) {
@@ -276,7 +295,7 @@ export async function POST(request: NextRequest) {
         console.error('Shopify cart revision stopped', { code, mutationStarted })
         // A failed read leaves the original cart reusable. A mutation with an
         // uncertain result must never expose a stale cart or create another one.
-        const saved = await saveEdit(mutationStarted ? { status: 'unknown', last_error: 'CART_EDIT_OUTCOME_UNKNOWN' } : { status: 'ready' })
+        const saved = await saveEdit(mutationStarted ? { status: 'unknown', last_error: 'CART_EDIT_OUTCOME_UNKNOWN' } : { status: 'ready', cart_snapshot: prior })
         if (saved.error || !saved.data || mutationStarted) return pendingEdit()
         return review()
       }

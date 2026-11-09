@@ -12,7 +12,7 @@ const allocations=z.array(z.object({allocatedAmountSet:z.object({shopMoney:z.obj
 const connection=z.object({pageInfo:z.object({hasNextPage:z.literal(false)}),nodes:z.array(z.object({discountAllocations:allocations}))})
 const order=z.object({id:z.string(),updatedAt:z.string().datetime(),test:z.literal(false),displayFinancialStatus:z.enum(['PAID','PARTIALLY_REFUNDED','REFUNDED']),currencyCode:z.literal('EUR'),customAttributes:z.array(z.object({key:z.string(),value:z.string()})),
  discountApplications:z.object({pageInfo:z.object({hasNextPage:z.literal(false)}),nodes:z.array(z.object({__typename:z.string(),index:z.number().int().nonnegative(),code:z.string().optional()}))}),lineItems:connection,shippingLines:connection})
-export async function fetchPromoSettlement(input:{orderId:string;sourceUpdatedAt:string;attemptId:string;codeHash:string;discountCents:number}){
+export async function fetchPromoSettlement(input:{orderId:string;sourceUpdatedAt:string;attemptId:string;codeHash:string;discountCents:number; revisedAmounts?:number[]}){
  const raw=await admin<{order:unknown}>(PROMO_PAYMENT_QUERY,{id:input.orderId})
  const o=order.parse(raw.order)
  if(o.id!==input.orderId||Date.parse(o.updatedAt)!==Date.parse(input.sourceUpdatedAt)) throw new Error('PROMO_ORDER_VERSION_CHANGED')
@@ -24,6 +24,6 @@ export async function fetchPromoSettlement(input:{orderId:string;sourceUpdatedAt
  if(found.length!==1) throw new Error('PROMO_DISCOUNT_IDENTITY_MISMATCH')
  const index=found[0].index
  const amount=o.lineItems.nodes.flatMap(l=>l.discountAllocations).filter(a=>a.discountApplication.index===index).reduce((n,a)=>n+moneyToCents(a.allocatedAmountSet.shopMoney.amount),0)
- if(o.shippingLines.nodes.some(l=>l.discountAllocations.some(a=>a.discountApplication.index===index))||amount!==input.discountCents) throw new Error('PROMO_DISCOUNT_AMOUNT_MISMATCH')
+ if(o.shippingLines.nodes.some(l=>l.discountAllocations.some(a=>a.discountApplication.index===index))||amount<=0||(amount!==input.discountCents&&!input.revisedAmounts?.includes(amount))) throw new Error('PROMO_DISCOUNT_AMOUNT_MISMATCH')
  return {sourceUpdatedAt:o.updatedAt,codeHash:input.codeHash,discountCents:amount}
 }
