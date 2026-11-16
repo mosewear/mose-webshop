@@ -806,6 +806,8 @@
     "free": "Gratis",
     "manufacturingFault": "Bij fabricagefout",
     "shippingCost": "Onder €{threshold}? Dan betaal je €{cost} verzendkosten.",
+    "shippingAreasInternational": "We verzenden naar Nederland, België en de Verenigde Staten. De checkout toont welke artikelen op jouw adres bezorgd kunnen worden.",
+    "unitedStates": "Verenigde Staten",
     "sameConditionsNLBE": "We leveren in Nederland en België. Sommige artikelen zijn alleen in Nederland beschikbaar; dit staat bij het afrekenen.",
     "loading": "Laden...",
     "returnPeriodTitle": "{days} dagen bedenktijd",

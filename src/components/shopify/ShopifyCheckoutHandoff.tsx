@@ -29,6 +29,8 @@ const copy = {
     preserved: 'Je winkelmand blijft bewaard.', retry: 'Afrekenen lukt nu niet. Probeer het opnieuw; je winkelmand is behouden.',
     pending: 'Je eerdere betaalpoging wordt nog gecontroleerd. Je winkelmand blijft bewaard. Probeer het later opnieuw.',
     review: 'Je eerdere betaalpoging moet eerst worden gecontroleerd. Neem contact met ons op voordat je opnieuw betaalt.',
+    marketChanged: 'Je hebt het bezorgland in de betaalpagina gewijzigd. Kies daar weer het oorspronkelijke land en probeer daarna je bijgewerkte winkelmand opnieuw.',
+    openCheckout: 'Open de betaalpagina',
     changed: 'Je winkelmand, prijs of beschikbaarheid is gewijzigd. Controleer je artikelen en probeer het opnieuw.',
     gift: 'Controleer het bedrag en de ontvanger van je cadeaubon. Je winkelmand is behouden.', giftInfo: 'Je cadeaubon wordt per e-mail geleverd. Een ontvangen cadeaubon verzilver je op de betaalpagina.', invalidGift: 'Controleer de ontvanger, het bericht (maximaal 200 tekens inclusief afzender) en de verzenddatum (maximaal 90 dagen vooruit).',
     invalid: 'We kunnen deze winkelmand nog niet verwerken. Controleer de aantallen in je winkelmand.',
@@ -45,6 +47,8 @@ const copy = {
     preserved: 'Your bag will be saved.', retry: 'Checkout is currently unavailable. Please try again; your bag has been saved.',
     pending: 'Your earlier checkout is still being checked. Your bag has been saved. Please try again later.',
     review: 'Your earlier checkout needs to be checked first. Please contact us before making another payment.',
+    marketChanged: 'You changed the delivery country on the payment page. Switch back to the original country there, then retry checkout with your updated bag.',
+    openCheckout: 'Open the payment page',
     changed: 'Your bag, price or availability has changed. Check your items and try again.',
     gift: 'Check your gift card value and recipient. Your bag has been saved.', giftInfo: 'Your gift card is delivered by email. Redeem a received gift card on the payment page.', invalidGift: 'Check the recipient, message (up to 200 characters including sender) and delivery date (up to 90 days ahead).',
     invalid: 'We cannot process this bag yet. Please check the quantities in your bag.',
@@ -67,6 +71,7 @@ export function ShopifyCheckoutHandoff() {
   const hydrated = useCartGehydrateerd()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [marketRecoveryUrl, setMarketRecoveryUrl] = useState<string | null>(null)
   const [promoCode, setPromoCode] = useState('')
   const [loyaltyPoints, setLoyaltyPoints] = useState(0)
   const [loyaltyStatus, setLoyaltyStatus] = useState<'idle'|'loading'|'guest'|'ready'|'error'>('idle')
@@ -149,6 +154,7 @@ export function ShopifyCheckoutHandoff() {
     inFlight.current = true
     setBusy(true)
     setError('')
+    setMarketRecoveryUrl(null)
     const abort = new AbortController()
     controller.current = abort
     const timeout = setTimeout(() => abort.abort(), 60_000)
@@ -196,6 +202,11 @@ export function ShopifyCheckoutHandoff() {
       if (!response.ok) {
         const failure: unknown = await response.json().catch(() => null)
         const code = failure && typeof failure === 'object' ? (failure as { code?: unknown }).code : undefined
+        if (code === 'CART_REVISION_MARKET_CHANGED' && failure && typeof failure === 'object') {
+          setMarketRecoveryUrl(checkoutRedirectUrl((failure as { checkoutUrl?: unknown }).checkoutUrl, process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST))
+          setError(text.marketChanged)
+          return
+        }
         if (canRotateCheckoutAttempt(failure)) {
           // Acknowledged failure before checkout issuance: prepare a fresh
           // attempt for the user's next click, never automatically resubmit.
@@ -315,7 +326,7 @@ export function ShopifyCheckoutHandoff() {
             {loyaltyStatus === 'ready' && loyalty && <div><p className="mb-2 text-sm">{loyalty.points} {text.pointsAvailable} · {text.tier}: <span className="capitalize">{loyalty.tier}</span></p><label htmlFor="checkout-points" className="block text-sm font-bold">{text.pointsLabel}</label><input id="checkout-points" type="number" min={0} max={Math.floor(loyalty.points / 100) * 100} step={100} value={loyaltyPoints} onChange={event => setLoyaltyPoints(Number(event.target.value))} disabled={busy || loyalty.points < 100} className="mt-2 w-full border border-gray-500 bg-white px-3 py-3 text-base" aria-describedby="checkout-points-note"/><p id="checkout-points-note" className="mt-2 text-xs text-gray-600">{text.pointsNote}</p></div>}
           </div>
           {hasGiftCards && <p className="mb-4 text-sm leading-relaxed text-gray-700">{text.giftInfo}</p>}
-          {error && <p role="alert" className="mb-4 border-l-2 border-red-700 pl-3 text-sm leading-relaxed text-red-800">{error}{error === text.review && <> <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></>}</p>}
+          {error && <p role="alert" className="mb-4 border-l-2 border-red-700 pl-3 text-sm leading-relaxed text-red-800">{error}{marketRecoveryUrl && <> <a href={marketRecoveryUrl} className="underline underline-offset-4">{text.openCheckout}</a></>}{error === text.review && <> <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></>}</p>}
           <Button fullWidth isLoading={busy} disabled={buyerCountry === 'US' && (!usdReady || hasGiftCards || Boolean(promoCode.trim()) || loyaltyPoints > 0)} loadingLabel={text.loading} onClick={proceed}
             className="focus-visible:ring-black">
             <Lock size={17} aria-hidden="true" />{text.button}

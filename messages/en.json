@@ -806,6 +806,8 @@
     "free": "Free",
     "manufacturingFault": "For manufacturing defects",
     "shippingCost": "Under €{threshold}? Then you pay €{cost} shipping costs.",
+    "shippingAreasInternational": "We ship to the Netherlands, Belgium and the United States. Checkout shows which items can be delivered to your address.",
+    "unitedStates": "United States",
     "sameConditionsNLBE": "We deliver to the Netherlands and Belgium. Some items are available in the Netherlands only; checkout shows availability.",
     "loading": "Loading...",
     "returnPeriodTitle": "{days} Days return period",

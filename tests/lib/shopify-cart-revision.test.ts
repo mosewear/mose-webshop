@@ -49,3 +49,24 @@ it('keeps native tender and the exact gift recipient properties while updating t
     previous, desired, currency: 'EUR', subtotal: 4000, beforeMutation: vi.fn() })).resolves.toBe(checkoutUrl)
   expect(storefront.mock.calls[1][1].lines).toEqual([{ id: 'gift-line', quantity: 2 }])
 })
+
+it('leaves all cart lines intact after Shopify changes the checkout currency', async () => {
+  const id = 'gid://shopify/Cart/test?key=test'
+  const beforeMutation = vi.fn()
+  storefront.mockReset().mockResolvedValueOnce({
+    cart: {
+      id,
+      lines: { nodes: [], pageInfo: { hasNextPage: false } },
+      cost: { subtotalAmount: { amount: '57.00', currencyCode: 'USD' } },
+    },
+  })
+
+  await expect(reviseShopifyCart({
+    id, country: 'BE', language: 'NL', buyerIp: '127.0.0.1', currency: 'EUR',
+    previous: [{ merchandiseId: 'gid://shopify/ProductVariant/123', quantity: 1 }],
+    desired: [{ merchandiseId: 'gid://shopify/ProductVariant/456', quantity: 1 }],
+    subtotal: 5000, beforeMutation,
+  })).rejects.toThrow('CART_REVISION_MARKET_CHANGED')
+  expect(beforeMutation).not.toHaveBeenCalled()
+  expect(storefront).toHaveBeenCalledTimes(1)
+})
