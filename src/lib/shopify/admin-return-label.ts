@@ -44,7 +44,7 @@ function postal(value: string) {
 
 async function findExistingReturn(order: ShopifyAdminOrder) {
   const filters = new URLSearchParams({
-    from_date: order.createdAt.slice(0, 10) + ' 00:00:00',
+    from_date: (order.createdAt ?? order.updatedAt).slice(0, 10) + ' 00:00:00',
     to_date: new Date(Date.now() + 86400000).toISOString().slice(0, 10) + ' 00:00:00',
     page_size: '40',
   })

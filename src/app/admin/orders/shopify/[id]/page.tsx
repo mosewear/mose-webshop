@@ -32,13 +32,14 @@ export default async function ShopifyOrderDetailPage({ params }: { params: Promi
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 className="text-2xl font-bold">Bestelling {order.name}</h1>
-        <p>Shopify · {new Date(order.createdAt).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}</p>
+        <p>Shopify{order.createdAt && ' · ' + new Date(order.createdAt).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}</p>
       </div>
       <div className="flex gap-4">
         <a href="#retour" className="underline">Retourlabel</a>
         <a href={`https://admin.shopify.com/store/${SHOPIFY_STORE.split('.')[0]}/orders/${id}`} className="underline">Open in Shopify</a>
       </div>
     </header>
+    {!order.contactAvailable && <p role="status" className="text-sm text-gray-600">Shopify geeft de adressen tijdelijk niet door. De overige ordergegevens komen uit de laatste synchronisatie.</p>}
     <section className="grid gap-5 border border-gray-200 p-5 sm:grid-cols-3">
       <div><h2 className="font-bold">Klant en bezorgadres</h2><p>{order.email}</p><AddressDetails address={order.shippingAddress} /></div>
       <div><h2 className="font-bold">Factuuradres</h2><AddressDetails address={order.billingAddress} /></div>

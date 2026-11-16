@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { admin } from './client'
-import { fetchOrderProjection } from './orders'
+import { fetchOrderProjection, orderSchema } from './orders'
 import { toShopifyOrderView } from './order-views'
 
 const address = z.object({
@@ -37,18 +37,34 @@ export async function readShopifyAdminOrder(number: string) {
   if (!shopifyOrderNumber.test(number)) return null
   const id = 'gid://shopify/Order/' + number
   const db = createServiceClient()
-  const response = await admin<{ order: unknown }>(CONTACT, { id })
-  if (!response.order) return null
-  const details = contact.parse(response.order)
-  if (details.id !== id) throw new Error('ORDER_ID_MISMATCH')
-
-  const [order, owners] = await Promise.all([
-    fetchOrderProjection(id),
+  const [snapshot, owners, liveContact] = await Promise.all([
+    db.from('shopify_order_snapshots').select('snapshot,synced_at').eq('shopify_order_id', id).maybeSingle(),
     db.from('shopify_order_lines').select('line_id,fulfillment_owner').eq('order_id', id),
+    admin<{ order: unknown }>(CONTACT, { id }).catch(() => undefined),
   ])
-  if (owners.error) throw new Error('ORDER_ROUTING_UNAVAILABLE')
-  const view = toShopifyOrderView({ snapshot: order, synced_at: order.updatedAt }, owners.data ?? [], 'admin')
-  return { ...details, ...view, items: order.lineItems.nodes, refunds: order.refunds }
+  if (snapshot.error || owners.error) throw new Error('ORDER_DETAIL_UNAVAILABLE')
+  if (!snapshot.data && liveContact?.order === null) return null
+  if (!snapshot.data && !liveContact) throw new Error('ORDER_DETAIL_UNAVAILABLE')
+
+  const details = liveContact?.order ? contact.parse(liveContact.order) : null
+  if (details && details.id !== id) throw new Error('ORDER_ID_MISMATCH')
+
+  const order = snapshot.data ? orderSchema.parse(snapshot.data.snapshot) : await fetchOrderProjection(id)
+  if (order.id !== id) throw new Error('ORDER_ID_MISMATCH')
+  const view = toShopifyOrderView(
+    { snapshot: order, synced_at: snapshot.data?.synced_at ?? order.updatedAt },
+    owners.data ?? [],
+    'admin',
+  )
+  return {
+    ...view,
+    email: details ? details.email : order.email ?? null,
+    createdAt: details?.createdAt ?? order.createdAt ?? null,
+    shippingAddress: details?.shippingAddress ?? null,
+    billingAddress: details?.billingAddress ?? null,
+    contactAvailable: Boolean(details),
+    items: order.lineItems.nodes,
+  }
 }
 
 export type ShopifyAdminOrder = NonNullable<Awaited<ReturnType<typeof readShopifyAdminOrder>>>
