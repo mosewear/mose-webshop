@@ -297,6 +297,9 @@ export async function POST(request: NextRequest) {
         // uncertain result must never expose a stale cart or create another one.
         const saved = await saveEdit(mutationStarted ? { status: 'unknown', last_error: 'CART_EDIT_OUTCOME_UNKNOWN' } : { status: 'ready', cart_snapshot: prior })
         if (saved.error || !saved.data || mutationStarted) return pendingEdit()
+        if (code === 'CART_REVISION_MARKET_CHANGED') {
+          return respond({ code, checkoutUrl: assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST) }, 409)
+        }
         return review()
       }
     }

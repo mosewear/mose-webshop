@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Link as LocaleLink } from '@/i18n/routing'
 import PaginaKop from '@/components/layout/PaginaKop'
 
-export default function ShippingPageClient({settings}: {settings: CommercePromises}) {
+export default function ShippingPageClient({ settings, shipsToUnitedStates }: { settings: CommercePromises; shipsToUnitedStates: boolean }) {
   const t = useTranslations('shipping')
 
   return (
@@ -19,7 +19,7 @@ export default function ShippingPageClient({settings}: {settings: CommercePromis
         ondertitel={
           <>
             {t('checkoutDelivery')}.{' '}
-            {t('returnPolicy', { days: settings.return_days })}. {t('sameConditionsNLBE')}
+            {t('returnPolicy', { days: settings.return_days })}. {t(shipsToUnitedStates ? 'shippingAreasInternational' : 'sameConditionsNLBE')}
           </>
         }
       >
@@ -89,6 +89,12 @@ export default function ShippingPageClient({settings}: {settings: CommercePromis
                   <div className="w-2 h-2 bg-brand-primary" />
                   <span>{t('belgium')}</span>
                 </li>
+                {shipsToUnitedStates && (
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-brand-primary" />
+                    <span>{t('unitedStates')}</span>
+                  </li>
+                )}
               </ul>
             </div>
 
@@ -177,9 +183,6 @@ export default function ShippingPageClient({settings}: {settings: CommercePromis
             </h3>
             <p className="text-xl text-gray-300">
               {t('returnPeriodText', { days: settings.return_days })}
-            </p>
-            <p className="text-sm text-gray-400 mt-3">
-              {t('sameConditionsNLBE')}
             </p>
           </div>
 

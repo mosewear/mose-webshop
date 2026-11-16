@@ -42,6 +42,7 @@ export async function reviseShopifyCart(input: {
   const variables = { id, country, language }
   let { cart } = await storefront<{ cart: Cart | null }>(query, variables, buyerIp)
   assertOpenCart(cart, id)
+  if (cart.cost.subtotalAmount.currencyCode !== input.currency) throw new Error('CART_REVISION_MARKET_CHANGED')
   assertCreatedCartLines(cart.lines.nodes, previous)
   const codes = input.codes ?? []
   if (cart.discountCodes.length !== codes.length || codes.some(code => !cart!.discountCodes.some(actual => actual.code === code && actual.applicable))) {
