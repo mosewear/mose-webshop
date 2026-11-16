@@ -89,7 +89,7 @@ export default function ShopifyOrders({ mode, locale = 'nl' }: Props) {
           </div>)}
           <footer className="flex flex-wrap justify-between gap-3 text-xs text-gray-500">
             <p>{text('Gesynchroniseerd', 'Synced')}: {date(order.syncedAt)}</p>
-            {mode === 'admin' ? <a href={`https://admin.shopify.com/store/hp5szr-te/orders/${order.id.split('/').at(-1)}`} target="_blank" rel="noopener noreferrer" className="text-black font-bold underline underline-offset-4">Open in Shopify ↗</a>
+            {mode === 'admin' ? <a href={`/admin/orders/shopify/${order.id.split('/').at(-1)}`} className="text-black font-bold underline underline-offset-4">Bestelling bekijken</a>
               : <a href={`/${en ? 'en' : 'nl'}/contact`} className="text-black font-bold underline underline-offset-4">{text('Vraag over deze bestelling?', 'Question about this order?')}</a>}
           </footer>
         </div>

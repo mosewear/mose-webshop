@@ -2258,3 +2258,13 @@ export async function sendSpringDrop3FoundersEmail(
   )
 }
 
+
+export function sendShopifyReturnLabelEmail(props: { email: string; orderName: string; pdf: Buffer }) {
+  return sendAndLog({
+    from: 'MOSE Returns <orders@mosewear.com>',
+    to: [props.email],
+    subject: `Je DHL-retourlabel voor bestelling ${props.orderName}`,
+    html: '<p>Hoi,</p><p>Je DHL-retourlabel zit in de bijlage. Print het label, plak het op je pakket en geef het af bij een DHL ServicePoint. MOSE betaalt de retourzending.</p><p>Groet,<br>MOSE</p>',
+    attachments: [{ filename: 'MOSE-retourlabel.pdf', content: props.pdf.toString('base64') }],
+  }, { templateKey: 'return_label_generated', locale: 'nl' })
+}

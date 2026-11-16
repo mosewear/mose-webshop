@@ -7,6 +7,6 @@ export async function GET() {
   try {
     const {authorized}=await requireAdmin(['admin','manager'])
     if(!authorized) return NextResponse.json({error:'Geen toegang.'},{status:403,headers})
-    return NextResponse.json({orders:await readAdminOrderOverview()},{headers})
+    return NextResponse.json({orders:await readAdminOrderOverview({ allowOtherCurrencies: true })},{headers})
   } catch {return NextResponse.json({error:'Het volledige besteloverzicht kan nu niet worden geladen. Cijfers zijn niet bijgewerkt.'},{status:503,headers})}
 }

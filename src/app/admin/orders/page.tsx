@@ -31,6 +31,7 @@ interface Order {
   paid_at: string | null
   payment_method: string | null
   total: number
+  currency?: string
   delivery_method?: 'shipping' | 'pickup'
   shipping_address: any
   billing_address: any
@@ -39,6 +40,11 @@ interface Order {
   label_url: string | null
   created_at: string
   updated_at: string
+}
+
+function orderTotal(order: Order) {
+  if (!order.currency || order.currency === 'EUR') return formatBedrag(Number(order.total))
+  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: order.currency }).format(Number(order.total))
 }
 
 export default function AdminOrdersPage() {
@@ -441,12 +447,12 @@ export default function AdminOrdersPage() {
               const csvRows = [
                 headers.join(','),
                 ...filteredOrders.map(o => [
-                  o.id.slice(0, 8),
+                  o.name || o.id.slice(0, 8),
                   o.email,
                   o.status,
                   o.payment_status || 'unpaid',
                   o.delivery_method === 'pickup' ? 'Afhalen' : 'Verzending',
-                  `${formatBedrag(Number(o.total))}`,
+                  `${orderTotal(o)}`,
                   new Date(o.created_at).toLocaleDateString('nl-NL'),
                 ].map(val => `"${val}"`).join(','))
               ]
@@ -680,7 +686,7 @@ export default function AdminOrdersPage() {
                     ) : null}
                     </div>
                     <div className="text-gray-600">Datum: {new Date(order.created_at).toLocaleDateString('nl-NL')}</div>
-                    <div className="font-bold text-gray-900 text-right">{formatBedrag(Number(order.total))}</div>
+                    <div className="font-bold text-gray-900 text-right">{orderTotal(order)}</div>
                     <div className="col-span-2">
                       <span className={`px-2 py-1 font-semibold border inline-block ${
                         order.delivery_method === 'pickup'
@@ -777,7 +783,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-gray-900">
-                        {formatBedrag(Number(order.total))}
+                        {orderTotal(order)}
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 whitespace-nowrap">
