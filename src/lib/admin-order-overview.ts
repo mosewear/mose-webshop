@@ -34,7 +34,7 @@ export async function readAllAdminRows(table: string, select: string, key: strin
   }
 }
 
-export async function readAdminOrderOverview() {
+export async function readAdminOrderOverview({ allowOtherCurrencies = false } = {}) {
   const all = readAllAdminRows
   const [legacy, snapshots, refunds, production] = await Promise.all([
     all('orders', 'id,user_id,email,status,payment_status,total,delivery_method,shipping_address,tracking_code,label_url,created_at,updated_at,checkout_started_at,paid_at,payment_method', 'id'),
@@ -59,7 +59,7 @@ export async function readAdminOrderOverview() {
 
   const shopify = snapshots.map(row => {
     const observation=production.find(p=>p.shopify_order_id===row.shopify_order_id) as StoredProduction|undefined
-    return {...normalizeShopifyAdminOrder(row,metadata.get(row.shopify_order_id)),
+    return {...normalizeShopifyAdminOrder(row,metadata.get(row.shopify_order_id), allowOtherCurrencies),
       ...productionPresentation(observation),
       production_sync_warning: supplierShippingSyncWarning(row.snapshot,observation)}
   })
@@ -128,12 +128,12 @@ function storedOrderMetadata(order: OrderProjection) {
     : undefined
 }
 
-export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:string}, meta: {createdAt:string;email:string|null;netPaymentSet:{shopMoney:{amount:string;currencyCode:string}}}|undefined) {
+export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:string}, meta: {createdAt:string;email:string|null;netPaymentSet:{shopMoney:{amount:string;currencyCode:string}}}|undefined, allowOtherCurrencies = false) {
     const o=orderSchema.parse(row.snapshot)
     meta = storedOrderMetadata(o) ?? meta
     if(!meta || !Number.isFinite(Date.parse(meta.createdAt))) throw new Error('ORDER_METADATA_UNAVAILABLE')
     if(!Number.isFinite(Number(meta.netPaymentSet.shopMoney.amount))) throw new Error('INVALID_PAYMENT_TOTAL')
-    if(o.currencyCode!=='EUR' || meta.netPaymentSet.shopMoney.currencyCode!=='EUR') throw new Error('ORDER_CURRENCY_REQUIRES_CONVERSION')
+    if(meta.netPaymentSet.shopMoney.currencyCode!==o.currencyCode || (!allowOtherCurrencies && o.currencyCode!=='EUR')) throw new Error('ORDER_CURRENCY_REQUIRES_CONVERSION')
     const paid=['PAID','PARTIALLY_PAID','PARTIALLY_REFUNDED','REFUNDED'].includes(o.displayFinancialStatus ?? '')
     const activeLines=o.lineItems.nodes.filter(l=>l.currentQuantity>0)
     const delivered=activeLines.length>0 && activeLines.every(line=>o.fulfillments.filter(f=>f.status==='SUCCESS' && f.displayStatus==='DELIVERED').reduce((sum,f)=>sum+f.fulfillmentLineItems.nodes.filter(l=>l.lineItem.id===line.id).reduce((n,l)=>n+l.quantity,0),0)>=line.currentQuantity)
@@ -152,7 +152,7 @@ export function normalizeShopifyAdminOrder(row: {snapshot:unknown;synced_at:stri
       label_url:null,created_at:meta.createdAt,updated_at:o.updatedAt,checkout_started_at:null,
       production_status:'Productie niet afzonderlijk gemeld',
       shipping_status:o.fulfillments.filter(f=>f.status==='SUCCESS').map(f=>shipmentLabel(f.displayStatus)).join(' · ') || 'Nog geen verzendmelding',synced_at:row.synced_at,
-      detail_url:'/admin/shopify/orders#'+o.id.split('/').pop()}
+      detail_url:'/admin/orders/shopify/'+o.id.split('/').pop()}
 }
 
 /** Show the source discrepancy without inventing a fulfillment or changing metrics. */

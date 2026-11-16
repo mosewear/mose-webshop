@@ -30,6 +30,10 @@ interface OrderItem {
 
 interface Order {
   id: string
+  name?: string
+  currency?: string
+  item_count?: number
+  return_url?: string
   email: string
   total: number
   status: string
@@ -94,6 +98,7 @@ function AdminCreateReturnPageContent() {
   const [searchTerm, setSearchTerm] = useState('')
   const [orders, setOrders] = useState<Order[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
+  const [shopifyUnavailable, setShopifyUnavailable] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
   // Step 2 – item selection
@@ -134,7 +139,9 @@ function AdminCreateReturnPageContent() {
         const list = (body.orders || []) as Order[]
         const exact = list.find((o) => o.id === oid)
         if (ac.signal.aborted) return
-        if (exact) {
+        if (exact?.return_url) {
+          router.replace(exact.return_url)
+        } else if (exact) {
           setOrders([exact])
           setSearchTerm(exact.email || oid.slice(0, 8))
           setSelectedOrder(exact)
@@ -185,6 +192,7 @@ function AdminCreateReturnPageContent() {
         throw new Error(body.error || res.statusText || 'Zoeken mislukt')
       }
       setOrders((body.orders as Order[]) || [])
+      setShopifyUnavailable(Boolean(body.shopifyUnavailable))
     } catch (err: unknown) {
       console.error('Order search error:', err)
       const message = err instanceof Error ? err.message : 'Zoeken mislukt'
@@ -195,6 +203,10 @@ function AdminCreateReturnPageContent() {
   }
 
   function pickOrder(order: Order) {
+    if (order.return_url) {
+      router.push(order.return_url)
+      return
+    }
     setSelectedOrder(order)
     setSelectedItems({})
     setReturnReason('')
@@ -345,8 +357,7 @@ function AdminCreateReturnPageContent() {
           <h2 className="text-xl font-bold">1. Kies een bestelling</h2>
           <p className="text-sm text-gray-600">
             Zonder zoekterm zie je de recentste bestellingen (alle statussen). Met
-            minimaal 3 tekens zoek je op e-mailadres of op het begin van een
-            order-ID (hex, zonder #).
+            minimaal 3 tekens zoek je op e-mailadres, bestelnummer of order-ID.
           </p>
           <div className="relative">
             <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -354,11 +365,12 @@ function AdminCreateReturnPageContent() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Zoek op e-mail of order-ID (min. 3 tekens)…"
+              placeholder="Zoek op e-mail, bestelnummer of order-ID…"
               className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 focus:border-brand-primary focus:outline-none"
             />
           </div>
 
+          {shopifyUnavailable && <p role="alert" className="text-sm text-red-700">Shopify-bestellingen zijn tijdelijk niet beschikbaar in de retourzoekfunctie.</p>}
           {searchLoading ? (
             <div className="py-8 text-center text-gray-500">Zoeken…</div>
           ) : orders.length === 0 ? (
@@ -377,7 +389,7 @@ function AdminCreateReturnPageContent() {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                     <div>
                       <div className="font-mono font-bold">
-                        #{order.id.slice(0, 8).toUpperCase()}
+                        {order.name || '#' + order.id.slice(0, 8).toUpperCase()}
                       </div>
                       <div className="text-sm text-gray-600">{order.email}</div>
                       <div className="text-xs text-gray-500 mt-1">
@@ -390,9 +402,9 @@ function AdminCreateReturnPageContent() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold">{formatBedrag(order.total)}</div>
+                      <div className="font-bold">{order.currency ? new Intl.NumberFormat('nl-NL', { style: 'currency', currency: order.currency }).format(Number(order.total)) : formatBedrag(order.total)}</div>
                       <div className="text-xs text-gray-500">
-                        {order.order_items?.length || 0} items
+                        {order.item_count ?? order.order_items?.length ?? 0} items
                       </div>
                     </div>
                   </div>

@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
 
   const service = createServiceClient()
 
-  const { data: orderRows, error: rpcError } = await service.rpc(
-    'admin_search_orders_for_return',
-    { p_query: q, p_limit: limit }
-  )
+  const [{ data: orderRows, error: rpcError }, shopify] = await Promise.all([
+    service.rpc('admin_search_orders_for_return', { p_query: q, p_limit: limit }),
+    service.rpc('admin_search_shopify_orders_for_return', { p_query: q, p_limit: limit }),
+  ])
 
   if (rpcError) {
     console.error('admin_search_orders_for_return', rpcError)
@@ -30,16 +30,14 @@ export async function GET(request: NextRequest) {
   }
 
   const rows = (orderRows ?? []) as Array<{ id: string }>
-  if (rows.length === 0) {
-    return NextResponse.json({ orders: [] })
-  }
+
 
   const ids = rows.map((o) => o.id)
 
-  const { data: orderItems, error: itemsError } = await service
+  const { data: orderItems, error: itemsError } = ids.length ? await service
     .from('order_items')
     .select('*')
-    .in('order_id', ids)
+    .in('order_id', ids) : { data: [], error: null }
 
   if (itemsError) {
     console.error('order_items for admin search', itemsError)
@@ -59,5 +57,17 @@ export async function GET(request: NextRequest) {
     order_items: byOrder.get(o.id) ?? [],
   }))
 
-  return NextResponse.json({ orders })
+  const shopifyOrders = (shopify.data ?? []) as Array<{
+    id: string; created_at: string; item_count: number
+  }>
+  const combined = [
+    ...orders.map(order => ({ ...order, created_at: (order as { created_at?: string }).created_at ?? '' })),
+    ...shopifyOrders.map(order => ({
+      ...order,
+      return_url: '/admin/orders/shopify/' + order.id.split('/').pop() + '#retour',
+    })),
+  ].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+  return NextResponse.json({ orders: combined.slice(0, limit), shopifyUnavailable: Boolean(shopify.error) }, {
+    headers: { 'Cache-Control': 'private, no-store' },
+  })
 }
