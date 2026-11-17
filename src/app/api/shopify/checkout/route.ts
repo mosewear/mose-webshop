@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
 
   const input = parsed.data
   const seasonal = !input.loyaltyPoints && (!input.promoCode || isSeasonalCode(input.promoCode)) ? activeSeasonalOffer() : undefined
-  if (!seasonal && isSeasonalCode(input.promoCode)) return respond({ code: 'BENEFIT_UNAVAILABLE', retrySafe: true }, 409)
   // US selling is independently approved only after USD payment, DDP and margin checks.
   // The NL/EUR checkout remains unchanged until that explicit release.
   if (input.country === 'US' && (
