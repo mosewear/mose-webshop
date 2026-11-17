@@ -97,7 +97,7 @@ export default function LoginPage() {
       if (isLogin) {
         // Login
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: form.email,
+          email: form.email.trim().toLowerCase(),
           password: form.password,
         })
 
@@ -116,7 +116,7 @@ export default function LoginPage() {
         }
 
         const { data, error } = await supabase.auth.signUp({
-          email: form.email,
+          email: form.email.trim().toLowerCase(),
           password: form.password,
           options: {
             // Zonder deze regel valt Supabase terug op de Site URL van het

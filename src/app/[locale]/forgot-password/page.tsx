@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
     setSuccess(false)
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
         redirectTo: `${window.location.origin}/${locale}/reset-password`,
       })
 
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
 
       setSuccess(true)
       setLoading(false)
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(publicError(err, locale, tErrors('somethingWrong')))
       setLoading(false)
     }

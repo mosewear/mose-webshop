@@ -1259,6 +1259,13 @@
       }
     },
     "resetPassword": {
+      "emailLabel": "E-mailadres",
+      "codeLabel": "Herstelcode",
+      "codeInstructions": "Vul je e-mailadres en de code uit de herstelmail in.",
+      "invalidCode": "De herstelcode klopt niet, is verlopen of is al gebruikt. Controleer de code of vraag een nieuwe aan.",
+      "checkingLink": "Herstellink controleren…",
+      "invalidLink": "Deze herstellink is verlopen of al gebruikt.",
+      "requestNewLink": "Vraag een nieuwe herstellink aan",
       "title": "NIEUW WACHTWOORD",
       "description": "Stel een nieuw wachtwoord in voor je account.",
       "passwordLabel": "Nieuw wachtwoord",
