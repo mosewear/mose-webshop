@@ -30,6 +30,17 @@ describe('current local publication gate', () => {
     expect(() => assertCurrentLocalCatalog(lines, [supplierVariant], [supplierProduct], [{ mose_variant_id: 'v1', fulfillment_owner: 'tapstitch', supplier_model: 'WRONG-MODEL' }])).toThrow('SUPPLIER_ROUTING_MISMATCH')
     expect(() => assertCurrentLocalCatalog(lines, [supplierVariant], [supplierProduct], [{ mose_variant_id: 'v1', fulfillment_owner: 'tapstitch', supplier_model: source.sourceCode }])).not.toThrow()
   })
+  it.each([
+    ['ecccfb41-11c6-4c47-a58d-ec332b0c10bd', 75],
+    ['2307a99e-781a-8f4a-9da0-2374d3cb464f', 69],
+  ])('accepts the long hoodie for %s and prevents the short model from being sold', (id, price) => {
+    const hoodieLines = [{ localVariantId: variant.id, expectedPriceCents: price * 100 }]
+    const hoodieVariants = [{ ...variant, product_id: id }]
+    const hoodies = [{ ...product, id, base_price: price }]
+    const mapping = { mose_variant_id: variant.id, fulfillment_owner: 'tapstitch' as const, supplier_model: 'RW0016-C001-V3' }
+    expect(() => assertCurrentLocalCatalog(hoodieLines, hoodieVariants, hoodies, [mapping])).not.toThrow()
+    expect(() => assertCurrentLocalCatalog(hoodieLines, hoodieVariants, hoodies, [{ ...mapping, supplier_model: 'RW0041-P001-V3' }])).toThrow('SUPPLIER_ROUTING_MISMATCH')
+  })
   it('uses Shopify inventory authority but rejects unverified presale promises', () => {
     expect(() => assertCurrentLocalCatalog(lines, [{ ...variant, stock_quantity: 0 }], [product])).not.toThrow()
     expect(() => assertCurrentLocalCatalog(lines, [{ ...variant, presale_enabled: true, presale_stock_quantity: 2 }], [product])).toThrow('PRESALE_NOT_RELEASED')
