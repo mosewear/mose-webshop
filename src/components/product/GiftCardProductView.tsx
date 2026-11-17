@@ -14,6 +14,8 @@ import {
   ShoppingCart,
   ChevronDown,
 } from 'lucide-react'
+import { trackAddToCart } from '@/lib/analytics'
+import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { giftCardCartKey } from '@/lib/gift-card-cart-key'
 import { nativeGiftScheduleWithinWindow } from '@/lib/shopify/native-gift-input'
 import { useCart, type GiftCardRecipient } from '@/store/cart'
@@ -521,6 +523,24 @@ export default function GiftCardProductView({ product }: GiftCardProductViewProp
         isGiftCard: true,
         giftCardAmount: resolvedAmount,
         giftCardRecipient: recipient,
+      })
+
+      trackPixelEvent('AddToCart', {
+        content_ids: [product.id],
+        contents: [{ id: product.id, quantity, item_price: resolvedAmount }],
+        content_name: displayName,
+        content_type: 'product',
+        currency: 'EUR',
+        value: resolvedAmount * quantity,
+        num_items: quantity,
+      })
+      trackAddToCart({
+        id: product.id,
+        name: displayName,
+        category: 'gift card',
+        price: resolvedAmount,
+        quantity,
+        source: 'giftcard',
       })
 
       toast.success(

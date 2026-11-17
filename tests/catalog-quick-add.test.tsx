@@ -5,10 +5,11 @@ import messages from '../messages/nl.json'
 import CatalogQuickAdd from '@/components/shop/CatalogQuickAdd'
 import {type CatalogProduct} from '@/lib/catalog-filters'
 import {useCart} from '@/store/cart'
-const mocks=vi.hoisted(()=>{const storage=new Map<string,string>();vi.stubGlobal('localStorage',{getItem:(key:string)=>storage.get(key)??null,setItem:(key:string,value:string)=>storage.set(key,value),removeItem:(key:string)=>storage.delete(key)});return {read:vi.fn(),eq:vi.fn(),open:vi.fn(),track:vi.fn()}})
+const mocks=vi.hoisted(()=>{const storage=new Map<string,string>();vi.stubGlobal('localStorage',{getItem:(key:string)=>storage.get(key)??null,setItem:(key:string,value:string)=>storage.set(key,value),removeItem:(key:string)=>storage.delete(key)});return {read:vi.fn(),eq:vi.fn(),open:vi.fn(),track:vi.fn(),pixel:vi.fn()}})
 vi.mock('@/i18n/routing',()=>({Link:({children,...props}:React.ComponentProps<'a'>)=><a {...props}>{children}</a>}))
 vi.mock('next/image',()=>({default:({fill,sizes,...props}:Record<string,unknown>)=>{void fill;void sizes;return <img {...props}/>}}))
 vi.mock('@/lib/analytics',()=>({trackAddToCart:mocks.track}))
+vi.mock('@/lib/facebook-pixel',()=>({trackPixelEvent:mocks.pixel}))
 vi.mock('@/store/cartDrawer',()=>({useCartDrawer:{getState:()=>({openDrawer:mocks.open})}}))
 vi.mock('@/lib/supabase/client',()=>({createClient:()=>({from:()=>({select:()=>{const q={eq:(...args:unknown[])=>{mocks.eq(...args);return q},single:mocks.read};return q}})})}))
 const product:CatalogProduct={id:'p1',name:'MOSE Tee',slug:'mose-tee',base_price:50,sale_price:null,display_order:1,created_at:'2026-10-30',category_id:'shirts',images:[{url:'/tee.webp',color:'Zwart',is_primary:true}],variants:[
@@ -24,13 +25,14 @@ it('requires an explicit size, rechecks active public variants and adds the chos
  fireEvent.click(m);fireEvent.click(screen.getByRole('button',{name:'In winkelmand'}))
  await waitFor(()=>expect(useCart.getState().items).toHaveLength(1))
  expect(useCart.getState().items[0]).toMatchObject({variantId:'black-m',sku:'TEE-B-M',color:'Zwart',size:'M',price:50,quantity:1})
+ expect(mocks.pixel).toHaveBeenCalledExactlyOnceWith('AddToCart',expect.objectContaining({content_ids:['p1:zwart'],currency:'EUR',value:50,num_items:1}))
  expect(mocks.read).toHaveBeenCalledTimes(2);expect(mocks.eq).toHaveBeenCalledWith('status','active');expect(mocks.open).toHaveBeenCalledOnce()
 })
 it('clears the size when colour changes so an unchosen variant is never added',async()=>{
  renderPicker();fireEvent.click(await screen.findByRole('button',{name:'M'}));fireEvent.click(screen.getByRole('button',{name:'WIT'}));expect(screen.getByRole('button',{name:'Kies eerst je maat'})).toBeDisabled();expect(useCart.getState().items).toHaveLength(0)
 })
 it('does not add a variant which sells out between selection and adding',async()=>{
- renderPicker();fireEvent.click(await screen.findByRole('button',{name:'M'}));mocks.read.mockResolvedValueOnce({data:{...product,variants:product.variants!.map(v=>({...v,stock_quantity:0}))},error:null});fireEvent.click(screen.getByRole('button',{name:'In winkelmand'}));expect(await screen.findByRole('alert')).toHaveTextContent('Niet beschikbaar');expect(useCart.getState().items).toHaveLength(0)
+ renderPicker();fireEvent.click(await screen.findByRole('button',{name:'M'}));mocks.read.mockResolvedValueOnce({data:{...product,variants:product.variants!.map(v=>({...v,stock_quantity:0}))},error:null});fireEvent.click(screen.getByRole('button',{name:'In winkelmand'}));expect(await screen.findByRole('alert')).toHaveTextContent('Niet beschikbaar');expect(useCart.getState().items).toHaveLength(0);expect(mocks.pixel).not.toHaveBeenCalled()
 })
 it('asks the visitor to review a changed price and respects existing quantity limits',async()=>{
  renderPicker();fireEvent.click(await screen.findByRole('button',{name:'M'}));mocks.read.mockResolvedValue({data:{...product,base_price:55},error:null});fireEvent.click(screen.getByRole('button',{name:'In winkelmand'}));expect(await screen.findByRole('alert')).toHaveTextContent('De prijs is bijgewerkt');expect(useCart.getState().items).toHaveLength(0)
