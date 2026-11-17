@@ -1259,6 +1259,13 @@
       }
     },
     "resetPassword": {
+      "emailLabel": "Email address",
+      "codeLabel": "Recovery code",
+      "codeInstructions": "Enter your email address and the code from the reset email.",
+      "invalidCode": "The recovery code is incorrect, expired or already used. Check it or request a new one.",
+      "checkingLink": "Checking your reset link…",
+      "invalidLink": "This reset link has expired or has already been used.",
+      "requestNewLink": "Request a new reset link",
       "title": "NEW PASSWORD",
       "description": "Set a new password for your account.",
       "passwordLabel": "New password",
