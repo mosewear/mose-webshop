@@ -3,9 +3,9 @@
  */
 export const TAPSTITCH_PRODUCT_SOURCES: Readonly<Record<string, { sourceProductId: string | null; sourceCode: string; sourcePage: string }>> = {
   "ecccfb41-11c6-4c47-a58d-ec332b0c10bd": {
-    "sourceProductId": "1516805081033580544",
-    "sourceCode": "RW0041-P001-V3",
-    "sourcePage": "https://www.tapstitch.com/custom/1516805081033580544"
+    "sourceProductId": null,
+    "sourceCode": "RW0016-C001-V3",
+    "sourcePage": "https://www.tapstitch.com/custom/rw0016-essential-heavyweight-hoodie?bsId=1415005602056400896"
   },
   "69ae6c7e-aee5-4f31-bd13-1383e95ce212": {
     "sourceProductId": "1558069273950404608",
@@ -33,9 +33,9 @@ export const TAPSTITCH_PRODUCT_SOURCES: Readonly<Record<string, { sourceProductI
     "sourcePage": "https://www.tapstitch.com/custom/1549095814578778112"
   },
   "2307a99e-781a-8f4a-9da0-2374d3cb464f": {
-    "sourceProductId": "1516805081033580544",
-    "sourceCode": "RW0041-P001-V3",
-    "sourcePage": "https://www.tapstitch.com/custom/1516805081033580544"
+    "sourceProductId": null,
+    "sourceCode": "RW0016-C001-V3",
+    "sourcePage": "https://www.tapstitch.com/custom/rw0016-essential-heavyweight-hoodie?bsId=1415005602056400896"
   },
   "39ff9979-e4ff-84b4-8831-cf0b0cc713af": {
     "sourceProductId": "1369643248599044096",
