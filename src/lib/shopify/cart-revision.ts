@@ -35,7 +35,7 @@ function assertOpenCart(cart: Cart | null, id: string): asserts cart is Cart {
 
 export async function reviseShopifyCart(input: {
   id: string; country: string; language: string; buyerIp: string
-  previous: Line[]; desired: Line[]; currency: string; subtotal: number; codes?: string[]
+  previous: Line[]; desired: Line[]; currency: string; subtotal: number; codes?: string[]; onVerifiedSubtotal?: (cents: number) => void
   beforeMutation: () => void
 }) {
   const { id, country, language, buyerIp, previous, desired } = input
@@ -87,6 +87,7 @@ export async function reviseShopifyCart(input: {
   assertCreatedCartLines(cart.lines.nodes, desired)
   if (JSON.stringify(cart.appliedGiftCards.map(card => card.id).sort()) !== JSON.stringify(giftCardIds)) throw new Error('CART_REVISION_GIFT_TENDER_CHANGED')
   const subtotal = cart.cost.subtotalAmount
-  if (subtotal.currencyCode !== input.currency || moneyToCents(subtotal.amount) !== input.subtotal) throw new Error('CART_REVISION_PRICE_CHANGED')
+  if (subtotal.currencyCode !== input.currency || (!input.onVerifiedSubtotal && moneyToCents(subtotal.amount) !== input.subtotal)) throw new Error('CART_REVISION_PRICE_CHANGED')
+  input.onVerifiedSubtotal?.(moneyToCents(subtotal.amount))
   return assertCheckoutUrl(cart.checkoutUrl, process.env.SHOPIFY_CHECKOUT_HOST)
 }

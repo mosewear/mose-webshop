@@ -11,6 +11,8 @@ import { trackCheckoutStarted, trackCheckoutHandoffFailed } from '@/lib/analytic
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
+import { useSeasonalOffer } from '@/components/campaign/SeasonalOfferBanner'
+import { activeSeasonalOffer, isSeasonalCode } from '@/lib/seasonal-offers'
 import { SHOPIFY_NL_SHIPPING } from '@/lib/shopify/shipping-policy'
 import { vertaalKleur } from '@/lib/kleurnaam'
 import {
@@ -62,6 +64,7 @@ const copy = {
 export function ShopifyCheckoutHandoff() {
   const locale = useLocale()
   const text = copy[locale === 'en' ? 'en' : 'nl']
+  const seasonal = useSeasonalOffer()
   const usMarketEnabled = process.env.NEXT_PUBLIC_MOSE_US_MARKET_ENABLED === 'true'
   const [buyerCountry, setBuyerCountry] = useState<'NL' | 'BE' | 'US'>('NL')
   const [usdUnitPrices, setUsdUnitPrices] = useState<Record<string, number> | null>(null)
@@ -145,7 +148,7 @@ export function ShopifyCheckoutHandoff() {
     if (locked) return
     try {
       const saved = localStorage.getItem('mose_promo_code')?.trim().toUpperCase()
-      if (saved && saved.length <= 80 && /^[A-Z0-9_-]+$/.test(saved)) setPromoCode(saved)
+      if (!activeSeasonalOffer() && !isSeasonalCode(saved) && saved && saved.length <= 80 && /^[A-Z0-9_-]+$/.test(saved)) setPromoCode(saved)
     } catch { /* Storage is optional; the customer can enter the code manually. */ }
   }, [loadLoyalty])
 
@@ -162,7 +165,7 @@ export function ShopifyCheckoutHandoff() {
     let handoffProducts: string[] = []
     try {
       if (buyerCountry === 'US' && (usdQuoteLoading || usdQuoteError || !usdUnitPrices)) throw new Error('US_MARKET_NOT_READY')
-      if (buyerCountry === 'US' && (promoCode.trim() || loyaltyPoints > 0 || items.some(item => item.isGiftCard))) throw new Error('US_BENEFITS_NOT_READY')
+      if (buyerCountry === 'US' && ((promoCode.trim() && !(seasonal && isSeasonalCode(promoCode))) || loyaltyPoints > 0 || items.some(item => item.isGiftCard))) throw new Error('US_BENEFITS_NOT_READY')
       const snapshot = createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)
       let prior: unknown = attempt.current
       if (!prior) { try { prior = JSON.parse(sessionStorage.getItem(SHOPIFY_ATTEMPT_STORAGE_KEY) || 'null') } catch { /* Optional browser storage. */ } }
@@ -310,6 +313,11 @@ export function ShopifyCheckoutHandoff() {
         <section aria-label={locale === 'en' ? 'Order summary' : 'Besteloverzicht'} className="min-w-0 self-start border-2 border-black bg-gray-50 p-4 sm:p-6 lg:sticky lg:top-6">
           <div className="flex items-baseline justify-between gap-4"><h2 className="text-base font-bold">{text.subtotal}</h2>
           <p className="text-2xl font-bold tabular-nums">{subtotalLabel}</p></div>
+          {seasonal && (!promoCode.trim() || isSeasonalCode(promoCode)) && !loyaltyPoints && (
+            <p className="mt-3 border-l-2 pl-3 text-sm font-semibold text-gray-900" style={{ borderColor: seasonal.accent }}>
+              {locale === 'en' ? `${seasonal.title.en}. Review your final price on the payment page.` : `${seasonal.title.nl}. Je ziet je definitieve prijs op de betaalpagina.`}
+            </p>
+          )}
           <p className="mt-3 text-sm leading-relaxed text-gray-700">{text.final}</p>
           <div className="my-5 space-y-2 border-y border-gray-200 py-4 text-sm">
             {hasPhysicalItems ? <p>{buyerCountry === 'NL'
@@ -327,7 +335,7 @@ export function ShopifyCheckoutHandoff() {
           </div>
           {hasGiftCards && <p className="mb-4 text-sm leading-relaxed text-gray-700">{text.giftInfo}</p>}
           {error && <p role="alert" className="mb-4 border-l-2 border-red-700 pl-3 text-sm leading-relaxed text-red-800">{error}{marketRecoveryUrl && <> <a href={marketRecoveryUrl} className="underline underline-offset-4">{text.openCheckout}</a></>}{error === text.review && <> <Link href="/contact" className="underline underline-offset-4">{text.contact}</Link></>}</p>}
-          <Button fullWidth isLoading={busy} disabled={buyerCountry === 'US' && (!usdReady || hasGiftCards || Boolean(promoCode.trim()) || loyaltyPoints > 0)} loadingLabel={text.loading} onClick={proceed}
+          <Button fullWidth isLoading={busy} disabled={buyerCountry === 'US' && (!usdReady || hasGiftCards || (Boolean(promoCode.trim()) && !(seasonal && isSeasonalCode(promoCode))) || loyaltyPoints > 0)} loadingLabel={text.loading} onClick={proceed}
             className="focus-visible:ring-black">
             <Lock size={17} aria-hidden="true" />{text.button}
           </Button>

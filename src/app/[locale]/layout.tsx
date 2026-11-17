@@ -18,6 +18,7 @@ import PaginaWeergaveMeter from '@/components/PaginaWeergaveMeter'
 import MetingSchakelaar from '@/components/MetingSchakelaar'
 import CampaignPopupWrapper from '@/components/campaign/CampaignPopupWrapper'
 import CampaignAutoApply from '@/components/campaign/CampaignAutoApply'
+import SeasonalOfferBanner from '@/components/campaign/SeasonalOfferBanner'
 import CampaignThemeProvider from '@/components/campaign/CampaignThemeProvider'
 import {
   getActiveMarketingCampaign,
@@ -130,7 +131,9 @@ export default async function LocaleLayout({
       {/* Op het afrekenscherm vervangt een kale kop de volledige navigatie,
           en blijven de voettekst en de popups weg. Zie AfrekenChrome. */}
       <BuitenAfrekenen>
-        <AnnouncementBanner />
+        <SeasonalOfferBanner locale={locale} enabled={process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true'}>
+          <AnnouncementBanner />
+        </SeasonalOfferBanner>
         <Header />
       </BuitenAfrekenen>
       <AfrekenKop />

@@ -13,6 +13,9 @@ import { decideCheckoutAttempt } from '@/lib/shopify/attempts'
 import { assertInventoryEvidence } from '@/lib/shopify/inventory'
 import { adminCredentialsConfigured } from '@/lib/shopify/admin-auth'
 import { runtimeReadiness } from '@/lib/shopify/runtime-readiness'
+import { activeSeasonalOffer, isSeasonalCode } from '@/lib/seasonal-offers'
+import { assertSeasonalCart } from '@/lib/shopify/seasonal-proof'
+import { quoteCheckoutBenefits } from '@/lib/shopify/benefit-quote'
 import { readCheckoutBenefitQuote, issueCheckoutBenefits } from '@/lib/shopify/checkout-benefits'
 import { recordDefinitiveNoCart } from '@/lib/shopify/benefit-recovery'
 import { BENEFITS_CART_QUERY, assertCartBenefits } from '@/lib/shopify/benefits'
@@ -51,6 +54,8 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return respond({ error: 'Ongeldige winkelmand.' }, 400)
 
   const input = parsed.data
+  const seasonal = !input.loyaltyPoints && (!input.promoCode || isSeasonalCode(input.promoCode)) ? activeSeasonalOffer() : undefined
+  if (!seasonal && isSeasonalCode(input.promoCode)) return respond({ code: 'BENEFIT_UNAVAILABLE', retrySafe: true }, 409)
   // US selling is independently approved only after USD payment, DDP and margin checks.
   // The NL/EUR checkout remains unchanged until that explicit release.
   if (input.country === 'US' && (
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
     // is OFF even if the US storefront preview is enabled.
     return respond({ error: 'United States checkout is not available yet.', code: 'US_MARKET_NOT_READY' }, 503)
   }
-  if (input.country === 'US' && (input.promoCode || input.loyaltyPoints || input.giftCards?.length)) {
+  if (input.country === 'US' && ((input.promoCode && !seasonal) || input.loyaltyPoints || input.giftCards?.length)) {
     return respond({ error: 'US discounts and gift cards are awaiting currency verification.', code: 'US_BENEFITS_NOT_READY' }, 409)
   }
   const lease = randomUUID()
@@ -149,7 +154,13 @@ export async function POST(request: NextRequest) {
     const rejectNativeGiftInput = async () => {
       // A failed catalog preparation proves no NEW cart, but the supplied ID
       // may already own an older payable cart. Fence it before permitting rotation.
-      const fingerprint = createHash('sha256').update(JSON.stringify({ domain: 'rejected-native-gift-input:v1', input, userId })).digest('hex')
+      const seasonalLines = benefitLines.map(line => ({ ...line, unitCents: marketPrice.perVariantCents[line.variantId] }))
+    const readSeasonalCart = async (id: string, subtotal: number) => {
+      if (!seasonal) throw new Error('SEASONAL_NOT_ACTIVE')
+      const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id }, buyerIp)
+      return assertSeasonalCart(benefits.cart, seasonal, marketPrice.currency, seasonalLines, subtotal)
+    }
+    const fingerprint = createHash('sha256').update(JSON.stringify({ domain: 'rejected-native-gift-input:v1', input, userId })).digest('hex')
       const rejected = await db!.rpc('reserve_shopify_checkout', { p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'), p_fingerprint: fingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'), p_snapshot: { rejectedNativeGiftInput: true }, p_lease: lease })
       const decision = rejected.error ? null : decideCheckoutAttempt(rejected.data?.[0], fingerprint, lease)
       let retrySafe = decision?.kind === 'reject' && decision.retrySafe
@@ -195,7 +206,10 @@ export async function POST(request: NextRequest) {
     }))
     let preparedBenefits: Awaited<ReturnType<typeof readCheckoutBenefitQuote>>
     try {
-      preparedBenefits = await readCheckoutBenefitQuote(db, { lines: benefitLines, promoCode: input.promoCode, points: input.loyaltyPoints, user: verifiedUser })
+      preparedBenefits = seasonal ? {
+        quote: quoteCheckoutBenefits({ lines: benefitLines, tiers: [] }), promo: undefined, orderWidePromo: false,
+        expectedSubtotalBeforeOrderCents: marketPrice.subtotalCents, lines: benefitLines, user: verifiedUser, points: 0,
+      } : await readCheckoutBenefitQuote(db, { lines: benefitLines, promoCode: input.promoCode, points: input.loyaltyPoints, user: verifiedUser })
       // Local quantity and loyalty discount calculations are EUR-specific.
       // Do not create a USD cart with an unverified discount or exchange rate.
       if (input.country === 'US' && preparedBenefits.quote.discountCents !== 0) {
@@ -219,10 +233,16 @@ export async function POST(request: NextRequest) {
       }
       return respond({ error: 'Je korting of spaarpunten kunnen nu niet worden toegepast. Controleer je code en beschikbare punten.', code: 'BENEFIT_UNAVAILABLE', retrySafe: Boolean(retrySafe) }, 409)
     }
+    const seasonalLines = benefitLines.map(line => ({ ...line, unitCents: marketPrice.perVariantCents[line.variantId] }))
+    const readSeasonalCart = async (id: string, subtotal: number) => {
+      if (!seasonal) throw new Error('SEASONAL_NOT_ACTIVE')
+      const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id }, buyerIp)
+      return assertSeasonalCart(benefits.cart, seasonal, marketPrice.currency, seasonalLines, subtotal)
+    }
     const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId,
-      benefits: { quote: preparedBenefits.quote, points: input.loyaltyPoints ?? 0 } })).digest('hex')
+      benefits: { quote: preparedBenefits.quote, points: input.loyaltyPoints ?? 0, ...(seasonal ? { seasonal: seasonal.code } : {}) } })).digest('hex')
     const sessionHash = createHmac('sha256', secret).update(sessionToken).digest('hex')
-    const cartSnapshot = { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote, orderWidePromo: preparedBenefits.orderWidePromo }
+    const cartSnapshot = { locale: input.locale, country: input.country, lines, benefits: preparedBenefits.quote, orderWidePromo: preparedBenefits.orderWidePromo, ...(seasonal ? { seasonalCode: seasonal.code } : {}) }
     if (input.editExisting) {
       const review = () => respond({ code: 'INPUT_CHANGED', retrySafe: false }, 409)
       const pendingEdit = () => respond({ code: 'ATTEMPT_PENDING' }, 409)
@@ -242,14 +262,14 @@ export async function POST(request: NextRequest) {
       if (ownerError) throw ownerError
       if ((owner?.user_id ?? null) !== userId) return review()
       const prior = old.cart_snapshot
-      if (prior?.country !== input.country || !prior.benefits || !Array.isArray(prior.lines)) return review()
+      if (prior?.country !== input.country || prior?.seasonalCode !== seasonal?.code || !prior.benefits || !Array.isArray(prior.lines)) return review()
       if (old.request_fingerprint === fingerprint) {
         return respond({ checkoutUrl: assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
       }
 
       let expectedBenefits: Awaited<ReturnType<typeof existingCartBenefits>>
       try {
-        expectedBenefits = await existingCartBenefits(db, { attemptId: input.attemptId, secret, prior: prior.benefits,
+        expectedBenefits = seasonal ? [] : await existingCartBenefits(db, { attemptId: input.attemptId, secret, prior: prior.benefits,
           orderWidePromo: prior.orderWidePromo, next: preparedBenefits })
       } catch {
         return respond({ code: 'BENEFIT_UNAVAILABLE', retrySafe: false }, 409)
@@ -277,13 +297,16 @@ export async function POST(request: NextRequest) {
         }
       }
       try {
+        let seasonalSubtotal: number | undefined
         const checkoutUrl = await reviseShopifyCart({
           ...context, buyerIp, id: old.cart_id, previous: prior.lines, desired: lines,
           currency: marketPrice.currency, subtotal: input.country === 'US' ? marketPrice.subtotalCents : preparedBenefits.expectedSubtotalBeforeOrderCents,
-          codes: expectedBenefits.map(benefit => benefit.code),
+          codes: seasonal ? [seasonal.code] : expectedBenefits.map(benefit => benefit.code),
+          onVerifiedSubtotal: seasonal ? value => { seasonalSubtotal = value } : undefined,
           beforeMutation: () => { mutationStarted = true },
         })
-        if (input.country !== 'US') {
+        if (seasonal) await readSeasonalCart(old.cart_id, seasonalSubtotal ?? -1)
+        else if (input.country !== 'US') {
           const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: old.cart_id }, buyerIp)
           assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
         }
@@ -328,12 +351,12 @@ export async function POST(request: NextRequest) {
     }
     // Voucher capabilities/point holds are issued only after the durable attempt
     // and account proof. An unknown issuance is never retried with another ID.
-    const expectedBenefits = await issueCheckoutBenefits(db, { ...preparedBenefits, attemptId: input.attemptId, checkoutLease: lease, secret })
+    const expectedBenefits = seasonal ? [] : await issueCheckoutBenefits(db, { ...preparedBenefits, attemptId: input.attemptId, checkoutLease: lease, secret })
     const created = await storefront<CreatedCart>(CART_CREATE, {
       ...context, input: {
         buyerIdentity: { countryCode: input.country, ...(verifiedUser?.email_confirmed_at && verifiedUser.email ? { email: verifiedUser.email } : {}) },
         lines: lines.map(({ merchandiseId, quantity, attributes: lineAttributes }) => ({ merchandiseId, quantity, ...(lineAttributes?.length ? { attributes: lineAttributes } : {}) })),
-        ...(expectedBenefits.length ? { discountCodes: expectedBenefits.map(benefit => benefit.code) } : {}),
+        ...(seasonal ? { discountCodes: [seasonal.code] } : expectedBenefits.length ? { discountCodes: expectedBenefits.map(benefit => benefit.code) } : {}),
         attributes,
       },
     }, buyerIp)
@@ -351,8 +374,9 @@ export async function POST(request: NextRequest) {
       cart.totalQuantity !== lines.reduce((n, l) => n + l.quantity, 0)) throw new Error('CART_MISMATCH')
     assertCreatedCartLines(cart.lines.nodes, lines)
     const expectedSubtotalCents = input.country === 'US' ? marketPrice.subtotalCents : preparedBenefits.expectedSubtotalBeforeOrderCents
-    if (moneyToCents(cart.cost.subtotalAmount.amount) !== expectedSubtotalCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
-    if (input.country !== 'US') {
+    if (!seasonal && moneyToCents(cart.cost.subtotalAmount.amount) !== expectedSubtotalCents) throw new Error('CART_BENEFIT_TOTAL_MISMATCH')
+    if (seasonal) await readSeasonalCart(cart.id, moneyToCents(cart.cost.subtotalAmount.amount))
+    else if (input.country !== 'US') {
       const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id: cart.id }, buyerIp)
       assertCartBenefits(benefits.cart, expectedBenefits, { lines: benefitLines, payableMerchandiseCents: preparedBenefits.quote.payableMerchandiseCents })
     }
