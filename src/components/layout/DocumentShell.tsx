@@ -142,6 +142,12 @@ export default function DocumentShell({
             __html: `
               // Wait for cookie consent before initializing
               function initFacebookPixel() {
+                const host = window.location.hostname;
+                if (host !== 'www.mosewear.com' && host !== 'mosewear.com') return;
+                if (window.navigator.webdriver || localStorage.getItem('mose_interne_sessie') === '1') return;
+                if (new URLSearchParams(window.location.search).get('meting') === 'uit') return;
+                if (localStorage.getItem('mose_cookie_consent') !== 'all' || window.fbq) return;
+
                 !function(f,b,e,v,n,t,s)
                 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
                 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -150,6 +156,7 @@ export default function DocumentShell({
                 t.src=v;s=b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t,s)}(window, document,'script',
                 'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('set', 'autoConfig', false, '1447430483627328');
                 fbq('init', '1447430483627328');
                 fbq('track', 'PageView');
               }
