@@ -154,13 +154,7 @@ export async function POST(request: NextRequest) {
     const rejectNativeGiftInput = async () => {
       // A failed catalog preparation proves no NEW cart, but the supplied ID
       // may already own an older payable cart. Fence it before permitting rotation.
-      const seasonalLines = benefitLines.map(line => ({ ...line, unitCents: marketPrice.perVariantCents[line.variantId] }))
-    const readSeasonalCart = async (id: string, subtotal: number) => {
-      if (!seasonal) throw new Error('SEASONAL_NOT_ACTIVE')
-      const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id }, buyerIp)
-      return assertSeasonalCart(benefits.cart, seasonal, marketPrice.currency, seasonalLines, subtotal)
-    }
-    const fingerprint = createHash('sha256').update(JSON.stringify({ domain: 'rejected-native-gift-input:v1', input, userId })).digest('hex')
+      const fingerprint = createHash('sha256').update(JSON.stringify({ domain: 'rejected-native-gift-input:v1', input, userId })).digest('hex')
       const rejected = await db!.rpc('reserve_shopify_checkout', { p_id: input.attemptId, p_session: createHmac('sha256', secret).update(sessionToken).digest('hex'), p_fingerprint: fingerprint, p_buyer: createHmac('sha256', secret).update(buyerIp).digest('hex'), p_snapshot: { rejectedNativeGiftInput: true }, p_lease: lease })
       const decision = rejected.error ? null : decideCheckoutAttempt(rejected.data?.[0], fingerprint, lease)
       let retrySafe = decision?.kind === 'reject' && decision.retrySafe
