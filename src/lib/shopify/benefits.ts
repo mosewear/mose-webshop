@@ -73,7 +73,7 @@ export const BENEFITS_CART_QUERY = `query MoseBenefitsCart($id: ID!) {
     deliveryGroups(first: 100) { pageInfo { hasNextPage } nodes { discountAllocations { __typename } } }
     lines(first: 100) { pageInfo { hasNextPage } nodes {
       quantity merchandise { ... on ProductVariant { id } }
-      cost { amountPerQuantity { amount currencyCode } subtotalAmount { amount currencyCode } }
+      cost { amountPerQuantity { amount currencyCode } subtotalAmount { amount currencyCode } totalAmount { amount currencyCode } }
       discountAllocations(lineLevelOnly: false) { __typename ... on CartCodeDiscountAllocation { code discountedAmount { amount currencyCode } } }
     } }
   }
