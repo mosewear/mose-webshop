@@ -16,6 +16,9 @@ import {compareSizes} from '@/lib/variant-sort'
 import {useCart} from '@/store/cart'
 import {useCartDrawer} from '@/store/cartDrawer'
 import {trackAddToCart} from '@/lib/analytics'
+import {catalogContentId} from '@/lib/catalog-ids'
+import {trackPixelEvent} from '@/lib/facebook-pixel'
+import {useMoseUsPrices} from '@/hooks/useMoseUsPrices'
 
 /** Mounted on demand; current published variants are read again before adding. */
 export default function CatalogQuickAdd({product, initialColor, onClose}: {
@@ -63,6 +66,7 @@ export default function CatalogQuickAdd({product, initialColor, onClose}: {
   const p = current ?? product, name = locale === 'en' ? p.name_en || p.name : p.name
   const colors = getUniqueColors(p.variants), variants = (p.variants ?? []).filter(v => v.color === color).sort((a,b) => compareSizes(a.size ?? '', b.size ?? ''))
   const selected = variants.find(v => v.size === size)
+  const market = useMoseUsPrices(selected?.id ? [selected.id] : [])
   const add = async () => {
     if (!current || !selected?.id || !availableVariant(selected) || submitting.current) return
     submitting.current = true
@@ -85,6 +89,18 @@ export default function CatalogQuickAdd({product, initialColor, onClose}: {
         isPresale: !madeToOrder && (v.stock_quantity ?? 0) <= 0 && v.presale_enabled === true,
         presaleExpectedDate: v.presale_expected_date ?? undefined, presaleStock: v.presale_stock_quantity ?? 0})
       // Cart success must not depend on optional analytics.
+      const contentId = catalogContentId(fresh.id, v.color)
+      const trackedPrice = market.isUs ? market.price(v.id) : price
+      trackPixelEvent('AddToCart', {
+        content_ids: [contentId],
+        contents: [{id: contentId, quantity: 1, item_price: trackedPrice}],
+        content_name: `${name} - ${v.size} - ${v.color}`,
+        content_type: 'product',
+        content_category: fresh.category?.name,
+        currency: market.isUs ? 'USD' : 'EUR',
+        value: trackedPrice,
+        num_items: 1,
+      })
       try {trackAddToCart({id: fresh.id, name: fresh.name, category: fresh.category?.name ?? 'uncategorized', price, quantity: 1,
         color: v.color, size: v.size, variantId: v.id, sku: v.sku, source: 'catalog', sizeChosenByUser: true})} catch { /* Optional measurement. */ }
       onClose()

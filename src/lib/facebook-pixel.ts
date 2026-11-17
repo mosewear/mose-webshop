@@ -91,7 +91,7 @@ async function sendToConversionsAPI(
     
     const response = await fetch('/api/facebook-capi', {
       method: 'POST',
-      keepalive: event === 'InitiateCheckout',
+      keepalive: event === 'AddToCart' || event === 'InitiateCheckout',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -177,6 +177,9 @@ export function trackPixelEvent(
   }
 
   try {
+    // The pixel and the server relay must both follow the storefront cookie choice.
+    if (window.localStorage.getItem('mose_cookie_consent') !== 'all') return
+
     // Stable ID when caller supplies one (Purchase: order.id), else random.
     const eventId = options?.eventId || generateEventId()
     
