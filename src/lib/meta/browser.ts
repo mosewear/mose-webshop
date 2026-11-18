@@ -8,7 +8,9 @@ export function readBrowserCookie(name: string): string | undefined {
 export function isMetaTestBrowser(): boolean { return Boolean(readBrowserCookie(META_TEST_COOKIE)) }
 export function syncMetaConsent(): boolean {
   try {
-    const allowed = localStorage.getItem('mose_cookie_consent') === 'all'
+    // QA has its own signed server-validated lane and never loads the real pixel.
+    // Do not overwrite the tester's saved marketing preference for a test run.
+    const allowed = isMetaTestBrowser() || localStorage.getItem('mose_cookie_consent') === 'all'
     document.cookie = `${META_CONSENT_COOKIE}=${allowed ? 'all' : 'necessary'}; Path=/; SameSite=Lax; Secure; Max-Age=31536000`
     return allowed
   } catch { return false }
