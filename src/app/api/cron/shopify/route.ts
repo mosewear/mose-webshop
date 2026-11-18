@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { workerAuthorized } from '@/lib/shopify/http'
 import { reconcileOrders } from '@/lib/shopify/reconcile'
+import { runMetaPurchaseWorker } from '@/lib/meta/shopify-purchase'
 import { runOrderWorker } from '@/lib/shopify/worker'
 
 export const runtime = 'nodejs'
@@ -26,8 +27,12 @@ export async function GET(request: Request) {
     if (!options.signal.aborted && Date.now() + 16_000 < deadline) {
       try { worker = await runOrderWorker(db, undefined, options) } catch { /* Leases remain recoverable; report failure without provider details. */ }
     }
+    let meta: Awaited<ReturnType<typeof runMetaPurchaseWorker>> | null = null
+    if (!options.signal.aborted && Date.now() + 15_000 < deadline) {
+      try { meta = await runMetaPurchaseWorker(db, undefined, deadline) } catch { console.error('[Meta CAPI] Purchase worker unavailable') }
+    }
     const ok = reconciliation !== null && worker !== null && worker.failed === 0 && worker.leaseLost === 0
-    return NextResponse.json({ ok, skipped: false, reconciliation, worker, ...(ok ? {} : { error: 'SHOPIFY_SYNC_INCOMPLETE' }) }, { status: ok ? 200 : 503, headers })
+    return NextResponse.json({ ok, skipped: false, reconciliation, worker, meta, ...(ok ? {} : { error: 'SHOPIFY_SYNC_INCOMPLETE' }) }, { status: ok ? 200 : 503, headers })
   } catch {
     return NextResponse.json({ ok: false, error: 'SHOPIFY_SYNC_UNAVAILABLE' }, { status: 503, headers })
   }

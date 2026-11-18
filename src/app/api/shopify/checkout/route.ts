@@ -25,6 +25,7 @@ import { assertNativeGiftCutover, nativeGiftRuntimeReadiness } from '@/lib/shopi
 import { assertCreatedCartLines, aggregateBenefitLines } from '@/lib/shopify/cart-line-proof'
 import { verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
 import { reviseShopifyCart } from '@/lib/shopify/cart-revision'
+import { saveCheckoutAttribution } from '@/lib/meta/checkout-attribution'
 import { existingCartBenefits } from '@/lib/shopify/cart-revision-benefits'
 
 export const runtime = 'nodejs'
@@ -54,6 +55,10 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return respond({ error: 'Ongeldige winkelmand.' }, 400)
 
   const input = parsed.data
+  const checkoutResponse = async (checkoutUrl: string) => {
+    if (db) { try { await saveCheckoutAttribution(db, request, input.attemptId) } catch { console.error('[Meta CAPI] Attribution unavailable') } }
+    return respond({ checkoutUrl, attemptId: input.attemptId })
+  }
   const seasonal = !input.loyaltyPoints && (!input.promoCode || isSeasonalCode(input.promoCode)) ? activeSeasonalOffer() : undefined
   // US selling is independently approved only after USD payment, DDP and margin checks.
   // The NL/EUR checkout remains unchanged until that explicit release.
@@ -257,7 +262,7 @@ export async function POST(request: NextRequest) {
       const prior = old.cart_snapshot
       if (prior?.country !== input.country || prior?.seasonalCode !== seasonal?.code || !prior.benefits || !Array.isArray(prior.lines)) return review()
       if (old.request_fingerprint === fingerprint) {
-        return respond({ checkoutUrl: assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
+        return checkoutResponse(assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST))
       }
 
       let expectedBenefits: Awaited<ReturnType<typeof existingCartBenefits>>
@@ -305,7 +310,7 @@ export async function POST(request: NextRequest) {
         }
         const saved = await saveEdit({ status: 'ready', request_fingerprint: fingerprint, cart_snapshot: { ...cartSnapshot, orderWidePromo: prior.orderWidePromo }, checkout_url: checkoutUrl, last_error: null })
         if (saved.error || !saved.data) throw new Error('CART_EDIT_SAVE_FAILED')
-        return respond({ checkoutUrl, attemptId: input.attemptId })
+        return checkoutResponse(checkoutUrl)
       } catch (error) {
         const code = error instanceof Error && /^[A-Z_]{1,90}$/.test(error.message) ? error.message : 'CART_EDIT_UNEXPECTED'
         console.error('Shopify cart revision stopped', { code, mutationStarted })
@@ -333,7 +338,7 @@ export async function POST(request: NextRequest) {
       error: decision.retrySafe ? 'Deze afrekenpoging kan veilig opnieuw worden gestart.' : 'Deze afrekenpoging moet eerst worden gecontroleerd. Je winkelmand blijft bewaard.',
       code: decision.code, retrySafe: decision.retrySafe,
     }, 409)
-    if (decision.kind === 'reuse') return respond({ checkoutUrl: assertCheckoutUrl(decision.url, process.env.SHOPIFY_CHECKOUT_HOST), attemptId: input.attemptId })
+    if (decision.kind === 'reuse') return checkoutResponse(assertCheckoutUrl(decision.url, process.env.SHOPIFY_CHECKOUT_HOST))
     reserved = true
     const attributes = [{ key: 'mose_source', value: 'unified-checkout' }, { key: 'mose_attempt', value: input.attemptId }]
     if (userId) {
@@ -376,7 +381,7 @@ export async function POST(request: NextRequest) {
     const checkoutUrl = assertCheckoutUrl(cart.checkoutUrl, process.env.SHOPIFY_CHECKOUT_HOST)
     const saved = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'ready', p_cart_id: cart.id, p_checkout_url: checkoutUrl })
     if (saved.error || saved.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')
-    return respond({ checkoutUrl, attemptId: input.attemptId })
+    return checkoutResponse(checkoutUrl)
   } catch {
     if (reserved && db) {
       // Unknown is intentional: never recreate a cart automatically after an uncertain mutation.

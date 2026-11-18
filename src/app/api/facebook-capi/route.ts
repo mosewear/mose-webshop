@@ -1,268 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { z } from 'zod'
 import { isLikelyBotRequest } from '@/lib/bot-detection'
-
-/**
- * Facebook Conversions API (Server-Side Events)
- * 
- * Deze API route ontvangt events van de client en stuurt ze
- * naar Facebook's Conversions API voor server-side tracking.
- * 
- * Voordelen:
- * - Werkt ook als client-side pixel geblokt wordt
- * - Betere event matching
- * - Hogere event quality score
- * - iOS 14+ privacy compliant
- */
-
-const PIXEL_ID = '1447430483627328'
-// Keep this in sync with the Pixel base script in `src/app/layout.tsx`.
-// Meta only guarantees stability for the latest two Graph API versions,
-// so bump this together with the public fbevents.js version when Meta
-// publishes a new release.
-const API_VERSION = 'v22.0'
-const FB_API_URL = `https://graph.facebook.com/${API_VERSION}/${PIXEL_ID}/events`
-
-interface FacebookEvent {
-  event_name: string
-  event_time: number
-  event_id?: string
-  event_source_url: string
-  action_source: 'website'
-  user_data: {
-    em?: string[]  // email (hashed)
-    ph?: string[]  // phone (hashed)
-    fn?: string[]  // first name (hashed)
-    ln?: string[]  // last name (hashed)
-    ct?: string[]  // city (hashed)
-    st?: string[]  // state (hashed)
-    zp?: string[]  // zip/postal code (hashed)
-    country?: string[]  // country code (NOT hashed)
-    client_ip_address?: string
-    client_user_agent?: string
-    fbc?: string  // Facebook click ID cookie
-    fbp?: string  // Facebook browser ID cookie
-  }
-  custom_data?: {
-    currency?: string
-    value?: number
-    content_ids?: string[]
-    contents?: Array<{ id: string; quantity: number; item_price?: number }>
-    content_name?: string
-    content_type?: string
-    content_category?: string
-    num_items?: number
-    search_string?: string
-    transaction_id?: string
-    predicted_ltv?: number
-  }
-}
-
-/**
- * Hash data met SHA256 voor Facebook's enhanced matching
- */
-function hashData(data: string): string {
-  if (!data) return ''
-  // Normalize: lowercase en trim
-  const normalized = data.toLowerCase().trim()
-  // SHA256 hash
-  return crypto.createHash('sha256').update(normalized).digest('hex')
-}
-
-/**
- * Normaliseer telefoonnummer (verwijder niet-numerieke karakters)
- */
-function normalizePhone(phone: string): string {
-  return phone.replace(/[^0-9]/g, '')
-}
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 30
-const RATE_WINDOW_MS = 60_000
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS })
-    return true
-  }
-  entry.count++
-  return entry.count <= RATE_LIMIT
-}
-
-/**
- * Alleen de echte winkel mag hier gebeurtenissen inleggen.
- *
- * `localhost` stond hier eerder bij, en elke voorvertoning op een
- * vercel.app-domein kwam er via de lege-origin-tak gewoon langs. Daarmee
- * stuurden een ontwikkelserver en elke testomgeving net zo hard echte
- * AddToCart-gebeurtenissen naar Meta. Dat is een van de redenen dat de
- * campagne meer mandjes telde dan onze eigen administratie.
- *
- * De betaalwebhook raakt deze route niet (die praat via src/lib/meta/capi.ts
- * rechtstreeks met Meta), dus we mogen hier streng zijn: dit is per definitie
- * een browser op de winkel.
- */
-function isWinkelOrigin(origin: string): boolean {
-  if (!origin) return false
-  try {
-    const host = new URL(origin).hostname
-    return host === 'www.mosewear.com' || host === 'mosewear.com'
-  } catch {
-    return false
-  }
-}
-
+import { sendCapiEvent } from '@/lib/meta/capi'
+import { verifyMetaTestTicket } from '@/lib/meta/test-session'
+import { readLimitedBody } from '@/lib/shopify/http'
+import { checkSlidingWindowRateLimit, getClientIp, type SlidingWindowEntry } from '@/lib/rate-limit-ip'
+import { createServiceClient } from '@/lib/supabase/service'
+const buckets = new Map<string, SlidingWindowEntry>()
+const eventSchema = z.object({
+  event_name: z.enum(['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'Purchase', 'Search', 'CompleteRegistration', 'Lead', 'Subscribe']),
+  event_id: z.string().min(1).max(150),
+  event_source_url: z.string().url().max(3000),
+  user_data: z.object({ email: z.string().max(254).optional(), firstName: z.string().max(100).optional(), lastName: z.string().max(100).optional(), phone: z.string().max(50).optional(), city: z.string().max(100).optional(), state: z.string().max(100).optional(), zip: z.string().max(30).optional(), country: z.string().max(50).optional(), fbc: z.string().regex(/^fb\.\d\.\d{13}\.[A-Za-z0-9_.-]{6,500}$/).optional(), fbp: z.string().regex(/^fb\.\d\.\d{13}\.\d+$/).optional() }).default({}),
+  custom_data: z.object({ currency: z.string().regex(/^[A-Z]{3}$/).optional(), value: z.number().finite().nonnegative().max(100000).optional(), content_ids: z.array(z.string().max(200)).max(100).optional(), contents: z.array(z.object({ id: z.string().max(200), quantity: z.number().int().positive().max(100), item_price: z.number().nonnegative().optional() })).max(100).optional(), content_name: z.string().max(500).optional(), content_type: z.string().max(50).optional(), content_category: z.string().max(200).optional(), num_items: z.number().int().nonnegative().optional(), search_string: z.string().max(200).optional(), transaction_id: z.string().max(150).optional(), predicted_ltv: z.number().nonnegative().optional() }).default({}),
+})
 export async function POST(request: NextRequest) {
+  const headers = { 'Cache-Control': 'no-store' }
+  const respond = (body: unknown, status = 200) => NextResponse.json(body, { status, headers })
+  if (!['https://www.mosewear.com', 'https://mosewear.com'].includes(request.headers.get('origin') || '')) return respond({ ok: true, filtered: 'origin' })
+  if (request.cookies.get('mose_meta_consent')?.value !== 'all') return respond({ ok: true, filtered: 'consent' })
+  if (!checkSlidingWindowRateLimit(buckets, getClientIp(request), 60, 60_000)) return respond({ error: 'Rate limited' }, 429)
+  const testCookie = request.cookies.get('mose_meta_test')?.value
+  const test = verifyMetaTestTicket(testCookie)
+  if (testCookie && !test) return respond({ error: 'Expired test session' }, 403)
+  const userAgent = request.headers.get('user-agent')
+  if (!test && isLikelyBotRequest({ userAgent, countryCode: request.headers.get('x-vercel-ip-country') })) return respond({ ok: true, filtered: 'bot' })
   try {
-    const origin = request.headers.get('origin') || ''
-    if (!isWinkelOrigin(origin)) {
-      // 200, zodat een echte bezoeker geen fout in zijn console krijgt en niet
-      // opnieuw probeert. Niets gaat de deur uit.
-      return NextResponse.json({ ok: true, filtered: 'origin' })
+    const event = eventSchema.safeParse(JSON.parse((await readLimitedBody(request, 16000)).toString('utf8')))
+    if (!event.success) return respond({ error: 'Invalid event' }, 400)
+    const source = new URL(event.data.event_source_url)
+    if (!['www.mosewear.com','mosewear.com'].includes(source.hostname) || source.protocol !== 'https:') return respond({ error: 'Invalid source' }, 400)
+    // Browser requests cannot invent a paid order. Native Shopify Purchase is server-authoritative.
+    if (event.data.event_name === 'Purchase' && !test) {
+      const id = event.data.custom_data.transaction_id
+      if (!id || event.data.event_id !== id || !/^[0-9a-f-]{36}$/i.test(id)) return respond({ error: 'Paid order required' }, 400)
+      const paid = await createServiceClient().from('orders').select('id,total,payment_status').eq('id', id).maybeSingle()
+      if (paid.error || paid.data?.payment_status !== 'paid' || Number(paid.data.total) !== event.data.custom_data.value || event.data.custom_data.currency !== 'EUR') return respond({ error: 'Paid order required' }, 400)
     }
-
-    // Dezelfde botfilter als onze eigen meting. Die zat hier niet, en daardoor
-    // werd elke geautomatiseerde sessie (test, crawler, scraper) wél bij Meta
-    // geteld en niet bij ons. Twee systemen die hetzelfde moeten meten, moeten
-    // ook hetzelfde weigeren.
-    const userAgent = request.headers.get('user-agent')
-    const countryCode =
-      request.headers.get('x-vercel-ip-country') || request.headers.get('cf-ipcountry')
-    if (isLikelyBotRequest({ userAgent, countryCode })) {
-      return NextResponse.json({ ok: true, filtered: 'bot' })
-    }
-
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-    }
-
-    const accessToken = process.env.FACEBOOK_ACCESS_TOKEN
-
-    if (!accessToken) {
-      console.error('[FB CAPI] No access token configured')
-      return NextResponse.json(
-        { error: 'Facebook API not configured' },
-        { status: 500 }
-      )
-    }
-
-    const body = await request.json()
-    
-    // Destructure event data
-    const {
-      event_name,
-      event_id,
-      event_source_url,
-      user_data = {},
-      custom_data = {},
-    } = body
-
-    if (!event_name) {
-      return NextResponse.json(
-        { error: 'event_name is required' },
-        { status: 400 }
-      )
-    }
-
-    // Build user_data met hashing voor PII
-    const hashedUserData: FacebookEvent['user_data'] = {
-      client_ip_address: request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                         request.headers.get('x-real-ip') || 
-                         undefined,
-      client_user_agent: request.headers.get('user-agent') || undefined,
-    }
-
-    // Hash PII fields (only if non-empty)
-    if (user_data.email && user_data.email.trim()) {
-      hashedUserData.em = [hashData(user_data.email)]
-    }
-    if (user_data.phone && user_data.phone.trim()) {
-      const normalized = normalizePhone(user_data.phone)
-      if (normalized) { // Only add if not empty after normalization
-        hashedUserData.ph = [hashData(normalized)]
-      }
-    }
-    if (user_data.firstName && user_data.firstName.trim()) {
-      hashedUserData.fn = [hashData(user_data.firstName)]
-    }
-    if (user_data.lastName && user_data.lastName.trim()) {
-      hashedUserData.ln = [hashData(user_data.lastName)]
-    }
-    if (user_data.city && user_data.city.trim()) {
-      hashedUserData.ct = [hashData(user_data.city)]
-    }
-    if (user_data.state && user_data.state.trim()) {
-      hashedUserData.st = [hashData(user_data.state)]
-    }
-    if (user_data.zip && user_data.zip.trim()) {
-      hashedUserData.zp = [hashData(user_data.zip)]
-    }
-    if (user_data.country && user_data.country.trim()) {
-      // Country code MUST be hashed (lowercase 2-letter code, then hashed)
-      const countryCode = user_data.country.toLowerCase().substring(0, 2)
-      if (countryCode) {
-        hashedUserData.country = [hashData(countryCode)]
-      }
-    }
-
-    // Facebook cookies (NOT hashed, only if present and non-empty)
-    if (user_data.fbc && user_data.fbc.trim()) {
-      hashedUserData.fbc = user_data.fbc
-    }
-    if (user_data.fbp && user_data.fbp.trim()) {
-      hashedUserData.fbp = user_data.fbp
-    }
-
-    // Build event
-    const fbEvent: FacebookEvent = {
-      event_name,
-      event_time: Math.floor(Date.now() / 1000),
-      event_id,
-      event_source_url: event_source_url || 'https://www.mosewear.com',
-      action_source: 'website',
-      user_data: hashedUserData,
-      custom_data: {
-        currency: custom_data.currency || 'EUR',
-        ...custom_data,
-      },
-    }
-
-    const response = await fetch(FB_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: [fbEvent],
-        access_token: accessToken,
-      }),
+    const result = await sendCapiEvent({ ...event.data,
+      user_data: { ...event.data.user_data, client_ip_address: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(), client_user_agent: userAgent ?? undefined },
+      test_event_code: test?.code,
     })
-
-    const result = await response.json()
-
-    if (!response.ok) {
-      console.error('[FB CAPI] Facebook API error:', result)
-      return NextResponse.json(
-        { error: 'Facebook API error', details: result },
-        { status: response.status }
-      )
+    if (!result.ok || result.events_received !== 1) {
+      console.error('[Meta CAPI] Event rejected', { event: event.data.event_name, status: result.status, trace: result.fbtrace_id })
+      return respond({ error: 'Event delivery failed' }, 502)
     }
-
-    return NextResponse.json({
-      success: true,
-      events_received: result.events_received,
-      fbtrace_id: result.fbtrace_id,
-    })
-
-  } catch (error: any) {
-    console.error('[FB CAPI] Error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+    console.info('[Meta CAPI] Event accepted', { event: event.data.event_name, event_id: event.data.event_id, test: Boolean(test), trace: result.fbtrace_id })
+    return respond({ success: true, events_received: 1, fbtrace_id: result.fbtrace_id, ...(test ? { test: true } : {}) })
+  } catch { return respond({ error: 'Invalid event request' }, 400) }
 }
-

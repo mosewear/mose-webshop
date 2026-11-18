@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { syncMetaConsent } from '@/lib/meta/browser'
 import { Link } from '@/i18n/routing'
 
 export default function CookieConsent() {
@@ -14,6 +15,7 @@ export default function CookieConsent() {
   // immutability-regel leest in bronvolgorde, dus een verwijzing naar een
   // functie die lager staat wordt gemarkeerd, ook al is hij gehoist.
   function loadTrackingScripts() {
+    syncMetaConsent()
     window.dispatchEvent(new Event('mose-tracking-enabled'))
   }
 
@@ -65,6 +67,7 @@ export default function CookieConsent() {
       loadTrackingScripts()
     } else {
       localStorage.setItem('mose_cookie_consent', 'necessary')
+      syncMetaConsent()
     }
     
     // Animate out
