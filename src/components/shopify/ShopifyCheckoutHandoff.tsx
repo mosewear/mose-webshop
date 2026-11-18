@@ -8,6 +8,7 @@ import { Link } from '@/i18n/routing'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
 import { trackCheckoutStarted, trackCheckoutHandoffFailed } from '@/lib/analytics'
+import { catalogContentId } from '@/lib/catalog-ids'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
@@ -253,6 +254,9 @@ export function ShopifyCheckoutHandoff() {
             currency: usdValue === null ? 'EUR' : 'USD',
             value: usdValue ?? eurValue,
             num_items: quantity,
+            content_type: 'product',
+            content_ids: checkoutItems.map(item => catalogContentId(item.productId, item.color)),
+            contents: checkoutItems.map(item => ({ id: catalogContentId(item.productId, item.color), quantity: item.quantity, item_price: buyerCountry === 'US' && usdUnitPrices ? usdUnitPrices[item.variantId] : item.price })),
           }, undefined, { eventId: attemptId })
           sessionStorage.setItem(CHECKOUT_TRACKED_STORAGE_KEY, attemptId)
         }

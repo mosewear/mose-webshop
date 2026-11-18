@@ -80,7 +80,7 @@ describe('Shopify handoff', () => {
     fireEvent.click(button)
     await waitFor(() => expect(trackCheckoutStarted).toHaveBeenCalledWith(expect.objectContaining({ items_count: 2, total_value: 150, shopify_attempt_id: expect.any(String), product_ids: expect.any(Array) })))
     expect(trackPixelEvent).toHaveBeenCalledWith(
-      'InitiateCheckout', { currency: 'EUR', value: 150, num_items: 2 }, undefined, { eventId: attemptId },
+      'InitiateCheckout', expect.objectContaining({ currency: 'EUR', value: 150, num_items: 2, content_ids: ['p:black', 'p:black'] }), undefined, { eventId: attemptId },
     )
     fireEvent.click(button)
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))

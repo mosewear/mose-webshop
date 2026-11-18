@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Montserrat } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
-import Script from 'next/script'
+import MetaPageTracking from '@/components/MetaPageTracking'
 import { PostHogProvider } from '@/app/providers'
 import HtmlLangUpdater from '@/components/HtmlLangUpdater'
 
@@ -134,62 +134,13 @@ export default function DocumentShell({
             <link rel="dns-prefetch" href={supabaseOrigin} />
           </>
         )}
-        {/* Facebook Pixel - Only load after consent */}
-        <Script
-          id="facebook-pixel"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Wait for cookie consent before initializing
-              function initFacebookPixel() {
-                const host = window.location.hostname;
-                if (host !== 'www.mosewear.com' && host !== 'mosewear.com') return;
-                if (window.navigator.webdriver || localStorage.getItem('mose_interne_sessie') === '1') return;
-                if (new URLSearchParams(window.location.search).get('meting') === 'uit') return;
-                if (localStorage.getItem('mose_cookie_consent') !== 'all' || window.fbq) return;
-
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('set', 'autoConfig', false, '1447430483627328');
-                fbq('init', '1447430483627328');
-                fbq('track', 'PageView');
-              }
-
-              // Check if consent already given
-              if (typeof window !== 'undefined') {
-                const consent = localStorage.getItem('mose_cookie_consent');
-                if (consent === 'all') {
-                  initFacebookPixel();
-                } else {
-                  // Listen for consent event
-                  window.addEventListener('mose-tracking-enabled', initFacebookPixel);
-                }
-              }
-            `,
-          }}
-        />
-        {/*
-          De noscript-fallbackpixel van Meta is bewust verwijderd. Hij stond
-          buiten de consentcheck hierboven en vuurde dus bij elke bezoeker,
-          ook bij wie "alleen noodzakelijke cookies" koos. Dat is in strijd met
-          de AVG/ePrivacy-toestemmingsplicht, en een noscript-img kan per
-          definitie niet op het mose-tracking-enabled-event wachten.
-          Gevolg: bezoekers zonder JavaScript worden niet meer getrackt. Dat is
-          een verwaarloosbaar deel van het verkeer, en zij gaven geen
-          toestemming die we konden uitlezen.
-        */}
       </head>
       <body className="antialiased font-sans">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:border-2 focus:border-black">
           {locale === 'en' ? 'Skip to content' : 'Ga naar de inhoud'}
         </a>
         <HtmlLangUpdater />
+        <MetaPageTracking />
         <PostHogProvider>
           {children}
         </PostHogProvider>

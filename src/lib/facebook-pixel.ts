@@ -4,8 +4,10 @@
  */
 
 import { magMeten } from '@/lib/meting-uitsluiten'
+import { initMetaPixel, isMetaTestBrowser, metaBrowserIdentifiers, syncMetaConsent } from '@/lib/meta/browser'
 
 type PixelEvent = 
+  | 'PageView'
   | 'ViewContent'
   | 'AddToCart'
   | 'InitiateCheckout'
@@ -62,21 +64,6 @@ function generateEventId(): string {
 /**
  * Get Facebook cookies for better tracking
  */
-function getFacebookCookies() {
-  if (typeof document === 'undefined') return {}
-  
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=')
-    acc[key] = value
-    return acc
-  }, {} as Record<string, string>)
-  
-  return {
-    fbc: cookies._fbc || undefined,
-    fbp: cookies._fbp || undefined,
-  }
-}
-
 /**
  * Send event to server-side Conversions API
  */
@@ -87,11 +74,11 @@ async function sendToConversionsAPI(
   eventId: string
 ) {
   try {
-    const cookies = getFacebookCookies()
+    const cookies = metaBrowserIdentifiers()
     
     const response = await fetch('/api/facebook-capi', {
       method: 'POST',
-      keepalive: event === 'AddToCart' || event === 'InitiateCheckout',
+      keepalive: true,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -141,12 +128,15 @@ interface TrackOptions {
  * blokkeerde. Juist die gebeurtenissen zijn de belangrijkste voor Meta.
  */
 const ALTIJD_OOK_SERVERSIDE = new Set<PixelEvent>([
+  'PageView',
   'ViewContent',
   'AddToCart',
   'InitiateCheckout',
   'AddPaymentInfo',
   'Purchase',
 ])
+
+let pendingView: (() => void) | undefined
 
 export function trackPixelEvent(
   event: PixelEvent,
@@ -169,7 +159,7 @@ export function trackPixelEvent(
   // administratie: elke test leverde Meta een echte AddToCart op. Zie
   // meting-uitsluiten.ts voor de drie uitsluitingen.
   const poort = magMeten()
-  if (!poort.mag) {
+  if (!poort.mag && !isMetaTestBrowser()) {
     if (process.env.NODE_ENV !== 'production') {
       console.info(`[FB Pixel] ${event} niet verstuurd (${poort.reden})`)
     }
@@ -178,13 +168,25 @@ export function trackPixelEvent(
 
   try {
     // The pixel and the server relay must both follow the storefront cookie choice.
-    if (window.localStorage.getItem('mose_cookie_consent') !== 'all') return
+    if (!syncMetaConsent()) {
+      if (event === 'ViewContent') {
+        if (pendingView) window.removeEventListener('mose-tracking-enabled', pendingView)
+        const route = window.location.pathname
+        pendingView = () => {
+          if (route === window.location.pathname) trackPixelEvent(event, params, userData, options)
+          pendingView = undefined
+        }
+        window.addEventListener('mose-tracking-enabled', pendingView, { once: true })
+      }
+      return false
+    }
+    initMetaPixel()
 
     // Stable ID when caller supplies one (Purchase: order.id), else random.
     const eventId = options?.eventId || generateEventId()
     
     // Prepare parameters
-    const eventParams: any = {
+    const eventParams: Record<string, unknown> = {
       currency: params?.currency || 'EUR',
     }
 
@@ -209,14 +211,15 @@ export function trackPixelEvent(
     // Daardoor zag Meta een client- en een serverversie van dezelfde aankoop
     // als twee losse gebeurtenissen. Nu dedupliceren ze zoals bedoeld, wat ook
     // de voorwaarde is om beide wegen tegelijk te durven gebruiken.
-    if (window.fbq) {
+    if (window.fbq && !isMetaTestBrowser()) {
       window.fbq('track', event, eventParams, { eventID: eventId })
     }
 
     // 2. Server-side (Conversions API), onafhankelijk van de pixel hierboven.
     if (ALTIJD_OOK_SERVERSIDE.has(event) || userData || params?.transaction_id) {
-      sendToConversionsAPI(event, params || {}, userData || {}, eventId)
+      void sendToConversionsAPI(event, params || {}, userData || {}, eventId)
     }
+    return true
   } catch (error) {
     console.error(`[FB Pixel] Error tracking ${event}:`, error)
   }

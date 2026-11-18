@@ -5,7 +5,7 @@ import { ORDER_QUERY } from './admin-queries'
 const id = z.string().regex(/^gid:\/\/shopify\/[A-Za-z]+\/\d+$/)
 const time = z.string().datetime({ offset: true })
 const pageInfo = z.object({ hasNextPage: z.boolean(), endCursor: z.string().nullable() })
-const money = z.object({ shopMoney: z.object({ amount: z.string().regex(/^\d+(\.\d+)?$/), currencyCode: z.string().length(3) }) })
+const money = z.object({ presentmentMoney: z.object({ amount: z.string(), currencyCode: z.string().length(3) }).optional(), shopMoney: z.object({ amount: z.string().regex(/^\d+(\.\d+)?$/), currencyCode: z.string().length(3) }) })
 const line = z.object({ id, name: z.string(), sku: z.string().nullable(), quantity: z.number().int().nonnegative(),
   currentQuantity: z.number().int().nonnegative(), variant: z.object({ id }).nullable(), originalUnitPriceSet: money, discountedTotalSet: money })
 const fulfillmentLine = z.object({ quantity: z.number().int().nonnegative(), lineItem: z.object({ id }) })
@@ -20,6 +20,8 @@ const fulfillmentOrder = z.object({ id, status: z.string(), requestStatus: z.str
   lineItems: z.object({ nodes: z.array(z.object({ id, remainingQuantity: z.number().int().nonnegative(),
     totalQuantity: z.number().int().nonnegative(), lineItem: z.object({ id }) })), pageInfo }) })
 export const orderSchema = z.object({ id: z.string().regex(/^gid:\/\/shopify\/Order\/\d+$/), name: z.string(), updatedAt: time,
+  fullyPaid: z.boolean().optional(), test: z.boolean().optional(),
+  totalPriceSet: z.object({ presentmentMoney: z.object({ amount: z.string(), currencyCode: z.string().length(3) }) }).optional(),
   createdAt: time.optional(), email: z.string().nullable().optional(), netPaymentSet: money.optional(),
   cancelledAt: time.nullable(), displayFinancialStatus: z.string().nullable(), displayFulfillmentStatus: z.string(),
   currencyCode: z.string().length(3), currentTotalPriceSet: money, totalRefundedSet: money,

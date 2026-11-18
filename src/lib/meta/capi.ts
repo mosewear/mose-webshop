@@ -153,6 +153,7 @@ export async function sendCapiEvent(input: CapiEventInput): Promise<CapiSendResu
     const response = await fetch(FB_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
         data: [event],
         access_token: accessToken,
