@@ -9,6 +9,11 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(new URL(target, 'https://www.mosewear.com'))
   response.headers.set('Cache-Control', 'no-store')
   response.headers.set('Referrer-Policy', 'no-referrer')
-  response.cookies.set('mose_meta_test', ticket!, { secure: true, sameSite: 'lax', path: '/', maxAge: Math.floor((session.expires - Date.now()) / 1000) })
+  if (request.nextUrl.searchParams.get('end') === '1') {
+    response.cookies.set('mose_meta_test', '', { secure: true, sameSite: 'lax', path: '/', maxAge: 0 })
+    response.cookies.set('mose_meta_consent', '', { secure: true, sameSite: 'lax', path: '/', maxAge: 0 })
+  } else {
+    response.cookies.set('mose_meta_test', ticket!, { secure: true, sameSite: 'lax', path: '/', maxAge: Math.floor((session.expires - Date.now()) / 1000) })
+  }
   return response
 }
