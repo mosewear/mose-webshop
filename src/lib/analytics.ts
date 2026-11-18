@@ -201,6 +201,7 @@ export function trackCheckoutStarted(cart: {
   total_value: number
   product_ids?: string[]
   shopify_attempt_id?: string
+  currency?: string
 }) {
   void trackEvent({
     event_name: 'checkout_started',
@@ -209,6 +210,7 @@ export function trackCheckoutStarted(cart: {
       value: cart.total_value,
       product_ids: cart.product_ids,
       shopify_attempt_id: cart.shopify_attempt_id,
+      currency: cart.currency || 'EUR',
     },
   })
 }

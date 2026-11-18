@@ -11,7 +11,7 @@ const { trackCheckoutStarted, trackCheckoutHandoffFailed, trackPixelEvent } = vi
 vi.mock('@/lib/analytics', () => ({ trackCheckoutStarted, trackCheckoutHandoffFailed }))
 vi.mock('@/lib/facebook-pixel', () => ({ trackPixelEvent }))
 vi.mock('@/store/cart', () => ({
-  useCart: Object.assign((selector: (value: typeof state) => unknown) => selector(state), { getState: () => ({ ...state, clearCart }) }),
+  useCart: Object.assign((selector: (value: typeof state) => unknown) => selector(state), { getState: () => ({ ...state, clearCart, setItems: (items: CartItem[]) => { state.items = items } }) }),
   useCartGehydrateerd: () => true,
 }))
 vi.mock('next-intl', () => ({ useLocale: () => 'nl' }))
@@ -73,19 +73,20 @@ describe('Shopify handoff', () => {
     vi.stubEnv('NEXT_PUBLIC_SHOPIFY_CHECKOUT_HOST', 'checkout.mosewear.com')
     const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/session')
       ? { ok: true, json: async () => ({ ready: true }) }
-      : { ok: true, json: async () => ({ checkoutUrl: 'https://checkout.mosewear.com/checkouts/cn/test', attemptId }) }))
+      : { ok: true, json: async () => ({ checkoutUrl: 'https://checkout.mosewear.com/checkouts/cn/test', attemptId, tracking: {currency:'EUR',value:140,num_items:2,content_type:'product',content_ids:['p:black','p:black'],contents:[{id:'p:black',quantity:1,item_price:70},{id:'p:black',quantity:1,item_price:70}],prices_eur:{'mose-stock':70,tapstitch:70}} }) }))
     vi.stubGlobal('fetch', fetch)
     render(<ShopifyCheckoutHandoff />)
     const button = screen.getByRole('button', { name: 'Veilig verder naar betalen' })
     fireEvent.click(button)
-    await waitFor(() => expect(trackCheckoutStarted).toHaveBeenCalledWith(expect.objectContaining({ items_count: 2, total_value: 150, shopify_attempt_id: expect.any(String), product_ids: expect.any(Array) })))
+    await waitFor(() => expect(trackCheckoutStarted).toHaveBeenCalledWith(expect.objectContaining({ items_count: 2, total_value: 140, shopify_attempt_id: expect.any(String), product_ids: expect.any(Array) })))
     expect(trackPixelEvent).toHaveBeenCalledWith(
-      'InitiateCheckout', expect.objectContaining({ currency: 'EUR', value: 150, num_items: 2, content_ids: ['p:black', 'p:black'] }), undefined, { eventId: attemptId },
+      'InitiateCheckout', expect.objectContaining({ currency: 'EUR', value: 140, num_items: 2, content_ids: ['p:black', 'p:black'] }), undefined, { eventId: attemptId },
     )
     fireEvent.click(button)
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))
     expect(trackCheckoutStarted).toHaveBeenCalledOnce()
     expect(trackPixelEvent).toHaveBeenCalledOnce()
+    expect(state.items.map(item => item.price)).toEqual([70,70])
   })
 
   it('always sends EUR-country checkout for Dutch pages even after a US visit', async () => {

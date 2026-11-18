@@ -51,6 +51,10 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('unified checkout boundary', () => {
+  it('returns only server-verified checkout prices for Meta, independent of an old browser cart', async () => {
+    const response = await POST(request())
+    expect(await response.json()).toMatchObject({tracking:{currency:'EUR',value:69.95,num_items:1,prices_eur:{'local-123':69.95}}})
+  })
   it('updates the owned open cart after a quantity change and never creates a second cart', async () => {
     const cartId = 'gid://shopify/Cart/private?key=test'
     const makeCart = (quantity: number) => ({ id: cartId, checkoutUrl: url, discountCodes: [], appliedGiftCards: [],
@@ -81,7 +85,7 @@ describe('unified checkout boundary', () => {
       .mockResolvedValueOnce(benefit)
 
     const response = await POST(request({ ...body, editExisting: true, lines: [{ variantId: 'local-123', quantity: 2 }] }))
-    expect(await response.json()).toEqual({ checkoutUrl: url, attemptId })
+    expect(await response.json()).toMatchObject({ checkoutUrl: url, attemptId, tracking: { currency: 'EUR' } })
     expect(mock.storefront.mock.calls[2][1]).toMatchObject({ id: cartId, lines: [{ id: 'gid://shopify/CartLine/1', quantity: 2 }] })
     expect(updates.mock.calls.map(([value]) => value.status)).toEqual(['creating', 'ready'])
     expect(mock.rpc.mock.calls.some(call => call[0] === 'reserve_shopify_checkout')).toBe(false)
@@ -116,7 +120,7 @@ describe('unified checkout boundary', () => {
     expect(mock.storefront.mock.calls[1][1].country).toBe('BE')
     expect(mock.storefront.mock.calls[1][1].input.buyerIdentity.countryCode).toBe('BE')
     expect(mock.issueBenefits).toHaveBeenCalledTimes(1)
-    expect(await response.json()).toEqual({ checkoutUrl: url, attemptId })
+    expect(await response.json()).toMatchObject({ checkoutUrl: url, attemptId, tracking: { currency: 'EUR' } })
   })
   it('rejects a Belgian market price drift instead of applying a mismatched EUR discount', async () => {
     mock.storefront.mockReset().mockResolvedValueOnce({ nodes: [{ id: gid, availableForSale: true, quantityAvailable: 5,
@@ -203,7 +207,7 @@ describe('unified checkout boundary', () => {
   it('stores the checkout before exposing its URL and never exposes the cart secret', async () => {
     const response = await POST(request())
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ checkoutUrl: url, attemptId })
+    expect(await response.json()).toMatchObject({ checkoutUrl: url, attemptId, tracking: { currency: 'EUR' } })
     expect(mock.rpc.mock.calls.map(c => c[0])).toEqual(['shopify_queue_health','shopify_inventory_evidence','reserve_shopify_checkout','finish_shopify_checkout'])
     expect(mock.rpc.mock.calls[2][1].p_snapshot.lines[0]).toMatchObject({ localVariantId: 'local-123', merchandiseId: gid })
     expect(response.headers.get('set-cookie')).toBe(null)
