@@ -8,7 +8,7 @@ import { Link } from '@/i18n/routing'
 import { Button, buttonVariants } from '@/components/ui/Button'
 import { useCart, useCartGehydrateerd } from '@/store/cart'
 import { trackCheckoutStarted, trackCheckoutHandoffFailed } from '@/lib/analytics'
-import { catalogContentId } from '@/lib/catalog-ids'
+import { readCheckoutMetrics } from '@/lib/meta/checkout-metrics'
 import { trackPixelEvent } from '@/lib/facebook-pixel'
 import { resolveStorefrontCountry } from '@/lib/shopify/us-market'
 import { formatBedrag } from '@/lib/format-price'
@@ -225,7 +225,7 @@ export function ShopifyCheckoutHandoff() {
       }
       const result: unknown = await response.json()
       if (!result || typeof result !== 'object') throw new Error('INVALID_RESPONSE')
-      const data = result as { checkoutUrl?: unknown; attemptId?: unknown }
+      const data = result as { checkoutUrl?: unknown; attemptId?: unknown; tracking?: unknown }
       if (data.attemptId !== attempt.current.attemptId) throw new Error('INVALID_RESPONSE')
       // Another tab can change the bag while the server prepares checkout.
       if (JSON.stringify(createShopifyCartSnapshot(useCart.getState().items, locale, benefits.current, buyerCountry)) !== JSON.stringify(snapshot)) {
@@ -245,19 +245,17 @@ export function ShopifyCheckoutHandoff() {
         if (firstHandoff || revision) {
           const checkoutItems = useCart.getState().items
           const quantity = checkoutItems.reduce((sum, item) => sum + item.quantity, 0)
-          const eurValue = checkoutItems.reduce((sum, item) => sum + Math.round(item.price * 100) * item.quantity, 0) / 100
-          const usdValue = buyerCountry === 'US' && usdUnitPrices
-            ? checkoutItems.reduce((sum, item) => sum + Math.round(usdUnitPrices[item.variantId] * 100) * item.quantity, 0) / 100
-            : null
-          trackCheckoutStarted({ items_count: quantity, total_value: eurValue, product_ids: handoffProducts, shopify_attempt_id: attemptId })
-          if (firstHandoff) trackPixelEvent('InitiateCheckout', {
-            currency: usdValue === null ? 'EUR' : 'USD',
-            value: usdValue ?? eurValue,
-            num_items: quantity,
-            content_type: 'product',
-            content_ids: checkoutItems.map(item => catalogContentId(item.productId, item.color)),
-            contents: checkoutItems.map(item => ({ id: catalogContentId(item.productId, item.color), quantity: item.quantity, item_price: buyerCountry === 'US' && usdUnitPrices ? usdUnitPrices[item.variantId] : item.price })),
-          }, undefined, { eventId: attemptId })
+          const tracking = readCheckoutMetrics(data.tracking, quantity)
+          if (tracking) {
+            const refreshed = checkoutItems.map(item => !item.isGiftCard && tracking.prices_eur[item.variantId] !== undefined
+              ? { ...item, price: tracking.prices_eur[item.variantId] } : item)
+            if (refreshed.some((item,i) => item.price !== checkoutItems[i].price)) useCart.getState().setItems(refreshed)
+            trackCheckoutStarted({ items_count: quantity, total_value: tracking.value, currency: tracking.currency, product_ids: handoffProducts, shopify_attempt_id: attemptId })
+            if (firstHandoff) trackPixelEvent('InitiateCheckout', {
+              currency: tracking.currency, value: tracking.value, num_items: tracking.num_items,
+              content_type: tracking.content_type, content_ids: tracking.content_ids, contents: tracking.contents,
+            }, undefined, { eventId: attemptId })
+          } else console.warn('[Meta CAPI] Missing verified checkout value; no estimate sent')
           sessionStorage.setItem(CHECKOUT_TRACKED_STORAGE_KEY, attemptId)
         }
       } catch { /* Tracking must never prevent a successful checkout handoff. */ }

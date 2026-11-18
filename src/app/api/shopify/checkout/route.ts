@@ -25,6 +25,8 @@ import { assertNativeGiftCutover, nativeGiftRuntimeReadiness } from '@/lib/shopi
 import { assertCreatedCartLines, aggregateBenefitLines } from '@/lib/shopify/cart-line-proof'
 import { verifyMarketPriceSubtotal } from '@/lib/shopify/us-market'
 import { reviseShopifyCart } from '@/lib/shopify/cart-revision'
+import { catalogContentId } from '@/lib/catalog-ids'
+import type { CheckoutMetrics } from '@/lib/meta/checkout-metrics'
 import { saveCheckoutAttribution } from '@/lib/meta/checkout-attribution'
 import { existingCartBenefits } from '@/lib/shopify/cart-revision-benefits'
 
@@ -55,9 +57,12 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return respond({ error: 'Ongeldige winkelmand.' }, 400)
 
   const input = parsed.data
-  const checkoutResponse = async (checkoutUrl: string) => {
+  let checkoutMetrics: CheckoutMetrics | undefined
+  let readTracking: ((cartId: string) => Promise<void>) | undefined
+  const checkoutResponse = async (checkoutUrl: string, cartId?: string | null) => {
+    if (!checkoutMetrics && readTracking && cartId) { try { await readTracking(cartId) } catch { console.error('[Meta CAPI] Checkout value unavailable') } }
     if (db) { try { await saveCheckoutAttribution(db, request, input.attemptId) } catch { console.error('[Meta CAPI] Attribution unavailable') } }
-    return respond({ checkoutUrl, attemptId: input.attemptId })
+    return respond({ checkoutUrl, attemptId: input.attemptId, ...(checkoutMetrics ? { tracking: checkoutMetrics } : {}) })
   }
   const seasonal = !input.loyaltyPoints && (!input.promoCode || isSeasonalCode(input.promoCode)) ? activeSeasonalOffer() : undefined
   // US selling is independently approved only after USD payment, DDP and margin checks.
@@ -142,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
     // Read current local publication and price from the variant's database parent, never a client product ID.
     const localVariants = physicalLines.length ? await db.from('product_variants')
-      .select('id,product_id,is_available,price_adjustment,presale_enabled,presale_stock_quantity')
+      .select('id,product_id,color,is_available,price_adjustment,presale_enabled,presale_stock_quantity')
       .in('id', physicalLines.map(line => line.localVariantId)) : { data: [], error: null }
     if (localVariants.error) throw new Error('LOCAL_CATALOG_UNAVAILABLE')
     const productIds = [...new Set((localVariants.data ?? []).map(variant => variant.product_id as string))]
@@ -231,12 +236,28 @@ export async function POST(request: NextRequest) {
       }
       return respond({ error: 'Je korting of spaarpunten kunnen nu niet worden toegepast. Controleer je code en beschikbare punten.', code: 'BENEFIT_UNAVAILABLE', retrySafe: Boolean(retrySafe) }, 409)
     }
+    const metricsForValue = (valueCents: number): CheckoutMetrics => {
+      const contents = lines.map(line => {
+        const variant = localVariants.data?.find(v => v.id === line.localVariantId)
+        const contentId = line.gift ? line.gift.productId : catalogContentId(variant!.product_id, variant!.color)
+        return { id: contentId, quantity: line.quantity, item_price: marketPrice.perVariantCents[line.merchandiseId] / 100 }
+      })
+      return { currency: marketPrice.currency, value: valueCents / 100,
+        num_items: lines.reduce((n,line) => n + line.quantity, 0), content_type: 'product',
+        content_ids: contents.map(line => line.id), contents,
+        prices_eur: Object.fromEntries(lines.filter(line => !line.gift).map(line => [line.localVariantId, line.expectedPriceCents / 100])),
+      }
+    }
+    if (!seasonal) checkoutMetrics = metricsForValue(input.country === 'US' ? marketPrice.subtotalCents : preparedBenefits.quote.payableMerchandiseCents)
     const seasonalLines = benefitLines.map(line => ({ ...line, unitCents: marketPrice.perVariantCents[line.variantId] }))
     const readSeasonalCart = async (id: string, subtotal: number) => {
       if (!seasonal) throw new Error('SEASONAL_NOT_ACTIVE')
       const benefits = await storefront<{ cart: unknown }>(BENEFITS_CART_QUERY, { id }, buyerIp)
-      return assertSeasonalCart(benefits.cart, seasonal, marketPrice.currency, seasonalLines, subtotal)
+      const verified = assertSeasonalCart(benefits.cart, seasonal, marketPrice.currency, seasonalLines, subtotal)
+      checkoutMetrics = metricsForValue(verified.net)
+      return verified
     }
+    if (seasonal) readTracking = async id => { await readSeasonalCart(id, marketPrice.subtotalCents) }
     const fingerprint = createHash('sha256').update(JSON.stringify({ locale: input.locale, country: input.country, lines, userId,
       benefits: { quote: preparedBenefits.quote, points: input.loyaltyPoints ?? 0, ...(seasonal ? { seasonal: seasonal.code } : {}) } })).digest('hex')
     const sessionHash = createHmac('sha256', secret).update(sessionToken).digest('hex')
@@ -262,7 +283,7 @@ export async function POST(request: NextRequest) {
       const prior = old.cart_snapshot
       if (prior?.country !== input.country || prior?.seasonalCode !== seasonal?.code || !prior.benefits || !Array.isArray(prior.lines)) return review()
       if (old.request_fingerprint === fingerprint) {
-        return checkoutResponse(assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST))
+        return checkoutResponse(assertCheckoutUrl(old.checkout_url, process.env.SHOPIFY_CHECKOUT_HOST), old.cart_id)
       }
 
       let expectedBenefits: Awaited<ReturnType<typeof existingCartBenefits>>
@@ -310,7 +331,7 @@ export async function POST(request: NextRequest) {
         }
         const saved = await saveEdit({ status: 'ready', request_fingerprint: fingerprint, cart_snapshot: { ...cartSnapshot, orderWidePromo: prior.orderWidePromo }, checkout_url: checkoutUrl, last_error: null })
         if (saved.error || !saved.data) throw new Error('CART_EDIT_SAVE_FAILED')
-        return checkoutResponse(checkoutUrl)
+        return checkoutResponse(checkoutUrl, old.cart_id)
       } catch (error) {
         const code = error instanceof Error && /^[A-Z_]{1,90}$/.test(error.message) ? error.message : 'CART_EDIT_UNEXPECTED'
         console.error('Shopify cart revision stopped', { code, mutationStarted })
@@ -338,7 +359,7 @@ export async function POST(request: NextRequest) {
       error: decision.retrySafe ? 'Deze afrekenpoging kan veilig opnieuw worden gestart.' : 'Deze afrekenpoging moet eerst worden gecontroleerd. Je winkelmand blijft bewaard.',
       code: decision.code, retrySafe: decision.retrySafe,
     }, 409)
-    if (decision.kind === 'reuse') return checkoutResponse(assertCheckoutUrl(decision.url, process.env.SHOPIFY_CHECKOUT_HOST))
+    if (decision.kind === 'reuse') return checkoutResponse(assertCheckoutUrl(decision.url, process.env.SHOPIFY_CHECKOUT_HOST), booking.data?.[0]?.cart_id)
     reserved = true
     const attributes = [{ key: 'mose_source', value: 'unified-checkout' }, { key: 'mose_attempt', value: input.attemptId }]
     if (userId) {
@@ -381,7 +402,7 @@ export async function POST(request: NextRequest) {
     const checkoutUrl = assertCheckoutUrl(cart.checkoutUrl, process.env.SHOPIFY_CHECKOUT_HOST)
     const saved = await db.rpc('finish_shopify_checkout', { p_id: input.attemptId, p_lease: lease, p_status: 'ready', p_cart_id: cart.id, p_checkout_url: checkoutUrl })
     if (saved.error || saved.data !== true) throw new Error('ATTEMPT_SAVE_FAILED')
-    return checkoutResponse(checkoutUrl)
+    return checkoutResponse(checkoutUrl, cart.id)
   } catch {
     if (reserved && db) {
       // Unknown is intentional: never recreate a cart automatically after an uncertain mutation.
