@@ -2,6 +2,10 @@ import { inventoryOperation } from './inventory-operation'
 
 export type InventoryAdjustField = 'regular' | 'presale'
 
+export class InventoryAdjustError extends Error {
+  constructor(message: string, public currentStock?: number) { super(message); this.name = 'InventoryAdjustError' }
+}
+
 export async function postInventoryAdjust(body: {
   variantId: string
   delta: number
@@ -26,13 +30,15 @@ export async function postInventoryAdjust(body: {
   })
   const json = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error((json as { error?: string }).error || res.statusText)
+    throw new InventoryAdjustError((json as { error?: string }).error || 'Opslaan mislukt. Probeer opnieuw.',
+      Number.isSafeInteger(json.currentStock) && json.currentStock >= 0 ? json.currentStock : undefined)
   }
-  if (!json || json.ok !== true || !json.result || typeof json.result !== 'object') {
+  if (!json || json.ok !== true || !json.result || typeof json.result !== 'object' ||
+    !Number.isSafeInteger(json.result.new_stock) || json.result.new_stock < 0) {
     throw new Error('Voorraadbewerking nog niet bevestigd. Probeer dezelfde bewerking opnieuw.')
   }
   operation.confirmed()
-  return json as { ok: true; result: { shopify_pending?: boolean; [key: string]: unknown } }
+  return json as { ok: true; result: { new_stock: number; shopify_pending?: boolean; [key: string]: unknown } }
 }
 
 export type InventoryLogRow = {

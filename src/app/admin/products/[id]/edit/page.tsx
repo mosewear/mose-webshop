@@ -372,7 +372,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 uppercase tracking-wider text-xs sm:text-sm transition-colors flex items-center justify-center gap-2"
           >
             <Layers className="w-4 h-4 sm:w-5 sm:h-5" />
-            {isGift ? 'Coupures' : 'Varianten'}
+            {isGift ? 'Coupures' : 'Voorraad & varianten'}
           </Link>
         </div>
       </div>

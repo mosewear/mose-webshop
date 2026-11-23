@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/supabase/admin'
+import { revalidateTag } from 'next/cache'
 
 type Field = 'regular' | 'presale'
 
@@ -15,14 +16,16 @@ function parseBody(body: unknown): {
   if (!body || typeof body !== 'object') return null
   const o = body as Record<string, unknown>
   const variantId = typeof o.variantId === 'string' ? o.variantId : null
-  const delta = typeof o.delta === 'number' ? o.delta : Number(o.delta)
+  const delta = o.delta
   const field = o.field === 'presale' ? 'presale' : o.field === 'regular' ? 'regular' : null
   const reason =
     typeof o.reason === 'string' && o.reason.trim() ? o.reason.trim() : 'manual'
   const notes =
     typeof o.notes === 'string' && o.notes.trim() ? o.notes.trim() : null
-  if (!variantId || !Number.isFinite(delta) || delta === 0 || !field) return null
+  if (!variantId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(variantId) ||
+    typeof delta !== 'number' || !Number.isSafeInteger(delta) || delta === 0 || Math.abs(delta) > 2147483647 || !field) return null
   if (o.expectedStock !== undefined && (!Number.isSafeInteger(o.expectedStock) || Number(o.expectedStock) < 0)) return null
+  if (o.expectedStock !== undefined && (Number(o.expectedStock) + delta < 0 || Number(o.expectedStock) + delta > 2147483647)) return null
   return { variantId, delta, field, reason, notes, ...(o.expectedStock === undefined ? {} : { expectedStock: Number(o.expectedStock) }) }
 }
 
@@ -58,14 +61,30 @@ export async function POST(request: NextRequest) {
     p_receipt_id: null as string | null,
   }
 
+  const respondError = async (message: string) => {
+    if (message.includes('STOCK_CHANGED_RELOAD_REQUIRED')) {
+      const { data } = await supabase.from('product_variants').select('stock_quantity').eq('id', parsed.variantId).single<{ stock_quantity: number }>()
+      return NextResponse.json({ error: 'De voorraad is intussen gewijzigd. Laad het actuele aantal en controleer je wijziging.',
+        ...(data ? { currentStock: data.stock_quantity } : {}) }, { status: 409 })
+    }
+    if (message.includes('OWNED_PRESALE_WRITE_FORBIDDEN')) return NextResponse.json({
+      error: 'Voor dit artikel wordt de voorraad via Shopify beheerd. Pas de gewone voorraad aan; pre-salevoorraad is niet beschikbaar.',
+    }, { status: 409 })
+    return NextResponse.json({ error: 'Voorraadbewerking nog niet bevestigd. Probeer dezelfde bewerking opnieuw.' }, { status: 503 })
+  }
+  const confirmed = (result: unknown) => {
+    try { revalidateTag('public-catalog', { expire: 0 }) } catch { console.error('[inventory adjust] catalogue refresh pending') }
+    return NextResponse.json({ ok: true, result })
+  }
+
   if (process.env.LEGACY_INVENTORY_ATOMIC_ENABLED === 'true') {
     const operation = request.headers.get('idempotency-key')
     if (!operation || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(operation)) {
       return NextResponse.json({ error: 'Een vaste voorraadbewerking-ID is vereist. Vernieuw de beheerpagina.' }, { status: 400 })
     }
     const response = await (supabase as SupabaseClient).rpc('apply_inventory_command', { p_operation: operation, p_kind: 'adjust', p_payload: parsed })
-    if (response.error) return NextResponse.json({ error: 'Voorraadbewerking nog niet bevestigd. Probeer dezelfde bewerking opnieuw.' }, { status: 503 })
-    return NextResponse.json({ ok: true, result: response.data })
+    if (response.error) return respondError(response.error.message)
+    return confirmed(response.data)
   }
 
   const client = supabase as SupabaseClient
@@ -78,8 +97,8 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('[inventory adjust]', parsed.field, error)
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    return respondError(error.message)
   }
 
-  return NextResponse.json({ ok: true, result: data })
+  return confirmed(data)
 }
