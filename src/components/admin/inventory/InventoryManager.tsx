@@ -10,6 +10,7 @@ import {
   type InventoryLogRow,
 } from '@/lib/admin/inventory-api'
 import { InventorySkuScan } from '@/components/admin/inventory/InventorySkuScan'
+import StockQuantityEditor from '@/components/admin/inventory/StockQuantityEditor'
 import {
   sortVariantsByColorSize,
   sortVariantsByProductColorSize,
@@ -75,7 +76,7 @@ export default function InventoryManager() {
 
   const fetchInventory = useCallback(async () => {
     try {
-      setLoading(true)
+      setError('')
       const { data, error: fetchError } = await supabase
         .from('product_variants')
         .select(
@@ -434,6 +435,12 @@ export default function InventoryManager() {
     variant: VariantWithProduct,
     field: 'stock' | 'presale_stock'
   ) => {
+    if (field === 'stock') return <StockQuantityEditor variantId={variant.id} quantity={variant.stock_quantity}
+      label={`${variant.product.name} ${variant.color} ${variant.size}`} onSaved={quantity => {
+        setVariants(current => current.map(row => row.id === variant.id ? { ...row, stock_quantity: quantity } : row))
+        setVariantLogCache(current => { const next = { ...current }; delete next[variant.id]; return next })
+        void loadRecentLogs()
+      }} />
     const currentValue =
       field === 'presale_stock'
         ? variant.presale_stock_quantity || 0
@@ -479,7 +486,7 @@ export default function InventoryManager() {
               ✕
             </button>
           </div>
-          {field === 'stock' || (field === 'presale_stock' && variant.presale_enabled)
+          {variant.presale_enabled
             ? renderQuickButtons(variant, field)
             : null}
         </div>
@@ -514,28 +521,7 @@ export default function InventoryManager() {
       )
     }
 
-    return (
-      <div>
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => startEditing(variant, field)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') startEditing(variant, field)
-          }}
-          className={`inline-block px-3 py-2 text-sm font-bold cursor-pointer border-2 border-transparent hover:border-gray-400 transition-colors ${
-            currentValue === 0
-              ? 'text-red-700'
-              : currentValue < lowStockThreshold
-                ? 'text-orange-700'
-                : 'text-gray-900'
-          }`}
-        >
-          {currentValue}
-        </span>
-        {renderQuickButtons(variant, field)}
-      </div>
-    )
+    return null
   }
 
   const renderHistorySection = (variant: VariantWithProduct) => {

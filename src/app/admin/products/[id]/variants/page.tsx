@@ -3,6 +3,9 @@
 import { invalidatePublicCatalog } from '@/lib/catalog-invalidation'
 
 import { use, useState, useEffect } from 'react'
+import ProductStockPanel from '@/components/admin/inventory/ProductStockPanel'
+import { postInventoryAdjust } from '@/lib/admin/inventory-api'
+import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { ChevronUp, ChevronDown } from 'lucide-react'
@@ -41,6 +44,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [savingDetails, setSavingDetails] = useState(false)
   const supabase = createClient()
 
   // State to track pending changes per variant
@@ -62,6 +66,8 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
   })
 
   useEffect(() => {
+    setLoading(true)
+    setPendingChanges({})
     fetchProduct()
     fetchVariants()
   }, [id])
@@ -83,7 +89,6 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
 
   const fetchVariants = async () => {
     try {
-      setLoading(true)
       const { data, error } = await supabase
         .from('product_variants')
         .select('*')
@@ -93,8 +98,6 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
 
       if (error) throw error
       setVariants(data || [])
-      // Clear pending changes when refreshing data
-      setPendingChanges({})
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -176,6 +179,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
 
   // Track changes in state instead of saving immediately
   const handleFieldChange = (variantId: string, field: keyof ProductVariant, value: any) => {
+    if (field === 'stock_quantity') return
     setPendingChanges(prev => ({
       ...prev,
       [variantId]: {
@@ -192,36 +196,40 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       return // No changes to save
     }
 
-    try {
-      // Save all changes in parallel
-      const savePromises = variantIds.map(async (variantId) => {
-        const changes = pendingChanges[variantId]
-        if (!changes || Object.keys(changes).length === 0) {
-          return
+    if (savingDetails) return
+    setSavingDetails(true)
+    const failed: string[] = []
+    for (const variantId of variantIds) {
+      const changes = pendingChanges[variantId]
+      const variant = variants.find(item => item.id === variantId)
+      if (!changes || !variant) continue
+      try {
+        const { stock_quantity: _regular, presale_stock_quantity: presale, ...details } = changes
+        if (presale !== undefined && presale !== variant.presale_stock_quantity) {
+          await postInventoryAdjust({ variantId, delta: presale - variant.presale_stock_quantity,
+            field: 'presale', reason: 'manual', notes: 'Pre-salevoorraad ingesteld in MOSE admin' })
+          setVariants(current => current.map(row => row.id === variantId ? { ...row, presale_stock_quantity: presale } : row))
+          // A later metadata error must not repeat a confirmed stock adjustment.
+          setPendingChanges(current => {
+            const next = { ...current[variantId] }
+            delete next.presale_stock_quantity
+            return { ...current, [variantId]: next }
+          })
         }
-
-        const { error } = await supabase
-          .from('product_variants')
-          .update(changes)
-          .eq('id', variantId)
-
-        if (error) throw error
-      })
-
-      await Promise.all(savePromises)
-
-      // Clear all pending changes
-      setPendingChanges({})
-
-      // Refresh variants to show updated data
-      await invalidatePublicCatalog()
-      fetchVariants()
-
-      // Show success message
-      alert(`✅ ${variantIds.length} variant${variantIds.length > 1 ? 'en' : ''} opgeslagen!`)
-    } catch (err: any) {
-      alert(`Fout bij opslaan: ${err.message}`)
+        if (Object.keys(details).length) {
+          const { data, error: saveError } = await supabase.from('product_variants').update(details).eq('id', variantId).select('id').single()
+          if (saveError || !data) throw saveError || new Error('Opslaan is niet bevestigd')
+        }
+        setVariants(current => current.map(row => row.id === variantId ? { ...row, ...details } : row))
+        setPendingChanges(current => { const next = { ...current }; delete next[variantId]; return next })
+      } catch (cause) {
+        failed.push(`${variant.color} / ${variant.size}: ${cause instanceof Error ? cause.message : 'Opslaan mislukt'}`)
+      }
     }
+    await invalidatePublicCatalog()
+    setSavingDetails(false)
+    if (failed.length) toast.error(failed.join('\n'), { duration: 8000 })
+    else toast.success('Variantdetails opgeslagen')
   }
 
   // Get total number of pending changes
@@ -363,7 +371,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
           </Link>
           <div>
             <h1 className="text-2xl md:text-3xl font-display font-bold mb-1 md:mb-2">
-              {product?.is_gift_card ? 'Cadeaubon Coupures' : 'Product Varianten'}
+              {product?.is_gift_card ? 'Cadeaubon Coupures' : 'Voorraad & varianten'}
             </h1>
             {product ? (
               <p className="text-sm md:text-base text-gray-600">
@@ -384,9 +392,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
           {pendingCount > 0 && !product?.is_gift_card && (
             <button
               onClick={handleSaveAll}
+              disabled={savingDetails}
               className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 uppercase tracking-wider transition-colors text-sm md:text-base flex items-center gap-2"
             >
-              <span>Opslaan</span>
+              <span>{savingDetails ? 'Opslaan…' : 'Details opslaan'}</span>
               <span className="bg-white text-green-600 rounded-full px-2 py-0.5 text-xs font-bold">
                 {pendingCount}
               </span>
@@ -422,6 +431,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       {/* Standard variants UI (hidden for gift cards) */}
       {!product?.is_gift_card && (
       <>
+      <ProductStockPanel variants={variants} onSaved={(variantId, quantity) => {
+        setVariants(current => current.map(row => row.id === variantId ? { ...row, stock_quantity: quantity } : row))
+      }} />
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         <div className="bg-white p-4 md:p-6 border-2 border-gray-200">
@@ -639,6 +652,9 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
       )}
 
       {/* Variants Table */}
+      <details className="mb-6">
+      <summary className="cursor-pointer border-2 border-gray-200 bg-white p-4 font-bold">Variantdetails · kleurcodes, prijzen, pre-sale en volgorde</summary>
+      <fieldset disabled={savingDetails}>
       <div className="bg-white border-2 border-gray-200">
         {variants.length === 0 ? (
           <div className="text-center py-12">
@@ -738,25 +754,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                         </div>
                       </div>
 
-                      {/* Stock */}
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Voorraad</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={pendingChanges[variant.id]?.stock_quantity !== undefined
-                            ? pendingChanges[variant.id]?.stock_quantity
-                            : variant.stock_quantity}
-                          onChange={(e) => handleFieldChange(variant.id, 'stock_quantity', parseInt(e.target.value) || 0)}
-                          className={`w-full px-3 py-2 border-2 focus:outline-none transition-colors ${
-                            (pendingChanges[variant.id]?.stock_quantity !== undefined
-                              ? (pendingChanges[variant.id]?.stock_quantity ?? 0)
-                              : variant.stock_quantity) < 5
-                              ? 'border-red-300 focus:border-red-500 bg-red-50'
-                              : 'border-gray-300 focus:border-brand-primary'
-                          }`}
-                        />
-                      </div>
+                      <a href="#product-stock" className="block text-sm font-bold underline">Voorraad: {variant.stock_quantity} · aanpassen ↑</a>
 
                       {/* Presale */}
                       <div className="border-t pt-3">
@@ -971,21 +969,7 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
                       )}
                     </td>
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="number"
-                        min="0"
-                        value={pendingChanges[variant.id]?.stock_quantity !== undefined
-                          ? pendingChanges[variant.id]?.stock_quantity
-                          : variant.stock_quantity}
-                        onChange={(e) => handleFieldChange(variant.id, 'stock_quantity', parseInt(e.target.value) || 0)}
-                        className={`w-16 md:w-20 px-2 md:px-3 py-1.5 md:py-2 text-sm border-2 focus:outline-none transition-colors ${
-                          (pendingChanges[variant.id]?.stock_quantity !== undefined
-                            ? (pendingChanges[variant.id]?.stock_quantity ?? 0)
-                            : variant.stock_quantity) < 5
-                            ? 'border-red-300 focus:border-red-500 bg-red-50'
-                            : 'border-gray-300 focus:border-brand-primary'
-                        }`}
-                      />
+                      <a href="#product-stock" className="font-bold underline">{variant.stock_quantity} · aanpassen ↑</a>
                     </td>
                     <td className="px-3 md:px-6 py-4">
                       <div className="space-y-2">
@@ -1069,6 +1053,8 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
           </>
         )}
       </div>
+      </fieldset>
+      </details>
       </>
       )}
 
@@ -1077,9 +1063,10 @@ export default function ProductVariantsPage({ params }: { params: Promise<{ id: 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-lg md:hidden z-50">
           <button
             onClick={handleSaveAll}
+            disabled={savingDetails}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
           >
-            <span>Opslaan</span>
+            <span>{savingDetails ? 'Opslaan…' : 'Details opslaan'}</span>
             <span className="bg-white text-green-600 rounded-full px-3 py-1 text-sm font-bold">
               {pendingCount}
             </span>
