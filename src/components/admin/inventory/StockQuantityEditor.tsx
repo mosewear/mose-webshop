@@ -65,7 +65,7 @@ export default function StockQuantityEditor({ variantId, quantity, label, onSave
 
   return (
     <div className="min-w-0 space-y-1.5" aria-busy={saving}>
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
         <button type="button" aria-label={`Verlaag voorraad ${label}`} disabled={saving || !valid || Number(value) === 0 || conflictStock !== null}
           onClick={() => change(String(Number(value) - 1))}
           className="flex h-10 w-10 shrink-0 items-center justify-center border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-30"><Minus size={15} /></button>
