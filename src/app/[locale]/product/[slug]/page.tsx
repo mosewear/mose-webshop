@@ -10,7 +10,7 @@ import { mapLocalizedProduct } from '@/lib/i18n-db'
 import { notFound } from 'next/navigation'
 import { offerAvailability } from '@/lib/variant-availability'
 
-export const revalidate = 60
+export const revalidate = 300
 
 export async function generateMetadata({
   params,

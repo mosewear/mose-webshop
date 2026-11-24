@@ -44,7 +44,7 @@ export async function generateMetadata({
   }
 }
 
-export const revalidate = 60 // Public presentation data; checkout checks live inventory
+export const revalidate = 300 // Public presentation data; checkout checks live inventory
 
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))

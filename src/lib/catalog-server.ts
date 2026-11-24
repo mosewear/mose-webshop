@@ -6,6 +6,8 @@ import { SHOP_PRODUCT_SELECT, PDP_PRODUCT_SELECT } from '@/lib/catalog-select'
 
 // Public RLS-scoped presentation data only. Checkout independently validates
 // current price, availability and stock; this cache never authorizes a purchase.
+// Data refreshes in two minutes and page shells in five: together with the
+// five-minute supplier heartbeat this stays inside the 15-minute freshness gate.
 // Throw on failure so ISR retains its last good response instead of caching an
 // empty catalogue or incorrectly returning 404 during a database outage.
 export const getShopCatalog = cache(unstable_cache(async () => {
@@ -20,7 +22,7 @@ export const getShopCatalog = cache(unstable_cache(async () => {
   if (products.error) throw new Error('Public catalogue unavailable', { cause: products.error })
   if (categories.error) throw new Error('Public categories unavailable', { cause: categories.error })
   return { products: products.data.map(product => ({ ...product, images: [...(product.images ?? [])].sort((a, b) => (a.position ?? 999) - (b.position ?? 999)) })), categories: categories.data }
-}, ['public-shop-catalog-v1'], { revalidate: 60, tags: ['public-catalog'] }))
+}, ['public-shop-catalog-v1'], { revalidate: 120, tags: ['public-catalog'] }))
 
 export const getCatalogProduct = cache(unstable_cache(async (slug: string) => {
   const { data, error } = await createAnonClient().from('products').select(PDP_PRODUCT_SELECT)
@@ -32,4 +34,4 @@ export const getCatalogProduct = cache(unstable_cache(async (slug: string) => {
     product_images: [...data.product_images].sort((a, b) => a.position - b.position),
     product_variants: [...data.product_variants].sort((a, b) => a.display_order - b.display_order),
   }
-}, ['public-product-v1'], { revalidate: 60, tags: ['public-catalog'] }))
+}, ['public-product-v1'], { revalidate: 120, tags: ['public-catalog'] }))

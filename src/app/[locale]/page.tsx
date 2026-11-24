@@ -11,7 +11,7 @@ import { formatPromiseAmount } from '@/lib/settings-server'
 
 // ✅ ISR with On-Demand Revalidation
 // Homepage follows the public catalogue refresh interval.
-export const revalidate = 60 // Match the public catalogue refresh interval
+export const revalidate = 300 // Match the public catalogue refresh interval
 
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
