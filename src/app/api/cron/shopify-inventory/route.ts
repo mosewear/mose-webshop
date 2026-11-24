@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { workerAuthorized } from '@/lib/shopify/http'
 import { reconcileInventory } from '@/lib/shopify/inventory'
+import { readPublicStockSignature } from '@/lib/shopify/public-stock-signature'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,12 +21,16 @@ export async function GET(request: Request) {
   const options = { deadline: Date.now() + 90_000, signal: AbortSignal.timeout(90_000) }
   try {
     const db = createServiceClient(), batches = []
+    const before = await readPublicStockSignature(db, options.signal)
     for (let batch = 0; batch < 4 && Date.now() + 18_000 < options.deadline; batch++) {
       const result = await reconcileInventory(db, undefined, options)
       batches.push(result)
       if (result.processed === 0 && result.leaseLost === 0) break
     }
-    if (batches.some(batch => batch.processed > 0)) revalidateTag('public-catalog', { expire: 0 })
+    if (batches.some(batch => batch.processed > 0)) {
+      const after = await readPublicStockSignature(db, options.signal)
+      if (before === null || after === null || before !== after) revalidateTag('public-catalog', 'max')
+    }
     const ok = batches.length > 0 && batches.every(b => b.failed === 0 && b.unknown === 0 && b.leaseLost === 0)
     return NextResponse.json({ ok, skipped: false, batches, ...(ok ? {} : { error: 'INVENTORY_NOT_READY' }) }, { status: ok ? 200 : 503, headers })
   } catch {
