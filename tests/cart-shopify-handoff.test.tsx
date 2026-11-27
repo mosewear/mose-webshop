@@ -25,6 +25,9 @@ const attemptId = 'c6a7205c-f9aa-4bc4-8e8f-83276c4273be'
 
 describe('Shopify handoff', () => {
   beforeEach(() => {
+    // Keep promo-input expectations independent of the date the suite runs.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-15T12:00:00Z'))
     state.items = [item('mose-stock'), item('tapstitch')]
     clearCart.mockClear()
     trackCheckoutStarted.mockClear()
@@ -35,7 +38,7 @@ describe('Shopify handoff', () => {
     vi.stubGlobal('localStorage', {getItem:(key:string)=>local.get(key)??null,setItem:(key:string,value:string)=>local.set(key,value)})
     vi.stubGlobal('crypto', { randomUUID: () => attemptId })
   })
-  afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); document.cookie = 'mose-country=; path=/; max-age=0' })
+  afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); document.cookie = 'mose-country=; path=/; max-age=0' })
 
   it('keeps an optional promo collapsed until opened and preserves its value', () => {
     render(<ShopifyCheckoutHandoff />)
