@@ -446,7 +446,7 @@
     "zekerheid": {
       "gratis": "Always free shipping",
       "gratisVanaf": "Free shipping from €{bedrag}",
-      "bezorging": "Order before 17:00 and it usually arrives tomorrow",
+      "bezorging": "Tracked delivery",
       "retour": "{dagen} days to change your mind, easy returns"
     }
   },
@@ -547,15 +547,13 @@
       "limitedEdition": "Limited edition"
     },
     "stock": {
-      "inStock": "✓ In Stock - Tomorrow at home",
+      "inStock": "✓ In stock",
       "outOfStock": "Temporarily out of stock",
       "lowStock": "🔥 Last {count} pieces - Order now!"
     },
     "shipping": {
       "info": "€{cost} • Free from €{threshold}",
       "label": "Shipping",
-      "deliveryTime": "Delivery time",
-      "deliveryTimeValue": "Usually the next business day, otherwise the day after",
       "infoAltijd": "Free shipping, always"
     },
     "trust": {
@@ -725,23 +723,25 @@
       "sizeLabel": "Size"
     },
     "shippingMicro": {
-      "beforeCutoff": "Order before 5 PM, usually at your door tomorrow.",
-      "afterCutoff": "Order today, usually at your door the day after tomorrow."
+      "beforeCutoff": "Tracked delivery.",
+      "afterCutoff": "Tracked delivery.",
+      "tracking": "Tracked delivery."
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
       "fallback": "A good fit. A character of its own."
     },
     "trustAnchor": {
-      "shippingBeforeCutoff": "Order before 5 PM today? Usually at your door tomorrow via DHL in NL and BE. Free shipping from €{threshold}.",
-      "shippingAfterCutoff": "Order today and it is usually at your door the day after tomorrow via DHL in NL and BE. Free shipping from €{threshold}.",
+      "shippingBeforeCutoff": "Delivery options and shipping costs are shown at checkout.",
+      "shippingAfterCutoff": "Delivery options and shipping costs are shown at checkout.",
       "returns": "Returns within 30 days. Full refund, no questions asked.",
       "madeInWithSpec": "MOSE · {spec}",
       "madeInBare": "MOSE essentials",
       "payment": "Pay securely with iDEAL, Klarna, Bancontact and credit card.",
       "warranty": "Two-year manufacturer warranty against material and manufacturing defects.",
-      "shippingBeforeCutoffAltijd": "Ordered before 17:00? Usually delivered tomorrow via DHL in NL and BE. Shipping is always free.",
-      "shippingAfterCutoffAltijd": "Order today and it usually arrives the day after tomorrow via DHL in NL and BE. Shipping is always free."
+      "shippingBeforeCutoffAltijd": "Delivery options and shipping costs are shown at checkout.",
+      "shippingAfterCutoffAltijd": "Delivery options and shipping costs are shown at checkout.",
+      "shippingAtCheckout": "Delivery options and shipping costs are shown at checkout."
     },
     "klarna": {
       "installment": "or 3× {amount} with Klarna, no interest"
@@ -761,8 +761,8 @@
           "answer": "True to size, pick your usual size. Between two sizes? Go up for a slightly more relaxed silhouette. The size chart is right next to the size selector."
         },
         {
-          "question": "When will I receive my order?",
-          "answer": "Order before 5 PM and we ship the same day with DHL. Usually at your door the next business day in NL and BE, otherwise the day after. Shipping is free from €{freeShipping}; below that it is €{shippingCost}."
+          "question": "What are the shipping costs?",
+          "answer": "Delivery options and shipping costs are shown at checkout."
         },
         {
           "question": "What if the size doesn't fit?",
@@ -777,7 +777,7 @@
           "answer": "Yes. With Klarna you can split your purchase into 3 payments at zero interest, or pay later within 14 days. Both options appear at checkout."
         }
       ],
-      "answerVerzendingAltijd": "Order today before 17:00 and it usually arrives tomorrow in NL and BE via DHL, otherwise the day after. Shipping is always free, with no minimum."
+      "answerVerzendingAltijd": "Delivery options and shipping costs are shown at checkout."
     },
     "discountBadge": "-{pct}% OFF",
     "youSave": "You save {amount}",
@@ -848,7 +848,7 @@
     "shippingAreas": "Shipping Areas",
     "netherlands": "Netherlands",
     "belgium": "Belgium",
-    "processing": "See the delivery estimate on the product page.",
+    "processing": "See our terms and conditions for more information.",
     "delivery": "Delivery options and shipping costs are shown at checkout.",
     "total": "Mixed orders may arrive in separate parcels.",
     "trackTrace": "Track & Trace",
@@ -1398,11 +1398,11 @@
       },
       "step2": {
         "title": "We pack your order",
-        "description": "Within 1-2 business days we'll carefully pack everything."
+        "description": "We process your order and carefully pack your items."
       },
       "step3": {
         "title": "Shipping & tracking",
-        "description": "Track & trace code upon shipping. Usually at your door the next business day, otherwise the day after.",
+        "description": "You will receive a tracking code once your order has shipped.",
         "pickupDescription": "We will contact you as soon as your order is ready for pickup in Groningen."
       }
     },
@@ -1829,7 +1829,7 @@
   },
   "terms": {
     "title": "TERMS & CONDITIONS",
-    "lastUpdated": "Last updated: 29 October 2026",
+    "lastUpdated": "Last updated: 27 November 2026",
     "backToHome": "Back to home",
     "sections": {
       "general": {
@@ -1841,10 +1841,10 @@
         "items": [
           "All prices are in euros and include VAT",
           "Shipping costs are listed separately at checkout",
-          "Free shipping from €{threshold} within the Netherlands and Belgium",
+          "Available delivery options depend on the items and delivery address.",
           "Prices and stock may change without prior notice"
         ],
-        "itemAltijd": "Free shipping within the Netherlands and Belgium, no minimum order value"
+        "itemAltijd": "Available delivery options depend on the items and delivery address."
       },
       "ordering": {
         "title": "3. ORDERING",
@@ -1863,11 +1863,11 @@
         "title": "5. SHIPPING",
         "items": [
           "Delivery options and shipping costs are shown at checkout.",
-          "Delivery estimates are shown before payment. Mixed orders may arrive in separate parcels.",
+          "Some of our items are made to order. The usual total delivery time is approximately 7 business days after payment. This is an estimate; we will inform you of any delay. Orders may arrive in separate parcels.",
           "You will receive a track & trace code upon shipment",
-          "Shipping costs: €{cost} (free from €{threshold})"
+          "Full shipping costs are shown at checkout before you pay."
         ],
-        "itemAltijd": "Shipping costs: free within the Netherlands and Belgium"
+        "itemAltijd": "Full shipping costs are shown at checkout before you pay."
       },
       "returns": {
         "title": "6. RETURNS",
@@ -1977,7 +1977,7 @@
     "subtitle": "Thank you {name}, we're processing your order",
     "orderNumber": "Order number",
     "description": "Your order has been received and is currently being processed by our team. You'll receive a new email once your order has been shipped.",
-    "processingInfo": "Expected processing time: 1-2 business days"
+    "processingInfo": "Follow your order status in your account."
   },
   "orderDelivered": {
     "subject": "Your order has been delivered! - {orderNumber}",

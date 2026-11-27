@@ -123,7 +123,7 @@ export default async function ProductPage({
     
     const fulfillmentAvailability = offerAvailability(product.product_variants ?? [], product.is_gift_card)
     // Google Shopping uses InStock for an offer that accepts orders now.
-    // The storefront still identifies supplier fulfillment as made to order.
+    // Supplier availability is verified separately from physical stock.
     const availability = fulfillmentAvailability === 'https://schema.org/MadeToOrder'
       ? 'https://schema.org/InStock'
       : fulfillmentAvailability

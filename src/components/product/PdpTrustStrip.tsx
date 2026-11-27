@@ -4,21 +4,16 @@
  * Compact trust + fit anchor rendered DIRECTLY above the Add-to-Cart button.
  * Designed to neutralise the four most common conversion blockers in one
  * eye-shot before the visitor commits:
- *   1. shipping speed & cost
+ *   1. shipping options & cost
  *   2. returns
  *   3. authenticity / quality (made-in + signature spec)
  *   4. payment options
  *
- * The "today before 17:00 = tomorrow at home" line flips automatically into
- * a next-day-shipping line after the cutoff so we never promise something
- * we cannot deliver.
+ * Delivery timing belongs in the general terms, not beside the buy button.
  */
 
-import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { levertMorgen } from '@/lib/shipping-cutoff'
-import { isAltijdGratisUitWaarden } from '@/lib/verzendbelofte'
 
 interface PdpTrustStripProps {
   supplierFulfilled?: boolean
@@ -32,43 +27,16 @@ interface PdpTrustStripProps {
   shippingCost?: number
 }
 
-export default function PdpTrustStrip({ signatureSpecs, freeShippingThreshold, shippingCost = 0, supplierFulfilled = false }: PdpTrustStripProps) {
+export default function PdpTrustStrip({ signatureSpecs, supplierFulfilled = false }: PdpTrustStripProps) {
   const locale = useLocale()
   const t = useTranslations('product.trustAnchor')
-  // Lazy-init runs once on first render. `Intl.DateTimeFormat` works on
-  // both server and client so the SSR'd HTML matches the first client
-  // render and we never flicker.
-  const [beforeCutoff, setBeforeCutoff] = useState(levertMorgen)
-
-  useEffect(() => {
-    // Subscribe to time-of-day changes via interval. The setState here
-    // lives inside an external timer callback so it does not violate the
-    // "no setState in effect body" rule.
-    const id = window.setInterval(() => {
-      setBeforeCutoff(levertMorgen())
-    }, 5 * 60 * 1000)
-    return () => window.clearInterval(id)
-  }, [])
-
-  // Deze strip zit binnen één scherm van de koopknop, dus de belofte moet
-  // kloppen met wat de checkout rekent.
-  const altijdGratis = isAltijdGratisUitWaarden(freeShippingThreshold, shippingCost)
-
   const lines = supplierFulfilled ? [
     locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.',
     locale === 'en' ? 'Team MOSE can help with sizing or your order.' : 'Team MOSE helpt je met vragen over maat of bestelling.',
     locale === 'en' ? 'Check the size chart for this specific model.' : 'Bekijk de maattabel van dit specifieke model.',
     locale === 'en' ? 'Secure payment at checkout.' : 'Veilig betalen bij het afrekenen.',
   ] : [
-    process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true'
-      ? (locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.')
-      : beforeCutoff
-      ? (altijdGratis
-          ? t('shippingBeforeCutoffAltijd')
-          : t('shippingBeforeCutoff', { threshold: freeShippingThreshold }))
-      : (altijdGratis
-          ? t('shippingAfterCutoffAltijd')
-          : t('shippingAfterCutoff', { threshold: freeShippingThreshold })),
+    t('shippingAtCheckout'),
     t('returns'),
     // Twee jaar garantie stond alleen in de veelgestelde vragen, op 5,2 scherm.
     // Dat is een van de sterkste redenen om bij een onbekend merk te kopen en

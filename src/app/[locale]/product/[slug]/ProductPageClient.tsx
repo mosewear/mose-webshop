@@ -45,7 +45,7 @@ import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 import GiftCardProductView from '@/components/product/GiftCardProductView'
 import { vertaalKleur } from '@/lib/kleurnaam'
 import { productEditorialNl, careInstructionsNl } from '@/lib/product-editorial-nl'
-import { SHOPIFY_NL_SHIPPING, TAPSTITCH_NL_DELIVERY } from '@/lib/shopify/shipping-policy'
+import { SHOPIFY_NL_SHIPPING } from '@/lib/shopify/shipping-policy'
 import { isPantsProductForSizeAdvice } from '@/lib/pants-size-advice'
 
 const supabase = createClient()
@@ -1164,7 +1164,6 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
   const editorial = locale === 'nl' ? productEditorialNl[product.slug] : undefined
   const showDutchShipping = Boolean(editorial && process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' && !usMarketPrice.isUs)
   const nlShipping = `Nederland: ${formatBedrag(SHOPIFY_NL_SHIPPING.standard, 'nl')} verzending, gratis vanaf ${formatBedrag(SHOPIFY_NL_SHIPPING.freeFrom, 'nl')}.`
-  const deliveryEstimate = `Op bestelling gemaakt. Verwachte bezorging in Nederland: ${TAPSTITCH_NL_DELIVERY.handlingMin + TAPSTITCH_NL_DELIVERY.transitMin}–${TAPSTITCH_NL_DELIVERY.handlingMax + TAPSTITCH_NL_DELIVERY.transitMax} werkdagen.`
   const supplierDelivery = locale === 'en' ? 'Delivery options and shipping costs are shown at checkout.' : 'Bezorgopties en verzendkosten staan bij het afrekenen.'
   const supplierOrigin = locale === 'en' ? 'Team MOSE can help with sizing or your order.' : 'Team MOSE helpt je met vragen over maat of bestelling.'
 
@@ -2063,7 +2062,6 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
               {showDutchShipping && hasAnyStock && selectedVariant && !isPresale && (
                 <div className="space-y-1 text-xs leading-relaxed text-gray-700 md:text-sm">
                   <p className="font-semibold">{nlShipping}</p>
-                  {madeToOrder && <p>{deliveryEstimate}</p>}
                   {!settingsLoading && settings.return_days > 0 && (
                     <p>{settings.return_days} dagen om een retour aan te melden. <LocaleLink href="/verzending" className="underline underline-offset-2">Verzending en retour</LocaleLink></p>
                   )}
@@ -2368,7 +2366,6 @@ export default function ProductPage({ params, instagramSlot, initialProduct, ini
                             ? tShipping('alwaysFreeShipping')
                             : t('trust.freeShipping', { threshold: settings.free_shipping_threshold })
                         }</p>
-                        <p><span className="font-semibold">{t('shipping.deliveryTime')}:</span> {showDutchShipping && madeToOrder ? deliveryEstimate : supplierFulfilled ? supplierDelivery : t('shipping.deliveryTimeValue')}</p>
                         <p><span className="font-semibold">{t('returns.label')}:</span> {t('returns.info', { days: settings.return_days })}</p>
                         <p><span className="font-semibold">{t('returns.cost')}:</span> {supplierFulfilled ? (locale === 'en' ? 'See our returns policy for instructions and costs.' : 'Bekijk ons retourbeleid voor de werkwijze en kosten.') : t('returns.costValue', { cost: settings.return_label_cost_incl_btw.toFixed(2).replace('.', ',') })}</p>
                       </div>

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import { NextIntlClientProvider } from 'next-intl'
 import messages from '../messages/nl.json'
+import englishMessages from '../messages/en.json'
 import PdpTrustStrip from '@/components/product/PdpTrustStrip'
 import PdpFaq from '@/components/product/PdpFaq'
 
@@ -12,6 +13,15 @@ function render(supplierFulfilled: boolean) {
   </NextIntlClientProvider>)
 }
 describe('supplier fulfilment promises', () => {
+  it.each(['nl', 'en'] as const)('keeps product reassurance and FAQs free of delivery-day promises in %s', (locale) => {
+    for (const supplierFulfilled of [false, true]) {
+      const html = renderToString(<NextIntlClientProvider locale={locale} messages={locale === 'nl' ? messages : englishMessages}>
+        <PdpTrustStrip supplierFulfilled={supplierFulfilled} freeShippingThreshold={55} shippingCost={6.95} />
+        <PdpFaq supplierFulfilled={supplierFulfilled} freeShippingThreshold={55} shippingCost={6.95} returnDays={30} locale={locale} />
+      </NextIntlClientProvider>)
+      expect(html).not.toMatch(/op bestelling|made.to.order|morgen|tomorrow|next business day|\d+[–-]\d+ (?:werkdagen|business days)/i)
+    }
+  })
   it('keeps supplier and internal production details private', () => {
     const html = render(true)
     expect(html).not.toMatch(/Tapstitch|productiepartner|production partner|fulfilled by/i)
