@@ -446,7 +446,7 @@
     "zekerheid": {
       "gratis": "Altijd gratis verzending",
       "gratisVanaf": "Gratis verzending vanaf €{bedrag}",
-      "bezorging": "Voor 17:00 besteld? Meestal morgen in huis",
+      "bezorging": "Bezorging met tracking",
       "retour": "{dagen} dagen bedenktijd, retour zonder gedoe"
     }
   },
@@ -547,15 +547,13 @@
       "limitedEdition": "Beperkte oplage"
     },
     "stock": {
-      "inStock": "✓ Op voorraad - Morgen in huis",
+      "inStock": "✓ Op voorraad",
       "outOfStock": "Tijdelijk uitverkocht",
       "lowStock": "🔥 Laatste {count} stuks - Bestel snel!"
     },
     "shipping": {
       "info": "€{cost} • Gratis vanaf €{threshold}",
       "label": "Verzending",
-      "deliveryTime": "Levertijd",
-      "deliveryTimeValue": "Meestal de volgende werkdag, anders de dag erna",
       "infoAltijd": "Altijd gratis verzending"
     },
     "trust": {
@@ -725,23 +723,25 @@
       "sizeLabel": "Maat"
     },
     "shippingMicro": {
-      "beforeCutoff": "Voor 17:00 besteld? Meestal morgen in huis.",
-      "afterCutoff": "Bestel vandaag, dan is het meestal overmorgen in huis."
+      "beforeCutoff": "Bezorging met tracking.",
+      "afterCutoff": "Bezorging met tracking.",
+      "tracking": "Bezorging met tracking."
     },
     "reviewSnippet": {
       "reviewCount": "{count, plural, =1 {{count} review} other {{count} reviews}}",
       "fallback": "Een goede pasvorm. Een eigen karakter."
     },
     "trustAnchor": {
-      "shippingBeforeCutoff": "Voor 17:00 besteld? Meestal morgen in huis via DHL in NL en BE. Gratis bezorging vanaf €{threshold}.",
-      "shippingAfterCutoff": "Bestel vandaag, dan is het meestal overmorgen in huis via DHL in NL en BE. Gratis bezorging vanaf €{threshold}.",
+      "shippingBeforeCutoff": "Bezorgopties en verzendkosten staan bij het afrekenen.",
+      "shippingAfterCutoff": "Bezorgopties en verzendkosten staan bij het afrekenen.",
       "returns": "30 dagen bedenktijd. Geld terug bij retour, zonder gedoe.",
       "madeInWithSpec": "MOSE · {spec}",
       "madeInBare": "MOSE essentials",
       "payment": "Veilig betalen met iDEAL, Klarna, Bancontact en creditcard.",
       "warranty": "Twee jaar fabrieksgarantie tegen materiaal- en fabricagefouten.",
-      "shippingBeforeCutoffAltijd": "Voor 17:00 besteld? Meestal morgen in huis via DHL in NL en BE. Bezorging is altijd gratis.",
-      "shippingAfterCutoffAltijd": "Bestel vandaag, dan is het meestal overmorgen in huis via DHL in NL en BE. Bezorging is altijd gratis."
+      "shippingBeforeCutoffAltijd": "Bezorgopties en verzendkosten staan bij het afrekenen.",
+      "shippingAfterCutoffAltijd": "Bezorgopties en verzendkosten staan bij het afrekenen.",
+      "shippingAtCheckout": "Bezorgopties en verzendkosten staan bij het afrekenen."
     },
     "klarna": {
       "installment": "of 3× {amount} met Klarna, geen rente"
@@ -761,8 +761,8 @@
           "answer": "True to size, kies gewoon je gebruikelijke maat. Twijfel je tussen twee maten? Ga voor de grotere voor een wat relaxter silhouet. Onze maattabel staat naast de maatselector."
         },
         {
-          "question": "Wanneer is mijn bestelling in huis?",
-          "answer": "Bestel vandaag voor 17:00 en je hebt 'm meestal morgen al in huis in NL en BE via DHL, anders de dag erna. Verzending is gratis vanaf €{freeShipping}; daaronder reken je €{shippingCost}."
+          "question": "Wat zijn de verzendkosten?",
+          "answer": "Bezorgopties en verzendkosten staan bij het afrekenen."
         },
         {
           "question": "Wat als de maat niet past?",
@@ -777,7 +777,7 @@
           "answer": "Ja. Bij Klarna kies je voor 3× betalen zonder rente of betaal je achteraf binnen 14 dagen. Beide opties krijg je tijdens het afrekenen."
         }
       ],
-      "answerVerzendingAltijd": "Bestel vandaag voor 17:00 en je hebt 'm meestal morgen al in huis in NL en BE via DHL, anders de dag erna. Verzending is altijd gratis, zonder minimumbedrag."
+      "answerVerzendingAltijd": "Bezorgopties en verzendkosten staan bij het afrekenen."
     },
     "discountBadge": "-{pct}% KORTING",
     "youSave": "Je bespaart {amount}",
@@ -848,7 +848,7 @@
     "shippingAreas": "Verzendgebieden",
     "netherlands": "Nederland",
     "belgium": "België",
-    "processing": "De verwachte bezorging staat op de productpagina.",
+    "processing": "Meer informatie vind je in onze algemene voorwaarden.",
     "delivery": "Bezorgopties en verzendkosten staan bij het afrekenen.",
     "total": "Een gemengde bestelling kan in meerdere pakketten aankomen.",
     "trackTrace": "Track & Trace",
@@ -1729,11 +1729,11 @@
       },
       "step2": {
         "title": "We pakken je bestelling in",
-        "description": "Binnen 1-2 werkdagen pakken we alles zorgvuldig in."
+        "description": "We verwerken je bestelling en pakken je artikelen zorgvuldig in."
       },
       "step3": {
         "title": "Verzending & tracking",
-        "description": "Track & trace code bij verzending. Meestal de volgende werkdag in huis, anders de dag erna.",
+        "description": "Je ontvangt een track & trace code zodra je bestelling is verzonden.",
         "pickupDescription": "We nemen contact op zodra je bestelling klaarstaat om af te halen in Groningen."
       }
     },
@@ -1829,7 +1829,7 @@
   },
   "terms": {
     "title": "ALGEMENE VOORWAARDEN",
-    "lastUpdated": "Laatst bijgewerkt: 29 oktober 2026",
+    "lastUpdated": "Laatst bijgewerkt: 27 november 2026",
     "backToHome": "Terug naar home",
     "sections": {
       "general": {
@@ -1841,10 +1841,10 @@
         "items": [
           "Alle prijzen zijn in euro's en inclusief BTW",
           "Verzendkosten worden apart vermeld bij het afrekenen",
-          "Gratis verzending vanaf €{threshold} binnen Nederland en België",
+          "Beschikbare bezorgopties hangen af van de artikelen en het afleveradres.",
           "Prijzen en voorraad kunnen wijzigen zonder voorafgaande kennisgeving"
         ],
-        "itemAltijd": "Gratis verzending binnen Nederland en België, zonder minimumbedrag"
+        "itemAltijd": "Beschikbare bezorgopties hangen af van de artikelen en het afleveradres."
       },
       "ordering": {
         "title": "3. BESTELLEN",
@@ -1863,11 +1863,11 @@
         "title": "5. VERZENDING",
         "items": [
           "Bezorgopties en verzendkosten staan bij het afrekenen.",
-          "De verwachte bezorging zie je vóór betaling. Een gemengde bestelling kan in meerdere pakketten aankomen.",
+          "Een deel van onze artikelen wordt op bestelling gemaakt. De gebruikelijke totale levertijd is ongeveer 7 werkdagen na betaling. Dit is een indicatie; bij vertraging informeren we je. Een bestelling kan in meerdere pakketten aankomen.",
           "Je ontvangt een track & trace code bij verzending",
-          "Verzendkosten: €{cost} (gratis vanaf €{threshold})"
+          "De volledige verzendkosten worden vóór betaling bij het afrekenen getoond."
         ],
-        "itemAltijd": "Verzendkosten: gratis binnen Nederland en België"
+        "itemAltijd": "De volledige verzendkosten worden vóór betaling bij het afrekenen getoond."
       },
       "returns": {
         "title": "6. RETOURNEREN",
@@ -1977,7 +1977,7 @@
     "subtitle": "Bedankt {name}, we zijn je bestelling aan het verwerken",
     "orderNumber": "Bestelnummer",
     "description": "Je bestelling is ontvangen en wordt momenteel door ons team verwerkt. Je ontvangt een nieuwe e-mail zodra je bestelling is verzonden.",
-    "processingInfo": "Verwachte verwerkingstijd: 1-2 werkdagen"
+    "processingInfo": "Volg de status van je bestelling via je account."
   },
   "orderDelivered": {
     "subject": "Je bestelling is bezorgd! - {orderNumber}",

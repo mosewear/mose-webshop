@@ -1,34 +1,16 @@
 'use client'
 
 /**
- * Tiny shipping reassurance shown DIRECTLY under the [quantity + ATC]
- * row on mobile. Mirrors the time-aware logic from PdpTrustStrip so the
- * promise we make ("morgen in huis") flips automatically after the
- * 17:00 NL cutoff to "overmorgen". On desktop the larger trust-strip
- * already covers this, so this strip is hidden via `md:hidden` at the
- * call site.
+ * Shipping reassurance without a product-level delivery-time promise.
  */
 
-import { useEffect, useState } from 'react'
 import { Truck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { levertMorgen } from '@/lib/shipping-cutoff'
 
 export default function ShippingMicrocopy() {
   const t = useTranslations('product.shippingMicro')
 
-  // Lazy-init: SSR + first client render produce the same value, then
-  // we tick every 5 minutes so the promise auto-flips at 17:00.
-  const [beforeCutoff, setBeforeCutoff] = useState(levertMorgen)
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setBeforeCutoff(levertMorgen())
-    }, 5 * 60 * 1000)
-    return () => window.clearInterval(id)
-  }, [])
-
-  const message = beforeCutoff ? t('beforeCutoff') : t('afterCutoff')
+  const message = t('tracking')
 
   return (
     <div className="flex items-center gap-2 border-2 border-black bg-gray-50 px-3 py-2">

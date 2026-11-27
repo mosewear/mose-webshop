@@ -22,6 +22,9 @@ function request(data: unknown = body, session: string | null = 'a'.repeat(64)) 
     headers: { origin: 'https://www.mosewear.com', ...(session ? { cookie: 'mose_shopify_session=' + session } : {}) } })
 }
 beforeEach(() => {
+  // Baseline checkout cases run outside a promotion; holiday behavior has its own suite.
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-11-15T12:00:00Z'))
   mock.nativeRuntime.mockReset().mockResolvedValue({key:'nativeGiftRuntime',status:'verified'})
   mock.nativeCutover.mockReset().mockResolvedValue({shopifyProductIds:['gid://shopify/Product/999']})
   mock.nativeResolve.mockReset().mockImplementation(async (_db,input) => ({shopifyVariantId:'gid://shopify/ProductVariant/999',shopifyProductId:'gid://shopify/Product/999',amountCents:input.amountCents,nativeGiftCard:true}))
@@ -49,7 +52,7 @@ beforeEach(() => {
       cost: { subtotalAmount: { amount: '69.95', currencyCode: 'EUR' } }, lines: { nodes: [{ quantity: 1, merchandise: { id: gid } }] } }, userErrors: [], warnings: [] } })
     .mockResolvedValueOnce(emptyBenefitCart())
 })
-afterEach(() => vi.unstubAllEnvs())
+afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs() })
 describe('unified checkout boundary', () => {
   it('returns only server-verified checkout prices for Meta, independent of an old browser cart', async () => {
     const response = await POST(request())

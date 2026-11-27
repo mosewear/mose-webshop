@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server'
 import { render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import messages from '../messages/nl.json'
+import englishMessages from '../messages/en.json'
 import ShopPageClient from '@/app/[locale]/shop/ShopPageClient'
 
 const { query } = vi.hoisted(() => ({ query: vi.fn() }))
@@ -108,5 +109,23 @@ it('renders a fresh made-to-order PDP with enabled size/CTA and truthful stock c
     const unavailable = new DOMParser().parseFromString(view(override), 'text/html')
     expect(unavailable.querySelector('[data-pdp-main-atc]')?.hasAttribute('disabled')).toBe(true)
     expect(unavailable.body.textContent).not.toContain('Op bestelling gemaakt')
+  }
+})
+
+it.each(['nl', 'en'] as const)('keeps the editorial supplier PDP orderable without production or delivery-day copy (%s)', (locale) => {
+  vi.stubEnv('NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED', 'true')
+  try {
+    const value = { slug: 'mose-waffle-tee', locale }
+    const params = Object.assign(Promise.resolve(value), { status: 'fulfilled', value })
+    const html = renderToString(<NextIntlClientProvider locale={locale} messages={locale === 'nl' ? messages : englishMessages}><ProductPageClient params={params}
+      initialSettings={{free_shipping_threshold:55,shipping_cost:6.95,return_days:30,return_label_cost_incl_btw:6.95,show_preview_images_notice:false,pdp_sticky_picker_enabled:false}}
+      initialProduct={{id:'d4432b58-9b22-4321-9f4e-a2b7a6a3f287',name:'MOSE Waffle Tee',slug:'mose-waffle-tee',description:'Waffle knit cotton',base_price:39,sale_price:null,category_id:null,categories:null,meta_title:'',meta_description:'',product_images:[{id:'image',url:'/waffle.webp',alt_text:'Waffle Tee',position:0,is_primary:true,color:'Coffee',media_type:'image'}],product_variants:[{id:'waffle-m',size:'M',color:'Coffee',color_hex:'#654321',sku:'waffle',stock_quantity:0,presale_stock_quantity:0,presale_enabled:false,presale_expected_date:null,presale_expected_date_en:null,price_adjustment:0,is_available:true,display_order:0,fulfillment_mode:'made_to_order',supplier_orderable:true,supplier_checked_at:new Date().toISOString()}]}}
+    /></NextIntlClientProvider>)
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    expect(doc.querySelector('[data-pdp-main-atc]')?.hasAttribute('disabled')).toBe(false)
+    expect(doc.body.textContent).not.toMatch(/op bestelling gemaakt|made.to.order|\d+[–-]\d+ werkdagen|morgen in huis|tomorrow/i)
+    expect(doc.body.textContent).toContain(locale === 'nl' ? 'Bezorgopties en verzendkosten' : 'Delivery options and shipping costs')
+  } finally {
+    vi.unstubAllEnvs()
   }
 })

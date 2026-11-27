@@ -100,7 +100,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const giftFaceValue = items.filter(item => item.isGiftCard).reduce((sum, item) => sum + item.price * item.quantity, 0)
   const digitalOnly = items.length > 0 && items.every(item => item.isGiftCard)
   const nativeShipping = process.env.NEXT_PUBLIC_SHOPIFY_CHECKOUT_ENABLED === 'true' && !digitalOnly
-  const productionOrder = items.some(item => item.isMadeToOrder || item.isPresale)
   const subtotalAfterDiscount = subtotal - promoDiscount - staffelBreakdown.totalSavings
   const shipping = nativeShipping || digitalOnly || subtotalAfterDiscount >= freeShippingThreshold ? 0 : shippingCost
   
@@ -864,7 +863,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <ul className="m-0 list-none space-y-1.5 border-t-2 border-gray-200 px-4 py-4 text-[13px] text-gray-700 md:px-6">
                 {[
                   nativeShipping ? t('shippingAtCheckout') : freeShippingThreshold <= 0 && shippingCost <= 0 ? t('zekerheid.gratis') : t('zekerheid.gratisVanaf', { bedrag: formatBedragKaal(freeShippingThreshold, locale) }),
-                  productionOrder ? t('productionDelivery') : t('zekerheid.bezorging'),
+                  t('zekerheid.bezorging'),
                   t('zekerheid.retour', { dagen: returnDays }),
                 ].map((regel) => (
                   <li key={regel} className="flex items-center gap-2">

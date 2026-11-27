@@ -1,4 +1,4 @@
-import { SHOPIFY_NL_SHIPPING, TAPSTITCH_NL_DELIVERY } from '@/lib/shopify/shipping-policy'
+import { SHOPIFY_NL_SHIPPING } from '@/lib/shopify/shipping-policy'
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { catalogContentId } from '@/lib/catalog-ids'
@@ -62,12 +62,10 @@ function googleShippingXml(madeToOrder: boolean, price: number): string {
   const belgium = '<g:shipping><g:country>BE</g:country><g:price>0.00 EUR</g:price></g:shipping>'
   if (!madeToOrder) return belgium
   const cost = formatPrice(price >= SHOPIFY_NL_SHIPPING.freeFrom ? 0 : SHOPIFY_NL_SHIPPING.standard)
-  // Tapstitch small-order production window plus NL Special Line transit.
-  // The documented shipping estimate excludes production.
+  // Keep the verified shipping charge; do not export the obsolete supplier
+  // handling/transit ranges as a customer delivery promise.
   return `<g:shipping>
       <g:country>NL</g:country><g:price>${cost}</g:price>
-      <g:min_handling_time>${TAPSTITCH_NL_DELIVERY.handlingMin}</g:min_handling_time><g:max_handling_time>${TAPSTITCH_NL_DELIVERY.handlingMax}</g:max_handling_time>
-      <g:min_transit_time>${TAPSTITCH_NL_DELIVERY.transitMin}</g:min_transit_time><g:max_transit_time>${TAPSTITCH_NL_DELIVERY.transitMax}</g:max_transit_time>
     </g:shipping>${process.env.MOSE_BE_TAPSTITCH_DDP_VERIFIED === 'true' ? belgium : ''}`
 }
 

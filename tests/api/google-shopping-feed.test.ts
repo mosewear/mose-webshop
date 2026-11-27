@@ -34,7 +34,7 @@ it('lists supplier sizes as in stock only while the supplier confirms they can b
   expect(xml).toContain('<g:size>L</g:size>')
   expect(xml).not.toContain('XL')
   expect(xml).toContain('<g:country>NL</g:country><g:price>0.00 EUR</g:price>')
-  expect(xml).toContain('<g:max_transit_time>14</g:max_transit_time>')
+  expect(xml).not.toMatch(/<g:(?:min|max)_(?:handling|transit)_time>/)
   vi.stubEnv('MOSE_BE_TAPSTITCH_DDP_VERIFIED', 'false')
   try {
     expect(await (await GET(new Request('https://www.mosewear.com/google-shopping-feed.xml'))).text()).not.toContain('<g:country>BE</g:country>')

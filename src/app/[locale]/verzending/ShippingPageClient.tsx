@@ -109,7 +109,7 @@ export default function ShippingPageClient({ settings, shipsToUnitedStates }: { 
               <ul className="space-y-2">
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-brand-primary" />
-                  <span>{t('processing')}</span>
+                  <LocaleLink href="/algemene-voorwaarden" className="underline underline-offset-2">{t('processing')}</LocaleLink>
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-brand-primary" />
